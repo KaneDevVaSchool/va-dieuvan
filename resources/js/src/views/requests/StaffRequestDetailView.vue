@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-gradient-to-b from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950"
+    class="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-slate-50 dark:bg-slate-950"
   >
     <div
       v-if="loading"
@@ -10,137 +10,124 @@
     </div>
 
     <template v-else-if="req">
-      <!-- ───────────────── Sticky header ───────────────── -->
+      <!-- ═══════════ Header ═══════════ -->
       <header
-        class="sticky top-0 z-40 shrink-0 border-b border-slate-200/90 bg-white/95 shadow-sm backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 supports-[top:env(safe-area-inset-top)]:top-[env(safe-area-inset-top)]"
+        class="sticky top-0 z-40 shrink-0 border-b border-slate-200 bg-white/95 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 supports-[top:env(safe-area-inset-top)]:top-[env(safe-area-inset-top)]"
       >
-        <div class="mx-auto flex max-w-[88rem] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <div class="flex min-w-0 flex-1 items-center gap-3">
-            <RouterLink
-              :to="backTo"
-              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800"
-              :aria-label="backAriaLabel"
+        <div class="mx-auto flex max-w-[84rem] flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
+          <RouterLink
+            :to="backTo"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            :aria-label="backAriaLabel"
+          >
+            <ArrowLeftIcon class="h-5 w-5" aria-hidden="true" />
+          </RouterLink>
+
+          <div class="flex min-w-0 flex-1 items-center gap-2.5">
+            <h1 class="truncate font-mono text-base font-bold tracking-tight text-slate-900 dark:text-white sm:text-lg">
+              {{ requestRefCode }}
+            </h1>
+            <StatusBadge :status="req.status" />
+            <span
+              v-if="showUrgentBadge"
+              class="inline-flex items-center gap-1 rounded-md bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-700 ring-1 ring-inset ring-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:ring-rose-800/60"
             >
-              <ArrowLeftIcon class="h-5 w-5" aria-hidden="true" />
-            </RouterLink>
-            <div class="min-w-0">
-              <div class="flex flex-wrap items-center gap-2">
-                <h1 class="truncate font-mono text-lg font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl">
-                  {{ requestRefCode }}
-                </h1>
-                <StatusBadge :status="req.status" />
-                <span
-                  v-if="showUrgentBadge"
-                  class="inline-flex items-center gap-1 rounded-lg bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-800 ring-1 ring-rose-200/80 dark:bg-rose-950/60 dark:text-rose-300 dark:ring-rose-800/60"
-                >
-                  <BoltIcon class="h-3 w-3" aria-hidden="true" />
-                  {{ t('requests_page.filter_priority_urgent') }}
-                </span>
-                <span
-                  v-if="showRecurringBadge"
-                  class="inline-flex items-center gap-1 rounded-lg bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-900 ring-1 ring-indigo-200/80 dark:bg-indigo-950/60 dark:text-indigo-300 dark:ring-indigo-800/60"
-                >
-                  <ArrowPathIcon class="h-3 w-3" aria-hidden="true" />
-                  {{ t('request_detail.badge_recurring') }}
-                </span>
-              </div>
-              <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">
-                {{ t('request_detail.meta_created', { dt: fmt(req.created_at) }) }}
-                <template v-if="req.trip">
-                  <span class="text-slate-300 dark:text-slate-600"> · </span>
-                  <RouterLink
-                    :to="`/trips/${req.trip.id}`"
-                    class="font-semibold text-va-800 underline decoration-va-300 underline-offset-2 hover:decoration-va-600 dark:text-va-300 dark:decoration-va-500"
-                  >
-                    {{ t('request_detail.trip_link', { id: req.trip.id }) }}
-                  </RouterLink>
-                </template>
-              </p>
-            </div>
+              <BoltIcon class="h-3 w-3" aria-hidden="true" />
+              {{ t('requests_page.filter_priority_urgent') }}
+            </span>
+            <span
+              v-if="showRecurringBadge"
+              class="inline-flex items-center gap-1 rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:ring-indigo-800/60"
+            >
+              <ArrowPathIcon class="h-3 w-3" aria-hidden="true" />
+              {{ t('request_detail.badge_recurring') }}
+            </span>
           </div>
+
           <button
             type="button"
-            class="inline-flex h-10 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-medium transition"
+            class="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border px-3 text-sm font-medium transition"
             :class="
               pdfExportDisabled
-                ? 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-600'
-                : 'border-slate-200 bg-white text-slate-800 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700'
+                ? 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-600'
+                : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
             "
             :disabled="pdfBusy || pdfExportDisabled"
             :title="pdfExportDisabled ? t('request_detail.pdf_locked_tooltip') : t('request_detail.export_pdf')"
             @click="downloadRequestPdf"
           >
             <ArrowDownTrayIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-            {{ pdfBusy ? t('request_detail.pdf_export_loading') : t('request_detail.export_pdf') }}
+            <span class="hidden sm:inline">{{ pdfBusy ? t('request_detail.pdf_export_loading') : t('request_detail.export_pdf') }}</span>
           </button>
         </div>
       </header>
 
-      <!-- ───────────────── Scroll body ───────────────── -->
+      <!-- ═══════════ Body ═══════════ -->
       <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
-        <div class="mx-auto max-w-[88rem] space-y-5 px-4 py-5 pb-16 sm:px-6">
+        <div class="mx-auto max-w-[84rem] space-y-4 px-4 py-5 pb-16 sm:px-6">
           <!-- Alerts -->
           <div
             v-if="req.status === 'rejected'"
-            class="rounded-2xl border border-rose-200 bg-rose-50/80 p-4 dark:border-rose-900/60 dark:bg-rose-950/40 sm:p-5"
+            class="flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 dark:border-rose-900/60 dark:bg-rose-950/40"
             role="alert"
           >
-            <div class="flex items-start gap-3">
-              <XCircleIcon class="h-8 w-8 shrink-0 text-rose-600 dark:text-rose-400" aria-hidden="true" />
-              <div class="min-w-0 flex-1">
-                <p class="text-base font-bold text-rose-950 dark:text-rose-200">{{ rejectionBannerTitle }}</p>
-                <p
-                  v-if="req.rejection_reason"
-                  class="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-rose-900/95 dark:text-rose-200/90"
-                >
-                  {{ req.rejection_reason }}
-                </p>
-                <p v-else class="mt-2 text-sm text-rose-800/90 dark:text-rose-300/80">
-                  {{ t('request_detail.rejected_no_reason') }}
-                </p>
-                <button
-                  v-if="req.rejection_reason"
-                  type="button"
-                  class="mt-3 inline-flex min-h-[40px] items-center gap-2 rounded-xl border border-rose-200 bg-white px-3 text-xs font-semibold text-rose-900 shadow-sm transition hover:bg-rose-50 dark:border-rose-800 dark:bg-slate-900 dark:text-rose-200 dark:hover:bg-slate-800"
-                  @click="copyRejectionReason"
-                >
-                  <ClipboardDocumentIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-                  {{ copyRejectionFeedback ? t('request_detail.copied') : t('request_detail.copy_rejection') }}
-                </button>
-              </div>
+            <XCircleIcon class="h-6 w-6 shrink-0 text-rose-500 dark:text-rose-400" aria-hidden="true" />
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-bold text-rose-900 dark:text-rose-200">{{ rejectionBannerTitle }}</p>
+              <p
+                v-if="req.rejection_reason"
+                class="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-rose-800/90 dark:text-rose-200/80"
+              >
+                {{ req.rejection_reason }}
+              </p>
+              <p v-else class="mt-1 text-sm text-rose-700/80 dark:text-rose-300/70">
+                {{ t('request_detail.rejected_no_reason') }}
+              </p>
+              <button
+                v-if="req.rejection_reason"
+                type="button"
+                class="mt-2.5 inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-rose-800 transition hover:bg-rose-50 dark:border-rose-800 dark:bg-slate-900 dark:text-rose-200 dark:hover:bg-slate-800"
+                @click="copyRejectionReason"
+              >
+                <ClipboardDocumentIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                {{ copyRejectionFeedback ? t('request_detail.copied') : t('request_detail.copy_rejection') }}
+              </button>
             </div>
           </div>
 
-          <RequestCloneLineageBanner
+          <div
             v-if="req.cloned_from_summary"
-            :summary="req.cloned_from_summary"
-            :context="cloneBannerContext"
-          />
+            class="flex items-center gap-2.5 rounded-xl border border-indigo-200 bg-indigo-50/70 px-4 py-2.5 text-sm text-indigo-900 dark:border-indigo-900/50 dark:bg-indigo-950/30 dark:text-indigo-200"
+          >
+            <ArrowPathIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span class="min-w-0 flex-1">{{ cloneLineageText }}</span>
+            <RouterLink
+              v-if="req.cloned_from_summary.id"
+              :to="`/requests/${req.cloned_from_summary.id}`"
+              class="shrink-0 font-semibold underline decoration-indigo-300 underline-offset-2 hover:decoration-indigo-500"
+            >
+              {{ t('request_detail.clone_lineage_open_source') }}
+            </RouterLink>
+          </div>
 
-          <CostLimitAlert
-            v-if="req.dispatch_package_cost_alert || req.dispatch_package_budget_alert"
-            :alert="req.dispatch_package_cost_alert"
-            :budget-alert="req.dispatch_package_budget_alert"
-          />
+          <div
+            v-if="costAlertText"
+            class="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200"
+            role="alert"
+          >
+            <ExclamationTriangleIcon class="mt-0.5 h-5 w-5 shrink-0 text-amber-500 dark:text-amber-400" aria-hidden="true" />
+            <span class="min-w-0 flex-1 whitespace-pre-line">{{ costAlertText }}</span>
+          </div>
 
-          <!-- Workspace grid -->
-          <div class="grid gap-5 lg:grid-cols-12 lg:items-start">
-            <!-- ─────────── MAIN ─────────── -->
-            <div class="space-y-5 lg:col-span-8">
-              <section
-                class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-5"
-              >
-                <PortalStatusTimeline :title="t('portal.timeline_heading')" :steps="timelineSteps" />
-              </section>
-
-              <!-- Tabbed workspace -->
-              <div
-                class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
-              >
+          <!-- Grid -->
+          <div class="grid gap-4 lg:grid-cols-12 lg:items-start">
+            <!-- ─── MAIN ─── -->
+            <div class="space-y-4 lg:col-span-8">
+              <!-- Tabs -->
+              <div :class="cardClass">
                 <nav
-                  class="flex gap-1 overflow-x-auto border-b border-slate-100 bg-slate-50/80 px-2 py-2 dark:border-slate-800 dark:bg-slate-900/60 sm:px-3"
+                  class="flex gap-1 overflow-x-auto border-b border-slate-100 px-2 pt-2 dark:border-slate-800"
                   role="tablist"
-                  :aria-label="t('request_detail.tablist_aria')"
                 >
                   <button
                     v-for="tab in workspaceTabs"
@@ -148,368 +135,458 @@
                     type="button"
                     role="tab"
                     :aria-selected="activeTab === tab.id"
-                    class="relative shrink-0 rounded-xl px-3.5 py-2.5 text-xs font-semibold transition sm:text-sm"
+                    class="relative -mb-px shrink-0 border-b-2 px-3.5 py-2.5 text-sm font-semibold transition"
                     :class="
                       activeTab === tab.id
-                        ? 'bg-va-800 text-white shadow-sm shadow-va-900/15'
-                        : 'text-slate-600 hover:bg-white hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100'
+                        ? 'border-va-700 text-va-800 dark:border-va-400 dark:text-va-300'
+                        : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                     "
                     @click="setActiveTab(tab.id)"
                   >
                     {{ tab.label }}
                     <span
                       v-if="tab.badge"
-                      class="ml-1.5 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white"
-                    >
-                      {{ tab.badge }}
-                    </span>
+                      class="ml-1.5 inline-flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white"
+                    >{{ tab.badge }}</span>
                     <span
                       v-else-if="tab.dot"
-                      class="absolute right-1 top-1 h-2 w-2 rounded-full"
+                      class="ml-1 inline-block h-1.5 w-1.5 rounded-full align-middle"
                       :class="tab.dotTone === 'amber' ? 'bg-amber-500' : 'bg-teal-500'"
                       aria-hidden="true"
                     />
                   </button>
                 </nav>
 
-                <div class="p-4 sm:p-6">
-                  <!-- Overview / BM.03 form -->
-                  <div v-show="activeTab === 'form'" class="space-y-5">
-                    <RequestBm03FormTab
-                      :req="req"
-                      :show-fill-price-section="showFillPriceSection"
-                      :fill-price-acting="fillPriceActing"
-                      :fill-price-msg="fillPriceMsg"
-                      :signed-paper-attachments="signedPaperAttachments"
-                      :signed-upload-component-key="`signed-${route.params.id}-${signedPaperAttachments.length}`"
-                      :upload-signed-fn="uploadSignedPaper"
-                      :signed-upload-err="signedUploadErr"
-                      :show-signed-paper-section="showSignedPaperSection"
-                      :signed-document-current="signedDocumentCurrent"
-                      :approval-tab-needs-focus="approvalTabNeedsFocus"
-                      @save-row-prices="onSaveRowPrices"
-                      @download-signed="downloadFile"
-                      @signed-uploaded="onSignedUploaded"
-                    />
+                <div class="p-4 sm:p-5">
+                  <!-- ===== Tab: Tổng quan ===== -->
+                  <div v-show="activeTab === 'form'" class="space-y-4">
+                    <!-- Journey -->
+                    <div class="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 dark:border-slate-800 dark:from-slate-800/40 dark:to-slate-900">
+                      <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <div class="min-w-0 flex-1">
+                          <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                            <MapPinIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                            <span class="text-[11px] font-semibold uppercase tracking-wide">{{ t('request_detail.lbl_origin') }}</span>
+                          </div>
+                          <p class="mt-1 text-base font-bold text-slate-900 dark:text-white">{{ req.origin || '—' }}</p>
+                        </div>
+                        <ArrowRightIcon class="hidden h-5 w-5 shrink-0 text-slate-300 dark:text-slate-600 sm:block" aria-hidden="true" />
+                        <ArrowDownIcon class="h-5 w-5 shrink-0 text-slate-300 dark:text-slate-600 sm:hidden" aria-hidden="true" />
+                        <div class="min-w-0 flex-1">
+                          <div class="flex items-center gap-2 text-rose-600 dark:text-rose-400">
+                            <MapPinIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                            <span class="text-[11px] font-semibold uppercase tracking-wide">{{ t('request_detail.lbl_destination') }}</span>
+                          </div>
+                          <p class="mt-1 text-base font-bold text-slate-900 dark:text-white">{{ req.destination || '—' }}</p>
+                        </div>
+                      </div>
+                      <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-slate-200/70 pt-3 text-xs text-slate-600 dark:border-slate-700/70 dark:text-slate-400">
+                        <span class="inline-flex items-center gap-1.5">
+                          <ClockIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                          {{ journeyDepartLine || '—' }}
+                        </span>
+                        <span class="inline-flex items-center gap-1.5">
+                          <TruckIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                          {{ labelTripType(req.trip_type) }}
+                        </span>
+                        <span v-if="distanceText" class="inline-flex items-center gap-1.5">
+                          <MapIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                          {{ distanceText }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Timeline -->
+                    <div class="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+                      <h2 :class="sectionTitleClass">{{ t('portal.timeline_heading') }}</h2>
+                      <ol class="mt-3 space-y-0">
+                        <li v-for="(step, idx) in timelineSteps" :key="step.key" class="flex gap-3">
+                          <div class="flex w-5 shrink-0 flex-col items-center">
+                            <span
+                              class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2"
+                              :class="timelineDotClass(step.state)"
+                            >
+                              <CheckIcon v-if="step.state === 'done'" class="h-3 w-3 text-white" aria-hidden="true" />
+                              <span v-else-if="step.state === 'rejected'" class="text-[10px] font-bold text-rose-600">!</span>
+                              <span v-else-if="step.state === 'current'" class="h-1.5 w-1.5 rounded-full bg-va-700 dark:bg-va-400" />
+                            </span>
+                            <span
+                              v-if="idx < timelineSteps.length - 1"
+                              class="min-h-[1.5rem] w-px flex-1"
+                              :class="step.state === 'done' ? 'bg-va-500/70' : 'bg-slate-200 dark:bg-slate-700'"
+                              aria-hidden="true"
+                            />
+                          </div>
+                          <div class="min-w-0 flex-1 pb-4">
+                            <p
+                              class="text-sm font-semibold leading-tight"
+                              :class="step.state === 'current' ? 'text-va-800 dark:text-va-300' : step.state === 'upcoming' ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-200'"
+                            >{{ step.label }}</p>
+                            <p v-if="step.actor" class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ step.actor }}</p>
+                            <p v-if="step.sub && step.sub !== '—'" class="text-[11px] text-slate-400 dark:text-slate-500">{{ step.sub }}</p>
+                          </div>
+                        </li>
+                      </ol>
+                    </div>
+
+                    <!-- Detail field cards -->
+                    <div class="grid gap-4 sm:grid-cols-2">
+                      <!-- Schedule -->
+                      <div class="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+                        <h2 :class="sectionTitleClass">{{ t('request_detail.ops_schedule_heading') }}</h2>
+                        <dl class="mt-3 space-y-2.5">
+                          <FieldRow :label="t('request_detail.ops_lbl_proposed_date')" :value="fmtDateOnly(formData.proposed_date)" />
+                          <FieldRow :label="t('request_detail.ops_lbl_date_needed')" :value="fmtDateOnly(formData.date_needed)" />
+                          <FieldRow :label="t('request_detail.aside_vehicle_request')" :value="labelTripType(req.trip_type)" />
+                          <FieldRow v-if="urgentReasonText" :label="t('request_detail.ops_lbl_urgent_reason')" :value="urgentReasonText" />
+                        </dl>
+                      </div>
+
+                      <!-- Purpose & basis -->
+                      <div class="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+                        <h2 :class="sectionTitleClass">{{ t('request_detail.ops_purpose_heading') }}</h2>
+                        <dl class="mt-3 space-y-2.5">
+                          <FieldRow :label="t('request_detail.ops_lbl_purpose')" :value="nz(formData.purpose) || '—'" multiline />
+                          <FieldRow :label="t('request_detail.ops_lbl_basis')" :value="basisText || '—'" multiline />
+                        </dl>
+                      </div>
+
+                      <!-- Targets & coordinator -->
+                      <div
+                        v-if="targets.length || coordinatorName"
+                        class="rounded-xl border border-slate-200 p-4 dark:border-slate-800 sm:col-span-2"
+                      >
+                        <h2 :class="sectionTitleClass">{{ t('request_detail.ops_targets_heading') }}</h2>
+                        <div v-if="targets.length" class="mt-3 flex flex-wrap gap-1.5">
+                          <span
+                            v-for="(tg, i) in targets"
+                            :key="i"
+                            class="inline-flex rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                          >{{ tg }}</span>
+                        </div>
+                        <dl v-if="coordinatorName" class="mt-3 grid gap-2.5 sm:grid-cols-3">
+                          <FieldRow :label="t('request_detail.ops_lbl_coordinator')" :value="coordinatorName" />
+                          <FieldRow v-if="nz(formData.coordinator_email)" :label="t('request_detail.lbl_email')" :value="formData.coordinator_email" />
+                          <FieldRow v-if="nz(formData.coordinator_phone)" :label="t('request_detail.lbl_phone')" :value="formData.coordinator_phone" />
+                        </dl>
+                      </div>
+                    </div>
                   </div>
 
-                  <!-- Documents -->
-                  <div v-show="activeTab === 'docs'">
-                    <RequestDocsPanel
-                      id="request-docs-panel"
-                      :req="req"
-                      :request-id="route.params.id"
-                      :docs-progress-steps="docsProgressSteps"
-                      :docs-checklist="docsChecklist"
-                      :highlight-attachment-id="docsHighlightAttachmentId"
-                      :general-attachments="generalAttachments"
-                      :signed-paper-attachments="signedPaperAttachments"
-                      :paper-scans="paperScans"
-                      :attach-err="attachErr"
-                      :ocr-err="ocrErr"
-                      :ocr-busy="ocrBusy"
+                  <!-- ===== Tab: Hành trình ===== -->
+                  <div v-show="activeTab === 'route'" class="space-y-4">
+                    <!-- Fill-price tool (dispatcher) -->
+                    <div v-if="showFillPriceSection">
+                      <RequestBm03FormTab
+                        :req="req"
+                        hide-proposal-form
+                        :show-fill-price-section="showFillPriceSection"
+                        :fill-price-acting="fillPriceActing"
+                        :fill-price-msg="fillPriceMsg"
+                        :approval-tab-needs-focus="true"
+                        @save-row-prices="onSaveRowPrices"
+                      />
+                    </div>
+
+                    <!-- Read-only itinerary cards -->
+                    <template v-else>
+                      <h2 :class="sectionTitleClass">{{ t('request_detail.ops_itinerary_heading') }}</h2>
+                      <p
+                        v-if="!itineraryCards.length"
+                        class="rounded-xl border border-dashed border-slate-200 px-4 py-10 text-center text-sm text-slate-400 dark:border-slate-700 dark:text-slate-500"
+                      >
+                        {{ t('request_detail.ops_no_itinerary') }}
+                      </p>
+                      <div
+                        v-for="card in itineraryCards"
+                        :key="card.key"
+                        class="rounded-xl border border-slate-200 p-4 dark:border-slate-800"
+                      >
+                        <div class="flex flex-wrap items-start justify-between gap-2">
+                          <div class="flex min-w-0 items-center gap-2">
+                            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-va-50 text-xs font-bold text-va-800 dark:bg-va-950/50 dark:text-va-300">{{ card.idx }}</span>
+                            <p class="min-w-0 truncate font-semibold text-slate-900 dark:text-white">{{ card.title }}</p>
+                          </div>
+                          <span v-if="card.price" class="shrink-0 text-sm font-bold tabular-nums text-teal-600 dark:text-teal-400">{{ card.price }}</span>
+                        </div>
+                        <div v-if="card.route" class="mt-2.5 flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                          <span class="min-w-0 truncate">{{ card.route.from || '—' }}</span>
+                          <ArrowRightIcon class="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+                          <span class="min-w-0 truncate">{{ card.route.to || '—' }}</span>
+                        </div>
+                        <dl v-if="card.fields.length" class="mt-3 grid gap-x-4 gap-y-2 sm:grid-cols-2">
+                          <FieldRow v-for="(f, fi) in card.fields" :key="fi" :label="f.label" :value="f.value" :multiline="f.multiline" />
+                        </dl>
+                      </div>
+
+                      <!-- Extra notes -->
+                      <div
+                        v-if="extraNotes.length"
+                        class="rounded-xl border border-slate-200 bg-slate-50/60 p-4 dark:border-slate-800 dark:bg-slate-800/30"
+                      >
+                        <h3 class="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('request_detail.ops_extra_notes_heading') }}</h3>
+                        <ul class="mt-2 space-y-1.5 text-sm text-slate-700 dark:text-slate-300">
+                          <li v-for="(n, ni) in extraNotes" :key="ni" class="flex gap-2">
+                            <span class="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-slate-400" aria-hidden="true" />
+                            <span class="min-w-0">{{ n }}</span>
+                          </li>
+                        </ul>
+                      </div>
+                    </template>
+                  </div>
+
+                  <!-- ===== Tab: Hồ sơ ===== -->
+                  <div v-show="activeTab === 'docs'" class="space-y-5">
+                    <p v-if="uploadErrLocal || attachErr || ocrErr" class="rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
+                      {{ uploadErrLocal || attachErr || ocrErr }}
+                    </p>
+
+                    <!-- General attachments -->
+                    <DocGroup
+                      :title="t('request_detail.ops_docs_general')"
+                      :files="generalAttachments"
+                      :highlight-id="docsHighlightAttachmentId"
                       :deleting-id="deletingId"
-                      :can-upload-general="canUploadAttachment"
-                      :can-upload-paper-scan="canUploadAttachment"
-                      :can-delete-attachment="canDeleteAttachment"
-                      :can-run-ocr="canUploadAttachment"
-                      :signed-document-current="signedDocumentCurrent"
-                      :can-manage-signed-document="canManagePaper"
-                      :signed-ocr-busy="signedOcrBusy"
-                      :signed-verify-busy="signedVerifyBusy"
-                      :upload-general-fn="uploadRequestDocument"
-                      :upload-paper-scan-fn="uploadPaperScan"
-                      :format-date-time="fmt"
+                      :ocr-busy="ocrBusy"
+                      :can-delete="canDeleteAttachment"
+                      :can-ocr="canUploadAttachment"
+                      :can-upload="canUploadAttachment"
+                      :uploading="uploadingGeneral"
+                      :fmt-size="fmtSize"
+                      :fmt-date="fmt"
+                      :previewable="isPreviewable"
                       @preview="openAttachmentPreview"
                       @download="downloadFile"
                       @delete="removeAttachment"
                       @ocr="runOcr"
-                      @uploaded-general="onDocUploaded"
-                      @uploaded-paper-scan="onPaperScanUploaded"
-                      @signed-rerun-ocr="onSignedRerunOcr"
-                      @signed-verify="onSignedVerify"
+                      @pick="onPickGeneral"
+                    />
+
+                    <!-- Signed paper -->
+                    <DocGroup
+                      :title="t('request_detail.ops_docs_signed')"
+                      :files="signedPaperAttachments"
+                      :deleting-id="deletingId"
+                      :can-delete="canDeleteAttachment"
+                      :can-upload="false"
+                      :fmt-size="fmtSize"
+                      :fmt-date="fmt"
+                      :previewable="isPreviewable"
+                      @preview="openAttachmentPreview"
+                      @download="downloadFile"
+                      @delete="removeAttachment"
                     >
-                      <template v-if="canManagePaper" #paper-forms>
-                        <div
-                          v-if="req.paper_status === 'pending'"
-                          class="rounded-xl border border-slate-100 bg-slate-50/80 p-4"
-                        >
-                          <h3 class="text-xs font-bold uppercase tracking-wide text-slate-600">
-                            {{ t('request_detail.paper_confirm_received_title') }}
-                          </h3>
-                          <form class="mt-3 grid gap-3 sm:grid-cols-2" @submit.prevent="doMarkPaper">
-                            <div class="sm:col-span-2">
-                              <Input
-                                v-model="paperForm.paper_reference"
-                                :label="t('request_detail.paper_ref_input_label')"
-                                :placeholder="t('request_detail.paper_ref_placeholder')"
-                              />
-                            </div>
-                            <div class="sm:col-span-2">
-                              <Input
-                                v-model="paperForm.paper_received_at"
-                                :label="t('request_detail.paper_received_at_input_label')"
-                                type="datetime-local"
-                              />
-                            </div>
-                            <div class="flex flex-wrap items-center gap-2 sm:col-span-2">
-                              <Button :loading="paperActing" type="submit" class="!bg-teal-600 hover:!bg-teal-700">
-                                {{ t('request_detail.paper_mark_received_btn') }}
-                              </Button>
-                              <span v-if="paperMsg" class="text-xs text-slate-600">{{ paperMsg }}</span>
-                            </div>
-                          </form>
+                      <div
+                        v-if="signedDocumentCurrent"
+                        class="mt-3 rounded-lg border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-700 dark:bg-slate-800/40"
+                      >
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                          <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">{{ t('request_detail.ops_signed_doc_status') }}</span>
+                          <span
+                            class="inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-semibold"
+                            :class="signedVerifyBadgeClass"
+                          >{{ signedVerifyLabel }}</span>
                         </div>
-                        <div
-                          v-else-if="req.paper_status === 'received'"
-                          class="rounded-xl border border-slate-100 bg-slate-50/80 p-4"
-                        >
-                          <h3 class="text-xs font-bold uppercase tracking-wide text-slate-600">
-                            {{ t('request_detail.paper_update_section_title') }}
-                          </h3>
-                          <form class="mt-3 grid gap-3 sm:grid-cols-2" @submit.prevent="doMarkPaper">
-                            <div class="sm:col-span-2">
-                              <Input
-                                v-model="paperForm.paper_reference"
-                                :label="t('request_detail.paper_ref_input_label')"
-                                :placeholder="t('request_detail.paper_ref_placeholder')"
-                              />
-                            </div>
-                            <div class="sm:col-span-2">
-                              <Input
-                                v-model="paperForm.paper_received_at"
-                                :label="t('request_detail.paper_received_at_input_label')"
-                                type="datetime-local"
-                              />
-                            </div>
-                            <div class="flex flex-wrap items-center gap-2 sm:col-span-2">
-                              <Button :loading="paperActing" type="submit" class="!bg-teal-600 hover:!bg-teal-700">
-                                {{ t('request_detail.paper_save_changes_btn') }}
-                              </Button>
-                              <Button
-                                variant="secondary"
-                                type="button"
-                                class="!border-amber-200 !text-amber-900 hover:!bg-amber-50"
-                                :disabled="paperActing || paperRevertActing"
-                                @click="doRevertPaper"
-                              >
-                                {{ t('request_detail.paper_revert_btn') }}
-                              </Button>
-                              <span v-if="paperMsg" class="text-xs text-slate-600">{{ paperMsg }}</span>
-                            </div>
-                          </form>
+                        <div v-if="canManagePaper" class="mt-2.5 flex flex-wrap gap-2">
+                          <button type="button" :class="btnGhostClass" :disabled="signedOcrBusy" @click="onSignedRerunOcr">
+                            {{ signedOcrBusy ? t('request_detail.docs_ocr_running') : t('request_detail.ops_rerun_ocr') }}
+                          </button>
+                          <button type="button" :class="btnTealClass" :disabled="signedVerifyBusy" @click="onSignedVerify('approve')">
+                            {{ t('request_detail.ops_verify_pass') }}
+                          </button>
+                          <button type="button" :class="btnDangerGhostClass" :disabled="signedVerifyBusy" @click="onSignedVerify('reject')">
+                            {{ t('request_detail.ops_verify_fail') }}
+                          </button>
                         </div>
-                      </template>
-                    </RequestDocsPanel>
+                      </div>
+                    </DocGroup>
+
+                    <!-- Paper scan + receive form -->
+                    <DocGroup
+                      :title="t('request_detail.ops_docs_scan')"
+                      :files="paperScans"
+                      :deleting-id="deletingId"
+                      :can-delete="canDeleteAttachment"
+                      :can-upload="canUploadAttachment"
+                      :uploading="uploadingScan"
+                      :fmt-size="fmtSize"
+                      :fmt-date="fmt"
+                      :previewable="isPreviewable"
+                      @preview="openAttachmentPreview"
+                      @download="downloadFile"
+                      @delete="removeAttachment"
+                      @pick="onPickScan"
+                    >
+                      <form
+                        v-if="canManagePaper && (req.paper_status === 'pending' || req.paper_status === 'received')"
+                        class="mt-3 space-y-3 rounded-lg border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-700 dark:bg-slate-800/40"
+                        @submit.prevent="doMarkPaper"
+                      >
+                        <p class="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                          {{ req.paper_status === 'received' ? t('request_detail.paper_update_section_title') : t('request_detail.paper_confirm_received_title') }}
+                        </p>
+                        <Input
+                          v-model="paperForm.paper_reference"
+                          :label="t('request_detail.paper_ref_input_label')"
+                          :placeholder="t('request_detail.paper_ref_placeholder')"
+                        />
+                        <Input
+                          v-model="paperForm.paper_received_at"
+                          :label="t('request_detail.paper_received_at_input_label')"
+                          type="datetime-local"
+                        />
+                        <div class="flex flex-wrap items-center gap-2">
+                          <Button :loading="paperActing" type="submit" class="!bg-teal-600 hover:!bg-teal-700">
+                            {{ req.paper_status === 'received' ? t('request_detail.paper_save_changes_btn') : t('request_detail.paper_mark_received_btn') }}
+                          </Button>
+                          <Button
+                            v-if="req.paper_status === 'received'"
+                            variant="secondary"
+                            type="button"
+                            class="!border-amber-200 !text-amber-900 hover:!bg-amber-50"
+                            :disabled="paperActing || paperRevertActing"
+                            @click="doRevertPaper"
+                          >
+                            {{ t('request_detail.paper_revert_btn') }}
+                          </Button>
+                          <span v-if="paperMsg" class="text-xs text-slate-500 dark:text-slate-400">{{ paperMsg }}</span>
+                        </div>
+                      </form>
+                    </DocGroup>
                   </div>
 
-                  <!-- Students (recurring) -->
-                  <div v-show="activeTab === 'students' && showStudentCountTab">
-                    <RequestStudentCountTab
-                      v-model:passenger-draft="passengerDraft"
-                      :req="req"
-                      :passenger-saving="passengerSaving"
-                      :passenger-patch-err="passengerPatchErr"
-                      :passenger-depart-locked="passengerDepartLocked"
-                      :passenger-dispatcher-override="passengerDispatcherOverride"
-                      :depart-at-formatted="req.depart_at ? fmtStepDetail(req.depart_at) : ''"
-                      :show-passenger-adjust-section="false"
-                      @save-passenger="savePassengerDraft"
-                    />
+                  <!-- ===== Tab: Học sinh ===== -->
+                  <div v-show="activeTab === 'students' && showStudentCountTab" class="grid gap-4 sm:grid-cols-2">
+                    <div class="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+                      <p :class="sectionTitleClass">{{ t('request_detail.bm03_student_count_plan_short') }}</p>
+                      <p class="mt-2 text-3xl font-bold tabular-nums text-slate-900 dark:text-white">{{ req.passenger_count ?? '—' }}</p>
+                    </div>
+                    <div class="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+                      <p :class="sectionTitleClass">{{ t('request_detail.bm03_student_count_actual_short') }}</p>
+                      <p class="mt-2 text-3xl font-bold tabular-nums text-teal-600 dark:text-teal-400">{{ req.student_count_actual ?? '—' }}</p>
+                    </div>
                   </div>
 
-                  <!-- Activity / audit log -->
+                  <!-- ===== Tab: Lịch sử ===== -->
                   <div v-show="activeTab === 'activity'">
-                    <RequestAuditTimeline
-                      :items="auditItems"
-                      :loading="auditLoading"
-                      :error="auditError"
-                      :format-date-time="fmt"
-                    />
+                    <p v-if="auditLoading" class="py-8 text-center text-sm text-slate-400 dark:text-slate-500">{{ t('request_detail.audit_timeline_loading') }}</p>
+                    <p v-else-if="auditError" class="py-4 text-sm text-rose-600 dark:text-rose-400">{{ auditError }}</p>
+                    <p v-else-if="!auditItems.length" class="py-8 text-center text-sm text-slate-400 dark:text-slate-500">{{ t('request_detail.audit_timeline_empty') }}</p>
+                    <ol v-else class="space-y-0">
+                      <li v-for="(row, idx) in auditItems" :key="row.id" class="flex gap-3">
+                        <div class="flex w-2 shrink-0 flex-col items-center pt-1.5">
+                          <span class="h-2 w-2 shrink-0 rounded-full bg-va-500 dark:bg-va-400" aria-hidden="true" />
+                          <span v-if="idx < auditItems.length - 1" class="min-h-[1.5rem] w-px flex-1 bg-slate-200 dark:bg-slate-700" aria-hidden="true" />
+                        </div>
+                        <div class="min-w-0 flex-1 pb-4">
+                          <p class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ auditEventLabel(row.event) }}</p>
+                          <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                            {{ row.actor?.name ?? '—' }}<span class="text-slate-300 dark:text-slate-600"> · {{ fmt(row.created_at) }}</span>
+                          </p>
+                        </div>
+                      </li>
+                    </ol>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- ─────────── SIDEBAR ─────────── -->
+            <!-- ─── SIDEBAR ─── -->
             <aside class="space-y-4 lg:col-span-4">
               <!-- Action center -->
-              <section
-                class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-              >
-                <h2
-                  class="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-                >
-                  {{ t('request_detail.ops_action_center') }}
-                </h2>
+              <section :class="cardClass + ' p-4'">
+                <h2 :class="sectionTitleClass">{{ t('request_detail.ops_action_center') }}</h2>
+                <div class="mt-3 space-y-2.5">
+                  <!-- D2D decision -->
+                  <div v-if="showD2dDecisionSection" class="space-y-2">
+                    <button type="button" class="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60" :disabled="d2dActing" @click="onD2dApproveClick">
+                      <CheckBadgeIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                      {{ t('request_detail.d2d_approve_confirm_btn') }}
+                    </button>
+                    <button type="button" class="flex w-full items-center justify-center gap-2 rounded-lg border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 disabled:opacity-60 dark:border-rose-800/60 dark:text-rose-300 dark:hover:bg-rose-950/40" :disabled="d2dActing" @click="openD2dReject">
+                      {{ t('request_detail.d2d_reject_confirm_btn') }}
+                    </button>
+                    <p v-if="d2dMsg && !d2dRejectOpen" class="text-xs text-rose-600 dark:text-rose-400">{{ d2dMsg }}</p>
+                  </div>
 
-                <div class="mt-3 space-y-3">
-                  <DispatchD2dDecisionSection
-                    v-if="showD2dDecisionSection"
-                    :acting="d2dActing"
-                    :inline-message="d2dMsg"
-                    :reject-modal-open="d2dRejectOpen"
-                    @approve="onD2dApproveClick"
-                    @reject="openD2dReject"
-                  />
-
+                  <!-- Fill price CTA -->
                   <button
                     v-if="showFillPriceSection"
                     type="button"
-                    class="flex w-full items-center gap-3 rounded-2xl border border-sky-200 bg-gradient-to-br from-sky-50 to-white px-4 py-3 text-left shadow-sm transition hover:from-sky-100 dark:border-sky-900/60 dark:from-sky-950/40 dark:to-slate-900 dark:hover:from-sky-950/70"
-                    @click="onWorkflowNavigate({ tab: 'form', focus: 'fill-price' })"
+                    class="flex w-full items-center gap-3 rounded-lg border border-sky-200 bg-sky-50/70 px-3 py-2.5 text-left transition hover:bg-sky-100/70 dark:border-sky-900/50 dark:bg-sky-950/30 dark:hover:bg-sky-950/50"
+                    @click="onWorkflowNavigate({ tab: 'route', focus: 'fill-price' })"
                   >
-                    <span
-                      class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-600 text-white shadow"
-                    >
-                      <CurrencyDollarIcon class="h-5 w-5" aria-hidden="true" />
+                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-600 text-white">
+                      <CurrencyDollarIcon class="h-4 w-4" aria-hidden="true" />
                     </span>
                     <span class="min-w-0">
-                      <span class="block text-sm font-semibold text-slate-900 dark:text-slate-100">
-                        {{ t('request_detail.fill_price_title') }}
-                      </span>
-                      <span class="mt-0.5 block text-xs text-slate-600 dark:text-slate-400">
-                        {{ t('request_detail.todo_fill_price') }}
-                      </span>
+                      <span class="block text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('request_detail.fill_price_title') }}</span>
+                      <span class="block truncate text-xs text-slate-500 dark:text-slate-400">{{ t('request_detail.todo_fill_price') }}</span>
                     </span>
                   </button>
 
-                  <ResetCloneSection
+                  <!-- Clone -->
+                  <button
                     v-if="showResetCloneBtn"
-                    compact
-                    class="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
-                    :busy="resetCloneBusy"
-                    @clone="onResetCloneRequest"
-                  />
+                    type="button"
+                    class="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                    :disabled="resetCloneBusy"
+                    @click="onResetCloneRequest"
+                  >
+                    <ArrowPathIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                    {{ resetCloneBusy ? t('request_detail.reset_clone_busy') : t('request_detail.reset_clone') }}
+                  </button>
 
-                  <!-- Next steps quick-nav -->
-                  <div v-if="workflowTodoItems.length" class="space-y-2">
-                    <p class="text-[10px] font-bold uppercase tracking-wide text-amber-700 dark:text-amber-400">
-                      {{ t('request_detail.aside_todos_heading') }}
-                    </p>
+                  <!-- Next steps -->
+                  <div v-if="workflowTodoItems.length" class="space-y-1.5 pt-1">
+                    <p class="text-[10px] font-bold uppercase tracking-wide text-amber-600 dark:text-amber-400">{{ t('request_detail.aside_todos_heading') }}</p>
                     <button
                       v-for="item in workflowTodoItems"
                       :key="item.key"
                       type="button"
-                      class="flex w-full items-center justify-between gap-2 rounded-xl border border-amber-200/80 bg-amber-50/60 px-3 py-2 text-left text-xs font-semibold text-amber-950 transition hover:bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200 dark:hover:bg-amber-950/50"
-                      @click="onWorkflowNavigate({ tab: item.tab, focus: item.focus })"
+                      class="flex w-full items-center justify-between gap-2 rounded-lg border border-amber-200/70 bg-amber-50/50 px-3 py-2 text-left text-xs font-semibold text-amber-900 transition hover:bg-amber-50 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200 dark:hover:bg-amber-950/40"
+                      @click="onWorkflowNavigate({ tab: mapTodoTab(item.tab), focus: item.focus })"
                     >
                       <span class="min-w-0 truncate">{{ item.label }}</span>
                       <ArrowRightIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                     </button>
                   </div>
 
-                  <p
-                    v-if="!hasAnyAction"
-                    class="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-3 py-4 text-center text-xs text-slate-500 dark:border-slate-700 dark:bg-slate-800/40 dark:text-slate-400"
-                  >
+                  <p v-if="!hasAnyAction" class="rounded-lg border border-dashed border-slate-200 px-3 py-5 text-center text-xs text-slate-400 dark:border-slate-700 dark:text-slate-500">
                     {{ t('request_detail.ops_no_actions') }}
                   </p>
                 </div>
               </section>
 
-              <!-- Properties -->
-              <section
-                class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-              >
-                <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  {{ t('request_detail.ops_properties') }}
-                </h2>
-
-                <!-- Requester -->
+              <!-- Requester / properties -->
+              <section :class="cardClass + ' p-4'">
+                <h2 :class="sectionTitleClass">{{ t('request_detail.ops_properties') }}</h2>
                 <div class="mt-3 flex items-start gap-3">
-                  <img
-                    v-if="req.requester?.avatar_url"
-                    :src="req.requester.avatar_url"
-                    alt=""
-                    class="h-11 w-11 shrink-0 rounded-full object-cover ring-2 ring-slate-100 dark:ring-slate-700"
-                  />
-                  <div
-                    v-else
-                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                  >
-                    {{ requesterInitials }}
-                  </div>
+                  <img v-if="req.requester?.avatar_url" :src="req.requester.avatar_url" alt="" class="h-10 w-10 shrink-0 rounded-full object-cover ring-2 ring-slate-100 dark:ring-slate-700" />
+                  <div v-else class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-va-50 text-sm font-bold text-va-800 dark:bg-va-950/50 dark:text-va-300">{{ requesterInitials }}</div>
                   <div class="min-w-0">
                     <p class="font-semibold text-slate-900 dark:text-slate-100">{{ req.requester?.name ?? '—' }}</p>
-                    <p v-if="requesterAsideSubtitle" class="mt-0.5 text-sm text-slate-600 dark:text-slate-400">
-                      {{ requesterAsideSubtitle }}
-                    </p>
-                    <dl v-if="requesterAsideFields.length" class="mt-2 space-y-1.5 text-sm">
-                      <div v-for="row in requesterAsideFields" :key="row.key" class="flex gap-2">
-                        <dt class="shrink-0 text-slate-500 dark:text-slate-500">{{ row.label }}</dt>
-                        <dd class="min-w-0 break-all text-slate-800 dark:text-slate-300">{{ row.value }}</dd>
-                      </div>
-                    </dl>
+                    <p v-if="requesterAsideSubtitle" class="text-xs text-slate-500 dark:text-slate-400">{{ requesterAsideSubtitle }}</p>
                   </div>
                 </div>
-
-                <!-- Route -->
-                <div class="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
-                  <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-500">
-                    {{ t('request_detail.route_map_heading') }}
-                  </p>
-                  <div class="mt-2 flex items-start gap-2">
-                    <MapPinIcon class="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
-                    <p class="min-w-0 text-sm font-medium text-slate-900 dark:text-slate-100">{{ req.origin || '—' }}</p>
-                  </div>
-                  <div class="ml-[7px] my-0.5 h-3 w-px bg-slate-200 dark:bg-slate-700" aria-hidden="true" />
-                  <div class="flex items-start gap-2">
-                    <MapPinIcon class="mt-0.5 h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400" aria-hidden="true" />
-                    <p class="min-w-0 text-sm font-medium text-slate-900 dark:text-slate-100">{{ req.destination || '—' }}</p>
-                  </div>
-                  <p v-if="journeyDepartLine" class="mt-3 flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
-                    <ClockIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                    {{ journeyDepartLine }}
-                  </p>
-                </div>
-
-                <!-- Vehicle / load -->
-                <div class="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
-                  <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-500">
-                    {{ t('request_detail.aside_vehicle_request') }}
-                  </p>
-                  <p class="mt-2 flex items-center gap-1.5 text-sm font-semibold text-slate-900 dark:text-slate-100">
-                    <TruckIcon class="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" aria-hidden="true" />
-                    {{ labelTripType(req.trip_type) }}
-                  </p>
-                  <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">{{ passengerOrCargoLine }}</p>
-                </div>
+                <dl v-if="requesterAsideFields.length" class="mt-3 space-y-2 border-t border-slate-100 pt-3 dark:border-slate-800">
+                  <FieldRow v-for="row in requesterAsideFields" :key="row.key" :label="row.label" :value="row.value" />
+                </dl>
               </section>
 
-              <!-- Cost estimate -->
-              <section
-                v-if="costEstimate"
-                class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-              >
-                <h2 class="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  <CalculatorIcon class="h-4 w-4 shrink-0 text-teal-600 dark:text-teal-400" aria-hidden="true" />
+              <!-- Cost -->
+              <section v-if="costEstimate" :class="cardClass + ' p-4'">
+                <h2 class="flex items-center gap-2" :class="sectionTitleClass">
+                  <CalculatorIcon class="h-4 w-4 shrink-0 text-teal-500 dark:text-teal-400" aria-hidden="true" />
                   {{ t('request_detail.cost_estimate_heading') }}
                 </h2>
-                <dl class="mt-3 space-y-2 text-sm">
-                  <div class="flex justify-between gap-3">
-                    <dt class="text-slate-500 dark:text-slate-400">{{ t('request_detail.lbl_est_distance') }}</dt>
-                    <dd class="text-right font-medium text-slate-900 dark:text-slate-100">
-                      {{ costEstimate.distanceLabel ?? '—' }}
-                    </dd>
-                  </div>
-                  <div
-                    v-if="req.service_price != null"
-                    class="flex justify-between gap-3"
-                  >
-                    <dt class="text-slate-500 dark:text-slate-400">{{ t('request_detail.lbl_dispatcher_unit_price') }}</dt>
-                    <dd class="text-right font-medium text-violet-900 dark:text-violet-300">
-                      {{ formatVndCurrency(req.service_price) }}
-                    </dd>
-                  </div>
+                <dl class="mt-3 space-y-2">
+                  <FieldRow :label="t('request_detail.lbl_est_distance')" :value="costEstimate.distanceLabel ?? '—'" />
+                  <FieldRow v-if="req.service_price != null" :label="t('request_detail.lbl_dispatcher_unit_price')" :value="formatVndCurrency(req.service_price)" />
                 </dl>
-                <div class="mt-3 rounded-xl bg-teal-50/90 px-3 py-3 ring-1 ring-teal-600/10 dark:bg-teal-950/40 dark:ring-teal-800/40">
-                  <p class="text-[11px] font-medium text-teal-900/90 dark:text-teal-300/90">
-                    {{ t('request_detail.total_per_declaration') }}
-                  </p>
-                  <p class="mt-0.5 text-lg font-bold tabular-nums text-teal-600 dark:text-teal-300">
-                    {{ costEstimate.declaredTotalLabel ?? '—' }}
-                  </p>
+                <div class="mt-3 rounded-lg bg-teal-50 px-3 py-2.5 dark:bg-teal-950/30">
+                  <p class="text-[11px] font-medium text-teal-700/90 dark:text-teal-300/90">{{ t('request_detail.total_per_declaration') }}</p>
+                  <p class="text-lg font-bold tabular-nums text-teal-600 dark:text-teal-300">{{ costEstimate.declaredTotalLabel ?? '—' }}</p>
                 </div>
               </section>
 
@@ -517,30 +594,21 @@
               <RouterLink
                 v-if="req.trip"
                 :to="`/trips/${req.trip.id}`"
-                class="flex items-center justify-between gap-3 rounded-2xl border border-va-200 bg-va-50/60 px-4 py-3 shadow-sm transition hover:bg-va-50 dark:border-va-800/60 dark:bg-va-950/30 dark:hover:bg-va-950/50"
+                class="flex items-center justify-between gap-3 rounded-xl border border-va-200 bg-va-50/60 px-4 py-3 transition hover:bg-va-50 dark:border-va-800/50 dark:bg-va-950/30 dark:hover:bg-va-950/50"
               >
                 <span class="min-w-0">
-                  <span class="block text-[11px] font-semibold uppercase tracking-wide text-va-700 dark:text-va-300">
-                    {{ t('request_detail.ops_linked_trip') }}
-                  </span>
-                  <span class="mt-0.5 block text-sm font-bold text-va-900 dark:text-va-200">
-                    {{ t('request_detail.trip_link', { id: req.trip.id }) }}
-                  </span>
+                  <span class="block text-[11px] font-semibold uppercase tracking-wide text-va-600 dark:text-va-400">{{ t('request_detail.ops_linked_trip') }}</span>
+                  <span class="block text-sm font-bold text-va-900 dark:text-va-200">{{ t('request_detail.trip_link', { id: req.trip.id }) }}</span>
                 </span>
-                <ArrowTopRightOnSquareIcon class="h-5 w-5 shrink-0 text-va-700 dark:text-va-300" aria-hidden="true" />
+                <ArrowTopRightOnSquareIcon class="h-5 w-5 shrink-0 text-va-600 dark:text-va-400" aria-hidden="true" />
               </RouterLink>
             </aside>
           </div>
         </div>
       </div>
 
-      <!-- ───────────────── Modals ───────────────── -->
-      <AttachmentPreviewModal
-        :open="previewOpen"
-        :attachment="previewAttachment"
-        @close="closeAttachmentPreview"
-      />
-
+      <!-- Modals -->
+      <AttachmentPreviewModal :open="previewOpen" :attachment="previewAttachment" @close="closeAttachmentPreview" />
       <RejectReasonModal
         :open="d2dRejectOpen"
         :reason="d2dRejectReason"
@@ -557,9 +625,10 @@
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent } from 'vue'
+import { computed, defineAsyncComponent, h, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import {
+  ArrowDownIcon,
   ArrowDownTrayIcon,
   ArrowLeftIcon,
   ArrowPathIcon,
@@ -567,33 +636,35 @@ import {
   ArrowTopRightOnSquareIcon,
   BoltIcon,
   CalculatorIcon,
+  CheckBadgeIcon,
+  CheckIcon,
   ClipboardDocumentIcon,
   ClockIcon,
   CurrencyDollarIcon,
+  ExclamationTriangleIcon,
+  MapIcon,
   MapPinIcon,
   TruckIcon,
   XCircleIcon,
 } from '@heroicons/vue/24/outline'
+import {
+  ArrowDownTrayIcon as ArrowDownTraySolid,
+  EyeIcon,
+  SparklesIcon,
+  TrashIcon,
+} from '@heroicons/vue/24/solid'
 import { useI18n } from 'vue-i18n'
 import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
 import StatusBadge from '../../components/ui/StatusBadge.vue'
-import CostLimitAlert from '../../components/requests/CostLimitAlert.vue'
-import RequestCloneLineageBanner from '../../components/requests/RequestCloneLineageBanner.vue'
-import ResetCloneSection from '../../components/requests/ResetCloneSection.vue'
-import RequestDocsPanel from '../../components/requests/RequestDocsPanel.vue'
-import RequestAuditTimeline from '../../components/requests/RequestAuditTimeline.vue'
 import AttachmentPreviewModal from '../../components/requests/AttachmentPreviewModal.vue'
-import DispatchD2dDecisionSection from '../../components/requests/DispatchD2dDecisionSection.vue'
 import RejectReasonModal from '../../components/requests/RejectReasonModal.vue'
-import PortalStatusTimeline from '../../components/portal/PortalStatusTimeline.vue'
 import { useRequestDetailPage } from '../../composables/useRequestDetailPage'
+import { parseMoneyVnd } from '../../util/money'
+import { isPassengerRowFilled, isBusinessRowFilled } from '../../composables/dispatchWizardConstants'
 
 const RequestBm03FormTab = defineAsyncComponent(() =>
   import('../../components/requests/RequestBm03FormTab.vue'),
-)
-const RequestStudentCountTab = defineAsyncComponent(() =>
-  import('../../components/requests/RequestStudentCountTab.vue'),
 )
 
 const { t } = useI18n()
@@ -606,7 +677,6 @@ const {
   loading,
   backTo,
   backAriaLabel,
-  cloneBannerContext,
   requestRefCode,
   showRecurringBadge,
   showUrgentBadge,
@@ -626,7 +696,6 @@ const {
   requesterInitials,
   requesterAsideSubtitle,
   requesterAsideFields,
-  passengerOrCargoLine,
   showD2dDecisionSection,
   showFillPriceSection,
   costEstimate,
@@ -647,22 +716,8 @@ const {
   resetCloneBusy,
   onResetCloneRequest,
   signedPaperAttachments,
-  showSignedPaperSection,
-  signedUploadErr,
-  uploadSignedPaper,
-  onSignedUploaded,
   downloadFile,
-  approvalTabNeedsFocus,
-  passengerDraft,
-  passengerSaving,
-  passengerPatchErr,
-  passengerDepartLocked,
-  passengerDispatcherOverride,
-  savePassengerDraft,
   fmt,
-  fmtStepDetail,
-  docsProgressSteps,
-  docsChecklist,
   docsHighlightAttachmentId,
   generalAttachments,
   paperScans,
@@ -699,7 +754,170 @@ const {
   auditError,
 } = page
 
-/** Relabel composable nav items into workspace tabs + append activity tab. */
+// ───────── Shared style tokens ─────────
+const cardClass = 'overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900'
+const sectionTitleClass = 'text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400'
+const btnGhostClass = 'inline-flex items-center rounded-md border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
+const btnTealClass = 'inline-flex items-center rounded-md bg-teal-600 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-teal-700 disabled:opacity-50'
+const btnDangerGhostClass = 'inline-flex items-center rounded-md border border-rose-200 px-2.5 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 disabled:opacity-50 dark:border-rose-800/60 dark:text-rose-300 dark:hover:bg-rose-950/40'
+
+// ───────── BM.03 data (read-only cards) ─────────
+const formData = computed(() => req.value?.wizard_snapshot?.form ?? {})
+const snap = computed(() => req.value?.wizard_snapshot ?? {})
+const isCargo = computed(() => req.value?.trip_type === 'cargo')
+const isBusiness = computed(() => req.value?.trip_type === 'business')
+
+function nz(v) {
+  const s = v == null ? '' : String(v).trim()
+  return s
+}
+
+function fmtDateOnly(v) {
+  if (!v) return '—'
+  const s = String(v).trim()
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+    const [y, m, d] = s.slice(0, 10).split('-')
+    return `${d}/${m}/${y}`
+  }
+  const d = new Date(s)
+  return Number.isNaN(d.getTime()) ? s : d.toLocaleDateString('vi-VN')
+}
+
+function fmtRowDt(v) {
+  if (!v) return ''
+  const d = new Date(String(v).trim())
+  if (Number.isNaN(d.getTime())) return String(v)
+  return d.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+}
+
+function money(v) {
+  const n = parseMoneyVnd(v)
+  return n > 0 ? formatVndCurrency(n) : ''
+}
+
+const urgentReasonText = computed(() => (formData.value.is_urgent ? nz(formData.value.urgent_reason) : ''))
+
+const basisText = computed(() => {
+  const r = nz(formData.value.basis_ref)
+  if (r) return r
+  const bf = nz(formData.value.basisFileName)
+  return bf ? `Tệp: ${bf}` : ''
+})
+
+const targets = computed(() => {
+  const raw = Array.isArray(formData.value.targets) ? formData.value.targets : []
+  return raw.map((x) => nz(x)).filter(Boolean)
+})
+
+const coordinatorName = computed(() => nz(formData.value.coordinator_name))
+
+const distanceText = computed(() => {
+  const label = costEstimate.value?.distanceLabel
+  return label ? t('request_detail.distance_badge_approx', { label }) : ''
+})
+
+const cloneLineageText = computed(() => {
+  const s = req.value?.cloned_from_summary
+  if (!s) return ''
+  return t('request_detail.clone_lineage_body', { id: s.id ?? '' })
+})
+
+const costAlertText = computed(() => {
+  const a = req.value?.dispatch_package_cost_alert
+  const b = req.value?.dispatch_package_budget_alert
+  const parts = []
+  if (typeof a === 'string') parts.push(a)
+  else if (a?.message) parts.push(a.message)
+  if (typeof b === 'string') parts.push(b)
+  else if (b?.message) parts.push(b.message)
+  return parts.join('\n')
+})
+
+const itineraryCards = computed(() => {
+  const s = snap.value
+  if (isCargo.value) {
+    const rows = (Array.isArray(s.cargoRows) ? s.cargoRows : []).filter((r) => nz(r?.name))
+    return rows.map((r, i) => ({
+      key: `c-${i}`,
+      idx: i + 1,
+      title: nz(r.name) || `#${i + 1}`,
+      price: money(r.cost),
+      route: { from: nz(r.pickup_place), to: nz(r.delivery_place) },
+      fields: [
+        { label: t('request_detail.ops_lbl_qty'), value: nz(r.qty) },
+        { label: t('request_detail.ops_lbl_weight'), value: nz(r.weight) },
+        { label: t('request_detail.ops_lbl_dimensions'), value: nz(r.dimensions) },
+        { label: t('request_detail.ops_lbl_pickup_time'), value: fmtRowDt(r.pickup_at) },
+        { label: t('request_detail.ops_lbl_delivery_time'), value: fmtRowDt(r.delivery_at) },
+        { label: t('request_detail.ops_lbl_notes'), value: nz(r.item_notes) || nz(r.transport_note), multiline: true },
+      ].filter((f) => f.value),
+    }))
+  }
+  if (isBusiness.value) {
+    const rows = (Array.isArray(s.businessRows) ? s.businessRows : []).filter(isBusinessRowFilled)
+    return rows.map((r, i) => ({
+      key: `b-${i}`,
+      idx: i + 1,
+      title: nz(r.description) || t('request_detail.ops_default_business_title'),
+      price: money(parseMoneyVnd(r.unit_price) + parseMoneyVnd(r.extra_fee)),
+      route: { from: nz(r.pickup), to: nz(r.dropoff) },
+      fields: [
+        { label: t('request_detail.ops_lbl_guests'), value: nz(r.guests) },
+        { label: t('request_detail.ops_lbl_waypoint'), value: nz(r.waypoint) },
+        { label: t('request_detail.ops_lbl_depart_time'), value: fmtRowDt(r.depart_at) },
+        { label: t('request_detail.ops_lbl_return_time'), value: fmtRowDt(r.return_at) },
+        { label: t('request_detail.ops_lbl_notes'), value: nz(r.notes), multiline: true },
+      ].filter((f) => f.value),
+    }))
+  }
+  const rows = (Array.isArray(s.passengerRows) ? s.passengerRows : []).filter(isPassengerRowFilled)
+  return rows.map((r, i) => ({
+    key: `p-${i}`,
+    idx: i + 1,
+    title: nz(r.description) || nz(r.name) || `#${i + 1}`,
+    price: money(parseMoneyVnd(r.unit_price) + parseMoneyVnd(r.extra_fee)),
+    route: { from: nz(r.pickup_place) || nz(r.pickup), to: nz(r.dropoff_place) || nz(r.dropoff) },
+    fields: [
+      { label: t('request_detail.ops_lbl_guests'), value: nz(r.guests) },
+      { label: t('request_detail.ops_lbl_depart_time'), value: fmtRowDt(r.depart_at) },
+      { label: t('request_detail.ops_lbl_return_time'), value: fmtRowDt(r.return_at) },
+      { label: t('request_detail.ops_lbl_person_in_charge'), value: nz(r.person_in_charge) },
+      { label: t('request_detail.ops_lbl_notes'), value: nz(r.notes), multiline: true },
+    ].filter((f) => f.value),
+  }))
+})
+
+const extraNotes = computed(() => {
+  const f = formData.value
+  const out = []
+  if (f.need_porters) {
+    const qty = nz(f.porter_qty)
+    const cost = money(f.porter_cost)
+    out.push([t('request_detail.ops_porter_label'), qty && `× ${qty}`, cost].filter(Boolean).join(' '))
+  }
+  if (f.interprovincial) {
+    const cost = money(f.interprovincial_cost)
+    out.push([t('request_detail.ops_interprovincial_label'), cost].filter(Boolean).join(' — '))
+  }
+  if (nz(f.cargo_extra_notes)) out.push(nz(f.cargo_extra_notes))
+  return out
+})
+
+// ───────── Signed document badge ─────────
+const signedVerifyLabel = computed(() => {
+  const v = signedDocumentCurrent.value?.verification_status
+  const key = `request_detail.signed_verify_${String(v || 'pending')}`
+  const tr = t(key)
+  return tr !== key ? tr : (v || '—')
+})
+const signedVerifyBadgeClass = computed(() => {
+  const v = signedDocumentCurrent.value?.verification_status
+  if (v === 'verified' || v === 'auto_pass') return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
+  if (v === 'rejected') return 'bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300'
+  return 'bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300'
+})
+
+// ───────── Tabs ─────────
 const TAB_LABEL_KEY = {
   form: 'request_detail.ops_tab_overview',
   students: 'request_detail.tab_students',
@@ -707,13 +925,26 @@ const TAB_LABEL_KEY = {
 }
 
 const workspaceTabs = computed(() => {
-  const tabs = sectionNavItems.value.map((item) => ({
-    ...item,
-    label: t(TAB_LABEL_KEY[item.id] ?? '') || item.label,
-  }))
-  tabs.push({ id: 'activity', label: t('request_detail.audit_timeline_heading') })
-  return tabs
+  const out = []
+  const nav = sectionNavItems.value
+  const formItem = nav.find((x) => x.id === 'form')
+  out.push({ id: 'form', label: t('request_detail.ops_tab_overview'), badge: formItem?.badge, dot: formItem?.dot, dotTone: formItem?.dotTone })
+  out.push({ id: 'route', label: t('request_detail.ops_tab_route') })
+  const docItem = nav.find((x) => x.id === 'docs')
+  out.push({ id: 'docs', label: t('request_detail.tab_docs'), badge: docItem?.badge, dot: docItem?.dot, dotTone: docItem?.dotTone })
+  if (showStudentCountTab.value) {
+    const stItem = nav.find((x) => x.id === 'students')
+    out.push({ id: 'students', label: t('request_detail.tab_students'), badge: stItem?.badge })
+  }
+  out.push({ id: 'activity', label: t('request_detail.audit_timeline_heading') })
+  return out
 })
+
+/** Composable workflow todos target tab 'form' for fill-price; map to our 'route' tab. */
+function mapTodoTab(tab) {
+  if (tab === 'form') return 'route'
+  return tab
+}
 
 const hasAnyAction = computed(
   () =>
@@ -722,4 +953,172 @@ const hasAnyAction = computed(
     showResetCloneBtn.value ||
     workflowTodoItems.value.length > 0,
 )
+
+// ───────── Timeline dot ─────────
+function timelineDotClass(state) {
+  if (state === 'done') return 'border-va-600 bg-va-600 dark:border-va-500 dark:bg-va-500'
+  if (state === 'current') return 'border-va-600 bg-white dark:border-va-400 dark:bg-slate-900'
+  if (state === 'rejected') return 'border-rose-400 bg-white dark:bg-slate-900'
+  return 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900'
+}
+
+// ───────── Audit ─────────
+function auditEventLabel(event) {
+  const key = `request_detail.audit_event_${String(event || '').replace(/\./g, '_')}`
+  const tr = t(key)
+  return tr !== key ? tr : (event || '—')
+}
+
+// ───────── Docs ─────────
+const uploadingGeneral = ref(false)
+const uploadingScan = ref(false)
+const uploadErrLocal = ref('')
+
+function fmtSize(bytes) {
+  const n = Number(bytes)
+  if (!Number.isFinite(n) || n <= 0) return ''
+  if (n < 1024) return `${n} B`
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function isPreviewable(a) {
+  return /image\/|pdf/i.test(String(a?.mime || ''))
+}
+
+async function onPickGeneral(file) {
+  if (!file) return
+  uploadErrLocal.value = ''
+  uploadingGeneral.value = true
+  try {
+    const r = await uploadRequestDocument(file)
+    await onDocUploaded(r)
+  } catch (e) {
+    uploadErrLocal.value = e?.response?.data?.message ?? t('request_detail.attachment_delete_failed_fallback')
+  } finally {
+    uploadingGeneral.value = false
+  }
+}
+
+async function onPickScan(file) {
+  if (!file) return
+  uploadErrLocal.value = ''
+  uploadingScan.value = true
+  try {
+    const r = await uploadPaperScan(file)
+    await onPaperScanUploaded(r)
+  } catch (e) {
+    uploadErrLocal.value = e?.response?.data?.message ?? t('request_detail.attachment_delete_failed_fallback')
+  } finally {
+    uploadingScan.value = false
+  }
+}
+
+// ───────── DocGroup (inline functional-ish presentational component) ─────────
+const FieldRow = {
+  props: { label: { type: String, default: '' }, value: { type: [String, Number], default: '' }, multiline: { type: Boolean, default: false } },
+  setup(props) {
+    return () =>
+      h('div', { class: 'min-w-0' }, [
+        h('dt', { class: 'text-[11px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500' }, props.label),
+        h(
+          'dd',
+          { class: ['mt-0.5 text-sm text-slate-800 dark:text-slate-200', props.multiline ? 'whitespace-pre-wrap break-words' : 'break-words'] },
+          props.value === '' || props.value == null ? '—' : String(props.value),
+        ),
+      ])
+  },
+}
+
+const DocGroup = {
+  props: {
+    title: { type: String, default: '' },
+    files: { type: Array, default: () => [] },
+    highlightId: { type: [Number, String], default: null },
+    deletingId: { type: [Number, String], default: null },
+    ocrBusy: { type: [Number, String], default: null },
+    canDelete: { type: Boolean, default: false },
+    canOcr: { type: Boolean, default: false },
+    canUpload: { type: Boolean, default: false },
+    uploading: { type: Boolean, default: false },
+    fmtSize: { type: Function, required: true },
+    fmtDate: { type: Function, required: true },
+    previewable: { type: Function, required: true },
+  },
+  emits: ['preview', 'download', 'delete', 'ocr', 'pick'],
+  setup(props, { emit, slots }) {
+    const inputRef = ref(null)
+    const onChange = (e) => {
+      const f = e.target.files?.[0]
+      e.target.value = ''
+      if (f) emit('pick', f)
+    }
+    const actionBtn = (icon, label, handler, tone) =>
+      h(
+        'button',
+        {
+          type: 'button',
+          title: label,
+          'aria-label': label,
+          class: [
+            'inline-flex h-7 w-7 items-center justify-center rounded-md border transition disabled:opacity-40',
+            tone === 'danger'
+              ? 'border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-800/60 dark:text-rose-300 dark:hover:bg-rose-950/40'
+              : 'border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800',
+          ],
+          onClick: handler,
+        },
+        [h(icon, { class: 'h-3.5 w-3.5' })],
+      )
+
+    return () =>
+      h('section', {}, [
+        h('div', { class: 'flex items-center justify-between gap-2' }, [
+          h('h3', { class: 'text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400' }, props.title),
+          props.canUpload
+            ? h('label', { class: 'inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800' }, [
+                h(ArrowDownTraySolid, { class: 'h-3.5 w-3.5 rotate-180' }),
+                props.uploading ? t('request_detail.docs_ocr_running') : t('request_detail.ops_upload_file'),
+                h('input', { ref: inputRef, type: 'file', class: 'hidden', disabled: props.uploading, onChange }),
+              ])
+            : null,
+        ]),
+        h('div', { class: 'mt-2 space-y-1.5' }, [
+          props.files.length === 0
+            ? h('p', { class: 'rounded-lg border border-dashed border-slate-200 px-3 py-4 text-center text-xs text-slate-400 dark:border-slate-700 dark:text-slate-500' }, t('request_detail.docs_empty_attachments'))
+            : props.files.map((a) =>
+                h(
+                  'div',
+                  {
+                    key: a.id,
+                    class: [
+                      'flex items-center gap-3 rounded-lg border px-3 py-2 transition',
+                      String(props.highlightId) === String(a.id)
+                        ? 'border-teal-300 bg-teal-50/60 dark:border-teal-700 dark:bg-teal-950/30'
+                        : 'border-slate-200 dark:border-slate-800',
+                    ],
+                  },
+                  [
+                    h('div', { class: 'min-w-0 flex-1' }, [
+                      h('p', { class: 'truncate text-sm font-medium text-slate-800 dark:text-slate-200' }, a.original_name || '—'),
+                      h('p', { class: 'text-[11px] text-slate-400 dark:text-slate-500' }, [
+                        props.fmtSize(a.size) ? `${props.fmtSize(a.size)} · ` : '',
+                        props.fmtDate(a.created_at),
+                        a.ocr_status === 'completed' ? ' · OCR ✓' : a.ocr_status === 'queued' || a.ocr_status === 'processing' ? ' · OCR…' : '',
+                      ].join('')),
+                    ]),
+                    h('div', { class: 'flex shrink-0 items-center gap-1' }, [
+                      props.previewable(a) ? actionBtn(EyeIcon, t('request_detail.ops_preview'), () => emit('preview', a)) : null,
+                      actionBtn(ArrowDownTraySolid, t('request_detail.download_action'), () => emit('download', a)),
+                      props.canOcr ? actionBtn(SparklesIcon, t('request_detail.ops_run_ocr'), () => emit('ocr', a.id)) : null,
+                      props.canDelete ? actionBtn(TrashIcon, t('request_detail.delete_action'), () => emit('delete', a), 'danger') : null,
+                    ]),
+                  ],
+                ),
+              ),
+        ]),
+        slots.default ? slots.default() : null,
+      ])
+  },
+}
 </script>
