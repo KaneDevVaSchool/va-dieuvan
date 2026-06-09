@@ -1,4 +1,4 @@
-import { ref, watch } from 'vue'
+import { ref, unref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { searchPortalDeptHeads } from '../api/requests'
 import { formatApiError } from '../api/http'
@@ -12,8 +12,9 @@ function chosenLabel(u) {
 /**
  * Gán trưởng đơn vị khi tạo phiếu trên portal (bước Người đề nghị & Thời gian).
  * @param {{ value: object }} form — reactive form (`dept_head_user_id`, `dept_head_label`)
+ * @param {import('vue').MaybeRefOrGetter<boolean>} [needsDeptHead] — bắt buộc chọn trưởng ĐV (portal, không D2D)
  */
-export function usePortalDeptHeadSearch(form) {
+export function usePortalDeptHeadSearch(form, needsDeptHead) {
   const { t } = useI18n()
 
   const deptHeadQ = ref('')
@@ -88,6 +89,9 @@ export function usePortalDeptHeadSearch(form) {
   function onDeptHeadSearchBlur() {
     blurTimer = setTimeout(() => {
       deptHeadDropdownOpen.value = false
+      if (unref(needsDeptHead) && !String(form.value.dept_head_user_id ?? '').trim()) {
+        validateDeptHeadSelected()
+      }
     }, 200)
   }
 

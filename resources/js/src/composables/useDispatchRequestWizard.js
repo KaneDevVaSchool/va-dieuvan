@@ -383,7 +383,7 @@ export function useDispatchRequestWizard(options = {}) {
   const cargoRows = ref([emptyCargoRow()])
 
   const portalNeedsDeptHead = computed(() => isPortal && form.value.trip_type !== 'door_to_door')
-  const portalDeptHeadSearch = isPortal ? usePortalDeptHeadSearch(form) : null
+  const portalDeptHeadSearch = isPortal ? usePortalDeptHeadSearch(form, portalNeedsDeptHead) : null
 
   /** Bước 3: form thẻ — không cho Next khi có lỗi inline hoặc danh sách rỗng (đồng bộ từ DispatchWizardStep3). */
   const detailStepSchedulesValid = ref(true)
@@ -1100,7 +1100,16 @@ export function useDispatchRequestWizard(options = {}) {
   }
 
   function nextStep() {
-    if (!canGoNext.value) return
+    if (!canGoNext.value) {
+      if (
+        step.value === 1
+        && portalNeedsDeptHead.value
+        && !String(form.value.dept_head_user_id ?? '').trim()
+      ) {
+        portalDeptHeadSearch?.validateDeptHeadSelected()
+      }
+      return
+    }
     if (step.value < 3) step.value++
   }
 
@@ -1391,7 +1400,7 @@ export function useDispatchRequestWizard(options = {}) {
         urgent_reason: form.value.is_urgent ? (form.value.urgent_reason?.trim() || undefined) : undefined,
         wizard_snapshot,
       }
-      if (portalNeedsDeptHead.value && form.value.dept_head_user_id) {
+      if (portalNeedsDeptHead.value) {
         payload.dept_head_user_id = Number(form.value.dept_head_user_id)
       }
       Object.keys(payload).forEach((k) => (payload[k] === '' ? delete payload[k] : null))

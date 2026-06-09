@@ -40,6 +40,7 @@ class DispatchRequestApproveCargoShipmentTest extends TestCase
             'source_channel' => 'portal',
             'is_urgent' => false,
             'paper_status' => 'pending',
+            'assigned_dept_head_id' => $departmentHead->id,
             'wizard_snapshot' => [
                 'form' => ['requester_name' => 'Nguyễn A', 'trip_type' => 'cargo'],
                 'cargoRows' => [
@@ -59,7 +60,6 @@ class DispatchRequestApproveCargoShipmentTest extends TestCase
 
         $this->patchJson("/api/dispatch-requests/{$dr->id}/fill-price", [
             'service_price' => 250000,
-            'dept_head_user_id' => $departmentHead->id,
         ])->assertSuccessful();
 
         $this->actingAs($departmentHead);

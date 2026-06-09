@@ -2764,6 +2764,8 @@
         "assign_dept_head_required": "Choose a department head before submitting.",
         "assign_dept_head_preset_label": "Department head for approval",
         "assign_dept_head_preset_hint": "Chosen by the requester on the form. Save pricing only — we email the department head.",
+        "assign_dept_head_missing_staff_title": "No department head on this request",
+        "assign_dept_head_missing_staff_body": "The requester must assign a department head when creating the request on the portal. Ask them to update the request before you can save pricing.",
         "fill_price_submit": "Save price & submit",
         "fill_price_submit_preset_dept": "Save price & notify dept. head",
         "fill_price_success": "Price saved; request forwarded.",

@@ -2561,6 +2561,8 @@
         "assign_dept_head_required": "Vui lòng chọn Trưởng đơn vị nhận duyệt.",
         "assign_dept_head_preset_label": "Trưởng đơn vị nhận duyệt",
         "assign_dept_head_preset_hint": "Người đề nghị đã chọn trên phiếu. Điều vận chỉ cần lưu giá — hệ thống gửi email cho Trưởng đơn vị.",
+        "assign_dept_head_missing_staff_title": "Chưa có Trưởng đơn vị trên phiếu",
+        "assign_dept_head_missing_staff_body": "Trưởng đơn vị phải được người đề nghị gán khi tạo phiếu trên cổng đề xuất. Liên hệ người đề nghị bổ sung trước khi lưu giá.",
         "fill_price_submit": "Lưu giá & chuyển duyệt",
         "fill_price_submit_preset_dept": "Lưu giá & gửi Trưởng đơn vị",
         "fill_price_success": "Đã lưu giá và chuyển phiếu.",

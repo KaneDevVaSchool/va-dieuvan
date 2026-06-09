@@ -52,7 +52,7 @@ class DispatchRequestFillPriceDeptHeadTest extends TestCase
             'service_price' => 100000,
         ])
             ->assertUnprocessable()
-            ->assertJsonValidationErrors(['dept_head_user_id']);
+            ->assertJsonValidationErrors(['assigned_dept_head_id']);
     }
 
     public function test_fill_price_uses_preset_assigned_dept_head_without_payload_user_id(): void
@@ -138,6 +138,7 @@ class DispatchRequestFillPriceDeptHeadTest extends TestCase
             'source_channel' => 'portal',
             'is_urgent' => false,
             'paper_status' => 'pending',
+            'assigned_dept_head_id' => $headChosen->id,
             'wizard_snapshot' => [
                 'form' => ['purpose' => 'Công tác', 'coordinator_name' => 'Lê Minh'],
                 'businessRows' => [['extra_fee' => 35000]],
@@ -150,7 +151,6 @@ class DispatchRequestFillPriceDeptHeadTest extends TestCase
 
         $this->patchJson("/api/dispatch-requests/{$dr->id}/fill-price", [
             'service_price' => 240000,
-            'dept_head_user_id' => $headChosen->id,
             'rows' => [],
         ])
             ->assertSuccessful();
@@ -232,6 +232,7 @@ class DispatchRequestFillPriceDeptHeadTest extends TestCase
             'source_channel' => 'portal',
             'is_urgent' => false,
             'paper_status' => 'pending',
+            'assigned_dept_head_id' => $headB->id,
             'wizard_snapshot' => [],
         ]);
 
@@ -239,7 +240,6 @@ class DispatchRequestFillPriceDeptHeadTest extends TestCase
 
         $this->patchJson("/api/dispatch-requests/{$dr->id}/fill-price", [
             'service_price' => 100000,
-            'dept_head_user_id' => $headB->id,
             'rows' => [],
         ])
             ->assertSuccessful();
@@ -277,6 +277,7 @@ class DispatchRequestFillPriceDeptHeadTest extends TestCase
             'source_channel' => 'portal',
             'is_urgent' => false,
             'paper_status' => 'pending',
+            'assigned_dept_head_id' => $internalOnly->id,
             'wizard_snapshot' => [],
         ]);
 
@@ -284,10 +285,46 @@ class DispatchRequestFillPriceDeptHeadTest extends TestCase
 
         $this->patchJson("/api/dispatch-requests/{$dr->id}/fill-price", [
             'service_price' => 100000,
-            'dept_head_user_id' => $internalOnly->id,
             'rows' => [],
         ])
             ->assertStatus(422);
+    }
+
+    public function test_fill_price_prohibits_dept_head_user_id_in_payload(): void
+    {
+        $this->seed(RbacSeeder::class);
+
+        User::factory()->create(['is_active' => true])->assignRole('department_head');
+
+        $dispatcher = User::factory()->create(['is_active' => true]);
+        $dispatcher->assignRole('dispatcher');
+
+        $head = User::factory()->create(['is_active' => true]);
+        $head->assignRole('department_head');
+
+        $dr = DispatchRequest::create([
+            'requester_id' => User::factory()->create(['is_active' => true])->id,
+            'trip_type' => 'business',
+            'origin' => 'A',
+            'destination' => 'B',
+            'depart_at' => now()->addDays(3),
+            'status' => 'pending',
+            'source_channel' => 'portal',
+            'is_urgent' => false,
+            'paper_status' => 'pending',
+            'assigned_dept_head_id' => $head->id,
+            'wizard_snapshot' => [],
+        ]);
+
+        $this->actingAs($dispatcher);
+
+        $this->patchJson("/api/dispatch-requests/{$dr->id}/fill-price", [
+            'service_price' => 100000,
+            'dept_head_user_id' => $head->id,
+            'rows' => [],
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['dept_head_user_id']);
     }
 
     public function test_assigned_dept_head_can_approve_even_when_requester_has_no_department(): void

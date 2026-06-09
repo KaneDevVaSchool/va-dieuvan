@@ -176,13 +176,9 @@ class DispatchRequestController extends Controller
         $user = $request->user();
         $before = $dispatchRequest->toArray();
 
-        $chosenDeptHeadId = isset($data['dept_head_user_id']) ? (int) $data['dept_head_user_id'] : null;
-        if ($chosenDeptHeadId === 0) {
-            $chosenDeptHeadId = null;
-        }
-        if ($chosenDeptHeadId === null && $dispatchRequest->assigned_dept_head_id !== null) {
-            $chosenDeptHeadId = (int) $dispatchRequest->assigned_dept_head_id;
-        }
+        $chosenDeptHeadId = $dispatchRequest->assigned_dept_head_id !== null
+            ? (int) $dispatchRequest->assigned_dept_head_id
+            : null;
         if ($chosenDeptHeadId !== null) {
             $eligible = User::query()
                 ->where('is_active', true)

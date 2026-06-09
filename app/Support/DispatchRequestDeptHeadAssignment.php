@@ -2,18 +2,17 @@
 
 namespace App\Support;
 
-use App\Models\Role;
 use App\Models\User;
 
 final class DispatchRequestDeptHeadAssignment
 {
     public static function requiresChoice(string $tripType): bool
     {
-        if ($tripType === 'door_to_door') {
+        if ($tripType === '' || $tripType === 'door_to_door') {
             return false;
         }
 
-        return Role::query()->where('name', 'department_head')->where('guard_name', 'web')->exists();
+        return true;
     }
 
     public static function resolveValidatedId(mixed $raw): ?int

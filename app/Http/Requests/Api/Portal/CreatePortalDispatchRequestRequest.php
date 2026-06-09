@@ -55,8 +55,12 @@ class CreatePortalDispatchRequestRequest extends ApiFormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $v) {
-            $departRaw = $this->input('depart_at');
             $tripType = (string) $this->input('trip_type', '');
+            if (DispatchRequestDeptHeadAssignment::requiresChoice($tripType) && $this->filled('dept_head_user_id')) {
+                DispatchRequestDeptHeadAssignment::resolveValidatedId($this->input('dept_head_user_id'));
+            }
+
+            $departRaw = $this->input('depart_at');
             if (! $departRaw || $tripType === '') {
                 return;
             }

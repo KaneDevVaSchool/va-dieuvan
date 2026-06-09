@@ -6,7 +6,7 @@ use App\Http\Requests\Api\ApiFormRequest;
 use App\Models\DispatchRequest;
 use App\Models\Role;
 use App\Support\Messages;
-use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class FillPriceDispatchRequestRequest extends ApiFormRequest
 {
@@ -16,18 +16,13 @@ class FillPriceDispatchRequestRequest extends ApiFormRequest
     }
 
     /**
-     * Bắt buộc chọn một Trưởng BP khi hệ thống có role `department_head` (luồng fill giá).
+     * Trưởng đơn vị chỉ được gán khi tạo phiếu (portal); điều vận không gửi dept_head_user_id.
      */
     public function rules(): array
     {
         return [
             'service_price' => ['required', 'numeric', 'min:0'],
-            'dept_head_user_id' => [
-                Rule::requiredIf(fn () => $this->requiresDeptHeadUserId()),
-                'nullable',
-                'integer',
-                'exists:users,id',
-            ],
+            'dept_head_user_id' => ['prohibited'],
             'rows' => ['nullable', 'array'],
             'rows.*.unit_price' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'rows.*.extra_fee' => ['sometimes', 'nullable', 'numeric', 'min:0'],
@@ -37,21 +32,35 @@ class FillPriceDispatchRequestRequest extends ApiFormRequest
         ];
     }
 
-    public function messages(): array
+    public function withValidator(Validator $validator): void
     {
-        return [
-            'dept_head_user_id.required' => Messages::REQUEST_DEPT_HEAD_REQUIRED,
-        ];
+        $validator->after(function (Validator $validator): void {
+            if (! $this->requiresAssignedDeptHeadOnRequest()) {
+                return;
+            }
+
+            $dr = $this->route('dispatchRequest');
+            if ($dr instanceof DispatchRequest && $dr->assigned_dept_head_id === null) {
+                $validator->errors()->add(
+                    'assigned_dept_head_id',
+                    Messages::REQUEST_DEPT_HEAD_MUST_BE_SET_ON_PORTAL,
+                );
+            }
+        });
     }
 
-    private function requiresDeptHeadUserId(): bool
+    private function requiresAssignedDeptHeadOnRequest(): bool
     {
         if (! Role::query()->where('name', 'department_head')->where('guard_name', 'web')->exists()) {
             return false;
         }
 
         $dr = $this->route('dispatchRequest');
-        if ($dr instanceof DispatchRequest && $dr->assigned_dept_head_id !== null) {
+        if (! $dr instanceof DispatchRequest) {
+            return false;
+        }
+
+        if ($dr->trip_type === 'door_to_door') {
             return false;
         }
 

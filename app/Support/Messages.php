@@ -14,6 +14,8 @@ final class Messages
 
     public const REQUEST_DEPT_HEAD_REQUIRED = 'Vui lòng chọn Trưởng đơn vị nhận duyệt trước khi chuyển phiếu.';
 
+    public const REQUEST_DEPT_HEAD_MUST_BE_SET_ON_PORTAL = 'Phiếu chưa có Trưởng đơn vị do người đề nghị gán trên cổng đề xuất. Điều vận không thể chỉ định — yêu cầu người đề nghị bổ sung.';
+
     public const REQUEST_NOT_PRICE_FILLED = 'Yêu cầu chưa ở trạng thái đã điền giá; không thể duyệt theo quy trình này.';
 
     public const REQUEST_PAPER_NOT_RECEIVED = 'Phiếu giấy chưa ở trạng thái đã nhận; không thể hoàn tác.';

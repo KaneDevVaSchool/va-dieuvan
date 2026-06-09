@@ -363,7 +363,7 @@
 
               <div v-if="portalNeedsDeptHead" class="relative">
                 <label class="dw-label" for="portal-dept-head">
-                  <span>{{ t('request_detail.assign_dept_head_label') }}</span>
+                  <span>{{ t('request_detail.assign_dept_head_label') }} <span class="dw-req" aria-hidden="true">*</span></span>
                   <span
                     class="inline-flex cursor-help text-slate-400 hover:text-slate-600"
                     :title="t('portal.create.assign_dept_head_tooltip')"

@@ -162,7 +162,6 @@
         <span class="text-xl font-bold tabular-nums text-teal-600 dark:text-teal-400">{{ totalFmt }}</span>
       </div>
 
-      <!-- Trưởng ĐV đã chọn trên portal -->
       <div
         v-if="deptHeadPresetLocked"
         class="mt-4 rounded-lg border border-sky-200 bg-sky-50/50 px-3 py-3 dark:border-sky-900/40 dark:bg-sky-950/20"
@@ -171,61 +170,31 @@
           {{ t('request_detail.assign_dept_head_preset_label') }}
         </p>
         <p class="mt-1 text-base font-semibold text-slate-900 dark:text-white">{{ deptHeadDisplayLine }}</p>
+        <p v-if="deptHeadLoadErr" class="mt-1 text-sm text-rose-600 dark:text-rose-400">{{ deptHeadLoadErr }}</p>
         <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">{{ t('request_detail.assign_dept_head_preset_hint') }}</p>
       </div>
 
-      <!-- Gán trưởng ĐV thủ công (phiếu legacy) -->
-      <div v-else class="relative mt-4">
-        <FillPriceFieldLabel
-          for-id="fp-dept-head"
-          :label="t('request_detail.assign_dept_head_label')"
-          :tooltip="t('request_detail.assign_dept_head_tooltip')"
-        />
-        <input
-          id="fp-dept-head"
-          v-model="deptHeadQ"
-          type="search"
-          role="combobox"
-          autocomplete="off"
-          :aria-expanded="dropdownOpen && deptHeadQ.trim().length >= 2"
-          :disabled="acting"
-          :placeholder="t('request_detail.assign_dept_head_combo_ph')"
-          :title="t('request_detail.assign_dept_head_tooltip')"
-          class="w-full rounded-lg border bg-white px-3 py-2.5 text-base text-slate-900 outline-none focus:ring-1 dark:bg-slate-800 dark:text-slate-100"
-          :class="clientErr ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/30' : 'border-slate-300 focus:border-sky-500 focus:ring-sky-500/30 dark:border-slate-700'"
-          @input="scheduleSearch"
-          @focus="onFocus"
-          @blur="onBlur"
-        />
-        <div v-if="searchLoading" class="absolute right-3 top-[2.35rem] h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-sky-600" />
-        <ul
-          v-if="dropdownOpen && deptHeadQ.trim().length >= 2"
-          class="absolute z-40 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg ring-1 ring-black/5 dark:border-slate-700 dark:bg-slate-800"
-          role="listbox"
-        >
-          <li v-if="searchLoading" class="px-3 py-2.5 text-slate-500 dark:text-slate-400">{{ t('request_detail.assign_dept_head_loading') }}</li>
-          <template v-else-if="options.length">
-            <li v-for="u in options" :key="u.id">
-              <button type="button" class="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition hover:bg-sky-50 dark:hover:bg-slate-700" @mousedown.prevent="pick(u)">
-                <span class="font-medium text-slate-900 dark:text-slate-100">{{ u.name }}</span>
-                <span class="truncate text-xs text-slate-500 dark:text-slate-400">{{ u.email }}</span>
-              </button>
-            </li>
-          </template>
-          <li v-else class="px-3 py-2.5 text-slate-500 dark:text-slate-400">{{ t('request_detail.assign_dept_head_no_match') }}</li>
-        </ul>
-        <p v-if="loadErr" class="mt-1 text-sm text-rose-600 dark:text-rose-400">{{ loadErr }}</p>
-        <p v-else-if="clientErr" class="mt-1 text-sm text-rose-600 dark:text-rose-400">{{ clientErr }}</p>
-        <p v-else class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ t('request_detail.assign_dept_head_combo_hint') }}</p>
+      <div
+        v-else
+        class="mt-4 rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-3 dark:border-amber-900/40 dark:bg-amber-950/20"
+        role="alert"
+      >
+        <p class="text-sm font-medium text-amber-900 dark:text-amber-100">
+          {{ t('request_detail.assign_dept_head_missing_staff_title') }}
+        </p>
+        <p class="mt-1 text-sm text-amber-800 dark:text-amber-200/90">
+          {{ t('request_detail.assign_dept_head_missing_staff_body') }}
+        </p>
       </div>
 
       <div class="mt-4 flex flex-wrap items-center gap-3">
-        <Button class="!bg-sky-600 hover:!bg-sky-700" :loading="acting" @click="onSave">
-          {{
-            deptHeadPresetLocked
-              ? t('request_detail.fill_price_submit_preset_dept')
-              : t('request_detail.fill_price_submit')
-          }}
+        <Button
+          class="!bg-sky-600 hover:!bg-sky-700"
+          :loading="acting"
+          :disabled="!canSubmitFillPrice"
+          @click="onSave"
+        >
+          {{ t('request_detail.fill_price_submit_preset_dept') }}
         </Button>
         <span v-if="message" class="text-sm text-slate-600 dark:text-slate-400">{{ message }}</span>
       </div>
@@ -329,16 +298,8 @@ const total = computed(() => {
 })
 const totalFmt = computed(() => formatVndCurrency(total.value, VND_CURRENCY_SUFFIX))
 
-// ── Dept head search ──
-const deptHeadQ = ref('')
-const options = ref([])
-const dropdownOpen = ref(false)
-const searchLoading = ref(false)
-const selectedId = ref('')
+const deptHeadLoadErr = ref('')
 const lockedLabel = ref('')
-const loadErr = ref('')
-const clientErr = ref('')
-let timer = null
 
 function chosenLabel(u) {
   const email = nz(u?.email)
@@ -355,6 +316,8 @@ const presetDeptHeadId = computed(() => {
 
 const deptHeadPresetLocked = computed(() => presetDeptHeadId.value != null)
 
+const canSubmitFillPrice = computed(() => deptHeadPresetLocked.value && !props.acting)
+
 const deptHeadDisplayLine = computed(() => {
   if (lockedLabel.value.trim()) return lockedLabel.value.trim()
   const h = props.req?.assigned_dept_head
@@ -365,104 +328,30 @@ const deptHeadDisplayLine = computed(() => {
   return presetDeptHeadId.value != null ? `#${presetDeptHeadId.value}` : '—'
 })
 
-function applyPresetDeptHeadFromReq() {
-  const hid = presetDeptHeadId.value
-  if (hid == null) return
-  selectedId.value = String(hid)
-  const h = props.req?.assigned_dept_head
-  if (h && Number(h.id) === hid) {
-    lockedLabel.value = chosenLabel(h)
-    deptHeadQ.value = lockedLabel.value
-  }
-}
-
 watch(
   () => [props.req?.id, props.req?.assigned_dept_head_id, props.req?.assigned_dept_head],
   async ([rid, hid]) => {
-    if (rid == null) return
-    applyPresetDeptHeadFromReq()
-    if (hid == null || hid === '') return
-    if (props.req?.assigned_dept_head?.name) return
-    searchLoading.value = true
+    deptHeadLoadErr.value = ''
+    lockedLabel.value = ''
+    if (rid == null || hid == null || hid === '') return
+    const h = props.req?.assigned_dept_head
+    if (h && Number(h.id) === Number(hid)) {
+      lockedLabel.value = chosenLabel(h)
+      return
+    }
     try {
       const list = await getAvailableDeptHeads(rid, { pick: hid })
-      options.value = list ?? []
-      const u = options.value.find((x) => Number(x.id) === Number(hid))
-      if (u) {
-        lockedLabel.value = chosenLabel(u)
-        deptHeadQ.value = lockedLabel.value
-      }
-      loadErr.value = ''
+      const u = (list ?? []).find((x) => Number(x.id) === Number(hid))
+      if (u) lockedLabel.value = chosenLabel(u)
     } catch (e) {
-      loadErr.value = e?.response?.data?.message ?? t('request_detail.assign_dept_head_load_err')
-    } finally {
-      searchLoading.value = false
+      deptHeadLoadErr.value = e?.response?.data?.message ?? t('request_detail.assign_dept_head_load_err')
     }
   },
   { immediate: true },
 )
 
-watch(deptHeadQ, () => {
-  if (lockedLabel.value && deptHeadQ.value.trim() !== lockedLabel.value.trim()) selectedId.value = ''
-})
-
-function scheduleSearch() {
-  loadErr.value = ''
-  clientErr.value = ''
-  clearTimeout(timer)
-  timer = setTimeout(runSearch, 350)
-}
-async function runSearch() {
-  const rid = props.req?.id
-  if (rid == null) return
-  const q = deptHeadQ.value.trim()
-  if (q.length < 2) {
-    options.value = []
-    dropdownOpen.value = false
-    return
-  }
-  searchLoading.value = true
-  dropdownOpen.value = true
-  try {
-    options.value = await getAvailableDeptHeads(rid, { q })
-    loadErr.value = ''
-  } catch (e) {
-    options.value = []
-    loadErr.value = e?.response?.data?.message ?? t('request_detail.assign_dept_head_load_err')
-  } finally {
-    searchLoading.value = false
-  }
-}
-function pick(u) {
-  selectedId.value = String(u.id)
-  lockedLabel.value = chosenLabel(u)
-  deptHeadQ.value = lockedLabel.value
-  dropdownOpen.value = false
-  clientErr.value = ''
-}
-function onFocus() {
-  if (deptHeadQ.value.trim().length >= 2) {
-    dropdownOpen.value = true
-    runSearch()
-  }
-}
-function onBlur() {
-  setTimeout(() => (dropdownOpen.value = false), 180)
-}
-
-function resolveDeptHeadUserId() {
-  if (selectedId.value !== '' && selectedId.value != null) return Number(selectedId.value)
-  if (presetDeptHeadId.value != null) return presetDeptHeadId.value
-  return null
-}
-
 function onSave() {
-  clientErr.value = ''
-  const deptHeadUserId = resolveDeptHeadUserId()
-  if (deptHeadUserId == null) {
-    clientErr.value = t('request_detail.assign_dept_head_required')
-    return
-  }
+  if (!deptHeadPresetLocked.value) return
   const payloadRows = isCargo.value
     ? rows.value.map((_, i) => ({
         transport_note: String(cargoTransport.value[i] ?? '').slice(0, 500),
@@ -473,13 +362,9 @@ function onSave() {
         extra_fee: parseMoneyVnd(extraDraft.value[i] ?? ''),
         notes: String(notesDraft.value[i] ?? '').slice(0, 2000),
       }))
-  const payload = {
+  emit('save', {
     rows: payloadRows,
     service_price: total.value,
-  }
-  if (!deptHeadPresetLocked.value) {
-    payload.dept_head_user_id = deptHeadUserId
-  }
-  emit('save', payload)
+  })
 }
 </script>

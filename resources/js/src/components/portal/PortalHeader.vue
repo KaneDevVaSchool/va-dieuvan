@@ -65,7 +65,7 @@
           <span class="hidden lg:inline">{{ t('portal.nav_extracurricular') }}</span>
         </RouterLink>
         <RouterLink
-          :to="{ name: createRouteName }"
+          :to="{ name: 'portalCreate' }"
           class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full px-3 text-sm font-semibold transition sm:min-w-0 sm:px-4 lg:min-w-[8rem]"
           :class="
             isCreate
@@ -249,13 +249,7 @@ const menuRootRef = ref(null)
 
 const { isExtracurricularModule } = usePortalExtracurricularModule()
 
-const createRouteName = computed(() =>
-  isExtracurricularModule.value ? 'portalExtracurricularCreate' : 'portalCreate',
-)
-
-const isCreate = computed(
-  () => route.name === 'portalCreate' || route.name === 'portalExtracurricularCreate',
-)
+const isCreate = computed(() => route.name === 'portalCreate')
 
 /** Danh sách yêu cầu thường — không gộp với extracurricular/requests */
 const isGeneralList = computed(() => route.name === 'portalRequestList')
