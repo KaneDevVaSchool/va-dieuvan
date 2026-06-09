@@ -1,7 +1,12 @@
 <template>
   <details ref="root" class="group relative">
     <summary
-      class="flex cursor-pointer list-none items-center gap-1 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-200 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
+      class="flex cursor-pointer list-none items-center gap-1 rounded-lg border bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:bg-slate-900/90 dark:text-slate-200 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
+      :class="
+        active
+          ? 'border-teal-300/80 ring-2 ring-teal-500/25 dark:border-teal-700/60 dark:ring-teal-500/20'
+          : 'border-white/80 dark:border-slate-700'
+      "
     >
       <span class="relative inline-flex">
         <FunnelIcon class="h-5 w-5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
@@ -29,6 +34,8 @@ import { useDetailsAutoClose } from '../../composables/useDetailsAutoClose.js'
 
 defineProps({
   badgeCount: { type: Number, default: 0 },
+  /** Viền nhấn khi có bộ lọc — thay badge số trên màn chi phí. */
+  active: { type: Boolean, default: false },
 })
 
 const root = ref(null)

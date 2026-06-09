@@ -10,12 +10,23 @@
     <template v-else-if="req">
       <!-- ═══════════ Header ═══════════ -->
       <header
-        class="sticky top-0 z-40 shrink-0 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 supports-[top:env(safe-area-inset-top)]:top-[env(safe-area-inset-top)]"
+        class="sticky top-0 z-40 shrink-0 shadow-sm backdrop-blur-md supports-[top:env(safe-area-inset-top)]:top-[env(safe-area-inset-top)]"
+        :class="
+          showUrgentBadge
+            ? 'border-b border-rose-200 bg-rose-50/95 dark:border-rose-900/60 dark:bg-rose-950/95'
+            : 'border-b border-slate-200 bg-white/95 dark:border-slate-800 dark:bg-slate-900/95'
+        "
+        :aria-label="showUrgentBadge ? t('dispatch_wizard.create.form_priority_frame_aria') : undefined"
       >
         <div class="mx-auto flex w-full max-w-none items-start gap-3 px-4 py-3 sm:px-6 lg:px-8">
           <RouterLink
             :to="backTo"
-            class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition"
+            :class="
+              showUrgentBadge
+                ? 'border-rose-200/80 text-rose-600 hover:bg-rose-100 hover:text-rose-800 dark:border-rose-800 dark:text-rose-400 dark:hover:bg-rose-900/50 dark:hover:text-rose-200'
+                : 'border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'
+            "
             :aria-label="backAriaLabel"
           >
             <ArrowLeftIcon class="h-5 w-5" aria-hidden="true" />
@@ -40,7 +51,7 @@
               </div>
               <div
                 v-if="showUrgentBadge"
-                class="inline-flex items-center gap-1.5 rounded-lg border border-rose-200/80 bg-rose-50 px-2.5 py-1 dark:border-rose-900/50 dark:bg-rose-950/40"
+                class="inline-flex items-center gap-1.5 rounded-lg border border-rose-300 bg-white px-2.5 py-1 shadow-sm dark:border-rose-700 dark:bg-rose-900/80"
               >
                 <span class="text-[10px] font-bold uppercase tracking-wide text-rose-500 dark:text-rose-400">{{ t('request_detail.ops_header_priority') }}</span>
                 <span class="inline-flex items-center gap-1 text-xs font-semibold text-rose-800 dark:text-rose-200">
@@ -86,8 +97,12 @@
             class="mt-0.5 inline-flex h-10 shrink-0 items-center gap-2 rounded-lg border px-3.5 text-sm font-semibold transition"
             :class="
               pdfExportDisabled
-                ? 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-600'
-                : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
+                ? showUrgentBadge
+                  ? 'cursor-not-allowed border-rose-200/80 bg-rose-100/50 text-rose-400 dark:border-rose-900/50 dark:bg-rose-900/40 dark:text-rose-600'
+                  : 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-600'
+                : showUrgentBadge
+                  ? 'border-rose-200 bg-white text-rose-800 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-900/60 dark:text-rose-200 dark:hover:bg-rose-900/80'
+                  : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
             "
             :disabled="pdfBusy || pdfExportDisabled"
             :title="pdfExportDisabled ? t('request_detail.pdf_locked_tooltip') : t('request_detail.export_pdf')"
@@ -300,7 +315,7 @@
                             />
                             <div
                               v-if="urgentReasonText"
-                              class="rounded-xl border border-rose-200 bg-rose-50/70 px-3 py-2.5 dark:border-rose-900/50 dark:bg-rose-950/25"
+                              class="sm:col-span-2 rounded-xl border border-rose-200 bg-rose-50/70 px-3 py-2.5 dark:border-rose-900/50 dark:bg-rose-950/25"
                             >
                               <FieldRow :label="t('request_detail.ops_lbl_urgent_reason')" :value="urgentReasonText" multiline emphasize />
                             </div>
@@ -359,57 +374,6 @@
                     />
 
                     <template v-else>
-                      <!-- Tổng quan chuyến -->
-                      <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                        <div class="flex items-center gap-2.5 border-b border-slate-100 bg-slate-50/80 px-5 py-3 dark:border-slate-800 dark:bg-slate-800/40">
-                          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-va-50 text-va-700 dark:bg-va-950/50 dark:text-va-300">
-                            <TruckIcon class="h-4 w-4" aria-hidden="true" />
-                          </span>
-                          <h2 class="text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">
-                            {{ t('request_detail.ops_route_overview_heading') }}
-                          </h2>
-                        </div>
-                        <div class="grid gap-0 lg:grid-cols-[1fr_auto_1fr] lg:items-stretch">
-                          <div class="border-b border-slate-100 bg-emerald-50/60 px-5 py-4 dark:border-slate-800 dark:bg-emerald-950/20 lg:border-b-0 lg:border-r">
-                            <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-600/90 dark:text-emerald-400/90">
-                              {{ t('request_detail.lbl_origin') }}
-                            </p>
-                            <p class="mt-1.5 flex items-start gap-2 text-lg font-bold leading-snug text-slate-900 dark:text-white">
-                              <MapPinIcon class="mt-0.5 h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
-                              <span class="min-w-0">{{ req.origin || friendlyEmpty }}</span>
-                            </p>
-                          </div>
-                          <div class="flex items-center justify-center border-b border-slate-100 bg-slate-50/50 px-3 py-2 dark:border-slate-800 dark:bg-slate-800/30 lg:border-b-0">
-                            <ArrowRightIcon class="h-6 w-6 shrink-0 text-slate-300 dark:text-slate-600" aria-hidden="true" />
-                          </div>
-                          <div class="border-t border-slate-100 bg-rose-50/60 px-5 py-4 dark:border-slate-800 dark:bg-rose-950/20 lg:border-l lg:border-t-0">
-                            <p class="text-[10px] font-bold uppercase tracking-wider text-rose-600/90 dark:text-rose-400/90">
-                              {{ t('request_detail.lbl_destination') }}
-                            </p>
-                            <p class="mt-1.5 flex items-start gap-2 text-lg font-bold leading-snug text-slate-900 dark:text-white">
-                              <MapPinIcon class="mt-0.5 h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400" aria-hidden="true" />
-                              <span class="min-w-0">{{ req.destination || friendlyEmpty }}</span>
-                            </p>
-                          </div>
-                        </div>
-                        <dl class="grid gap-2.5 border-t border-slate-100 px-5 py-4 dark:border-slate-800 sm:grid-cols-2 lg:grid-cols-3">
-                          <FieldRow
-                            v-for="chip in routeOverviewChips"
-                            :key="chip.key"
-                            boxed
-                            :label="chip.label"
-                            :value="chip.value"
-                            :highlight="chip.highlight"
-                          />
-                        </dl>
-                        <div
-                          v-if="nz(formData.purpose)"
-                          class="border-t border-slate-100 px-5 py-4 dark:border-slate-800"
-                        >
-                          <FieldRow boxed :label="t('request_detail.ops_lbl_purpose')" :value="nz(formData.purpose)" multiline />
-                        </div>
-                      </div>
-
                       <!-- Chi tiết hành trình -->
                       <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
                         <div class="flex min-w-0 items-center gap-2.5">
@@ -486,23 +450,12 @@
                               >{{ card.peek }}</p>
                             </div>
                           </div>
-                          <div class="flex shrink-0 items-start gap-2">
-                            <div
-                              v-if="card.priceTotal"
-                              class="rounded-xl border border-teal-200/80 bg-teal-50/80 px-3 py-2 text-right dark:border-teal-900/50 dark:bg-teal-950/30"
-                            >
-                              <p class="text-[10px] font-bold uppercase tracking-wider text-teal-600/90 dark:text-teal-400/90">
-                                {{ t('request_detail.ops_lbl_row_cost') }}
-                              </p>
-                              <p class="mt-0.5 text-base font-bold tabular-nums text-teal-700 dark:text-teal-300">{{ card.priceTotal.display }}</p>
-                            </div>
-                            <ChevronDownIcon
-                              v-if="itineraryCollapsible"
-                              class="mt-2 h-5 w-5 shrink-0 text-slate-400 transition-transform duration-200"
-                              :class="{ '-rotate-180': isItineraryExpanded(card.key) }"
-                              aria-hidden="true"
-                            />
-                          </div>
+                          <ChevronDownIcon
+                            v-if="itineraryCollapsible"
+                            class="mt-2 h-5 w-5 shrink-0 text-slate-400 transition-transform duration-200"
+                            :class="{ '-rotate-180': isItineraryExpanded(card.key) }"
+                            aria-hidden="true"
+                          />
                         </component>
 
                         <div v-show="!itineraryCollapsible || isItineraryExpanded(card.key)">
@@ -726,7 +679,7 @@
                   <div v-show="activeTab === 'students' && showStudentCountTab" class="grid gap-4 sm:grid-cols-2">
                     <div class="rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
                       <p :class="sectionTitleClass">{{ t('request_detail.bm03_student_count_plan_short') }}</p>
-                      <p class="mt-2 text-4xl font-bold tabular-nums text-slate-900 dark:text-white">{{ req.passenger_count ?? friendlyEmpty }}</p>
+                      <p class="mt-2 text-4xl font-bold tabular-nums text-slate-900 dark:text-white">{{ dispatchRequestDisplayPassengerCount(req) || friendlyEmpty }}</p>
                     </div>
                     <div class="rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
                       <p :class="sectionTitleClass">{{ t('request_detail.bm03_student_count_actual_short') }}</p>
@@ -1109,6 +1062,7 @@ import {
 } from '../../util/requestItineraryRowDisplay'
 import { isPassengerRowFilled, isBusinessRowFilled } from '../../composables/dispatchWizardConstants'
 import { formatTripCode } from '../../util/labels'
+import { dispatchRequestDisplayPassengerCount } from '../../util/dispatchRequestPassengers'
 
 const FillPricePanel = defineAsyncComponent(() =>
   import('../../components/requests/workspace/FillPricePanel.vue'),
@@ -1404,77 +1358,6 @@ function buildItineraryCard(r, i, keyPrefix) {
     peek: buildItineraryPeek(r, tripType),
   }
 }
-
-const routeOverviewChips = computed(() => {
-  const chips = []
-  chips.push({
-    key: 'trip_type',
-    label: t('request_detail.lbl_trip_type_short'),
-    value: labelTripType(req.value?.trip_type),
-  })
-  if (passengerOrCargoLine.value && passengerOrCargoLine.value !== '—') {
-    chips.push({
-      key: 'load',
-      label: metaLoadLabel.value,
-      value: passengerOrCargoLine.value,
-    })
-  }
-  if (distanceText.value) {
-    chips.push({
-      key: 'distance',
-      label: t('request_detail.lbl_est_distance'),
-      value: distanceText.value,
-    })
-  }
-  const dateNeeded = fmtDateOnly(formData.value.date_needed)
-  if (dateNeeded) {
-    chips.push({
-      key: 'date_needed',
-      label: t('request_detail.ops_lbl_date_needed'),
-      value: dateNeeded,
-      highlight: !!formData.value.date_needed,
-    })
-  }
-  if (journeyDepartLine.value) {
-    chips.push({
-      key: 'depart',
-      label: t('request_detail.ops_lbl_depart_time'),
-      value: journeyDepartLine.value,
-    })
-  }
-  if (req.value?.trip) {
-    chips.push({
-      key: 'linked_trip',
-      label: t('request_detail.ops_linked_trip'),
-      value: linkedTripCode.value,
-      highlight: true,
-    })
-  }
-  if (req.value?.service_price != null) {
-    chips.push({
-      key: 'service_price',
-      label: t('request_detail.lbl_dispatcher_unit_price'),
-      value: formatVndSidebar(req.value.service_price),
-    })
-  }
-  const declared = costEstimate.value?.total
-  if (declared != null && declared > 0) {
-    chips.push({
-      key: 'declared_total',
-      label: t('request_detail.total_per_declaration'),
-      value: formatVndSidebar(declared),
-      highlight: true,
-    })
-  }
-  if (coordinatorName.value) {
-    chips.push({
-      key: 'coordinator',
-      label: t('request_detail.ops_lbl_coordinator'),
-      value: coordinatorName.value,
-    })
-  }
-  return chips
-})
 
 const itineraryCards = computed(() => {
   const s = snap.value

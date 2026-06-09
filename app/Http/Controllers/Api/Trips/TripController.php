@@ -17,6 +17,7 @@ use App\Models\Trip;
 use App\Services\Auditing\AuditLogger;
 use App\Services\Dispatching\DispatchingService;
 use App\Services\Trips\TripNamedPassengerSyncService;
+use App\Support\DispatchWizardPassengerCount;
 use App\Support\FinancialDataLock;
 use App\Support\TripOptimisticLock;
 use App\Support\TripVisibility;
@@ -569,16 +570,13 @@ class TripController extends Controller
             if (! $this->passengerRowFilled($r)) {
                 continue;
             }
-            $g = (int) ($r['guests'] ?? 1);
-
-            $sum += $g >= 1 ? $g : 1;
+            $sum += DispatchWizardPassengerCount::rowGuestsValue($r);
         }
         foreach ($businessRows as $r) {
             if (! $this->businessRowFilled($r)) {
                 continue;
             }
-            $g = (int) ($r['guests'] ?? 1);
-            $sum += $g >= 1 ? $g : 1;
+            $sum += DispatchWizardPassengerCount::rowGuestsValue($r);
         }
 
         return max(1, $sum);

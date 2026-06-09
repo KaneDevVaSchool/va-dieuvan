@@ -1,5 +1,5 @@
 <template>
-  <div class="rounded-2xl border border-dashed border-va-200/70 bg-white/85 px-6 py-12 text-center shadow-md shadow-va-900/[0.04] ring-1 ring-va-900/[0.03] backdrop-blur-sm">
+  <div class="rounded-2xl bg-slate-50/60 px-6 py-12 text-center">
     <svg
       class="mx-auto h-24 w-40 text-va-300"
       :class="{ 'animate-pulse': pulseIcon }"
@@ -23,8 +23,8 @@
       <rect x="36" y="44" width="20" height="12" rx="2" class="fill-va-200/80" />
       <rect x="60" y="44" width="20" height="12" rx="2" class="fill-va-200/80" />
     </svg>
-    <h2 class="mt-4 text-base font-semibold text-slate-900">{{ title }}</h2>
-    <p class="mx-auto mt-2 max-w-md text-sm text-slate-600">{{ description }}</p>
+    <h2 class="mt-4 text-lg font-semibold text-slate-900">{{ title }}</h2>
+    <p class="mx-auto mt-2 max-w-md text-base text-slate-600">{{ description }}</p>
     <div v-if="$slots.action" class="mt-6">
       <slot name="action" />
     </div>

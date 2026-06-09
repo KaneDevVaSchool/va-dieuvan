@@ -179,8 +179,27 @@ export function isPassengerRowFilled(r) {
   return !!(g && g !== '1')
 }
 
+/** Dòng có dữ liệu thực — bỏ qua dòng chỉ có giờ auto-sync (tránh +1 khách ảo). */
+export function isPassengerRowCounted(r) {
+  if (r.pickup?.trim() || r.dropoff?.trim()) return true
+  if (r.person_in_charge?.trim() || r.notes?.trim()) return true
+  if (r.unit_price && String(r.unit_price).trim() !== '') return true
+  if (r.extra_fee && String(r.extra_fee).trim() !== '') return true
+  const g = String(r.guests ?? '').trim()
+  return !!(g && g !== '1')
+}
+
 export function isBusinessRowFilled(r) {
   if (r.pickup?.trim() || r.dropoff?.trim() || r.waypoint?.trim() || r.depart_at || r.return_at) return true
+  if (r.unit_price && String(r.unit_price).trim() !== '') return true
+  if (r.extra_fee && String(r.extra_fee).trim() !== '') return true
+  if (r.notes?.trim()) return true
+  const g = String(r.guests ?? '').trim()
+  return !!(g && g !== '1')
+}
+
+export function isBusinessRowCounted(r) {
+  if (r.pickup?.trim() || r.dropoff?.trim() || r.waypoint?.trim()) return true
   if (r.unit_price && String(r.unit_price).trim() !== '') return true
   if (r.extra_fee && String(r.extra_fee).trim() !== '') return true
   if (r.notes?.trim()) return true

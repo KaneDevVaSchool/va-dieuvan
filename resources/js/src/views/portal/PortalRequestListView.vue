@@ -96,7 +96,7 @@
                       ]"
                       @mousedown.prevent="pickSearchSuggestion(req)"
                     >
-                      <span class="font-mono text-sm font-semibold text-slate-900">#{{ req.id }}</span>
+                      <span class="font-mono text-sm font-semibold text-slate-900">{{ formatDispatchRequestRefCode(req) }}</span>
                       <span class="truncate text-xs text-slate-500">{{ suggestRouteLine(req) }}</span>
                     </button>
                   </li>
@@ -585,6 +585,7 @@ import ExtracurricularRequestsCalendar from '../../components/portal/extracurric
 import ExtracurricularScheduleTable from '../../components/portal/extracurricular/ExtracurricularScheduleTable.vue'
 import { usePortalExtracurricularModule } from '../../composables/usePortalExtracurricularModule'
 import { useDetailsAutoClose, useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
+import { formatDispatchRequestRefCode } from '../../util/portalRequestFormat.js'
 
 const PER_PAGE_OPTIONS = [5, 10, 15, 20]
 const PER_PAGE_KEY = 'portal-list-per-page'

@@ -749,7 +749,7 @@
                       {{ (r.origin ?? '—') + ' → ' + (r.destination ?? '—') }}
                     </div>
                     <div class="mt-0.5 text-sm text-slate-500">
-                      <span v-if="r.passenger_count">{{ t('requests_page.passengers', { n: r.passenger_count }) }}</span>
+                      <span v-if="dispatchRequestDisplayPassengerCount(r)">{{ t('requests_page.passengers', { n: dispatchRequestDisplayPassengerCount(r) }) }}</span>
                       <span v-else-if="r.trip_type === 'cargo'">{{ t('requests_page.cargo') }}</span>
                       <span v-else>{{ t('requests_page.no_passenger_info') }}</span>
                     </div>
@@ -1083,6 +1083,7 @@ import {
   labelTripType,
 } from '../../util/labels'
 import { isLegacyBm03NotesBlock } from '../../util/formatDispatchNotes'
+import { dispatchRequestDisplayPassengerCount } from '../../util/dispatchRequestPassengers'
 
 const { t } = useI18n()
 const route = useRoute()

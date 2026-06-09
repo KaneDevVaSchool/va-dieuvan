@@ -6,9 +6,11 @@
     @php
         // header.png 1999×393 px → ~41.3mm khi scale theo chiều ngang A4 (210mm)
         $hdrBandMm = 41.3;
+        $hdrTrimBottomMm = 2.8;
+        $hdrVisibleMm = $hdrBandMm - $hdrTrimBottomMm;
         $hdrContentGapMm = 0;
         $pageOrient = $isCargo ? 'landscape' : 'portrait';
-        $pageMarginTop = $isCargo ? '12mm' : ($hdrBandMm + $hdrContentGapMm) . 'mm';
+        $pageMarginTop = $isCargo ? '12mm' : ($hdrVisibleMm + $hdrContentGapMm) . 'mm';
         $pageMarginX   = '5mm';
         $pageMarginBot = $isCargo ? '12mm' : '14mm';
         $bgW = $isCargo ? '297mm' : '210mm';
@@ -97,25 +99,34 @@
             position: absolute;
             top: 0; left: 0;
             width: {{ $bgW }};
-            height: {{ $hdrBandMm }}mm;
+            height: {{ $hdrVisibleMm }}mm;
             background: #fff;
         }
 
-        .hdr-layer {
+        .hdr-shell {
             position: fixed;
             top: -{{ $pageMarginTop }};
             left: -{{ $pageMarginX }};
             width: {{ $bgW }};
-            height: {{ $hdrBandMm }}mm;
+            height: {{ $hdrVisibleMm }}mm;
+            overflow: hidden;
             z-index: 2;
-            margin: 0; padding: 0; border: none; display: block;
+        }
+
+        .hdr-layer {
+            display: block;
+            width: {{ $bgW }};
+            height: {{ $hdrBandMm }}mm;
+            margin: 0;
+            padding: 0;
+            border: none;
         }
 
         .page-content {
             position: relative;
             width: 100%;
             color: {{ $pdfTextColor }};
-            margin-top: -1pt;
+            margin-top: -3pt;
         }
 
         /* E + F + G always on the same page */
@@ -129,13 +140,13 @@
         /* ── TITLE BLOCK ── */
         .doc-head {
             width: 100%;
-            margin-bottom: 3pt;
+            margin-bottom: 2pt;
         }
 
         .doc-heading {
             width: 100%;
             text-align: center;
-            padding: 0 0 2pt;
+            padding: 0;
         }
 
         .doc-title {
@@ -206,6 +217,31 @@
 
         .sec-bd { page-break-before: avoid; }
         .sec-bd--flush { padding: 0; }
+
+        .sec--bordered .sec-hd {
+            border-top: 0.75pt solid #444;
+            border-bottom: 0.5pt solid #bbb;
+        }
+
+        .sec--bordered .sec-bd {
+            border-bottom: 0.5pt solid #ccc;
+        }
+
+        .sec--bordered table.ft td {
+            border-right: 0.5pt solid #ddd;
+            border-bottom: 0.5pt solid #ddd;
+        }
+
+        .sec--bordered table.ft tr:first-child td { border-top: 0.5pt solid #ddd; }
+        .sec--bordered table.ft td:first-child    { border-left: 0.5pt solid #ddd; }
+
+        .sec--bordered .d1-lbl {
+            border-bottom: 0.5pt solid #ddd;
+        }
+
+        .sec--bordered .target-wrap {
+            border-bottom: 0.5pt solid #ddd;
+        }
 
         /* ── FIELD TABLE ── */
         table.ft { width: 100%; border-collapse: collapse; }
@@ -569,7 +605,9 @@
         </div>
     @endif
     @if($hdrUri)
-        <img class="hdr-layer" src="{{ $hdrUri }}" alt="" />
+        <div class="hdr-shell">
+            <img class="hdr-layer" src="{{ $hdrUri }}" alt="" />
+        </div>
     @endif
 
     <div class="page-content">
@@ -589,7 +627,7 @@
     </div>
 
     {{-- ────────── A · NGƯỜI ĐỀ NGHỊ ────────── --}}
-    <div class="sec sec-avoid">
+    <div class="sec sec-avoid sec--bordered">
         <div class="sec-hd">
             <span class="sec-badge">A</span>
             <span class="sec-ttl">Người đề nghị</span>
@@ -621,7 +659,7 @@
     </div>
 
     {{-- ────────── B · MỤC ĐÍCH ────────── --}}
-    <div class="sec sec-avoid">
+    <div class="sec sec-avoid sec--bordered">
         <div class="sec-hd">
             <span class="sec-badge">B</span>
             <span class="sec-ttl">Mục đích sử dụng</span>
@@ -647,7 +685,7 @@
     </div>
 
     {{-- ────────── C · THỜI GIAN ────────── --}}
-    <div class="sec sec-avoid">
+    <div class="sec sec-avoid sec--bordered">
         <div class="sec-hd">
             <span class="sec-badge">C</span>
             <span class="sec-ttl">Thời gian</span>
@@ -695,7 +733,7 @@
     </div>
 
     {{-- ────────── D · ĐỐI TƯỢNG ────────── --}}
-    <div class="sec sec-avoid">
+    <div class="sec sec-avoid sec--bordered">
         <div class="sec-hd">
             <span class="sec-badge">D</span>
             <span class="sec-ttl">Khu vực / Đối tượng được phân bổ</span>

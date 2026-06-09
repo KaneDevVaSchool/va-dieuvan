@@ -6,6 +6,7 @@ use App\Models\DispatchRequest;
 use App\Models\DispatchSetting;
 use App\Services\RecurringDispatch\RecurringBudgetAlertService;
 use App\Services\RecurringDispatch\RecurringPackageBudgetService;
+use App\Support\DispatchWizardPassengerCount;
 
 trait PresentsDispatchRequest
 {
@@ -27,6 +28,11 @@ trait PresentsDispatchRequest
         }
 
         $arr = $dispatchRequest->toArray();
+        $arr['passenger_count'] = DispatchWizardPassengerCount::effectiveCount(
+            is_array($dispatchRequest->wizard_snapshot) ? $dispatchRequest->wizard_snapshot : null,
+            (string) ($dispatchRequest->trip_type ?? ''),
+            $dispatchRequest->passenger_count,
+        ) ?: null;
         $arr['price_filled_by_user'] = null;
         if ($dispatchRequest->relationLoaded('priceFiller') && $dispatchRequest->priceFiller !== null) {
             $u = $dispatchRequest->priceFiller;

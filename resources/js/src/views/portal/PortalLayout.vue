@@ -22,3 +22,14 @@ onMounted(() => {
   }
 })
 </script>
+
+<style>
+.portal-app {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Giữ outline cho bàn phím; bỏ viền focus khi click chuột / chạm trên portal */
+.portal-app :is(button, a, [role='option'], [role='menuitem']):focus:not(:focus-visible) {
+  outline: none;
+}
+</style>

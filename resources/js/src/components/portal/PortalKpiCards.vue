@@ -1,29 +1,29 @@
 <template>
   <div class="grid grid-cols-1 gap-3 xs:grid-cols-2 lg:grid-cols-4 lg:gap-4">
     <template v-if="loading">
-      <div v-for="i in 4" :key="i" class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div class="h-3 w-24 animate-pulse rounded bg-slate-200" />
-        <div class="mt-3 h-8 w-16 animate-pulse rounded bg-slate-100" />
-        <div class="mt-2 h-3 w-full animate-pulse rounded bg-slate-100" />
+      <div v-for="i in 4" :key="i" class="rounded-2xl bg-white p-5 shadow-sm">
+        <div class="h-3.5 w-24 animate-pulse rounded bg-slate-200" />
+        <div class="mt-3 h-9 w-16 animate-pulse rounded bg-slate-100" />
+        <div class="mt-2 h-3.5 w-full animate-pulse rounded bg-slate-100" />
       </div>
     </template>
     <template v-else>
       <article
         v-for="card in cards"
         :key="card.key"
-        class="rounded-2xl border bg-gradient-to-br p-4 shadow-sm ring-1 ring-inset ring-black/[0.03] transition hover:shadow-md"
-        :class="[card.borderClass, card.bgClass]"
+        class="rounded-2xl bg-gradient-to-br p-5 shadow-sm transition hover:shadow-md"
+        :class="card.bgClass"
       >
         <div class="flex items-start justify-between gap-2">
-          <p class="text-xs font-semibold uppercase tracking-wide text-slate-600">{{ card.title }}</p>
-          <div class="flex shrink-0 items-center gap-1.5">
-            <span class="flex rounded-xl p-2" :class="card.iconWrapClass">
-              <component :is="card.icon" class="h-6 w-6 opacity-95" :class="card.iconClass" aria-hidden="true" />
-            </span>
-          </div>
+          <p class="text-sm font-semibold text-slate-600">{{ card.title }}</p>
+          <span class="flex rounded-xl p-2" :class="card.iconWrapClass">
+            <component :is="card.icon" class="h-6 w-6 opacity-95" :class="card.iconClass" aria-hidden="true" />
+          </span>
         </div>
-        <p class="mt-2 text-3xl font-bold tabular-nums tracking-tight" :class="card.valueClass">{{ card.value }}</p>
-        <p v-if="card.sub" class="mt-1 text-[11px] leading-snug text-slate-500">{{ card.sub }}</p>
+        <p class="mt-2 text-3xl font-bold tabular-nums tracking-tight sm:text-4xl" :class="card.valueClass">
+          {{ card.value }}
+        </p>
+        <p v-if="card.sub" class="mt-1.5 text-sm leading-snug text-slate-500">{{ card.sub }}</p>
       </article>
     </template>
   </div>
@@ -60,7 +60,6 @@ const cards = computed(() => {
       iconClass: 'text-sky-600',
       iconWrapClass: 'bg-sky-100 text-sky-600',
       bgClass: 'from-sky-50/90 to-white',
-      borderClass: 'border-sky-100',
       valueClass: 'text-sky-700',
     },
     {
@@ -72,7 +71,6 @@ const cards = computed(() => {
       iconClass: 'text-amber-600',
       iconWrapClass: 'bg-amber-100 text-amber-600',
       bgClass: 'from-amber-50/90 to-white',
-      borderClass: 'border-amber-100',
       valueClass: 'text-amber-700',
     },
     {
@@ -84,7 +82,6 @@ const cards = computed(() => {
       iconClass: 'text-emerald-600',
       iconWrapClass: 'bg-emerald-100 text-emerald-600',
       bgClass: 'from-emerald-50/90 to-white',
-      borderClass: 'border-emerald-100',
       valueClass: 'text-emerald-700',
     },
     {
@@ -96,7 +93,6 @@ const cards = computed(() => {
       iconClass: 'text-rose-600',
       iconWrapClass: 'bg-rose-100 text-rose-600',
       bgClass: 'from-rose-50/90 to-white',
-      borderClass: 'border-rose-100',
       valueClass: 'text-rose-700',
     },
   ]

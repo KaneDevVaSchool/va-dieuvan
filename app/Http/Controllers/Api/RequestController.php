@@ -10,6 +10,7 @@ use App\Http\Requests\Api\Requests\BulkSoftDeleteDispatchRequestsRequest;
 use App\Http\Requests\Api\Requests\ListRequestsRequest;
 use App\Models\DispatchRequest;
 use App\Models\User;
+use App\Support\DispatchWizardPassengerCount;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -132,8 +133,19 @@ class RequestController extends Controller
         $perPage = (int) ($data['per_page'] ?? 20);
         $results = $q->paginate($perPage);
 
+        $items = array_map(function (DispatchRequest $dr) {
+            $row = $dr->toArray();
+            $row['passenger_count'] = DispatchWizardPassengerCount::effectiveCount(
+                is_array($dr->wizard_snapshot) ? $dr->wizard_snapshot : null,
+                (string) ($dr->trip_type ?? ''),
+                $dr->passenger_count,
+            ) ?: null;
+
+            return $row;
+        }, $results->items());
+
         return $this->ok([
-            'items' => $results->items(),
+            'items' => $items,
             'meta' => [
                 'current_page' => $results->currentPage(),
                 'per_page' => $results->perPage(),

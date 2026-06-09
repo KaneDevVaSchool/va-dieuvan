@@ -13,7 +13,7 @@
         :key="tt"
         type="button"
         role="option"
-        class="relative flex min-h-[120px] flex-col items-center rounded-xl border-2 p-4 text-center outline-none focus-visible:ring-2 focus-visible:ring-va-700 focus-visible:ring-offset-2 xl:min-h-[124px]"
+        class="relative flex min-h-[120px] flex-col items-center rounded-xl border-2 p-4 text-center outline-none focus:outline-none focus-visible:outline-none xl:min-h-[124px]"
         :class="tripType === tt ? styleFor(tt).selectedCard : styleFor(tt).idleCard"
         :aria-selected="tripType === tt"
         @click="$emit('select', tt)"

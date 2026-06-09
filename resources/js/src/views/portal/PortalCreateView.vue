@@ -29,7 +29,7 @@
         <div class="flex flex-wrap items-center justify-end gap-2">
           <button
             type="button"
-            class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+            class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm outline-none transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:outline-none"
             @click="handlePortalCancel"
           >
             {{ t('dispatch_wizard.create.cancel') }}
@@ -38,7 +38,7 @@
           <div ref="draftMenuEl" class="relative">
             <button
               type="button"
-              class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50"
+              class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm outline-none transition hover:bg-slate-50 focus:outline-none focus-visible:outline-none"
               :class="{ 'border-slate-300 bg-slate-50': draftMenuOpen }"
               @click.stop="draftMenuOpen = !draftMenuOpen"
             >
@@ -119,7 +119,7 @@
           <button
             v-if="!(step === 3 && !created)"
             type="button"
-            class="inline-flex items-center gap-2 rounded-lg bg-va-800 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-va-900 disabled:cursor-not-allowed disabled:opacity-50"
+            class="inline-flex items-center gap-2 rounded-lg bg-va-800 px-4 py-2 text-sm font-semibold text-white shadow-sm outline-none transition hover:bg-va-900 focus:outline-none focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             :disabled="headerPrimaryDisabled"
             @click="primaryAction"
           >

@@ -49,16 +49,37 @@
         </div>
       </div>
 
-      <!-- Trip info chips: times + passengers + pic -->
-      <div v-if="rowInfoChips(row).length" class="flex flex-wrap gap-2 border-b border-slate-100 px-4 py-3 dark:border-slate-800">
-        <span
-          v-for="chip in rowInfoChips(row)"
-          :key="chip.key"
-          class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-slate-50/70 px-2.5 py-1 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300"
+      <!-- Trip info: labeled fields (time, guests, PIC…) -->
+      <div
+        v-if="rowInfoItems(row).length"
+        class="grid gap-2 border-b border-slate-100 px-4 py-3 sm:grid-cols-2 dark:border-slate-800"
+      >
+        <div
+          v-for="item in rowInfoItems(row)"
+          :key="item.key"
+          class="flex items-start gap-2.5 rounded-xl border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 dark:border-slate-700/80 dark:bg-slate-800/40"
         >
-          <span class="shrink-0 text-slate-400 dark:text-slate-500">{{ chip.icon }}</span>
-          <span>{{ chip.text }}</span>
-        </span>
+          <span
+            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+            :class="infoItemTone[item.tone].icon"
+          >
+            <component :is="item.icon" class="h-4 w-4" aria-hidden="true" />
+          </span>
+          <div class="min-w-0 flex-1">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              {{ item.label }}
+            </p>
+            <p class="mt-0.5 text-sm font-semibold tabular-nums text-slate-800 dark:text-slate-100">
+              {{ item.primary }}
+            </p>
+            <p
+              v-if="item.secondary"
+              class="mt-0.5 truncate text-xs font-medium text-slate-500 dark:text-slate-400"
+            >
+              {{ item.secondary }}
+            </p>
+          </div>
+        </div>
       </div>
 
       <!-- Cargo inputs -->
@@ -213,7 +234,16 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { CurrencyDollarIcon } from '@heroicons/vue/24/outline'
+import {
+  ArrowRightIcon,
+  ArrowUturnLeftIcon,
+  ClockIcon,
+  CurrencyDollarIcon,
+  MapPinIcon,
+  ScaleIcon,
+  UserGroupIcon,
+  UserIcon,
+} from '@heroicons/vue/24/outline'
 import Button from '../../ui/Button.vue'
 import FillPriceFieldLabel from './FillPriceFieldLabel.vue'
 import { getAvailableDeptHeads } from '../../../api/requests'
@@ -277,31 +307,113 @@ function rowTo(row) {
   return itineraryRowEndpoints(row).to
 }
 
-function rowInfoChips(row) {
-  const chips = []
+const infoItemTone = {
+  emerald: { icon: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300' },
+  rose: { icon: 'bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300' },
+  sky: { icon: 'bg-sky-100 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300' },
+  violet: { icon: 'bg-violet-100 text-violet-700 dark:bg-violet-950/50 dark:text-violet-300' },
+  amber: { icon: 'bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300' },
+}
+
+function rowInfoItems(row) {
+  const items = []
   const tripType = itineraryTripType.value
+  const { from, to } = itineraryRowEndpoints(row)
+
+  if (tripType === 'cargo') {
+    const pickupAt = formatItineraryRowDt(row.pickup_at)
+    const deliveryAt = formatItineraryRowDt(row.delivery_at)
+    if (pickupAt || from) {
+      items.push({
+        key: 'pickup',
+        label: t('request_detail.ops_lbl_pickup_time'),
+        primary: pickupAt || '—',
+        secondary: from || '',
+        icon: ClockIcon,
+        tone: 'emerald',
+      })
+    }
+    if (deliveryAt || to) {
+      items.push({
+        key: 'delivery',
+        label: t('request_detail.ops_lbl_delivery_time'),
+        primary: deliveryAt || '—',
+        secondary: to || '',
+        icon: ArrowRightIcon,
+        tone: 'rose',
+      })
+    }
+    const qty = nz(row.qty)
+    const weight = nz(row.weight)
+    if (qty || weight) {
+      items.push({
+        key: 'load',
+        label: t('request_detail.ops_lbl_qty'),
+        primary: qty || '—',
+        secondary: weight ? `${t('request_detail.ops_lbl_weight')}: ${weight}` : '',
+        icon: ScaleIcon,
+        tone: 'amber',
+      })
+    }
+    return items
+  }
+
   const outTime = formatItineraryRowDt(row.depart_at)
   const backTime = formatItineraryRowDt(row.return_at)
-  const { from, to } = itineraryRowEndpoints(row)
   if (outTime || from) {
-    chips.push({ key: 'out', icon: '↗', text: [outTime, from].filter(Boolean).join(' · ') })
+    items.push({
+      key: 'out',
+      label: t('request_detail.ops_lbl_depart_time'),
+      primary: outTime || '—',
+      secondary: from || '',
+      icon: ArrowRightIcon,
+      tone: 'emerald',
+    })
   }
   if (backTime || to) {
-    chips.push({ key: 'back', icon: '↙', text: [backTime, to].filter(Boolean).join(' · ') })
-  }
-  const guests = nz(row.guests)
-  if (guests) {
-    chips.push({ key: 'guests', icon: '👥', text: t('request_detail.ops_row_line_guests', { n: guests }) })
-  }
-  const pic = nz(row.person_in_charge)
-  if (pic && tripType === 'passenger') {
-    chips.push({ key: 'pic', icon: '👤', text: t('request_detail.ops_row_line_pic', { name: pic }) })
+    items.push({
+      key: 'back',
+      label: t('request_detail.ops_lbl_return_time'),
+      primary: backTime || '—',
+      secondary: to || '',
+      icon: ArrowUturnLeftIcon,
+      tone: 'rose',
+    })
   }
   const waypoint = nz(row.waypoint)
   if (waypoint && tripType === 'business') {
-    chips.push({ key: 'waypoint', icon: '📍', text: waypoint })
+    items.push({
+      key: 'waypoint',
+      label: t('request_detail.ops_lbl_waypoint'),
+      primary: waypoint,
+      secondary: '',
+      icon: MapPinIcon,
+      tone: 'amber',
+    })
   }
-  return chips
+  const guests = nz(row.guests)
+  if (guests) {
+    items.push({
+      key: 'guests',
+      label: t('request_detail.ops_lbl_guests'),
+      primary: t('request_detail.ops_row_heading_guests', { n: guests }),
+      secondary: '',
+      icon: UserGroupIcon,
+      tone: 'sky',
+    })
+  }
+  const pic = nz(row.person_in_charge)
+  if (pic && tripType === 'passenger') {
+    items.push({
+      key: 'pic',
+      label: t('request_detail.ops_lbl_person_in_charge'),
+      primary: pic,
+      secondary: '',
+      icon: UserIcon,
+      tone: 'violet',
+    })
+  }
+  return items
 }
 
 // ── Drafts ──

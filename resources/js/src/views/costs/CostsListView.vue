@@ -40,12 +40,6 @@
         @click="activeTab = 'standalone'"
       >
         {{ t('costs_page.tab_standalone') }}
-        <span
-          v-if="standaloneTabTotal > 0"
-          class="ml-1 inline-block min-w-[1.125rem] rounded-full bg-amber-100 px-1 py-px text-[10px] font-bold tabular-nums text-amber-900 dark:bg-amber-950/70 dark:text-amber-200"
-        >
-          {{ standaloneTabTotal }}
-        </span>
       </button>
       <button
         type="button"
@@ -60,12 +54,6 @@
         @click="activeTab = 'business_personnel'"
       >
         {{ t('costs_page.tab_business_personnel') }}
-        <span
-          v-if="bpMeta.total > 0"
-          class="ml-1 inline-block min-w-[1.125rem] rounded-full bg-violet-100 px-1 py-px text-[10px] font-bold tabular-nums text-violet-800 dark:bg-violet-950/70 dark:text-violet-200"
-        >
-          {{ bpMeta.total }}
-        </span>
       </button>
     </div>
 
@@ -77,7 +65,7 @@
       <div class="relative z-40">
     <AppFilterBar>
       <div ref="costsFilterBarRef" class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
-        <AppFilterFunnelMenu ref="filterMenuRef" :badge-count="activeFilterCount">
+        <AppFilterFunnelMenu ref="filterMenuRef" :active="activeFilterCount > 0">
               <p class="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
               {{ t('dashboard_analytics.filter_applied_title') }}
               </p>
@@ -498,14 +486,14 @@
               ]"
             >
               <td class="costs-td text-center tabular-nums text-slate-500 dark:text-slate-400">{{ rowIndex(idx) }}</td>
-              <td v-if="colVisible.unit" class="costs-td">
-                <span class="costs-pill">{{ unitLabel }}</span>
+              <td v-if="colVisible.unit" class="costs-td text-slate-700 dark:text-slate-300">
+                {{ unitLabel }}
               </td>
               <td v-if="colVisible.category" class="costs-td">
                 <span
                   v-if="tripTypeFromCost(c)"
-                  class="costs-pill"
-                  :class="tripTypePillClass(tripTypeFromCost(c))"
+                  class="text-xs font-semibold"
+                  :class="tripTypeTextClass(tripTypeFromCost(c))"
                 >{{ labelTripType(tripTypeFromCost(c)) }}</span>
                 <span v-else class="text-slate-400">—</span>
               </td>
@@ -514,13 +502,13 @@
                 <span class="line-clamp-2" :title="c.description || ''">{{ c.description || '—' }}</span>
                 <span
                   v-if="isWizardEstimateLine(c)"
-                  class="mt-0.5 inline-flex rounded-full bg-violet-100/90 px-2 py-px text-[10px] font-semibold text-violet-900 dark:bg-violet-950/50 dark:text-violet-100"
+                  class="mt-0.5 block text-[11px] font-medium text-violet-700 dark:text-violet-400"
                 >
                   {{ estimateKindLabel(c) }}
                 </span>
               </td>
-              <td v-if="colVisible.fleet_source" class="costs-td whitespace-nowrap">
-                <span class="costs-pill">{{ fleetModeLabel(tripFleetModeFromCost(c)) }}</span>
+              <td v-if="colVisible.fleet_source" class="costs-td whitespace-nowrap text-slate-700 dark:text-slate-300">
+                {{ fleetModeLabel(tripFleetModeFromCost(c)) }}
               </td>
               <td v-if="colVisible.provider" class="costs-td">{{ costProviderName(c) || '—' }}</td>
               <td v-if="colVisible.advance" class="costs-td costs-td--money text-right text-slate-400">—</td>
@@ -534,9 +522,8 @@
                 {{ formatVnd(c.amount) }}
               </td>
               <td v-if="colVisible.time" class="costs-td whitespace-nowrap tabular-nums text-slate-600 dark:text-slate-400">{{ formatDateDMY(c.created_at) }}</td>
-              <td v-if="colVisible.owner" class="costs-td">
-                <span v-if="c.confirmer?.name" class="costs-pill">{{ c.confirmer.name }}</span>
-                <span v-else class="text-slate-400">—</span>
+              <td v-if="colVisible.owner" class="costs-td text-slate-700 dark:text-slate-300">
+                {{ c.confirmer?.name || '—' }}
               </td>
               <td v-if="colVisible.receipt" class="costs-td">
                 <a
@@ -565,14 +552,18 @@
                 >
                 <span
                   v-else-if="!isWizardEstimateLine(c)"
-                  class="costs-pill bg-amber-100/90 text-amber-900 dark:bg-amber-950/50 dark:text-amber-100"
+                  class="text-xs font-medium text-amber-700 dark:text-amber-400"
                 >{{ t('costs_page.badge_standalone') }}</span>
                 <span v-else>—</span>
               </td>
               <td v-if="colVisible.trip_type" class="costs-td">
                 <span
-                  class="costs-pill"
-                  :class="isWizardEstimateLine(c) ? 'costs-pill--estimate' : 'costs-pill--type'"
+                  class="text-xs font-medium"
+                  :class="
+                    isWizardEstimateLine(c)
+                      ? 'text-violet-700 dark:text-violet-400'
+                      : 'text-slate-700 dark:text-slate-300'
+                  "
                 >{{ isWizardEstimateLine(c) ? estimateKindLabel(c) : typeLabel(c.type) }}</span>
               </td>
               <td v-if="canReconcileCosts && colVisible.actions" class="costs-td">
@@ -752,7 +743,6 @@
             class="text-sm font-semibold text-slate-900 dark:text-slate-100"
           >
             {{ t('costs_page.section_business_personnel') }}
-            <span v-if="bpMeta.total != null" class="ml-1 font-normal text-slate-500 dark:text-slate-400">({{ bpMeta.total }})</span>
           </h3>
         </div>
         <div class="overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
@@ -1176,8 +1166,6 @@ const auth = useAuthStore()
 /** @type {import('vue').Ref<'all_trips' | 'standalone' | 'business_personnel'>} */
 const activeTab = ref('all_trips')
 
-const standaloneTabTotal = ref(0)
-
 const DEFAULT_PER_PAGE = 25
 
 const unitLabel = computed(() => t('costs_page.unit_label_const'))
@@ -1341,15 +1329,15 @@ function providerFilterMatchesRecordedCost(c) {
   return costProviderName(c) === p
 }
 
-const TRIP_TYPE_PILL_CLASSES = {
-  point_to_point: 'bg-sky-100/80 text-sky-800',
-  cargo: 'bg-amber-100/80 text-amber-800',
-  business: 'bg-violet-100/80 text-violet-800',
-  door_to_door: 'bg-teal-100/80 text-teal-800',
+const TRIP_TYPE_TEXT_CLASSES = {
+  point_to_point: 'text-sky-700 dark:text-sky-400',
+  cargo: 'text-amber-700 dark:text-amber-400',
+  business: 'text-violet-700 dark:text-violet-400',
+  door_to_door: 'text-teal-700 dark:text-teal-400',
 }
 
-function tripTypePillClass(slug) {
-  return TRIP_TYPE_PILL_CLASSES[slug] ?? ''
+function tripTypeTextClass(slug) {
+  return TRIP_TYPE_TEXT_CLASSES[slug] ?? 'text-slate-700 dark:text-slate-300'
 }
 
 const modalCostTypeOptions = computed(() => {
@@ -1461,7 +1449,7 @@ const filters = reactive({
 
 function hydrateCostStatusFromRoute() {
   if (!('status' in route.query)) {
-    filters.status = 'submitted'
+    filters.status = ''
     return
   }
   const s = route.query.status
@@ -2056,17 +2044,6 @@ function resetFilters() {
   reload()
 }
 
-async function refreshStandaloneTabTotal() {
-  try {
-    const q = { standalone: 1, per_page: 1, page: 1 }
-    if (filters.status) q.status = filters.status
-    const res = await listTripCosts(q)
-    standaloneTabTotal.value = Number(res.meta?.total ?? 0)
-  } catch {
-    standaloneTabTotal.value = 0
-  }
-}
-
 async function reload() {
   loading.value = true
   estimatesLoading.value = true
@@ -2097,7 +2074,6 @@ async function reload() {
       items.value = res.items ?? []
       meta.value = res.meta ?? {}
       estimateItems.value = []
-      standaloneTabTotal.value = Number(res.meta?.total ?? 0)
     } else {
       const [res, estRes] = await Promise.all([
         listTripCosts(p),
@@ -2106,7 +2082,6 @@ async function reload() {
       items.value = res.items ?? []
       meta.value = res.meta ?? {}
       estimateItems.value = (estRes.items ?? []).map(mapWizardLineToCostRow)
-      void refreshStandaloneTabTotal()
     }
   } finally {
     loading.value = false
@@ -2301,17 +2276,5 @@ onActivated(() => {
 
 .costs-td--money {
   @apply text-right tabular-nums;
-}
-
-.costs-pill {
-  @apply inline-flex max-w-full items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300;
-}
-
-.costs-pill--type {
-  @apply bg-slate-200/90 text-slate-800 dark:bg-slate-700 dark:text-slate-100;
-}
-
-.costs-pill--estimate {
-  @apply bg-violet-100/90 text-violet-900 dark:bg-violet-950/50 dark:text-violet-100;
 }
 </style>

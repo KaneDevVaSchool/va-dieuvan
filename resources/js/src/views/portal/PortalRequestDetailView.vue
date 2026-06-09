@@ -40,103 +40,99 @@
     </div>
 
     <template v-else-if="req">
-      <div class="space-y-4">
-        <PortalRequestHeroCard
-          :req="req"
-          :back-route="portalRoutes.list"
-          :priority-label="actionCenter.priorityLabel"
-          :priority-tone="actionCenter.priorityTone"
-          :polling-refreshing="pollingRefreshing"
-          :can-print="canPrintRequest"
-          @print="onPrintRequest"
-        />
+      <PortalRequestHeroCard
+        class="mb-4"
+        :req="req"
+        :back-route="portalRoutes.list"
+        :priority-label="actionCenter.priorityLabel"
+        :priority-tone="actionCenter.priorityTone"
+        :polling-refreshing="pollingRefreshing"
+        :can-print="canPrintRequest"
+        @print="onPrintRequest"
+      />
 
-        <PortalRequestJourneyCard
-          :origin="originText"
-          :destination="destinationText"
-          :depart-at="departFmt"
-          :trip-type-label="tripTypeLabel"
-        />
-
-        <PortalRequestActionCenter
-          :waiting-on-label="actionCenter.waitingOnLabel"
-          :due-label="actionCenter.dueLabel"
-          :sla-label="actionCenter.slaLabel"
-          :next-action-text="actionCenter.nextActionText"
-          :hours-until-depart="actionCenter.hoursUntilDepart"
-          :urgent-threshold-hours="req.threshold_hours ?? 24"
-        />
-      </div>
-
-      <div class="mt-4 space-y-4">
-        <div id="portal-request-timeline" class="w-full">
-          <PortalStatusTimeline
-            :title="t('portal.timeline_heading')"
-            :steps="timelineSteps"
-          />
-        </div>
-
-        <PortalRequestInfoCards
-          :req="req"
-          :origin="originText"
-          :destination="destinationText"
-          :timeline-steps="timelineSteps"
-          :purpose="purposeLine"
-          :notes="notesLine"
-        />
-
-        <div
-            v-if="req.status === 'rejected' && req.rejection_reason"
-            class="rounded-xl border border-rose-200 bg-rose-50/50 p-4 sm:p-5"
+      <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <nav
+          class="portal-detail-tabs sticky top-[calc(env(safe-area-inset-top,0px)+4.5rem)] z-20 flex gap-1 overflow-x-auto border-b border-slate-200 bg-slate-50 px-2 py-2 sm:static sm:flex-wrap sm:overflow-visible sm:px-3"
+          role="tablist"
+          :aria-label="t('portal.detail_tablist_aria')"
+        >
+          <button
+            v-for="tab in detailTabs"
+            :key="tab.id"
+            type="button"
+            role="tab"
+            :aria-selected="activeTab === tab.id"
+            class="shrink-0 snap-start rounded-xl px-3.5 py-2.5 text-xs font-semibold transition sm:text-sm"
+            :class="
+              activeTab === tab.id
+                ? 'bg-va-800 text-white shadow-sm shadow-va-900/15'
+                : 'text-slate-600 hover:bg-white hover:text-slate-900'
+            "
+            @click="setActiveTab(tab.id)"
           >
-            <div class="flex items-start gap-3">
-              <XCircleIcon class="h-7 w-7 shrink-0 text-rose-600" aria-hidden="true" />
-              <div class="min-w-0 flex-1">
-                <p class="text-sm font-bold text-rose-950">{{ t('portal.rejected_title') }}</p>
-                <p class="mt-2 max-h-40 overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed text-rose-900/95">
-                  {{ req.rejection_reason }}
-                </p>
-                <button
-                  type="button"
-                  class="mt-3 inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-rose-200 bg-white px-3 py-2 text-xs font-semibold text-rose-900 transition hover:bg-rose-50 active:scale-[0.98]"
-                  @click="copyRejectionReason"
-                >
-                  <ClipboardDocumentIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-                  {{ copyRejectionFeedback ? t('portal.copied') : t('portal.copy_rejection') }}
-                </button>
+            {{ tab.label }}
+          </button>
+        </nav>
+
+        <div class="p-4 sm:p-6">
+          <div v-show="activeTab === 'overview'" class="space-y-4">
+            <PortalRequestJourneyCard
+              :origin="originText"
+              :destination="destinationText"
+              :depart-at="departFmt"
+              :trip-type-label="tripTypeLabel"
+            />
+
+            <PortalRequestActionCenter
+              :waiting-on-label="actionCenter.waitingOnLabel"
+              :due-label="actionCenter.dueLabel"
+              :sla-label="actionCenter.slaLabel"
+              :next-action-text="actionCenter.nextActionText"
+              :hours-until-depart="actionCenter.hoursUntilDepart"
+              :urgent-threshold-hours="req.threshold_hours ?? 24"
+            />
+
+            <div id="portal-request-timeline" class="w-full">
+              <PortalStatusTimeline
+                :title="t('portal.timeline_heading')"
+                :steps="timelineSteps"
+              />
+            </div>
+
+            <PortalRequestInfoCards
+              :req="req"
+              :origin="originText"
+              :destination="destinationText"
+              :timeline-steps="timelineSteps"
+              :purpose="purposeLine"
+              :notes="notesLine"
+            />
+
+            <div
+              v-if="req.status === 'rejected' && req.rejection_reason"
+              class="rounded-xl border border-rose-200 bg-rose-50/50 p-4 sm:p-5"
+            >
+              <div class="flex items-start gap-3">
+                <XCircleIcon class="h-7 w-7 shrink-0 text-rose-600" aria-hidden="true" />
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-bold text-rose-950">{{ t('portal.rejected_title') }}</p>
+                  <p class="mt-2 max-h-40 overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed text-rose-900/95">
+                    {{ req.rejection_reason }}
+                  </p>
+                  <button
+                    type="button"
+                    class="mt-3 inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-rose-200 bg-white px-3 py-2 text-xs font-semibold text-rose-900 transition hover:bg-rose-50 active:scale-[0.98]"
+                    @click="copyRejectionReason"
+                  >
+                    <ClipboardDocumentIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                    {{ copyRejectionFeedback ? t('portal.copied') : t('portal.copy_rejection') }}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
-          <div
-            v-if="detailTabs.length"
-            class="overflow-hidden rounded-xl border border-slate-200 bg-white"
-          >
-            <nav
-              v-if="detailTabs.length > 1"
-              class="portal-detail-tabs sticky top-[calc(env(safe-area-inset-top,0px)+4.5rem)] z-20 -mx-px flex gap-1 overflow-x-auto border-b border-slate-100 bg-slate-50 px-2 py-2 sm:static sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-3 sm:py-2"
-              role="tablist"
-              :aria-label="t('portal.detail_tablist_aria')"
-            >
-              <button
-                v-for="tab in detailTabs"
-                :key="tab.id"
-                type="button"
-                role="tab"
-                :aria-selected="activeTab === tab.id"
-                class="shrink-0 snap-start rounded-xl px-3.5 py-2.5 text-xs font-semibold transition sm:text-sm"
-                :class="
-                  activeTab === tab.id
-                    ? 'bg-va-800 text-white shadow-sm shadow-va-900/15'
-                    : 'text-slate-600 hover:bg-white hover:text-slate-900'
-                "
-                @click="setActiveTab(tab.id)"
-              >
-                {{ tab.label }}
-              </button>
-            </nav>
-
-            <div class="p-4 sm:p-6">
           <div v-show="activeTab === 'form' && showExtracurricularBm03">
             <PortalExtracurricularBm03EditForm
               ref="bm03FormRef"
@@ -263,8 +259,7 @@
               :signed-mime="signedPreviewMime"
             />
           </div>
-            </div>
-          </div>
+        </div>
       </div>
 
       <PortalRequestMobileActionBar
@@ -362,8 +357,8 @@ const actionCenter = usePortalRequestActionCenter(req, t)
 
 const canPrintRequest = computed(() => req.value?.status === 'approved')
 
-const PORTAL_DETAIL_TAB_IDS = ['form', 'manage', 'pdf', 'docs']
-const activeTab = ref('form')
+const PORTAL_DETAIL_TAB_IDS = ['overview', 'form', 'manage', 'pdf', 'docs']
+const activeTab = ref('overview')
 
 function revokePdfPreviewUrl() {
   if (pdfBlobUrl.value && pdfBlobUrl.value.startsWith('blob:')) {
@@ -703,7 +698,7 @@ const showRecurringExtras = computed(() => {
 })
 
 const detailTabs = computed(() => {
-  const tabs = []
+  const tabs = [{ id: 'overview', label: t('portal.detail_tab_overview') }]
   if (showExtracurricularBm03.value) {
     tabs.push({ id: 'form', label: t('portal.detail_tab_form') })
   }
@@ -736,7 +731,7 @@ function resolveDefaultPortalTab() {
   if (portalTabVisible('form')) return 'form'
   if (portalTabVisible('pdf')) return 'pdf'
   if (portalTabVisible('manage')) return 'manage'
-  return detailTabs.value[0]?.id ?? 'form'
+  return 'overview'
 }
 
 function setActiveTab(tab) {

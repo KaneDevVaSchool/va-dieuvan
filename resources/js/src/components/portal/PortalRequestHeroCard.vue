@@ -10,9 +10,12 @@
           <ArrowLeftIcon class="h-5 w-5" aria-hidden="true" />
         </RouterLink>
         <div class="min-w-0 flex-1">
-          <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <h1 class="font-mono text-2xl font-semibold tracking-tight text-slate-900">
-              #{{ req.id }}
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            {{ t('portal.detail_hero.ref_label') }}
+          </p>
+          <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2">
+            <h1 class="font-mono text-2xl font-bold tracking-tight text-va-900 sm:text-3xl">
+              {{ refCode }}
             </h1>
             <StatusBadge :status="req.status" />
             <span
@@ -66,6 +69,7 @@ import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ArrowLeftIcon, BoltIcon, PrinterIcon } from '@heroicons/vue/24/outline'
 import StatusBadge from '../ui/StatusBadge.vue'
+import { formatDispatchRequestRefCode } from '../../util/portalRequestFormat.js'
 
 const props = defineProps({
   req: { type: Object, required: true },
@@ -79,6 +83,8 @@ const props = defineProps({
 defineEmits(['print'])
 
 const { t } = useI18n()
+
+const refCode = computed(() => formatDispatchRequestRefCode(props.req) || '—')
 
 const requesterName = computed(() => {
   const r = props.req

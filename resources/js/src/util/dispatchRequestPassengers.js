@@ -1,16 +1,18 @@
 import {
-  isPassengerRowFilled,
-  isBusinessRowFilled,
+  isPassengerRowCounted,
+  isBusinessRowCounted,
   isCargoRowFilled,
 } from '../composables/dispatchWizardConstants'
 
 function rowGuestsValue(row) {
-  const g = parseInt(String(row?.guests ?? '1'), 10)
-  return Number.isFinite(g) && g >= 1 ? g : 1
+  const raw = String(row?.guests ?? '').trim().replace(/\s/g, '')
+  if (raw === '') return 0
+  const g = Number(raw)
+  return Number.isFinite(g) && g >= 1 ? g : 0
 }
 
 /**
- * Tổng khách theo loại chuyến — cùng quy tắc lọc dòng như `useDispatchScheduleCards`.
+ * Tổng khách theo loại chuyến — khớp `DispatchWizardPassengerCount::sumFromSnapshot` (PHP).
  * @param {object | null | undefined} snapshot wizard_snapshot
  * @param {string} [tripType] door_to_door | point_to_point | business | cargo
  */
@@ -29,14 +31,13 @@ export function wizardSnapshotGuestTotal(snapshot, tripType = '') {
   }
 
   let sum = 0
-  if (tt !== 'business') {
-    for (const r of snapshot.passengerRows ?? []) {
-      if (isPassengerRowFilled(r)) sum += rowGuestsValue(r)
-    }
-  }
-  if (tt !== 'point_to_point') {
+  if (tt === 'business') {
     for (const r of snapshot.businessRows ?? []) {
-      if (isBusinessRowFilled(r)) sum += rowGuestsValue(r)
+      if (isBusinessRowCounted(r)) sum += rowGuestsValue(r)
+    }
+  } else {
+    for (const r of snapshot.passengerRows ?? []) {
+      if (isPassengerRowCounted(r)) sum += rowGuestsValue(r)
     }
   }
   return sum
@@ -55,4 +56,20 @@ export function dispatchRequestEffectivePassengerCount(dr) {
   }
   const pc = Number(dr.passenger_count)
   return Number.isFinite(pc) && pc > 0 ? Math.round(pc) : 0
+}
+
+/**
+ * Số khách hiển thị — ưu tiên tổng wizard_snapshot (tránh lệch passenger_count DB).
+ * @param {{ wizard_snapshot?: object, trip_type?: string, student_count_actual?: number|string|null, passenger_count?: number|string|null } | null | undefined} dr
+ */
+export function dispatchRequestDisplayPassengerCount(dr) {
+  if (!dr) return 0
+  const actual = dr.student_count_actual
+  if (actual != null && actual !== '') {
+    const n = Number(actual)
+    if (Number.isFinite(n) && n > 0) return Math.round(n)
+  }
+  const fromSnapshot = wizardSnapshotGuestTotal(dr?.wizard_snapshot, dr?.trip_type ?? '')
+  if (fromSnapshot > 0) return fromSnapshot
+  return dispatchRequestEffectivePassengerCount(dr)
 }

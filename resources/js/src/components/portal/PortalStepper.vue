@@ -18,7 +18,7 @@
           <button
             v-if="interactive"
             type="button"
-            class="group flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left antialiased transition sm:flex-col sm:items-center sm:gap-2 sm:px-2 sm:py-2"
+            class="group flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left antialiased outline-none transition focus:outline-none focus-visible:outline-none sm:flex-col sm:items-center sm:gap-2 sm:px-2 sm:py-2"
             :class="
               i > maxReachedStep
                 ? 'cursor-not-allowed opacity-45'

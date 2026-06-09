@@ -38,6 +38,8 @@ import {
   emptyBusinessRow,
   emptyCargoRow,
   isPassengerRowFilled,
+  isPassengerRowCounted,
+  isBusinessRowCounted,
   isPassengerRouteFilled,
   isBusinessRowFilled,
   isCargoRowFilled,
@@ -955,9 +957,9 @@ export function useDispatchRequestWizard(options = {}) {
   const passengerGuestTotal = computed(() => {
     const tt = form.value.trip_type
     if (tt === 'business') {
-      return businessRows.value.filter(isBusinessRowFilled).reduce((s, r) => s + parseGuests(r.guests), 0)
+      return businessRows.value.filter(isBusinessRowCounted).reduce((s, r) => s + parseGuests(r.guests), 0)
     }
-    return passengerRows.value.filter(isPassengerRowFilled).reduce((s, r) => s + parseGuests(r.guests), 0)
+    return passengerRows.value.filter(isPassengerRowCounted).reduce((s, r) => s + parseGuests(r.guests), 0)
   })
 
   const cargoTotal = computed(() =>
@@ -1381,9 +1383,9 @@ export function useDispatchRequestWizard(options = {}) {
       }
       const wizard_snapshot = {
         form: formSnap,
-        passengerRows: passengerRows.value.map((r) => ({ ...r })),
-        businessRows: businessRows.value.map((r) => ({ ...r })),
-        cargoRows: cargoRows.value.map((r) => ({ ...r })),
+        passengerRows: passengerRows.value.filter(isPassengerRowCounted).map((r) => ({ ...r })),
+        businessRows: businessRows.value.filter(isBusinessRowCounted).map((r) => ({ ...r })),
+        cargoRows: cargoRows.value.filter(isCargoRowFilled).map((r) => ({ ...r })),
       }
       const payload = {
         trip_type: form.value.trip_type,

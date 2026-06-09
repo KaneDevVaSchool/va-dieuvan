@@ -1,33 +1,33 @@
 <template>
   <div>
-    <section class="mx-auto max-w-7xl px-3 py-8 xs:px-4 sm:px-6 lg:py-10">
+    <section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:py-10">
       <!-- Heading + primary CTA -->
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 class="text-2xl font-bold tracking-tight text-slate-900">
+          <h1 class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
             {{ greetingTitle }}
           </h1>
-          <p class="mt-1 text-sm font-medium text-va-800/90">{{ todayLine }}</p>
-          <p class="mt-2 max-w-2xl text-sm text-slate-600">{{ t('portal.dashboard_lead') }}</p>
+          <p class="mt-1.5 text-base font-medium text-va-800/90">{{ todayLine }}</p>
+          <p class="mt-2 max-w-2xl text-base leading-relaxed text-slate-600">{{ t('portal.dashboard_lead') }}</p>
         </div>
         <RouterLink
           :to="{ name: 'portalCreate' }"
-          class="inline-flex min-h-[48px] shrink-0 items-center justify-center gap-2 rounded-2xl bg-va-800 px-6 text-sm font-bold text-white shadow-md transition hover:bg-va-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-va-800 max-[379px]:px-3"
+          class="inline-flex min-h-[52px] shrink-0 items-center justify-center gap-2 rounded-2xl bg-va-800 px-6 text-base font-bold text-white shadow-md transition hover:bg-va-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-va-800 max-[379px]:px-4"
         >
           <PlusCircleIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
-          <span class="max-[379px]:sr-only">{{ t('portal.cta_primary') }}</span>
+          <span>{{ t('portal.cta_primary') }}</span>
         </RouterLink>
       </div>
 
       <PortalKpiCards class="mt-8" :loading="summaryLoading" :summary="summary" />
 
-      <div class="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <div class="min-w-0 space-y-6">
+      <div class="mt-10 space-y-8 lg:grid lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start lg:gap-8 xl:grid-cols-[minmax(0,1fr)_20rem]">
+        <div class="min-w-0 space-y-5">
           <div class="flex flex-wrap items-end justify-between gap-3">
-            <h2 class="text-lg font-bold text-slate-900">{{ t('portal.recent_requests_heading') }}</h2>
+            <h2 class="text-xl font-bold text-slate-900 sm:text-2xl">{{ t('portal.recent_requests_heading') }}</h2>
             <RouterLink
               :to="{ name: 'portalRequestList' }"
-              class="text-sm font-semibold text-va-800 underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-va-800"
+              class="text-base font-semibold text-va-800 underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-va-800"
             >
               {{ t('portal.view_all_requests') }}
             </RouterLink>
@@ -42,7 +42,7 @@
               v-for="chip in recentFilterChips"
               :key="chip.key"
               type="button"
-              class="rounded-full px-3 py-1.5 text-xs font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-va-800"
+              class="min-h-[40px] rounded-full px-4 py-2 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-va-800"
               :class="
                 recentFilter === chip.key
                   ? 'bg-va-800 text-white shadow-sm'
@@ -56,7 +56,7 @@
 
           <PortalRequestSkeleton v-if="loading && !silentListRefresh" class="mt-2" :aria-label="t('portal.loading_requests')" />
 
-          <div v-else-if="fetchError" class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+          <div v-else-if="fetchError" class="rounded-2xl bg-rose-50 px-4 py-3.5 text-base text-rose-800">
             {{ fetchError }}
           </div>
 
@@ -69,7 +69,7 @@
             <template #action>
               <RouterLink
                 :to="{ name: 'portalCreate' }"
-                class="inline-flex min-h-[48px] items-center justify-center rounded-2xl bg-va-800 px-8 text-sm font-semibold text-white shadow-md hover:bg-va-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-va-800"
+                class="inline-flex min-h-[52px] items-center justify-center rounded-2xl bg-va-800 px-8 text-base font-semibold text-white shadow-md hover:bg-va-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-va-800"
               >
                 {{ t('portal.cta_primary') }}
               </RouterLink>
@@ -83,9 +83,8 @@
           />
         </div>
 
-        <aside class="space-y-6 lg:sticky lg:top-[5.5rem] lg:self-start">
+        <aside class="lg:sticky lg:top-[5.5rem] lg:self-start">
           <PortalQuickActions :pending-count="pendingCount" />
-          <PortalNotificationsPanel :refresh-tick="pollTick" />
         </aside>
       </div>
     </section>
@@ -105,7 +104,6 @@ import PortalEmptyState from '../../components/portal/PortalEmptyState.vue'
 import PortalRequestSkeleton from '../../components/portal/PortalRequestSkeleton.vue'
 import PortalKpiCards from '../../components/portal/PortalKpiCards.vue'
 import PortalQuickActions from '../../components/portal/PortalQuickActions.vue'
-import PortalNotificationsPanel from '../../components/portal/PortalNotificationsPanel.vue'
 import PortalRequestsTable from '../../components/portal/PortalRequestsTable.vue'
 
 const RECENT_LIMIT = 8
@@ -127,7 +125,6 @@ const highlightRequestId = ref(null)
 const summary = ref(null)
 const summaryLoading = ref(true)
 
-const pollTick = ref(0)
 let pollTimer = null
 
 const localeKey = computed(() => (locale.value === 'en' ? 'en' : 'vi'))
@@ -286,7 +283,6 @@ function setRecentFilter(key) {
 }
 
 async function refreshAllQuiet() {
-  pollTick.value += 1
   await Promise.all([loadSummary(true), loadRecent(true)])
 }
 

@@ -31,6 +31,7 @@ use App\Services\Auditing\AuditLogger;
 use App\Services\DispatchRequests\DispatchRequestApprovalService;
 use App\Services\DispatchRequests\DispatchRequestPdfPresenter;
 use App\Support\DispatchCargoShipmentProvisioner;
+use App\Support\DispatchWizardPassengerCount;
 use App\Support\Messages;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -872,41 +873,7 @@ class DispatchRequestController extends Controller
      */
     private function sumGuestsFromSnapshot(array $snap, string $tripType = ''): ?int
     {
-        $tt = trim($tripType);
-        $sum = 0;
-
-        if ($tt === 'cargo') {
-            foreach ($snap['cargoRows'] ?? [] as $r) {
-                if (! is_array($r) || ! $this->cargoSnapshotRowFilled($r)) {
-                    continue;
-                }
-                $q = (int) ($r['qty'] ?? 1);
-                $sum += $q >= 1 ? $q : 1;
-            }
-
-            return $sum > 0 ? $sum : null;
-        }
-
-        if ($tt !== 'business') {
-            foreach ($snap['passengerRows'] ?? [] as $r) {
-                if (! is_array($r) || ! $this->passengerSnapshotRowFilled($r)) {
-                    continue;
-                }
-                $g = (int) ($r['guests'] ?? 1);
-                $sum += $g >= 1 ? $g : 1;
-            }
-        }
-        if ($tt === 'business') {
-            foreach ($snap['businessRows'] ?? [] as $r) {
-                if (! is_array($r) || ! $this->businessSnapshotRowFilled($r)) {
-                    continue;
-                }
-                $g = (int) ($r['guests'] ?? 1);
-                $sum += $g >= 1 ? $g : 1;
-            }
-        }
-
-        return $sum > 0 ? $sum : null;
+        return DispatchWizardPassengerCount::sumFromSnapshot($snap, $tripType);
     }
 
     /**
@@ -947,6 +914,27 @@ class DispatchRequestController extends Controller
     }
 
     /**
+     * Dòng có dữ liệu thực — bỏ qua dòng chỉ có giờ auto-sync (tránh +1 khách ảo).
+     *
+     * @param  array<string, mixed>  $r
+     */
+    private function passengerSnapshotRowCounted(array $r): bool
+    {
+        if (trim((string) ($r['pickup'] ?? '')) !== '' || trim((string) ($r['dropoff'] ?? '')) !== '') {
+            return true;
+        }
+        if (trim((string) ($r['person_in_charge'] ?? '')) !== '' || trim((string) ($r['notes'] ?? '')) !== '') {
+            return true;
+        }
+        if (trim((string) ($r['unit_price'] ?? '')) !== '' || trim((string) ($r['extra_fee'] ?? '')) !== '') {
+            return true;
+        }
+        $g = trim((string) ($r['guests'] ?? ''));
+
+        return $g !== '' && $g !== '1';
+    }
+
+    /**
      * @param  array<string, mixed>  $r
      */
     private function businessSnapshotRowFilled(array $r): bool
@@ -955,6 +943,25 @@ class DispatchRequestController extends Controller
             return true;
         }
         if (trim((string) ($r['depart_at'] ?? '')) !== '' || trim((string) ($r['return_at'] ?? '')) !== '') {
+            return true;
+        }
+        if (trim((string) ($r['unit_price'] ?? '')) !== '' || trim((string) ($r['extra_fee'] ?? '')) !== '') {
+            return true;
+        }
+        if (trim((string) ($r['notes'] ?? '')) !== '') {
+            return true;
+        }
+        $g = trim((string) ($r['guests'] ?? ''));
+
+        return $g !== '' && $g !== '1';
+    }
+
+    /**
+     * @param  array<string, mixed>  $r
+     */
+    private function businessSnapshotRowCounted(array $r): bool
+    {
+        if (trim((string) ($r['pickup'] ?? '')) !== '' || trim((string) ($r['dropoff'] ?? '')) !== '' || trim((string) ($r['waypoint'] ?? '')) !== '') {
             return true;
         }
         if (trim((string) ($r['unit_price'] ?? '')) !== '' || trim((string) ($r['extra_fee'] ?? '')) !== '') {

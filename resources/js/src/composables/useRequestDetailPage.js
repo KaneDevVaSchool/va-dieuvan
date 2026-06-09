@@ -23,6 +23,7 @@ import {
 import { formatApiError } from '../api/http'
 import { saveAs } from 'file-saver'
 import { labelTripType } from '../util/labels'
+import { dispatchRequestDisplayPassengerCount } from '../util/dispatchRequestPassengers'
 import { downloadBinaryAttachmentFromApi } from '../util/downloadPdfAttachment'
 import { toDatetimeLocalValue } from '../util/datetime'
 import { createActionIdempotencyKey } from '../util/idempotency'
@@ -315,8 +316,9 @@ export function useRequestDetailPage() {
         return `${joined}${hint}`
       }
     }
-    if (r.passenger_count != null && r.passenger_count > 0) {
-      return t('request_detail.passengers_count_line', { n: r.passenger_count })
+    const n = dispatchRequestDisplayPassengerCount(r)
+    if (n > 0) {
+      return t('request_detail.passengers_count_line', { n })
     }
     return '—'
   })
