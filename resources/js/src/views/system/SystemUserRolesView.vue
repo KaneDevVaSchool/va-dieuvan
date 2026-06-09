@@ -61,7 +61,7 @@ onMounted(() => bootstrap())
 </script>
 
 <template>
-  <div class="mx-auto max-w-6xl space-y-5 pb-8">
+  <div class="space-y-5 pb-8">
 
     <!-- ── Header ─────────────────────────────────────────────────────────── -->
     <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -80,14 +80,14 @@ onMounted(() => bootstrap())
     <!-- ── Filter bar ─────────────────────────────────────────────────────── -->
     <div class="flex flex-wrap items-center gap-2">
       <!-- Search -->
-      <div class="relative">
+      <div class="relative min-w-0 w-full flex-1 sm:min-w-[12rem]">
         <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
         <input
           v-model="filters.q"
           type="search"
           placeholder="Tìm nhân viên…"
           aria-label="Tìm nhân viên"
-          class="h-9 w-44 rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 sm:w-56"
+          class="h-9 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
           :disabled="isLocked"
         />
       </div>

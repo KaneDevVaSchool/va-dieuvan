@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\PermissionDisplayVi;
 use App\Support\PermissionPlainVi;
 use App\Support\SuperAdminAccess;
 use Illuminate\Database\Seeder;
@@ -100,7 +101,7 @@ class RbacSeeder extends Seeder
             Permission::updateOrCreate(
                 ['name' => $p, 'guard_name' => $guard],
                 [
-                    'display_name' => $p,
+                    'display_name' => PermissionDisplayVi::title($p) ?? $p,
                     'plain_description' => PermissionPlainVi::text($p),
                 ]
             );

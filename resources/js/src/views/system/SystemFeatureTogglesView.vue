@@ -7,12 +7,17 @@ import {
   TrashIcon,
   XMarkIcon,
   LinkIcon,
+  ShieldCheckIcon,
 } from '@heroicons/vue/24/outline'
 import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
 import Select from '../../components/ui/Select.vue'
+import { useI18n } from 'vue-i18n'
 import { getFeatureToggleNavClusters } from '../../config/nav'
+import { FEATURE_TOGGLE_RELATED_PERMS } from '../../config/featureToggleRelatedPerms.js'
+import { getCapabilityLabelForPerm } from '../../config/businessCapabilities.js'
+import permissionPlainVi from '../../data/permission_plain_vi.json'
 import { SEED_FEATURE_TOGGLE_PRESETS } from '../../config/systemSeedOptions'
 import * as admin from '../../api/admin'
 import { formatApiError } from '../../api/http'
@@ -40,9 +45,26 @@ function navLinksForKey(key) {
   return navKeyMap.value.get(key) ?? []
 }
 
+function relatedPermsForKey(key) {
+  return FEATURE_TOGGLE_RELATED_PERMS[key] ?? []
+}
+
+function navLinkLabel(link) {
+  try {
+    return t(link.labelKey)
+  } catch {
+    return link.labelKey
+  }
+}
+
+function relatedPermHint(permName) {
+  return permissionPlainVi[permName] ?? ''
+}
+
 // ─── State ────────────────────────────────────────────────────────────────────
 
 const auth = useAuthStore()
+const { t } = useI18n()
 
 const loading    = ref(true)
 const saving     = ref(false)
@@ -226,7 +248,7 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="mx-auto max-w-6xl space-y-5 pb-8">
+  <div class="space-y-5 pb-8">
 
     <!-- ── Header ─────────────────────────────────────────────────────────── -->
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -244,14 +266,14 @@ onMounted(load)
 
     <!-- ── Filter bar ─────────────────────────────────────────────────────── -->
     <div class="flex flex-wrap items-center gap-2">
-      <div class="relative">
+      <div class="relative min-w-0 w-full flex-1 sm:min-w-[12rem]">
         <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
         <input
           v-model="searchRaw"
           type="search"
           placeholder="Tìm tính năng…"
           aria-label="Tìm tính năng"
-          class="h-9 w-44 rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 sm:w-52"
+          class="h-9 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
         />
       </div>
 
@@ -393,7 +415,7 @@ onMounted(load)
                   <!-- Nav expand -->
                   <td class="py-3 px-2 text-right align-middle">
                     <button
-                      v-if="navLinksForKey(row.key).length > 0"
+                      v-if="navLinksForKey(row.key).length > 0 || relatedPermsForKey(row.key).length > 0"
                       type="button"
                       :title="expandedId === row.id ? 'Ẩn nav' : 'Xem nav bị ảnh hưởng'"
                       class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-teal-600 dark:hover:bg-slate-800 dark:hover:text-teal-400"
@@ -424,18 +446,37 @@ onMounted(load)
                 <!-- Nav affected panel (expand) -->
                 <tr v-if="expandedId === row.id" :key="'nav-' + row.id">
                   <td colspan="8" class="border-b border-slate-100 bg-slate-50/70 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/40">
-                    <div class="flex items-start gap-2">
-                      <LinkIcon class="mt-0.5 h-4 w-4 shrink-0 text-teal-500" aria-hidden="true" />
-                      <div>
-                        <p class="mb-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">MỤC MENU BỊ ẢNH HƯỞNG KHI TẮT TÍNH NĂNG NÀY</p>
-                        <div class="flex flex-wrap gap-1.5">
-                          <span
-                            v-for="link in navLinksForKey(row.key)"
-                            :key="link.to"
-                            class="rounded-lg border border-teal-200/60 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 dark:border-teal-800/40 dark:bg-slate-900 dark:text-slate-300"
-                          >
-                            {{ link.labelKey.replace(/^nav\./, '') }} <span class="ml-1 font-mono text-[10px] text-slate-400">{{ link.to }}</span>
-                          </span>
+                    <div class="space-y-3">
+                      <div v-if="navLinksForKey(row.key).length" class="flex items-start gap-2">
+                        <LinkIcon class="mt-0.5 h-4 w-4 shrink-0 text-teal-500" aria-hidden="true" />
+                        <div class="min-w-0 flex-1">
+                          <p class="mb-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">Mục menu bị ảnh hưởng khi tắt tính năng</p>
+                          <div class="flex flex-wrap gap-1.5">
+                            <span
+                              v-for="link in navLinksForKey(row.key)"
+                              :key="link.to"
+                              class="rounded-lg border border-teal-200/60 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 dark:border-teal-800/40 dark:bg-slate-900 dark:text-slate-300"
+                            >
+                              {{ navLinkLabel(link) }}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div v-if="relatedPermsForKey(row.key).length" class="flex items-start gap-2">
+                        <ShieldCheckIcon class="mt-0.5 h-4 w-4 shrink-0 text-violet-500" aria-hidden="true" />
+                        <div class="min-w-0 flex-1">
+                          <p class="mb-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">Quyền nghiệp vụ liên quan (RBAC)</p>
+                          <ul class="space-y-1.5">
+                            <li
+                              v-for="perm in relatedPermsForKey(row.key)"
+                              :key="perm"
+                              class="rounded-lg border border-violet-200/50 bg-white px-2.5 py-1.5 text-xs dark:border-violet-900/40 dark:bg-slate-900"
+                            >
+                              <span class="font-semibold text-slate-800 dark:text-slate-100">{{ getCapabilityLabelForPerm(perm) }}</span>
+                              <span class="ml-1.5 font-mono text-[10px] text-slate-400">{{ perm }}</span>
+                              <p v-if="relatedPermHint(perm)" class="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">{{ relatedPermHint(perm) }}</p>
+                            </li>
+                          </ul>
                         </div>
                       </div>
                     </div>
@@ -515,19 +556,31 @@ onMounted(load)
             </div>
 
             <!-- Nav affected (mobile) -->
-            <div v-if="navLinksForKey(row.key).length" class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-800">
+            <div v-if="navLinksForKey(row.key).length || relatedPermsForKey(row.key).length" class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-800">
               <button type="button" class="flex items-center gap-1 text-xs font-medium text-teal-600 dark:text-teal-400" @click="toggleExpand(row.id)">
                 <LinkIcon class="h-3.5 w-3.5" aria-hidden="true" />
-                {{ expandedId === row.id ? 'Ẩn nav' : `${navLinksForKey(row.key).length} mục menu bị ảnh hưởng` }}
+                {{ expandedId === row.id ? 'Ẩn chi tiết' : 'Menu & quyền liên quan' }}
               </button>
-              <div v-if="expandedId === row.id" class="mt-2 flex flex-wrap gap-1.5">
-                <span
-                  v-for="link in navLinksForKey(row.key)"
-                  :key="link.to"
-                  class="rounded-lg border border-teal-200/60 bg-slate-50 px-2 py-1 text-xs text-slate-600 dark:border-teal-800/40 dark:bg-slate-800 dark:text-slate-300"
-                >
-                  {{ link.labelKey.replace(/^nav\./, '') }}
-                </span>
+              <div v-if="expandedId === row.id" class="mt-2 space-y-2">
+                <div v-if="navLinksForKey(row.key).length" class="flex flex-wrap gap-1.5">
+                  <span
+                    v-for="link in navLinksForKey(row.key)"
+                    :key="link.to"
+                    class="rounded-lg border border-teal-200/60 bg-slate-50 px-2 py-1 text-xs text-slate-600 dark:border-teal-800/40 dark:bg-slate-800 dark:text-slate-300"
+                  >
+                    {{ navLinkLabel(link) }}
+                  </span>
+                </div>
+                <ul v-if="relatedPermsForKey(row.key).length" class="space-y-1">
+                  <li
+                    v-for="perm in relatedPermsForKey(row.key)"
+                    :key="perm"
+                    class="rounded-lg border border-violet-200/50 bg-slate-50 px-2 py-1.5 text-xs dark:border-violet-900/40 dark:bg-slate-800"
+                  >
+                    <span class="font-semibold text-slate-800 dark:text-slate-100">{{ getCapabilityLabelForPerm(perm) }}</span>
+                    <p v-if="relatedPermHint(perm)" class="mt-0.5 text-[11px] text-slate-500">{{ relatedPermHint(perm) }}</p>
+                  </li>
+                </ul>
               </div>
             </div>
           </div>

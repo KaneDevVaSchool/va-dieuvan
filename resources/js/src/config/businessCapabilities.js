@@ -182,6 +182,26 @@ export function getAllCapabilityPerms() {
   return BUSINESS_CAPABILITY_GROUPS.flatMap((g) => g.capabilities.map((c) => c.perm))
 }
 
+const CAPABILITY_LABEL_BY_PERM = new Map(
+  BUSINESS_CAPABILITY_GROUPS.flatMap((g) => g.capabilities.map((c) => [c.perm, c.label])),
+)
+
+/** Nhãn ngắn, dễ hiểu cho admin (ẩn mã kỹ thuật trên UI). */
+export function getCapabilityLabelForPerm(permName) {
+  if (!permName) return null
+  return CAPABILITY_LABEL_BY_PERM.get(permName) ?? null
+}
+
+/** Tiêu đề hiển thị: capability → display_name DB → mã quyền. */
+export function getPermissionFriendlyTitle(perm) {
+  const name = typeof perm === 'string' ? perm : perm?.name
+  const fromCap = getCapabilityLabelForPerm(name)
+  if (fromCap) return fromCap
+  const dn = typeof perm === 'object' ? perm?.display_name?.trim() : ''
+  if (dn && dn !== name) return dn
+  return name ?? ''
+}
+
 /** Get the capability group containing a given permission name. */
 export function getGroupForPerm(permName) {
   for (const group of BUSINESS_CAPABILITY_GROUPS) {

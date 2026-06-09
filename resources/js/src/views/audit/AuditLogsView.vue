@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto max-w-3xl space-y-4 pb-10">
+  <div class="space-y-4 pb-10">
 
     <!-- ── Header ─────────────────────────────────────────────────────────── -->
     <div class="flex items-center justify-between">

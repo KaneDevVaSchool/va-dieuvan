@@ -12,6 +12,7 @@ import {
 import { PERMISSION_MODULES, groupPermissions, getModuleId } from '../../config/permissionModules.js'
 import { SEED_PERMISSION_PRESETS } from '../../config/systemSeedOptions'
 import permissionPlainVi from '../../data/permission_plain_vi.json'
+import { getPermissionFriendlyTitle } from '../../config/businessCapabilities.js'
 import * as admin from '../../api/admin'
 import { formatApiError } from '../../api/http'
 import { showAppError, showAppSuccess } from '../../composables/appMessage'
@@ -124,8 +125,7 @@ function rolesOfPerm(perm) {
 }
 
 function permDisplayName(perm) {
-  const dn = perm.display_name?.trim()
-  return dn && dn !== perm.name ? dn : perm.name
+  return getPermissionFriendlyTitle(perm)
 }
 
 // ─── Accordions ──────────────────────────────────────────────────────────────
@@ -275,7 +275,7 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="mx-auto max-w-6xl space-y-5 pb-8">
+  <div class="space-y-5 pb-8">
 
     <!-- ── Header ─────────────────────────────────────────────────────────── -->
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -293,14 +293,14 @@ onMounted(load)
     <div class="flex flex-wrap items-center gap-2">
 
       <!-- Search -->
-      <div class="relative">
+      <div class="relative min-w-0 w-full flex-1 sm:min-w-[12rem]">
         <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
         <input
           v-model="searchRaw"
           type="search"
           placeholder="Tìm quyền…"
           aria-label="Tìm quyền"
-          class="h-9 w-48 rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 sm:w-56"
+          class="h-9 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
         />
       </div>
 

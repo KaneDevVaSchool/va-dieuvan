@@ -1,21 +1,19 @@
 <template>
-  <div
-    class="resources-shell mx-auto max-w-[1600px] space-y-4 rounded-xl border border-slate-200 bg-white px-3 py-4 text-slate-900 shadow-sm sm:px-4 md:px-6 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-  >
+  <div class="resources-page space-y-4 text-slate-900 md:space-y-5 dark:text-slate-100">
     <!-- Header -->
     <div class="border-b border-slate-200/80 pb-4 dark:border-slate-700">
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div class="min-w-0 flex-1">
-          <div class="flex flex-wrap items-center gap-2">
-            <h1 class="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">{{ t('resources.page_title') }}</h1>
-            <span
-              class="inline-flex items-center rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-800 ring-1 ring-inset ring-teal-600/20 dark:bg-teal-950/50 dark:text-teal-300 dark:ring-teal-600/40"
-            >
-              {{ t('resources.workspace_badge') }}
-            </span>
-          </div>
-        </div>
-        <div class="relative w-full min-w-0 flex-1 sm:max-w-xs lg:max-w-sm">
+      <div class="flex flex-wrap items-center gap-2">
+        <h1 class="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">{{ t('resources.page_title') }}</h1>
+        <span
+          class="inline-flex items-center rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-800 ring-1 ring-inset ring-teal-600/20 dark:bg-teal-950/50 dark:text-teal-300 dark:ring-teal-600/40"
+        >
+          {{ t('resources.workspace_badge') }}
+        </span>
+      </div>
+      <p class="mt-1 max-w-3xl text-sm text-slate-600 dark:text-slate-400">
+        {{ t('resources.page_subtitle') }}
+      </p>
+      <div class="relative mt-4 w-full min-w-0">
           <MagnifyingGlassIcon
             class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
             aria-hidden="true"
@@ -26,7 +24,6 @@
             class="min-h-[44px] w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-base text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 sm:min-h-0 sm:py-2 sm:text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
             :placeholder="searchPlaceholder"
           />
-        </div>
       </div>
 
       <div class="mt-4 flex flex-wrap items-center gap-2 sm:gap-3">
@@ -261,16 +258,30 @@
           <!-- Trạng thái -->
           <details class="group relative min-w-0">
             <summary
-              class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
+              class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-2 py-1.5 shadow-sm transition [&::-webkit-details-marker]:hidden"
+              :class="
+                filters.status
+                  ? 'border-teal-300/90 bg-teal-50/90 text-teal-950 ring-1 ring-teal-200/70 hover:bg-teal-50 dark:border-teal-700/60 dark:bg-teal-950/40 dark:text-teal-100 dark:ring-teal-800/50'
+                  : 'border-white/80 bg-white/90 text-slate-700 hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700'
+              "
+              :aria-label="t('resources.filter_status')"
             >
-              <span class="min-w-0 max-w-[10rem] truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{
-                filters.status ? resourceFilterStatusLabel : t('resources.filter_all')
-              }}</span>
+              <span
+                class="min-w-0 max-w-[10rem] truncate"
+                :class="
+                  filters.status
+                    ? 'text-sm font-semibold text-teal-950 dark:text-teal-50'
+                    : 'text-xs font-medium text-slate-600 sm:text-sm dark:text-slate-400'
+                "
+              >{{ statusFilterChipSummary }}</span>
               <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
             </summary>
             <div
-              class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+              class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
             >
+              <p class="border-b border-slate-100 bg-slate-50/80 px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200">
+                {{ t('resources.filter_status') }}
+              </p>
               <ul class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1">
                 <li v-for="opt in resourceStatusFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
                   <button
@@ -294,16 +305,30 @@
           <template v-if="activeTab === 'vehicles'">
             <details class="group relative min-w-0">
               <summary
-                class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
+                class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-2 py-1.5 shadow-sm transition [&::-webkit-details-marker]:hidden"
+                :class="
+                  filters.type
+                    ? 'border-teal-300/90 bg-teal-50/90 text-teal-950 ring-1 ring-teal-200/70 hover:bg-teal-50 dark:border-teal-700/60 dark:bg-teal-950/40 dark:text-teal-100 dark:ring-teal-800/50'
+                    : 'border-white/80 bg-white/90 text-slate-700 hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700'
+                "
+                :aria-label="t('resources.filter_type')"
               >
-                <span class="min-w-0 max-w-[10rem] truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{
-                  filters.type ? resourceFilterTypeLabel : t('resources.filter_all')
-                }}</span>
+                <span
+                  class="min-w-0 max-w-[10rem] truncate"
+                  :class="
+                    filters.type
+                      ? 'text-sm font-semibold text-teal-950 dark:text-teal-50'
+                      : 'text-xs font-medium text-slate-600 sm:text-sm dark:text-slate-400'
+                  "
+                >{{ typeFilterChipSummary }}</span>
                 <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
               </summary>
               <div
-                class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+                class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
               >
+                <p class="border-b border-slate-100 bg-slate-50/80 px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200">
+                  {{ t('resources.filter_type') }}
+                </p>
                 <ul class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1">
                   <li v-for="opt in resourceVehicleTypeFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
                     <button
@@ -325,16 +350,30 @@
 
             <details class="group relative min-w-0">
               <summary
-                class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
+                class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-2 py-1.5 shadow-sm transition [&::-webkit-details-marker]:hidden"
+                :class="
+                  filters.driver_default
+                    ? 'border-teal-300/90 bg-teal-50/90 text-teal-950 ring-1 ring-teal-200/70 hover:bg-teal-50 dark:border-teal-700/60 dark:bg-teal-950/40 dark:text-teal-100 dark:ring-teal-800/50'
+                    : 'border-white/80 bg-white/90 text-slate-700 hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700'
+                "
+                :aria-label="t('resources.filter_driver_default')"
               >
-                <span class="min-w-0 max-w-[9rem] truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{
-                  filters.driver_default ? resourceFilterDriverDefaultLabel : t('resources.filter_all')
-                }}</span>
+                <span
+                  class="min-w-0 max-w-[9rem] truncate"
+                  :class="
+                    filters.driver_default
+                      ? 'text-sm font-semibold text-teal-950 dark:text-teal-50'
+                      : 'text-xs font-medium text-slate-600 sm:text-sm dark:text-slate-400'
+                  "
+                >{{ driverDefaultFilterChipSummary }}</span>
                 <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
               </summary>
               <div
-                class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+                class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
               >
+                <p class="border-b border-slate-100 bg-slate-50/80 px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200">
+                  {{ t('resources.filter_driver_default') }}
+                </p>
                 <ul class="space-y-0.5 px-1 py-1">
                   <li v-for="opt in resourceDriverDefaultFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
                     <button
@@ -359,16 +398,30 @@
           <template v-if="activeTab === 'drivers' && driversViewMode === 'active'">
             <details class="group relative min-w-0">
               <summary
-                class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
+                class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-2 py-1.5 shadow-sm transition [&::-webkit-details-marker]:hidden"
+                :class="
+                  filters.driver_license
+                    ? 'border-teal-300/90 bg-teal-50/90 text-teal-950 ring-1 ring-teal-200/70 hover:bg-teal-50 dark:border-teal-700/60 dark:bg-teal-950/40 dark:text-teal-100 dark:ring-teal-800/50'
+                    : 'border-white/80 bg-white/90 text-slate-700 hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700'
+                "
+                :aria-label="t('resources.filter_driver_license')"
               >
-                <span class="min-w-0 max-w-[9rem] truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{
-                  filters.driver_license ? resourceFilterDocStateLabel(filters.driver_license) : t('resources.filter_all')
-                }}</span>
+                <span
+                  class="min-w-0 max-w-[9rem] truncate"
+                  :class="
+                    filters.driver_license
+                      ? 'text-sm font-semibold text-teal-950 dark:text-teal-50'
+                      : 'text-xs font-medium text-slate-600 sm:text-sm dark:text-slate-400'
+                  "
+                >{{ driverLicenseFilterChipSummary }}</span>
                 <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
               </summary>
               <div
-                class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+                class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
               >
+                <p class="border-b border-slate-100 bg-slate-50/80 px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200">
+                  {{ t('resources.filter_driver_license') }}
+                </p>
                 <ul class="space-y-0.5 px-1 py-1">
                   <li v-for="opt in resourceDocStateFilterOptions" :key="'dl-' + (opt.value === '' ? '_all' : opt.value)">
                     <button
@@ -390,16 +443,30 @@
 
             <details class="group relative min-w-0">
               <summary
-                class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
+                class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-2 py-1.5 shadow-sm transition [&::-webkit-details-marker]:hidden"
+                :class="
+                  filters.driver_availability
+                    ? 'border-teal-300/90 bg-teal-50/90 text-teal-950 ring-1 ring-teal-200/70 hover:bg-teal-50 dark:border-teal-700/60 dark:bg-teal-950/40 dark:text-teal-100 dark:ring-teal-800/50'
+                    : 'border-white/80 bg-white/90 text-slate-700 hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700'
+                "
+                :aria-label="t('resources.filter_driver_availability')"
               >
-                <span class="min-w-0 max-w-[9rem] truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{
-                  filters.driver_availability ? resourceFilterDriverAvailabilityLabel : t('resources.filter_all')
-                }}</span>
+                <span
+                  class="min-w-0 max-w-[9rem] truncate"
+                  :class="
+                    filters.driver_availability
+                      ? 'text-sm font-semibold text-teal-950 dark:text-teal-50'
+                      : 'text-xs font-medium text-slate-600 sm:text-sm dark:text-slate-400'
+                  "
+                >{{ driverAvailabilityFilterChipSummary }}</span>
                 <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
               </summary>
               <div
-                class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+                class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
               >
+                <p class="border-b border-slate-100 bg-slate-50/80 px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200">
+                  {{ t('resources.filter_driver_availability') }}
+                </p>
                 <ul class="space-y-0.5 px-1 py-1">
                   <li v-for="opt in resourceDriverAvailabilityFilterOptions" :key="'da-' + (opt.value === '' ? '_all' : opt.value)">
                     <button
@@ -422,16 +489,30 @@
 
           <details v-if="activeTab === 'suppliers'" class="group relative min-w-0">
             <summary
-              class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
+              class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-2 py-1.5 shadow-sm transition [&::-webkit-details-marker]:hidden"
+              :class="
+                filters.contract
+                  ? 'border-teal-300/90 bg-teal-50/90 text-teal-950 ring-1 ring-teal-200/70 hover:bg-teal-50 dark:border-teal-700/60 dark:bg-teal-950/40 dark:text-teal-100 dark:ring-teal-800/50'
+                  : 'border-white/80 bg-white/90 text-slate-700 hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700'
+              "
+              :aria-label="t('resources.filter_contract')"
             >
-              <span class="min-w-0 max-w-[9rem] truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{
-                filters.contract ? resourceFilterContractLabel : t('resources.filter_all')
-              }}</span>
+              <span
+                class="min-w-0 max-w-[9rem] truncate"
+                :class="
+                  filters.contract
+                    ? 'text-sm font-semibold text-teal-950 dark:text-teal-50'
+                    : 'text-xs font-medium text-slate-600 sm:text-sm dark:text-slate-400'
+                "
+              >{{ contractFilterChipSummary }}</span>
               <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
             </summary>
             <div
-              class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+              class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
             >
+              <p class="border-b border-slate-100 bg-slate-50/80 px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200">
+                {{ t('resources.filter_contract') }}
+              </p>
               <ul class="space-y-0.5 px-1 py-1">
                 <li v-for="opt in resourceDocStateFilterOptions" :key="'contract-' + (opt.value === '' ? '_all' : opt.value)">
                   <button
@@ -488,16 +569,30 @@
       >
         <details v-for="spec in resourceVehicleDocFiltersExtra" :key="'extra-' + spec.key" class="group relative min-w-0">
           <summary
-            class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
+            class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-2 py-1.5 shadow-sm transition [&::-webkit-details-marker]:hidden"
+            :class="
+              filters[spec.key]
+                ? 'border-teal-300/90 bg-teal-50/90 text-teal-950 ring-1 ring-teal-200/70 hover:bg-teal-50 dark:border-teal-700/60 dark:bg-teal-950/40 dark:text-teal-100 dark:ring-teal-800/50'
+                : 'border-white/80 bg-white/90 text-slate-700 hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700'
+            "
+            :aria-label="spec.label"
           >
-            <span class="min-w-0 max-w-[8rem] truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{
-              filters[spec.key] ? resourceFilterDocStateLabel(filters[spec.key]) : t('resources.filter_all')
-            }}</span>
+            <span
+              class="min-w-0 max-w-[8rem] truncate"
+              :class="
+                filters[spec.key]
+                  ? 'text-sm font-semibold text-teal-950 dark:text-teal-50'
+                  : 'text-xs font-medium text-slate-600 sm:text-sm dark:text-slate-400'
+              "
+            >{{ resourceDocFilterChipSummary(spec) }}</span>
             <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
           </summary>
           <div
-            class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[200px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+            class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[200px] overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
           >
+            <p class="border-b border-slate-100 bg-slate-50/80 px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200">
+              {{ spec.label }}
+            </p>
             <ul class="space-y-0.5 px-1 py-1">
               <li v-for="opt in resourceDocStateFilterOptions" :key="'ex-' + spec.key + '-' + (opt.value === '' ? '_all' : opt.value)">
                 <button
@@ -3243,6 +3338,49 @@ const resourceFilterContractLabel = computed(() => {
   }
   return map[f] ?? f
 })
+
+/** Chip: nhãn trường khi mặc định; giá trị đã chọn khi đang lọc. */
+function filterChipSummary(fieldLabel, valueLabel, isActive) {
+  return isActive ? valueLabel : fieldLabel
+}
+
+const statusFilterChipSummary = computed(() =>
+  filterChipSummary(t('resources.filter_status'), resourceFilterStatusLabel.value, !!filters.value.status),
+)
+const typeFilterChipSummary = computed(() =>
+  filterChipSummary(t('resources.filter_type'), resourceFilterTypeLabel.value, !!filters.value.type),
+)
+const driverDefaultFilterChipSummary = computed(() =>
+  filterChipSummary(
+    t('resources.filter_driver_default'),
+    resourceFilterDriverDefaultLabel.value,
+    !!filters.value.driver_default,
+  ),
+)
+const driverLicenseFilterChipSummary = computed(() =>
+  filterChipSummary(
+    t('resources.filter_driver_license'),
+    resourceFilterDocStateLabel(filters.value.driver_license),
+    !!filters.value.driver_license,
+  ),
+)
+const driverAvailabilityFilterChipSummary = computed(() =>
+  filterChipSummary(
+    t('resources.filter_driver_availability'),
+    resourceFilterDriverAvailabilityLabel.value,
+    !!filters.value.driver_availability,
+  ),
+)
+const contractFilterChipSummary = computed(() =>
+  filterChipSummary(t('resources.filter_contract'), resourceFilterContractLabel.value, !!filters.value.contract),
+)
+
+function resourceDocFilterChipSummary(spec) {
+  const key = spec?.key
+  const active = key ? !!filters.value[key] : false
+  const value = key ? resourceFilterDocStateLabel(filters.value[key]) : ''
+  return filterChipSummary(spec?.label ?? '', value, active)
+}
 
 function resetResourceFilters() {
   filters.value = {

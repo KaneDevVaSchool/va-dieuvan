@@ -15,6 +15,7 @@ import {
   UsersIcon,
 } from '@heroicons/vue/24/outline'
 import { JOB_ROLE_TEMPLATES } from '../../config/jobRoleTemplates.js'
+import { getPermissionFriendlyTitle } from '../../config/businessCapabilities.js'
 import * as admin from '../../api/admin'
 import { formatApiError } from '../../api/http'
 import { showAppError, showAppSuccess } from '../../composables/appMessage'
@@ -159,7 +160,7 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="mx-auto max-w-6xl space-y-6 pb-10">
+  <div class="space-y-6 pb-10">
 
     <!-- ── Page header ─────────────────────────────────────────────────────── -->
     <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -318,9 +319,9 @@ onMounted(load)
                 <span
                   v-for="p in permsByRoleId[role.id]"
                   :key="p.id"
-                  :title="p.plain_summary || p.name"
-                  class="rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] text-slate-600 dark:bg-slate-800 dark:text-slate-400"
-                >{{ p.display_name || p.name }}</span>
+                  :title="`${p.name}${p.plain_summary ? ' — ' + p.plain_summary : ''}`"
+                  class="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                >{{ getPermissionFriendlyTitle(p) }}</span>
               </div>
             </div>
           </div>
