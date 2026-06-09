@@ -12,7 +12,7 @@
       <header
         class="sticky top-0 z-40 shrink-0 border-b border-slate-200 bg-white/95 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 supports-[top:env(safe-area-inset-top)]:top-[env(safe-area-inset-top)]"
       >
-        <div class="mx-auto flex max-w-[84rem] flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
+        <div class="mx-auto flex w-full max-w-none flex-wrap items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
           <RouterLink
             :to="backTo"
             class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
@@ -62,7 +62,7 @@
 
       <!-- ═══════════ Body ═══════════ -->
       <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
-        <div class="mx-auto max-w-[84rem] space-y-4 px-4 py-5 pb-16 sm:px-6">
+        <div class="mx-auto w-full max-w-none space-y-4 px-4 py-5 pb-16 sm:px-6 lg:px-8">
           <!-- Alerts -->
           <div
             v-if="req.status === 'rejected'"
@@ -116,7 +116,7 @@
           <!-- Grid -->
           <div class="grid gap-4 lg:grid-cols-12 lg:items-start">
             <!-- ─── MAIN ─── -->
-            <div class="space-y-4 lg:col-span-8">
+            <div :class="activeTab === 'form' ? 'lg:col-span-12' : 'space-y-4 lg:col-span-8'">
               <div :class="cardClass">
                 <nav
                   class="flex gap-1 overflow-x-auto border-b border-slate-100 px-2 pt-2 dark:border-slate-800"
@@ -153,31 +153,100 @@
                 <div class="p-4 sm:p-6">
                   <!-- ===== Tab: Tổng quan ===== -->
                   <div v-show="activeTab === 'form'" class="space-y-5">
-                    <!-- Journey -->
-                    <div class="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-5 dark:border-slate-800 dark:from-slate-800/40 dark:to-slate-900">
-                      <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-                        <div class="min-w-0 flex-1">
-                          <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                    <!-- Route hero -->
+                    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+                      <div class="grid gap-0 lg:grid-cols-[1fr_auto_1fr] lg:items-stretch">
+                        <div class="border-b border-slate-100 bg-emerald-50/60 px-5 py-4 dark:border-slate-800 dark:bg-emerald-950/20 lg:border-b-0 lg:border-r">
+                          <div class="flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
                             <MapPinIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-                            <span class="text-xs font-semibold uppercase tracking-wide">{{ t('request_detail.lbl_origin') }}</span>
+                            <span class="text-xs font-bold uppercase tracking-wide">{{ t('request_detail.lbl_origin') }}</span>
                           </div>
-                          <p class="mt-1 text-lg font-bold text-slate-900 dark:text-white">{{ req.origin || friendlyEmpty }}</p>
+                          <p class="mt-1.5 text-xl font-bold leading-snug text-slate-900 dark:text-white">{{ req.origin || friendlyEmpty }}</p>
                         </div>
-                        <ArrowRightIcon class="hidden h-6 w-6 shrink-0 text-slate-300 dark:text-slate-600 sm:block" aria-hidden="true" />
-                        <ArrowDownIcon class="h-5 w-5 shrink-0 text-slate-300 dark:text-slate-600 sm:hidden" aria-hidden="true" />
-                        <div class="min-w-0 flex-1">
-                          <div class="flex items-center gap-2 text-rose-600 dark:text-rose-400">
+                        <div class="hidden items-center justify-center px-3 lg:flex">
+                          <ArrowRightIcon class="h-6 w-6 shrink-0 text-slate-300 dark:text-slate-600" aria-hidden="true" />
+                        </div>
+                        <div class="border-t border-slate-100 bg-rose-50/60 px-5 py-4 dark:border-slate-800 dark:bg-rose-950/20 lg:border-l lg:border-t-0">
+                          <div class="flex items-center gap-2 text-rose-700 dark:text-rose-400">
                             <MapPinIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-                            <span class="text-xs font-semibold uppercase tracking-wide">{{ t('request_detail.lbl_destination') }}</span>
+                            <span class="text-xs font-bold uppercase tracking-wide">{{ t('request_detail.lbl_destination') }}</span>
                           </div>
-                          <p class="mt-1 text-lg font-bold text-slate-900 dark:text-white">{{ req.destination || friendlyEmpty }}</p>
+                          <p class="mt-1.5 text-xl font-bold leading-snug text-slate-900 dark:text-white">{{ req.destination || friendlyEmpty }}</p>
                         </div>
                       </div>
-                      <div class="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-slate-200/70 pt-3 text-sm text-slate-600 dark:border-slate-700/70 dark:text-slate-400">
-                        <span class="inline-flex items-center gap-1.5"><ClockIcon class="h-4 w-4 shrink-0" aria-hidden="true" />{{ journeyDepartLine || friendlyEmpty }}</span>
-                        <span class="inline-flex items-center gap-1.5"><TruckIcon class="h-4 w-4 shrink-0" aria-hidden="true" />{{ labelTripType(req.trip_type) }}</span>
-                        <span v-if="distanceText" class="inline-flex items-center gap-1.5"><MapIcon class="h-4 w-4 shrink-0" aria-hidden="true" />{{ distanceText }}</span>
+                      <div class="flex flex-wrap items-center gap-2 border-t border-slate-100 bg-slate-50/80 px-5 py-3 dark:border-slate-800 dark:bg-slate-800/40">
+                        <span
+                          v-if="journeyDepartLine"
+                          class="inline-flex items-center gap-1.5 rounded-lg bg-va-100 px-3 py-1.5 text-sm font-semibold text-va-900 ring-1 ring-inset ring-va-200 dark:bg-va-950/60 dark:text-va-100 dark:ring-va-800/60"
+                        >
+                          <ClockIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                          {{ journeyDepartLine }}
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-inset ring-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700">
+                          <TruckIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                          {{ labelTripType(req.trip_type) }}
+                        </span>
+                        <span
+                          v-if="passengerOrCargoLine && passengerOrCargoLine !== '—'"
+                          class="inline-flex items-center rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-inset ring-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700"
+                        >{{ passengerOrCargoLine }}</span>
+                        <span
+                          v-if="distanceText"
+                          class="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-inset ring-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700"
+                        >
+                          <MapIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                          {{ distanceText }}
+                        </span>
                       </div>
+                    </div>
+
+                    <!-- Inline actions (form tab only) -->
+                    <div
+                      v-if="hasAnyAction"
+                      class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
+                    >
+                      <h2 :class="sectionTitleClass">{{ t('request_detail.ops_action_center') }}</h2>
+                      <div class="mt-3 flex flex-wrap gap-2">
+                        <template v-if="showD2dDecisionSection">
+                          <button type="button" class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60" :disabled="d2dActing" @click="onD2dApproveClick">
+                            <CheckBadgeIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                            {{ t('request_detail.d2d_approve_confirm_btn') }}
+                          </button>
+                          <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 disabled:opacity-60 dark:border-rose-800/60 dark:text-rose-300 dark:hover:bg-rose-950/40" :disabled="d2dActing" @click="openD2dReject">
+                            {{ t('request_detail.d2d_reject_confirm_btn') }}
+                          </button>
+                        </template>
+                        <button
+                          v-if="showFillPriceSection"
+                          type="button"
+                          class="inline-flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-4 py-2.5 text-sm font-semibold text-sky-900 transition hover:bg-sky-100 dark:border-sky-900/50 dark:bg-sky-950/30 dark:text-sky-200 dark:hover:bg-sky-950/50"
+                          @click="onWorkflowNavigate({ tab: 'route', focus: 'fill-price' })"
+                        >
+                          <CurrencyDollarIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                          {{ t('request_detail.fill_price_title') }}
+                        </button>
+                        <button
+                          v-if="showResetCloneBtn"
+                          type="button"
+                          class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                          :disabled="resetCloneBusy"
+                          @click="onResetCloneRequest"
+                        >
+                          <ArrowPathIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                          {{ resetCloneBusy ? t('request_detail.reset_clone_busy') : t('request_detail.reset_clone') }}
+                        </button>
+                        <button
+                          v-for="item in workflowTodoItems"
+                          :key="item.key"
+                          type="button"
+                          class="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-900 transition hover:bg-amber-100 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200 dark:hover:bg-amber-950/40"
+                          @click="onWorkflowNavigate({ tab: mapTodoTab(item.tab), focus: item.focus })"
+                        >
+                          {{ item.label }}
+                          <ArrowRightIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                        </button>
+                      </div>
+                      <p v-if="d2dMsg && !d2dRejectOpen && showD2dDecisionSection" class="mt-2 text-sm text-rose-600 dark:text-rose-400">{{ d2dMsg }}</p>
                     </div>
 
                     <PortalStatusTimeline
@@ -186,44 +255,106 @@
                       variant="staff"
                     />
 
-                    <!-- Quick facts -->
-                    <div class="rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
-                      <h2 :class="sectionTitleClass">{{ t('request_detail.ops_quick_facts') }}</h2>
-                      <dl class="mt-4 grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-                        <FieldRow v-for="f in quickFacts" :key="f.label" :label="f.label" :value="f.value" />
-                      </dl>
-                    </div>
-
-                    <!-- Schedule + purpose -->
-                    <div class="grid gap-4 sm:grid-cols-2">
-                      <div class="rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
-                        <h2 :class="sectionTitleClass">{{ t('request_detail.ops_schedule_heading') }}</h2>
-                        <dl class="mt-4 space-y-3.5">
-                          <FieldRow :label="t('request_detail.ops_lbl_proposed_date')" :value="fmtDateOnly(formData.proposed_date)" />
-                          <FieldRow :label="t('request_detail.ops_lbl_date_needed')" :value="fmtDateOnly(formData.date_needed)" />
-                          <FieldRow :label="t('request_detail.ops_lbl_dispatch_window')" :value="journeyDepartLine" />
-                          <FieldRow v-if="urgentReasonText" :label="t('request_detail.ops_lbl_urgent_reason')" :value="urgentReasonText" multiline />
-                        </dl>
-                      </div>
-                      <div class="rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
-                        <h2 :class="sectionTitleClass">{{ t('request_detail.ops_purpose_heading') }}</h2>
-                        <dl class="mt-4 space-y-3.5">
-                          <FieldRow :label="t('request_detail.ops_lbl_purpose')" :value="nz(formData.purpose)" multiline />
-                          <FieldRow :label="t('request_detail.ops_lbl_basis')" :value="basisText" multiline />
-                        </dl>
-                      </div>
-
-                      <div v-if="targets.length || coordinatorName" class="rounded-2xl border border-slate-200 p-5 dark:border-slate-800 sm:col-span-2">
-                        <h2 :class="sectionTitleClass">{{ t('request_detail.ops_targets_heading') }}</h2>
-                        <div v-if="targets.length" class="mt-4 flex flex-wrap gap-2">
-                          <span v-for="(tg, i) in targets" :key="i" class="inline-flex rounded-lg bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">{{ tg }}</span>
+                    <div class="grid gap-4 lg:grid-cols-12">
+                      <div class="space-y-4 lg:col-span-8">
+                        <div class="grid gap-4 md:grid-cols-2">
+                          <div class="rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
+                            <h2 :class="sectionTitleClass">{{ t('request_detail.ops_schedule_heading') }}</h2>
+                            <dl class="mt-4 space-y-3.5">
+                              <FieldRow :label="t('request_detail.ops_lbl_proposed_date')" :value="fmtDateOnly(formData.proposed_date)" />
+                              <FieldRow
+                                :label="t('request_detail.ops_lbl_date_needed')"
+                                :value="fmtDateOnly(formData.date_needed)"
+                                :highlight="!!formData.date_needed"
+                              />
+                              <div
+                                v-if="urgentReasonText"
+                                class="rounded-xl border border-rose-200 bg-rose-50/70 px-3 py-2.5 dark:border-rose-900/50 dark:bg-rose-950/25"
+                              >
+                                <FieldRow :label="t('request_detail.ops_lbl_urgent_reason')" :value="urgentReasonText" multiline emphasize />
+                              </div>
+                            </dl>
+                          </div>
+                          <div class="rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
+                            <h2 :class="sectionTitleClass">{{ t('request_detail.ops_purpose_heading') }}</h2>
+                            <dl class="mt-4 space-y-3.5">
+                              <FieldRow :label="t('request_detail.ops_lbl_purpose')" :value="nz(formData.purpose)" multiline />
+                              <FieldRow :label="t('request_detail.ops_lbl_basis')" :value="basisText" multiline />
+                            </dl>
+                          </div>
                         </div>
-                        <dl v-if="coordinatorName" class="mt-4 grid gap-x-6 gap-y-3.5 sm:grid-cols-3">
-                          <FieldRow :label="t('request_detail.ops_lbl_coordinator')" :value="coordinatorName" />
-                          <FieldRow :label="t('request_detail.lbl_email')" :value="nz(formData.coordinator_email)" />
-                          <FieldRow :label="t('request_detail.lbl_phone')" :value="nz(formData.coordinator_phone)" />
-                        </dl>
+
+                        <div v-if="targets.length || coordinatorName" class="rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
+                          <h2 :class="sectionTitleClass">{{ t('request_detail.ops_targets_heading') }}</h2>
+                          <div v-if="targets.length" class="mt-4 flex flex-wrap gap-2">
+                            <span v-for="(tg, i) in targets" :key="i" class="inline-flex rounded-lg bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">{{ tg }}</span>
+                          </div>
+                          <dl v-if="coordinatorName" class="mt-4 grid gap-x-6 gap-y-3.5 sm:grid-cols-3">
+                            <FieldRow :label="t('request_detail.ops_lbl_coordinator')" :value="coordinatorName" />
+                            <FieldRow :label="t('request_detail.lbl_email')" :value="nz(formData.coordinator_email)" />
+                            <FieldRow :label="t('request_detail.lbl_phone')" :value="nz(formData.coordinator_phone)" />
+                          </dl>
+                        </div>
                       </div>
+
+                      <aside class="space-y-4 lg:col-span-4">
+                        <section class="rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
+                          <h2 :class="sectionTitleClass">{{ t('request_detail.ops_properties') }}</h2>
+                          <div class="mt-4 flex items-start gap-3">
+                            <img v-if="req.requester?.avatar_url" :src="req.requester.avatar_url" alt="" class="h-11 w-11 shrink-0 rounded-full object-cover ring-2 ring-slate-100 dark:ring-slate-700" />
+                            <div v-else class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-va-50 text-base font-bold text-va-800 dark:bg-va-950/50 dark:text-va-300">{{ requesterInitials }}</div>
+                            <div class="min-w-0">
+                              <p class="text-base font-semibold text-slate-900 dark:text-slate-100">{{ req.requester?.name ?? friendlyEmpty }}</p>
+                              <p v-if="requesterAsideSubtitle" class="text-sm text-slate-500 dark:text-slate-400">{{ requesterAsideSubtitle }}</p>
+                            </div>
+                          </div>
+                          <dl v-if="requesterAsideFields.length" class="mt-4 space-y-3 border-t border-slate-100 pt-4 dark:border-slate-800">
+                            <FieldRow v-for="row in requesterAsideFields" :key="row.key" :label="row.label" :value="row.value" />
+                          </dl>
+                          <dl class="mt-4 space-y-3 border-t border-slate-100 pt-4 dark:border-slate-800">
+                            <FieldRow :label="t('request_detail.ops_lbl_created_at')" :value="fmt(req.created_at)" />
+                            <FieldRow v-if="req.approver?.name" :label="t('request_detail.ops_lbl_approver')" :value="req.approver.name" />
+                            <FieldRow
+                              v-if="req.status === 'approved'"
+                              :label="t('request_detail.ops_lbl_paper_status')"
+                              :value="paperStatusText"
+                              :highlight="req.paper_status === 'pending'"
+                            />
+                          </dl>
+                        </section>
+
+                        <section v-if="costEstimate" class="rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
+                          <h2 class="flex items-center gap-2" :class="sectionTitleClass">
+                            <CalculatorIcon class="h-4 w-4 shrink-0 text-teal-500 dark:text-teal-400" aria-hidden="true" />
+                            {{ t('request_detail.cost_estimate_heading') }}
+                          </h2>
+                          <dl class="mt-4 space-y-3">
+                            <FieldRow :label="t('request_detail.lbl_est_distance')" :value="costEstimate.distanceLabel" />
+                            <FieldRow
+                              v-if="req.service_price != null"
+                              :label="t('request_detail.ops_lbl_service_price')"
+                              :value="formatVndCurrency(req.service_price)"
+                              highlight
+                            />
+                          </dl>
+                          <div class="mt-4 rounded-xl bg-teal-50 px-4 py-3 ring-1 ring-inset ring-teal-100 dark:bg-teal-950/30 dark:ring-teal-900/40">
+                            <p class="text-xs font-medium text-teal-700/90 dark:text-teal-300/90">{{ t('request_detail.total_per_declaration') }}</p>
+                            <p class="mt-0.5 text-xl font-bold tabular-nums text-teal-600 dark:text-teal-300">{{ costEstimate.declaredTotalLabel ?? friendlyEmpty }}</p>
+                          </div>
+                        </section>
+
+                        <RouterLink
+                          v-if="req.trip"
+                          :to="`/trips/${req.trip.id}`"
+                          class="flex items-center justify-between gap-3 rounded-2xl border border-va-200 bg-va-50/60 px-4 py-3.5 transition hover:bg-va-50 dark:border-va-800/50 dark:bg-va-950/30 dark:hover:bg-va-950/50"
+                        >
+                          <span class="min-w-0">
+                            <span class="block text-xs font-semibold uppercase tracking-wide text-va-600 dark:text-va-400">{{ t('request_detail.ops_linked_trip') }}</span>
+                            <span class="block text-base font-bold text-va-900 dark:text-va-200">{{ t('request_detail.trip_link', { id: req.trip.id }) }}</span>
+                          </span>
+                          <ArrowTopRightOnSquareIcon class="h-5 w-5 shrink-0 text-va-600 dark:text-va-400" aria-hidden="true" />
+                        </RouterLink>
+                      </aside>
                     </div>
                   </div>
 
@@ -414,8 +545,8 @@
               </div>
             </div>
 
-            <!-- ─── SIDEBAR ─── -->
-            <aside class="space-y-4 lg:col-span-4">
+            <!-- ─── SIDEBAR (ẩn trên tab Tổng quan — đã gộp vào layout full width) ─── -->
+            <aside v-if="activeTab !== 'form'" class="space-y-4 lg:col-span-4">
               <section :class="cardClass + ' p-5'">
                 <h2 :class="sectionTitleClass">{{ t('request_detail.ops_action_center') }}</h2>
                 <div class="mt-4 space-y-2.5">
@@ -538,7 +669,6 @@
 import { computed, defineAsyncComponent, h, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import {
-  ArrowDownIcon,
   ArrowDownTrayIcon,
   ArrowLeftIcon,
   ArrowPathIcon,
@@ -749,21 +879,6 @@ const paperStatusText = computed(() => {
   return ''
 })
 
-const quickFacts = computed(() => {
-  const r = req.value
-  if (!r) return []
-  const facts = [
-    { label: t('request_detail.ops_lbl_created_at'), value: fmt(r.created_at) },
-    { label: t('request_detail.ops_lbl_date_needed'), value: fmtDateOnly(formData.value.date_needed) },
-    { label: t('request_detail.ops_lbl_load'), value: passengerOrCargoLine.value },
-    { label: t('request_detail.lbl_est_distance'), value: costEstimate.value?.distanceLabel ?? '' },
-    { label: t('request_detail.ops_lbl_service_price'), value: r.service_price != null ? formatVndCurrency(r.service_price) : '' },
-    { label: t('request_detail.ops_lbl_approver'), value: r.approver?.name ?? '' },
-  ]
-  if (r.status === 'approved') facts.push({ label: t('request_detail.ops_lbl_paper_status'), value: paperStatusText.value })
-  return facts
-})
-
 const itineraryTripType = computed(() => resolveItineraryTripType(isCargo.value, isBusiness.value))
 
 function buildItineraryCard(r, i, keyPrefix) {
@@ -942,15 +1057,29 @@ async function onPickScan(file) {
 
 // ── Presentational helpers ──
 const FieldRow = {
-  props: { label: { type: String, default: '' }, value: { type: [String, Number], default: '' }, multiline: { type: Boolean, default: false } },
+  props: {
+    label: { type: String, default: '' },
+    value: { type: [String, Number], default: '' },
+    multiline: { type: Boolean, default: false },
+    highlight: { type: Boolean, default: false },
+    emphasize: { type: Boolean, default: false },
+  },
   setup(props) {
     const empty = computed(() => props.value === '' || props.value == null)
+    const valueClass = computed(() => {
+      if (empty.value) return 'mt-0.5 text-sm italic text-slate-300 dark:text-slate-600'
+      const base = ['mt-0.5 text-base break-words', props.multiline ? 'whitespace-pre-wrap' : '']
+      if (props.emphasize) base.push('font-semibold text-rose-800 dark:text-rose-200')
+      else if (props.highlight) base.push('font-semibold text-va-800 dark:text-va-200')
+      else base.push('text-slate-800 dark:text-slate-200')
+      return base
+    })
     return () =>
       h('div', { class: 'min-w-0' }, [
         h('dt', { class: 'text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500' }, props.label),
         empty.value
           ? h('dd', { class: 'mt-0.5 text-sm italic text-slate-300 dark:text-slate-600' }, t('request_detail.ops_no_data'))
-          : h('dd', { class: ['mt-0.5 text-base text-slate-800 dark:text-slate-200', props.multiline ? 'whitespace-pre-wrap break-words' : 'break-words'] }, String(props.value)),
+          : h('dd', { class: valueClass.value }, String(props.value)),
       ])
   },
 }
