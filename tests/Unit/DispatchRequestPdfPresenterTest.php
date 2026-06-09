@@ -70,6 +70,16 @@ class DispatchRequestPdfPresenterTest extends TestCase
         $this->assertSame(250000, DispatchRequestPdfPresenter::parseMoney(250000));
     }
 
+    public function test_fmt_pdf_amount_in_words(): void
+    {
+        $this->assertSame('Không đồng', DispatchRequestPdfPresenter::fmtPdfAmountInWords(0));
+        $this->assertSame('Một triệu năm trăm nghìn đồng', DispatchRequestPdfPresenter::fmtPdfAmountInWords(1_500_000));
+        $this->assertSame(
+            'Một trăm năm mươi triệu không trăm chín mươi đồng',
+            DispatchRequestPdfPresenter::fmtPdfAmountInWords(150_000_090),
+        );
+    }
+
     public function test_fmt_pdf_phone_normalizes_numeric_snapshot_values(): void
     {
         $dr = new DispatchRequest();

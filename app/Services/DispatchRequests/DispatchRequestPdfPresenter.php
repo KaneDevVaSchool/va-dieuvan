@@ -97,6 +97,7 @@ final class DispatchRequestPdfPresenter
         $grandTotalFmt = $grandTotal > 0
             ? number_format($grandTotal, 0, ',', '.').' đ'
             : '0 đ';
+        $grandTotalWords = self::fmtPdfAmountInWords($grandTotal);
 
         $tripTypeLabels = [
             'door_to_door' => 'Đưa đón tận nơi',
@@ -120,6 +121,7 @@ final class DispatchRequestPdfPresenter
             'passengerSectionRows' => $passengerSectionRows,
             'businessSectionRows' => $businessSectionRows,
             'grandTotalFmt' => $grandTotalFmt,
+            'grandTotalWords' => $grandTotalWords,
             'aName' => $aName,
             'aEmail' => $aEmail,
             'aPhone' => $aPhone,
@@ -473,6 +475,80 @@ final class DispatchRequestPdfPresenter
         }
 
         return (int) round((float) $s);
+    }
+
+    public static function fmtPdfAmountInWords(int $amount): string
+    {
+        if ($amount === 0) {
+            return 'Không đồng';
+        }
+        if ($amount < 0) {
+            return '';
+        }
+
+        $n = $amount;
+        $chunks = [];
+        $scales = [
+            ['v' => 1_000_000_000, 'label' => 'tỷ'],
+            ['v' => 1_000_000, 'label' => 'triệu'],
+            ['v' => 1_000, 'label' => 'nghìn'],
+        ];
+
+        foreach ($scales as ['v' => $v, 'label' => $label]) {
+            $block = intdiv($n, $v);
+            if ($block > 0) {
+                $chunks[] = self::readVndTriple($block, $block >= 100).' '.$label;
+                $n %= $v;
+            }
+        }
+
+        if ($n > 0) {
+            $chunks[] = self::readVndTriple($n, $chunks !== []);
+        }
+
+        $text = preg_replace('/\s+/u', ' ', trim(implode(' ', $chunks))) ?? '';
+
+        return mb_strtoupper(mb_substr($text, 0, 1)).mb_substr($text, 1).' đồng';
+    }
+
+    private static function readVndTriple(int $n, bool $full): string
+    {
+        $words = ['không', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín'];
+        $hundred = intdiv($n, 100);
+        $ten = intdiv($n % 100, 10);
+        $unit = $n % 10;
+        $parts = [];
+
+        if ($hundred > 0) {
+            $parts[] = $hundred === 1 ? 'một trăm' : $words[$hundred].' trăm';
+        } elseif ($full && $n > 0) {
+            $parts[] = 'không trăm';
+        }
+
+        if ($ten > 1) {
+            $parts[] = $words[$ten].' mươi';
+            if ($unit === 1) {
+                $parts[] = 'mốt';
+            } elseif ($unit === 5) {
+                $parts[] = 'lăm';
+            } elseif ($unit > 0) {
+                $parts[] = $words[$unit];
+            }
+        } elseif ($ten === 1) {
+            $parts[] = 'mười';
+            if ($unit === 5) {
+                $parts[] = 'lăm';
+            } elseif ($unit > 0) {
+                $parts[] = $words[$unit];
+            }
+        } elseif ($unit > 0) {
+            if ($hundred > 0 || $full) {
+                $parts[] = 'lẻ';
+            }
+            $parts[] = $words[$unit];
+        }
+
+        return preg_replace('/\s+/u', ' ', trim(implode(' ', $parts))) ?? '';
     }
 
     /**

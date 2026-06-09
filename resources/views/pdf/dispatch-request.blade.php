@@ -63,6 +63,7 @@
         table.ft, table.ft td,
         table.dt, table.dt th, table.dt td,
         .hint-bar, .target-chip, .chip-type, .muted,
+        .dt-amount-words, .dt-amount-words-lbl, .dt-amount-words-val,
         .cb, .sec-badge, .sec-sub,
         table.sig, .sig-hd, .sig-bd, .sig-name,
         .pg-footer,
@@ -112,11 +113,13 @@
 
         .page-content { position: relative; width: 100%; color: {{ $pdfTextColor }}; }
 
-        /* F + G always start on a dedicated page (signatures / PO confirmation) */
+        /* E + F + G always on the same page */
         .signatures-page {
             page-break-before: always;
             page-break-inside: avoid;
         }
+
+        .signatures-page > .sec:first-child { margin-top: 0; }
 
         /* ── TITLE BLOCK ── */
         .doc-head {
@@ -251,6 +254,97 @@
             font-style: italic;
         }
 
+        /* ── SECTION C · Thời gian ── */
+        .sec-c-dates td.sec-c-date {
+            width: 50%;
+            padding: 7pt 8pt 8pt;
+            vertical-align: top;
+        }
+
+        .sec-c-dates td.sec-c-date + td.sec-c-date {
+            border-left: 0.75pt solid #bbb;
+        }
+
+        .fv-date {
+            font-size: 10pt;
+            font-weight: bold;
+            white-space: nowrap;
+            border-bottom: 0.75pt solid #888;
+            padding-bottom: 3pt;
+            min-height: 16pt;
+            line-height: 1.5;
+        }
+
+        .hint-bar--policy {
+            background: #f7f7f7;
+            border-top: 0.75pt solid #bbb;
+            border-bottom: 0.75pt solid #bbb;
+            border-left: 2.5pt solid #444;
+            padding: 5pt 8pt 5pt 7pt;
+            font-style: normal;
+        }
+
+        .hint-bar--policy strong {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 7pt;
+            letter-spacing: 0.2pt;
+        }
+
+        .sec-c-meta td {
+            vertical-align: middle;
+            padding: 6pt 8pt;
+            border-top: none;
+        }
+
+        .sec-c-urgent {
+            width: 58%;
+            border-right: 0.75pt solid #bbb;
+        }
+
+        .sec-c-type {
+            width: 42%;
+            text-align: center;
+        }
+
+        .sec-c-urgent-row {
+            line-height: 1.55;
+        }
+
+        .sec-c-urgent-lbl {
+            font-size: 8.5pt;
+            font-weight: bold;
+        }
+
+        .sec-c-reason {
+            display: block;
+            margin-top: 3pt;
+            padding-left: 16pt;
+            font-size: 8pt;
+            line-height: 1.5;
+        }
+
+        .sec-c-reason--urgent { color: #c0392b; }
+
+        .sec-c-type-lbl {
+            display: block;
+            font-size: 6.5pt;
+            text-transform: uppercase;
+            letter-spacing: 0.35pt;
+            margin-bottom: 4pt;
+            line-height: 1.45;
+        }
+
+        .chip-type--trip {
+            display: inline-block;
+            font-size: 8.5pt;
+            font-weight: bold;
+            padding: 2.5pt 12pt;
+            border: 0.75pt solid #444;
+            background: #fff;
+            letter-spacing: 0.15pt;
+        }
+
         /* ── TARGET CHIPS ── */
         .target-wrap { padding: 4pt 6pt 3pt; border-bottom: 0.5pt solid #ddd; }
 
@@ -286,9 +380,6 @@
             line-height: 1.5;
         }
 
-        table.dt th.go   { background: #eaf2fc; color: {{ $pdfTextColor }}; }
-        table.dt th.back { background: #eaf6ee; color: {{ $pdfTextColor }}; }
-
         table.dt td {
             padding: 4.5pt 3pt;
             border: 0.5pt solid #e0e0e0;
@@ -299,10 +390,6 @@
         }
 
         table.dt tbody tr:nth-child(even) td { background: #fafafa; }
-        table.dt tbody tr:nth-child(even) td.td-idx   { background: #ebebeb; }
-        table.dt tbody tr:nth-child(even) td.td-go    { background: #e8f0f8; }
-        table.dt tbody tr:nth-child(even) td.td-back  { background: #e8f4ec; }
-        table.dt tbody tr:nth-child(even) td.td-money { background: #fef8e8; }
         table.dt td.tl { text-align: left; }
         table.dt td.tr { text-align: right; white-space: nowrap; }
         table.dt td.tc { text-align: center; }
@@ -310,7 +397,7 @@
 
         table.dt tr.row-total td {
             font-weight: bold;
-            background: #e8e8e8;
+            background: #f5f5f5;
             font-size: 8.5pt;
             padding-top: 5pt;
             padding-bottom: 5pt;
@@ -329,71 +416,33 @@
             font-weight: normal;
         }
 
-        /* ── SECTION E · transport tables ── */
-        .dt-legend {
-            padding: 4pt 6pt 5pt;
-            border-bottom: 0.5pt solid #ccc;
-            background: #fafafa;
-            line-height: 1.5;
-        }
-
-        .dt-legend-chip {
-            display: inline-block;
-            font-size: 6.5pt;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.25pt;
-            margin-right: 12pt;
-            padding-left: 7pt;
-            border-left: 3pt solid #888;
-        }
-
-        .dt-legend-chip--go   { border-left-color: #4a7ab8; }
-        .dt-legend-chip--back { border-left-color: #3d8a5a; }
-        .dt-legend-chip--item { border-left-color: #888; }
-
         table.dt thead tr.dt-group-hd th {
             padding: 5pt 3pt 4pt;
             font-size: 7pt;
             border-bottom: 0.75pt solid #888;
         }
 
-        table.dt th.th-item {
-            background: #efefef;
-            border-bottom: 0.75pt solid #aaa;
+        .dt-amount-words {
+            border-top: 0.75pt solid #bbb;
+            border-bottom: 0.5pt solid #ccc;
+            padding: 5pt 8pt 6pt;
+            line-height: 1.55;
         }
 
-        table.dt th.th-cost {
-            background: #f7f2e8;
-            border-left: 1pt solid #999;
-        }
-
-        table.dt td.td-idx {
-            background: #f3f3f3;
+        .dt-amount-words-lbl {
+            display: inline-block;
+            font-size: 6.5pt;
             font-weight: bold;
-            text-align: center;
-            vertical-align: middle;
+            text-transform: uppercase;
+            letter-spacing: 0.3pt;
+            margin-right: 8pt;
+            vertical-align: top;
         }
 
-        table.dt td.td-go {
-            background: #f2f7fc;
-            border-left: 0.75pt solid #9bb8d9;
-        }
-
-        table.dt td.td-back {
-            background: #f2faf5;
-            border-left: 0.75pt solid #8fbf9a;
-        }
-
-        table.dt td.td-money {
-            background: #fffdf5;
-            border-left: 0.75pt solid #c9b87a;
-            font-weight: bold;
-        }
-
-        table.dt tr.row-total td:last-child {
-            background: #dedede;
-            border-left: 1pt solid #999;
+        .dt-amount-words-val {
+            display: inline;
+            font-size: 8.5pt;
+            font-style: italic;
         }
 
         .e-notes-wrap {
@@ -408,7 +457,6 @@
             text-align: center;
             padding: 8pt 6pt;
             border-left: 0.75pt solid #bbb;
-            background: #f5f5f5;
             font-size: 7.5pt;
             line-height: 1.55;
             font-style: italic;
@@ -605,38 +653,41 @@
             <span class="sec-ttl">Thời gian</span>
         </div>
         <div class="sec-bd">
-            <table class="ft">
+            <table class="ft sec-c-dates">
                 <tr>
-                    <td style="width:50%;">
+                    <td class="sec-c-date">
                         <div class="fl">c.1 &nbsp;Ngày đề xuất</div>
-                        <div class="fv fv-phone">{{ $proposedDate }}</div>
+                        <div class="fv fv-date">{{ $proposedDate }}</div>
                     </td>
-                    <td style="width:50%;">
+                    <td class="sec-c-date">
                         <div class="fl">c.2 &nbsp;Ngày cần sử dụng xe</div>
-                        <div class="fv fv-phone">{{ $dateNeeded }}</div>
+                        <div class="fv fv-date">{{ $dateNeeded }}</div>
                     </td>
                 </tr>
             </table>
 
-            <div class="hint-bar">
-                Lưu ý: Tối thiểu 03 ngày làm việc trước ngày cấp xe;
+            <div class="hint-bar hint-bar--policy">
+                <strong>Lưu ý</strong> &nbsp;·&nbsp;
+                Tối thiểu 03 ngày làm việc trước ngày cấp xe;
                 từ 2.000 kg trở lên cần báo sớm ít nhất 05 ngày làm việc.
             </div>
 
-            <table class="ft" style="border-top: none;">
+            <table class="ft sec-c-meta">
                 <tr>
-                    <td style="width:60%; vertical-align:middle; border-top:none; padding:4pt 8pt;">
-                        <span class="cb">{!! $cb($isUrgent) !!}</span>
-                        <strong style="font-size:8.5pt;">Gấp</strong>
+                    <td class="sec-c-urgent">
+                        <div class="sec-c-urgent-row">
+                            <span class="cb">{!! $cb($isUrgent) !!}</span>
+                            <span class="sec-c-urgent-lbl">Gấp</span>
+                        </div>
                         @if($isUrgent)
-                            &nbsp;<span style="font-size:8pt; color:#c0392b;">Lý do: {{ $urgentReason }}</span>
+                            <span class="sec-c-reason sec-c-reason--urgent">Lý do: {{ $urgentReason }}</span>
                         @else
-                            &nbsp;<span style="font-size:8pt; color:{{ $pdfTextColor }};">Lý do: —</span>
+                            <span class="sec-c-reason">Lý do: —</span>
                         @endif
                     </td>
-                    <td style="width:40%; text-align:right; vertical-align:middle; border-top:none; padding:4pt 8pt;">
-                        <span style="font-size:6.5pt; color:{{ $pdfTextColor }}; text-transform:uppercase; letter-spacing:0.3pt;">Loại yêu cầu:</span>
-                        &nbsp;<span class="chip-type">{{ $tripType }}</span>
+                    <td class="sec-c-type">
+                        <span class="sec-c-type-lbl">Loại yêu cầu</span>
+                        <span class="chip-type chip-type--trip">{{ $tripType }}</span>
                     </td>
                 </tr>
             </table>
@@ -678,8 +729,10 @@
         </div>
     </div>
 
+    <div class="signatures-page">
+
     {{-- ────────── E · NỘI DUNG VẬN CHUYỂN ────────── --}}
-    <div class="sec">
+    <div class="sec sec-avoid">
         <div class="sec-hd">
             <span class="sec-badge">E</span>
             <span class="sec-ttl">Nội dung đề nghị vận chuyển</span>
@@ -697,23 +750,18 @@
 
             {{-- ── CARGO TABLE ── --}}
             @if($isCargo)
-                <div class="dt-legend">
-                    <span class="dt-legend-chip dt-legend-chip--item">Thông tin hàng hóa</span>
-                    <span class="dt-legend-chip dt-legend-chip--go">Điểm tập kết</span>
-                    <span class="dt-legend-chip dt-legend-chip--back">Điểm giao</span>
-                </div>
                 <table class="dt">
                     <thead>
                         <tr class="dt-group-hd">
                             <th rowspan="2" style="width:4%;">STT</th>
-                            <th colspan="5" class="th-item">Thông tin hàng hóa</th>
-                            <th colspan="3" class="go">Điểm tập kết</th>
-                            <th colspan="3" class="back">Điểm giao</th>
-                            <th rowspan="2" style="width:8%;" class="th-cost">
+                            <th colspan="5">Thông tin hàng hóa</th>
+                            <th colspan="3">Điểm tập kết</th>
+                            <th colspan="3">Điểm giao</th>
+                            <th rowspan="2" style="width:8%;">
                                 Loại hình
                                 <span class="th-sub">(NV điều phối)</span>
                             </th>
-                            <th rowspan="2" style="width:10%;" class="th-cost">
+                            <th rowspan="2" style="width:10%;">
                                 Chi phí
                                 <span class="th-sub">(Gồm VAT)</span>
                             </th>
@@ -724,39 +772,44 @@
                             <th style="width:10%;">Kích thước (DxRxC)</th>
                             <th style="width:8%;">Khối lượng</th>
                             <th style="width:8%;">Ghi chú</th>
-                            <th class="go" style="width:7%;">Thời gian</th>
-                            <th class="go" style="width:8%;">Địa điểm</th>
-                            <th class="go" style="width:8%;">Người giao</th>
-                            <th class="back" style="width:7%;">Thời gian</th>
-                            <th class="back" style="width:8%;">Địa điểm</th>
-                            <th class="back" style="width:8%;">Người nhận</th>
+                            <th style="width:7%;">Thời gian</th>
+                            <th style="width:8%;">Địa điểm</th>
+                            <th style="width:8%;">Người giao</th>
+                            <th style="width:7%;">Thời gian</th>
+                            <th style="width:8%;">Địa điểm</th>
+                            <th style="width:8%;">Người nhận</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($cargoSectionRows as $idx => $row)
                             <tr>
-                                <td class="tc td-idx">{{ $idx + 1 }}</td>
+                                <td class="tc">{{ $idx + 1 }}</td>
                                 <td class="tl">{{ $row['name'] }}</td>
                                 <td class="tc">{{ $row['qty'] }}</td>
                                 <td class="tl">{{ $row['dim'] }}</td>
                                 <td class="tl">{{ $row['weight'] }}</td>
                                 <td class="tl">{{ $row['inotes'] }}</td>
-                                <td class="tc dt-time td-go">{{ $row['puTime'] }}</td>
-                                <td class="tl td-go">{{ $row['puPlace'] }}</td>
-                                <td class="tl td-go">{{ $row['puContact'] }}</td>
-                                <td class="tc dt-time td-back">{{ $row['delTime'] }}</td>
-                                <td class="tl td-back">{{ $row['delPlace'] }}</td>
-                                <td class="tl td-back">{{ $row['delContact'] }}</td>
+                                <td class="tc dt-time">{{ $row['puTime'] }}</td>
+                                <td class="tl">{{ $row['puPlace'] }}</td>
+                                <td class="tl">{{ $row['puContact'] }}</td>
+                                <td class="tc dt-time">{{ $row['delTime'] }}</td>
+                                <td class="tl">{{ $row['delPlace'] }}</td>
+                                <td class="tl">{{ $row['delContact'] }}</td>
                                 <td class="tc">{{ $row['transport'] }}</td>
-                                <td class="tr td-money">{{ $row['cost'] }}</td>
+                                <td class="tr">{{ $row['cost'] }}</td>
                             </tr>
                         @endforeach
                         <tr class="row-total">
                             <td colspan="13" class="tr" style="padding-right:8pt;">Tổng:</td>
-                            <td class="tr td-money">{{ $grandTotalFmt }}</td>
+                            <td class="tr">{{ $grandTotalFmt }}</td>
                         </tr>
                     </tbody>
                 </table>
+
+                <div class="dt-amount-words">
+                    <span class="dt-amount-words-lbl">Bằng chữ</span>
+                    <span class="dt-amount-words-val">{{ $grandTotalWords }}</span>
+                </div>
 
                 <table class="ft e-notes-wrap">
                     <tr>
@@ -786,27 +839,22 @@
 
             {{-- ── PASSENGER / P2P TABLE ── --}}
             @if(!$isCargo && !$isBusiness)
-                <div class="dt-legend">
-                    <span class="dt-legend-chip dt-legend-chip--item">Nội dung</span>
-                    <span class="dt-legend-chip dt-legend-chip--go">Chiều đi</span>
-                    <span class="dt-legend-chip dt-legend-chip--back">Chiều về</span>
-                </div>
                 <table class="dt">
                     <thead>
                         <tr class="dt-group-hd">
                             <th rowspan="2" style="width:4%;">STT</th>
-                            <th colspan="2" class="th-item">Nội dung</th>
-                            <th colspan="2" class="go">Chiều đi</th>
-                            <th colspan="2" class="back">Chiều về</th>
-                            <th colspan="4" class="th-cost">Chi phí &amp; ghi chú</th>
+                            <th colspan="2">Nội dung</th>
+                            <th colspan="2">Chiều đi</th>
+                            <th colspan="2">Chiều về</th>
+                            <th colspan="4">Chi phí &amp; ghi chú</th>
                         </tr>
                         <tr>
                             <th style="width:12%;">Diễn giải</th>
                             <th style="width:5%;">SL</th>
-                            <th class="go" style="width:9%;">TG đi</th>
-                            <th class="go" style="width:12%;">Điểm đón</th>
-                            <th class="back" style="width:9%;">TG về</th>
-                            <th class="back" style="width:12%;">Điểm trả</th>
+                            <th style="width:9%;">TG đi</th>
+                            <th style="width:12%;">Điểm đón</th>
+                            <th style="width:9%;">TG về</th>
+                            <th style="width:12%;">Điểm trả</th>
                             <th style="width:10%;">Phụ trách</th>
                             <th style="width:10%;">Đơn giá</th>
                             <th style="width:8%;">Phụ thu</th>
@@ -816,41 +864,41 @@
                     <tbody>
                         @foreach($passengerSectionRows as $idx => $row)
                             <tr>
-                                <td class="tc td-idx">{{ $idx + 1 }}</td>
+                                <td class="tc">{{ $idx + 1 }}</td>
                                 <td class="tl">{{ $row['name'] }}</td>
                                 <td class="tc">{{ $row['qty'] }}</td>
-                                <td class="tc dt-time td-go">{{ $row['puTime'] }}</td>
-                                <td class="tl td-go">{{ $row['puPlace'] }}</td>
-                                <td class="tc dt-time td-back">{{ $row['delTime'] }}</td>
-                                <td class="tl td-back">{{ $row['delPlace'] }}</td>
+                                <td class="tc dt-time">{{ $row['puTime'] }}</td>
+                                <td class="tl">{{ $row['puPlace'] }}</td>
+                                <td class="tc dt-time">{{ $row['delTime'] }}</td>
+                                <td class="tl">{{ $row['delPlace'] }}</td>
                                 <td class="tl">{{ $row['puContact'] }}</td>
-                                <td class="tr td-money">{{ $row['unitPrice'] ?? '' }}</td>
-                                <td class="tr td-money">{{ $row['extraFee'] ?? '' }}</td>
+                                <td class="tr">{{ $row['unitPrice'] ?? '' }}</td>
+                                <td class="tr">{{ $row['extraFee'] ?? '' }}</td>
                                 <td class="tl">{{ $row['inotes'] }}</td>
                             </tr>
                         @endforeach
                         <tr class="row-total">
                             <td colspan="10" class="tr" style="padding-right:8pt;">Tổng ước tính:</td>
-                            <td class="tr td-money">{{ $grandTotalFmt }}</td>
+                            <td class="tr">{{ $grandTotalFmt }}</td>
                         </tr>
                     </tbody>
                 </table>
+
+                <div class="dt-amount-words">
+                    <span class="dt-amount-words-lbl">Bằng chữ</span>
+                    <span class="dt-amount-words-val">{{ $grandTotalWords }}</span>
+                </div>
             @endif
 
             {{-- ── BUSINESS TABLE ── --}}
             @if($isBusiness)
-                <div class="dt-legend">
-                    <span class="dt-legend-chip dt-legend-chip--item">Nội dung công tác</span>
-                    <span class="dt-legend-chip dt-legend-chip--go">Chiều đi</span>
-                    <span class="dt-legend-chip dt-legend-chip--back">Chiều về</span>
-                </div>
                 <table class="dt">
                     <thead>
                         <tr class="dt-group-hd">
                             <th rowspan="2" style="width:4%;">STT</th>
-                            <th colspan="4" class="th-item">Nội dung công tác</th>
-                            <th colspan="2" class="go">Chiều đi</th>
-                            <th colspan="2" class="back">Chiều về</th>
+                            <th colspan="4">Nội dung công tác</th>
+                            <th colspan="2">Chiều đi</th>
+                            <th colspan="2">Chiều về</th>
                             <th rowspan="2" style="width:21%;">Khác</th>
                         </tr>
                         <tr>
@@ -858,39 +906,42 @@
                             <th style="width:5%;">SL</th>
                             <th style="width:10%;">Điểm dừng / cung đường</th>
                             <th style="width:8%;">Ghi chú</th>
-                            <th class="go" style="width:9%;">TG đi</th>
-                            <th class="go" style="width:10%;">Điểm đi</th>
-                            <th class="back" style="width:9%;">TG về</th>
-                            <th class="back" style="width:10%;">Điểm đến</th>
+                            <th style="width:9%;">TG đi</th>
+                            <th style="width:10%;">Điểm đi</th>
+                            <th style="width:9%;">TG về</th>
+                            <th style="width:10%;">Điểm đến</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($businessSectionRows as $idx => $row)
                             <tr>
-                                <td class="tc td-idx">{{ $idx + 1 }}</td>
+                                <td class="tc">{{ $idx + 1 }}</td>
                                 <td class="tl">{{ $row['name'] }}</td>
                                 <td class="tc">{{ $row['qty'] }}</td>
                                 <td class="tl">{{ $row['dim'] }}</td>
                                 <td class="tl">{{ $row['inotes'] }}</td>
-                                <td class="tc dt-time td-go">{{ $row['puTime'] }}</td>
-                                <td class="tl td-go">{{ $row['puPlace'] }}</td>
-                                <td class="tc dt-time td-back">{{ $row['delTime'] }}</td>
-                                <td class="tl td-back">{{ $row['delPlace'] }}</td>
+                                <td class="tc dt-time">{{ $row['puTime'] }}</td>
+                                <td class="tl">{{ $row['puPlace'] }}</td>
+                                <td class="tc dt-time">{{ $row['delTime'] }}</td>
+                                <td class="tl">{{ $row['delPlace'] }}</td>
                                 <td class="tc">{{ $row['delContact'] ?: '—' }}</td>
                             </tr>
                         @endforeach
                         <tr class="row-total">
                             <td colspan="9" class="tr" style="padding-right:8pt;">Tổng (ước tính):</td>
-                            <td class="tr td-money">{{ $grandTotalFmt }}</td>
+                            <td class="tr">{{ $grandTotalFmt }}</td>
                         </tr>
                     </tbody>
                 </table>
+
+                <div class="dt-amount-words">
+                    <span class="dt-amount-words-lbl">Bằng chữ</span>
+                    <span class="dt-amount-words-val">{{ $grandTotalWords }}</span>
+                </div>
             @endif
 
         </div>
     </div>
-
-    <div class="signatures-page">
 
     {{-- ────────── F · XÁC NHẬN CÁC BÊN ────────── --}}
     <div class="sec sec-avoid">
