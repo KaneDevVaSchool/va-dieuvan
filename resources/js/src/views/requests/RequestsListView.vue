@@ -1,5 +1,8 @@
 <template>
-  <div class="space-y-6">
+  <div
+    class="space-y-6"
+    :class="!loading && items.length ? 'pb-[4.75rem] sm:pb-[4.25rem]' : ''"
+  >
     <!-- Header -->
     <div class="flex flex-col gap-4 border-b border-slate-200/80 pb-6 lg:flex-row lg:items-start lg:justify-between">
       <div>
@@ -813,13 +816,6 @@
               </td>
               <td class="relative overflow-visible px-2 py-3 align-top text-right" :class="isTrashTab ? 'text-slate-800' : ''">
                 <div class="inline-flex flex-wrap items-center justify-end gap-1">
-                  <RouterLink
-                    v-if="!isTrashTab"
-                    :to="{ name: 'requestDetail', params: { id: String(r.id) } }"
-                    class="inline-flex items-center gap-1 rounded-lg border border-teal-200/90 bg-teal-50 px-2 py-1 text-xs font-semibold text-teal-900 shadow-sm transition hover:bg-teal-100"
-                  >
-                    {{ t('requests_page.view') }}
-                  </RouterLink>
                 <details class="group/action-menu relative inline-block text-right">
                   <summary
                     class="inline-flex cursor-pointer list-none items-center justify-center rounded-lg border border-slate-200/90 bg-white p-1.5 text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 [&::-webkit-details-marker]:hidden"
@@ -911,50 +907,51 @@
         </ul>
         </template>
       </div>
-
-      <div
-        v-if="!loading && items.length"
-        class="sticky bottom-0 z-10 flex flex-col gap-3 border-t border-slate-200/90 bg-white/95 px-4 py-3 shadow-[0_-4px_12px_-4px_rgba(15,23,42,0.08)] backdrop-blur sm:flex-row sm:items-center sm:justify-between"
-      >
-        <p class="text-sm text-slate-500">
-          {{
-            t('requests_page.pagination_summary', {
-              from: pageFrom,
-              to: pageTo,
-              total: meta.total ?? 0,
-            })
-          }}
-        </p>
-        <div class="flex flex-wrap items-center gap-2">
-          <Button variant="secondary" :disabled="(meta.current_page ?? 1) <= 1 || loading" @click="goPage((meta.current_page ?? 1) - 1)">
-            {{ t('requests_page.prev') }}
-          </Button>
-          <div class="flex items-center gap-1">
-            <button
-              v-for="p in pageNumbers"
-              :key="p"
-              type="button"
-              class="min-w-[2.25rem] rounded-md px-2 py-1.5 text-sm"
-              :class="
-                p === meta.current_page
-                  ? 'bg-teal-600 font-medium text-white'
-                  : 'text-slate-600 hover:bg-slate-100'
-              "
-              @click="goPage(p)"
-            >
-              {{ p }}
-            </button>
-          </div>
-          <Button
-            variant="secondary"
-            :disabled="(meta.current_page ?? 1) >= (meta.last_page ?? 1) || loading"
-            @click="goPage((meta.current_page ?? 1) + 1)"
-          >
-            {{ t('requests_page.next') }}
-          </Button>
-        </div>
-      </div>
     </div>
+
+    <nav
+      v-if="!loading && items.length"
+      class="sticky bottom-0 z-30 -mx-3 flex flex-col gap-3 border-t border-slate-200/90 bg-white/95 px-3 py-3 shadow-[0_-4px_12px_-4px_rgba(15,23,42,0.08)] backdrop-blur supports-[padding:max(0px)]:pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:-mx-4 sm:flex-row sm:items-center sm:justify-between sm:px-4 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8"
+      :aria-label="t('requests_page.filter_per_page')"
+    >
+      <p class="text-sm text-slate-500">
+        {{
+          t('requests_page.pagination_summary', {
+            from: pageFrom,
+            to: pageTo,
+            total: meta.total ?? 0,
+          })
+        }}
+      </p>
+      <div class="flex flex-wrap items-center gap-2">
+        <Button variant="secondary" :disabled="(meta.current_page ?? 1) <= 1 || loading" @click="goPage((meta.current_page ?? 1) - 1)">
+          {{ t('requests_page.prev') }}
+        </Button>
+        <div class="flex items-center gap-1">
+          <button
+            v-for="p in pageNumbers"
+            :key="p"
+            type="button"
+            class="min-w-[2.25rem] rounded-md px-2 py-1.5 text-sm"
+            :class="
+              p === meta.current_page
+                ? 'bg-teal-600 font-medium text-white'
+                : 'text-slate-600 hover:bg-slate-100'
+            "
+            @click="goPage(p)"
+          >
+            {{ p }}
+          </button>
+        </div>
+        <Button
+          variant="secondary"
+          :disabled="(meta.current_page ?? 1) >= (meta.last_page ?? 1) || loading"
+          @click="goPage((meta.current_page ?? 1) + 1)"
+        >
+          {{ t('requests_page.next') }}
+        </Button>
+      </div>
+    </nav>
 
     <Teleport to="body">
       <div

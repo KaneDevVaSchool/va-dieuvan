@@ -162,6 +162,12 @@ return new class extends Migration
         $permissionsTable = $tableNames['permissions'] ?? 'permissions';
 
         Schema::table('audit_logs', function (Blueprint $table) {
+            if (Schema::hasColumn('audit_logs', 'module')) {
+                $table->dropIndex(['module', 'created_at']);
+            }
+            if (Schema::hasColumn('audit_logs', 'ip_address')) {
+                $table->dropIndex(['ip_address']);
+            }
             $cols = ['actor_name', 'module', 'action', 'result', 'ip_address', 'user_agent', 'device', 'browser', 'os'];
             foreach ($cols as $col) {
                 if (Schema::hasColumn('audit_logs', $col)) {
@@ -173,6 +179,11 @@ return new class extends Migration
         Schema::table($rolesTable, function (Blueprint $table) use ($rolesTable) {
             if (Schema::hasColumn($rolesTable, 'deleted_at')) {
                 $table->dropSoftDeletes();
+            }
+            foreach (['parent_id', 'created_by', 'updated_by'] as $col) {
+                if (Schema::hasColumn($rolesTable, $col)) {
+                    $table->dropForeign([$col]);
+                }
             }
             foreach (['parent_id', 'created_by', 'updated_by', 'is_system', 'status', 'sort_order', 'color'] as $col) {
                 if (Schema::hasColumn($rolesTable, $col)) {
