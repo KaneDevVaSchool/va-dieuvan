@@ -1,0 +1,11 @@
+{
+  "web_apps": [
+    {
+      "manifest": "/manifest.webmanifest",
+      "details": {
+        "paths": ["/*"],
+        "exclude_paths": ["/api/*", "/auth/*"]
+      }
+    }
+  ]
+}

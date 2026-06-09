@@ -19,30 +19,6 @@
       </span>
     </div>
 
-    <div v-if="hasMeta" class="flex flex-wrap gap-2 border-b border-white/[0.06] px-4 py-3">
-      <span
-        v-if="scheduleSummary && scheduleSummary !== '—'"
-        class="inline-flex items-center gap-1.5 rounded-lg bg-white/5 px-2.5 py-1.5 text-xs font-medium text-driver-ink/90 ring-1 ring-white/10 sm:text-sm"
-      >
-        <ClockIcon class="h-4 w-4 shrink-0 text-[#7fdcc8]" aria-hidden="true" />
-        {{ scheduleSummary }}
-      </span>
-      <span
-        v-if="distanceLabel && distanceLabel !== '— km'"
-        class="inline-flex items-center gap-1.5 rounded-lg bg-white/5 px-2.5 py-1.5 text-xs font-medium text-driver-ink/90 ring-1 ring-white/10 sm:text-sm"
-      >
-        <ArrowsRightLeftIcon class="h-4 w-4 shrink-0 text-[#7fdcc8]" aria-hidden="true" />
-        {{ distanceLabel }}
-      </span>
-      <span
-        v-if="passengerCount > 0"
-        class="inline-flex items-center gap-1.5 rounded-lg bg-white/5 px-2.5 py-1.5 text-xs font-medium text-driver-ink/90 ring-1 ring-white/10 sm:text-sm"
-      >
-        <UserGroupIcon class="h-4 w-4 shrink-0 text-[#7fdcc8]" aria-hidden="true" />
-        {{ t('driver_trip_detail.route_chip_passengers', { n: passengerCount }) }}
-      </span>
-    </div>
-
     <div v-if="notesPreview" class="mx-4 mt-3 rounded-xl border border-amber-400/25 bg-amber-500/10 px-3 py-2.5">
       <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-200/90">
         {{ t('driver_trip_detail.notes_important') }}
@@ -85,14 +61,8 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import {
-  ArrowsRightLeftIcon,
-  ClockIcon,
-  MapIcon,
-  UserGroupIcon,
-} from '@heroicons/vue/24/outline'
+import { MapIcon } from '@heroicons/vue/24/outline'
 import DriverRouteTimeline from './DriverRouteTimeline.vue'
 
 const props = defineProps({
@@ -110,11 +80,4 @@ const props = defineProps({
 })
 
 const { t } = useI18n()
-
-const hasMeta = computed(
-  () =>
-    (props.scheduleSummary && props.scheduleSummary !== '—') ||
-    (props.distanceLabel && props.distanceLabel !== '— km') ||
-    props.passengerCount > 0,
-)
 </script>

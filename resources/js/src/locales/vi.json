@@ -524,6 +524,7 @@
         "cost_type_wash": "Rửa xe",
         "cost_type_fine": "Phạt",
         "cost_type_repair": "Sửa chữa nhỏ",
+        "cost_type_wizard_estimate": "Dự toán phiếu điều xe",
         "cost_status_draft": "Nháp",
         "cost_status_submitted": "Chờ duyệt",
         "cost_status_confirmed": "Đã duyệt",

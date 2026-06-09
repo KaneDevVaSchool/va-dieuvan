@@ -13,7 +13,7 @@ class TpTripExecution extends Model
     public const STATUS_CANCELLED = 'cancelled';
 
     protected $fillable = [
-        'program_day_id', 'program_id', 'driver_id', 'vehicle_id',
+        'program_day_id', 'shift', 'program_id', 'driver_id', 'vehicle_id',
         'driver_snapshot', 'vehicle_snapshot', 'scheduled_time',
         'started_at', 'completed_at', 'cancelled_at', 'cancel_reason',
         'estimated_cost', 'actual_cost', 'cost_notes',

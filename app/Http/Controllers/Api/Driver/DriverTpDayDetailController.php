@@ -21,12 +21,18 @@ class DriverTpDayDetailController extends Controller
 
     public function show(Request $request, TpProgramDay $tpProgramDay): JsonResponse
     {
-        $this->assertCanStartDay($request->user(), $tpProgramDay);
+        $shift = $request->query('shift');
+        $shift = in_array($shift, ['morning', 'afternoon'], true) ? $shift : null;
+        $this->assertCanStartDay($request->user(), $tpProgramDay, $shift);
 
+        $tpProgramDay->loadMissing('executions');
         $payload = $this->presenter->programDay($tpProgramDay);
-        $payload['execution'] = $tpProgramDay->execution
-            ? $this->presenter->execution($tpProgramDay->execution)
+        $slotExecution = $tpProgramDay->executionForShift($shift);
+        $payload['execution'] = $slotExecution
+            ? $this->presenter->execution($slotExecution)
             : null;
+        $payload['execution_status'] = $slotExecution?->status;
+        $payload['shift'] = $shift;
 
         return $this->ok($payload);
     }

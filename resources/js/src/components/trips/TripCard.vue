@@ -57,13 +57,6 @@
         >
           {{ tripCode }}
         </p>
-        <p
-          v-if="comfortable && serviceTypeLabel"
-          class="min-w-0 truncate font-medium text-[#94a3b8]"
-          :class="comfortable ? 'text-sm' : 'text-[11px]'"
-        >
-          {{ serviceTypeLabel }}
-        </p>
       </div>
 
       <!-- Status badge -->
@@ -124,12 +117,9 @@
 
     <!-- Extra details (comfortable) -->
     <div
-      v-if="comfortable && (requesterLine || notesPreview || scheduleLegCount > 1)"
+      v-if="comfortable && (notesPreview || scheduleLegCount > 1)"
       class="space-y-1 px-4 pt-2"
     >
-      <p v-if="requesterLine" class="text-sm font-medium text-[#94a3b8]">
-        {{ requesterLine }}
-      </p>
       <p v-if="scheduleLegCount > 1" class="text-sm font-medium text-[#94a3b8]">
         {{ t('trip_history_page.schedule_legs', { n: scheduleLegCount }) }}
       </p>
@@ -168,10 +158,7 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { dispatchRequestDisplayPassengerCount } from '../../util/dispatchRequestPassengers'
-import {
-  tripOutboundInboundTimeRange,
-  tripServiceTypeCalendarLabel,
-} from '../../composables/useDriverTripDisplay'
+import { tripOutboundInboundTimeRange } from '../../composables/useDriverTripDisplay'
 
 const props = defineProps({
   trip: { type: Object, required: true },
@@ -198,13 +185,6 @@ const typeLabel = computed(() => {
   if (t0 === 'ct' || t0 === 'business' || t0 === 'cong_tac') return 'CT'
   if (t0 === 'hh' || t0 === 'delivery' || t0 === 'cargo' || t0 === 'hang_hoa') return 'HH'
   return (props.trip.trip_type_label || props.trip.type || '—').toUpperCase()
-})
-
-const serviceTypeLabel = computed(() => {
-  if (props.trip.trip_type_label && !['P2P', 'D2D', 'CT', 'HH', 'CG'].includes(String(props.trip.trip_type_label).toUpperCase())) {
-    return props.trip.trip_type_label
-  }
-  return tripServiceTypeCalendarLabel(props.trip, t)
 })
 
 const typeBadgeStyle = computed(() => {
@@ -308,15 +288,6 @@ const durationPart = computed(() => {
   const m = props.trip.duration_minutes
   if (m == null || Number.isNaN(Number(m)) || Number(m) <= 0) return ''
   return t('trip_history_page.min_short', { n: Math.round(Number(m)) })
-})
-
-const requesterLine = computed(() => {
-  const name =
-    props.trip.requester_name?.trim()
-    || drOf()?.requester?.name?.trim()
-    || ''
-  if (!name) return ''
-  return t('driver_trip_detail.request_from', { name })
 })
 
 const notesPreview = computed(() => {

@@ -13,6 +13,13 @@
         >
           {{ typeLabel }}
         </span>
+        <span
+          v-if="shiftLabel"
+          class="inline-flex shrink-0 rounded-lg px-2.5 py-1 text-xs font-bold ring-1"
+          :class="shiftBadgeClass"
+        >
+          {{ shiftLabel }}
+        </span>
         <span class="text-sm font-medium text-[#64748b]">
           {{ tripCode }}
         </span>
@@ -176,6 +183,24 @@ const tripCode = computed(() => {
 
 const typeLabel = computed(() => tripTypeBadgeText(tripRaw.value))
 
+const isMultiSlotTp = computed(() => !!tripRaw.value._tp?.multi_slot)
+
+const shiftLabel = computed(() => {
+  if (!isMultiSlotTp.value) return ''
+  const s = tripRaw.value._tp?.shift || tripRaw.value.calendar_shift
+  if (s === 'morning') return t('driver_home.shift_morning')
+  if (s === 'afternoon') return t('driver_home.shift_afternoon')
+  return ''
+})
+
+const shiftBadgeClass = computed(() => {
+  const s = tripRaw.value._tp?.shift || tripRaw.value.calendar_shift
+  if (s === 'afternoon') {
+    return 'bg-amber-500/20 text-amber-200 ring-amber-400/35'
+  }
+  return 'bg-sky-500/20 text-sky-200 ring-sky-400/35'
+})
+
 const typeBadgeStyle = computed(() => {
   const lbl = typeLabel.value
   if (lbl === 'P2P') return { backgroundColor: 'rgb(59 130 246 / 0.22)', color: '#93c5fd' }
@@ -202,12 +227,18 @@ const cardMode = computed(() => {
 
 const statusLabelText = computed(() => {
   const m = cardMode.value
-  if (m === 'in_progress') return t('driver_home.card_status_in_progress')
-  if (m === 'confirmed') return t('driver_home.card_status_confirmed')
-  if (m === 'pending') return t('driver_home.card_status_pending')
-  if (m === 'completed') return t('driver_home.card_status_completed')
-  if (m === 'cancelled') return t('driver_home.card_status_cancelled')
-  return tripRaw.value.status || '—'
+  let base = ''
+  if (m === 'in_progress') base = t('driver_home.card_status_in_progress')
+  else if (m === 'confirmed') base = t('driver_home.card_status_confirmed')
+  else if (m === 'pending') base = t('driver_home.card_status_pending')
+  else if (m === 'completed') base = t('driver_home.card_status_completed')
+  else if (m === 'cancelled') base = t('driver_home.card_status_cancelled')
+  else base = tripRaw.value.status || '—'
+
+  if (isMultiSlotTp.value && shiftLabel.value) {
+    return `${shiftLabel.value} · ${base}`
+  }
+  return base
 })
 
 const PlayIcon = {

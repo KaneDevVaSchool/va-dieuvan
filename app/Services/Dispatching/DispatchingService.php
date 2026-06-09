@@ -5,7 +5,9 @@ namespace App\Services\Dispatching;
 use App\Models\Driver;
 use App\Models\Trip;
 use App\Notifications\TripAssignedNotification;
+use App\Notifications\TripDriverRemovedNotification;
 use App\Services\Auditing\AuditLogger;
+use App\Services\Trips\TripDriverNotifyService;
 use App\Support\FinancialDataLock;
 use App\Support\Messages;
 use Illuminate\Support\Carbon;
@@ -144,8 +146,19 @@ class DispatchingService
                 ],
             );
 
-            if ($allAssigned && empty($payload['suppress_assignment_notifications'])) {
-                $this->notifyAssignedDrivers($trip, $assignments, $defsByKey);
+            if (empty($payload['suppress_assignment_notifications'])) {
+                $oldDriverIds = $this->extractDriverIds(
+                    $before['schedule_assignments'] ?? null,
+                    $before['driver_id'] ?? null,
+                );
+                $newDriverIds = $this->extractDriverIds($assignments, $primary['driver_id'] ?? null);
+                foreach (array_diff($oldDriverIds, $newDriverIds) as $removedDriverId) {
+                    $this->notifyRemovedDriver($trip, $removedDriverId);
+                }
+
+                if ($allAssigned) {
+                    $this->notifyAssignedDrivers($trip, $assignments, $defsByKey);
+                }
             }
 
             return $trip;
@@ -349,7 +362,57 @@ class DispatchingService
                 metadata: ['source' => 'DispatchingService'],
             );
 
+            if (empty($payload['suppress_assignment_notifications'])) {
+                app(TripDriverNotifyService::class)->notifyDriversRescheduled($trip, $oldDepart, $newDepart);
+            }
+
             return $trip;
         });
+    }
+
+    /**
+     * @param  list<array<string, mixed>>|null  $scheduleAssignments
+     * @return list<int>
+     */
+    private function extractDriverIds(mixed $scheduleAssignments, mixed $fallbackDriverId): array
+    {
+        $ids = [];
+        if (is_array($scheduleAssignments)) {
+            foreach ($scheduleAssignments as $leg) {
+                $id = (int) ($leg['driver_id'] ?? 0);
+                if ($id > 0) {
+                    $ids[$id] = true;
+                }
+            }
+        }
+        if ($ids === [] && (int) ($fallbackDriverId ?? 0) > 0) {
+            $ids[(int) $fallbackDriverId] = true;
+        }
+
+        return array_keys($ids);
+    }
+
+    private function notifyRemovedDriver(Trip $trip, int $driverId): void
+    {
+        $driver = Driver::query()->with('user')->find($driverId);
+        $user = $driver?->user;
+        if ($user === null) {
+            return;
+        }
+
+        $trip->loadMissing(['dispatchRequest']);
+        $dr = $trip->dispatchRequest;
+        $tripType = is_string($dr?->trip_type) && $dr->trip_type !== '' ? $dr->trip_type : 'unspecified';
+        $departAt = $trip->depart_at;
+
+        $user->notify(new TripDriverRemovedNotification(
+            tripId: (int) $trip->id,
+            tripType: $tripType,
+            origin: (string) ($dr?->origin ?? ''),
+            destination: (string) ($dr?->destination ?? ''),
+            departAt: $departAt instanceof Carbon
+                ? $departAt->toIso8601String()
+                : (string) ($departAt ?? ''),
+        ));
     }
 }

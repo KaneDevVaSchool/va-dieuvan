@@ -43,5 +43,15 @@ Route::get('/manifest.webmanifest', function () {
     ]);
 });
 
+Route::get('/.well-known/web-app-origin-association', function () {
+    $path = public_path('.well-known/web-app-origin-association');
+    abort_unless(is_file($path), 404);
+
+    return response()->file($path, [
+        'Content-Type' => 'application/json; charset=UTF-8',
+        'Cache-Control' => 'public, max-age=86400',
+    ]);
+});
+
 /** Do not match `/build/` or `/storage/` so missing static files 404 instead of returning HTML SPA (avoids MIME type errors on *.js modules). */
 Route::view('/{any?}', 'welcome')->where('any', '^(?!build/|storage/).*');

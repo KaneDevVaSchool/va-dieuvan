@@ -34,7 +34,7 @@ class DriverTpDayConfirmController extends Controller
         $driver = $this->assertCanStartDay($request->user(), $tpProgramDay, $shift);
 
         abort_if($tpProgramDay->day_type === TpProgramDay::DAY_CANCELLED, 422, 'Ngày này đã bị hủy.');
-        abort_if($tpProgramDay->execution()->exists(), 422, 'Chuyến đã được bắt đầu.');
+        abort_if($tpProgramDay->shiftExecutionStarted($shift), 422, 'Ca này đã được bắt đầu.');
 
         if ($shift === 'morning') {
             if (! $tpProgramDay->morning_confirmed_at) {
@@ -71,7 +71,7 @@ class DriverTpDayConfirmController extends Controller
         $shift = $this->resolveShift($request);
         $this->assertCanStartDay($request->user(), $tpProgramDay, $shift);
 
-        abort_if($tpProgramDay->execution()->exists(), 422, 'Chuyến đã được bắt đầu, không thể bỏ xác nhận.');
+        abort_if($tpProgramDay->shiftExecutionStarted($shift), 422, 'Ca này đã được bắt đầu, không thể bỏ xác nhận.');
 
         if ($shift === 'morning') {
             if ($tpProgramDay->morning_confirmed_at) {

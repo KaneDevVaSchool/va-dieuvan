@@ -105,6 +105,7 @@ export function tpItemsToDriverTrips(tpItems) {
         multi_slot: multiSlot,
         list_key: listKey,
         program_id: row.program_id,
+        execution_id: row.execution_id ?? null,
       },
       trip_number: row.program_code ? String(row.program_code) : 'CPĐD',
       type: 'TP',

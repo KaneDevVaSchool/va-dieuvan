@@ -22,16 +22,6 @@
         <p v-if="originSub" class="mt-1 text-sm leading-snug text-driver-muted sm:text-base">
           {{ originSub }}
         </p>
-        <a
-          v-if="originNavUrl"
-          :href="originNavUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="mt-2 inline-flex min-h-[36px] items-center gap-1.5 rounded-lg bg-white/5 px-2.5 py-1.5 text-xs font-semibold text-[#7fdcc8] ring-1 ring-white/10 transition active:bg-white/10 sm:text-sm"
-        >
-          <ArrowTopRightOnSquareIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-          {{ t('driver_trip_detail.route_point_nav') }}
-        </a>
       </div>
     </div>
 
@@ -53,16 +43,6 @@
         <p v-if="destSub" class="mt-1 text-sm leading-snug text-driver-muted sm:text-base">
           {{ destSub }}
         </p>
-        <a
-          v-if="destNavUrl"
-          :href="destNavUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="mt-2 inline-flex min-h-[36px] items-center gap-1.5 rounded-lg bg-white/5 px-2.5 py-1.5 text-xs font-semibold text-[#7fdcc8] ring-1 ring-white/10 transition active:bg-white/10 sm:text-sm"
-        >
-          <ArrowTopRightOnSquareIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-          {{ t('driver_trip_detail.route_point_nav') }}
-        </a>
       </div>
     </div>
 
@@ -80,14 +60,8 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import {
-  ArrowTopRightOnSquareIcon,
-  FlagIcon,
-  MapIcon,
-  MapPinIcon,
-} from '@heroicons/vue/24/outline'
+import { FlagIcon, MapIcon, MapPinIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
   originMain: { type: String, default: '' },
@@ -98,20 +72,4 @@ const props = defineProps({
 })
 
 const { t } = useI18n()
-
-function fullAddress(main, sub) {
-  const m = String(main ?? '').trim()
-  const s = String(sub ?? '').trim()
-  if (!m || m === '—') return ''
-  return s ? `${m}, ${s}` : m
-}
-
-function pointMapUrl(main, sub) {
-  const addr = fullAddress(main, sub)
-  if (!addr) return ''
-  return `https://maps.google.com/maps?q=${encodeURIComponent(addr)}`
-}
-
-const originNavUrl = computed(() => pointMapUrl(props.originMain, props.originSub))
-const destNavUrl = computed(() => pointMapUrl(props.destMain, props.destSub))
 </script>

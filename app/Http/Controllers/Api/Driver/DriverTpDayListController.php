@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\Driver\Concerns\ActsOnTpExecutions;
 use App\Http\Controllers\Controller;
 use App\Models\TpProgramDay;
 use App\Services\TransportProgram\TpProgramScheduleSlots;
+use App\Services\TransportProgram\TpShiftDriverSupport;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,6 +19,7 @@ class DriverTpDayListController extends Controller
 
     public function __construct(
         private readonly TpProgramScheduleSlots $scheduleSlots,
+        private readonly TpShiftDriverSupport $shiftSupport,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -32,11 +34,11 @@ class DriverTpDayListController extends Controller
         }
 
         $days = TpProgramDay::query()
-            ->with('program', 'execution')
+            ->with(['program', 'executions'])
             ->where('day_type', TpProgramDay::DAY_OPERATING)
-            ->whereBetween('scheduled_date', [$from, $to])
-            ->get()
-            ->filter(fn (TpProgramDay $d) => optional($d->effectiveDriver())->id === $driver->id);
+            ->whereDate('scheduled_date', '>=', $from)
+            ->whereDate('scheduled_date', '<=', $to)
+            ->get();
 
         $items = [];
         foreach ($days as $d) {
@@ -52,6 +54,10 @@ class DriverTpDayListController extends Controller
             $multiSlot = count($slots) > 1;
             foreach ($slots as $slot) {
                 $shift = (string) ($slot['shift'] ?? 'morning');
+                $slotDriver = $this->shiftSupport->effectiveMainDriver($d, $multiSlot ? $shift : null);
+                if (! $slotDriver || (int) $slotDriver->id !== (int) $driver->id) {
+                    continue;
+                }
                 // Khi có nhiều ca (tuyến con), trả về confirmed_at riêng của từng ca.
                 // Khi chỉ có 1 ca, dùng confirmed_at chung (backward-compat).
                 $confirmedAt = $multiSlot
@@ -73,7 +79,8 @@ class DriverTpDayListController extends Controller
                     'arrival_time' => $slot['arrival_time'] ?? null,
                     'expected_count' => $d->expected_count,
                     'is_default_driver' => $d->driver_id === null,
-                    'execution_status' => $d->execution?->status,
+                    'execution_status' => $d->executionForShift($shift)?->status,
+                    'execution_id' => $d->executionForShift($shift)?->id,
                     'confirmed_at' => $confirmedAt,
                 ];
             }

@@ -67,7 +67,7 @@
             <div class="min-w-0 flex-1">
               <p class="text-base font-semibold leading-snug text-driver-ink sm:text-lg">
                 {{ costTypeLabel(c.type) }}
-                <span v-if="c.description" class="font-normal text-driver-muted"> · {{ c.description }}</span>
+                <span v-if="costDescription(c)" class="font-normal text-driver-muted"> · {{ costDescription(c) }}</span>
               </p>
               <div class="mt-0.5 flex flex-wrap items-center gap-2">
                 <p class="text-xs text-driver-muted/85 sm:text-sm">{{ formatCostTime(c.created_at) }}</p>
@@ -118,4 +118,11 @@ const canOpenCostEntry = computed(() => props.canAddCost || props.showPostTripCo
 defineEmits(['open-modal'])
 
 const { t } = useI18n()
+
+function costDescription(cost) {
+  const type = String(cost?.type ?? '').trim().toLowerCase()
+  if (type === 'wizard_estimate') return ''
+  const desc = String(cost?.description ?? '').trim()
+  return desc
+}
 </script>

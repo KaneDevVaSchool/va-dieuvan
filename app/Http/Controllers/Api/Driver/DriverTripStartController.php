@@ -31,7 +31,7 @@ class DriverTripStartController extends Controller
             'Bạn cần xác nhận chuyến trước khi bắt đầu.',
         );
 
-        $execution = $this->executionService->start($tpProgramDay, $driver, $request->input('device_id'));
+        $execution = $this->executionService->start($tpProgramDay, $driver, $request->input('device_id'), $shift);
 
         return $this->created($this->presenter->execution($execution));
     }

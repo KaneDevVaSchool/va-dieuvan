@@ -21,6 +21,18 @@ export function formatItineraryRowDt(v) {
   return d.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 }
 
+/** Compact leg time for itinerary cards: `HH:mm DD-MM` */
+export function formatItineraryTimelineDt(v) {
+  if (!v) return ''
+  const d = new Date(String(v).trim())
+  if (Number.isNaN(d.getTime())) return nz(v)
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mm = String(d.getMinutes()).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  const mo = String(d.getMonth() + 1).padStart(2, '0')
+  return `${hh}:${mm} ${dd}-${mo}`
+}
+
 /**
  * @param {'cargo'|'business'|'passenger'} tripType
  */

@@ -284,7 +284,7 @@ const formattedDate = computed(() => {
 async function load() {
   loading.value = true
   try {
-    day.value = await driverGetDay(route.params.dayId)
+    day.value = await driverGetDay(route.params.dayId, shift.value)
     execution.value = day.value?.execution ?? null
   } catch (err) {
     showAppErrorFromApi(err)

@@ -16,9 +16,9 @@ class TripExecutionService
         private readonly StudentLogService $studentLogService,
     ) {}
 
-    public function start(TpProgramDay $day, Driver $driver, ?string $deviceId = null): TpTripExecution
+    public function start(TpProgramDay $day, Driver $driver, ?string $deviceId = null, ?string $shift = null): TpTripExecution
     {
-        return $this->startAction->execute($day, $driver, $deviceId);
+        return $this->startAction->execute($day, $driver, $deviceId, $shift);
     }
 
     public function complete(TpTripExecution $execution, bool $confirmPendingBoard, ?int $actorId): TpTripExecution

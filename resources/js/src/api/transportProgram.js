@@ -360,8 +360,9 @@ export async function driverListDays(params = {}) {
   return data.data
 }
 
-export async function driverGetDay(dayId) {
-  const { data } = await http.get(`/driver/tp-days/${dayId}`)
+export async function driverGetDay(dayId, shift = null) {
+  const params = shift ? { shift } : {}
+  const { data } = await http.get(`/driver/tp-days/${dayId}`, { params })
   return data.data
 }
 

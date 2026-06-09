@@ -57,6 +57,55 @@ class DriverTpDayStartTest extends TestCase
 
         $this->postJson("/api/driver/tp-days/{$day->id}/start", ['shift' => 'morning'])
             ->assertCreated();
+
+        $list = $this->getJson('/api/driver/tp-days?date_from='.$date.'&date_to='.$date)
+            ->assertOk()
+            ->json('data.items');
+
+        $this->assertCount(1, $list);
+        $this->assertSame('morning', $list[0]['shift']);
+        $this->assertSame('in_progress', $list[0]['execution_status']);
+    }
+
+    public function test_cannot_start_second_shift_while_first_in_progress(): void
+    {
+        $this->seed(RbacSeeder::class);
+
+        $driver = $this->makeDriver('TX Full');
+        $date = now('Asia/Ho_Chi_Minh')->addDays(3)->toDateString();
+
+        $program = TpProgram::query()->create([
+            'code' => 'TP-BLOCK',
+            'name' => 'Đưa đón 2 ca',
+            'status' => 'active',
+            'start_date' => $date,
+            'end_date' => $date,
+            'departure_time' => '06:00',
+            'return_time' => '17:00',
+            'runs_on' => ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+            'settings' => [
+                'morning' => ['enabled' => true, 'departure' => '06:00', 'arrival' => '07:00'],
+                'afternoon' => ['enabled' => true, 'departure' => '17:00', 'arrival' => '18:00'],
+            ],
+        ]);
+
+        $day = TpProgramDay::query()->create([
+            'program_id' => $program->id,
+            'scheduled_date' => $date,
+            'day_type' => TpProgramDay::DAY_OPERATING,
+            'expected_count' => 5,
+        ]);
+
+        app(DriverAssignmentService::class)->assignDriver($day, (int) $driver->id, null, null, 'morning');
+        app(DriverAssignmentService::class)->assignDriver($day->fresh(), (int) $driver->id, null, null, 'afternoon');
+
+        $this->actingAs($driver->user);
+        $this->postJson("/api/driver/tp-days/{$day->id}/confirm", ['shift' => 'morning'])->assertOk();
+        $this->postJson("/api/driver/tp-days/{$day->id}/confirm", ['shift' => 'afternoon'])->assertOk();
+        $this->postJson("/api/driver/tp-days/{$day->id}/start", ['shift' => 'morning'])->assertCreated();
+
+        $this->postJson("/api/driver/tp-days/{$day->id}/start", ['shift' => 'afternoon'])
+            ->assertStatus(422);
     }
 
     private function makeDriver(string $name): Driver

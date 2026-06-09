@@ -474,6 +474,7 @@
         "cost_type_wash": "Car wash",
         "cost_type_fine": "Fine",
         "cost_type_repair": "Minor repair",
+        "cost_type_wizard_estimate": "Dispatch request estimate",
         "cost_status_draft": "Draft",
         "cost_status_submitted": "Pending",
         "cost_status_confirmed": "Approved",

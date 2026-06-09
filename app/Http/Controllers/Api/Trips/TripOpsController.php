@@ -15,6 +15,7 @@ use App\Services\Costs\TripWizardCostProvisioner;
 use App\Services\Dispatching\TripScheduleLegService;
 use App\Services\RecurringDispatch\DispatchRecurringMaintenanceService;
 use App\Services\RecurringDispatch\RecurringBudgetAlertService;
+use App\Services\Trips\TripDriverNotifyService;
 use App\Services\Trips\TripStatusTransitionValidator;
 use App\Support\Messages;
 use App\Support\TripOptimisticLock;
@@ -127,6 +128,7 @@ class TripOpsController extends Controller
         if (in_array($newStatus, ['cancelled'], true) && $beforeStatus !== 'cancelled') {
             $trip->refresh();
             app(RecurringBudgetAlertService::class)->refreshAndNotifyForTrip($trip);
+            app(TripDriverNotifyService::class)->notifyDriversCancelled($trip);
         }
 
         return $response;

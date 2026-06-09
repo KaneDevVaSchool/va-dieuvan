@@ -442,15 +442,11 @@
                               <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                                 {{ t('request_detail.ops_itinerary_row_label') }}
                               </p>
-                              <p v-if="card.subtitle" class="mt-0.5 text-base font-semibold leading-snug text-slate-900 dark:text-white">{{ card.subtitle }}</p>
+                              <p v-if="card.title && card.title !== card.subtitle" class="mt-0.5 text-base font-semibold leading-snug text-slate-900 dark:text-white">{{ card.title }}</p>
                               <p
-                                v-if="card.title && card.title !== card.subtitle"
-                                class="mt-0.5 text-xs text-slate-500 dark:text-slate-400"
-                              >{{ card.title }}</p>
-                              <p
-                                v-if="itineraryCollapsible && !isItineraryExpanded(card.key) && card.peek"
-                                class="mt-1.5 truncate text-xs text-slate-500 dark:text-slate-400"
-                              >{{ card.peek }}</p>
+                                v-else-if="card.subtitle && !card.timeline.length"
+                                class="mt-0.5 text-base font-semibold leading-snug text-slate-900 dark:text-white"
+                              >{{ card.subtitle }}</p>
                             </div>
                           </div>
                           <ChevronDownIcon
@@ -461,71 +457,61 @@
                           />
                         </component>
 
-                        <div v-show="!itineraryCollapsible || isItineraryExpanded(card.key)">
                         <div
-                          v-if="card.routeLabel"
-                          class="grid gap-0 border-b border-slate-100 dark:border-slate-800 sm:grid-cols-[1fr_auto_1fr]"
+                          v-if="itineraryCollapsible && !isItineraryExpanded(card.key) && card.timeline.length"
+                          class="border-b border-slate-100 px-4 py-3 dark:border-slate-800"
                         >
-                          <div class="border-b border-slate-100 bg-emerald-50/40 px-4 py-3 dark:border-slate-800 dark:bg-emerald-950/15 sm:border-b-0 sm:border-r">
-                            <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-600/80 dark:text-emerald-400/80">
-                              {{ t('request_detail.ops_lbl_pickup_place') }}
-                            </p>
-                            <p class="mt-1 text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100">{{ card.from || friendlyEmpty }}</p>
-                          </div>
-                          <div class="hidden items-center justify-center bg-slate-50/50 px-2 dark:bg-slate-800/30 sm:flex">
-                            <ArrowRightIcon class="h-5 w-5 text-slate-300 dark:text-slate-600" aria-hidden="true" />
-                          </div>
-                          <div class="border-t border-slate-100 bg-rose-50/40 px-4 py-3 dark:border-slate-800 dark:bg-rose-950/15 sm:border-l sm:border-t-0">
-                            <p class="text-[10px] font-bold uppercase tracking-wider text-rose-600/80 dark:text-rose-400/80">
-                              {{ t('request_detail.ops_lbl_dropoff_place') }}
-                            </p>
-                            <p class="mt-1 text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100">{{ card.to || friendlyEmpty }}</p>
+                          <div
+                            class="grid gap-2"
+                            :class="card.timeline.length === 2 ? 'sm:grid-cols-[1fr_auto_1fr] sm:gap-0' : 'sm:grid-cols-2'"
+                          >
+                            <template v-for="(leg, li) in card.timeline" :key="`peek-${li}`">
+                              <div
+                                v-if="card.timeline.length === 2 && li === 1"
+                                class="hidden items-center justify-center px-2 sm:flex"
+                                aria-hidden="true"
+                              >
+                                <ArrowRightIcon class="h-4 w-4 text-slate-300 dark:text-slate-600" />
+                              </div>
+                              <div
+                                class="min-w-0 rounded-lg border px-3 py-2"
+                                :class="itineraryLegSurfaceClass(leg.tone)"
+                              >
+                                <p class="text-[10px] font-bold uppercase tracking-wider opacity-80">{{ leg.label }}</p>
+                                <p v-if="leg.time" class="mt-0.5 text-xs font-semibold tabular-nums">{{ leg.time }}</p>
+                                <p v-if="leg.place" class="mt-0.5 truncate text-xs font-medium opacity-90">{{ leg.place }}</p>
+                              </div>
+                            </template>
                           </div>
                         </div>
 
-                        <ItineraryRowInfoGrid
-                          v-if="card.sourceRow"
-                          :row="card.sourceRow"
-                          :trip-type="itineraryTripType"
-                        />
-
+                        <div v-show="!itineraryCollapsible || isItineraryExpanded(card.key)">
                         <div
                           v-if="card.timeline.length"
                           class="border-b border-slate-100 px-4 py-4 dark:border-slate-800"
                         >
-                          <ol class="space-y-0">
-                            <li
-                              v-for="(leg, li) in card.timeline"
-                              :key="li"
-                              class="relative flex gap-3 pb-4 last:pb-0"
-                            >
-                              <div class="flex flex-col items-center">
-                                <span
-                                  class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-[10px] font-bold uppercase"
-                                  :class="leg.tone === 'out' || leg.tone === 'pickup'
-                                    ? 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
-                                    : leg.tone === 'waypoint'
-                                      ? 'border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300'
-                                      : 'border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300'"
-                                >
-                                  <ClockIcon class="h-4 w-4" aria-hidden="true" />
-                                </span>
-                                <span
-                                  v-if="li < card.timeline.length - 1"
-                                  class="mt-1 w-px flex-1 bg-slate-200 dark:bg-slate-700"
-                                  aria-hidden="true"
-                                />
+                          <div
+                            class="grid gap-3"
+                            :class="card.timeline.length === 2 ? 'sm:grid-cols-[1fr_auto_1fr] sm:gap-0' : 'sm:grid-cols-2 lg:grid-cols-3'"
+                          >
+                            <template v-for="(leg, li) in card.timeline" :key="li">
+                              <div
+                                v-if="card.timeline.length === 2 && li === 1"
+                                class="hidden items-center justify-center bg-slate-50/50 px-2 dark:bg-slate-800/30 sm:flex"
+                                aria-hidden="true"
+                              >
+                                <ArrowRightIcon class="h-5 w-5 text-slate-300 dark:text-slate-600" />
                               </div>
-                              <div class="min-w-0 flex-1 pt-0.5">
-                                <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ leg.label }}</p>
-                                <p v-if="leg.time" class="mt-0.5 text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100">{{ leg.time }}</p>
-                                <p v-if="leg.place" class="mt-0.5 flex items-start gap-1.5 text-sm text-slate-600 dark:text-slate-400">
-                                  <MapPinIcon class="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                                  <span class="min-w-0 break-words">{{ leg.place }}</span>
-                                </p>
+                              <div
+                                class="min-w-0 rounded-xl border px-4 py-3"
+                                :class="itineraryLegSurfaceClass(leg.tone)"
+                              >
+                                <p class="text-[10px] font-bold uppercase tracking-wider opacity-80">{{ leg.label }}</p>
+                                <p v-if="leg.time" class="mt-1 text-sm font-semibold tabular-nums">{{ leg.time }}</p>
+                                <p v-if="leg.place" class="mt-1 text-sm font-semibold leading-snug">{{ leg.place }}</p>
                               </div>
-                            </li>
-                          </ol>
+                            </template>
+                          </div>
                         </div>
 
                         <div
@@ -1113,6 +1099,7 @@ import PortalStatusTimeline from '../../components/portal/PortalStatusTimeline.v
 import { useRequestDetailPage } from '../../composables/useRequestDetailPage'
 import { formatVndCurrency as formatVndMoney, parseMoneyVnd, VND_CURRENCY_SUFFIX, vndAmountInWords } from '../../util/money'
 import {
+  formatItineraryTimelineDt,
   itineraryRowEndpoints,
   itineraryRowHeading,
   resolveItineraryTripType,
@@ -1124,10 +1111,6 @@ import { dispatchRequestDisplayPassengerCount } from '../../util/dispatchRequest
 const FillPricePanel = defineAsyncComponent(() =>
   import('../../components/requests/workspace/FillPricePanel.vue'),
 )
-const ItineraryRowInfoGrid = defineAsyncComponent(() =>
-  import('../../components/requests/workspace/ItineraryRowInfoGrid.vue'),
-)
-
 const { t } = useI18n()
 
 const page = useRequestDetailPage()
@@ -1295,10 +1278,18 @@ function fmtDateOnly(v) {
   return Number.isNaN(d.getTime()) ? s : d.toLocaleDateString('vi-VN')
 }
 function fmtRowDt(v) {
-  if (!v) return ''
-  const d = new Date(String(v).trim())
-  if (Number.isNaN(d.getTime())) return String(v)
-  return d.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+  return formatItineraryTimelineDt(v)
+}
+
+const ITINERARY_LEG_SURFACE = {
+  out: 'border-emerald-200/80 bg-emerald-50/60 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/25 dark:text-emerald-100',
+  pickup: 'border-emerald-200/80 bg-emerald-50/60 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/25 dark:text-emerald-100',
+  waypoint: 'border-amber-200/80 bg-amber-50/60 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/25 dark:text-amber-100',
+  back: 'border-rose-200/80 bg-rose-50/60 text-rose-900 dark:border-rose-900/50 dark:bg-rose-950/25 dark:text-rose-100',
+}
+
+function itineraryLegSurfaceClass(tone) {
+  return ITINERARY_LEG_SURFACE[tone] || ITINERARY_LEG_SURFACE.back
 }
 function money(v) {
   const n = parseMoneyVnd(v)
@@ -1353,17 +1344,6 @@ function buildRowMoney(n) {
   }
 }
 
-function buildItineraryPeek(r, tripType) {
-  const parts = []
-  const guests = nz(r.guests)
-  if (guests && tripType !== 'cargo') {
-    parts.push(t('request_detail.ops_row_line_guests', { n: guests }))
-  }
-  for (const leg of buildItineraryTimeline(r, tripType)) {
-    if (leg.time) parts.push(`${leg.label}: ${leg.time}`)
-  }
-  return parts.join(' · ')
-}
 
 function buildItineraryTimeline(r, tripType) {
   const { from, to } = itineraryRowEndpoints(r)
@@ -1431,7 +1411,6 @@ function buildItineraryCard(r, i, keyPrefix) {
     to,
     sourceRow: r,
     timeline: buildItineraryTimeline(r, tripType),
-    peek: buildItineraryPeek(r, tripType),
   }
 }
 
@@ -1524,12 +1503,7 @@ const extraNotes = computed(() => {
 watch(
   itineraryCards,
   (cards) => {
-    if (cards.length <= 1) {
-      itineraryExpandedKeys.value = new Set()
-      return
-    }
-    const firstKey = cards[0]?.key
-    itineraryExpandedKeys.value = firstKey ? new Set([firstKey]) : new Set()
+    itineraryExpandedKeys.value = new Set()
   },
   { immediate: true },
 )

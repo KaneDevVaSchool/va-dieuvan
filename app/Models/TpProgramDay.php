@@ -97,9 +97,55 @@ class TpProgramDay extends Model
         return $this->confirmed_at;
     }
 
+    public function executions(): HasMany
+    {
+        return $this->hasMany(TpTripExecution::class, 'program_day_id');
+    }
+
+    /** @deprecated Ưu tiên executionForShift() khi chương trình có nhiều ca. */
     public function execution(): HasOne
     {
-        return $this->hasOne(TpTripExecution::class, 'program_day_id');
+        return $this->hasOne(TpTripExecution::class, 'program_day_id')->latestOfMany();
+    }
+
+    public static function normalizeExecutionShift(?string $shift): string
+    {
+        return in_array($shift, ['morning', 'afternoon'], true) ? $shift : 'morning';
+    }
+
+    public function executionForShift(?string $shift): ?TpTripExecution
+    {
+        $key = self::normalizeExecutionShift($shift);
+
+        if ($this->relationLoaded('executions')) {
+            return $this->executions->firstWhere('shift', $key);
+        }
+
+        return $this->executions()->where('shift', $key)->first();
+    }
+
+    public function hasInProgressExecutionOtherThan(?string $shift): bool
+    {
+        $key = self::normalizeExecutionShift($shift);
+        $query = $this->executions()->where('status', TpTripExecution::STATUS_IN_PROGRESS);
+        if (in_array($shift, ['morning', 'afternoon'], true)) {
+            $query->where('shift', '!=', $key);
+        }
+
+        return $query->exists();
+    }
+
+    public function shiftExecutionStarted(?string $shift): bool
+    {
+        $exec = $this->executionForShift($shift);
+        if (! $exec) {
+            return false;
+        }
+
+        return in_array($exec->status, [
+            TpTripExecution::STATUS_IN_PROGRESS,
+            TpTripExecution::STATUS_COMPLETED,
+        ], true);
     }
 
     public function absences(): HasMany

@@ -66,7 +66,7 @@
             <span class="rounded-full px-3.5 py-1.5 text-xs font-semibold sm:text-[13px]" :class="badgeCls(cost.status)">
               {{ badgeTitle(cost.status) }}
             </span>
-            <span v-if="cost.trip_id" class="text-sm tabular-nums text-driver-muted">#{{ cost.trip_id }}</span>
+            <span v-if="cost.trip_id" class="font-mono text-sm font-semibold tabular-nums text-driver-muted">{{ tripCodeLabel }}</span>
             <span
               v-else
               class="rounded-full bg-driver-accent/12 px-2.5 py-0.5 text-xs font-semibold text-driver-accent ring-1 ring-driver-accent/25"
@@ -111,7 +111,7 @@
             >
               <div class="min-w-0 flex-1">
                 <p class="text-xs font-semibold uppercase tracking-wide text-driver-muted">{{ t('driver_cost_req.trip_label') }}</p>
-                <p class="mt-1 text-lg font-bold text-driver-ink">#{{ cost.trip_id }}</p>
+                <p class="mt-1 font-mono text-lg font-bold text-driver-ink">{{ tripCodeLabel }}</p>
                 <p class="mt-1 line-clamp-2 text-base text-driver-muted">{{ tripRouteLine }}</p>
               </div>
               <ChevronRightIcon class="h-6 w-6 shrink-0 text-driver-muted/45" />
@@ -355,7 +355,7 @@ import { showAppSuccess } from '../../composables/appMessage'
 import { deleteTripCost, getTripCost, updateTripCost } from '../../api/costs'
 import { useDriverVisiblePoll } from '../../composables/useDriverVisiblePoll'
 import { isTripBlockingDriverCostMutations } from '../../constants/tripStatus'
-import { formatVnd } from '../../util/labels'
+import { formatTripCode, formatVnd } from '../../util/labels'
 
 const { t, te } = useI18n()
 const route = useRoute()
@@ -459,10 +459,13 @@ function typeLabelUi(type) {
     wash: 'Rửa xe',
     fine: 'Phạt',
     repair: 'Sửa chữa',
+    wizard_estimate: 'Dự toán phiếu điều xe',
     other: 'Khác',
   }
   return fallback[n] ?? 'Khác'
 }
+
+const tripCodeLabel = computed(() => formatTripCode(cost.value?.trip_id ?? cost.value?.trip?.id))
 
 const dateLabel = computed(() => {
   if (!cost.value?.created_at) return '—'
