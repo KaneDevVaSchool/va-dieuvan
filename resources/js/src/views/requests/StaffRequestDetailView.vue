@@ -201,6 +201,7 @@
                         <dl class="mt-4 space-y-3.5">
                           <FieldRow :label="t('request_detail.ops_lbl_proposed_date')" :value="fmtDateOnly(formData.proposed_date)" />
                           <FieldRow :label="t('request_detail.ops_lbl_date_needed')" :value="fmtDateOnly(formData.date_needed)" />
+                          <FieldRow :label="t('request_detail.ops_lbl_dispatch_window')" :value="journeyDepartLine" />
                           <FieldRow v-if="urgentReasonText" :label="t('request_detail.ops_lbl_urgent_reason')" :value="urgentReasonText" multiline />
                         </dl>
                       </div>
@@ -226,7 +227,7 @@
                     </div>
                   </div>
 
-                  <!-- ===== Tab: Hành trình ===== -->
+                  <!-- ===== Tab: Chi tiết chuyến ===== -->
                   <div v-show="activeTab === 'route'" class="space-y-4">
                     <FillPricePanel
                       v-if="showFillPriceSection"

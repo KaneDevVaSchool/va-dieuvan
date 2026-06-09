@@ -31,6 +31,7 @@ import { confirmAction } from './useConfirm'
 import { showAppSuccess, showAppError } from './appMessage'
 
 const DETAIL_TABS = ['form', 'students', 'docs']
+const STAFF_DETAIL_TABS = ['form', 'route', 'docs', 'students', 'activity']
 
 const FOCUS_TARGETS = {
   'fill-price': 'request-focus-fill-price',
@@ -374,12 +375,21 @@ export function useRequestDetailPage() {
     return `${num} ${t('dept.currency_suffix')}`
   }
 
+  function allowedDetailTabs() {
+    if (isStaffContext.value) {
+      return showStudentCountTab.value
+        ? STAFF_DETAIL_TABS
+        : STAFF_DETAIL_TABS.filter((tab) => tab !== 'students')
+    }
+    return DETAIL_TABS
+  }
+
   function tabFromRouteQuery() {
     const q = route.query.tab
     if (typeof q !== 'string') return null
-    if (q === 'route') return 'form'
+    if (q === 'route' && !isStaffContext.value) return 'form'
     if (q === 'students' && !showStudentCountTab.value) return null
-    return DETAIL_TABS.includes(q) ? q : null
+    return allowedDetailTabs().includes(q) ? q : null
   }
 
   function setActiveTab(tab) {
@@ -412,7 +422,7 @@ export function useRequestDetailPage() {
   watch(
     () => route.query.tab,
     (tab) => {
-      if (typeof tab === 'string' && DETAIL_TABS.includes(tab) && activeTab.value !== tab) {
+      if (typeof tab === 'string' && allowedDetailTabs().includes(tab) && activeTab.value !== tab) {
         if (tab === 'students' && !showStudentCountTab.value) return
         activeTab.value = tab
       }
@@ -478,7 +488,7 @@ export function useRequestDetailPage() {
       passengerPatchErr.value = ''
       const tabQ = tabFromRouteQuery()
       if (tabQ) activeTab.value = tabQ
-      if (route.query.tab === 'route') {
+      if (route.query.tab === 'route' && !isStaffContext.value) {
         router.replace({ query: { ...route.query, tab: 'form' } })
       }
     } finally {
