@@ -16,7 +16,7 @@
     @endphp
     <style>
         @page {
-            margin: {{ $pageMarginTop }} {{ $pageMarginX }} {{ $pageMarginBot }} {{ $pageMarginX }};
+            margin: {{ $pageMarginTop }} 12mm {{ $pageMarginBot }} 12mm;
             size: A4 {{ $pageOrient }};
         }
 
@@ -26,10 +26,10 @@
             font-size: 7.5pt;
             color: #111;
             margin: 0;
-            line-height: 1.45;
+            line-height: 1.4;
         }
 
-        strong, b { font-weight: bold; }
+        strong, b { font-weight: normal; }
 
         /* ── Fixed branding layers ──
            DomPDF positions fixed elements from the content area origin,
@@ -72,127 +72,86 @@
 
         .page-content { position: relative; }
 
-        /* ════════════════════════════════════════
-           DOCUMENT TITLE  (no background)
-           ════════════════════════════════════════ */
-        .top-layout {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 6pt;
-        }
-
+        /* ── TITLE BLOCK ── */
+        .top-layout { width: 100%; border-collapse: collapse; margin-bottom: 4pt; }
         .top-layout td { vertical-align: middle; padding: 0; border: none; }
 
         .doc-title {
-            font-size: 14pt;
-            font-weight: bold;
+            font-size: 13.5pt;
+            font-weight: normal;
             text-transform: uppercase;
             letter-spacing: 2pt;
             text-align: center;
             color: #111;
-            line-height: 1.25;
         }
 
         .doc-subtitle {
-            font-size: 8pt;
+            font-size: 7.5pt;
             text-align: center;
             color: #555;
             font-style: italic;
-            margin-top: 3pt;
+            margin-top: 2pt;
         }
 
-        /* Meta info box */
-        .meta-tbl {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 6.5pt;
-            border: 0.7pt solid #c0c0c0;
-        }
-
-        .meta-tbl td {
-            padding: 2.5pt 6pt;
-            border-bottom: 0.5pt solid #e8e8e8;
-        }
-
+        .meta-tbl { width: 100%; border-collapse: collapse; font-size: 6.5pt; border: 0.5pt solid #ccc; }
+        .meta-tbl td { padding: 2pt 5pt; border-bottom: 0.5pt solid #eee; }
         .meta-tbl tr:last-child td { border-bottom: none; }
+        .meta-lbl { color: #999; width: 88px; }
+        .meta-val { text-align: right; color: #111; }
+        .meta-code { color: #7B1E3B; }
 
-        .meta-lbl { color: #999; width: 92px; }
-        .meta-val { font-weight: bold; text-align: right; color: #111; }
-        .meta-code { color: #7B1E3B; font-weight: bold; }
-
-        /* Thin maroon rule separating title from body */
-        .title-rule {
-            border: none;
-            border-top: 1.5pt solid #7B1E3B;
-            margin: 0 0 5pt;
-        }
-
-        /* ════════════════════════════════════════
-           SECTION CHROME
-           ════════════════════════════════════════ */
-        .sec       { margin-top: 5pt; }
+        /* ── SECTION CHROME (no background) ── */
+        .sec       { margin-top: 4pt; }
         .sec-avoid { page-break-inside: avoid; }
 
         .sec-hd {
-            background: #7B1E3B;
-            color: #fff;
-            padding: 4pt 9pt;
-            width: 100%;
-            display: table;
+            text-align: center;
+            padding: 3pt 0 2.5pt;
+            border-top: 0.5pt solid #999;
+            border-bottom: 0.5pt solid #999;
             page-break-after: avoid;
         }
 
         .sec-badge {
             display: inline-block;
-            background: rgba(255,255,255,0.18);
-            border: 0.5pt solid rgba(255,255,255,0.45);
-            color: #fff;
+            border: 0.5pt solid #999;
+            color: #111;
             font-size: 6.5pt;
-            font-weight: bold;
-            padding: 0.5pt 5pt;
+            font-weight: normal;
+            padding: 0.3pt 5pt;
             border-radius: 2pt;
-            letter-spacing: 0.5pt;
-            margin-right: 7pt;
+            letter-spacing: 0.4pt;
+            margin-right: 6pt;
             text-transform: uppercase;
         }
 
         .sec-ttl {
-            font-size: 7.5pt;
-            font-weight: bold;
+            font-size: 7pt;
+            font-weight: normal;
             text-transform: uppercase;
             letter-spacing: 0.5pt;
+            color: #111;
         }
 
         .sec-sub {
             font-size: 6.5pt;
-            font-weight: normal;
             font-style: italic;
-            text-transform: none;
             letter-spacing: 0;
-            color: rgba(255,255,255,0.75);
-            margin-left: 5pt;
+            text-transform: none;
+            color: #777;
+            margin-left: 4pt;
         }
 
-        .sec-bd {
-            border: 0.5pt solid #c8c8c8;
-            border-top: none;
-            page-break-before: avoid;
-        }
-
+        .sec-bd { border-bottom: 0.5pt solid #ccc; page-break-before: avoid; }
         .sec-bd--flush { padding: 0; }
 
-        /* ════════════════════════════════════════
-           FIELD TABLE  (form-cell grid)
-           ════════════════════════════════════════ */
-        table.ft {
-            width: 100%;
-            border-collapse: collapse;
-        }
+        /* ── FIELD TABLE ── */
+        table.ft { width: 100%; border-collapse: collapse; }
 
         table.ft td {
             border-right: 0.5pt solid #ddd;
             border-bottom: 0.5pt solid #ddd;
-            padding: 5pt 9pt 6pt;
+            padding: 3pt 6pt 4pt;
             vertical-align: top;
         }
 
@@ -201,7 +160,6 @@
         table.ft td:first-child    { border-left: none; }
         table.ft td:last-child     { border-right: none; }
 
-        /* Field label */
         .fl {
             font-size: 5.5pt;
             color: #aaa;
@@ -210,208 +168,143 @@
             margin-bottom: 2pt;
         }
 
-        .fl-hint {
-            font-style: italic;
-            color: #ccc;
-            text-transform: none;
-            letter-spacing: 0;
-            font-weight: normal;
-        }
+        .fl-hint { font-style: italic; color: #ccc; text-transform: none; letter-spacing: 0; }
 
-        /* Field value — dotted underline acts as the write-on line */
         .fv {
             font-size: 8pt;
             color: #111;
-            font-weight: 500;
-            min-height: 13pt;
-            border-bottom: 0.8pt dotted #bbb;
-            padding-bottom: 2pt;
-            margin-top: 1pt;
+            min-height: 12pt;
+            border-bottom: 0.6pt dotted #bbb;
+            padding-bottom: 1.5pt;
         }
 
-        /* ════════════════════════════════════════
-           HINT BAR
-           ════════════════════════════════════════ */
+        /* ── HINT BAR ── */
         .hint-bar {
-            background: #fffbf4;
-            border-top: 0.5pt solid #edd9a3;
-            border-bottom: 0.5pt solid #edd9a3;
-            padding: 3.5pt 9pt;
+            border-top: 0.5pt solid #ddd;
+            border-bottom: 0.5pt solid #ddd;
+            padding: 3pt 6pt;
             font-size: 6.5pt;
-            color: #7a5c00;
+            color: #888;
             font-style: italic;
         }
 
-        /* ════════════════════════════════════════
-           TARGET CHIPS
-           ════════════════════════════════════════ */
-        .target-wrap {
-            padding: 5pt 9pt 4pt;
-            border-bottom: 0.5pt solid #ddd;
-        }
+        /* ── TARGET CHIPS ── */
+        .target-wrap { padding: 4pt 6pt 3pt; border-bottom: 0.5pt solid #ddd; }
 
         .target-chip {
             display: inline-block;
-            background: #fdf0f4;
-            border: 0.5pt solid #c8a0b0;
-            color: #7B1E3B;
-            font-size: 7pt;
-            font-weight: bold;
-            padding: 2pt 9pt;
+            border: 0.5pt solid #999;
+            color: #333;
+            font-size: 6.5pt;
+            padding: 1.5pt 7pt;
             border-radius: 10pt;
             margin-right: 4pt;
-            margin-bottom: 3pt;
+            margin-bottom: 2pt;
         }
 
-        /* ════════════════════════════════════════
-           CHECKBOX
-           ════════════════════════════════════════ */
+        /* ── CHECKBOX ── */
         .cb { font-family: 'DejaVu Sans', sans-serif; font-size: 8pt; margin-right: 3pt; }
 
-        /* ════════════════════════════════════════
-           DATA TABLES  (Section E)
-           ════════════════════════════════════════ */
-        table.dt {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 6.5pt;
-        }
-
+        /* ── DATA TABLES ── */
+        table.dt { width: 100%; border-collapse: collapse; font-size: 6.5pt; }
         table.dt thead tr { page-break-inside: avoid; page-break-after: avoid; }
 
         table.dt th {
-            padding: 4pt 4pt;
+            padding: 3.5pt 3pt;
             text-align: center;
             font-size: 5.5pt;
-            font-weight: bold;
+            font-weight: normal;
             border: 0.5pt solid #bbb;
             text-transform: uppercase;
             letter-spacing: 0.2pt;
-            background: #efefef;
-            color: #333;
-            line-height: 1.35;
+            background: #f4f4f4;
+            color: #444;
+            line-height: 1.3;
         }
 
-        table.dt th.go   { background: #dce9f8; color: #1a3d6e; }
-        table.dt th.back { background: #daf0e2; color: #1a3d28; }
+        table.dt th.go   { background: #eaf2fc; color: #2a4a7a; }
+        table.dt th.back { background: #eaf6ee; color: #1a4028; }
 
         table.dt td {
-            padding: 4pt 4pt;
+            padding: 3.5pt 3pt;
             border: 0.5pt solid #e0e0e0;
             color: #111;
             vertical-align: top;
-            background: #fff;
             font-size: 7pt;
             line-height: 1.4;
         }
 
         table.dt tbody tr:nth-child(even) td { background: #fafafa; }
-
         table.dt td.tl { text-align: left; }
         table.dt td.tr { text-align: right; white-space: nowrap; }
         table.dt td.tc { text-align: center; }
 
         table.dt tr.row-total td {
-            background: #f7f0f2;
-            font-weight: bold;
+            background: #f5f5f5;
             border: 0.5pt solid #bbb;
-            border-top: 1.5pt solid #7B1E3B;
+            border-top: 1pt solid #555;
             color: #111;
         }
 
         table.dt .th-sub {
             font-size: 5pt;
-            font-weight: normal;
             text-transform: none;
             display: block;
             margin-top: 1pt;
             letter-spacing: 0;
         }
 
-        /* ════════════════════════════════════════
-           SIGNATURE BLOCK  (Section F)
-           ════════════════════════════════════════ */
-        table.sig {
-            width: 100%;
-            border-collapse: collapse;
-            border: 0.5pt solid #bbb;
-        }
+        /* ── SIGNATURE BLOCK ── */
+        table.sig { width: 100%; border-collapse: collapse; border: 0.5pt solid #bbb; }
 
-        table.sig td {
-            border: 0.5pt solid #bbb;
-            text-align: center;
-            padding: 0;
-        }
+        table.sig td { border: 0.5pt solid #bbb; text-align: center; padding: 0; }
 
         .sig-hd {
-            background: #f4ecee;
-            color: #7B1E3B;
             font-size: 6.5pt;
-            font-weight: bold;
             text-align: center;
             vertical-align: middle;
-            padding: 4.5pt 6pt;
-            letter-spacing: 0.4pt;
+            padding: 4pt 4pt;
             text-transform: uppercase;
-            border-bottom: 0.5pt solid #c8a0b0 !important;
+            letter-spacing: 0.3pt;
+            color: #111;
+            border-bottom: 0.5pt solid #ccc !important;
         }
 
         .sig-bd {
-            height: 68pt;
+            height: 60pt;
             vertical-align: bottom;
-            background: #fff;
-            padding: 0 6pt 6pt;
+            padding: 0 4pt 5pt;
             text-align: center;
         }
 
-        .sig-date {
-            font-size: 6pt;
-            color: #aaa;
-            text-align: center;
-            padding: 4pt 6pt 2pt;
-            font-style: italic;
-        }
+        .sig-name { font-size: 7pt; color: #111; }
 
-        .sig-note {
-            font-size: 5.5pt;
-            color: #bbb;
-            font-style: italic;
-        }
-
-        .sig-name { font-size: 7pt; font-weight: bold; color: #111; }
-        .sig-role { font-size: 6pt; color: #999; font-style: italic; }
-
-        /* ════════════════════════════════════════
-           SECTION G
-           ════════════════════════════════════════ */
-        .g-row { padding: 7pt 9pt; display: block; }
-        .g-lbl { font-size: 7pt; font-weight: bold; color: #111; }
+        /* ── SECTION G ── */
+        .g-row { padding: 5pt 6pt; display: block; }
+        .g-lbl { font-size: 7pt; color: #111; }
 
         .g-dots {
-            border-bottom: 0.7pt dotted #bbb;
+            border-bottom: 0.6pt dotted #bbb;
             display: inline-block;
-            min-width: 185pt;
+            min-width: 180pt;
             margin-left: 4pt;
             vertical-align: bottom;
         }
 
-        /* ════════════════════════════════════════
-           MISC
-           ════════════════════════════════════════ */
+        /* ── MISC ── */
         .chip-type {
             display: inline-block;
-            background: #fdf0f4;
-            border: 0.5pt solid #c8a0b0;
-            color: #7B1E3B;
+            border: 0.5pt solid #999;
+            color: #333;
             font-size: 6.5pt;
-            padding: 1.5pt 7pt;
+            padding: 1pt 6pt;
             border-radius: 2pt;
         }
 
         .muted { font-size: 6.5pt; color: #aaa; font-style: italic; }
 
         .d1-lbl {
-            padding: 3pt 9pt 2pt;
+            padding: 2.5pt 6pt 2pt;
             font-size: 5.5pt;
             color: #aaa;
             text-transform: uppercase;
@@ -419,15 +312,13 @@
             border-bottom: 0.5pt solid #ddd;
         }
 
-        /* ════════════════════════════════════════
-           PAGE FOOTER
-           ════════════════════════════════════════ */
+        /* ── PAGE FOOTER ── */
         .pg-footer {
             text-align: center;
             font-size: 6pt;
             color: #bbb;
-            margin-top: 10pt;
-            padding-top: 4pt;
+            margin-top: 8pt;
+            padding-top: 3pt;
             border-top: 0.5pt solid #e0e0e0;
             letter-spacing: 0.4pt;
         }
@@ -474,7 +365,9 @@
     {{-- ────────── DOCUMENT TITLE ────────── --}}
     <table class="top-layout">
         <tr>
-            <td style="width:65%; vertical-align:middle; padding-right:10pt;">
+            {{-- spacer equal to meta width so title appears perfectly centred --}}
+            <td style="width:28%;"></td>
+            <td style="width:44%; vertical-align:middle;">
                 <div class="doc-title">Phiếu Đề Nghị Điều Vận</div>
                 <div class="doc-subtitle">
                     @if($isCargo) Điều chuyển Hàng hóa
@@ -484,7 +377,7 @@
                     @endif
                 </div>
             </td>
-            <td style="width:35%; vertical-align:top;">
+            <td style="width:28%; vertical-align:top;">
                 <table class="meta-tbl">
                     <tr>
                         <td class="meta-lbl">Ký hiệu</td>
@@ -506,7 +399,6 @@
             </td>
         </tr>
     </table>
-    <hr class="title-rule" />
 
     {{-- ────────── A · NGƯỜI ĐỀ NGHỊ ────────── --}}
     <div class="sec sec-avoid">
@@ -847,21 +739,12 @@
                 <td class="sig-hd">Trưởng đơn vị đề xuất</td>
             </tr>
             <tr>
-                <td style="border: 0.5pt solid #bbb; padding:0; vertical-align:top; background:#fff;">
-                    <div class="sig-date">Ngày &nbsp;___&nbsp; tháng &nbsp;___&nbsp; năm &nbsp;_______</div>
-                    <div class="sig-bd">
-                        <div class="sig-note">(Ký, ghi rõ họ tên)</div><br/>
-                        <span class="sig-name">Phạm Thanh Hùng</span>
-                    </div>
+                <td class="sig-bd">
+                    <span style="font-size:6pt; color:#bbb; font-style:italic; display:block; margin-bottom:2pt;">(Ký, ghi rõ họ tên)</span>
+                    <span class="sig-name">Phạm Thanh Hùng</span>
                 </td>
-                <td style="border: 0.5pt solid #bbb; padding:0; vertical-align:top; background:#fff;">
-                    <div class="sig-date">Ngày &nbsp;___&nbsp; tháng &nbsp;___&nbsp; năm &nbsp;_______</div>
-                    <div class="sig-bd"><div class="sig-note">(Ký, ghi rõ họ tên)</div></div>
-                </td>
-                <td style="border: 0.5pt solid #bbb; padding:0; vertical-align:top; background:#fff;">
-                    <div class="sig-date">Ngày &nbsp;___&nbsp; tháng &nbsp;___&nbsp; năm &nbsp;_______</div>
-                    <div class="sig-bd"><div class="sig-note">(Ký, ghi rõ họ tên)</div></div>
-                </td>
+                <td class="sig-bd"><span style="font-size:6pt; color:#bbb; font-style:italic;">(Ký, ghi rõ họ tên)</span></td>
+                <td class="sig-bd"><span style="font-size:6pt; color:#bbb; font-style:italic;">(Ký, ghi rõ họ tên)</span></td>
             </tr>
             <tr>
                 <td class="sig-hd">Giám đốc Vận hành</td>
@@ -869,23 +752,14 @@
                 <td class="sig-hd">Phó Tổng Giám đốc</td>
             </tr>
             <tr>
-                <td style="border: 0.5pt solid #bbb; padding:0; vertical-align:top; background:#fff;">
-                    <div class="sig-date">Ngày &nbsp;___&nbsp; tháng &nbsp;___&nbsp; năm &nbsp;_______</div>
-                    <div class="sig-bd">
-                        <div class="sig-note">(Ký, ghi rõ họ tên)</div><br/>
-                        <span class="sig-name">Vũ Quốc Vương</span>
-                    </div>
+                <td class="sig-bd">
+                    <span style="font-size:6pt; color:#bbb; font-style:italic; display:block; margin-bottom:2pt;">(Ký, ghi rõ họ tên)</span>
+                    <span class="sig-name">Vũ Quốc Vương</span>
                 </td>
-                <td style="border: 0.5pt solid #bbb; padding:0; vertical-align:top; background:#fff;">
-                    <div class="sig-date">&nbsp;</div>
-                    <div class="sig-bd"></div>
-                </td>
-                <td style="border: 0.5pt solid #bbb; padding:0; vertical-align:top; background:#fff;">
-                    <div class="sig-date">Ngày &nbsp;___&nbsp; tháng &nbsp;___&nbsp; năm &nbsp;_______</div>
-                    <div class="sig-bd">
-                        <div class="sig-note">(Ký, ghi rõ họ tên)</div><br/>
-                        <span class="sig-name">Nguyễn Ngọc Hiển</span>
-                    </div>
+                <td class="sig-bd"></td>
+                <td class="sig-bd">
+                    <span style="font-size:6pt; color:#bbb; font-style:italic; display:block; margin-bottom:2pt;">(Ký, ghi rõ họ tên)</span>
+                    <span class="sig-name">Nguyễn Ngọc Hiển</span>
                 </td>
             </tr>
         </table>

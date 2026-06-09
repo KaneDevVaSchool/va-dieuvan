@@ -43,3 +43,63 @@ export function formatMoneyDraftDisplay(v) {
   if (!n) return ''
   return formatVndWhileTyping(String(n))
 }
+
+const VN_WORDS = ['không', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín']
+
+function readTriple(n, full) {
+  const hundred = Math.floor(n / 100)
+  const ten = Math.floor((n % 100) / 10)
+  const unit = n % 10
+  const parts = []
+
+  if (hundred > 0) {
+    parts.push(hundred === 1 ? 'một trăm' : `${VN_WORDS[hundred]} trăm`)
+  } else if (full && n > 0) {
+    parts.push('không trăm')
+  }
+
+  if (ten > 1) {
+    parts.push(`${VN_WORDS[ten]} mươi`)
+    if (unit === 1) parts.push('mốt')
+    else if (unit === 5) parts.push('lăm')
+    else if (unit > 0) parts.push(VN_WORDS[unit])
+  } else if (ten === 1) {
+    parts.push('mười')
+    if (unit === 5) parts.push('lăm')
+    else if (unit > 0) parts.push(VN_WORDS[unit])
+  } else if (unit > 0) {
+    if (hundred > 0 || full) parts.push('lẻ')
+    parts.push(VN_WORDS[unit])
+  }
+
+  return parts.join(' ').replace(/\s+/g, ' ').trim()
+}
+
+/** Đọc số tiền VNĐ thành chữ (vd. 150000090 → «một trăm năm mươi triệu… đồng»). */
+export function vndAmountInWords(amount) {
+  let n = Math.round(normalizeMoneyAmount(amount))
+  if (n === 0) return 'Không đồng'
+  if (n < 0) return ''
+
+  const scales = [
+    { v: 1_000_000_000, label: 'tỷ' },
+    { v: 1_000_000, label: 'triệu' },
+    { v: 1_000, label: 'nghìn' },
+  ]
+
+  const chunks = []
+  for (const { v, label } of scales) {
+    const block = Math.floor(n / v)
+    if (block > 0) {
+      chunks.push(`${readTriple(block, n >= v)} ${label}`)
+      n %= v
+    }
+  }
+  if (n > 0) {
+    const tail = readTriple(n, false)
+    chunks.push(chunks.length > 0 && n < 1000 ? `lẻ ${tail}` : tail)
+  }
+
+  const text = chunks.join(' ').replace(/\s+/g, ' ').trim()
+  return `${text.charAt(0).toUpperCase()}${text.slice(1)} đồng`
+}

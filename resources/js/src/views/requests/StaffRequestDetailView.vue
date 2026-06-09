@@ -359,17 +359,87 @@
                     />
 
                     <template v-else>
-                      <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3 dark:border-slate-800">
-                        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-va-50 text-va-700 dark:bg-va-950/50 dark:text-va-300">
-                          <MapIcon class="h-4 w-4" aria-hidden="true" />
-                        </span>
-                        <div class="min-w-0">
+                      <!-- Tổng quan chuyến -->
+                      <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                        <div class="flex items-center gap-2.5 border-b border-slate-100 bg-slate-50/80 px-5 py-3 dark:border-slate-800 dark:bg-slate-800/40">
+                          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-va-50 text-va-700 dark:bg-va-950/50 dark:text-va-300">
+                            <TruckIcon class="h-4 w-4" aria-hidden="true" />
+                          </span>
                           <h2 class="text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">
-                            {{ t('request_detail.ops_itinerary_heading') }}
+                            {{ t('request_detail.ops_route_overview_heading') }}
                           </h2>
-                          <p v-if="itineraryCards.length" class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                            {{ t('request_detail.ops_itinerary_count', { n: itineraryCards.length }) }}
-                          </p>
+                        </div>
+                        <div class="grid gap-0 lg:grid-cols-[1fr_auto_1fr] lg:items-stretch">
+                          <div class="border-b border-slate-100 bg-emerald-50/60 px-5 py-4 dark:border-slate-800 dark:bg-emerald-950/20 lg:border-b-0 lg:border-r">
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-600/90 dark:text-emerald-400/90">
+                              {{ t('request_detail.lbl_origin') }}
+                            </p>
+                            <p class="mt-1.5 flex items-start gap-2 text-lg font-bold leading-snug text-slate-900 dark:text-white">
+                              <MapPinIcon class="mt-0.5 h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                              <span class="min-w-0">{{ req.origin || friendlyEmpty }}</span>
+                            </p>
+                          </div>
+                          <div class="flex items-center justify-center border-b border-slate-100 bg-slate-50/50 px-3 py-2 dark:border-slate-800 dark:bg-slate-800/30 lg:border-b-0">
+                            <ArrowRightIcon class="h-6 w-6 shrink-0 text-slate-300 dark:text-slate-600" aria-hidden="true" />
+                          </div>
+                          <div class="border-t border-slate-100 bg-rose-50/60 px-5 py-4 dark:border-slate-800 dark:bg-rose-950/20 lg:border-l lg:border-t-0">
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-rose-600/90 dark:text-rose-400/90">
+                              {{ t('request_detail.lbl_destination') }}
+                            </p>
+                            <p class="mt-1.5 flex items-start gap-2 text-lg font-bold leading-snug text-slate-900 dark:text-white">
+                              <MapPinIcon class="mt-0.5 h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400" aria-hidden="true" />
+                              <span class="min-w-0">{{ req.destination || friendlyEmpty }}</span>
+                            </p>
+                          </div>
+                        </div>
+                        <dl class="grid gap-2.5 border-t border-slate-100 px-5 py-4 dark:border-slate-800 sm:grid-cols-2 lg:grid-cols-3">
+                          <FieldRow
+                            v-for="chip in routeOverviewChips"
+                            :key="chip.key"
+                            boxed
+                            :label="chip.label"
+                            :value="chip.value"
+                            :highlight="chip.highlight"
+                          />
+                        </dl>
+                        <div
+                          v-if="nz(formData.purpose)"
+                          class="border-t border-slate-100 px-5 py-4 dark:border-slate-800"
+                        >
+                          <FieldRow boxed :label="t('request_detail.ops_lbl_purpose')" :value="nz(formData.purpose)" multiline />
+                        </div>
+                      </div>
+
+                      <!-- Chi tiết hành trình -->
+                      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
+                        <div class="flex min-w-0 items-center gap-2.5">
+                          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-va-50 text-va-700 dark:bg-va-950/50 dark:text-va-300">
+                            <MapIcon class="h-4 w-4" aria-hidden="true" />
+                          </span>
+                          <div class="min-w-0">
+                            <h2 class="text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">
+                              {{ t('request_detail.ops_itinerary_heading') }}
+                            </h2>
+                            <p v-if="itineraryCards.length" class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                              {{ t('request_detail.ops_itinerary_count', { n: itineraryCards.length }) }}
+                            </p>
+                          </div>
+                        </div>
+                        <div v-if="itineraryCollapsible" class="flex shrink-0 items-center gap-2">
+                          <button
+                            type="button"
+                            class="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                            @click="expandAllItinerary"
+                          >
+                            {{ t('request_detail.ops_itinerary_expand_all') }}
+                          </button>
+                          <button
+                            type="button"
+                            class="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                            @click="collapseAllItinerary"
+                          >
+                            {{ t('request_detail.ops_itinerary_collapse_all') }}
+                          </button>
                         </div>
                       </div>
                       <p
@@ -381,11 +451,23 @@
                         :key="card.key"
                         class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
                       >
-                        <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 bg-slate-50/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/40">
+                        <component
+                          :is="itineraryCollapsible ? 'button' : 'div'"
+                          :type="itineraryCollapsible ? 'button' : undefined"
+                          class="flex w-full flex-wrap items-start justify-between gap-3 border-b border-slate-100 bg-slate-50/80 px-4 py-3 text-left dark:border-slate-800 dark:bg-slate-800/40"
+                          :class="itineraryCollapsible ? 'cursor-pointer transition hover:bg-slate-100/80 dark:hover:bg-slate-800/70' : ''"
+                          :aria-expanded="itineraryCollapsible ? isItineraryExpanded(card.key) : undefined"
+                          :aria-label="itineraryCollapsible
+                            ? (isItineraryExpanded(card.key)
+                              ? t('request_detail.ops_itinerary_collapse_row', { n: card.idx })
+                              : t('request_detail.ops_itinerary_expand_row', { n: card.idx }))
+                            : undefined"
+                          @click="itineraryCollapsible ? toggleItineraryCard(card.key) : undefined"
+                        >
                           <div class="flex min-w-0 flex-1 items-start gap-3">
                             <span
-                              class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-va-100 text-sm font-bold text-va-800 dark:bg-va-950/50 dark:text-va-300"
-                              :aria-label="t('request_detail.ops_row_badge_aria', { n: card.idx })"
+                              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-va-100 text-sm font-bold text-va-800 dark:bg-va-950/50 dark:text-va-300"
+                              :aria-hidden="itineraryCollapsible ? true : undefined"
                             >
                               {{ card.idx }}
                             </span>
@@ -393,37 +475,135 @@
                               <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                                 {{ t('request_detail.ops_itinerary_row_label') }}
                               </p>
-                              <p class="mt-0.5 text-base font-semibold leading-snug text-slate-900 dark:text-white">
-                                {{ card.title }}
-                              </p>
+                              <p v-if="card.subtitle" class="mt-0.5 text-base font-semibold leading-snug text-slate-900 dark:text-white">{{ card.subtitle }}</p>
+                              <p
+                                v-if="card.title && card.title !== card.subtitle"
+                                class="mt-0.5 text-xs text-slate-500 dark:text-slate-400"
+                              >{{ card.title }}</p>
+                              <p
+                                v-if="itineraryCollapsible && !isItineraryExpanded(card.key) && card.peek"
+                                class="mt-1.5 truncate text-xs text-slate-500 dark:text-slate-400"
+                              >{{ card.peek }}</p>
                             </div>
                           </div>
-                          <div
-                            v-if="card.price"
-                            class="shrink-0 rounded-xl border border-teal-200/80 bg-teal-50/80 px-3 py-2 text-right dark:border-teal-900/50 dark:bg-teal-950/30"
-                          >
-                            <p class="text-[10px] font-bold uppercase tracking-wider text-teal-600/90 dark:text-teal-400/90">
-                              {{ t('request_detail.ops_lbl_row_cost') }}
+                          <div class="flex shrink-0 items-start gap-2">
+                            <div
+                              v-if="card.priceTotal"
+                              class="rounded-xl border border-teal-200/80 bg-teal-50/80 px-3 py-2 text-right dark:border-teal-900/50 dark:bg-teal-950/30"
+                            >
+                              <p class="text-[10px] font-bold uppercase tracking-wider text-teal-600/90 dark:text-teal-400/90">
+                                {{ t('request_detail.ops_lbl_row_cost') }}
+                              </p>
+                              <p class="mt-0.5 text-base font-bold tabular-nums text-teal-700 dark:text-teal-300">{{ card.priceTotal.display }}</p>
+                            </div>
+                            <ChevronDownIcon
+                              v-if="itineraryCollapsible"
+                              class="mt-2 h-5 w-5 shrink-0 text-slate-400 transition-transform duration-200"
+                              :class="{ '-rotate-180': isItineraryExpanded(card.key) }"
+                              aria-hidden="true"
+                            />
+                          </div>
+                        </component>
+
+                        <div v-show="!itineraryCollapsible || isItineraryExpanded(card.key)">
+                        <div
+                          v-if="card.routeLabel"
+                          class="grid gap-0 border-b border-slate-100 dark:border-slate-800 sm:grid-cols-[1fr_auto_1fr]"
+                        >
+                          <div class="border-b border-slate-100 bg-emerald-50/40 px-4 py-3 dark:border-slate-800 dark:bg-emerald-950/15 sm:border-b-0 sm:border-r">
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-600/80 dark:text-emerald-400/80">
+                              {{ t('request_detail.ops_lbl_pickup_place') }}
                             </p>
-                            <p class="mt-0.5 text-base font-bold tabular-nums text-teal-700 dark:text-teal-300">{{ card.price }}</p>
+                            <p class="mt-1 text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100">{{ card.from || friendlyEmpty }}</p>
+                          </div>
+                          <div class="hidden items-center justify-center bg-slate-50/50 px-2 dark:bg-slate-800/30 sm:flex">
+                            <ArrowRightIcon class="h-5 w-5 text-slate-300 dark:text-slate-600" aria-hidden="true" />
+                          </div>
+                          <div class="border-t border-slate-100 bg-rose-50/40 px-4 py-3 dark:border-slate-800 dark:bg-rose-950/15 sm:border-l sm:border-t-0">
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-rose-600/80 dark:text-rose-400/80">
+                              {{ t('request_detail.ops_lbl_dropoff_place') }}
+                            </p>
+                            <p class="mt-1 text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100">{{ card.to || friendlyEmpty }}</p>
                           </div>
                         </div>
+
                         <div
-                          v-if="card.summaryLines.length"
-                          class="flex flex-wrap gap-2 border-b border-slate-100 px-4 py-3 dark:border-slate-800"
+                          v-if="card.timeline.length"
+                          class="border-b border-slate-100 px-4 py-4 dark:border-slate-800"
                         >
-                          <span
-                            v-for="(line, li) in card.summaryLines"
-                            :key="li"
-                            class="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white px-2.5 py-1.5 text-xs font-medium leading-snug text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-                          >
-                            <component :is="itinerarySummaryIcon(line)" class="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
-                            <span class="min-w-0 break-words">{{ line }}</span>
-                          </span>
+                          <ol class="space-y-0">
+                            <li
+                              v-for="(leg, li) in card.timeline"
+                              :key="li"
+                              class="relative flex gap-3 pb-4 last:pb-0"
+                            >
+                              <div class="flex flex-col items-center">
+                                <span
+                                  class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-[10px] font-bold uppercase"
+                                  :class="leg.tone === 'out' || leg.tone === 'pickup'
+                                    ? 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
+                                    : leg.tone === 'waypoint'
+                                      ? 'border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300'
+                                      : 'border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300'"
+                                >
+                                  <ClockIcon class="h-4 w-4" aria-hidden="true" />
+                                </span>
+                                <span
+                                  v-if="li < card.timeline.length - 1"
+                                  class="mt-1 w-px flex-1 bg-slate-200 dark:bg-slate-700"
+                                  aria-hidden="true"
+                                />
+                              </div>
+                              <div class="min-w-0 flex-1 pt-0.5">
+                                <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ leg.label }}</p>
+                                <p v-if="leg.time" class="mt-0.5 text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100">{{ leg.time }}</p>
+                                <p v-if="leg.place" class="mt-0.5 flex items-start gap-1.5 text-sm text-slate-600 dark:text-slate-400">
+                                  <MapPinIcon class="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                                  <span class="min-w-0 break-words">{{ leg.place }}</span>
+                                </p>
+                              </div>
+                            </li>
+                          </ol>
                         </div>
+
+                        <div
+                          v-if="card.priceTotal || card.unitPrice || card.extraFee"
+                          class="border-b border-slate-100 bg-slate-50/50 px-4 py-4 dark:border-slate-800 dark:bg-slate-800/25"
+                        >
+                          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                            {{ t('request_detail.ops_route_cost_breakdown') }}
+                          </p>
+                          <dl class="mt-2.5 grid gap-2 sm:grid-cols-3">
+                            <FieldRow
+                              v-if="card.unitPrice"
+                              boxed
+                              :label="t('request_detail.ops_lbl_unit_price')"
+                              :value="card.unitPrice.display"
+                            />
+                            <FieldRow
+                              v-if="card.extraFee"
+                              boxed
+                              :label="t('request_detail.ops_lbl_extra_fee')"
+                              :value="card.extraFee.display"
+                            />
+                            <FieldRow
+                              v-if="card.priceTotal"
+                              boxed
+                              :label="t('request_detail.ops_lbl_row_cost')"
+                              :value="card.priceTotal.display"
+                              highlight
+                            />
+                          </dl>
+                          <p v-if="card.priceTotal?.words" class="mt-2 text-xs italic leading-relaxed text-slate-500 dark:text-slate-400">
+                            <span class="font-semibold not-italic text-slate-400 dark:text-slate-500">{{ t('request_detail.ops_lbl_amount_in_words') }}:</span>
+                            {{ card.priceTotal.words }}
+                          </p>
+                        </div>
+
                         <dl v-if="card.fields.length" class="grid gap-2.5 px-4 py-4 sm:grid-cols-2">
                           <FieldRow v-for="(f, fi) in card.fields" :key="fi" boxed :label="f.label" :value="f.value" :multiline="f.multiline" />
                         </dl>
+                        </div>
                       </div>
 
                       <div v-if="extraNotes.length" class="rounded-2xl border border-slate-200 bg-slate-50/60 p-5 dark:border-slate-800 dark:bg-slate-800/30">
@@ -687,105 +867,171 @@
                 </div>
               </section>
 
-              <section :class="cardClass + ' p-5'">
-                <h2 :class="sectionTitleClass">{{ t('request_detail.ops_properties') }}</h2>
-                <div class="mt-4 flex items-start gap-3">
-                  <img v-if="req.requester?.avatar_url" :src="req.requester.avatar_url" alt="" class="h-11 w-11 shrink-0 rounded-full object-cover ring-2 ring-slate-100 dark:ring-slate-700" />
-                  <div v-else class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-va-50 text-base font-bold text-va-800 dark:bg-va-950/50 dark:text-va-300">{{ requesterInitials }}</div>
-                  <div class="min-w-0">
-                    <p class="text-base font-semibold text-slate-900 dark:text-slate-100">{{ req.requester?.name ?? friendlyEmpty }}</p>
-                    <p v-if="requesterAsideSubtitle" class="text-sm text-slate-500 dark:text-slate-400">{{ requesterAsideSubtitle }}</p>
-                  </div>
-                </div>
-                <dl v-if="requesterAsideFields.length" class="mt-4 space-y-3 border-t border-slate-100 pt-4 dark:border-slate-800">
-                  <FieldRow v-for="row in requesterAsideFields" :key="row.key" :label="row.label" :value="row.value" />
-                </dl>
-                <dl class="mt-4 space-y-3 border-t border-slate-100 pt-4 dark:border-slate-800">
-                  <FieldRow :label="t('request_detail.ops_lbl_request_code')" :value="requestRefCode" highlight />
-                  <FieldRow :label="t('request_detail.lbl_trip_type_short')" :value="labelTripType(req.trip_type)" />
-                  <FieldRow
-                    v-if="passengerOrCargoLine && passengerOrCargoLine !== '—'"
-                    :label="metaLoadLabel"
-                    :value="passengerOrCargoLine"
-                  />
-                  <FieldRow :label="t('request_detail.ops_lbl_created_at')" :value="fmt(req.created_at)" />
-                  <FieldRow v-if="req.approver?.name" :label="t('request_detail.ops_lbl_approver')" :value="req.approver.name" />
-                  <FieldRow
-                    v-if="req.status === 'approved'"
-                    :label="t('request_detail.ops_lbl_paper_status')"
-                    :value="paperStatusText"
-                    :highlight="req.paper_status === 'pending'"
-                  />
-                </dl>
-              </section>
-
-              <section
-                v-if="costEstimate"
-                class="overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-              >
-                <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3 dark:border-slate-800">
-                  <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-600 dark:bg-teal-950/40 dark:text-teal-400">
-                    <CalculatorIcon class="h-4 w-4" aria-hidden="true" />
+              <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <div class="flex items-center gap-2.5 border-b border-slate-100 px-5 py-3.5 dark:border-slate-800">
+                  <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                    <ClipboardDocumentIcon class="h-4 w-4" aria-hidden="true" />
                   </span>
                   <h2 class="text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">
-                    {{ t('request_detail.cost_estimate_heading') }}
+                    {{ t('request_detail.ops_aside_panel_heading') }}
                   </h2>
                 </div>
 
-                <div class="mt-4 space-y-2.5">
-                  <div class="rounded-xl border border-slate-100 bg-slate-50/70 px-3.5 py-2.5 dark:border-slate-800 dark:bg-slate-800/40">
-                    <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                      {{ t('request_detail.lbl_est_distance') }}
-                    </p>
-                    <p
-                      class="mt-1 text-sm"
-                      :class="costEstimate.distanceLabel ? 'font-semibold text-slate-800 dark:text-slate-200' : 'italic text-slate-400 dark:text-slate-500'"
-                    >
-                      {{ costEstimate.distanceLabel || friendlyEmpty }}
-                    </p>
-                  </div>
-
-                  <div
-                    v-if="req.service_price != null"
-                    class="rounded-xl border border-slate-100 bg-white px-3.5 py-2.5 dark:border-slate-800 dark:bg-slate-900"
+                <nav
+                  class="flex gap-0.5 overflow-x-auto border-b border-slate-100 px-2 pt-1 dark:border-slate-800"
+                  role="tablist"
+                  :aria-label="t('request_detail.ops_aside_panel_heading')"
+                >
+                  <button
+                    v-for="tab in asidePanelTabs"
+                    :key="tab.id"
+                    type="button"
+                    role="tab"
+                    :aria-selected="asidePanelTab === tab.id"
+                    class="relative -mb-px shrink-0 border-b-2 px-3 py-2.5 text-xs font-semibold transition sm:text-sm"
+                    :class="
+                      asidePanelTab === tab.id
+                        ? 'border-va-700 text-va-800 dark:border-va-400 dark:text-va-300'
+                        : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+                    "
+                    @click="asidePanelTab = tab.id"
                   >
-                    <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                      {{ t('request_detail.lbl_dispatcher_unit_price') }}
-                    </p>
-                    <p class="mt-1 text-base font-bold tabular-nums text-slate-900 dark:text-slate-100">
-                      {{ formatVndCurrency(req.service_price) }}
+                    {{ tab.label }}
+                  </button>
+                </nav>
+
+                <div class="p-4">
+                  <!-- Tab: Thông tin phiếu -->
+                  <div v-show="asidePanelTab === 'info'" class="space-y-3">
+                    <div class="rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
+                      <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                        {{ t('request_detail.ops_requester_heading') }}
+                      </p>
+                      <div class="mt-3 flex items-start gap-2.5">
+                        <img
+                          v-if="req.requester?.avatar_url"
+                          :src="req.requester.avatar_url"
+                          alt=""
+                          class="h-10 w-10 shrink-0 rounded-full object-cover ring-2 ring-white dark:ring-slate-700"
+                        />
+                        <div
+                          v-else
+                          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-va-50 text-sm font-bold text-va-800 dark:bg-va-950/50 dark:text-va-300"
+                        >{{ requesterInitials }}</div>
+                        <div class="min-w-0">
+                          <p class="text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100">{{ req.requester?.name ?? friendlyEmpty }}</p>
+                          <p v-if="requesterAsideSubtitle" class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ requesterAsideSubtitle }}</p>
+                        </div>
+                      </div>
+                      <dl v-if="requesterAsideFields.length" class="mt-3 grid gap-2">
+                        <FieldRow v-for="row in requesterAsideFields" :key="row.key" boxed :label="row.label" :value="row.value" />
+                      </dl>
+                    </div>
+
+                    <div class="rounded-xl border border-slate-100 bg-white p-3.5 dark:border-slate-800 dark:bg-slate-900">
+                      <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                        {{ t('request_detail.ops_ticket_detail_heading') }}
+                      </p>
+                      <dl class="mt-3 grid gap-2">
+                        <FieldRow boxed :label="t('request_detail.ops_lbl_request_code')" :value="requestRefCode" highlight />
+                        <FieldRow boxed :label="t('request_detail.lbl_trip_type_short')" :value="labelTripType(req.trip_type)" />
+                        <FieldRow
+                          v-if="passengerOrCargoLine && passengerOrCargoLine !== '—'"
+                          boxed
+                          :label="metaLoadLabel"
+                          :value="passengerOrCargoLine"
+                        />
+                        <FieldRow boxed :label="t('request_detail.ops_lbl_created_at')" :value="fmt(req.created_at)" />
+                        <FieldRow v-if="req.approver?.name" boxed :label="t('request_detail.ops_lbl_approver')" :value="req.approver.name" />
+                        <FieldRow
+                          v-if="req.status === 'approved'"
+                          boxed
+                          :label="t('request_detail.ops_lbl_paper_status')"
+                          :value="paperStatusText"
+                          :highlight="req.paper_status === 'pending'"
+                        />
+                      </dl>
+                    </div>
+                  </div>
+
+                  <!-- Tab: Dự toán chi phí -->
+                  <div v-show="asidePanelTab === 'cost'" class="space-y-3">
+                    <template v-if="costEstimate">
+                      <div class="rounded-xl border border-slate-100 bg-slate-50/70 px-3.5 py-2.5 dark:border-slate-800 dark:bg-slate-800/40">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                          {{ t('request_detail.lbl_est_distance') }}
+                        </p>
+                        <p
+                          class="mt-1 text-sm"
+                          :class="costEstimate.distanceLabel ? 'font-semibold text-slate-800 dark:text-slate-200' : 'italic text-slate-400 dark:text-slate-500'"
+                        >
+                          {{ costEstimate.distanceLabel || friendlyEmpty }}
+                        </p>
+                      </div>
+
+                      <div
+                        v-if="req.service_price != null"
+                        class="rounded-xl border border-slate-100 bg-white px-3.5 py-2.5 dark:border-slate-800 dark:bg-slate-900"
+                      >
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                          {{ t('request_detail.lbl_dispatcher_unit_price') }}
+                        </p>
+                        <p class="mt-1 text-lg font-bold tabular-nums tracking-tight text-slate-900 dark:text-slate-100">
+                          {{ asideServicePriceDisplay }}
+                        </p>
+                        <p v-if="asideServicePriceWords" class="mt-1.5 text-xs italic leading-relaxed text-slate-500 dark:text-slate-400">
+                          <span class="font-semibold not-italic text-slate-400 dark:text-slate-500">{{ t('request_detail.ops_lbl_amount_in_words') }}:</span>
+                          {{ asideServicePriceWords }}
+                        </p>
+                      </div>
+
+                      <div class="overflow-hidden rounded-xl border border-teal-200/80 bg-gradient-to-br from-teal-50 to-emerald-50/80 px-4 py-3.5 ring-1 ring-inset ring-teal-100 dark:border-teal-900/50 dark:from-teal-950/40 dark:to-emerald-950/20 dark:ring-teal-900/40">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-teal-600/90 dark:text-teal-400/90">
+                          {{ t('request_detail.total_per_declaration') }}
+                        </p>
+                        <p class="mt-1 text-2xl font-bold tabular-nums tracking-tight text-teal-700 dark:text-teal-300">
+                          {{ asideDeclaredTotalDisplay }}
+                        </p>
+                        <p v-if="asideDeclaredTotalWords" class="mt-2 text-xs italic leading-relaxed text-teal-700/80 dark:text-teal-300/80">
+                          <span class="font-semibold not-italic text-teal-600/90 dark:text-teal-400/90">{{ t('request_detail.ops_lbl_amount_in_words') }}:</span>
+                          {{ asideDeclaredTotalWords }}
+                        </p>
+                      </div>
+                    </template>
+                    <p v-else class="rounded-xl border border-dashed border-slate-200 px-3 py-8 text-center text-sm text-slate-400 dark:border-slate-700 dark:text-slate-500">
+                      {{ friendlyEmpty }}
                     </p>
                   </div>
-                </div>
 
-                <div class="mt-4 overflow-hidden rounded-xl border border-teal-200/80 bg-gradient-to-br from-teal-50 to-emerald-50/80 px-4 py-3.5 ring-1 ring-inset ring-teal-100 dark:border-teal-900/50 dark:from-teal-950/40 dark:to-emerald-950/20 dark:ring-teal-900/40">
-                  <p class="text-[10px] font-bold uppercase tracking-wider text-teal-600/90 dark:text-teal-400/90">
-                    {{ t('request_detail.total_per_declaration') }}
-                  </p>
-                  <p class="mt-1 text-2xl font-bold tabular-nums tracking-tight text-teal-700 dark:text-teal-300">
-                    {{ costEstimate.declaredTotalLabel ?? friendlyEmpty }}
-                  </p>
+                  <!-- Tab: Chuyến liên kết -->
+                  <div v-show="asidePanelTab === 'trip'">
+                    <RouterLink
+                      v-if="req.trip"
+                      :to="`/trips/${req.trip.id}`"
+                      class="flex items-center gap-3 rounded-xl border border-va-200 bg-va-50/60 px-4 py-3.5 transition hover:bg-va-50 dark:border-va-800/50 dark:bg-va-950/30 dark:hover:bg-va-950/50"
+                    >
+                      <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-va-100 text-va-700 dark:bg-va-900/50 dark:text-va-300">
+                        <TruckIcon class="h-5 w-5" aria-hidden="true" />
+                      </span>
+                      <span class="min-w-0 flex-1">
+                        <span class="block text-[10px] font-bold uppercase tracking-wider text-va-600 dark:text-va-400">{{ t('request_detail.ops_linked_trip') }}</span>
+                        <span class="mt-0.5 block font-mono text-lg font-bold tracking-tight text-va-900 dark:text-va-100">{{ linkedTripCode }}</span>
+                        <span
+                          v-if="req.origin || req.destination"
+                          class="mt-0.5 block text-xs leading-snug text-va-700/80 dark:text-va-300/80"
+                        >{{ req.origin || '—' }} → {{ req.destination || '—' }}</span>
+                        <span class="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-va-700 dark:text-va-300">
+                          {{ t('request_detail.ops_open_trip_detail') }}
+                          <ArrowTopRightOnSquareIcon class="h-3.5 w-3.5" aria-hidden="true" />
+                        </span>
+                      </span>
+                    </RouterLink>
+                    <p v-else class="rounded-xl border border-dashed border-slate-200 px-3 py-8 text-center text-sm text-slate-400 dark:border-slate-700 dark:text-slate-500">
+                      {{ t('request_detail.ops_no_linked_trip') }}
+                    </p>
+                  </div>
                 </div>
               </section>
-
-              <RouterLink
-                v-if="req.trip"
-                :to="`/trips/${req.trip.id}`"
-                class="flex items-center gap-3 rounded-2xl border border-va-200 bg-va-50/60 px-4 py-3.5 transition hover:bg-va-50 dark:border-va-800/50 dark:bg-va-950/30 dark:hover:bg-va-950/50"
-              >
-                <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-va-100 text-va-700 dark:bg-va-900/50 dark:text-va-300">
-                  <TruckIcon class="h-5 w-5" aria-hidden="true" />
-                </span>
-                <span class="min-w-0 flex-1">
-                  <span class="block text-[10px] font-bold uppercase tracking-wider text-va-600 dark:text-va-400">{{ t('request_detail.ops_linked_trip') }}</span>
-                  <span class="mt-0.5 block font-mono text-lg font-bold tracking-tight text-va-900 dark:text-va-100">{{ linkedTripCode }}</span>
-                  <span
-                    v-if="req.origin || req.destination"
-                    class="mt-0.5 block truncate text-xs text-va-700/80 dark:text-va-300/80"
-                  >{{ req.origin || '—' }} → {{ req.destination || '—' }}</span>
-                </span>
-                <ArrowTopRightOnSquareIcon class="h-5 w-5 shrink-0 text-va-600 dark:text-va-400" aria-hidden="true" />
-              </RouterLink>
             </aside>
           </div>
         </div>
@@ -818,10 +1064,10 @@ import {
   ArrowTopRightOnSquareIcon,
   ArrowUturnLeftIcon,
   BoltIcon,
-  CalculatorIcon,
   CalendarDaysIcon,
   CheckBadgeIcon,
   CheckCircleIcon,
+  ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ClipboardDocumentIcon,
@@ -855,11 +1101,10 @@ import AttachmentPreviewModal from '../../components/requests/AttachmentPreviewM
 import RejectReasonModal from '../../components/requests/RejectReasonModal.vue'
 import PortalStatusTimeline from '../../components/portal/PortalStatusTimeline.vue'
 import { useRequestDetailPage } from '../../composables/useRequestDetailPage'
-import { parseMoneyVnd } from '../../util/money'
+import { formatVndCurrency, parseMoneyVnd, VND_CURRENCY_SUFFIX, vndAmountInWords } from '../../util/money'
 import {
   itineraryRowEndpoints,
   itineraryRowHeading,
-  itineraryRowSummaryLines,
   resolveItineraryTripType,
 } from '../../util/requestItineraryRowDisplay'
 import { isPassengerRowFilled, isBusinessRowFilled } from '../../composables/dispatchWizardConstants'
@@ -966,6 +1211,38 @@ const btnDangerGhostClass = 'inline-flex items-center rounded-md border border-r
 const friendlyEmpty = computed(() => t('request_detail.ops_no_data'))
 const linkedTripCode = computed(() => formatTripCode(req.value?.trip?.id))
 
+const asidePanelTab = ref('info')
+const asidePanelTabs = computed(() => [
+  { id: 'info', label: t('request_detail.ops_aside_tab_info') },
+  { id: 'cost', label: t('request_detail.ops_aside_tab_cost') },
+  { id: 'trip', label: t('request_detail.ops_aside_tab_trip') },
+])
+
+function formatVndSidebar(n) {
+  const amount = parseMoneyVnd(n)
+  if (!amount) return friendlyEmpty.value
+  return formatVndCurrency(amount, VND_CURRENCY_SUFFIX)
+}
+
+const asideServicePriceDisplay = computed(() =>
+  req.value?.service_price != null ? formatVndSidebar(req.value.service_price) : '',
+)
+const asideServicePriceWords = computed(() => {
+  if (req.value?.service_price == null) return ''
+  const words = vndAmountInWords(req.value.service_price)
+  return words && words !== 'Không đồng' ? words : ''
+})
+const asideDeclaredTotalDisplay = computed(() => {
+  const total = costEstimate.value?.total
+  if (total != null && total > 0) return formatVndSidebar(total)
+  return friendlyEmpty.value
+})
+const asideDeclaredTotalWords = computed(() => {
+  const total = costEstimate.value?.total
+  if (total == null || total <= 0) return ''
+  return vndAmountInWords(total)
+})
+
 // ── BM.03 data ──
 const formData = computed(() => req.value?.wizard_snapshot?.form ?? {})
 const snap = computed(() => req.value?.wizard_snapshot ?? {})
@@ -1036,58 +1313,245 @@ const paperStatusText = computed(() => {
 
 const itineraryTripType = computed(() => resolveItineraryTripType(isCargo.value, isBusiness.value))
 
-function buildItineraryCard(r, i, keyPrefix) {
+function buildRowMoney(n) {
+  const amount = parseMoneyVnd(n)
+  if (!amount) return null
+  const words = vndAmountInWords(amount)
+  return {
+    display: formatVndCurrency(amount, VND_CURRENCY_SUFFIX),
+    words: words && words !== 'Không đồng' ? words : '',
+    amount,
+  }
+}
+
+function buildItineraryPeek(r, tripType) {
+  const parts = []
+  const guests = nz(r.guests)
+  if (guests && tripType !== 'cargo') {
+    parts.push(t('request_detail.ops_row_line_guests', { n: guests }))
+  }
+  for (const leg of buildItineraryTimeline(r, tripType)) {
+    if (leg.time) parts.push(`${leg.label}: ${leg.time}`)
+  }
+  return parts.join(' · ')
+}
+
+function buildItineraryTimeline(r, tripType) {
   const { from, to } = itineraryRowEndpoints(r)
+  const legs = []
+
+  if (tripType === 'cargo') {
+    if (from || fmtRowDt(r.pickup_at)) {
+      legs.push({
+        tone: 'pickup',
+        label: t('request_detail.ops_route_timeline_pickup'),
+        time: fmtRowDt(r.pickup_at),
+        place: from,
+      })
+    }
+    if (to || fmtRowDt(r.delivery_at)) {
+      legs.push({
+        tone: 'back',
+        label: t('request_detail.ops_route_timeline_delivery'),
+        time: fmtRowDt(r.delivery_at),
+        place: to,
+      })
+    }
+    return legs
+  }
+
+  if (from || fmtRowDt(r.depart_at)) {
+    legs.push({
+      tone: 'out',
+      label: t('request_detail.ops_route_timeline_out'),
+      time: fmtRowDt(r.depart_at),
+      place: from,
+    })
+  }
+  if (tripType === 'business' && nz(r.waypoint)) {
+    legs.push({
+      tone: 'waypoint',
+      label: t('request_detail.ops_route_timeline_waypoint'),
+      time: '',
+      place: nz(r.waypoint),
+    })
+  }
+  if (to || fmtRowDt(r.return_at)) {
+    legs.push({
+      tone: 'back',
+      label: t('request_detail.ops_route_timeline_back'),
+      time: fmtRowDt(r.return_at),
+      place: to,
+    })
+  }
+  return legs
+}
+
+function buildItineraryCard(r, i, keyPrefix) {
+  const tripType = itineraryTripType.value
+  const { from, to } = itineraryRowEndpoints(r)
+  const routeLabel = from || to ? `${from || '—'} → ${to || '—'}` : ''
+  const title = itineraryRowHeading(r, i, { tripType, t })
   return {
     key: `${keyPrefix}-${i}`,
     idx: i + 1,
-    title: itineraryRowHeading(r, i, { tripType: itineraryTripType.value, t }),
-    summaryLines: itineraryRowSummaryLines(r, { tripType: itineraryTripType.value, t, index: i }),
-    route: from || to ? { from, to } : null,
+    title,
+    subtitle: routeLabel || title,
+    routeLabel,
+    from,
+    to,
+    timeline: buildItineraryTimeline(r, tripType),
+    peek: buildItineraryPeek(r, tripType),
   }
 }
+
+const routeOverviewChips = computed(() => {
+  const chips = []
+  chips.push({
+    key: 'trip_type',
+    label: t('request_detail.lbl_trip_type_short'),
+    value: labelTripType(req.value?.trip_type),
+  })
+  if (passengerOrCargoLine.value && passengerOrCargoLine.value !== '—') {
+    chips.push({
+      key: 'load',
+      label: metaLoadLabel.value,
+      value: passengerOrCargoLine.value,
+    })
+  }
+  if (distanceText.value) {
+    chips.push({
+      key: 'distance',
+      label: t('request_detail.lbl_est_distance'),
+      value: distanceText.value,
+    })
+  }
+  const dateNeeded = fmtDateOnly(formData.value.date_needed)
+  if (dateNeeded) {
+    chips.push({
+      key: 'date_needed',
+      label: t('request_detail.ops_lbl_date_needed'),
+      value: dateNeeded,
+      highlight: !!formData.value.date_needed,
+    })
+  }
+  if (journeyDepartLine.value) {
+    chips.push({
+      key: 'depart',
+      label: t('request_detail.ops_lbl_depart_time'),
+      value: journeyDepartLine.value,
+    })
+  }
+  if (req.value?.trip) {
+    chips.push({
+      key: 'linked_trip',
+      label: t('request_detail.ops_linked_trip'),
+      value: linkedTripCode.value,
+      highlight: true,
+    })
+  }
+  if (req.value?.service_price != null) {
+    chips.push({
+      key: 'service_price',
+      label: t('request_detail.lbl_dispatcher_unit_price'),
+      value: formatVndSidebar(req.value.service_price),
+    })
+  }
+  const declared = costEstimate.value?.total
+  if (declared != null && declared > 0) {
+    chips.push({
+      key: 'declared_total',
+      label: t('request_detail.total_per_declaration'),
+      value: formatVndSidebar(declared),
+      highlight: true,
+    })
+  }
+  if (coordinatorName.value) {
+    chips.push({
+      key: 'coordinator',
+      label: t('request_detail.ops_lbl_coordinator'),
+      value: coordinatorName.value,
+    })
+  }
+  return chips
+})
 
 const itineraryCards = computed(() => {
   const s = snap.value
   if (isCargo.value) {
     return (Array.isArray(s.cargoRows) ? s.cargoRows : []).filter((r) => nz(r?.name)).map((r, i) => ({
       ...buildItineraryCard(r, i, 'c'),
-      price: money(r.cost),
+      unitPrice: null,
+      extraFee: null,
+      priceTotal: buildRowMoney(r.cost),
       fields: [
         { label: t('request_detail.ops_lbl_qty'), value: nz(r.qty) },
         { label: t('request_detail.ops_lbl_weight'), value: nz(r.weight) },
         { label: t('request_detail.ops_lbl_dimensions'), value: nz(r.dimensions) },
-        { label: t('request_detail.ops_lbl_pickup_time'), value: fmtRowDt(r.pickup_at) },
-        { label: t('request_detail.ops_lbl_delivery_time'), value: fmtRowDt(r.delivery_at) },
+        { label: t('request_detail.ops_lbl_pickup_contact'), value: nz(r.pickup_contact) },
+        { label: t('request_detail.ops_lbl_delivery_contact'), value: nz(r.delivery_contact) },
         { label: t('request_detail.ops_lbl_notes'), value: nz(r.item_notes) || nz(r.transport_note), multiline: true },
       ].filter((f) => f.value),
     }))
   }
   if (isBusiness.value) {
-    return (Array.isArray(s.businessRows) ? s.businessRows : []).filter(isBusinessRowFilled).map((r, i) => ({
-      ...buildItineraryCard(r, i, 'b'),
-      price: money(parseMoneyVnd(r.unit_price) + parseMoneyVnd(r.extra_fee)),
+    return (Array.isArray(s.businessRows) ? s.businessRows : []).filter(isBusinessRowFilled).map((r, i) => {
+      const unitPrice = buildRowMoney(r.unit_price)
+      const extraFee = buildRowMoney(r.extra_fee)
+      const totalAmount = parseMoneyVnd(r.unit_price) + parseMoneyVnd(r.extra_fee)
+      return {
+        ...buildItineraryCard(r, i, 'b'),
+        unitPrice,
+        extraFee,
+        priceTotal: buildRowMoney(totalAmount),
+        fields: [
+          { label: t('request_detail.ops_lbl_guests'), value: nz(r.guests) },
+          { label: t('request_detail.ops_lbl_person_in_charge'), value: nz(r.person_in_charge) },
+          { label: t('request_detail.ops_lbl_notes'), value: nz(r.notes), multiline: true },
+        ].filter((f) => f.value),
+      }
+    })
+  }
+  return (Array.isArray(s.passengerRows) ? s.passengerRows : []).filter(isPassengerRowFilled).map((r, i) => {
+    const unitPrice = buildRowMoney(r.unit_price)
+    const extraFee = buildRowMoney(r.extra_fee)
+    const totalAmount = parseMoneyVnd(r.unit_price) + parseMoneyVnd(r.extra_fee)
+    return {
+      ...buildItineraryCard(r, i, 'p'),
+      unitPrice,
+      extraFee,
+      priceTotal: buildRowMoney(totalAmount),
       fields: [
         { label: t('request_detail.ops_lbl_guests'), value: nz(r.guests) },
-        { label: t('request_detail.ops_lbl_waypoint'), value: nz(r.waypoint) },
-        { label: t('request_detail.ops_lbl_depart_time'), value: fmtRowDt(r.depart_at) },
-        { label: t('request_detail.ops_lbl_return_time'), value: fmtRowDt(r.return_at) },
+        { label: t('request_detail.ops_lbl_person_in_charge'), value: nz(r.person_in_charge) },
         { label: t('request_detail.ops_lbl_notes'), value: nz(r.notes), multiline: true },
       ].filter((f) => f.value),
-    }))
-  }
-  return (Array.isArray(s.passengerRows) ? s.passengerRows : []).filter(isPassengerRowFilled).map((r, i) => ({
-    ...buildItineraryCard(r, i, 'p'),
-    price: money(parseMoneyVnd(r.unit_price) + parseMoneyVnd(r.extra_fee)),
-    fields: [
-      { label: t('request_detail.ops_lbl_guests'), value: nz(r.guests) },
-      { label: t('request_detail.ops_lbl_depart_time'), value: fmtRowDt(r.depart_at) },
-      { label: t('request_detail.ops_lbl_return_time'), value: fmtRowDt(r.return_at) },
-      { label: t('request_detail.ops_lbl_person_in_charge'), value: nz(r.person_in_charge) },
-      { label: t('request_detail.ops_lbl_notes'), value: nz(r.notes), multiline: true },
-    ].filter((f) => f.value),
-  }))
+    }
+  })
 })
+
+const itineraryExpandedKeys = ref(new Set())
+const itineraryCollapsible = computed(() => itineraryCards.value.length > 1)
+
+function isItineraryExpanded(key) {
+  if (!itineraryCollapsible.value) return true
+  return itineraryExpandedKeys.value.has(key)
+}
+
+function toggleItineraryCard(key) {
+  const next = new Set(itineraryExpandedKeys.value)
+  if (next.has(key)) next.delete(key)
+  else next.add(key)
+  itineraryExpandedKeys.value = next
+}
+
+function expandAllItinerary() {
+  itineraryExpandedKeys.value = new Set(itineraryCards.value.map((c) => c.key))
+}
+
+function collapseAllItinerary() {
+  itineraryExpandedKeys.value = new Set()
+}
 
 const extraNotes = computed(() => {
   const f = formData.value
@@ -1097,6 +1561,19 @@ const extraNotes = computed(() => {
   if (nz(f.cargo_extra_notes)) out.push(nz(f.cargo_extra_notes))
   return out
 })
+
+watch(
+  itineraryCards,
+  (cards) => {
+    if (cards.length <= 1) {
+      itineraryExpandedKeys.value = new Set()
+      return
+    }
+    const firstKey = cards[0]?.key
+    itineraryExpandedKeys.value = firstKey ? new Set([firstKey]) : new Set()
+  },
+  { immediate: true },
+)
 
 // ── Signed doc badge ──
 const signedVerifyLabel = computed(() => {
@@ -1166,13 +1643,6 @@ const AUDIT_ICON = {
 function auditMeta(event) {
   const seg = String(event || '').split('.').pop()
   return AUDIT_ICON[seg] || { icon: ClockIcon, cls: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' }
-}
-
-function itinerarySummaryIcon(line) {
-  const s = String(line || '')
-  if (/^(Đi|Về|Out|Back|Tập kết|Giao|Pickup|Delivery):/i.test(s)) return ClockIcon
-  if (/khách|guest|Phụ trách|In charge/i.test(s)) return UserGroupIcon
-  return MapPinIcon
 }
 
 const AUDIT_PAGE_SIZE_ALL = 0
