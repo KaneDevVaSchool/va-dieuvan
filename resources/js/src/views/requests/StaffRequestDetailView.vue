@@ -10,41 +10,80 @@
     <template v-else-if="req">
       <!-- ═══════════ Header ═══════════ -->
       <header
-        class="sticky top-0 z-40 shrink-0 border-b border-slate-200 bg-white/95 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 supports-[top:env(safe-area-inset-top)]:top-[env(safe-area-inset-top)]"
+        class="sticky top-0 z-40 shrink-0 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 supports-[top:env(safe-area-inset-top)]:top-[env(safe-area-inset-top)]"
       >
-        <div class="mx-auto flex w-full max-w-none flex-wrap items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
+        <div class="mx-auto flex w-full max-w-none items-start gap-3 px-4 py-3 sm:px-6 lg:px-8">
           <RouterLink
             :to="backTo"
-            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
             :aria-label="backAriaLabel"
           >
             <ArrowLeftIcon class="h-5 w-5" aria-hidden="true" />
           </RouterLink>
 
-          <div class="flex min-w-0 flex-1 items-center gap-2.5">
-            <h1 class="truncate font-mono text-lg font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl">
+          <div class="min-w-0 flex-1">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              {{ t('request_detail.ops_header_eyebrow') }}
+            </p>
+            <h1 class="mt-0.5 truncate font-mono text-xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-2xl">
               {{ requestRefCode }}
             </h1>
-            <StatusBadge :status="req.status" />
-            <span
-              v-if="showUrgentBadge"
-              class="inline-flex items-center gap-1 rounded-md bg-rose-50 px-2 py-0.5 text-xs font-semibold text-rose-700 ring-1 ring-inset ring-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:ring-rose-800/60"
-            >
-              <BoltIcon class="h-3.5 w-3.5" aria-hidden="true" />
-              {{ t('requests_page.filter_priority_urgent') }}
-            </span>
-            <span
-              v-if="showRecurringBadge"
-              class="inline-flex items-center gap-1 rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:ring-indigo-800/60"
-            >
-              <ArrowPathIcon class="h-3.5 w-3.5" aria-hidden="true" />
-              {{ t('request_detail.badge_recurring') }}
-            </span>
+
+            <div class="mt-2.5 flex flex-wrap items-center gap-2">
+              <div class="inline-flex items-center gap-2 rounded-lg border border-slate-200/80 bg-slate-50/80 px-2.5 py-1 dark:border-slate-700 dark:bg-slate-800/60">
+                <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">{{ t('request_detail.lbl_status_short') }}</span>
+                <StatusBadge :status="req.status" />
+              </div>
+              <div class="inline-flex items-center gap-2 rounded-lg border border-slate-200/80 bg-white px-2.5 py-1 dark:border-slate-700 dark:bg-slate-900">
+                <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">{{ t('request_detail.lbl_trip_type_short') }}</span>
+                <span class="text-xs font-semibold text-slate-800 dark:text-slate-200">{{ labelTripType(req.trip_type) }}</span>
+              </div>
+              <div
+                v-if="showUrgentBadge"
+                class="inline-flex items-center gap-1.5 rounded-lg border border-rose-200/80 bg-rose-50 px-2.5 py-1 dark:border-rose-900/50 dark:bg-rose-950/40"
+              >
+                <span class="text-[10px] font-bold uppercase tracking-wide text-rose-500 dark:text-rose-400">{{ t('request_detail.ops_header_priority') }}</span>
+                <span class="inline-flex items-center gap-1 text-xs font-semibold text-rose-800 dark:text-rose-200">
+                  <BoltIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  {{ t('requests_page.filter_priority_urgent') }}
+                </span>
+              </div>
+              <div
+                v-if="showRecurringBadge"
+                class="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200/80 bg-indigo-50 px-2.5 py-1 dark:border-indigo-900/50 dark:bg-indigo-950/40"
+              >
+                <span class="text-[10px] font-bold uppercase tracking-wide text-indigo-500 dark:text-indigo-400">{{ t('request_detail.ops_header_recurring_lbl') }}</span>
+                <span class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-800 dark:text-indigo-200">
+                  <ArrowPathIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  {{ t('request_detail.badge_recurring') }}
+                </span>
+              </div>
+            </div>
+
+            <dl class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-slate-400">
+              <div class="inline-flex min-w-0 items-baseline gap-1.5">
+                <dt class="shrink-0 font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">{{ t('request_detail.ops_lbl_created_at') }}</dt>
+                <dd class="truncate font-medium tabular-nums text-slate-700 dark:text-slate-300">{{ fmt(req.created_at) }}</dd>
+              </div>
+              <div v-if="req.trip" class="inline-flex min-w-0 items-baseline gap-1.5">
+                <dt class="shrink-0 font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">{{ t('request_detail.ops_linked_trip') }}</dt>
+                <dd>
+                  <RouterLink
+                    :to="`/trips/${req.trip.id}`"
+                    class="font-mono font-semibold text-va-800 underline decoration-va-300 underline-offset-2 hover:decoration-va-600 dark:text-va-300 dark:decoration-va-700"
+                  >{{ linkedTripCode }}</RouterLink>
+                </dd>
+              </div>
+              <div v-if="journeyDepartLine" class="inline-flex min-w-0 items-baseline gap-1.5">
+                <dt class="shrink-0 font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">{{ t('request_detail.ops_lbl_depart_time') }}</dt>
+                <dd class="truncate font-medium tabular-nums text-slate-700 dark:text-slate-300">{{ journeyDepartLine }}</dd>
+              </div>
+            </dl>
           </div>
 
           <button
             type="button"
-            class="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg border px-3.5 text-sm font-semibold transition"
+            class="mt-0.5 inline-flex h-10 shrink-0 items-center gap-2 rounded-lg border px-3.5 text-sm font-semibold transition"
             :class="
               pdfExportDisabled
                 ? 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-600'
@@ -116,7 +155,7 @@
           <!-- Grid -->
           <div class="grid gap-4 lg:grid-cols-12 lg:items-start">
             <!-- ─── MAIN ─── -->
-            <div :class="activeTab === 'form' ? 'lg:col-span-12' : 'space-y-4 lg:col-span-8'">
+            <div class="space-y-4 lg:col-span-8">
               <div :class="cardClass">
                 <nav
                   class="flex gap-1 overflow-x-auto border-b border-slate-100 px-2 pt-2 dark:border-slate-800"
@@ -174,79 +213,54 @@
                           <p class="mt-1.5 text-xl font-bold leading-snug text-slate-900 dark:text-white">{{ req.destination || friendlyEmpty }}</p>
                         </div>
                       </div>
-                      <div class="flex flex-wrap items-center gap-2 border-t border-slate-100 bg-slate-50/80 px-5 py-3 dark:border-slate-800 dark:bg-slate-800/40">
-                        <span
+                      <div class="grid grid-cols-2 gap-3 border-t border-slate-100 bg-slate-50/80 px-5 py-4 dark:border-slate-800 dark:bg-slate-800/40 sm:grid-cols-4">
+                        <div
                           v-if="journeyDepartLine"
-                          class="inline-flex items-center gap-1.5 rounded-lg bg-va-100 px-3 py-1.5 text-sm font-semibold text-va-900 ring-1 ring-inset ring-va-200 dark:bg-va-950/60 dark:text-va-100 dark:ring-va-800/60"
+                          class="rounded-xl border border-va-200/80 bg-va-50/70 px-3.5 py-2.5 dark:border-va-800/50 dark:bg-va-950/30"
                         >
-                          <ClockIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-                          {{ journeyDepartLine }}
-                        </span>
-                        <span class="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-inset ring-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700">
-                          <TruckIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-                          {{ labelTripType(req.trip_type) }}
-                        </span>
-                        <span
+                          <p class="text-[10px] font-bold uppercase tracking-wider text-va-600/80 dark:text-va-400/80">
+                            {{ t('request_detail.ops_lbl_depart_time') }}
+                          </p>
+                          <p class="mt-1 flex items-center gap-1.5 text-sm font-semibold tabular-nums text-va-900 dark:text-va-100">
+                            <ClockIcon class="h-4 w-4 shrink-0 text-va-500 dark:text-va-400" aria-hidden="true" />
+                            {{ journeyDepartLine }}
+                          </p>
+                        </div>
+                        <div class="rounded-xl border border-slate-200/80 bg-white px-3.5 py-2.5 dark:border-slate-700 dark:bg-slate-900">
+                          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                            {{ t('request_detail.lbl_trip_type_short') }}
+                          </p>
+                          <p class="mt-1 flex items-center gap-1.5 text-sm font-semibold text-slate-800 dark:text-slate-200">
+                            <TruckIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                            {{ labelTripType(req.trip_type) }}
+                          </p>
+                        </div>
+                        <div
                           v-if="passengerOrCargoLine && passengerOrCargoLine !== '—'"
-                          class="inline-flex items-center rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-inset ring-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700"
-                        >{{ passengerOrCargoLine }}</span>
-                        <span
+                          class="rounded-xl border border-slate-200/80 bg-white px-3.5 py-2.5 dark:border-slate-700 dark:bg-slate-900"
+                        >
+                          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                            {{ metaLoadLabel }}
+                          </p>
+                          <p class="mt-1 flex items-center gap-1.5 text-sm font-semibold text-slate-800 dark:text-slate-200">
+                            <UserGroupIcon v-if="!isCargo" class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                            <ScaleIcon v-else class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                            {{ passengerOrCargoLine }}
+                          </p>
+                        </div>
+                        <div
                           v-if="distanceText"
-                          class="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-inset ring-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700"
+                          class="rounded-xl border border-slate-200/80 bg-white px-3.5 py-2.5 dark:border-slate-700 dark:bg-slate-900"
                         >
-                          <MapIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-                          {{ distanceText }}
-                        </span>
+                          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                            {{ t('request_detail.lbl_est_distance') }}
+                          </p>
+                          <p class="mt-1 flex items-center gap-1.5 text-sm font-semibold text-slate-800 dark:text-slate-200">
+                            <MapIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                            {{ distanceText }}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-
-                    <!-- Inline actions (form tab only) -->
-                    <div
-                      v-if="hasAnyAction"
-                      class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
-                    >
-                      <h2 :class="sectionTitleClass">{{ t('request_detail.ops_action_center') }}</h2>
-                      <div class="mt-3 flex flex-wrap gap-2">
-                        <template v-if="showD2dDecisionSection">
-                          <button type="button" class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60" :disabled="d2dActing" @click="onD2dApproveClick">
-                            <CheckBadgeIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-                            {{ t('request_detail.d2d_approve_confirm_btn') }}
-                          </button>
-                          <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 disabled:opacity-60 dark:border-rose-800/60 dark:text-rose-300 dark:hover:bg-rose-950/40" :disabled="d2dActing" @click="openD2dReject">
-                            {{ t('request_detail.d2d_reject_confirm_btn') }}
-                          </button>
-                        </template>
-                        <button
-                          v-if="showFillPriceSection"
-                          type="button"
-                          class="inline-flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-4 py-2.5 text-sm font-semibold text-sky-900 transition hover:bg-sky-100 dark:border-sky-900/50 dark:bg-sky-950/30 dark:text-sky-200 dark:hover:bg-sky-950/50"
-                          @click="onWorkflowNavigate({ tab: 'route', focus: 'fill-price' })"
-                        >
-                          <CurrencyDollarIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-                          {{ t('request_detail.fill_price_title') }}
-                        </button>
-                        <button
-                          v-if="showResetCloneBtn"
-                          type="button"
-                          class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
-                          :disabled="resetCloneBusy"
-                          @click="onResetCloneRequest"
-                        >
-                          <ArrowPathIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-                          {{ resetCloneBusy ? t('request_detail.reset_clone_busy') : t('request_detail.reset_clone') }}
-                        </button>
-                        <button
-                          v-for="item in workflowTodoItems"
-                          :key="item.key"
-                          type="button"
-                          class="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-900 transition hover:bg-amber-100 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200 dark:hover:bg-amber-950/40"
-                          @click="onWorkflowNavigate({ tab: mapTodoTab(item.tab), focus: item.focus })"
-                        >
-                          {{ item.label }}
-                          <ArrowRightIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-                        </button>
-                      </div>
-                      <p v-if="d2dMsg && !d2dRejectOpen && showD2dDecisionSection" class="mt-2 text-sm text-rose-600 dark:text-rose-400">{{ d2dMsg }}</p>
                     </div>
 
                     <PortalStatusTimeline
@@ -255,106 +269,60 @@
                       variant="staff"
                     />
 
-                    <div class="grid gap-4 lg:grid-cols-12">
-                      <div class="space-y-4 lg:col-span-8">
-                        <div class="grid gap-4 md:grid-cols-2">
-                          <div class="rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
-                            <h2 :class="sectionTitleClass">{{ t('request_detail.ops_schedule_heading') }}</h2>
-                            <dl class="mt-4 space-y-3.5">
-                              <FieldRow :label="t('request_detail.ops_lbl_proposed_date')" :value="fmtDateOnly(formData.proposed_date)" />
-                              <FieldRow
-                                :label="t('request_detail.ops_lbl_date_needed')"
-                                :value="fmtDateOnly(formData.date_needed)"
-                                :highlight="!!formData.date_needed"
-                              />
-                              <div
-                                v-if="urgentReasonText"
-                                class="rounded-xl border border-rose-200 bg-rose-50/70 px-3 py-2.5 dark:border-rose-900/50 dark:bg-rose-950/25"
-                              >
-                                <FieldRow :label="t('request_detail.ops_lbl_urgent_reason')" :value="urgentReasonText" multiline emphasize />
-                              </div>
-                            </dl>
+                    <div class="space-y-4">
+                      <div class="grid gap-4 md:grid-cols-2">
+                        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                          <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3 dark:border-slate-800">
+                            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-600 dark:bg-sky-950/40 dark:text-sky-400">
+                              <CalendarDaysIcon class="h-4 w-4" aria-hidden="true" />
+                            </span>
+                            <h2 class="text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">{{ t('request_detail.ops_schedule_heading') }}</h2>
                           </div>
-                          <div class="rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
-                            <h2 :class="sectionTitleClass">{{ t('request_detail.ops_purpose_heading') }}</h2>
-                            <dl class="mt-4 space-y-3.5">
-                              <FieldRow :label="t('request_detail.ops_lbl_purpose')" :value="nz(formData.purpose)" multiline />
-                              <FieldRow :label="t('request_detail.ops_lbl_basis')" :value="basisText" multiline />
-                            </dl>
-                          </div>
+                          <dl class="mt-4 space-y-3.5">
+                            <FieldRow :label="t('request_detail.ops_lbl_proposed_date')" :value="fmtDateOnly(formData.proposed_date)" />
+                            <FieldRow
+                              :label="t('request_detail.ops_lbl_date_needed')"
+                              :value="fmtDateOnly(formData.date_needed)"
+                              :highlight="!!formData.date_needed"
+                            />
+                            <div
+                              v-if="urgentReasonText"
+                              class="rounded-xl border border-rose-200 bg-rose-50/70 px-3 py-2.5 dark:border-rose-900/50 dark:bg-rose-950/25"
+                            >
+                              <FieldRow :label="t('request_detail.ops_lbl_urgent_reason')" :value="urgentReasonText" multiline emphasize />
+                            </div>
+                          </dl>
                         </div>
-
-                        <div v-if="targets.length || coordinatorName" class="rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
-                          <h2 :class="sectionTitleClass">{{ t('request_detail.ops_targets_heading') }}</h2>
-                          <div v-if="targets.length" class="mt-4 flex flex-wrap gap-2">
-                            <span v-for="(tg, i) in targets" :key="i" class="inline-flex rounded-lg bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">{{ tg }}</span>
+                        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                          <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3 dark:border-slate-800">
+                            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-600 dark:bg-violet-950/40 dark:text-violet-400">
+                              <DocumentTextIcon class="h-4 w-4" aria-hidden="true" />
+                            </span>
+                            <h2 class="text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">{{ t('request_detail.ops_purpose_heading') }}</h2>
                           </div>
-                          <dl v-if="coordinatorName" class="mt-4 grid gap-x-6 gap-y-3.5 sm:grid-cols-3">
-                            <FieldRow :label="t('request_detail.ops_lbl_coordinator')" :value="coordinatorName" />
-                            <FieldRow :label="t('request_detail.lbl_email')" :value="nz(formData.coordinator_email)" />
-                            <FieldRow :label="t('request_detail.lbl_phone')" :value="nz(formData.coordinator_phone)" />
+                          <dl class="mt-4 space-y-3.5">
+                            <FieldRow :label="t('request_detail.ops_lbl_purpose')" :value="nz(formData.purpose)" multiline />
+                            <FieldRow :label="t('request_detail.ops_lbl_basis')" :value="basisText" multiline />
                           </dl>
                         </div>
                       </div>
 
-                      <aside class="space-y-4 lg:col-span-4">
-                        <section class="rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
-                          <h2 :class="sectionTitleClass">{{ t('request_detail.ops_properties') }}</h2>
-                          <div class="mt-4 flex items-start gap-3">
-                            <img v-if="req.requester?.avatar_url" :src="req.requester.avatar_url" alt="" class="h-11 w-11 shrink-0 rounded-full object-cover ring-2 ring-slate-100 dark:ring-slate-700" />
-                            <div v-else class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-va-50 text-base font-bold text-va-800 dark:bg-va-950/50 dark:text-va-300">{{ requesterInitials }}</div>
-                            <div class="min-w-0">
-                              <p class="text-base font-semibold text-slate-900 dark:text-slate-100">{{ req.requester?.name ?? friendlyEmpty }}</p>
-                              <p v-if="requesterAsideSubtitle" class="text-sm text-slate-500 dark:text-slate-400">{{ requesterAsideSubtitle }}</p>
-                            </div>
-                          </div>
-                          <dl v-if="requesterAsideFields.length" class="mt-4 space-y-3 border-t border-slate-100 pt-4 dark:border-slate-800">
-                            <FieldRow v-for="row in requesterAsideFields" :key="row.key" :label="row.label" :value="row.value" />
-                          </dl>
-                          <dl class="mt-4 space-y-3 border-t border-slate-100 pt-4 dark:border-slate-800">
-                            <FieldRow :label="t('request_detail.ops_lbl_created_at')" :value="fmt(req.created_at)" />
-                            <FieldRow v-if="req.approver?.name" :label="t('request_detail.ops_lbl_approver')" :value="req.approver.name" />
-                            <FieldRow
-                              v-if="req.status === 'approved'"
-                              :label="t('request_detail.ops_lbl_paper_status')"
-                              :value="paperStatusText"
-                              :highlight="req.paper_status === 'pending'"
-                            />
-                          </dl>
-                        </section>
-
-                        <section v-if="costEstimate" class="rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
-                          <h2 class="flex items-center gap-2" :class="sectionTitleClass">
-                            <CalculatorIcon class="h-4 w-4 shrink-0 text-teal-500 dark:text-teal-400" aria-hidden="true" />
-                            {{ t('request_detail.cost_estimate_heading') }}
-                          </h2>
-                          <dl class="mt-4 space-y-3">
-                            <FieldRow :label="t('request_detail.lbl_est_distance')" :value="costEstimate.distanceLabel" />
-                            <FieldRow
-                              v-if="req.service_price != null"
-                              :label="t('request_detail.ops_lbl_service_price')"
-                              :value="formatVndCurrency(req.service_price)"
-                              highlight
-                            />
-                          </dl>
-                          <div class="mt-4 rounded-xl bg-teal-50 px-4 py-3 ring-1 ring-inset ring-teal-100 dark:bg-teal-950/30 dark:ring-teal-900/40">
-                            <p class="text-xs font-medium text-teal-700/90 dark:text-teal-300/90">{{ t('request_detail.total_per_declaration') }}</p>
-                            <p class="mt-0.5 text-xl font-bold tabular-nums text-teal-600 dark:text-teal-300">{{ costEstimate.declaredTotalLabel ?? friendlyEmpty }}</p>
-                          </div>
-                        </section>
-
-                        <RouterLink
-                          v-if="req.trip"
-                          :to="`/trips/${req.trip.id}`"
-                          class="flex items-center justify-between gap-3 rounded-2xl border border-va-200 bg-va-50/60 px-4 py-3.5 transition hover:bg-va-50 dark:border-va-800/50 dark:bg-va-950/30 dark:hover:bg-va-950/50"
-                        >
-                          <span class="min-w-0">
-                            <span class="block text-xs font-semibold uppercase tracking-wide text-va-600 dark:text-va-400">{{ t('request_detail.ops_linked_trip') }}</span>
-                            <span class="block text-base font-bold text-va-900 dark:text-va-200">{{ t('request_detail.trip_link', { id: req.trip.id }) }}</span>
+                      <div v-if="targets.length || coordinatorName" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                        <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3 dark:border-slate-800">
+                          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
+                            <UserGroupIcon class="h-4 w-4" aria-hidden="true" />
                           </span>
-                          <ArrowTopRightOnSquareIcon class="h-5 w-5 shrink-0 text-va-600 dark:text-va-400" aria-hidden="true" />
-                        </RouterLink>
-                      </aside>
+                          <h2 class="text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">{{ t('request_detail.ops_targets_heading') }}</h2>
+                        </div>
+                        <div v-if="targets.length" class="mt-4 flex flex-wrap gap-2">
+                          <span v-for="(tg, i) in targets" :key="i" class="inline-flex rounded-lg bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">{{ tg }}</span>
+                        </div>
+                        <dl v-if="coordinatorName" class="mt-4 grid gap-x-6 gap-y-3.5 sm:grid-cols-3">
+                          <FieldRow :label="t('request_detail.ops_lbl_coordinator')" :value="coordinatorName" />
+                          <FieldRow :label="t('request_detail.lbl_email')" :value="nz(formData.coordinator_email)" />
+                          <FieldRow :label="t('request_detail.lbl_phone')" :value="nz(formData.coordinator_phone)" />
+                        </dl>
+                      </div>
                     </div>
                   </div>
 
@@ -545,8 +513,8 @@
               </div>
             </div>
 
-            <!-- ─── SIDEBAR (ẩn trên tab Tổng quan — đã gộp vào layout full width) ─── -->
-            <aside v-if="activeTab !== 'form'" class="space-y-4 lg:col-span-4">
+            <!-- ─── SIDEBAR ─── -->
+            <aside class="space-y-4 lg:col-span-4">
               <section :class="cardClass + ' p-5'">
                 <h2 :class="sectionTitleClass">{{ t('request_detail.ops_action_center') }}</h2>
                 <div class="mt-4 space-y-2.5">
@@ -616,6 +584,23 @@
                 <dl v-if="requesterAsideFields.length" class="mt-4 space-y-3 border-t border-slate-100 pt-4 dark:border-slate-800">
                   <FieldRow v-for="row in requesterAsideFields" :key="row.key" :label="row.label" :value="row.value" />
                 </dl>
+                <dl class="mt-4 space-y-3 border-t border-slate-100 pt-4 dark:border-slate-800">
+                  <FieldRow :label="t('request_detail.ops_lbl_request_code')" :value="requestRefCode" highlight />
+                  <FieldRow :label="t('request_detail.lbl_trip_type_short')" :value="labelTripType(req.trip_type)" />
+                  <FieldRow
+                    v-if="passengerOrCargoLine && passengerOrCargoLine !== '—'"
+                    :label="metaLoadLabel"
+                    :value="passengerOrCargoLine"
+                  />
+                  <FieldRow :label="t('request_detail.ops_lbl_created_at')" :value="fmt(req.created_at)" />
+                  <FieldRow v-if="req.approver?.name" :label="t('request_detail.ops_lbl_approver')" :value="req.approver.name" />
+                  <FieldRow
+                    v-if="req.status === 'approved'"
+                    :label="t('request_detail.ops_lbl_paper_status')"
+                    :value="paperStatusText"
+                    :highlight="req.paper_status === 'pending'"
+                  />
+                </dl>
               </section>
 
               <section v-if="costEstimate" :class="cardClass + ' p-5'">
@@ -636,11 +621,18 @@
               <RouterLink
                 v-if="req.trip"
                 :to="`/trips/${req.trip.id}`"
-                class="flex items-center justify-between gap-3 rounded-2xl border border-va-200 bg-va-50/60 px-4 py-3.5 transition hover:bg-va-50 dark:border-va-800/50 dark:bg-va-950/30 dark:hover:bg-va-950/50"
+                class="flex items-center gap-3 rounded-2xl border border-va-200 bg-va-50/60 px-4 py-3.5 transition hover:bg-va-50 dark:border-va-800/50 dark:bg-va-950/30 dark:hover:bg-va-950/50"
               >
-                <span class="min-w-0">
-                  <span class="block text-xs font-semibold uppercase tracking-wide text-va-600 dark:text-va-400">{{ t('request_detail.ops_linked_trip') }}</span>
-                  <span class="block text-base font-bold text-va-900 dark:text-va-200">{{ t('request_detail.trip_link', { id: req.trip.id }) }}</span>
+                <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-va-100 text-va-700 dark:bg-va-900/50 dark:text-va-300">
+                  <TruckIcon class="h-5 w-5" aria-hidden="true" />
+                </span>
+                <span class="min-w-0 flex-1">
+                  <span class="block text-[10px] font-bold uppercase tracking-wider text-va-600 dark:text-va-400">{{ t('request_detail.ops_linked_trip') }}</span>
+                  <span class="mt-0.5 block font-mono text-lg font-bold tracking-tight text-va-900 dark:text-va-100">{{ linkedTripCode }}</span>
+                  <span
+                    v-if="req.origin || req.destination"
+                    class="mt-0.5 block truncate text-xs text-va-700/80 dark:text-va-300/80"
+                  >{{ req.origin || '—' }} → {{ req.destination || '—' }}</span>
                 </span>
                 <ArrowTopRightOnSquareIcon class="h-5 w-5 shrink-0 text-va-600 dark:text-va-400" aria-hidden="true" />
               </RouterLink>
@@ -677,18 +669,22 @@ import {
   ArrowUturnLeftIcon,
   BoltIcon,
   CalculatorIcon,
+  CalendarDaysIcon,
   CheckBadgeIcon,
   CheckCircleIcon,
   ClipboardDocumentIcon,
   ClockIcon,
   CurrencyDollarIcon,
   DocumentCheckIcon,
+  DocumentTextIcon,
   ExclamationTriangleIcon,
   MapIcon,
   MapPinIcon,
   PencilSquareIcon,
   PlusCircleIcon,
+  ScaleIcon,
   TruckIcon,
+  UserGroupIcon,
   XCircleIcon,
 } from '@heroicons/vue/24/outline'
 import {
@@ -713,6 +709,7 @@ import {
   resolveItineraryTripType,
 } from '../../util/requestItineraryRowDisplay'
 import { isPassengerRowFilled, isBusinessRowFilled } from '../../composables/dispatchWizardConstants'
+import { formatTripCode } from '../../util/labels'
 
 const FillPricePanel = defineAsyncComponent(() =>
   import('../../components/requests/workspace/FillPricePanel.vue'),
@@ -813,11 +810,15 @@ const btnTealClass = 'inline-flex items-center rounded-md bg-teal-600 px-2.5 py-
 const btnDangerGhostClass = 'inline-flex items-center rounded-md border border-rose-200 px-2.5 py-1.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 disabled:opacity-50 dark:border-rose-800/60 dark:text-rose-300 dark:hover:bg-rose-950/40'
 
 const friendlyEmpty = computed(() => t('request_detail.ops_no_data'))
+const linkedTripCode = computed(() => formatTripCode(req.value?.trip?.id))
 
 // ── BM.03 data ──
 const formData = computed(() => req.value?.wizard_snapshot?.form ?? {})
 const snap = computed(() => req.value?.wizard_snapshot ?? {})
 const isCargo = computed(() => req.value?.trip_type === 'cargo')
+const metaLoadLabel = computed(() =>
+  isCargo.value ? t('request_detail.ops_lbl_weight') : t('request_detail.ops_lbl_passenger_count'),
+)
 const isBusiness = computed(() => req.value?.trip_type === 'business')
 
 function nz(v) {

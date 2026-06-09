@@ -81,12 +81,11 @@
 
         .page-content {
             position: relative;
-            z-index: 1;
         }
 
         /* ── Document title ── */
         .doc-title {
-            font-size: 13.5pt;
+            font-size: 13pt;
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1.5pt;
@@ -95,17 +94,17 @@
         }
 
         .doc-subtitle {
-            font-size: 8pt;
+            font-size: 7.5pt;
             text-align: center;
             color: #555;
             font-style: italic;
-            margin-top: 3pt;
+            margin-top: 2pt;
         }
 
         .top-layout {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 5pt;
+            margin-bottom: 3pt;
         }
 
         .top-layout td {
@@ -137,17 +136,17 @@
         .doc-divider {
             border: none;
             border-bottom: 1.5pt solid #7B1E3B;
-            margin: 5pt 0 6pt;
+            margin: 4pt 0 5pt;
         }
 
         /* ── Section chrome ── */
-        .sec       { margin-top: 7pt; }
+        .sec       { margin-top: 5pt; }
         .sec-avoid { page-break-inside: avoid; }
 
         .sec-hd {
             background: #7B1E3B;
             color: #fff;
-            padding: 4.5pt 9pt;
+            padding: 3.5pt 8pt;
             width: 100%;
             display: table;
             page-break-after: avoid;
@@ -199,7 +198,7 @@
 
         table.ft td {
             border: 0.5pt solid #e0e0e0;
-            padding: 6pt 9pt 7pt;
+            padding: 4pt 8pt 5pt;
             vertical-align: top;
         }
 
@@ -225,9 +224,9 @@
         }
 
         .fv {
-            font-size: 8pt;
+            font-size: 7.5pt;
             color: #1a1a1a;
-            min-height: 12pt;
+            min-height: 10pt;
         }
 
         .fv-empty { color: #bbb; }
@@ -237,7 +236,7 @@
             background: #fdf6f0;
             border-top: 0.5pt solid #e8d0b5;
             border-bottom: 0.5pt solid #e8d0b5;
-            padding: 4pt 9pt;
+            padding: 3pt 8pt;
             font-size: 6.5pt;
             color: #8B5A2B;
             font-style: italic;
@@ -245,7 +244,7 @@
 
         /* ── Target chips ── */
         .target-wrap {
-            padding: 6pt 9pt 5pt;
+            padding: 4pt 8pt 4pt;
             border-bottom: 0.5pt solid #e0e0e0;
         }
 
@@ -290,7 +289,7 @@
         table.dt th.back { background: #dff0e0; color: #1a4d2a; }
 
         table.dt td {
-            padding: 5pt 4pt;
+            padding: 3.5pt 3.5pt;
             border: 0.5pt solid #ddd;
             color: #1a1a1a;
             vertical-align: top;
@@ -349,17 +348,17 @@
         }
 
         .sig-bd {
-            height: 80pt;
+            height: 65pt;
             vertical-align: bottom;
             background: #fff;
-            padding-bottom: 8pt;
+            padding-bottom: 6pt;
         }
 
         .sig-name { font-size: 7pt; font-weight: bold; color: #1a1a1a; }
         .sig-role { font-size: 6pt; color: #888; font-style: italic; }
 
         /* ── Section G ── */
-        .g-row { padding: 8pt 10pt; display: block; }
+        .g-row { padding: 6pt 9pt; display: block; }
         .g-lbl { font-size: 7pt; font-weight: bold; color: #1a1a1a; }
 
         .g-dots {
@@ -821,7 +820,6 @@
             <tr>
                 <td class="sig-bd">
                     <span class="sig-name">Phạm Thanh Hùng</span><br />
-                    <span class="sig-role">Giám đốc … (tùy lĩnh vực)</span>
                 </td>
                 <td class="sig-bd"></td>
                 <td class="sig-bd"></td>

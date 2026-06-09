@@ -46,7 +46,7 @@
                     :to="`/trips/${req.trip.id}`"
                     class="font-semibold text-va-800 underline decoration-va-300 underline-offset-2 hover:decoration-va-600"
                   >
-                    {{ t('request_detail.trip_link', { id: req.trip.id }) }}
+                    {{ formatTripCode(req.trip.id) }}
                   </RouterLink>
                 </template>
               </p>
@@ -433,6 +433,7 @@ import RejectReasonModal from '../../components/requests/RejectReasonModal.vue'
 import PortalRequestJourneyCard from '../../components/portal/PortalRequestJourneyCard.vue'
 import PortalStatusTimeline from '../../components/portal/PortalStatusTimeline.vue'
 import { useRequestDetailPage } from '../../composables/useRequestDetailPage'
+import { formatTripCode } from '../../util/labels'
 
 const RequestBm03FormTab = defineAsyncComponent(() =>
   import('../../components/requests/RequestBm03FormTab.vue'),

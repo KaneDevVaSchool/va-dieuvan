@@ -11,6 +11,12 @@ function tOrFallback(key, fallback) {
   return fallback
 }
 
+/** @param {number|string|null|undefined} id */
+export function formatTripCode(id) {
+  if (id == null || id === '') return 'TRP-—'
+  return `TRP-${String(id).padStart(4, '0')}`
+}
+
 /** @param {string|undefined|null} v */
 export function labelTripType(v) {
   const key = v ? `labels.trip_type.${v}` : ''
