@@ -112,7 +112,7 @@
         </Button>
       </div>
 
-      <div class="sticky top-0 z-20 -mx-1 px-1 pt-1">
+      <div class="sticky top-0 z-40 -mx-1 px-1 pt-1">
         <AppFilterBar>
           <div class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
             <div class="relative min-w-[200px] flex-1 basis-[200px]">
