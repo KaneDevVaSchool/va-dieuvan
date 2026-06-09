@@ -82,7 +82,7 @@ const staffChildRoutes = [
     {
         path: "requests/:id(\\d+)",
         name: "requestDetail",
-        component: () => import("../views/requests/RequestDetailView.vue"),
+        component: () => import("../views/requests/StaffRequestDetailView.vue"),
         meta: {
             title: "Chi tiết yêu cầu",
             subtitle: "Phiếu điều vận",

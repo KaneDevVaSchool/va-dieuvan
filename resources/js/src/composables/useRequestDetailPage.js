@@ -18,6 +18,7 @@ import {
   revertPaperReceived,
   cloneDispatchRequest,
   patchPassengerCount,
+  getDispatchRequestAuditLogs,
 } from '../api/requests'
 import { formatApiError } from '../api/http'
 import { saveAs } from 'file-saver'
@@ -99,6 +100,10 @@ export function useRequestDetailPage() {
   const passengerSaving = ref(false)
   const passengerPatchErr = ref('')
   const resetCloneBusy = ref(false)
+
+  const auditItems = ref([])
+  const auditLoading = ref(false)
+  const auditError = ref('')
 
   const activeTab = ref('form')
   const previewOpen = ref(false)
@@ -442,6 +447,18 @@ export function useRequestDetailPage() {
     previewAttachment.value = null
   }
 
+  async function loadAuditLogs() {
+    auditLoading.value = true
+    auditError.value = ''
+    try {
+      auditItems.value = await getDispatchRequestAuditLogs(route.params.id)
+    } catch (e) {
+      auditError.value = formatApiError(e, t('request_detail.audit_timeline_load_fail'))
+    } finally {
+      auditLoading.value = false
+    }
+  }
+
   async function load() {
     loading.value = true
     try {
@@ -451,6 +468,7 @@ export function useRequestDetailPage() {
       ])
       req.value = dr
       formSettings.value = fs
+      if (isStaffContext.value) loadAuditLogs()
       paperForm.value.paper_reference = req.value?.paper_reference ?? ''
       paperForm.value.paper_received_at = req.value?.paper_received_at
         ? toDatetimeLocalValue(new Date(req.value.paper_received_at))
@@ -1009,5 +1027,8 @@ export function useRequestDetailPage() {
     previewOpen,
     previewAttachment,
     closeAttachmentPreview,
+    auditItems,
+    auditLoading,
+    auditError,
   }
 }

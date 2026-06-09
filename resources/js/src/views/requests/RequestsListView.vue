@@ -802,40 +802,37 @@
               <td v-if="requestColOn('notes')" class="max-w-xs px-3 py-3 align-top text-xs text-slate-600">
                 <p class="line-clamp-2">{{ requestNotesListCell(r) }}</p>
               </td>
-              <td class="relative overflow-visible px-2 py-3 align-top text-right" :class="isTrashTab ? 'text-slate-800' : ''">
+              <td class="px-2 py-3 align-top text-right" :class="isTrashTab ? 'text-slate-800' : ''">
                 <div class="inline-flex flex-wrap items-center justify-end gap-1">
-                <details class="group/action-menu relative inline-block text-right">
-                  <summary
-                    class="inline-flex cursor-pointer list-none items-center justify-center rounded-lg border border-slate-200/90 bg-white p-1.5 text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 [&::-webkit-details-marker]:hidden"
-                  >
-                    <EllipsisVerticalIcon class="h-5 w-5" aria-hidden="true" />
-                    <span class="sr-only">{{ t('requests_page.col_actions') }}</span>
-                  </summary>
-                  <div
-                    class="absolute right-0 top-[calc(100%+6px)] z-[60] min-w-[12.5rem] rounded-xl border border-slate-200/90 bg-white py-1 text-left text-sm shadow-lg ring-1 ring-slate-900/5"
-                    @click.stop
+                  <AppRowActionsMenu
+                    align="end"
+                    :aria-label="t('requests_page.col_actions')"
+                    :trigger-sr-only="t('requests_page.col_actions')"
+                    root-class="text-right"
                   >
                     <RouterLink
                       v-if="!isTrashTab"
+                      role="menuitem"
                       :to="{ name: 'requestDetail', params: { id: String(r.id) } }"
                       class="flex w-full items-center gap-2 px-3 py-2 text-left text-slate-700 transition hover:bg-slate-50"
-                      @click="closeRowActionMenu"
                     >
                       {{ t('requests_page.view') }}
                     </RouterLink>
                     <template v-if="isTrashTab && canBulkTrash">
                       <button
                         type="button"
+                        role="menuitem"
                         class="flex w-full items-center gap-2 px-3 py-2 text-left text-slate-700 transition hover:bg-teal-50 hover:text-teal-900"
-                        @click="closeRowActionMenuThen(() => openBulkConfirm('restore', [r.id]))"
+                        @click="openBulkConfirm('restore', [r.id])"
                       >
                         <ArrowPathIcon class="h-4 w-4 shrink-0 text-teal-600" aria-hidden="true" />
                         {{ t('requests_page.bulk_restore') }}
                       </button>
                       <button
                         type="button"
+                        role="menuitem"
                         class="flex w-full items-center gap-2 px-3 py-2 text-left text-red-800 transition hover:bg-red-50"
-                        @click="closeRowActionMenuThen(() => openBulkConfirm('force_delete', [r.id]))"
+                        @click="openBulkConfirm('force_delete', [r.id])"
                       >
                         <ExclamationTriangleIcon class="h-4 w-4 shrink-0 text-red-600" aria-hidden="true" />
                         {{ t('requests_page.bulk_force_delete') }}
@@ -845,14 +842,14 @@
                     <button
                       v-if="!isTrashTab && r.status === 'draft'"
                       type="button"
+                      role="menuitem"
                       class="flex w-full items-center gap-2 px-3 py-2 text-left text-slate-700 transition hover:bg-slate-50"
-                      @click="closeRowActionMenuThen(() => openDraftEditor(r.id))"
+                      @click="openDraftEditor(r.id)"
                     >
                       <PencilSquareIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
                       {{ t('requests_page.edit') }}
                     </button>
-                  </div>
-                </details>
+                  </AppRowActionsMenu>
                 </div>
               </td>
             </tr>
@@ -1059,9 +1056,9 @@ import {
   XMarkIcon,
   AcademicCapIcon,
   CubeIcon,
-  EllipsisVerticalIcon,
 } from '@heroicons/vue/24/outline'
 import Button from '../../components/ui/Button.vue'
+import AppRowActionsMenu from '../../components/ui/AppRowActionsMenu.vue'
 import StatusBadge from '../../components/ui/StatusBadge.vue'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
@@ -1900,20 +1897,6 @@ async function reload() {
     }
   } finally {
     loading.value = false
-  }
-}
-
-function closeRowActionMenu(ev) {
-  const el = ev?.currentTarget ?? ev?.target
-  const d = el?.closest?.('details')
-  if (d) d.open = false
-}
-
-function closeRowActionMenuThen(fn) {
-  return (ev) => {
-    const d = ev?.currentTarget?.closest?.('details')
-    if (d) d.open = false
-    fn()
   }
 }
 
