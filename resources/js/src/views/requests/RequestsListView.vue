@@ -127,14 +127,13 @@
 
     <!-- Filters: horizontal bar -->
     <AppFilterBar>
-      <div class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+      <div ref="requestsFilterBarRef" class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
         <details ref="columnPickerRef" class="group relative shrink-0">
           <summary
             class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-200 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
             :aria-label="t('requests_page.table_columns')"
           >
-            <ViewColumnsIcon class="h-4 w-4 shrink-0 text-slate-600 dark:text-slate-400" aria-hidden="true" />
-            <span class="hidden sm:inline">{{ t('requests_page.table_columns') }}</span>
+            <ViewColumnsIcon class="h-5 w-5 shrink-0 text-slate-600 dark:text-slate-400" aria-hidden="true" />
             <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
           </summary>
           <div
@@ -185,6 +184,14 @@
               <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_paper') }}</span>
               <span class="font-medium">{{ labelPaperStatus(filters.paper_status) }}</span>
             </li>
+            <li v-if="filters.request_status" class="flex justify-between gap-2">
+              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_request_status') }}</span>
+              <span class="font-medium">{{ labelRequestStatus(filters.request_status) }}</span>
+            </li>
+            <li v-if="filters.trip_status_filter" class="flex justify-between gap-2">
+              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_trip_status') }}</span>
+              <span class="font-medium">{{ labelTripStatus(filters.trip_status_filter) }}</span>
+            </li>
             <li v-if="filters.sort && filters.sort !== 'created_desc'" class="flex justify-between gap-2">
               <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.sort_label') }}</span>
               <span class="font-medium">{{ sortLabel(filters.sort) }}</span>
@@ -213,6 +220,30 @@
               {{ t('requests_page.filter_menu_empty') }}
             </li>
           </ul>
+          <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
+            <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+              {{ t('requests_page.filter_show_controls_title') }}
+            </p>
+            <p class="mt-1 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+              {{ t('requests_page.filter_show_controls_hint') }}
+            </p>
+            <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
+              <li v-for="opt in filterBarVisibilityOptions" :key="'vis-' + opt.id" class="flex items-start gap-2">
+                <input
+                  :id="`requests-filter-vis-${opt.id}`"
+                  v-model="filterBarVisible[opt.id]"
+                  type="checkbox"
+                  class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900"
+                />
+                <label
+                  :for="`requests-filter-vis-${opt.id}`"
+                  class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
+                >
+                  {{ t(opt.labelKey) }}
+                </label>
+              </li>
+            </ul>
+          </div>
           <button
             type="button"
             class="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
@@ -241,6 +272,7 @@
         <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
 
         <button
+          v-if="filterBarVisible.recurring"
           type="button"
           role="switch"
           :aria-checked="filters.recurring_only"
@@ -258,6 +290,7 @@
         </button>
 
         <button
+          v-if="filterBarVisible.extracurricular"
           type="button"
           role="switch"
           :aria-checked="filters.extracurricular_only"
@@ -319,6 +352,7 @@
         class="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-2 border-t border-violet-100/80 pt-2 dark:border-violet-900/30 sm:gap-x-3"
       >
           <select
+            v-if="filterBarVisible.trip_type"
             v-model="filters.trip_type"
             class="h-9 max-w-[min(100%,11rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
             :class="
@@ -335,6 +369,7 @@
           </select>
 
           <AppFilterDropdown
+            v-if="filterBarVisible.depart"
             :panel-title="t('requests_page.filter_depart_range')"
             :show-chip-label="false"
             :label="t('requests_page.filter_depart_range')"
@@ -380,6 +415,7 @@
           </AppFilterDropdown>
 
           <select
+            v-if="filterBarVisible.channel"
             v-model="filters.source_channel"
             class="h-9 max-w-[min(100%,10rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
             :class="
@@ -396,6 +432,7 @@
           </select>
 
           <select
+            v-if="filterBarVisible.paper"
             v-model="filters.paper_status"
             class="h-9 max-w-[min(100%,11rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
             :class="
@@ -412,6 +449,7 @@
           </select>
 
           <select
+            v-if="filterBarVisible.priority"
             v-model="filters.priority"
             class="h-9 max-w-[min(100%,11rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
             :class="
@@ -423,6 +461,87 @@
             @change="onFilterChange"
           >
             <option v-for="opt in priorityFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+
+          <select
+            v-if="filterBarVisible.request_status"
+            v-model="filters.request_status"
+            class="h-9 max-w-[min(100%,12rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+            :class="
+              filters.request_status
+                ? 'text-slate-900 dark:text-slate-100'
+                : 'text-slate-600 dark:text-slate-400'
+            "
+            :aria-label="t('requests_page.filter_request_status')"
+            @change="onRequestStatusFilterChange"
+          >
+            <option v-for="opt in requestStatusFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+
+          <select
+            v-if="filterBarVisible.trip_status"
+            v-model="filters.trip_status_filter"
+            class="h-9 max-w-[min(100%,12rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+            :class="
+              filters.trip_status_filter
+                ? 'text-slate-900 dark:text-slate-100'
+                : 'text-slate-600 dark:text-slate-400'
+            "
+            :aria-label="t('requests_page.filter_trip_status')"
+            @change="onTripStatusFilterChange"
+          >
+            <option v-for="opt in tripStatusFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+
+          <button
+            v-if="filterBarVisible.sla_risk"
+            type="button"
+            role="switch"
+            :aria-checked="filters.sla_risk_only"
+            class="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1.5 text-xs font-semibold shadow-sm transition sm:text-sm"
+            :class="
+              filters.sla_risk_only
+                ? 'border-amber-300 bg-amber-50 text-amber-950 ring-1 ring-amber-400/25 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-100'
+                : 'border-slate-200/90 bg-white/80 text-slate-600 hover:border-slate-300 hover:bg-white dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:bg-slate-800'
+            "
+            :title="t('requests_page.sla_toggle')"
+            @click="toggleSla"
+          >
+            {{ t('requests_page.sla_toggle') }}
+          </button>
+
+          <select
+            v-if="filterBarVisible.sort"
+            :value="filters.sort"
+            class="h-9 max-w-[min(100%,11rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+            :class="
+              filters.sort && filters.sort !== 'created_desc'
+                ? 'text-slate-900 dark:text-slate-100'
+                : 'text-slate-600 dark:text-slate-400'
+            "
+            :aria-label="t('requests_page.sort_label')"
+            @change="onSortChange($event.target.value)"
+          >
+            <option v-for="opt in sortSelectOptionsWithLabel" :key="opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+
+          <select
+            v-if="filterBarVisible.per_page"
+            v-model.number="filters.per_page"
+            class="h-9 max-w-[min(100%,9rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+            :class="filters.per_page !== 10 ? 'text-slate-900 dark:text-slate-100' : 'text-slate-600 dark:text-slate-400'"
+            :aria-label="t('requests_page.filter_per_page')"
+            @change="onFilterChange"
+          >
+            <option v-for="opt in perPageFilterOptions" :key="opt.value" :value="opt.value">
               {{ opt.label }}
             </option>
           </select>
@@ -1038,6 +1157,7 @@ import {
 } from '../../api/requests'
 import ExtracurricularRequestsDataTable from '../../components/requests/ExtracurricularRequestsDataTable.vue'
 import { showAppError, showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
+import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 import { useAuthStore } from '../../store'
 import {
   labelPaperStatus,
@@ -1091,6 +1211,100 @@ const bulkConfirmOpen = ref(false)
 /** @type {import('vue').Ref<'delete' | 'restore' | 'force_delete' | null>} */
 const bulkConfirmKind = ref(null)
 const columnPickerRef = ref(null)
+const requestsFilterBarRef = ref(null)
+useDetailsAutoCloseWithin(requestsFilterBarRef)
+
+const REQUEST_FILTER_BAR_VIS_KEY = 'va.requests.filter_bar_vis_v1'
+const REQUEST_FILTER_BAR_VIS_IDS = [
+  'trip_type',
+  'depart',
+  'channel',
+  'paper',
+  'priority',
+  'request_status',
+  'trip_status',
+  'sla_risk',
+  'sort',
+  'per_page',
+  'recurring',
+  'extracurricular',
+]
+const REQUEST_FILTER_BAR_VIS_DEFAULTS = {
+  trip_type: true,
+  depart: true,
+  channel: true,
+  paper: true,
+  priority: true,
+  request_status: false,
+  trip_status: false,
+  sla_risk: false,
+  sort: false,
+  per_page: false,
+  recurring: true,
+  extracurricular: true,
+}
+
+const filterBarVisible = reactive({ ...REQUEST_FILTER_BAR_VIS_DEFAULTS })
+
+function loadFilterBarVisibility() {
+  try {
+    const raw = localStorage.getItem(REQUEST_FILTER_BAR_VIS_KEY)
+    if (!raw) return
+    const o = JSON.parse(raw)
+    for (const id of REQUEST_FILTER_BAR_VIS_IDS) {
+      if (typeof o[id] === 'boolean') filterBarVisible[id] = o[id]
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+watch(
+  () => REQUEST_FILTER_BAR_VIS_IDS.map((id) => filterBarVisible[id]),
+  () => {
+    try {
+      const payload = Object.fromEntries(REQUEST_FILTER_BAR_VIS_IDS.map((id) => [id, filterBarVisible[id]]))
+      localStorage.setItem(REQUEST_FILTER_BAR_VIS_KEY, JSON.stringify(payload))
+    } catch {
+      /* ignore */
+    }
+  },
+)
+
+const filterBarVisibilityOptions = computed(() => [
+  { id: 'trip_type', labelKey: 'requests_page.filter_vis_trip_type' },
+  { id: 'depart', labelKey: 'requests_page.filter_vis_depart' },
+  { id: 'channel', labelKey: 'requests_page.filter_vis_channel' },
+  { id: 'paper', labelKey: 'requests_page.filter_vis_paper' },
+  { id: 'priority', labelKey: 'requests_page.filter_vis_priority' },
+  { id: 'request_status', labelKey: 'requests_page.filter_vis_request_status' },
+  { id: 'trip_status', labelKey: 'requests_page.filter_vis_trip_status' },
+  { id: 'sla_risk', labelKey: 'requests_page.filter_vis_sla_risk' },
+  { id: 'sort', labelKey: 'requests_page.filter_vis_sort' },
+  { id: 'per_page', labelKey: 'requests_page.filter_vis_per_page' },
+  { id: 'recurring', labelKey: 'requests_page.filter_vis_recurring' },
+  { id: 'extracurricular', labelKey: 'requests_page.filter_vis_extracurricular' },
+])
+
+const REQUEST_TRIP_STATUS_FILTER_VALUES = [
+  'pending',
+  'approved',
+  'assigned',
+  'driver_confirmed',
+  'in_progress',
+  'completed',
+  'cancelled',
+  'incident',
+]
+
+const REQUEST_STATUS_FILTER_VALUES = [
+  'draft',
+  'pending',
+  'price_filled',
+  'approved',
+  'rejected',
+  'cancelled',
+]
 
 const REQUEST_COL_STORAGE_KEY = 'va-requests-cols-v1'
 const REQUEST_COL_DEFAULTS = {
@@ -1240,6 +1454,8 @@ const filters = reactive({
   from: '',
   to: '',
   priority: '',
+  request_status: '',
+  trip_status_filter: '',
   sla_risk_only: false,
   recurring_only: false,
   extracurricular_only: false,
@@ -1258,6 +1474,8 @@ const activeFilterCount = computed(() => {
   if (filters.source_channel) n++
   if (filters.paper_status) n++
   if (filters.priority === 'urgent') n++
+  if (filters.request_status) n++
+  if (filters.trip_status_filter) n++
   if (filters.sla_risk_only) n++
   if (filters.recurring_only) n++
   if (filters.extracurricular_only) n++
@@ -1277,6 +1495,21 @@ const sortSelectOptions = computed(() =>
     label: sortLabel(value),
   })),
 )
+
+const sortSelectOptionsWithLabel = computed(() => [
+  { value: 'created_desc', label: t('requests_page.sort_label') },
+  ...REQUEST_SORT_VALUES.filter((v) => v !== 'created_desc').map((value) => ({
+    value,
+    label: sortLabel(value),
+  })),
+])
+
+const perPageFilterOptions = computed(() => [
+  { value: 10, label: t('requests_page.filter_per_page') },
+  { value: 20, label: '20' },
+  { value: 50, label: '50' },
+  { value: 100, label: '100' },
+])
 
 function sortLabel(sortVal) {
   const k = {
@@ -1368,6 +1601,22 @@ const paperFilterOptions = computed(() => [
 const priorityFilterOptions = computed(() => [
   { value: '', label: t('requests_page.filter_priority') },
   { value: 'urgent', label: t('requests_page.filter_priority_urgent') },
+])
+
+const requestStatusFilterOptions = computed(() => [
+  { value: '', label: t('requests_page.filter_request_status') },
+  ...REQUEST_STATUS_FILTER_VALUES.map((value) => ({
+    value,
+    label: labelRequestStatus(value),
+  })),
+])
+
+const tripStatusFilterOptions = computed(() => [
+  { value: '', label: t('requests_page.filter_trip_status') },
+  ...REQUEST_TRIP_STATUS_FILTER_VALUES.map((value) => ({
+    value,
+    label: labelTripStatus(value),
+  })),
 ])
 
 const tabDefs = computed(() => [
@@ -1547,6 +1796,9 @@ function buildListParams() {
     params.is_urgent = true
   }
 
+  delete params.request_status
+  delete params.trip_status_filter
+
   if (activeTab.value === 'trash') {
     params.only_trashed = 1
     params.status = undefined
@@ -1557,12 +1809,15 @@ function buildListParams() {
   } else if (activeTab.value === 'trip_completed') {
     params.trip_status = 'completed'
     params.status = undefined
+  } else if (filters.request_status) {
+    params.status = filters.request_status
+    params.trip_status = filters.trip_status_filter || undefined
   } else if (activeTab.value !== 'all') {
     params.status = activeTab.value
     params.trip_status = undefined
   } else {
     params.status = undefined
-    params.trip_status = undefined
+    params.trip_status = filters.trip_status_filter || undefined
   }
 
   Object.keys(params).forEach((k) => {
@@ -1592,6 +1847,20 @@ function onFilterChange() {
   const hadPage = !!route.query.page
   syncRoutePageAfterReset()
   if (!hadPage) reload()
+}
+
+function onRequestStatusFilterChange() {
+  if (filters.request_status) {
+    activeTab.value = 'all'
+  }
+  onFilterChange()
+}
+
+function onTripStatusFilterChange() {
+  if (filters.trip_status_filter) {
+    activeTab.value = 'all'
+  }
+  onFilterChange()
 }
 
 function closeParentDetails(ev) {
@@ -1724,6 +1993,8 @@ function goPage(p) {
 
 function setTab(id) {
   activeTab.value = id
+  filters.request_status = ''
+  filters.trip_status_filter = ''
   filters.page = 1
   const q = { ...route.query }
   delete q.page
@@ -1800,6 +2071,8 @@ function resetFilters() {
   filters.from = ''
   filters.to = ''
   filters.priority = ''
+  filters.request_status = ''
+  filters.trip_status_filter = ''
   filters.sla_risk_only = false
   filters.recurring_only = false
   filters.extracurricular_only = false
@@ -1867,6 +2140,7 @@ watch(
 )
 
 onMounted(() => {
+  loadFilterBarVisibility()
   applyRouteQuery()
   reload()
 })
