@@ -3,16 +3,9 @@
     <!-- Header -->
     <div class="flex flex-col gap-4 border-b border-slate-200/80 pb-6 lg:flex-row lg:items-start lg:justify-between">
       <div>
-        <div class="flex flex-wrap items-center gap-2">
-          <h1 class="text-xl font-semibold tracking-tight text-slate-900">
-            {{ t('requests_page.title') }}
-          </h1>
-          <span
-            class="inline-flex items-center rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-800 ring-1 ring-inset ring-teal-600/20"
-          >
-            {{ t('requests_page.workspace_badge') }}
-          </span>
-        </div>
+        <h1 class="text-xl font-semibold tracking-tight text-slate-900">
+          {{ t('requests_page.title') }}
+        </h1>
       </div>
       <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div class="relative min-w-[220px] flex-1 sm:max-w-xs">
@@ -39,12 +32,8 @@
       </div>
     </div>
 
-    <RequestOpsAlertsBar v-if="stats.ops" :ops="stats.ops" class="mb-1" />
-
-    <!-- KPI: 4 thẻ gọn + thẻ xu hướng rộng -->
-    <div
-      class="grid grid-cols-2 gap-2 md:grid-cols-4 lg:grid-cols-[minmax(0,9rem)_minmax(0,9rem)_minmax(0,9rem)_minmax(0,9rem)_minmax(14rem,1fr)]"
-    >
+    <!-- KPI: 4 thẻ gọn -->
+    <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
       <div class="rounded-lg border border-slate-200/80 bg-white p-2.5 shadow-sm sm:p-3">
         <div class="flex items-start justify-between gap-1.5">
           <div class="min-w-0">
@@ -131,63 +120,6 @@
           </div>
         </div>
       </div>
-
-      <div
-        class="relative col-span-2 overflow-hidden rounded-2xl border border-teal-200/70 bg-gradient-to-br from-white via-teal-50/40 to-emerald-50/30 p-0 shadow-lg shadow-teal-500/15 ring-1 ring-teal-100/60 transition hover:shadow-xl hover:shadow-teal-500/20 md:col-span-4 lg:col-span-1 lg:min-w-0 dark:border-teal-900/50 dark:from-slate-900 dark:via-teal-950/30 dark:to-emerald-950/20 dark:shadow-black/30 dark:ring-teal-900/40"
-      >
-        <div
-          class="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-teal-400 via-emerald-400 to-teal-500 opacity-95"
-          aria-hidden="true"
-        />
-        <div class="relative flex items-start justify-between gap-3 p-3.5 sm:p-4">
-          <div class="min-w-0">
-            <p class="text-[11px] font-bold uppercase tracking-wide text-teal-900/85 dark:text-teal-200/90">
-              {{ t('requests_page.kpi_volume') }}
-            </p>
-          </div>
-          <div
-            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-100 to-emerald-100 text-teal-700 shadow-md shadow-teal-600/10 ring-1 ring-white/80 dark:from-teal-950/80 dark:to-emerald-950/60 dark:text-teal-200 dark:ring-teal-800/50"
-          >
-            <ArrowTrendingUpIcon class="h-5 w-5" aria-hidden="true" />
-          </div>
-        </div>
-        <div class="px-3.5 pb-3.5 sm:px-4 sm:pb-4">
-          <div
-            class="rounded-xl border border-teal-100/80 bg-white/85 p-2 shadow-inner shadow-slate-900/5 ring-1 ring-slate-100/80 dark:border-teal-900/40 dark:bg-slate-950/50 dark:ring-slate-800/80"
-          >
-            <div class="h-20 w-full sm:h-24">
-              <svg
-                class="h-full w-full text-teal-600 dark:text-teal-400"
-                viewBox="0 0 200 48"
-                preserveAspectRatio="none"
-                aria-hidden="true"
-              >
-                <defs>
-                  <linearGradient id="requests-volume-spark-fill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#0d9488" stop-opacity="0.28" />
-                    <stop offset="55%" stop-color="#14b8a6" stop-opacity="0.08" />
-                    <stop offset="100%" stop-color="#14b8a6" stop-opacity="0" />
-                  </linearGradient>
-                  <linearGradient id="requests-volume-spark-line" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stop-color="#0f766e" />
-                    <stop offset="100%" stop-color="#14b8a6" />
-                  </linearGradient>
-                </defs>
-                <polygon :points="sparklineAreaPoints" fill="url(#requests-volume-spark-fill)" />
-                <polyline
-                  :points="sparklinePoints"
-                  fill="none"
-                  stroke="url(#requests-volume-spark-line)"
-                  stroke-width="2.25"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="drop-shadow-sm"
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- Filters: horizontal bar -->
@@ -263,8 +195,10 @@
 
         <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
           <AppFilterDropdown
-            :label="t('requests_page.filter_trip_type')"
-            :summary-text="filters.trip_type ? labelTripType(filters.trip_type) : t('requests_page.all')"
+            :panel-title="t('requests_page.filter_trip_type')"
+            :summary-text="tripTypeChipSummary"
+            :active="!!filters.trip_type"
+            :aria-label="t('requests_page.filter_trip_type')"
             summary-text-class="max-w-[10rem]"
             panel-class="min-w-[220px] py-1"
           >
@@ -287,8 +221,10 @@
           </AppFilterDropdown>
 
           <AppFilterDropdown
-            :label="t('requests_page.filter_depart_range')"
-            :summary-text="filterDepartSummary"
+            :panel-title="t('requests_page.filter_depart_range')"
+            :summary-text="departRangeChipSummary"
+            :active="!!(filters.from || filters.to)"
+            :aria-label="t('requests_page.filter_depart_range')"
             full-width-summary
             panel-class="w-[min(100vw-1.5rem,320px)] p-3 sm:w-max"
           >
@@ -328,8 +264,10 @@
           </AppFilterDropdown>
 
           <AppFilterDropdown
-            :label="t('requests_page.filter_channel')"
-            :summary-text="filters.source_channel ? labelSourceChannel(filters.source_channel) : t('requests_page.all')"
+            :panel-title="t('requests_page.filter_channel')"
+            :summary-text="channelChipSummary"
+            :active="!!filters.source_channel"
+            :aria-label="t('requests_page.filter_channel')"
             summary-text-class="max-w-[8rem]"
             panel-class="min-w-[200px] py-1"
           >
@@ -352,8 +290,10 @@
           </AppFilterDropdown>
 
           <AppFilterDropdown
-            :label="t('requests_page.filter_paper')"
-            :summary-text="filters.paper_status ? labelPaperStatus(filters.paper_status) : t('requests_page.all')"
+            :panel-title="t('requests_page.filter_paper')"
+            :summary-text="paperChipSummary"
+            :active="!!filters.paper_status"
+            :aria-label="t('requests_page.filter_paper')"
             summary-text-class="max-w-[9rem]"
             panel-class="min-w-[220px] py-1"
           >
@@ -376,12 +316,10 @@
           </AppFilterDropdown>
 
           <AppFilterDropdown
-            :label="t('requests_page.filter_priority')"
-            :summary-text="
-              filters.priority === 'urgent'
-                ? t('requests_page.filter_priority_urgent')
-                : t('requests_page.filter_priority_all')
-            "
+            :panel-title="t('requests_page.filter_priority')"
+            :summary-text="priorityChipSummary"
+            :active="filters.priority === 'urgent'"
+            :aria-label="t('requests_page.filter_priority')"
             summary-text-class="max-w-[9rem]"
             panel-class="min-w-[200px] py-1"
           >
@@ -587,7 +525,7 @@
     </div>
 
     <!-- Table -->
-    <div class="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+    <div class="rounded-xl border border-slate-200/80 bg-white shadow-sm">
       <div
         class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 bg-slate-50/50 px-3 py-2"
       >
@@ -764,7 +702,7 @@
               <th v-if="requestColOn('notes')" class="min-w-[8rem] px-3 py-3 font-semibold text-slate-700">
                 {{ t('requests_page.col_notes') }}
               </th>
-              <th class="w-[4.5rem] min-w-[4.5rem] px-2 py-3 text-right font-semibold text-slate-700">
+              <th class="min-w-[7.5rem] px-2 py-3 text-right font-semibold text-slate-700">
                 {{ t('requests_page.col_actions') }}
               </th>
             </tr>
@@ -873,7 +811,15 @@
               <td v-if="requestColOn('notes')" class="max-w-xs px-3 py-3 align-top text-xs text-slate-600">
                 <p class="line-clamp-2">{{ requestNotesListCell(r) }}</p>
               </td>
-              <td class="relative px-2 py-3 align-top" :class="isTrashTab ? 'text-slate-800' : ''">
+              <td class="relative overflow-visible px-2 py-3 align-top text-right" :class="isTrashTab ? 'text-slate-800' : ''">
+                <div class="inline-flex flex-wrap items-center justify-end gap-1">
+                  <RouterLink
+                    v-if="!isTrashTab"
+                    :to="{ name: 'requestDetail', params: { id: String(r.id) } }"
+                    class="inline-flex items-center gap-1 rounded-lg border border-teal-200/90 bg-teal-50 px-2 py-1 text-xs font-semibold text-teal-900 shadow-sm transition hover:bg-teal-100"
+                  >
+                    {{ t('requests_page.view') }}
+                  </RouterLink>
                 <details class="group/action-menu relative inline-block text-right">
                   <summary
                     class="inline-flex cursor-pointer list-none items-center justify-center rounded-lg border border-slate-200/90 bg-white p-1.5 text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 [&::-webkit-details-marker]:hidden"
@@ -885,6 +831,14 @@
                     class="absolute right-0 top-[calc(100%+6px)] z-[60] min-w-[12.5rem] rounded-xl border border-slate-200/90 bg-white py-1 text-left text-sm shadow-lg ring-1 ring-slate-900/5"
                     @click.stop
                   >
+                    <RouterLink
+                      v-if="!isTrashTab"
+                      :to="{ name: 'requestDetail', params: { id: String(r.id) } }"
+                      class="flex w-full items-center gap-2 px-3 py-2 text-left text-slate-700 transition hover:bg-slate-50"
+                      @click="closeRowActionMenu"
+                    >
+                      {{ t('requests_page.view') }}
+                    </RouterLink>
                     <template v-if="isTrashTab && canBulkTrash">
                       <button
                         type="button"
@@ -915,6 +869,7 @@
                     </button>
                   </div>
                 </details>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -1103,7 +1058,6 @@ import { useI18n } from 'vue-i18n'
 import {
   ArrowDownTrayIcon,
   ArrowPathIcon,
-  ArrowTrendingUpIcon,
   TrashIcon,
   CheckCircleIcon,
   ChevronDownIcon,
@@ -1136,7 +1090,6 @@ import {
   listRequests,
 } from '../../api/requests'
 import ExtracurricularRequestsDataTable from '../../components/requests/ExtracurricularRequestsDataTable.vue'
-import RequestOpsAlertsBar from '../../components/requests/RequestOpsAlertsBar.vue'
 import { showAppError, showAppErrorFromApi, showAppInfo, showAppSuccess } from '../../composables/appMessage'
 import { useAuthStore } from '../../store'
 import {
@@ -1498,6 +1451,55 @@ const filterDepartSummary = computed(() => {
   return `${filters.from || '…'} → ${filters.to || '…'}`
 })
 
+/** Chip: nhãn bộ lọc khi mặc định; giá trị đã chọn khi đang lọc (giống portal). */
+function filterChipSummary(fieldLabel, valueLabel, isActive) {
+  return isActive ? valueLabel : fieldLabel
+}
+
+function optionLabelForValue(options, value) {
+  return options.find((o) => o.value === value)?.label ?? options[0]?.label ?? ''
+}
+
+const tripTypeChipSummary = computed(() =>
+  filterChipSummary(
+    optionLabelForValue(tripTypeFilterOptions.value, ''),
+    optionLabelForValue(tripTypeFilterOptions.value, filters.trip_type),
+    !!filters.trip_type,
+  ),
+)
+
+const departRangeChipSummary = computed(() =>
+  filterChipSummary(
+    t('requests_page.filter_depart_range'),
+    filterDepartSummary.value,
+    !!(filters.from || filters.to),
+  ),
+)
+
+const channelChipSummary = computed(() =>
+  filterChipSummary(
+    optionLabelForValue(channelFilterOptions.value, ''),
+    optionLabelForValue(channelFilterOptions.value, filters.source_channel),
+    !!filters.source_channel,
+  ),
+)
+
+const paperChipSummary = computed(() =>
+  filterChipSummary(
+    optionLabelForValue(paperFilterOptions.value, ''),
+    optionLabelForValue(paperFilterOptions.value, filters.paper_status),
+    !!filters.paper_status,
+  ),
+)
+
+const priorityChipSummary = computed(() =>
+  filterChipSummary(
+    optionLabelForValue(priorityFilterOptions.value, ''),
+    optionLabelForValue(priorityFilterOptions.value, filters.priority),
+    filters.priority === 'urgent',
+  ),
+)
+
 const tripTypeFilterOptions = computed(() => [
   { value: '', label: t('requests_page.all') },
   { value: 'door_to_door', label: labelTripType('door_to_door') },
@@ -1577,40 +1579,6 @@ const approvedShareOfTotalPct = computed(() => {
   const a = approvalApprovedCount.value
   if (t <= 0) return 0
   return Math.min(100, Math.round((a / t) * 100))
-})
-
-const SPARK_W = 200
-const SPARK_H = 40
-const SPARK_VB_H = 48
-
-function buildSparklineCoords(pts) {
-  if (!pts?.length) {
-    return [
-      { x: 0, y: SPARK_H },
-      { x: SPARK_W, y: SPARK_H },
-    ]
-  }
-  const max = Math.max(...pts, 1)
-  return pts.map((v, i) => {
-    const x = (i / Math.max(pts.length - 1, 1)) * SPARK_W
-    const y = SPARK_H - (v / max) * (SPARK_H - 4) - 2
-    return { x, y }
-  })
-}
-
-const sparklinePoints = computed(() => {
-  const coords = buildSparklineCoords(stats.value.volume_trend)
-  return coords.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
-})
-
-/** Vùng tô dưới đường (polygon khép xuống đáy viewBox) */
-const sparklineAreaPoints = computed(() => {
-  const coords = buildSparklineCoords(stats.value.volume_trend)
-  if (coords.length < 2) {
-    return `0,${SPARK_VB_H} ${SPARK_W},${SPARK_VB_H}`
-  }
-  const top = coords.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
-  return `0,${SPARK_VB_H} ${top} ${SPARK_W},${SPARK_VB_H}`
 })
 
 const pageFrom = computed(() => {
@@ -1850,7 +1818,8 @@ async function reload() {
 }
 
 function closeRowActionMenu(ev) {
-  const d = ev?.target?.closest?.('details')
+  const el = ev?.currentTarget ?? ev?.target
+  const d = el?.closest?.('details')
   if (d) d.open = false
 }
 
