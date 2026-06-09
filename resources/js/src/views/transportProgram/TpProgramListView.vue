@@ -75,9 +75,19 @@
             </button>
           </AppFilterFunnelMenu>
           <div class="hidden h-6 w-px bg-slate-200 sm:block" aria-hidden="true" />
-          <button type="button" class="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 hover:bg-slate-100" aria-label="Xóa lọc" @click="clearFilters">
-            <FunnelIcon class="h-5 w-5" />
-            <XMarkIcon class="h-3 w-3 text-rose-500" />
+          <button
+            type="button"
+            class="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
+            aria-label="Xóa lọc"
+            @click="clearFilters"
+          >
+            <span class="relative inline-flex">
+              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
+              <XMarkIcon
+                class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/40"
+                aria-hidden="true"
+              />
+            </span>
           </button>
           <div class="ml-auto flex items-center gap-1 rounded-xl border border-slate-200 p-1">
             <button type="button" class="grid h-9 w-9 place-items-center rounded-lg transition" :class="view === 'grid' ? 'bg-va-800 text-white' : 'text-slate-400 hover:text-slate-600'" aria-label="Xem dạng lưới" @click="view = 'grid'">
@@ -286,6 +296,7 @@ import { computed, onActivated, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   PlusIcon,
+  FunnelIcon,
   MagnifyingGlassIcon,
   Squares2X2Icon,
   ListBulletIcon,

@@ -51,6 +51,8 @@
             <li v-if="filters.transport_status" class="flex justify-between gap-2"><span class="text-slate-500">Trạng thái</span><span class="font-medium">{{ transportStatusLabel(filters.transport_status) }}</span></li>
             <li v-if="filters.program_id" class="flex justify-between gap-2"><span class="text-slate-500">Chương trình</span><span class="truncate font-medium">{{ programFilterLabel }}</span></li>
             <li v-if="filters.grade" class="flex justify-between gap-2"><span class="text-slate-500">Khối</span><span class="font-medium">{{ filters.grade }}</span></li>
+            <li v-if="filters.student_status" class="flex justify-between gap-2"><span class="text-slate-500">Hồ sơ HS</span><span class="font-medium">{{ studentStatusLabel(filters.student_status) }}</span></li>
+            <li v-if="filters.per_page !== DEFAULT_PER_PAGE" class="flex justify-between gap-2"><span class="text-slate-500">Số dòng/trang</span><span class="font-medium">{{ filters.per_page }}</span></li>
             <li v-if="activeFilterCount === 0" class="text-slate-400">Chưa có điều kiện lọc</li>
           </ul>
           <div class="mt-3 border-t border-slate-100 pt-3">
@@ -66,17 +68,26 @@
         </AppFilterFunnelMenu>
         <div class="hidden h-6 w-px bg-slate-200 sm:block" />
         <button type="button" class="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 hover:bg-slate-100" @click="clearFilters">
-          <FunnelIcon class="h-5 w-5" /><XMarkIcon class="h-3 w-3 text-rose-500" />
+          <span class="relative inline-flex">
+            <FunnelIcon class="h-5 w-5" aria-hidden="true" />
+            <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100" aria-hidden="true" />
+          </span>
         </button>
+        <div class="relative min-w-0 flex-1 basis-[10rem] sm:min-w-[12rem] sm:max-w-md">
+          <MagnifyingGlassIcon class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+          <input
+            v-model="filters.search"
+            type="search"
+            placeholder="Tìm theo tên, mã HS…"
+            aria-label="Tìm học sinh"
+            class="h-9 w-full rounded-md border-0 bg-white/90 py-0 pl-9 pr-3 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
+          />
+        </div>
         <span class="ml-auto text-xs text-slate-400">
           Hiển thị <span class="font-semibold text-slate-600">{{ items.length }}</span> / {{ stats.total }} học sinh
         </span>
       </div>
       <div v-if="hasVisibleBarFilters" class="mt-2 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-2">
-        <div v-if="filterBarVisible.search" class="relative min-w-[14rem] flex-1">
-          <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input v-model="filters.search" type="search" placeholder="Tìm theo tên, mã HS…" class="h-9 w-full rounded-lg border border-slate-200 pl-9 pr-3 text-sm focus:ring-2 focus:ring-teal-500/20" />
-        </div>
         <select v-if="filterBarVisible.class_name" v-model="filters.class_name" class="filter-select" :class="filters.class_name ? 'text-slate-900' : 'text-slate-500'">
           <option value="">Lớp</option>
           <option v-for="c in filterOptions.classes" :key="c" :value="c">{{ c }}</option>
@@ -95,6 +106,20 @@
         <select v-if="filterBarVisible.grade" v-model="filters.grade" class="filter-select" :class="filters.grade ? 'text-slate-900' : 'text-slate-500'">
           <option value="">Khối</option>
           <option v-for="g in filterOptions.grades" :key="g" :value="g">{{ g }}</option>
+        </select>
+        <select v-if="filterBarVisible.student_status" v-model="filters.student_status" class="filter-select" :class="filters.student_status ? 'text-slate-900' : 'text-slate-500'">
+          <option value="">Hồ sơ HS</option>
+          <option value="active">Đang theo học</option>
+          <option value="inactive">Ngưng học</option>
+          <option value="transferred">Chuyển trường</option>
+          <option value="graduated">Đã tốt nghiệp</option>
+        </select>
+        <select v-if="filterBarVisible.per_page" v-model.number="filters.per_page" class="filter-select" :class="filters.per_page !== DEFAULT_PER_PAGE ? 'text-slate-900' : 'text-slate-500'">
+          <option :value="DEFAULT_PER_PAGE">Số dòng/trang</option>
+          <option :value="15">15</option>
+          <option :value="25">25</option>
+          <option :value="50">50</option>
+          <option :value="100">100</option>
         </select>
       </div>
     </AppFilterBar>
@@ -225,10 +250,20 @@ const editing = ref(null)
 const stats = reactive({ total: 0, transporting: 0, pending: 0, unregistered: 0 })
 const filterOptions = reactive({ grades: [], classes: [], programs: [] })
 const meta = reactive({ current_page: 1, last_page: 1, per_page: 15, total: 0 })
-const filters = reactive({ search: '', class_name: '', transport_status: '', program_id: '', grade: '', page: 1 })
+const DEFAULT_PER_PAGE = 15
+const filters = reactive({
+  search: '',
+  class_name: '',
+  transport_status: '',
+  program_id: '',
+  grade: '',
+  student_status: '',
+  per_page: DEFAULT_PER_PAGE,
+  page: 1,
+})
 let timer = null
 
-const TP_STU_FILTER_VIS_IDS = ['search', 'class_name', 'transport_status', 'program_id', 'grade']
+const TP_STU_FILTER_VIS_IDS = ['class_name', 'transport_status', 'program_id', 'grade', 'student_status', 'per_page']
 const TP_STU_FILTER_VIS_DEFAULTS = Object.fromEntries(TP_STU_FILTER_VIS_IDS.map((id) => [id, false]))
 const {
   visible: filterBarVisible,
@@ -241,11 +276,12 @@ const tpStudentFilterBarRef = ref(null)
 useDetailsAutoCloseWithin(tpStudentFilterBarRef)
 
 const filterBarVisibilityOptions = [
-  { id: 'search', label: 'Tìm kiếm' },
   { id: 'class_name', label: 'Lớp' },
   { id: 'transport_status', label: 'Trạng thái vận chuyển' },
   { id: 'program_id', label: 'Chương trình' },
   { id: 'grade', label: 'Khối' },
+  { id: 'student_status', label: 'Hồ sơ học sinh' },
+  { id: 'per_page', label: 'Số dòng/trang' },
 ]
 
 const activeFilterCount = computed(() => {
@@ -255,8 +291,20 @@ const activeFilterCount = computed(() => {
   if (filters.transport_status) n++
   if (filters.program_id) n++
   if (filters.grade) n++
+  if (filters.student_status) n++
+  if (filters.per_page !== DEFAULT_PER_PAGE) n++
   return n
 })
+
+function studentStatusLabel(s) {
+  const map = {
+    active: 'Đang theo học',
+    inactive: 'Ngưng học',
+    transferred: 'Chuyển trường',
+    graduated: 'Đã tốt nghiệp',
+  }
+  return map[s] ?? s
+}
 
 const programFilterLabel = computed(() => {
   const id = filters.program_id
@@ -289,6 +337,8 @@ async function load() {
       transport_status: filters.transport_status || undefined,
       program_id: filters.program_id || undefined,
       grade: filters.grade || undefined,
+      status: filters.student_status || undefined,
+      per_page: filters.per_page,
       page: filters.page,
     })
     items.value = res?.items ?? []
@@ -303,10 +353,13 @@ async function load() {
   }
 }
 
-watch(() => [filters.class_name, filters.transport_status, filters.program_id, filters.grade], () => {
-  filters.page = 1
-  load()
-})
+watch(
+  () => [filters.class_name, filters.transport_status, filters.program_id, filters.grade, filters.student_status, filters.per_page],
+  () => {
+    filters.page = 1
+    load()
+  },
+)
 watch(() => filters.search, () => {
   clearTimeout(timer)
   filters.page = 1
@@ -323,6 +376,8 @@ function clearFilters() {
   filters.transport_status = ''
   filters.program_id = ''
   filters.grade = ''
+  filters.student_status = ''
+  filters.per_page = DEFAULT_PER_PAGE
   filters.page = 1
   load()
 }

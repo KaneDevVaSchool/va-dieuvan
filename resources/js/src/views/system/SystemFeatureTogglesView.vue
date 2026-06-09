@@ -30,7 +30,7 @@ import { useFilterBarVisibility } from '../../composables/useFilterBarVisibility
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vue'
 
-const FT_FILTER_VIS_IDS = ['search', 'status']
+const FT_FILTER_VIS_IDS = ['status', 'module', 'maintenance', 'upgrade']
 const FT_FILTER_VIS_DEFAULTS = Object.fromEntries(FT_FILTER_VIS_IDS.map((id) => [id, false]))
 const {
   visible: filterBarVisible,
@@ -96,6 +96,9 @@ const expandedId = ref(null)  // id của row đang expand nav panel
 const searchRaw  = ref('')
 const searchQ    = ref('')
 const filterStatus = ref('all')
+const filterModule = ref('')
+const filterMaintenanceOnly = ref(false)
+const filterUpgradeOnly = ref(false)
 
 const addModalOpen = ref(false)
 const presetIdx    = ref('')
@@ -114,8 +117,27 @@ const STATUS_OPTS = [
 const bumpSearch = debounceTrailing(() => { searchQ.value = searchRaw.value }, 300)
 watch(searchRaw, () => bumpSearch())
 
+const moduleOptions = computed(() => {
+  const set = new Set()
+  for (const r of items.value) {
+    const m = (r.module ?? '').trim()
+    if (m) set.add(m)
+  }
+  return [...set].sort((a, b) => a.localeCompare(b, 'vi'))
+})
+
 const filteredItems = computed(() => {
   let list = items.value
+
+  if (filterModule.value) {
+    list = list.filter((r) => (r.module ?? '').trim() === filterModule.value)
+  }
+  if (filterMaintenanceOnly.value) {
+    list = list.filter((r) => r.maintenance_mode)
+  }
+  if (filterUpgradeOnly.value) {
+    list = list.filter((r) => r.upgrade_notice)
+  }
 
   switch (filterStatus.value) {
     case 'on':          list = list.filter((r) => r.is_enabled); break
@@ -140,6 +162,9 @@ const activeFilters = computed(() => {
   let n = 0
   if (searchRaw.value.trim()) n++
   if (filterStatus.value !== 'all') n++
+  if (filterModule.value) n++
+  if (filterMaintenanceOnly.value) n++
+  if (filterUpgradeOnly.value) n++
   return n
 })
 
@@ -260,6 +285,9 @@ function resetFilters() {
   searchRaw.value    = ''
   searchQ.value      = ''
   filterStatus.value = 'all'
+  filterModule.value = ''
+  filterMaintenanceOnly.value = false
+  filterUpgradeOnly.value = false
 }
 
 function toggleExpand(id) {
@@ -300,31 +328,68 @@ onActivated(() => {
           <ul class="mt-2 space-y-2 text-sm text-slate-700">
             <li v-if="searchRaw.trim()" class="flex justify-between gap-2"><span class="text-slate-500">Tìm kiếm</span><span class="truncate font-medium">{{ searchRaw }}</span></li>
             <li v-if="filterStatus !== 'all'" class="flex justify-between gap-2"><span class="text-slate-500">Trạng thái</span><span class="font-medium">{{ STATUS_OPTS.find(o => o.value === filterStatus)?.label }}</span></li>
+            <li v-if="filterModule" class="flex justify-between gap-2"><span class="text-slate-500">Module</span><span class="font-medium">{{ filterModule }}</span></li>
+            <li v-if="filterMaintenanceOnly" class="flex justify-between gap-2"><span class="text-slate-500">Bảo trì</span><span class="font-medium">Đang bảo trì</span></li>
+            <li v-if="filterUpgradeOnly" class="flex justify-between gap-2"><span class="text-slate-500">Nâng cấp</span><span class="font-medium">Có thông báo</span></li>
             <li v-if="activeFilters === 0" class="text-slate-400">Chưa có điều kiện lọc</li>
           </ul>
           <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
             <p class="text-[11px] font-semibold uppercase text-violet-700">Hiển thị bộ lọc trên thanh</p>
             <ul class="mt-2 space-y-2">
-              <li class="flex gap-2"><input id="ft-vis-search" v-model="filterBarVisible.search" type="checkbox" class="h-4 w-4 rounded" /><label for="ft-vis-search" class="text-sm">Tìm kiếm</label></li>
               <li class="flex gap-2"><input id="ft-vis-status" v-model="filterBarVisible.status" type="checkbox" class="h-4 w-4 rounded" /><label for="ft-vis-status" class="text-sm">Trạng thái</label></li>
+              <li class="flex gap-2"><input id="ft-vis-module" v-model="filterBarVisible.module" type="checkbox" class="h-4 w-4 rounded" /><label for="ft-vis-module" class="text-sm">Module</label></li>
+              <li class="flex gap-2"><input id="ft-vis-maintenance" v-model="filterBarVisible.maintenance" type="checkbox" class="h-4 w-4 rounded" /><label for="ft-vis-maintenance" class="text-sm">Chỉ đang bảo trì</label></li>
+              <li class="flex gap-2"><input id="ft-vis-upgrade" v-model="filterBarVisible.upgrade" type="checkbox" class="h-4 w-4 rounded" /><label for="ft-vis-upgrade" class="text-sm">Có thông báo nâng cấp</label></li>
             </ul>
           </div>
           <button type="button" class="mt-3 w-full rounded-lg border py-2 text-sm dark:border-slate-600" @click="resetFilters(); closeFilterMenu()">Xóa tất cả bộ lọc</button>
         </AppFilterFunnelMenu>
         <div class="hidden h-6 w-px bg-slate-200 sm:block dark:bg-slate-700" />
         <button type="button" class="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500" @click="resetFilters">
-          <FunnelIcon class="h-5 w-5" /><XMarkIcon class="h-3 w-3 text-rose-500" />
+          <span class="relative inline-flex">
+            <FunnelIcon class="h-5 w-5" aria-hidden="true" />
+            <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 text-rose-500" aria-hidden="true" />
+          </span>
         </button>
+        <div class="relative min-w-0 flex-1 basis-[10rem] sm:min-w-[12rem] sm:max-w-md">
+          <MagnifyingGlassIcon class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+          <input
+            v-model="searchRaw"
+            type="search"
+            placeholder="Tìm tính năng…"
+            aria-label="Tìm tính năng"
+            class="h-9 w-full rounded-md border-0 bg-white/90 py-0 pl-9 pr-3 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600 dark:placeholder:text-slate-500"
+          />
+        </div>
       </div>
       <div v-if="hasVisibleBarFilters" class="mt-2 flex flex-wrap items-center gap-2 border-t border-violet-100/80 pt-2 dark:border-violet-900/30">
-        <div v-if="filterBarVisible.search" class="relative min-w-0 w-full flex-1 sm:min-w-[12rem]">
-          <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input v-model="searchRaw" type="search" placeholder="Tìm tính năng…" class="h-9 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm dark:border-slate-600 dark:bg-slate-900" />
-        </div>
         <select v-if="filterBarVisible.status" v-model="filterStatus" class="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-slate-600 dark:bg-slate-900" :class="filterStatus === 'all' ? 'text-slate-500' : 'text-slate-900'">
           <option value="all">Trạng thái</option>
           <option v-for="opt in STATUS_OPTS.filter(o => o.value !== 'all')" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
         </select>
+        <select
+          v-if="filterBarVisible.module"
+          v-model="filterModule"
+          class="h-9 max-w-[14rem] rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-slate-600 dark:bg-slate-900"
+          :class="filterModule ? 'text-slate-900' : 'text-slate-500'"
+        >
+          <option value="">Module</option>
+          <option v-for="m in moduleOptions" :key="m" :value="m">{{ m }}</option>
+        </select>
+        <label
+          v-if="filterBarVisible.maintenance"
+          class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300"
+        >
+          <input v-model="filterMaintenanceOnly" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" />
+          Chỉ đang bảo trì
+        </label>
+        <label
+          v-if="filterBarVisible.upgrade"
+          class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300"
+        >
+          <input v-model="filterUpgradeOnly" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" />
+          Có thông báo nâng cấp
+        </label>
       </div>
     </AppFilterBar>
 

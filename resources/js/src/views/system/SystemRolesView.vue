@@ -29,8 +29,8 @@ import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vu
 
 const router = useRouter()
 
-const ROLE_FILTER_VIS_IDS = ['search']
-const ROLE_FILTER_VIS_DEFAULTS = { search: false }
+const ROLE_FILTER_VIS_IDS = ['users', 'template']
+const ROLE_FILTER_VIS_DEFAULTS = Object.fromEntries(ROLE_FILTER_VIS_IDS.map((id) => [id, false]))
 const {
   visible: filterBarVisible,
   resetVisibility: resetFilterBarVisibility,
@@ -38,7 +38,21 @@ const {
 } = useFilterBarVisibility(ROLE_FILTER_VIS_IDS, ROLE_FILTER_VIS_DEFAULTS)
 
 const filterMenuRef = ref(null)
-const activeRoleSearchFilter = computed(() => (debouncedQuery.value.trim() ? 1 : 0))
+const filterUsers = ref('all')
+const filterTemplate = ref('all')
+
+const roleFilterVisibilityOptions = [
+  { id: 'users', label: 'Nhân viên được gán' },
+  { id: 'template', label: 'Loại vai trò (mẫu)' },
+]
+
+const activeRoleSearchFilter = computed(() => {
+  let n = 0
+  if (debouncedQuery.value.trim()) n++
+  if (filterUsers.value !== 'all') n++
+  if (filterTemplate.value !== 'all') n++
+  return n
+})
 
 function onSystemRolesFilterBarEnter() {
   resetFilterBarVisibility()
@@ -51,6 +65,8 @@ function closeFilterMenu() {
 function clearRoleSearch() {
   query.value = ''
   debouncedQuery.value = ''
+  filterUsers.value = 'all'
+  filterTemplate.value = 'all'
 }
 
 // ─── State ───────────────────────────────────────────────────────────────────
@@ -110,9 +126,20 @@ function getRoleColorKey(role) {
 }
 
 const filteredRoles = computed(() => {
+  let list = roles.value
+  if (filterUsers.value === 'with_users') {
+    list = list.filter((r) => (r.users_count ?? 0) > 0)
+  } else if (filterUsers.value === 'empty') {
+    list = list.filter((r) => (r.users_count ?? 0) === 0)
+  }
+  if (filterTemplate.value === 'template') {
+    list = list.filter((r) => matchTemplate(r))
+  } else if (filterTemplate.value === 'custom') {
+    list = list.filter((r) => !matchTemplate(r))
+  }
   const q = debouncedQuery.value.trim().toLowerCase()
-  if (!q) return roles.value
-  return roles.value.filter((r) =>
+  if (!q) return list
+  return list.filter((r) =>
     (r.display_name ?? '').toLowerCase().includes(q) ||
     (r.description ?? '').toLowerCase().includes(q) ||
     (r.name ?? '').toLowerCase().includes(q),
@@ -237,25 +264,69 @@ onActivated(() => {
       <div class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
         <AppFilterFunnelMenu ref="filterMenuRef" :badge-count="activeRoleSearchFilter">
           <p class="text-xs font-semibold uppercase text-slate-500">Bộ lọc đang áp dụng</p>
-          <ul class="mt-2 text-sm text-slate-700">
+          <ul class="mt-2 space-y-2 text-sm text-slate-700">
             <li v-if="query.trim()" class="flex justify-between gap-2"><span class="text-slate-500">Tìm kiếm</span><span class="truncate font-medium">{{ query }}</span></li>
-            <li v-else class="text-slate-400">Chưa có điều kiện lọc</li>
+            <li v-if="filterUsers !== 'all'" class="flex justify-between gap-2">
+              <span class="text-slate-500">Nhân viên</span>
+              <span class="font-medium">{{ filterUsers === 'with_users' ? 'Có người dùng' : 'Chưa gán ai' }}</span>
+            </li>
+            <li v-if="filterTemplate !== 'all'" class="flex justify-between gap-2">
+              <span class="text-slate-500">Loại vai trò</span>
+              <span class="font-medium">{{ filterTemplate === 'template' ? 'Theo mẫu' : 'Tùy chỉnh' }}</span>
+            </li>
+            <li v-if="activeRoleSearchFilter === 0" class="text-slate-400">Chưa có điều kiện lọc</li>
           </ul>
-          <div class="mt-3 border-t border-slate-100 pt-3">
-            <label class="flex gap-2 text-sm"><input v-model="filterBarVisible.search" type="checkbox" class="h-4 w-4 rounded" /> Hiển thị ô tìm kiếm trên thanh</label>
+          <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
+            <p class="text-[11px] font-semibold uppercase text-violet-700 dark:text-violet-300">Hiển thị bộ lọc trên thanh</p>
+            <ul class="mt-2 space-y-2">
+              <li v-for="opt in roleFilterVisibilityOptions" :key="'role-vis-' + opt.id" class="flex gap-2">
+                <input :id="'role-filter-vis-' + opt.id" v-model="filterBarVisible[opt.id]" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" />
+                <label :for="'role-filter-vis-' + opt.id" class="text-sm">{{ opt.label }}</label>
+              </li>
+            </ul>
           </div>
           <button type="button" class="mt-3 w-full rounded-lg border py-2 text-sm" @click="clearRoleSearch(); closeFilterMenu()">Xóa bộ lọc</button>
         </AppFilterFunnelMenu>
         <div class="hidden h-6 w-px bg-slate-200 sm:block dark:bg-slate-700" />
         <button type="button" class="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500" @click="clearRoleSearch">
-          <FunnelIcon class="h-5 w-5" /><XMarkIcon class="h-3 w-3 text-rose-500" />
+          <span class="relative inline-flex">
+            <FunnelIcon class="h-5 w-5" aria-hidden="true" />
+            <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 text-rose-500" aria-hidden="true" />
+          </span>
         </button>
-      </div>
-      <div v-if="hasVisibleBarFilters" class="mt-2 border-t border-slate-100 pt-2 dark:border-slate-700">
-        <div class="relative">
-          <MagnifyingGlassIcon class="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input v-model="query" type="search" placeholder="Tìm theo tên vai trò hoặc mô tả…" class="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm dark:border-slate-700 dark:bg-slate-900" @input="bumpQ" />
+        <div class="relative min-w-0 flex-1 basis-[10rem] sm:min-w-[12rem] sm:max-w-md">
+          <MagnifyingGlassIcon class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+          <input
+            v-model="query"
+            type="search"
+            placeholder="Tìm theo tên vai trò hoặc mô tả…"
+            aria-label="Tìm vai trò"
+            class="h-9 w-full rounded-md border-0 bg-white/90 py-0 pl-9 pr-3 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600 dark:placeholder:text-slate-500"
+            @input="bumpQ"
+          />
         </div>
+      </div>
+      <div v-if="hasVisibleBarFilters" class="mt-2 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-2 dark:border-slate-700">
+        <select
+          v-if="filterBarVisible.users"
+          v-model="filterUsers"
+          class="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+          :class="filterUsers === 'all' ? 'text-slate-500' : 'text-slate-900 dark:text-slate-100'"
+        >
+          <option value="all">Nhân viên được gán</option>
+          <option value="with_users">Có người dùng</option>
+          <option value="empty">Chưa gán ai</option>
+        </select>
+        <select
+          v-if="filterBarVisible.template"
+          v-model="filterTemplate"
+          class="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+          :class="filterTemplate === 'all' ? 'text-slate-500' : 'text-slate-900 dark:text-slate-100'"
+        >
+          <option value="all">Loại vai trò</option>
+          <option value="template">Theo mẫu công việc</option>
+          <option value="custom">Tùy chỉnh</option>
+        </select>
       </div>
     </AppFilterBar>
 

@@ -52,8 +52,10 @@ const searchQ      = ref('')
 const filterRoleId = ref('')
 const filterModule = ref('all')
 const filterUnassigned = ref(false)
+const filterSystemOnly = ref(false)
+const filterAssignedOnly = ref(false)
 
-const PERM_FILTER_VIS_IDS = ['search', 'module', 'role', 'unassigned']
+const PERM_FILTER_VIS_IDS = ['module', 'role', 'unassigned', 'assigned', 'system']
 const PERM_FILTER_VIS_DEFAULTS = Object.fromEntries(PERM_FILTER_VIS_IDS.map((id) => [id, false]))
 const {
   visible: filterBarVisible,
@@ -64,10 +66,11 @@ const {
 const filterMenuRef = ref(null)
 
 const permFilterVisibilityOptions = [
-  { id: 'search', label: 'Tìm kiếm' },
   { id: 'module', label: 'Module' },
   { id: 'role', label: 'Vai trò' },
   { id: 'unassigned', label: 'Chưa gán vai trò' },
+  { id: 'assigned', label: 'Đã gán vai trò' },
+  { id: 'system', label: 'Quyền hệ thống (system.*)' },
 ]
 
 function onPermissionsFilterBarEnter() {
@@ -110,7 +113,7 @@ const roleColorMap = computed(() => {
 })
 
 const MODULE_OPTS = computed(() => [
-  { value: 'all', label: 'Tất cả module' },
+  { value: 'all', label: 'Module' },
   ...PERMISSION_MODULES.map((m) => ({ value: m.id, label: m.label })),
 ])
 
@@ -122,6 +125,12 @@ const filteredItems = computed(() => {
 
   if (filterUnassigned.value) {
     list = list.filter((p) => !p.role_ids?.length)
+  }
+  if (filterAssignedOnly.value) {
+    list = list.filter((p) => (p.role_ids?.length ?? 0) > 0)
+  }
+  if (filterSystemOnly.value) {
+    list = list.filter((p) => isSystemPerm(p.name))
   }
 
   if (filterRoleId.value) {
@@ -153,6 +162,8 @@ const activeFilters = computed(() => {
   if (filterRoleId.value) n++
   if (filterModule.value !== 'all') n++
   if (filterUnassigned.value) n++
+  if (filterAssignedOnly.value) n++
+  if (filterSystemOnly.value) n++
   return n
 })
 
@@ -309,6 +320,8 @@ function resetFilters() {
   filterRoleId.value   = ''
   filterModule.value   = 'all'
   filterUnassigned.value = false
+  filterAssignedOnly.value = false
+  filterSystemOnly.value = false
 }
 
 onMounted(() => {
@@ -357,6 +370,14 @@ onActivated(() => {
               <span class="text-slate-500">Gán vai trò</span>
               <span class="font-medium">Chưa gán</span>
             </li>
+            <li v-if="filterAssignedOnly" class="flex justify-between gap-2">
+              <span class="text-slate-500">Gán vai trò</span>
+              <span class="font-medium">Đã gán</span>
+            </li>
+            <li v-if="filterSystemOnly" class="flex justify-between gap-2">
+              <span class="text-slate-500">Loại quyền</span>
+              <span class="font-medium">system.*</span>
+            </li>
             <li v-if="activeFilters === 0" class="text-slate-400">Chưa có điều kiện lọc</li>
           </ul>
           <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
@@ -379,18 +400,18 @@ onActivated(() => {
             <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 text-rose-500" />
           </span>
         </button>
-      </div>
-      <div v-if="hasVisibleBarFilters" class="mt-2 flex flex-wrap items-center gap-2 border-t border-violet-100/80 pt-2 dark:border-violet-900/30">
-        <div v-if="filterBarVisible.search" class="relative min-w-0 w-full flex-1 sm:min-w-[12rem]">
-          <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+        <div class="relative min-w-0 flex-1 basis-[10rem] sm:min-w-[12rem] sm:max-w-md">
+          <MagnifyingGlassIcon class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
           <input
             v-model="searchRaw"
             type="search"
             placeholder="Tìm quyền…"
             aria-label="Tìm quyền"
-            class="h-9 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+            class="h-9 w-full rounded-md border-0 bg-white/90 py-0 pl-9 pr-3 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600 dark:placeholder:text-slate-500"
           />
         </div>
+      </div>
+      <div v-if="hasVisibleBarFilters" class="mt-2 flex flex-wrap items-center gap-2 border-t border-violet-100/80 pt-2 dark:border-violet-900/30">
         <select
           v-if="filterBarVisible.module"
           v-model="filterModule"
@@ -407,7 +428,7 @@ onActivated(() => {
           class="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900"
           :class="!filterRoleId ? 'text-slate-500' : 'text-slate-900 dark:text-slate-100'"
         >
-          <option value="">Tất cả vai trò</option>
+          <option value="">Vai trò</option>
           <option v-for="r in roles" :key="r.id" :value="String(r.id)">
             {{ r.display_name || r.name }}
           </option>
@@ -418,6 +439,20 @@ onActivated(() => {
         >
           <input v-model="filterUnassigned" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900" />
           Chưa gán vai trò
+        </label>
+        <label
+          v-if="filterBarVisible.assigned"
+          class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+        >
+          <input v-model="filterAssignedOnly" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900" />
+          Đã gán vai trò
+        </label>
+        <label
+          v-if="filterBarVisible.system"
+          class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+        >
+          <input v-model="filterSystemOnly" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900" />
+          Quyền system.*
         </label>
       </div>
     </AppFilterBar>

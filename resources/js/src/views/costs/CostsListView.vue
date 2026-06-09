@@ -130,6 +130,9 @@
                 <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
                   {{ t('trips_page.filter_show_controls_title') }}
                 </p>
+                <p class="mt-1 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+                  {{ t('trips_page.filter_show_controls_hint') }}
+                </p>
                 <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
                   <li v-for="fd in filterControlDefs" :key="'costs-vis-' + fd.id" class="flex items-start gap-2">
                     <input
@@ -224,57 +227,54 @@
           v-if="hasVisibleBarFilters"
           class="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-2 border-t border-violet-100/80 pt-2 dark:border-violet-900/30 sm:gap-x-3"
         >
-          <label v-if="filterControlVisible.status" class="inline-flex min-w-0 shrink-0 items-center gap-1.5">
-            <span class="whitespace-nowrap text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('filter_bar.status') }}</span>
-            <select
-              v-model="filters.status"
-              class="h-9 max-w-[min(100%,11rem)] rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-              :aria-label="t('filter_bar.status')"
-              @change="onSimpleFilterSelectChange"
-            >
-              <option v-for="opt in statusFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
-          </label>
-
-          <label v-if="filterControlVisible.type" class="inline-flex min-w-0 shrink-0 items-center gap-1.5">
-            <span class="whitespace-nowrap text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('costs_page.filter_cost_type') }}</span>
-            <select
-              v-model="filters.type"
-              class="h-9 max-w-[min(100%,11rem)] rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-              :aria-label="t('costs_page.filter_cost_type')"
-              @change="onSimpleFilterSelectChange"
-            >
-              <option v-for="opt in typeFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
-          </label>
-
-          <label
-            v-if="filterControlVisible.trip_type && activeTab !== 'standalone'"
-            class="inline-flex min-w-0 shrink-0 items-center gap-1.5"
+          <select
+            v-if="filterControlVisible.status"
+            v-model="filters.status"
+            class="h-9 max-w-[min(100%,11rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+            :class="filters.status ? 'text-slate-900 dark:text-slate-100' : 'text-slate-600 dark:text-slate-400'"
+            :aria-label="t('filter_bar.status')"
+            @change="onSimpleFilterSelectChange"
           >
-            <span class="whitespace-nowrap text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('costs_page.filter_trip_type') }}</span>
-            <select
-              v-model="filters.trip_type"
-              class="h-9 max-w-[min(100%,11rem)] rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-              :aria-label="t('costs_page.filter_trip_type')"
-              @change="onSimpleFilterSelectChange"
-            >
-              <option v-for="opt in tripTypeFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
-          </label>
+            <option v-for="opt in statusFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+
+          <select
+            v-if="filterControlVisible.type"
+            v-model="filters.type"
+            class="h-9 max-w-[min(100%,11rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+            :class="filters.type ? 'text-slate-900 dark:text-slate-100' : 'text-slate-600 dark:text-slate-400'"
+            :aria-label="t('costs_page.filter_cost_type')"
+            @change="onSimpleFilterSelectChange"
+          >
+            <option v-for="opt in typeFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+
+          <select
+            v-if="filterControlVisible.trip_type && activeTab !== 'standalone'"
+            v-model="filters.trip_type"
+            class="h-9 max-w-[min(100%,11rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+            :class="filters.trip_type ? 'text-slate-900 dark:text-slate-100' : 'text-slate-600 dark:text-slate-400'"
+            :aria-label="t('costs_page.filter_trip_type')"
+            @change="onSimpleFilterSelectChange"
+          >
+            <option v-for="opt in tripTypeFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
 
           <AppFilterDropdown
             v-if="filterControlVisible.date"
             root-class="shrink-0"
-            show-chip-label
+            :panel-title="t('costs_page.filter_recorded_date')"
+            :show-chip-label="false"
             :label="t('costs_page.filter_recorded_date')"
             :summary-text="filterDateSummary"
+            :active="!!(filters.from || filters.to)"
+            :aria-label="t('costs_page.filter_recorded_date')"
             full-width-summary
             panel-class="w-[min(100vw-1.5rem,320px)] p-3 sm:w-max"
           >
@@ -298,10 +298,13 @@
           <AppFilterDropdown
             v-if="filterControlVisible.trip && activeTab !== 'standalone'"
             root-class="shrink-0"
-            show-chip-label
+            :panel-title="t('costs_page.filter_trip')"
+            :show-chip-label="false"
             :label="t('costs_page.filter_trip')"
             :summary-text="tripFilterSummaryShort"
             :summary-title="tripFilterSummaryFull"
+            :active="!!filters.trip_id"
+            :aria-label="t('costs_page.filter_trip')"
             summary-text-class="max-w-[11rem]"
             panel-class="w-[min(100vw-1.5rem,320px)] p-3 sm:w-max sm:min-w-[280px]"
           >
@@ -360,9 +363,12 @@
           <AppFilterDropdown
             v-if="filterControlVisible.amount_range"
             root-class="shrink-0"
-            show-chip-label
+            :panel-title="t('costs_page.filter_amount_range')"
+            :show-chip-label="false"
             :label="t('costs_page.filter_amount_range')"
             :summary-text="amountRangeSummary"
+            :active="!!(filters.amount_min || filters.amount_max)"
+            :aria-label="t('costs_page.filter_amount_range')"
             summary-text-class="max-w-[10rem]"
             panel-class="w-[min(100vw-1.5rem,320px)] p-3 sm:w-max"
           >
@@ -394,70 +400,53 @@
             </div>
           </AppFilterDropdown>
 
-          <label
+          <select
             v-if="filterControlVisible.provider && activeTab !== 'standalone'"
-            class="inline-flex min-w-0 shrink-0 items-center gap-1.5"
+            v-model="filters.provider"
+            class="h-9 max-w-[min(100%,11rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+            :class="filters.provider ? 'text-slate-900 dark:text-slate-100' : 'text-slate-600 dark:text-slate-400'"
+            :aria-label="t('costs_page.filter_provider')"
+            @change="onSimpleFilterSelectChange"
           >
-            <span class="whitespace-nowrap text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('costs_page.filter_provider') }}</span>
-            <select
-              v-model="filters.provider"
-              class="h-9 max-w-[min(100%,11rem)] rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-              :aria-label="t('costs_page.filter_provider')"
-            >
-              <option v-for="opt in providerFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
-          </label>
+            <option v-for="opt in providerFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
 
-          <label
+          <select
             v-if="filterControlVisible.fleet_mode && activeTab !== 'standalone'"
-            class="inline-flex min-w-0 shrink-0 items-center gap-1.5"
+            v-model="filters.fleet_mode"
+            class="h-9 max-w-[min(100%,11rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+            :class="filters.fleet_mode ? 'text-slate-900 dark:text-slate-100' : 'text-slate-600 dark:text-slate-400'"
+            :aria-label="t('dashboard_analytics.filter_fleet')"
+            @change="onSimpleFilterSelectChange"
           >
-            <span class="whitespace-nowrap text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('dashboard_analytics.filter_fleet') }}</span>
-            <select
-              v-model="filters.fleet_mode"
-              class="h-9 max-w-[min(100%,11rem)] rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-              :aria-label="t('dashboard_analytics.filter_fleet')"
-              @change="onSimpleFilterSelectChange"
-            >
-              <option v-for="opt in fleetModeFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
-          </label>
+            <option v-for="opt in fleetModeFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
 
-          <label
+          <input
             v-if="filterControlVisible.search"
-            class="inline-flex shrink-0 items-center gap-1.5"
-          >
-            <span class="whitespace-nowrap text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('costs_page.filter_search_page') }}</span>
-            <input
-              v-model="searchQ"
-              type="search"
-              :aria-label="t('costs_page.filter_search_page')"
-              :placeholder="t('costs_page.filter_search_page') + '…'"
-              :title="t('costs_page.filter_search_page')"
-              class="costs-input h-9 w-[9.5rem] text-sm sm:w-44"
-            />
-          </label>
+            v-model="searchQ"
+            type="search"
+            class="costs-input h-9 w-[9.5rem] shrink-0 text-sm sm:w-44"
+            :aria-label="t('costs_page.filter_search_page')"
+            :placeholder="t('costs_page.filter_search_page')"
+          />
 
-          <label v-if="filterControlVisible.per_page" class="inline-flex shrink-0 items-center gap-1.5">
-            <span class="whitespace-nowrap text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('filter_bar.per_page') }}</span>
-            <select
-              v-model.number="filters.per_page"
-              class="h-9 rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-              :aria-label="t('filter_bar.per_page')"
-              @change="onPerPageChange"
-            >
-              <option :value="10">10</option>
-              <option :value="20">20</option>
-              <option :value="25">25</option>
-              <option :value="50">50</option>
-              <option :value="100">100</option>
-            </select>
-            <span class="hidden whitespace-nowrap text-xs text-slate-500 sm:inline dark:text-slate-400" aria-hidden="true">{{ t('costs_page.per_page_unit') }}</span>
-          </label>
+          <select
+            v-if="filterControlVisible.per_page"
+            v-model.number="filters.per_page"
+            class="h-9 max-w-[min(100%,9rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+            :class="filters.per_page !== DEFAULT_PER_PAGE ? 'text-slate-900 dark:text-slate-100' : 'text-slate-600 dark:text-slate-400'"
+            :aria-label="t('filter_bar.per_page')"
+            @change="onPerPageChange"
+          >
+            <option v-for="opt in perPageFilterOptions" :key="opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
         </div>
     </AppFilterBar>
       </div>
@@ -670,9 +659,12 @@
         <div class="flex flex-wrap items-center gap-2">
           <AppFilterDropdown
             root-class="shrink-0"
-            show-chip-label
+            :panel-title="t('costs_page.filter_recorded_date')"
+            :show-chip-label="false"
             :label="t('costs_page.filter_recorded_date')"
             :summary-text="bpFilterDateSummary"
+            :active="!!(bpFilters.from || bpFilters.to)"
+            :aria-label="t('costs_page.filter_recorded_date')"
             panel-class="min-w-[260px] p-3"
           >
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -690,9 +682,12 @@
 
           <AppFilterDropdown
             root-class="shrink-0 min-w-0 max-w-full"
-            show-chip-label
+            :panel-title="t('costs_page.filter_trip')"
+            :show-chip-label="false"
             :label="t('costs_page.filter_trip')"
             :summary-text="bpTripFilterSummaryShort"
+            :active="!!bpFilters.trip_id"
+            :aria-label="t('costs_page.filter_trip')"
             summary-text-class="max-w-[10rem]"
             panel-class="w-[min(100vw-1.5rem,320px)] p-2"
           >
@@ -1599,10 +1594,9 @@ watch(
 )
 
 const statusFilterOptions = computed(() => {
-  const fa = t('requests_page.filter_option_any')
   const keys = ['draft', 'submitted', 'confirmed', 'rejected']
   return [
-    { value: '', label: fa },
+    { value: '', label: t('filter_bar.status') },
     ...keys.map((value) => ({
       value,
       label: te(`dashboard_analytics.cost_status_${value}`) ? t(`dashboard_analytics.cost_status_${value}`) : value,
@@ -1610,8 +1604,16 @@ const statusFilterOptions = computed(() => {
   ]
 })
 
+const perPageFilterOptions = computed(() => [
+  { value: DEFAULT_PER_PAGE, label: t('filter_bar.per_page') },
+  { value: 10, label: '10' },
+  { value: 20, label: '20' },
+  { value: 50, label: '50' },
+  { value: 100, label: '100' },
+])
+
 const typeFilterOptions = computed(() => {
-  const rows = [{ value: '', label: t('requests_page.filter_option_any') }]
+  const rows = [{ value: '', label: t('costs_page.filter_cost_type') }]
   rows.push({ value: 'wizard_estimate', label: typeLabel('wizard_estimate') })
   for (const value of BUILTIN_COST_TYPES) {
     rows.push({ value, label: typeLabel(value) })
@@ -1625,12 +1627,12 @@ const typeFilterOptions = computed(() => {
 })
 
 const tripTypeFilterOptions = computed(() => [
-  { value: '', label: t('requests_page.filter_option_any') },
+  { value: '', label: t('costs_page.filter_trip_type') },
   ...TRIP_TYPE_SLUGS.map((value) => ({ value, label: labelTripType(value) })),
 ])
 
 const fleetModeFilterOptions = computed(() => [
-  { value: '', label: t('requests_page.filter_option_any') },
+  { value: '', label: t('dashboard_analytics.filter_fleet') },
   { value: 'internal', label: fleetModeLabel('internal') },
   { value: 'vendor_hire', label: fleetModeLabel('vendor_hire') },
   { value: 'taxi', label: fleetModeLabel('taxi') },
@@ -1653,7 +1655,7 @@ const activeFilterCount = computed(() => {
 })
 
 const amountRangeSummary = computed(() => {
-  if (!filters.amount_min && !filters.amount_max) return t('dashboard_analytics.filter_all')
+  if (!filters.amount_min && !filters.amount_max) return t('costs_page.filter_amount_range')
   const min = filters.amount_min ? formatVndDigitsInput(String(filters.amount_min).replace(/\D/g, '')) : '…'
   const max = filters.amount_max ? formatVndDigitsInput(String(filters.amount_max).replace(/\D/g, '')) : '…'
   return t('costs_page.amount_range_summary', { min, max })
@@ -1667,7 +1669,7 @@ const providerFilterOptions = computed(() => {
     if (name) names.add(name)
     else hasEmpty = true
   }
-  const rows = [{ value: '', label: t('costs_page.filter_provider_all') }]
+  const rows = [{ value: '', label: t('costs_page.filter_provider') }]
   if (hasEmpty) rows.push({ value: '__none__', label: t('costs_page.filter_provider_none') })
   for (const name of [...names].sort((a, b) => a.localeCompare(b, 'vi'))) {
     rows.push({ value: name, label: name })
@@ -1693,7 +1695,7 @@ function passesClientRowFiltersForCost(c) {
 }
 
 const filterDateSummary = computed(() => {
-  if (!filters.from && !filters.to) return t('dashboard_analytics.filter_all')
+  if (!filters.from && !filters.to) return t('costs_page.filter_recorded_date')
   return `${filters.from || '…'} → ${filters.to || '…'}`
 })
 
@@ -1729,12 +1731,12 @@ const filteredTripsForBpFilter = computed(() => {
 })
 
 const bpFilterDateSummary = computed(() => {
-  if (!bpFilters.from && !bpFilters.to) return t('filter_bar.all')
+  if (!bpFilters.from && !bpFilters.to) return t('costs_page.filter_recorded_date')
   return `${bpFilters.from || '…'} → ${bpFilters.to || '…'}`
 })
 
 const bpTripFilterSummaryShort = computed(() => {
-  if (!bpFilters.trip_id) return t('filter_bar.all')
+  if (!bpFilters.trip_id) return t('costs_page.filter_trip')
   const id = Number(bpFilters.trip_id)
   const tr = tripOptionsRaw.value.find((tripRow) => Number(tripRow.id) === id)
   if (tr) {
@@ -1760,7 +1762,7 @@ const tripFilterSummaryFull = computed(() => {
 })
 
 const tripFilterSummaryShort = computed(() => {
-  if (!filters.trip_id) return t('dashboard_analytics.filter_all')
+  if (!filters.trip_id) return t('costs_page.filter_trip')
   const tr = selectedFilterTrip.value
   if (tr) {
     const dr = tr.dispatch_request ?? tr.dispatchRequest

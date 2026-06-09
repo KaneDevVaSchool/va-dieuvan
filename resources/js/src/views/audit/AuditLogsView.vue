@@ -35,6 +35,18 @@
               <span class="text-slate-500">Khoảng ngày</span>
               <span class="font-medium tabular-nums">{{ dateRangeLabel }}</span>
             </li>
+            <li v-if="filterEvent" class="flex justify-between gap-2">
+              <span class="text-slate-500">Sự kiện</span>
+              <span class="font-medium">{{ eventLabel(filterEvent) }}</span>
+            </li>
+            <li v-if="filterSubjectType" class="flex justify-between gap-2">
+              <span class="text-slate-500">Đối tượng</span>
+              <span class="font-medium">{{ subjectTypeLabel(filterSubjectType) }}</span>
+            </li>
+            <li v-if="filters.per_page !== DEFAULT_AUDIT_PER_PAGE" class="flex justify-between gap-2">
+              <span class="text-slate-500">Số dòng/trang</span>
+              <span class="font-medium">{{ filters.per_page }}</span>
+            </li>
             <li v-if="activeFilterCount === 0" class="text-slate-400">Chưa có điều kiện lọc</li>
           </ul>
           <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
@@ -45,12 +57,20 @@
                 <label for="audit-vis-category" class="text-sm">Nhóm sự kiện</label>
               </li>
               <li class="flex gap-2">
-                <input id="audit-vis-search" v-model="filterBarVisible.search" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" />
-                <label for="audit-vis-search" class="text-sm">Tìm trong trang</label>
-              </li>
-              <li class="flex gap-2">
                 <input id="audit-vis-dates" v-model="filterBarVisible.dates" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" />
                 <label for="audit-vis-dates" class="text-sm">Khoảng ngày</label>
+              </li>
+              <li class="flex gap-2">
+                <input id="audit-vis-event" v-model="filterBarVisible.event" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" />
+                <label for="audit-vis-event" class="text-sm">Loại sự kiện</label>
+              </li>
+              <li class="flex gap-2">
+                <input id="audit-vis-subject" v-model="filterBarVisible.subject" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" />
+                <label for="audit-vis-subject" class="text-sm">Đối tượng</label>
+              </li>
+              <li class="flex gap-2">
+                <input id="audit-vis-per-page" v-model="filterBarVisible.per_page" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" />
+                <label for="audit-vis-per-page" class="text-sm">Số dòng/trang</label>
               </li>
             </ul>
           </div>
@@ -65,6 +85,16 @@
             <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 text-rose-500" />
           </span>
         </button>
+        <div class="relative min-w-0 flex-1 basis-[10rem] sm:min-w-[12rem] sm:max-w-md">
+          <MagnifyingGlassIcon class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+          <input
+            v-model="searchInput"
+            type="search"
+            placeholder="Tìm theo tên người, hành động…"
+            aria-label="Tìm trong nhật ký"
+            class="h-9 w-full rounded-md border-0 bg-white/90 py-0 pl-9 pr-3 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600 dark:placeholder:text-slate-500"
+          />
+        </div>
       </div>
       <div v-if="hasVisibleBarFilters" class="mt-2 space-y-3 border-t border-violet-100/80 pt-2 dark:border-violet-900/30">
         <div v-if="filterBarVisible.category" class="flex flex-wrap gap-1.5">
@@ -83,33 +113,53 @@
           </button>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-          <div v-if="filterBarVisible.search" class="relative min-w-0 flex-1">
-            <MagnifyingGlassIcon class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-            <input
-              v-model="searchInput"
-              type="search"
-              placeholder="Tìm theo tên người, hành động…"
-              class="h-9 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
-            />
-          </div>
+          <select
+            v-if="filterBarVisible.event"
+            v-model="filterEvent"
+            class="h-9 max-w-[14rem] rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-800"
+            :class="filterEvent ? 'text-slate-900 dark:text-slate-100' : 'text-slate-500'"
+            @change="onServerFilterChange"
+          >
+            <option value="">Loại sự kiện</option>
+            <option v-for="ev in eventFilterOptions" :key="ev.value" :value="ev.value">{{ ev.label }}</option>
+          </select>
+          <select
+            v-if="filterBarVisible.subject"
+            v-model="filterSubjectType"
+            class="h-9 max-w-[12rem] rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-800"
+            :class="filterSubjectType ? 'text-slate-900 dark:text-slate-100' : 'text-slate-500'"
+            @change="onServerFilterChange"
+          >
+            <option v-for="opt in subjectTypeOptions" :key="opt.value === '' ? '_subj_any' : opt.value" :value="opt.value">{{ opt.label }}</option>
+          </select>
           <template v-if="filterBarVisible.dates">
-            <label class="flex items-center gap-2 text-sm">
-              <span class="w-14 shrink-0 text-slate-500">Từ ngày</span>
-              <input
-                v-model="filters.from"
-                type="date"
-                class="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-900 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-              />
-            </label>
-            <label class="flex items-center gap-2 text-sm">
-              <span class="w-14 shrink-0 text-slate-500">Đến ngày</span>
-              <input
-                v-model="filters.to"
-                type="date"
-                class="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-900 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-              />
-            </label>
+            <input
+              v-model="filters.from"
+              type="date"
+              aria-label="Từ ngày"
+              class="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-900 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            />
+            <span class="text-slate-300 dark:text-slate-600">—</span>
+            <input
+              v-model="filters.to"
+              type="date"
+              aria-label="Đến ngày"
+              class="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-900 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            />
           </template>
+          <select
+            v-if="filterBarVisible.per_page"
+            v-model.number="filters.per_page"
+            class="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-800"
+            :class="filters.per_page !== DEFAULT_AUDIT_PER_PAGE ? 'text-slate-900 dark:text-slate-100' : 'text-slate-500'"
+            @change="onServerFilterChange"
+          >
+            <option :value="DEFAULT_AUDIT_PER_PAGE">Số dòng/trang</option>
+            <option :value="25">25</option>
+            <option :value="50">50</option>
+            <option :value="100">100</option>
+            <option :value="200">200</option>
+          </select>
         </div>
       </div>
     </AppFilterBar>
@@ -344,9 +394,31 @@ const activeCategory = ref('all')
 const searchInput    = ref('')
 const searchQ        = ref('')
 
-const filters = reactive({ from: '', to: '', page: 1, per_page: 50 })
+const DEFAULT_AUDIT_PER_PAGE = 50
+const filters = reactive({ from: '', to: '', page: 1, per_page: DEFAULT_AUDIT_PER_PAGE })
+const filterEvent = ref('')
+const filterSubjectType = ref('')
 
-const AUDIT_FILTER_VIS_IDS = ['category', 'search', 'dates']
+const AUDIT_SUBJECT_TYPES = [
+  { value: 'App\\Models\\DispatchRequest', label: 'Yêu cầu' },
+  { value: 'App\\Models\\Trip', label: 'Chuyến xe' },
+  { value: 'App\\Models\\Attachment', label: 'Tài liệu' },
+  { value: 'App\\Models\\User', label: 'Tài khoản' },
+  { value: 'App\\Models\\Vehicle', label: 'Phương tiện' },
+  { value: 'App\\Models\\Driver', label: 'Tài xế' },
+]
+
+const subjectTypeOptions = [{ value: '', label: 'Đối tượng' }, ...AUDIT_SUBJECT_TYPES]
+
+const eventFilterOptions = computed(() =>
+  Object.entries(EVENT_LABELS).map(([value, label]) => ({ value, label })),
+)
+
+function subjectTypeLabel(value) {
+  return AUDIT_SUBJECT_TYPES.find((o) => o.value === value)?.label ?? value
+}
+
+const AUDIT_FILTER_VIS_IDS = ['category', 'dates', 'event', 'subject', 'per_page']
 const AUDIT_FILTER_VIS_DEFAULTS = Object.fromEntries(AUDIT_FILTER_VIS_IDS.map((id) => [id, false]))
 const {
   visible: filterBarVisible,
@@ -371,6 +443,9 @@ const activeFilterCount = computed(() => {
   if (activeCategory.value !== 'all') n++
   if (searchInput.value.trim()) n++
   if (filters.from || filters.to) n++
+  if (filterEvent.value) n++
+  if (filterSubjectType.value) n++
+  if (filters.per_page !== DEFAULT_AUDIT_PER_PAGE) n++
   return n
 })
 
@@ -475,6 +550,11 @@ const scheduleReload = debounceTrailing(() => {
 
 watch(() => [filters.from, filters.to], () => scheduleReload(), { deep: true })
 
+function onServerFilterChange() {
+  filters.page = 1
+  if (listReady.value) reload(false)
+}
+
 function setCategory(key) {
   activeCategory.value = key
   filters.page = 1
@@ -487,6 +567,9 @@ function resetFilters() {
   searchQ.value        = ''
   filters.from         = ''
   filters.to           = ''
+  filterEvent.value    = ''
+  filterSubjectType.value = ''
+  filters.per_page     = DEFAULT_AUDIT_PER_PAGE
   filters.page         = 1
   if (listReady.value) reload(false)
 }
@@ -502,7 +585,12 @@ async function reload(notify = false) {
     const params = { page: filters.page, per_page: filters.per_page }
     if (filters.from) params.from = filters.from
     if (filters.to)   params.to   = filters.to
-    if (cat?.events)  params.events = cat.events
+    if (filterEvent.value) {
+      params.event = filterEvent.value
+    } else if (cat?.events) {
+      params.events = cat.events
+    }
+    if (filterSubjectType.value) params.auditable_type = filterSubjectType.value
 
     const res = await listAuditLogs(params)
     items.value = res.items ?? []
