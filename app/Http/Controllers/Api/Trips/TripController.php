@@ -18,6 +18,7 @@ use App\Services\Auditing\AuditLogger;
 use App\Services\Dispatching\DispatchingService;
 use App\Services\Trips\TripNamedPassengerSyncService;
 use App\Support\FinancialDataLock;
+use App\Support\TripOptimisticLock;
 use App\Support\TripVisibility;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -277,6 +278,7 @@ class TripController extends Controller
                 $dr,
                 (int) $data['passenger_count'],
                 $passengers,
+                (int) $data['lock_version'],
             );
 
             $trip->refresh();
@@ -604,19 +606,23 @@ class TripController extends Controller
     {
         abort_unless(TripVisibility::userCanViewTrip($request->user(), $trip), 403);
 
-        $trip->refresh();
-        FinancialDataLock::assertTripNotPaid($trip);
-
+        $data = $request->validated();
         $key = $this->normalizePassengerCheckInKey($passenger);
 
-        $map = is_array($trip->passenger_check_ins) ? $trip->passenger_check_ins : [];
-        $map[$key] = [
-            'checked_in_at' => Carbon::parse($request->validated()['checked_in_at'])->toIso8601String(),
-        ];
-        $trip->passenger_check_ins = $map;
-        $trip->save();
+        $fresh = DB::transaction(function () use ($trip, $data, $key) {
+            $trip->refresh();
+            FinancialDataLock::assertTripNotPaid($trip);
 
-        $fresh = $trip->fresh()->load([
+            $expectedVersion = (int) $data['lock_version'];
+            $map = is_array($trip->passenger_check_ins) ? $trip->passenger_check_ins : [];
+            $map[$key] = [
+                'checked_in_at' => Carbon::parse($data['checked_in_at'])->toIso8601String(),
+            ];
+
+            return TripOptimisticLock::update($trip, ['passenger_check_ins' => $map], $expectedVersion);
+        });
+
+        $fresh = $fresh->load([
             'dispatcher:id,name,email,employee_code',
             'vehicle:id,license_plate,status,type,seat_count,odometer_km',
             'driver:id,full_name,phone,odometer_km,user_id',
@@ -641,17 +647,21 @@ class TripController extends Controller
     {
         abort_unless(TripVisibility::userCanViewTrip($request->user(), $trip), 403);
 
-        $trip->refresh();
-        FinancialDataLock::assertTripNotPaid($trip);
-
+        $data = $request->validated();
         $key = $this->normalizePassengerCheckInKey($passenger);
 
-        $map = is_array($trip->passenger_check_ins) ? $trip->passenger_check_ins : [];
-        unset($map[$key]);
-        $trip->passenger_check_ins = $map;
-        $trip->save();
+        $fresh = DB::transaction(function () use ($trip, $data, $key) {
+            $trip->refresh();
+            FinancialDataLock::assertTripNotPaid($trip);
 
-        $fresh = $trip->fresh()->load([
+            $expectedVersion = (int) $data['lock_version'];
+            $map = is_array($trip->passenger_check_ins) ? $trip->passenger_check_ins : [];
+            unset($map[$key]);
+
+            return TripOptimisticLock::update($trip, ['passenger_check_ins' => $map], $expectedVersion);
+        });
+
+        $fresh = $fresh->load([
             'dispatcher:id,name,email,employee_code',
             'vehicle:id,license_plate,status,type,seat_count,odometer_km',
             'driver:id,full_name,phone,odometer_km,user_id',

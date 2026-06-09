@@ -7,6 +7,7 @@ import {
   listDriverTripPagesAfterFirst,
 } from '../api/driver'
 import { updateTripStatus } from '../api/trips'
+import { tripLockVersion, mergeTripRowFromApi, isTripLockConflict } from '../util/tripLock'
 import { showAppErrorFromApi, showAppSuccess } from '../composables/appMessage'
 import { i18n } from '../i18n'
 import {
@@ -576,10 +577,20 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
       const backup = this.tripSnapshot(dispatchTripId)
       this.patchTripInList(dispatchTripId, { status: 'driver_confirmed' })
       try {
-        await updateTripStatus(dispatchTripId, { status: 'driver_confirmed' })
+        const updated = await updateTripStatus(dispatchTripId, {
+          status: 'driver_confirmed',
+          lock_version: tripLockVersion(trip),
+        })
+        this.patchTripInList(
+          dispatchTripId,
+          mergeTripRowFromApi(this.tripSnapshot(dispatchTripId), updated, {
+            status: 'driver_confirmed',
+          }),
+        )
         showAppSuccess(t('driver_home.toast_confirm_ok'), t('driver_home.toast_action_title'))
         this.scheduleSilentRefetch()
       } catch (e) {
+        if (isTripLockConflict(e)) void this.refreshTripsQuiet()
         if (backup) this.replaceTripInList(dispatchTripId, backup)
         else this.refreshTripsQuiet()
         throw e
@@ -592,10 +603,21 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
       const backup = this.tripSnapshot(dispatchTripId)
       this.removeTrip(dispatchTripId)
       try {
-        await updateTripStatus(dispatchTripId, { status: 'cancelled', message })
+        const updated = await updateTripStatus(dispatchTripId, {
+          status: 'cancelled',
+          message,
+          lock_version: tripLockVersion(trip),
+        })
+        if (updated?.id != null) {
+          this.patchTripInList(
+            dispatchTripId,
+            mergeTripRowFromApi(this.tripSnapshot(dispatchTripId), updated, { status: 'cancelled' }),
+          )
+        }
         showAppSuccess(t('driver_home.toast_decline_ok'), t('driver_home.toast_action_title'))
         this.scheduleSilentRefetch()
       } catch (e) {
+        if (isTripLockConflict(e)) void this.refreshTripsQuiet()
         if (backup) this.insertTrip(backup)
         else this.refreshTripsQuiet()
         throw e
@@ -625,10 +647,18 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
       this.startBusyTripId = tripId
       try {
         this.patchTripInList(tripId, { status: 'in_progress' })
-        await updateTripStatus(tripId, { status: 'in_progress' })
+        const updated = await updateTripStatus(tripId, {
+          status: 'in_progress',
+          lock_version: tripLockVersion(backup ?? this.tripSnapshot(tripId)),
+        })
+        this.patchTripInList(
+          tripId,
+          mergeTripRowFromApi(this.tripSnapshot(tripId), updated, { status: 'in_progress' }),
+        )
         showAppSuccess(t('driver_home.toast_start_ok'), t('driver_home.toast_action_title'))
         this.scheduleSilentRefetch()
       } catch (e) {
+        if (isTripLockConflict(e)) void this.refreshTripsQuiet()
         if (backup) this.replaceTripInList(tripId, backup)
         else this.refreshTripsQuiet()
         const fallback = t('driver_trip_detail.status_err')

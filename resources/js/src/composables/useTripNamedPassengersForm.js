@@ -1,5 +1,6 @@
 import { ref, watch } from "vue";
 import { usePassengerManager } from "./usePassengerManager";
+import { tripLockVersion } from "../util/tripLock";
 
 /**
  * Form lưu danh sách hành khách đặt tên (door_to_door / point_to_point).
@@ -66,6 +67,7 @@ export function useTripNamedPassengersForm(ctx) {
                     phone: String(r.phone ?? "").trim() || null,
                     note: String(r.note ?? "").trim() || null,
                 })),
+                lock_version: tripLockVersion(trip),
             });
             ctx.showAppSuccess(ctx.t("trip_detail.passengers.named_save_ok"));
             await ctx.load({ silent: true });

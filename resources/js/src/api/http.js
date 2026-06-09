@@ -108,7 +108,9 @@ function looksLikeVietnamese(text) {
 function humanizeStatusOnly(status) {
   if (status === 403) return 'Bạn không có quyền thực hiện thao tác này.'
   if (status === 404) return 'Không tìm thấy dữ liệu — có thể đã bị xóa hoặc bạn không có quyền xem.'
-  if (status === 409) return 'Dữ liệu bị trùng hoặc xung đột. Vui lòng làm mới trang và thử lại.'
+  if (status === 409) {
+    return 'Dữ liệu đã thay đổi hoặc thao tác không còn hợp lệ. Vui lòng làm mới trang và thử lại.'
+  }
   if (status === 422) return 'Thông tin gửi lên chưa đúng. Vui lòng kiểm tra và nhập lại.'
   if (status === 429) return 'Bạn thao tác quá nhanh. Vui lòng đợi vài giây rồi thử lại.'
   if (status === 503) return 'Hệ thống đang bảo trì hoặc quá tải. Vui lòng thử lại sau.'

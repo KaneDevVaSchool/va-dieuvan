@@ -1224,6 +1224,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     "trip-updated": [trip: Record<string, unknown>];
+    "lock-conflict": [];
     "passenger-list-save": [
         payload: {
             meta: PassengerEditMeta;
@@ -1626,6 +1627,7 @@ async function onToggleCheck(row: PassengerRow) {
         tripId: props.tripId,
         passengerKey: key,
         nextChecked: next,
+        lockVersion: Number(props.trip?.lock_version ?? 0),
         errorMessage: t("trip_detail.passengers.checkin_error"),
     });
     checkingKey.value = null;
@@ -1636,6 +1638,7 @@ async function onToggleCheck(row: PassengerRow) {
             const { [key]: _t, ...restT } = checkedAtLocal.value;
             checkedAtLocal.value = restT;
         }
+        if (res.lockConflict) emit("lock-conflict");
         return;
     }
     if (res.data) emit("trip-updated", res.data);

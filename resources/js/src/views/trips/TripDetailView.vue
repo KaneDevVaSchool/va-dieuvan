@@ -505,6 +505,7 @@
                             :can-edit-list="canEditPassengerList"
                             :special-summary="specialNeedsSummary"
                             @trip-updated="applyTripPayload"
+                            @lock-conflict="onTripLockConflict"
                             @passenger-list-save="onPassengerListSave"
                             @passenger-list-delete="onPassengerListDelete"
                             @passenger-list-add-submit="onPassengerListAddSubmit"
@@ -768,6 +769,7 @@ import {
 } from "../../api/operational";
 import { uploadAttachment, deleteAttachment } from "../../api/attachments";
 import { newIdempotencyKey } from "../../util/idempotency";
+import { withTripLockVersion, isTripLockConflict } from "../../util/tripLock";
 import { labelTripStatus } from "../../util/labels";
 import {
     formatDispatchRequestNotesForDisplay,
@@ -822,6 +824,7 @@ function formatApiMessage(e) {
 }
 
 const trip = ref(null);
+let tripDetailLoadSeq = 0;
 
 const selectedScheduleKey = ref("");
 const activeAssignLegKey = ref("");
@@ -1165,7 +1168,7 @@ async function persistPassengerListSnapshot(mutator) {
         payload = { passenger_rows: filled };
     }
     try {
-        await updateTripPassengerList(tid, payload);
+        await updateTripPassengerList(tid, withTripLockVersion(payload, trip.value));
         await load({ silent: true });
         showAppSuccess(t("trip_detail.passengers.dt_save_ok"));
         return true;
@@ -1211,10 +1214,16 @@ async function saveNamedPassengerSlot(rowIndex, draft, options = {}) {
         };
     });
     try {
-        await updateTripPassengerList(tid, {
-            passenger_count: count,
-            passengers: list,
-        });
+        await updateTripPassengerList(
+            tid,
+            withTripLockVersion(
+                {
+                    passenger_count: count,
+                    passengers: list,
+                },
+                trip.value,
+            ),
+        );
         const busIdx = options.businessRowIndex;
         if (
             dr.trip_type === "business" &&
@@ -2261,6 +2270,12 @@ function applyTripPayload(data) {
     assign.value.lock_version = trip.value.lock_version ?? 0;
 }
 
+async function onTripLockConflict() {
+    await load({ silent: true });
+    assignFeedbackKind.value = "error";
+    assignMsg.value = t("trip_detail.coordination.lock_refresh_hint");
+}
+
 function onVehicleCardChange() {
     vehicleScheduleConflict.value = null;
     suppressVehicleScheduleConflict.value = false;
@@ -2572,6 +2587,7 @@ async function loadResources(opts = {}) {
 
 async function load(opts = {}) {
     const silent = opts.silent === true;
+    const seq = ++tripDetailLoadSeq;
     if (!silent) {
         loading.value = true;
         loadError.value = "";
@@ -2581,6 +2597,7 @@ async function load(opts = {}) {
     }
     try {
         const data = await getTrip(route.params.id);
+        if (seq !== tripDetailLoadSeq) return;
         trip.value = data;
         assign.value.lock_version = trip.value.lock_version ?? 0;
         rescheduleDepartLocal.value = toDatetimeLocalValue(
@@ -2590,6 +2607,7 @@ async function load(opts = {}) {
         await loadResources({ silent });
         if (!silent) loadError.value = "";
     } catch (e) {
+        if (seq !== tripDetailLoadSeq) return;
         const msg = e?.response?.data?.message ?? t("trip_detail.load_error");
         if (!silent) {
             trip.value = null;
@@ -2598,6 +2616,7 @@ async function load(opts = {}) {
             silentLoadError.value = msg;
         }
     } finally {
+        if (seq !== tripDetailLoadSeq) return;
         if (!silent) loading.value = false;
         refreshing.value = false;
     }
@@ -2702,7 +2721,12 @@ async function onApproveTransfer() {
         await load({ silent: true });
     } catch (e) {
         assignFeedbackKind.value = "error";
-        assignMsg.value = formatApiMessage(e);
+        if (isTripLockConflict(e)) {
+            await load({ silent: true });
+            assignMsg.value = t("trip_detail.coordination.lock_refresh_hint");
+        } else {
+            assignMsg.value = formatApiMessage(e);
+        }
     } finally {
         assigning.value = false;
     }
@@ -2724,19 +2748,35 @@ async function onRejectTrip() {
     rejecting.value = true;
     try {
         const msg = coordinationNotes.value.trim() || undefined;
-        await updateTripStatus(route.params.id, {
-            status: "cancelled",
-            message: msg,
-        });
+        await updateTripStatus(
+            route.params.id,
+            withTripLockVersion(
+                {
+                    status: "cancelled",
+                    message: msg,
+                },
+                trip.value,
+            ),
+        );
         assignFeedbackKind.value = "success";
         assignMsg.value = t("trip_detail.coordination.reject_success");
         await load({ silent: true });
     } catch (e) {
-        assignFeedbackKind.value = "error";
-        assignMsg.value = formatApiMessage(e);
+        await handleTripStatusMutateError(e);
     } finally {
         rejecting.value = false;
     }
+}
+
+async function handleTripStatusMutateError(e) {
+    if (isTripLockConflict(e)) {
+        await load({ silent: true });
+        assignFeedbackKind.value = "error";
+        assignMsg.value = t("trip_detail.coordination.lock_refresh_hint");
+        return;
+    }
+    assignFeedbackKind.value = "error";
+    assignMsg.value = formatApiMessage(e);
 }
 
 async function doAdvanceTripStatus(to) {
@@ -2745,9 +2785,14 @@ async function doAdvanceTripStatus(to) {
     statusing.value = true;
     try {
         const msg = tripStatusWorkflowNote.value.trim() || undefined;
-        await updateTripStatus(route.params.id, { status: to, message: msg });
+        await updateTripStatus(
+            route.params.id,
+            withTripLockVersion({ status: to, message: msg }, trip.value),
+        );
         tripStatusWorkflowNote.value = "";
         await load({ silent: true });
+    } catch (e) {
+        await handleTripStatusMutateError(e);
     } finally {
         statusing.value = false;
     }
@@ -2769,17 +2814,22 @@ async function onWorkflowCancelTrip() {
     rejecting.value = true;
     try {
         const msg = tripStatusWorkflowNote.value.trim() || undefined;
-        await updateTripStatus(route.params.id, {
-            status: "cancelled",
-            message: msg,
-        });
+        await updateTripStatus(
+            route.params.id,
+            withTripLockVersion(
+                {
+                    status: "cancelled",
+                    message: msg,
+                },
+                trip.value,
+            ),
+        );
         tripStatusWorkflowNote.value = "";
         assignFeedbackKind.value = "success";
         assignMsg.value = t("trip_detail.coordination.reject_success");
         await load({ silent: true });
     } catch (e) {
-        assignFeedbackKind.value = "error";
-        assignMsg.value = formatApiMessage(e);
+        await handleTripStatusMutateError(e);
     } finally {
         rejecting.value = false;
     }
@@ -2821,6 +2871,9 @@ watch(
 
 const { start: startStaffTripDetailPoll } = useVisiblePoll(
     () => {
+        if (assigning.value || statusing.value || rejecting.value || noting.value) {
+            return;
+        }
         void load({ silent: true });
     },
     { intervalMs: 50_000 },

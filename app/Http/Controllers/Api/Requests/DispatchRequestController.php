@@ -28,6 +28,7 @@ use App\Notifications\SignedPaperUploadReminderNotification;
 use App\Services\Notifications\DispatchStaffNotificationRecipients;
 use App\Http\Requests\Api\Requests\SubmitRecurringDispatchRequestStudentCountRequest;
 use App\Services\Auditing\AuditLogger;
+use App\Services\DispatchRequests\DispatchRequestApprovalService;
 use App\Services\DispatchRequests\DispatchRequestPdfPresenter;
 use App\Support\DispatchCargoShipmentProvisioner;
 use App\Support\Messages;
@@ -470,20 +471,21 @@ class DispatchRequestController extends Controller
         $user = $request->user();
 
         return DB::transaction(function () use ($dispatchRequest, $data, $user) {
-            $before = $dispatchRequest->toArray();
-
-            $usesDeptPriceFlow = $dispatchRequest->trip_type !== 'door_to_door';
-
-            if ($usesDeptPriceFlow) {
-                if ($dispatchRequest->status !== 'price_filled') {
-                    abort(409, Messages::REQUEST_NOT_PRICE_FILLED);
-                }
-            } elseif ($dispatchRequest->status !== 'pending') {
-                abort(409, Messages::REQUEST_NOT_PENDING);
-            }
+            /** @var DispatchRequest $dr */
+            $dr = DispatchRequest::query()->whereKey($dispatchRequest->id)->lockForUpdate()->firstOrFail();
+            $before = $dr->toArray();
 
             if ($data['decision'] === 'reject') {
-                $dispatchRequest->update([
+                $usesDeptPriceFlow = $dr->trip_type !== 'door_to_door';
+                if ($usesDeptPriceFlow) {
+                    if ($dr->status !== 'price_filled') {
+                        abort(409, Messages::REQUEST_NOT_PRICE_FILLED);
+                    }
+                } elseif ($dr->status !== 'pending') {
+                    abort(409, Messages::REQUEST_NOT_PENDING);
+                }
+
+                $dr->update([
                     'status' => 'rejected',
                     'approved_by' => $user->id,
                     'rejection_reason' => $data['reason'] ?? null,
@@ -492,46 +494,41 @@ class DispatchRequestController extends Controller
                 app(AuditLogger::class)->log(
                     actorId: $user->id,
                     event: 'request.reject',
-                    auditable: $dispatchRequest,
+                    auditable: $dr,
                     before: $before,
-                    after: $dispatchRequest->toArray(),
+                    after: $dr->toArray(),
                     metadata: ['reason' => $data['reason'] ?? null],
                 );
 
-                $this->scheduleRequesterDeptDecisionNotification($dispatchRequest->id, 'reject');
+                $this->scheduleRequesterDeptDecisionNotification($dr->id, 'reject');
 
-                return $this->ok($dispatchRequest);
+                return $this->ok($dr);
             }
 
-            $dispatchRequest->update([
-                'status' => 'approved',
-                'approved_by' => $user->id,
-                'rejection_reason' => null,
-            ]);
+            if (Trip::query()->where('dispatch_request_id', $dr->id)->exists()) {
+                abort(409, Messages::TRIP_ALREADY_EXISTS_FOR_REQUEST);
+            }
 
-            $trip = Trip::create([
-                'dispatch_request_id' => $dispatchRequest->id,
-                'dispatcher_id' => $user->id,
-                'status' => 'approved',
-                'depart_at' => $dispatchRequest->depart_at,
-                'arrive_by' => $dispatchRequest->arrive_by,
-                'lock_version' => 0,
-            ]);
+            $usesDeptPriceFlow = $dr->trip_type !== 'door_to_door';
 
-            DispatchCargoShipmentProvisioner::provision($dispatchRequest, $trip);
+            if ($usesDeptPriceFlow) {
+                if ($dr->status !== 'price_filled') {
+                    abort(409, Messages::REQUEST_NOT_PRICE_FILLED);
+                }
+            } elseif ($dr->status !== 'pending') {
+                abort(409, Messages::REQUEST_NOT_PENDING);
+            }
 
-            app(AuditLogger::class)->log(
-                actorId: $user->id,
-                event: 'request.approve',
-                auditable: $dispatchRequest,
-                before: $before,
-                after: $dispatchRequest->toArray(),
-                metadata: ['trip_id' => $trip->id],
+            $result = app(DispatchRequestApprovalService::class)->createTripAfterApproval(
+                $dr,
+                $user,
+                'request.approve',
+                $before,
             );
 
-            $this->scheduleRequesterDeptDecisionNotification($dispatchRequest->id, 'approve');
+            $this->scheduleRequesterDeptDecisionNotification($dr->id, 'approve');
 
-            return $this->ok(['request' => $dispatchRequest, 'trip' => $trip]);
+            return $this->ok(['request' => $result['request'], 'trip' => $result['trip']]);
         });
     }
 
@@ -551,14 +548,16 @@ class DispatchRequestController extends Controller
         $user = $request->user();
 
         return DB::transaction(function () use ($dispatchRequest, $data, $user) {
-            $before = $dispatchRequest->toArray();
+            /** @var DispatchRequest $dr */
+            $dr = DispatchRequest::query()->whereKey($dispatchRequest->id)->lockForUpdate()->firstOrFail();
+            $before = $dr->toArray();
 
-            if ($dispatchRequest->status !== 'price_filled') {
+            if ($dr->status !== 'price_filled') {
                 abort(409, Messages::REQUEST_NOT_PRICE_FILLED);
             }
 
             if ($data['decision'] === 'reject') {
-                $dispatchRequest->update([
+                $dr->update([
                     'status' => 'rejected',
                     'approved_by' => $user->id,
                     'rejection_reason' => trim((string) ($data['rejection_reason'] ?? '')),
@@ -567,46 +566,31 @@ class DispatchRequestController extends Controller
                 app(AuditLogger::class)->log(
                     actorId: $user->id,
                     event: 'request.dept_reject',
-                    auditable: $dispatchRequest,
+                    auditable: $dr,
                     before: $before,
-                    after: $dispatchRequest->toArray(),
-                    metadata: ['reason' => $dispatchRequest->rejection_reason],
+                    after: $dr->toArray(),
+                    metadata: ['reason' => $dr->rejection_reason],
                 );
 
-                $this->scheduleRequesterDeptDecisionNotification($dispatchRequest->id, 'reject');
+                $this->scheduleRequesterDeptDecisionNotification($dr->id, 'reject');
 
-                return $this->ok($dispatchRequest->fresh());
+                return $this->ok($dr->fresh());
             }
 
-            $dispatchRequest->update([
-                'status' => 'approved',
-                'approved_by' => $user->id,
-                'rejection_reason' => null,
-            ]);
+            if (Trip::query()->where('dispatch_request_id', $dr->id)->exists()) {
+                abort(409, Messages::TRIP_ALREADY_EXISTS_FOR_REQUEST);
+            }
 
-            $trip = Trip::create([
-                'dispatch_request_id' => $dispatchRequest->id,
-                'dispatcher_id' => $user->id,
-                'status' => 'approved',
-                'depart_at' => $dispatchRequest->depart_at,
-                'arrive_by' => $dispatchRequest->arrive_by,
-                'lock_version' => 0,
-            ]);
-
-            DispatchCargoShipmentProvisioner::provision($dispatchRequest, $trip);
-
-            app(AuditLogger::class)->log(
-                actorId: $user->id,
-                event: 'request.approve_dept',
-                auditable: $dispatchRequest,
-                before: $before,
-                after: $dispatchRequest->toArray(),
-                metadata: ['trip_id' => $trip->id],
+            $result = app(DispatchRequestApprovalService::class)->createTripAfterApproval(
+                $dr,
+                $user,
+                'request.approve_dept',
+                $before,
             );
 
-            $this->scheduleRequesterDeptDecisionNotification($dispatchRequest->id, 'approve');
+            $this->scheduleRequesterDeptDecisionNotification($dr->id, 'approve');
 
-            return $this->ok(['request' => $dispatchRequest->fresh(), 'trip' => $trip]);
+            return $this->ok(['request' => $result['request'], 'trip' => $result['trip']]);
         });
     }
 

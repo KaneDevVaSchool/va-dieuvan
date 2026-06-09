@@ -336,12 +336,18 @@ class DispatchRecurringMaintenanceService
     public function consumePackageSessionAfterTripCompletion(Trip $trip): void
     {
         DB::transaction(function () use ($trip) {
-            if ($trip->dispatch_request_id === null) {
+            /** @var Trip|null $lockedTrip */
+            $lockedTrip = Trip::query()->whereKey($trip->id)->lockForUpdate()->first();
+            if ($lockedTrip === null || $lockedTrip->recurring_package_session_consumed_at !== null) {
+                return;
+            }
+
+            if ($lockedTrip->dispatch_request_id === null) {
                 return;
             }
 
             /** @phpstan-ignore-next-line */
-            $dr = DispatchRequest::query()->whereKey((int) $trip->dispatch_request_id)->first();
+            $dr = DispatchRequest::query()->whereKey((int) $lockedTrip->dispatch_request_id)->first();
             /** @phpstan-ignore-next-line */
             if ($dr === null || $dr->dispatch_request_template_id === null) {
                 return;
@@ -374,6 +380,9 @@ class DispatchRecurringMaintenanceService
             $pkg->sessions_used = (int) $pkg->sessions_used + 1;
             /** @phpstan-ignore-next-line */
             $pkg->save();
+
+            $lockedTrip->recurring_package_session_consumed_at = now();
+            $lockedTrip->saveQuietly();
 
             /** @phpstan-ignore-next-line */
             $pkg->refresh();

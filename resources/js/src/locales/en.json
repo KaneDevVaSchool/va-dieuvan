@@ -3318,6 +3318,7 @@
             "resource_combine_hint": "You can tick any combination: vehicle only, driver only, taxi only, vendor only, or mixes (e.g. vehicle + vendor, vehicle + taxi, taxi + vendor, all three). Extra taxi/vendor rows are appended to «External vehicle reference».",
             "driver_default_vehicle_hint": "Pick internal vehicle and driver independently; assigning from the driver workload panel suggests their default vehicle when available.",
             "assign_success": "Resources assigned successfully.",
+            "lock_refresh_hint": "Trip data changed — refreshed. Please try your action again.",
             "reject_success": "Trip cancelled.",
             "hire_external": "Hire external taxi / vendor",
             "provider_id": "Provider ID (transport_provider_id)",

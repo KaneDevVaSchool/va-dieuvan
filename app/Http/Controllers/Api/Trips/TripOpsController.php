@@ -15,6 +15,9 @@ use App\Services\Costs\TripWizardCostProvisioner;
 use App\Services\Dispatching\TripScheduleLegService;
 use App\Services\RecurringDispatch\DispatchRecurringMaintenanceService;
 use App\Services\RecurringDispatch\RecurringBudgetAlertService;
+use App\Services\Trips\TripStatusTransitionValidator;
+use App\Support\Messages;
+use App\Support\TripOptimisticLock;
 use App\Support\TripVisibility;
 use Illuminate\Support\Facades\DB;
 
@@ -27,8 +30,6 @@ class TripOpsController extends Controller
         $data = $request->validated();
 
         $user = $request->user();
-
-        $beforeStatus = (string) $trip->status;
 
         $scheduleLegs = app(TripScheduleLegService::class);
         $scheduleKey = isset($data['schedule_key']) ? trim((string) $data['schedule_key']) : null;
@@ -55,28 +56,46 @@ class TripOpsController extends Controller
             );
         }
 
-        $response = DB::transaction(function () use ($trip, $data, $user, $scheduleLegs, $scheduleKey) {
-            $before = $trip->toArray();
+        $newStatus = (string) $data['status'];
+        $beforeStatus = (string) $trip->status;
 
-            $applied = $scheduleLegs->applyStatusChange($trip, $data['status'], $scheduleKey);
+        $response = DB::transaction(function () use ($trip, $data, $user, $scheduleLegs, $scheduleKey, $newStatus) {
+            /** @var Trip $locked */
+            $locked = Trip::query()->whereKey($trip->id)->lockForUpdate()->firstOrFail();
+            $expectedVersion = array_key_exists('lock_version', $data)
+                ? (int) $data['lock_version']
+                : (int) $locked->lock_version;
+
+            if ((int) $locked->lock_version !== $expectedVersion) {
+                abort(409, Messages::OPTIMISTIC_LOCK_CONFLICT);
+            }
+
+            app(TripStatusTransitionValidator::class)->assertCanTransition(
+                (string) $locked->status,
+                $newStatus,
+            );
+
+            $before = $locked->toArray();
+
+            $applied = $scheduleLegs->applyStatusChange($locked, $newStatus, $scheduleKey);
             $updates = $applied['trip'];
             if ($applied['schedule_assignments'] !== null) {
                 $updates['schedule_assignments'] = $applied['schedule_assignments'];
             }
 
-            $trip->update($updates);
+            $fresh = TripOptimisticLock::update($locked, $updates, $expectedVersion);
 
             $eventData = [
                 'from' => $before['status'] ?? null,
-                'to' => $trip->status,
+                'to' => $fresh->status,
             ];
             if ($scheduleKey !== null) {
                 $eventData['schedule_key'] = $scheduleKey;
-                $eventData['leg_status'] = $data['status'];
+                $eventData['leg_status'] = $newStatus;
             }
 
             TripEvent::create([
-                'trip_id' => $trip->id,
+                'trip_id' => $fresh->id,
                 'created_by' => $user->id,
                 'type' => 'status_change',
                 'message' => $data['message'] ?? null,
@@ -86,20 +105,19 @@ class TripOpsController extends Controller
             app(AuditLogger::class)->log(
                 actorId: $user->id,
                 event: 'trip.status_change',
-                auditable: $trip,
+                auditable: $fresh,
                 before: $before,
-                after: $trip->toArray(),
+                after: $fresh->toArray(),
                 metadata: ['message' => $data['message'] ?? null],
             );
 
-            if (($data['status'] ?? '') === 'completed') {
-                app(TripWizardCostProvisioner::class)->provision($trip->fresh(), $user->id);
+            if ($newStatus === 'completed') {
+                app(TripWizardCostProvisioner::class)->provision($fresh, $user->id);
             }
 
-            return $this->ok($trip);
+            return $this->ok($fresh);
         });
 
-        $newStatus = (string) $data['status'];
         if ($newStatus === 'completed' && $beforeStatus !== 'completed') {
             $trip->refresh();
             app(DispatchRecurringMaintenanceService::class)->consumePackageSessionAfterTripCompletion($trip);

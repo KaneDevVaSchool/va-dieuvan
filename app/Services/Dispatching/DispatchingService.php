@@ -7,6 +7,7 @@ use App\Models\Trip;
 use App\Notifications\TripAssignedNotification;
 use App\Services\Auditing\AuditLogger;
 use App\Support\FinancialDataLock;
+use App\Support\Messages;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -25,6 +26,11 @@ class DispatchingService
         return DB::transaction(function () use ($trip, $payload) {
             $trip->refresh();
             FinancialDataLock::assertTripNotPaid($trip);
+
+            $currentStatus = (string) $trip->status;
+            if (in_array($currentStatus, ['in_progress', 'completed', 'cancelled', 'incident'], true)) {
+                abort(409, Messages::TRIP_ASSIGN_BLOCKED_OPERATIONAL);
+            }
 
             $expectedVersion = (int) ($payload['lock_version'] ?? $trip->lock_version);
 
@@ -98,25 +104,30 @@ class DispatchingService
                 'lock_version',
             ]);
 
+            $updatePayload = [
+                'vehicle_id' => $primary['vehicle_id'],
+                'driver_id' => $primary['driver_id'],
+                'transport_provider_id' => $primary['transport_provider_id'],
+                'external_vehicle_ref' => $primary['external_vehicle_ref'],
+                'external_driver_ref' => $primary['external_driver_ref'],
+                'supplement_transports' => $primary['supplement_transports'],
+                'schedule_assignments' => $assignments,
+                'lock_version' => $expectedVersion + 1,
+                'dispatcher_id' => $payload['dispatcher_id'] ?? $trip->dispatcher_id,
+                'updated_at' => now(),
+            ];
+
+            if (in_array($currentStatus, ['pending', 'approved', 'assigned'], true)) {
+                $updatePayload['status'] = $newStatus;
+            }
+
             $updated = Trip::query()
                 ->whereKey($trip->id)
                 ->where('lock_version', $expectedVersion)
-                ->update([
-                    'vehicle_id' => $primary['vehicle_id'],
-                    'driver_id' => $primary['driver_id'],
-                    'transport_provider_id' => $primary['transport_provider_id'],
-                    'external_vehicle_ref' => $primary['external_vehicle_ref'],
-                    'external_driver_ref' => $primary['external_driver_ref'],
-                    'supplement_transports' => $primary['supplement_transports'],
-                    'schedule_assignments' => $assignments,
-                    'status' => $newStatus,
-                    'lock_version' => $expectedVersion + 1,
-                    'dispatcher_id' => $payload['dispatcher_id'] ?? $trip->dispatcher_id,
-                    'updated_at' => now(),
-                ]);
+                ->update($updatePayload);
 
             if ($updated !== 1) {
-                abort(409, 'Dữ liệu đã thay đổi, vui lòng tải lại (optimistic lock).');
+                abort(409, Messages::OPTIMISTIC_LOCK_CONFLICT);
             }
 
             $trip->refresh();
@@ -324,7 +335,7 @@ class DispatchingService
                 ]);
 
             if ($updated !== 1) {
-                abort(409, 'Dữ liệu đã thay đổi, vui lòng tải lại (optimistic lock).');
+                abort(409, Messages::OPTIMISTIC_LOCK_CONFLICT);
             }
 
             $trip->refresh();

@@ -15,6 +15,7 @@ class TripPassengerCheckInRequest extends ApiFormRequest
     {
         return [
             'checked_in_at' => ['required', 'date'],
+            'lock_version' => ['required', 'integer', 'min:0'],
         ];
     }
 }

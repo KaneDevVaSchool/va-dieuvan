@@ -31,6 +31,7 @@ class Trip extends Model
         'schedule_assignments',
         'payment_status',
         'paid_at',
+        'recurring_package_session_consumed_at',
     ];
 
     protected $casts = [
@@ -42,6 +43,7 @@ class Trip extends Model
         'started_at' => 'datetime',
         'completed_at' => 'datetime',
         'paid_at' => 'datetime',
+        'recurring_package_session_consumed_at' => 'datetime',
     ];
 
     public function isPaid(): bool

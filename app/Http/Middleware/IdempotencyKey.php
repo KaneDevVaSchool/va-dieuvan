@@ -88,7 +88,7 @@ class IdempotencyKey
         try {
             return Cache::lock($lockKey, 30)->block(15, $callback);
         } catch (\Illuminate\Contracts\Cache\LockTimeoutException) {
-            return $callback();
+            abort(503, 'Hệ thống đang xử lý yêu cầu trùng lặp. Vui lòng thử lại sau vài giây.');
         }
     }
 }

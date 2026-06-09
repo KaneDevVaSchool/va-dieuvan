@@ -2,6 +2,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { addTripEvent, getTrip, updateTripStatus, upsertTripRecord } from '../api/trips'
+import { isTripLockConflict } from '../util/tripLock'
 import { submitStandaloneTripCost, submitTripCost } from '../api/costs'
 import { isPassengerRowFilled, isBusinessRowFilled, isCargoRowFilled } from './dispatchWizardConstants'
 import { useDriverWebPushBoot } from './useDriverWebPushBoot'
@@ -242,7 +243,7 @@ export function useDriverTripDetailPage() {
   })
 
   function buildStatusPayload(status) {
-    const payload = { status }
+    const payload = { status, lock_version: Number(trip.value?.lock_version ?? 0) }
     if (multiScheduleLegTrip.value && driverOperationalLeg.value?.key) {
       payload.schedule_key = driverOperationalLeg.value.key
     }
@@ -639,7 +640,8 @@ export function useDriverTripDetailPage() {
       await updateTripStatus(id, buildStatusPayload('completed'))
       await refresh()
       void driverDashboardStore.refreshTripsQuiet()
-    } catch {
+    } catch (e) {
+      if (isTripLockConflict(e)) await refresh()
       loadError.value = t('driver_trip_detail.status_err')
     } finally {
       actionBusy.value = false
@@ -700,7 +702,8 @@ export function useDriverTripDetailPage() {
       await updateTripStatus(id, buildStatusPayload('in_progress'))
       await refresh()
       void driverDashboardStore.refreshTripsQuiet()
-    } catch {
+    } catch (e) {
+      if (isTripLockConflict(e)) await refresh()
       loadError.value = t('driver_trip_detail.status_err')
     } finally {
       actionBusy.value = false

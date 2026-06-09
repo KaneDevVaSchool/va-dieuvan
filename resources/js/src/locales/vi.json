@@ -3115,6 +3115,7 @@
             "resource_combine_hint": "Có thể tick đồng thời: chỉ xe, chỉ tài xế, chỉ taxi, chỉ NCC, hoặc bất kỳ tổ hợp (vd. xe + NCC, xe + taxi, taxi + NCC, cả ba…). Nhiều taxi/NCC phụ được ghi thêm trong «Tham chiếu xe ngoài».",
             "driver_default_vehicle_hint": "Chọn xe và tài xế nội bộ độc lập; từ «Lịch tải tài xế» hệ thống gợi ý xe mặc định gắn tài xế (nếu có).",
             "assign_success": "Đã gán nguồn lực thành công.",
+            "lock_refresh_hint": "Dữ liệu chuyến vừa thay đổi — đã tải lại. Vui lòng thử lại thao tác.",
             "reject_success": "Đã hủy chuyến.",
             "hire_external": "Thuê ngoài taxi / NCC",
             "provider_id": "ID nhà cung cấp (transport_provider_id)",

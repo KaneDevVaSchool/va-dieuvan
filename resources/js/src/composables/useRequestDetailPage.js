@@ -24,7 +24,7 @@ import { saveAs } from 'file-saver'
 import { labelTripType } from '../util/labels'
 import { downloadBinaryAttachmentFromApi } from '../util/downloadPdfAttachment'
 import { toDatetimeLocalValue } from '../util/datetime'
-import { newIdempotencyKey } from '../util/idempotency'
+import { createActionIdempotencyKey } from '../util/idempotency'
 import { useAuthStore } from '../store'
 import { confirmAction } from './useConfirm'
 import { showAppSuccess, showAppError } from './appMessage'
@@ -58,6 +58,9 @@ export function useRequestDetailPage() {
     isDeptContext.value ? t('dept.aria_back_pending') : t('request_detail.aria_back_list'),
   )
   const cloneBannerContext = computed(() => (isDeptContext.value ? 'dept' : 'staff'))
+
+  const deptDecisionIdem = createActionIdempotencyKey()
+  const d2dDecisionIdem = createActionIdempotencyKey()
 
   const req = ref(null)
   const loading = ref(true)
@@ -695,10 +698,15 @@ export function useRequestDetailPage() {
     deptMsg.value = ''
     deptActing.value = true
     try {
-      await deptDecideDispatchRequest(Number(route.params.id), {
-        decision: 'reject',
-        rejection_reason: reason,
-      })
+      await deptDecideDispatchRequest(
+        Number(route.params.id),
+        {
+          decision: 'reject',
+          rejection_reason: reason,
+        },
+        { idempotencyKey: deptDecisionIdem.get() },
+      )
+      deptDecisionIdem.reset()
       closeDeptReject()
       await load()
       showAppSuccess(t('requests_page.reject_success_body'), t('requests_page.reject_success_title'))
@@ -719,7 +727,12 @@ export function useRequestDetailPage() {
     deptMsg.value = ''
     deptActing.value = true
     try {
-      const res = await deptDecideDispatchRequest(Number(route.params.id), { decision: 'approve' })
+      const res = await deptDecideDispatchRequest(
+        Number(route.params.id),
+        { decision: 'approve' },
+        { idempotencyKey: deptDecisionIdem.get() },
+      )
+      deptDecisionIdem.reset()
       const code = requestRefCode.value || `REQ-${route.params.id}`
       const tripId = res?.trip?.id
       if (auth.isDeptHeadOnly()) {
@@ -772,8 +785,9 @@ export function useRequestDetailPage() {
       await decideDispatchRequest(
         Number(route.params.id),
         { decision: 'reject', rejection_reason: reason },
-        { idempotencyKey: newIdempotencyKey() },
+        { idempotencyKey: d2dDecisionIdem.get() },
       )
+      d2dDecisionIdem.reset()
       closeD2dReject()
       await load()
       showAppSuccess(t('requests_page.reject_success_body'), t('requests_page.reject_success_title'))
@@ -797,8 +811,9 @@ export function useRequestDetailPage() {
       const res = await decideDispatchRequest(
         Number(route.params.id),
         { decision: 'approve' },
-        { idempotencyKey: newIdempotencyKey() },
+        { idempotencyKey: d2dDecisionIdem.get() },
       )
+      d2dDecisionIdem.reset()
       const code = requestRefCode.value || `REQ-${route.params.id}`
       const tripId = res?.trip?.id
       if (tripId) {

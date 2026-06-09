@@ -355,6 +355,7 @@ let signedPreviewObjectUrl = ''
 let ocrPollTimer = null
 
 let copyRejectionTimer = null
+let portalDetailLoadSeq = 0
 
 const timelineSteps = usePortalTimelineSteps(req, t)
 const actionCenter = usePortalRequestActionCenter(req, t)
@@ -406,6 +407,7 @@ function syncPortalDetailRouteName(data) {
 
 async function load(opts = {}) {
   const silent = opts.silent === true
+  const seq = ++portalDetailLoadSeq
   if (!silent) {
     loading.value = true
     detailError.value = ''
@@ -422,6 +424,7 @@ async function load(opts = {}) {
       return
     }
     const data = await getPortalDispatchRequest(id)
+    if (seq !== portalDetailLoadSeq) return
     syncPortalDetailRouteName(data)
     req.value = data
     const actual = data.student_count_actual ?? data.passenger_count
@@ -434,11 +437,13 @@ async function load(opts = {}) {
       else if (!portalTabVisible(activeTab.value)) activeTab.value = resolveDefaultPortalTab()
     }
   } catch (e) {
+    if (seq !== portalDetailLoadSeq) return
     if (!silent) {
       detailError.value = formatApiError(e, t('portal.detail_load_fail'))
       req.value = null
     }
   } finally {
+    if (seq !== portalDetailLoadSeq) return
     if (!silent) loading.value = false
     else pollingRefreshing.value = false
   }

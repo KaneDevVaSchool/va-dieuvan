@@ -6,6 +6,7 @@ use App\Models\Trip;
 use App\Models\TripCost;
 use App\Services\Auditing\AuditLogger;
 use App\Support\FinancialDataLock;
+use Illuminate\Support\Facades\DB;
 
 class TripWizardCostProvisioner
 {
@@ -18,45 +19,53 @@ class TripWizardCostProvisioner
      */
     public function provision(Trip $trip, ?int $actorId): void
     {
-        FinancialDataLock::assertTripNotPaid($trip);
+        DB::transaction(function () use ($trip, $actorId) {
+            /** @var Trip|null $locked */
+            $locked = Trip::query()->whereKey($trip->id)->lockForUpdate()->first();
+            if ($locked === null) {
+                return;
+            }
 
-        if ($trip->costs()->where('type', WizardSnapshotCostEstimator::PROVISION_TYPE)->exists()) {
-            return;
-        }
+            FinancialDataLock::assertTripNotPaid($locked);
 
-        $trip->loadMissing('dispatchRequest');
-        $dr = $trip->dispatchRequest;
-        if ($dr === null) {
-            return;
-        }
+            if ($locked->costs()->where('type', WizardSnapshotCostEstimator::PROVISION_TYPE)->exists()) {
+                return;
+            }
 
-        $dr->makeVisible(['wizard_snapshot']);
-        $amount = $this->estimator->estimatedTotalVnd($dr);
-        if ($amount <= 0) {
-            return;
-        }
+            $locked->loadMissing('dispatchRequest');
+            $dr = $locked->dispatchRequest;
+            if ($dr === null) {
+                return;
+            }
 
-        $createdBy = $actorId ?? $trip->dispatcher_id;
+            $dr->makeVisible(['wizard_snapshot']);
+            $amount = $this->estimator->estimatedTotalVnd($dr);
+            if ($amount <= 0) {
+                return;
+            }
 
-        $cost = TripCost::create([
-            'trip_id' => $trip->id,
-            'created_by' => $createdBy,
-            'type' => WizardSnapshotCostEstimator::PROVISION_TYPE,
-            'amount' => $amount,
-            'currency' => 'VND',
-            'description' => 'Chi phí theo dự toán phiếu điều xe',
-            'status' => 'submitted',
-        ]);
+            $createdBy = $actorId ?? $locked->dispatcher_id;
 
-        if ($actorId !== null) {
-            app(AuditLogger::class)->log(
-                actorId: $actorId,
-                event: 'cost.submit',
-                auditable: $cost,
-                before: null,
-                after: $cost->toArray(),
-                metadata: ['auto_provisioned' => true, 'source' => 'wizard_snapshot'],
-            );
-        }
+            $cost = TripCost::create([
+                'trip_id' => $locked->id,
+                'created_by' => $createdBy,
+                'type' => WizardSnapshotCostEstimator::PROVISION_TYPE,
+                'amount' => $amount,
+                'currency' => 'VND',
+                'description' => 'Chi phí theo dự toán phiếu điều xe',
+                'status' => 'submitted',
+            ]);
+
+            if ($actorId !== null) {
+                app(AuditLogger::class)->log(
+                    actorId: $actorId,
+                    event: 'cost.submit',
+                    auditable: $cost,
+                    before: null,
+                    after: $cost->toArray(),
+                    metadata: ['auto_provisioned' => true, 'source' => 'wizard_snapshot'],
+                );
+            }
+        });
     }
 }

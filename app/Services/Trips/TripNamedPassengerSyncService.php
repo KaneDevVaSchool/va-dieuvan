@@ -5,6 +5,8 @@ namespace App\Services\Trips;
 use App\Models\DispatchRequest;
 use App\Models\Trip;
 use App\Models\TripPassenger;
+use App\Support\Messages;
+use App\Support\TripOptimisticLock;
 use Illuminate\Support\Facades\DB;
 
 class TripNamedPassengerSyncService
@@ -12,12 +14,21 @@ class TripNamedPassengerSyncService
     /**
      * @param  array<int, array{name: string, phone?: ?string, note?: ?string}>  $passengers
      */
-    public function replace(Trip $trip, DispatchRequest $dispatchRequest, int $passengerCount, array $passengers): void
-    {
-        DB::transaction(function () use ($trip, $dispatchRequest, $passengerCount, $passengers) {
-            $trip->tripPassengers()->delete();
-            $trip->passenger_check_ins = [];
-            $trip->save();
+    public function replace(
+        Trip $trip,
+        DispatchRequest $dispatchRequest,
+        int $passengerCount,
+        array $passengers,
+        int $expectedLockVersion,
+    ): void {
+        DB::transaction(function () use ($trip, $dispatchRequest, $passengerCount, $passengers, $expectedLockVersion) {
+            /** @var Trip $locked */
+            $locked = Trip::query()->whereKey($trip->id)->lockForUpdate()->firstOrFail();
+            if ((int) $locked->lock_version !== $expectedLockVersion) {
+                abort(409, Messages::OPTIMISTIC_LOCK_CONFLICT);
+            }
+
+            $locked->tripPassengers()->delete();
 
             $now = now();
             $rows = [];
@@ -26,7 +37,7 @@ class TripNamedPassengerSyncService
                 $phoneTrim = isset($row['phone']) ? trim((string) $row['phone']) : '';
                 $noteTrim = isset($row['note']) ? trim((string) $row['note']) : '';
                 $rows[] = [
-                    'trip_id' => $trip->id,
+                    'trip_id' => $locked->id,
                     'name' => $name,
                     'phone' => $phoneTrim === '' ? null : mb_substr($phoneTrim, 0, 20),
                     'note' => $noteTrim === '' ? null : $noteTrim,
@@ -38,11 +49,14 @@ class TripNamedPassengerSyncService
                 TripPassenger::insert($rows);
             }
 
+            $dispatchRequest->refresh();
             $dispatchRequest->passenger_count = $passengerCount;
             $snap = is_array($dispatchRequest->wizard_snapshot) ? $dispatchRequest->wizard_snapshot : [];
             $snap['passengerRows'] = $this->mirrorWizardPassengerRows($passengers);
             $dispatchRequest->wizard_snapshot = $snap;
             $dispatchRequest->save();
+
+            TripOptimisticLock::update($locked, ['passenger_check_ins' => []], $expectedLockVersion);
         });
     }
 

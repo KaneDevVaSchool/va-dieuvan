@@ -88,7 +88,9 @@ export async function passengerCheckIn(tripId, passengerKey, payload) {
   return data.data
 }
 
-export async function passengerUncheckIn(tripId, passengerKey) {
-  const { data } = await http.delete(`/trips/${tripId}/passengers/${encodeURIComponent(passengerKey)}/checkin`)
+export async function passengerUncheckIn(tripId, passengerKey, { lock_version } = {}) {
+  const { data } = await http.delete(`/trips/${tripId}/passengers/${encodeURIComponent(passengerKey)}/checkin`, {
+    params: lock_version != null ? { lock_version } : undefined,
+  })
   return data.data
 }

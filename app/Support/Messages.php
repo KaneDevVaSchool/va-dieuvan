@@ -56,6 +56,10 @@ final class Messages
 
     public const REQUEST_CLONE_INVALID_STATUS = 'Chỉ có thể đặt lại phiếu đã duyệt hoặc đã từ chối.';
 
+    public const TRIP_ALREADY_EXISTS_FOR_REQUEST = 'Yêu cầu đã có chuyến điều vận; không thể duyệt tạo thêm.';
+
+    public const TRIP_ASSIGN_BLOCKED_OPERATIONAL = 'Chuyến đã vận hành hoặc đã kết thúc; không thể phân công lại.';
+
     public const REQUEST_PDF_REQUIRES_APPROVAL = 'PDF chỉ khả dụng sau khi phiếu đã được duyệt.';
 
 }

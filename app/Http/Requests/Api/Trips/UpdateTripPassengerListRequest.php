@@ -21,6 +21,7 @@ class UpdateTripPassengerListRequest extends ApiFormRequest
                 'passengers.*.name' => ['required', 'string', 'max:255'],
                 'passengers.*.phone' => ['nullable', 'string', 'max:20'],
                 'passengers.*.note' => ['nullable', 'string', 'max:2000'],
+                'lock_version' => ['required', 'integer', 'min:0'],
             ];
         }
 

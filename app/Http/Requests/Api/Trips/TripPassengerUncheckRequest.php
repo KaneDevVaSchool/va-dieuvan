@@ -13,6 +13,8 @@ class TripPassengerUncheckRequest extends ApiFormRequest
 
     public function rules(): array
     {
-        return [];
+        return [
+            'lock_version' => ['required', 'integer', 'min:0'],
+        ];
     }
 }

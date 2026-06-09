@@ -524,11 +524,15 @@ function buildApiParams() {
 }
 
 async function fetchReport() {
+  const seq = ++fetchReportSeq
   loading.value = true
   loadError.value = ''
   try {
-    reportData.value = await getDriverFrequencyReport(buildApiParams())
+    const data = await getDriverFrequencyReport(buildApiParams())
+    if (seq !== fetchReportSeq) return
+    reportData.value = data
   } catch (e) {
+    if (seq !== fetchReportSeq) return
     loadError.value = e?.response?.data?.message ?? e?.message ?? 'load_failed'
     reportData.value = {
       kpi: { ...EMPTY_KPI },
@@ -540,8 +544,18 @@ async function fetchReport() {
       year_comparison: {},
     }
   } finally {
-    loading.value = false
+    if (seq === fetchReportSeq) loading.value = false
   }
+}
+
+let fetchReportSeq = 0
+let fetchReportDebounceId = null
+
+function scheduleFetchReport() {
+  clearTimeout(fetchReportDebounceId)
+  fetchReportDebounceId = setTimeout(() => {
+    void fetchReport()
+  }, 320)
 }
 
 onMounted(() => {
@@ -552,7 +566,7 @@ onMounted(() => {
 onActivated(() => {
   onDriverFreqFilterBarEnter()
 })
-watch(() => ({ ...filters }), fetchReport, { deep: true })
+watch(() => ({ ...filters }), scheduleFetchReport, { deep: true })
 
 const chartDriverTrips = computed(() => {
   const list = filteredDrivers.value
