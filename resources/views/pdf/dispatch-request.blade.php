@@ -6,7 +6,7 @@
     @php
         // header.png 1999×393 px → ~41.3mm khi scale theo chiều ngang A4 (210mm)
         $hdrBandMm = 41.3;
-        $hdrContentGapMm = 1;
+        $hdrContentGapMm = 0;
         $pageOrient = $isCargo ? 'landscape' : 'portrait';
         $pageMarginTop = $isCargo ? '12mm' : ($hdrBandMm + $hdrContentGapMm) . 'mm';
         $pageMarginX   = '5mm';
@@ -111,7 +111,12 @@
             margin: 0; padding: 0; border: none; display: block;
         }
 
-        .page-content { position: relative; width: 100%; color: {{ $pdfTextColor }}; }
+        .page-content {
+            position: relative;
+            width: 100%;
+            color: {{ $pdfTextColor }};
+            margin-top: -1pt;
+        }
 
         /* E + F + G always on the same page */
         .signatures-page {
@@ -124,7 +129,7 @@
         /* ── TITLE BLOCK ── */
         .doc-head {
             width: 100%;
-            margin-bottom: 5pt;
+            margin-bottom: 3pt;
         }
 
         .doc-heading {
@@ -159,8 +164,6 @@
         .sec-hd {
             text-align: left;
             padding: 5pt 8pt 4.5pt 6pt;
-            border-top: 0.75pt solid #444;
-            border-bottom: 0.5pt solid #bbb;
             background: #f2f2f2;
             page-break-after: avoid;
             line-height: 1.55;
@@ -201,23 +204,22 @@
             vertical-align: middle;
         }
 
-        .sec-bd { border-bottom: 0.5pt solid #ccc; page-break-before: avoid; }
+        .sec-bd { page-break-before: avoid; }
         .sec-bd--flush { padding: 0; }
 
         /* ── FIELD TABLE ── */
         table.ft { width: 100%; border-collapse: collapse; }
 
         table.ft td {
-            border-right: 0.5pt solid #ddd;
-            border-bottom: 0.5pt solid #ddd;
+            border: none;
             padding: 4pt 6pt 5pt;
             vertical-align: top;
         }
 
-        table.ft tr:first-child td { border-top: none; }
-        table.ft tr:last-child  td { border-bottom: none; }
-        table.ft td:first-child    { border-left: none; }
-        table.ft td:last-child     { border-right: none; }
+        table.ft tr:first-child td,
+        table.ft tr:last-child td,
+        table.ft td:first-child,
+        table.ft td:last-child { border: none; }
 
         .fl {
             font-size: 6.5pt;
@@ -346,7 +348,7 @@
         }
 
         /* ── TARGET CHIPS ── */
-        .target-wrap { padding: 4pt 6pt 3pt; border-bottom: 0.5pt solid #ddd; }
+        .target-wrap { padding: 4pt 6pt 3pt; }
 
         .target-chip {
             display: inline-block;
@@ -522,7 +524,6 @@
             color: {{ $pdfTextColor }};
             text-transform: uppercase;
             letter-spacing: 0.5pt;
-            border-bottom: 0.5pt solid #ddd;
         }
 
         /* ── PAGE FOOTER ── */
@@ -533,7 +534,6 @@
             color: {{ $pdfTextColor }};
             margin-top: 8pt;
             padding-top: 3pt;
-            border-top: 0.5pt solid #e0e0e0;
             letter-spacing: 0.4pt;
         }
     </style>
@@ -710,7 +710,7 @@
                 @endforelse
             </div>
 
-            <table class="ft" style="border-top: 0.5pt solid #e0e0e0;">
+            <table class="ft">
                 <tr>
                     <td style="width:35%;">
                         <div class="fl">d.2 &nbsp;Nhân sự phụ trách — Họ tên</div>
