@@ -3,10 +3,21 @@
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    @php
+        // header.png 1999×393 px → ~41.3mm khi scale theo chiều ngang A4 (210mm)
+        $hdrBandMm = 41.3;
+        $pageOrient = $isCargo ? 'landscape' : 'portrait';
+        $pageMarginTop = $isCargo ? '16mm' : ($hdrBandMm + 5.7) . 'mm';
+        $pageMarginX   = $isCargo ? '12mm' : '18mm';
+        $pageMarginBot = $isCargo ? '16mm' : '24mm';
+        $bgW = $isCargo ? '297mm' : '210mm';
+        $bgH = $isCargo ? '210mm' : '297mm';
+        $useBranding = ! $isCargo;
+    @endphp
     <style>
         @page {
-            margin: 34mm 18mm 22mm 18mm;
-            size: A4 portrait;
+            margin: {{ $pageMarginTop }} {{ $pageMarginX }} {{ $pageMarginBot }} {{ $pageMarginX }};
+            size: A4 {{ $pageOrient }};
         }
 
         * {
@@ -23,19 +34,54 @@
 
         strong, b { font-weight: bold; }
 
-        /* ── Fixed layers (repeat on every page) ── */
-        .bg-layer {
+        /* ── Fixed branding layers (repeat on every page, portrait only) ── */
+        .bg-shell {
             position: fixed;
-            top: 0; left: 0;
-            width: 210mm; height: 297mm;
-            z-index: -10;
+            top: 0;
+            left: 0;
+            width: {{ $bgW }};
+            height: {{ $bgH }};
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .bg-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: {{ $bgW }};
+            height: {{ $bgH }};
+            margin: 0;
+            padding: 0;
+            border: none;
+            display: block;
+        }
+
+        .bg-hdr-mask {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: {{ $bgW }};
+            height: {{ $hdrBandMm }}mm;
+            background: #fff;
         }
 
         .hdr-layer {
             position: fixed;
-            top: 4mm; left: 0;
-            width: 210mm;
-            z-index: 10;
+            top: 0;
+            left: 0;
+            width: {{ $bgW }};
+            height: {{ $hdrBandMm }}mm;
+            z-index: 2;
+            margin: 0;
+            padding: 0;
+            border: none;
+            display: block;
+        }
+
+        .page-content {
+            position: relative;
+            z-index: 1;
         }
 
         /* ── Document title ── */
@@ -373,19 +419,28 @@
 
         $bgPath  = public_path('docs/background.png');
         $hdrPath = public_path('docs/header.png');
-        $bgUri   = file_exists($bgPath)  ? 'data:image/png;base64,' . base64_encode(file_get_contents($bgPath))  : '';
-        $hdrUri  = file_exists($hdrPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($hdrPath)) : '';
+        $bgUri   = ($useBranding && file_exists($bgPath))
+            ? 'data:image/png;base64,' . base64_encode(file_get_contents($bgPath))
+            : '';
+        $hdrUri  = ($useBranding && file_exists($hdrPath))
+            ? 'data:image/png;base64,' . base64_encode(file_get_contents($hdrPath))
+            : '';
 
         $reqCode = 'ĐNDV/' . $dispatchRequest->created_at->format('Y') . '/' . str_pad($dispatchRequest->id, 4, '0', STR_PAD_LEFT);
     @endphp
 
-    {{-- ────────── BACKGROUND & HEADER LAYERS ────────── --}}
+    {{-- ────────── BACKGROUND (watermark + footer) & HEADER (logo + tên trường) ────────── --}}
     @if($bgUri)
-        <img class="bg-layer" src="{{ $bgUri }}" />
+        <div class="bg-shell">
+            <img class="bg-layer" src="{{ $bgUri }}" alt="" />
+            <div class="bg-hdr-mask"></div>
+        </div>
     @endif
     @if($hdrUri)
-        <img class="hdr-layer" src="{{ $hdrUri }}" />
+        <img class="hdr-layer" src="{{ $hdrUri }}" alt="" />
     @endif
+
+    <div class="page-content">
 
     {{-- ────────── DOCUMENT TITLE ────────── --}}
     <table class="top-layout">
@@ -809,6 +864,8 @@
     <div class="pg-footer">
         BM.03/MH.QT.04 &nbsp;·&nbsp; Phiếu Đề Nghị Điều Vận &nbsp;·&nbsp; Hệ Thống Trường Việt Mỹ
     </div>
+
+    </div>{{-- /.page-content --}}
 
 </body>
 
