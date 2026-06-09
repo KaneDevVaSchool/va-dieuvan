@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Auth\LoginRequest;
 use App\Models\User;
+use App\Support\SuperAdminAccess;
 use App\Services\FeatureToggleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -31,6 +32,8 @@ class AuthController extends Controller
         if (isset($user->is_active) && ! $user->is_active) {
             abort(403, 'Tài khoản đã bị khóa.');
         }
+
+        SuperAdminAccess::ensureRole($user);
 
         $device = $data['device_name'] ?? 'spa';
         $token = $user->createToken($device)->plainTextToken;

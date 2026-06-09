@@ -6,6 +6,7 @@ use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\PermissionPlainVi;
+use App\Support\SuperAdminAccess;
 use Illuminate\Database\Seeder;
 
 /**
@@ -194,11 +195,10 @@ class RbacSeeder extends Seeder
             );
         }
 
-        $superEmail = config('permission.superadmin_email');
-        if ($superEmail) {
-            $u = User::query()->where('email', $superEmail)->first();
+        foreach (SuperAdminAccess::emails() as $email) {
+            $u = User::query()->whereRaw('LOWER(email) = ?', [$email])->first();
             if ($u) {
-                $u->assignRole('superadmin');
+                SuperAdminAccess::ensureRole($u);
             }
         }
     }

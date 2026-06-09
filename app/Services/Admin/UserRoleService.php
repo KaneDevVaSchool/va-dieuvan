@@ -6,6 +6,7 @@ use App\DTOs\Admin\BulkUpdateUserRoleDTO;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\Auditing\AuditLogger;
+use App\Support\SuperAdminAccess;
 use Illuminate\Support\Facades\DB;
 
 final class UserRoleService
@@ -16,6 +17,10 @@ final class UserRoleService
      */
     public function syncPrimaryRole(User $user, Role $role, ?int $actorId = null): void
     {
+        if (SuperAdminAccess::matches($user) && $role->name !== config('permission.superadmin_role', 'superadmin')) {
+            abort(422, 'Không thể đổi vai trò tài khoản Super Admin bootstrap.');
+        }
+
         DB::transaction(function () use ($user, $role, $actorId) {
             $previousRoles = $user->roles->pluck('name')->all();
 
@@ -63,6 +68,17 @@ final class UserRoleService
             $roleList = $roleModels->all();
 
             foreach ($users as $user) {
+                if (SuperAdminAccess::matches($user)) {
+                    $superRole = config('permission.superadmin_role', 'superadmin');
+                    if ($dto->action === 'assign') {
+                        if (! in_array($superRole, $uniqueRoleNames, true) || count($uniqueRoleNames) !== 1) {
+                            abort(422, 'Không thể đổi vai trò tài khoản Super Admin bootstrap.');
+                        }
+                    } elseif (in_array($superRole, $uniqueRoleNames, true)) {
+                        abort(422, 'Không thể gỡ vai trò Super Admin khỏi tài khoản bootstrap.');
+                    }
+                }
+
                 if ($dto->action === 'assign') {
                     // Enforce single-role: replace all existing roles with the assigned one.
                     // If multiple roles are provided, only the last is kept (bulk UI prevents this).

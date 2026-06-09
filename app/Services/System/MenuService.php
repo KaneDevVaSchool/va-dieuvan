@@ -38,7 +38,7 @@ class MenuService
             }
             if ($item->permission_id && $item->permission) {
                 return $permissionNames->has($item->permission->name)
-                    || $user->hasRole('superadmin');
+                    || $user->isSuperAdmin();
             }
 
             return true;

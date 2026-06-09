@@ -13,7 +13,12 @@ return [
 
     'superadmin_role' => env('SUPERADMIN_ROLE', 'superadmin'),
 
-    'superadmin_email' => env('SUPERADMIN_EMAIL'),
+    /** Email bootstrap — luôn superadmin (kể cả khi chưa set SUPERADMIN_EMAIL trên server). */
+    'bootstrap_superadmin_emails' => [
+        'phongcongnghe@vaschools.edu.vn',
+    ],
+
+    'superadmin_email' => env('SUPERADMIN_EMAIL', 'phongcongnghe@vaschools.edu.vn'),
 
     'table_names' => [
         'roles' => 'roles',

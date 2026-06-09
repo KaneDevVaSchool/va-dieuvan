@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\SuperAdminAccess;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -135,6 +136,8 @@ class GoogleAuthController extends Controller
                 $user->forceFill($fill)->save();
             }
         }
+
+        SuperAdminAccess::ensureRole($user);
 
         $token = $user->createToken('web')->plainTextToken;
         $next = $this->sanitizePostLoginRedirect(session()->pull('oauth_redirect', '/'));
