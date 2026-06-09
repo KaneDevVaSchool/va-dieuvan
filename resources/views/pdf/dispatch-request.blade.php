@@ -6,8 +6,9 @@
     @php
         // header.png 1999×393 px → ~41.3mm khi scale theo chiều ngang A4 (210mm)
         $hdrBandMm = 41.3;
+        $hdrContentGapMm = 1;
         $pageOrient = $isCargo ? 'landscape' : 'portrait';
-        $pageMarginTop = $isCargo ? '12mm' : ($hdrBandMm + 4) . 'mm';
+        $pageMarginTop = $isCargo ? '12mm' : ($hdrBandMm + $hdrContentGapMm) . 'mm';
         $pageMarginX   = '5mm';
         $pageMarginBot = $isCargo ? '12mm' : '14mm';
         $bgW = $isCargo ? '297mm' : '210mm';
@@ -35,6 +36,7 @@
         }
         $pdfFontFamily = "'GarbataTrial', sans-serif";
         $pdfTabularFont = "'DejaVu Sans', sans-serif";
+        $pdfTextColor = '#000';
     @endphp
     <style>
         {!! $fontFaceCss !!}
@@ -48,7 +50,7 @@
 
         body {
             font-size: 8.5pt;
-            color: #111;
+            color: {{ $pdfTextColor }};
             margin: 0;
             line-height: 1.55;
         }
@@ -108,7 +110,7 @@
             margin: 0; padding: 0; border: none; display: block;
         }
 
-        .page-content { position: relative; width: 100%; }
+        .page-content { position: relative; width: 100%; color: {{ $pdfTextColor }}; }
 
         /* F + G always start on a dedicated page (signatures / PO confirmation) */
         .signatures-page {
@@ -125,7 +127,7 @@
         .doc-heading {
             width: 100%;
             text-align: center;
-            padding: 3pt 0 2pt;
+            padding: 0 0 2pt;
         }
 
         .doc-title {
@@ -134,14 +136,14 @@
             text-transform: uppercase;
             letter-spacing: 1.5pt;
             text-align: center;
-            color: #111;
+            color: {{ $pdfTextColor }};
             line-height: 1.4;
         }
 
         .doc-subtitle {
             font-size: 8.5pt;
             text-align: center;
-            color: #555;
+            color: {{ $pdfTextColor }};
             font-style: italic;
             margin-top: 3pt;
             line-height: 1.5;
@@ -167,7 +169,7 @@
             text-align: center;
             border: 0.5pt solid #444;
             background: #fff;
-            color: #111;
+            color: {{ $pdfTextColor }};
             font-size: 8pt;
             padding: 1.5pt 4pt;
             margin-right: 7pt;
@@ -181,7 +183,7 @@
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 0.35pt;
-            color: #111;
+            color: {{ $pdfTextColor }};
             vertical-align: middle;
         }
 
@@ -191,7 +193,7 @@
             font-style: italic;
             letter-spacing: 0;
             text-transform: none;
-            color: #666;
+            color: {{ $pdfTextColor }};
             margin-left: 6pt;
             vertical-align: middle;
         }
@@ -216,17 +218,17 @@
 
         .fl {
             font-size: 6.5pt;
-            color: #aaa;
+            color: {{ $pdfTextColor }};
             text-transform: uppercase;
             margin-bottom: 2.5pt;
             line-height: 1.45;
         }
 
-        .fl-hint { font-style: italic; color: #ccc; text-transform: none; letter-spacing: 0; }
+        .fl-hint { font-style: italic; color: {{ $pdfTextColor }}; text-transform: none; letter-spacing: 0; }
 
         .fv {
             font-size: 9pt;
-            color: #111;
+            color: {{ $pdfTextColor }};
             min-height: 14pt;
             line-height: 1.55;
             border-bottom: 0.6pt dotted #bbb;
@@ -245,7 +247,7 @@
             padding: 4pt 6pt;
             font-size: 7.5pt;
             line-height: 1.5;
-            color: #888;
+            color: {{ $pdfTextColor }};
             font-style: italic;
         }
 
@@ -255,7 +257,7 @@
         .target-chip {
             display: inline-block;
             border: 0.5pt solid #999;
-            color: #333;
+            color: {{ $pdfTextColor }};
             font-size: 7.5pt;
             line-height: 1.45;
             padding: 1.5pt 7pt;
@@ -280,17 +282,17 @@
             text-transform: uppercase;
             letter-spacing: 0.2pt;
             background: #f4f4f4;
-            color: #444;
+            color: {{ $pdfTextColor }};
             line-height: 1.5;
         }
 
-        table.dt th.go   { background: #eaf2fc; color: #2a4a7a; }
-        table.dt th.back { background: #eaf6ee; color: #1a4028; }
+        table.dt th.go   { background: #eaf2fc; color: {{ $pdfTextColor }}; }
+        table.dt th.back { background: #eaf6ee; color: {{ $pdfTextColor }}; }
 
         table.dt td {
             padding: 4.5pt 3pt;
             border: 0.5pt solid #e0e0e0;
-            color: #111;
+            color: {{ $pdfTextColor }};
             vertical-align: top;
             font-size: 8pt;
             line-height: 1.55;
@@ -306,7 +308,7 @@
             background: #f5f5f5;
             border: 0.5pt solid #bbb;
             border-top: 1pt solid #555;
-            color: #111;
+            color: {{ $pdfTextColor }};
         }
 
         table.dt .th-sub {
@@ -332,22 +334,23 @@
             padding: 4pt 4pt;
             text-transform: uppercase;
             letter-spacing: 0.3pt;
-            color: #111;
+            color: {{ $pdfTextColor }};
             border-bottom: 0.5pt solid #ccc !important;
         }
 
         .sig-bd {
-            height: 60pt;
+            height: 85pt;
+            min-height: 85pt;
             vertical-align: bottom;
-            padding: 0 4pt 5pt;
+            padding: 8pt 6pt 8pt;
             text-align: center;
         }
 
-        .sig-name { font-size: 8pt; line-height: 1.5; color: #111; }
+        .sig-name { font-size: 8pt; line-height: 1.5; color: {{ $pdfTextColor }}; margin-top: 4pt; display: block; }
 
         /* ── SECTION G ── */
         .g-row { padding: 6pt 6pt; display: block; line-height: 1.55; }
-        .g-lbl { font-size: 8pt; color: #111; }
+        .g-lbl { font-size: 8pt; color: {{ $pdfTextColor }}; }
 
         .g-dots {
             border-bottom: 0.6pt dotted #bbb;
@@ -361,20 +364,20 @@
         .chip-type {
             display: inline-block;
             border: 0.5pt solid #999;
-            color: #333;
+            color: {{ $pdfTextColor }};
             font-size: 7.5pt;
             line-height: 1.45;
             padding: 1pt 6pt;
             border-radius: 2pt;
         }
 
-        .muted { font-size: 7.5pt; line-height: 1.5; color: #aaa; font-style: italic; }
+        .muted { font-size: 7.5pt; line-height: 1.5; color: {{ $pdfTextColor }}; font-style: italic; }
 
         .d1-lbl {
             padding: 3pt 6pt 2.5pt;
             font-size: 6.5pt;
             line-height: 1.45;
-            color: #aaa;
+            color: {{ $pdfTextColor }};
             text-transform: uppercase;
             letter-spacing: 0.5pt;
             border-bottom: 0.5pt solid #ddd;
@@ -385,7 +388,7 @@
             text-align: center;
             font-size: 7pt;
             line-height: 1.5;
-            color: #bbb;
+            color: {{ $pdfTextColor }};
             margin-top: 8pt;
             padding-top: 3pt;
             border-top: 0.5pt solid #e0e0e0;
@@ -400,8 +403,8 @@
 
         $cb = static function (bool $checked): string {
             return $checked
-                ? '<span style="font-family:DejaVu Sans,sans-serif;font-size:9pt;color:#1a1a1a;">&#x2611;</span>'
-                : '<span style="font-family:DejaVu Sans,sans-serif;font-size:9pt;color:#ccc;">&#x2610;</span>';
+                ? '<span style="font-family:DejaVu Sans,sans-serif;font-size:9pt;color:{{ $pdfTextColor }};">&#x2611;</span>'
+                : '<span style="font-family:DejaVu Sans,sans-serif;font-size:9pt;color:{{ $pdfTextColor }};">&#x2610;</span>';
         };
 
         $checkedTargets = array_filter($targetGrid, fn($t) => $t['checked']);
@@ -534,11 +537,11 @@
                         @if($isUrgent)
                             &nbsp;<span style="font-size:8pt; color:#c0392b;">Lý do: {{ $urgentReason }}</span>
                         @else
-                            &nbsp;<span style="font-size:8pt; color:#bbb;">Lý do: —</span>
+                            &nbsp;<span style="font-size:8pt; color:{{ $pdfTextColor }};">Lý do: —</span>
                         @endif
                     </td>
                     <td style="width:40%; text-align:right; vertical-align:middle; border-top:none; padding:4pt 8pt;">
-                        <span style="font-size:6.5pt; color:#888; text-transform:uppercase; letter-spacing:0.3pt;">Loại yêu cầu:</span>
+                        <span style="font-size:6.5pt; color:{{ $pdfTextColor }}; text-transform:uppercase; letter-spacing:0.3pt;">Loại yêu cầu:</span>
                         &nbsp;<span class="chip-type">{{ $tripType }}</span>
                     </td>
                 </tr>
@@ -558,7 +561,7 @@
                 @forelse($checkedTargets as $tg)
                     <span class="target-chip">&#x2714;&nbsp;{{ $tg['label'] }}</span>
                 @empty
-                    <span style="font-size:8pt; color:#bbb;">—</span>
+                    <span style="font-size:8pt; color:{{ $pdfTextColor }};">—</span>
                 @endforelse
             </div>
 
@@ -785,11 +788,11 @@
             </tr>
             <tr>
                 <td class="sig-bd">
-                    <span style="font-size:7pt; color:#bbb; font-style:italic; display:block; margin-bottom:2pt;">(Ký, ghi rõ họ tên)</span>
+                    <span style="font-size:7pt; color:{{ $pdfTextColor }}; font-style:italic; display:block; margin-bottom:2pt;">(Ký, ghi rõ họ tên)</span>
                     <span class="sig-name">Phạm Thanh Hùng</span>
                 </td>
-                <td class="sig-bd"><span style="font-size:7pt; color:#bbb; font-style:italic;">(Ký, ghi rõ họ tên)</span></td>
-                <td class="sig-bd"><span style="font-size:7pt; color:#bbb; font-style:italic;">(Ký, ghi rõ họ tên)</span></td>
+                <td class="sig-bd"><span style="font-size:7pt; color:{{ $pdfTextColor }}; font-style:italic;">(Ký, ghi rõ họ tên)</span></td>
+                <td class="sig-bd"><span style="font-size:7pt; color:{{ $pdfTextColor }}; font-style:italic;">(Ký, ghi rõ họ tên)</span></td>
             </tr>
             <tr>
                 <td class="sig-hd">Giám đốc Vận hành</td>
@@ -798,12 +801,12 @@
             </tr>
             <tr>
                 <td class="sig-bd">
-                    <span style="font-size:7pt; color:#bbb; font-style:italic; display:block; margin-bottom:2pt;">(Ký, ghi rõ họ tên)</span>
+                    <span style="font-size:7pt; color:{{ $pdfTextColor }}; font-style:italic; display:block; margin-bottom:2pt;">(Ký, ghi rõ họ tên)</span>
                     <span class="sig-name">Vũ Quốc Vương</span>
                 </td>
                 <td class="sig-bd"></td>
                 <td class="sig-bd">
-                    <span style="font-size:7pt; color:#bbb; font-style:italic; display:block; margin-bottom:2pt;">(Ký, ghi rõ họ tên)</span>
+                    <span style="font-size:7pt; color:{{ $pdfTextColor }}; font-style:italic; display:block; margin-bottom:2pt;">(Ký, ghi rõ họ tên)</span>
                     <span class="sig-name">Nguyễn Ngọc Hiển</span>
                 </td>
             </tr>
