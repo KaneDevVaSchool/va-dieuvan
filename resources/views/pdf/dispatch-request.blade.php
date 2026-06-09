@@ -79,16 +79,65 @@
         }
 
         /* ── TITLE BLOCK ── */
-        .top-layout { width: 100%; border-collapse: collapse; margin-bottom: 4pt; }
-        .top-layout td { vertical-align: middle; padding: 0; border: none; }
+        .doc-head {
+            position: relative;
+            width: 100%;
+            margin-bottom: 5pt;
+            min-height: 50pt;
+        }
+
+        .doc-meta {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 36%;
+            max-width: 66mm;
+            z-index: 1;
+        }
+
+        .meta-box {
+            border: 0.5pt solid #ccc;
+            font-size: 6.5pt;
+            background: #fff;
+        }
+
+        .meta-row {
+            padding: 2pt 5pt;
+            border-bottom: 0.5pt solid #eee;
+            overflow: hidden;
+        }
+
+        .meta-row:last-child { border-bottom: none; }
+
+        .meta-lbl {
+            float: left;
+            width: 54%;
+            color: #999;
+        }
+
+        .meta-val {
+            float: right;
+            width: 46%;
+            text-align: right;
+            color: #111;
+        }
+
+        .meta-code { color: #7B1E3B; }
+
+        .doc-heading {
+            width: 100%;
+            text-align: center;
+            padding: 28pt 0 1pt;
+        }
 
         .doc-title {
             font-size: 13.5pt;
             font-weight: normal;
             text-transform: uppercase;
-            letter-spacing: 2pt;
+            letter-spacing: 1.5pt;
             text-align: center;
             color: #111;
+            line-height: 1.25;
         }
 
         .doc-subtitle {
@@ -97,55 +146,56 @@
             color: #555;
             font-style: italic;
             margin-top: 2pt;
+            line-height: 1.3;
         }
 
-        .meta-tbl { width: 100%; border-collapse: collapse; font-size: 6.5pt; border: 0.5pt solid #ccc; }
-        .meta-tbl td { padding: 2pt 5pt; border-bottom: 0.5pt solid #eee; }
-        .meta-tbl tr:last-child td { border-bottom: none; }
-        .meta-lbl { color: #999; width: 88px; }
-        .meta-val { text-align: right; color: #111; }
-        .meta-code { color: #7B1E3B; }
-
-        /* ── SECTION CHROME (no background) ── */
-        .sec       { margin-top: 4pt; }
+        /* ── SECTION HEADERS (A–G) ── */
+        .sec       { margin-top: 5pt; }
         .sec-avoid { page-break-inside: avoid; }
 
         .sec-hd {
-            text-align: center;
-            padding: 3pt 0 2.5pt;
-            border-top: 0.5pt solid #999;
-            border-bottom: 0.5pt solid #999;
+            text-align: left;
+            padding: 4pt 8pt 3.5pt 6pt;
+            border-top: 0.75pt solid #444;
+            border-bottom: 0.5pt solid #bbb;
+            background: #f2f2f2;
             page-break-after: avoid;
+            line-height: 1.35;
         }
 
         .sec-badge {
             display: inline-block;
-            border: 0.5pt solid #999;
+            min-width: 12pt;
+            text-align: center;
+            border: 0.5pt solid #444;
+            background: #fff;
             color: #111;
-            font-size: 6.5pt;
-            font-weight: normal;
-            padding: 0.3pt 5pt;
-            border-radius: 2pt;
-            letter-spacing: 0.4pt;
-            margin-right: 6pt;
-            text-transform: uppercase;
+            font-size: 7pt;
+            padding: 1pt 4pt;
+            margin-right: 7pt;
+            vertical-align: middle;
+            letter-spacing: 0;
         }
 
         .sec-ttl {
-            font-size: 7pt;
+            display: inline;
+            font-size: 7.5pt;
             font-weight: normal;
             text-transform: uppercase;
-            letter-spacing: 0.5pt;
+            letter-spacing: 0.35pt;
             color: #111;
+            vertical-align: middle;
         }
 
         .sec-sub {
+            display: inline;
             font-size: 6.5pt;
             font-style: italic;
             letter-spacing: 0;
             text-transform: none;
-            color: #777;
-            margin-left: 4pt;
+            color: #666;
+            margin-left: 6pt;
+            vertical-align: middle;
         }
 
         .sec-bd { border-bottom: 0.5pt solid #ccc; page-break-before: avoid; }
@@ -369,42 +419,38 @@
     <div class="page-content">
 
     {{-- ────────── DOCUMENT TITLE ────────── --}}
-    <table class="top-layout">
-        <tr>
-            {{-- spacer equal to meta width so title appears perfectly centred --}}
-            <td style="width:28%;"></td>
-            <td style="width:44%; vertical-align:middle;">
-                <div class="doc-title">Phiếu Đề Nghị Điều Vận</div>
-                <div class="doc-subtitle">
-                    @if($isCargo) Điều chuyển Hàng hóa
-                    @elseif($isP2P) Vận chuyển Điểm — Điểm
-                    @elseif($isBusiness) Công tác
-                    @else Đưa đón tận nơi
-                    @endif
+    <div class="doc-head">
+        <div class="doc-heading">
+            <div class="doc-title">Phiếu Đề Nghị Điều Vận</div>
+            <div class="doc-subtitle">
+                @if($isCargo) Điều chuyển Hàng hóa
+                @elseif($isP2P) Vận chuyển Điểm — Điểm
+                @elseif($isBusiness) Công tác
+                @else Đưa đón tận nơi
+                @endif
+            </div>
+        </div>
+        <div class="doc-meta">
+            <div class="meta-box">
+                <div class="meta-row">
+                    <span class="meta-lbl">Ký hiệu</span>
+                    <span class="meta-val">BM.03/MH.QT.04</span>
                 </div>
-            </td>
-            <td style="width:28%; vertical-align:top;">
-                <table class="meta-tbl">
-                    <tr>
-                        <td class="meta-lbl">Ký hiệu</td>
-                        <td class="meta-val">BM.03/MH.QT.04</td>
-                    </tr>
-                    <tr>
-                        <td class="meta-lbl">Ngày ban hành</td>
-                        <td class="meta-val">29/08/2025</td>
-                    </tr>
-                    <tr>
-                        <td class="meta-lbl">Lần ban hành</td>
-                        <td class="meta-val">01</td>
-                    </tr>
-                    <tr>
-                        <td class="meta-lbl">Mã phiếu</td>
-                        <td class="meta-val"><span class="meta-code">{{ $reqCode }}</span></td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
+                <div class="meta-row">
+                    <span class="meta-lbl">Ngày ban hành</span>
+                    <span class="meta-val">29/08/2025</span>
+                </div>
+                <div class="meta-row">
+                    <span class="meta-lbl">Lần ban hành</span>
+                    <span class="meta-val">01</span>
+                </div>
+                <div class="meta-row">
+                    <span class="meta-lbl">Mã phiếu</span>
+                    <span class="meta-val"><span class="meta-code">{{ $reqCode }}</span></span>
+                </div>
+            </div>
+        </div>
+    </div>
 
     {{-- ────────── A · NGƯỜI ĐỀ NGHỊ ────────── --}}
     <div class="sec sec-avoid">
