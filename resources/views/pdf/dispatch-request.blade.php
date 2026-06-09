@@ -122,7 +122,7 @@
         }
 
         .meta-tbl td {
-            padding: 3pt 6pt;
+            padding: 2.5pt 5pt;
             border-bottom: 0.5pt solid #e0e0e0;
         }
 
@@ -383,7 +383,7 @@
         .muted { font-size: 6.5pt; color: #999; font-style: italic; }
 
         .d1-lbl {
-            padding: 4pt 9pt 3pt;
+            padding: 3pt 8pt 2pt;
             font-size: 5.5pt;
             color: #888;
             text-transform: uppercase;
@@ -564,7 +564,7 @@
 
             <table class="ft" style="border-top: none;">
                 <tr>
-                    <td style="width:60%; vertical-align:middle; border-top:none; padding:5pt 9pt;">
+                    <td style="width:60%; vertical-align:middle; border-top:none; padding:4pt 8pt;">
                         <span class="cb">{!! $cb($isUrgent) !!}</span>
                         <strong style="font-size:7.5pt;">Gấp</strong>
                         @if($isUrgent)
@@ -573,7 +573,7 @@
                             &nbsp;<span style="font-size:7pt; color:#bbb;">Lý do: —</span>
                         @endif
                     </td>
-                    <td style="width:40%; text-align:right; vertical-align:middle; border-top:none; padding:5pt 9pt;">
+                    <td style="width:40%; text-align:right; vertical-align:middle; border-top:none; padding:4pt 8pt;">
                         <span style="font-size:5.5pt; color:#888; text-transform:uppercase; letter-spacing:0.3pt;">Loại yêu cầu:</span>
                         &nbsp;<span class="chip-type">{{ $tripType }}</span>
                     </td>
@@ -847,7 +847,7 @@
         </div>
         <div class="sec-bd">
             <div class="g-row">
-                <div style="margin-bottom:8pt;">
+                <div style="margin-bottom:6pt;">
                     <span class="g-lbl">g.1 &nbsp;Mã vận đơn (PO):</span>
                     <span class="g-dots">{{ $poCode }}</span>
                 </div>
