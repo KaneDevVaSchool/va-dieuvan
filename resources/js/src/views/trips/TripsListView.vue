@@ -672,7 +672,7 @@
 </template>
 
 <script setup>
-import { computed, onActivated, onMounted, ref, watch } from 'vue'
+import { computed, onActivated, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
