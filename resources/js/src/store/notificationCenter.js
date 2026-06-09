@@ -147,6 +147,8 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
   let sessionStartedAt = null
   /** Guard tránh gọi _fetchAndQueueToasts song song */
   let isFetchingToasts = false
+  /** Gộp các lần gọi refreshBadges đồng thời thành một request */
+  let badgesInflight = null
   if (typeof window !== 'undefined') {
     soundEnabled.value = readSoundPref()
   }
@@ -227,34 +229,42 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
     if (!auth.isLoggedIn || !auth.user || auth.isPortalUser()) {
       return
     }
-    try {
-      const b = await fetchNavBadges()
-      navBadges.value = b && typeof b === 'object' ? b : {}
-      const n = Number(b?.notifications_unread ?? 0)
-      if (Number.isFinite(n)) {
-        if (badgePrimed && n > lastUnread.value) {
-          if (soundEnabled.value) {
-            playNotificationChime()
-          }
-          if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-            try {
-              new Notification(document.title, {
-                body: i18n.global.t('notify.os_toast'),
-                tag: 'va-bell',
-                icon: '/images/logo/logo_pwa_v1.png',
-              })
-            } catch {
-              /* ignore */
-            }
-          }
-          void _fetchAndQueueToasts()
-        }
-        lastUnread.value = n
-        badgePrimed = true
-      }
-    } catch {
-      /* ignore */
+    if (badgesInflight) {
+      return badgesInflight
     }
+    badgesInflight = (async () => {
+      try {
+        const b = await fetchNavBadges()
+        navBadges.value = b && typeof b === 'object' ? b : {}
+        const n = Number(b?.notifications_unread ?? 0)
+        if (Number.isFinite(n)) {
+          if (badgePrimed && n > lastUnread.value) {
+            if (soundEnabled.value) {
+              playNotificationChime()
+            }
+            if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+              try {
+                new Notification(document.title, {
+                  body: i18n.global.t('notify.os_toast'),
+                  tag: 'va-bell',
+                  icon: '/images/logo/logo_pwa_v1.png',
+                })
+              } catch {
+                /* ignore */
+              }
+            }
+            void _fetchAndQueueToasts()
+          }
+          lastUnread.value = n
+          badgePrimed = true
+        }
+      } catch {
+        /* ignore */
+      } finally {
+        badgesInflight = null
+      }
+    })()
+    return badgesInflight
   }
 
   async function _fetchAndQueueToasts() {

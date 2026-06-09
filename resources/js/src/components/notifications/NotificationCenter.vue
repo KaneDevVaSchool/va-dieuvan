@@ -11,39 +11,37 @@
         @click="notifStore.closePanel()"
       />
       <div
-        class="relative z-10 flex max-h-[min(88dvh,42rem)] w-full flex-col overflow-hidden rounded-t-[1.25rem] border border-slate-200/90 bg-white shadow-[0_-12px_48px_-12px_rgba(15,23,42,0.22)] dark:border-slate-700/90 dark:bg-slate-900 dark:shadow-[0_-12px_48px_-12px_rgba(0,0,0,0.45)] sm:max-h-[min(32rem,85vh)] sm:max-w-md sm:rounded-2xl sm:shadow-2xl"
+        class="relative z-10 flex max-h-[min(82dvh,36rem)] w-full flex-col overflow-hidden rounded-t-2xl border border-slate-200/90 bg-white shadow-lg dark:border-slate-700/90 dark:bg-slate-900 sm:max-h-[min(28rem,80vh)] sm:max-w-sm sm:rounded-xl sm:shadow-xl"
         :style="{
-          paddingTop: 'max(0.75rem, env(safe-area-inset-top))',
-          paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))',
+          paddingTop: 'max(0.5rem, env(safe-area-inset-top))',
+          paddingBottom: 'max(0.375rem, env(safe-area-inset-bottom))',
         }"
         role="dialog"
         aria-modal="true"
         :aria-label="t('notify.title')"
       >
-        <!-- Grab bar (mobile affordance) -->
         <div
-          class="mx-auto mb-1 h-1 w-10 shrink-0 rounded-full bg-slate-300/80 dark:bg-slate-600 sm:hidden"
+          class="mx-auto mb-0.5 mt-1 h-1 w-9 shrink-0 rounded-full bg-slate-300/70 dark:bg-slate-600 sm:hidden"
           aria-hidden="true"
         />
 
-        <div class="flex items-center gap-3 border-b border-slate-100 px-4 pb-3 pt-1 dark:border-slate-800 sm:pt-0">
-          <div
-            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-700 dark:bg-sky-950/80 dark:text-sky-300"
-          >
-            <BellIcon class="h-5 w-5" aria-hidden="true" />
-          </div>
+        <div class="flex items-center gap-2 border-b border-slate-100 px-3 py-2 dark:border-slate-800">
           <div class="min-w-0 flex-1">
-            <h2 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
-              {{ t('notify.title') }}
-            </h2>
-            <p v-if="notifStore.lastUnread > 0" class="text-xs font-medium text-sky-600 dark:text-sky-400">
-              {{ t('notify.unread_line', { n: notifStore.lastUnread > 99 ? '99+' : notifStore.lastUnread }) }}
-            </p>
+            <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+              <h2 class="text-base font-semibold text-slate-900 dark:text-white">
+                {{ t('notify.title') }}
+              </h2>
+              <span
+                v-if="notifStore.lastUnread > 0"
+                class="text-xs font-medium text-sky-600 dark:text-sky-400"
+              >
+                {{ t('notify.unread_line', { n: notifStore.lastUnread > 99 ? '99+' : notifStore.lastUnread }) }}
+              </span>
+            </div>
           </div>
           <button
             type="button"
-            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition active:scale-95 active:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:active:bg-slate-700"
-            :title="t('notify.close')"
+            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 active:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-800"
             :aria-label="t('notify.close')"
             @click="notifStore.closePanel()"
           >
@@ -53,7 +51,7 @@
 
         <div
           v-if="showAudienceTabs"
-          class="flex shrink-0 gap-1 overflow-x-auto border-b border-slate-100 px-3 py-2 dark:border-slate-800"
+          class="flex shrink-0 gap-0.5 overflow-x-auto border-b border-slate-100 px-2 py-1.5 dark:border-slate-800"
           role="tablist"
           :aria-label="t('notify.title')"
         >
@@ -63,7 +61,7 @@
             type="button"
             role="tab"
             :aria-selected="notifStore.activeTab === tab.key"
-            class="shrink-0 rounded-lg px-3 py-1.5 text-sm font-semibold transition"
+            class="shrink-0 rounded-md px-2.5 py-1 text-xs font-semibold transition"
             :class="
               notifStore.activeTab === tab.key
                 ? 'bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-200'
@@ -77,7 +75,7 @@
 
         <div
           v-if="isDriverApp"
-          class="border-b border-slate-100 px-4 py-4 dark:border-slate-800"
+          class="border-b border-slate-100 px-3 py-2.5 dark:border-slate-800"
         >
           <!-- All set: permission granted + push subscribed -->
           <div
@@ -155,42 +153,8 @@
         </div>
 
         <div
-          v-if="!isDriverApp"
-          class="flex flex-col gap-2 border-b border-slate-100 bg-slate-50/95 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/40"
-        >
-          <label
-            class="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-slate-200/80 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 shadow-sm dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-200"
-          >
-            <span>{{ t('notify.sound') }}</span>
-            <input
-              v-model="notifStore.soundEnabled"
-              type="checkbox"
-              class="h-5 w-5 rounded-md border-slate-300 text-sky-600 focus:ring-sky-500/40 dark:border-slate-500 dark:bg-slate-800"
-            />
-          </label>
-          <div class="flex flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
-            <button
-              type="button"
-              class="rounded-lg px-2 py-1.5 text-left text-sm font-semibold text-sky-600 active:bg-sky-50 dark:text-sky-400 dark:active:bg-sky-950/50"
-              @click="enableDesktopNotify"
-            >
-              {{ t('notify.desktop_perm') }}
-            </button>
-            <span class="hidden text-slate-300 dark:text-slate-600 sm:inline" aria-hidden="true">·</span>
-            <button
-              v-if="isProd"
-              type="button"
-              class="rounded-lg px-2 py-1.5 text-left text-sm font-semibold text-sky-600 active:bg-sky-50 dark:text-sky-400 dark:active:bg-sky-950/50"
-              @click="notifStore.registerWebPush"
-            >
-              {{ t('notify.push_reg') }}
-            </button>
-          </div>
-        </div>
-
-        <div
           v-if="notifStore.loading"
-          class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-3"
+          class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-2 py-2"
           aria-busy="true"
           :aria-label="t('notify.skeleton_loading')"
         >
@@ -212,23 +176,19 @@
         <template v-else>
           <div
             v-if="!notifStore.items.length"
-            class="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-14 text-center"
+            class="flex flex-1 flex-col items-center justify-center gap-1.5 px-4 py-10 text-center"
           >
-            <div
-              class="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
-            >
-              <BellIcon class="h-8 w-8" aria-hidden="true" />
-            </div>
-            <p class="text-lg font-semibold text-slate-700 dark:text-slate-200">
+            <BellIcon class="h-7 w-7 text-slate-300 dark:text-slate-600" aria-hidden="true" />
+            <p class="text-sm font-medium text-slate-600 dark:text-slate-300">
               {{ t('notify.empty') }}
             </p>
-            <p class="text-sm text-slate-500 dark:text-slate-400">
+            <p class="text-xs text-slate-500 dark:text-slate-500">
               {{ t('notify.empty_hint') }}
             </p>
           </div>
           <ul
             v-else
-            class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-3"
+            class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-2 py-2"
           >
             <template v-for="section in groupedSections" :key="section.key">
               <li
@@ -251,13 +211,11 @@
             </template>
           </ul>
         </template>
-        <div
-          class="shrink-0 border-t border-slate-100 bg-white/95 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/95"
-        >
-          <div class="flex items-center justify-between gap-2">
+        <div class="shrink-0 border-t border-slate-100 px-3 py-2 dark:border-slate-800">
+          <div class="flex items-center justify-between gap-2 text-xs">
             <RouterLink
               :to="hubPath"
-              class="rounded-lg px-2 py-1.5 text-sm font-semibold text-sky-600 transition hover:bg-sky-50 active:bg-sky-100 dark:text-sky-400 dark:hover:bg-sky-950/40"
+              class="font-semibold text-sky-600 hover:underline dark:text-sky-400"
               @click="notifStore.closePanel()"
             >
               {{ t('notify.view_all') }}
@@ -265,7 +223,7 @@
             <button
               v-if="!notifStore.loading && notifStore.items.length"
               type="button"
-              class="rounded-lg px-2 py-1.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 active:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-800"
+              class="font-semibold text-slate-600 hover:underline dark:text-slate-400"
               @click="onReadAll"
             >
               {{ t('notify.mark_all') }}
@@ -619,15 +577,10 @@ function onBellClick() {
   void notifStore.refreshBadges()
 }
 
-function enableDesktopNotify() {
-  void notifStore.requestBrowserNotificationPermission()
-}
-
 onMounted(() => {
   syncNotifPerm()
   if (auth.isLoggedIn) {
     notifStore.startPolling()
-    void notifStore.refreshBadges()
   }
 })
 
@@ -640,7 +593,6 @@ watch(
   (v) => {
     if (v) {
       notifStore.startPolling()
-      void notifStore.refreshBadges()
     } else {
       notifStore.stopPolling()
     }

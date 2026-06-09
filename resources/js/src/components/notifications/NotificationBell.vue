@@ -3,7 +3,7 @@
     type="button"
     class="relative flex h-10 w-10 items-center justify-center rounded-full border transition active:scale-95"
     :class="toneClass"
-    :title="t('notify.bell_open')"
+    :aria-label="t('notify.bell_open')"
     @click="onBellClick"
   >
     <BellIcon class="h-5 w-5" aria-hidden="true" />

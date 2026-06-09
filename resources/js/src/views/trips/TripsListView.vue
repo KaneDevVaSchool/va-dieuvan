@@ -87,14 +87,20 @@
             </p>
             <div class="p-3 pt-2">
               <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
-                <li class="font-medium text-slate-900 dark:text-slate-100">{{ currentPresetLabel }}</li>
-                <li class="tabular-nums text-slate-600 dark:text-slate-400">
-                  {{ rangeDisplayFormatted }}
-                  <span
-                    v-if="rangeValid && rangeDaySpan > 0"
-                    class="ml-1.5 inline-block rounded-md bg-violet-100/90 px-1.5 py-0.5 text-[10px] font-semibold text-violet-800 dark:bg-violet-950/70 dark:text-violet-200"
-                  >
-                    {{ t('dashboard_analytics.date_range_span', { n: rangeDaySpan }) }}
+                <li class="flex justify-between gap-2 border-b border-slate-100 pb-2 dark:border-slate-700">
+                  <span class="text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.filter_period_label') }}</span>
+                  <span class="font-medium text-slate-900 dark:text-slate-100">{{ currentPresetLabel }}</span>
+                </li>
+                <li class="flex justify-between gap-2 tabular-nums">
+                  <span class="text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.filter_dates_label') }}</span>
+                  <span class="text-right font-medium text-slate-700 dark:text-slate-300">
+                    {{ rangeChipSummary }}
+                    <span
+                      v-if="hasDateRangeFilter && rangeValid && rangeDaySpan > 0"
+                      class="ml-1 inline-block rounded-md bg-violet-100/90 px-1.5 py-0.5 text-[10px] font-semibold text-violet-800 dark:bg-violet-950/70 dark:text-violet-200"
+                    >
+                      {{ t('dashboard_analytics.date_range_span', { n: rangeDaySpan }) }}
+                    </span>
                   </span>
                 </li>
                 <li v-for="(row, i) in activeFilterLines" :key="i" class="border-t border-slate-100 pt-2 dark:border-slate-700">
@@ -145,48 +151,33 @@
         <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
 
         <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
+          <label class="inline-flex min-w-0 shrink-0 items-center gap-1.5">
+            <span class="whitespace-nowrap text-xs font-medium text-slate-600 dark:text-slate-400">{{
+              t('dashboard_analytics.filter_period_label')
+            }}</span>
+            <select
+              :value="preset"
+              class="h-9 max-w-[min(100%,11rem)] rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+              :aria-label="t('dashboard_analytics.filter_period_label')"
+              @change="onPresetSelectChange($event.target.value)"
+            >
+              <option v-for="p in presetDefs" :key="p.id" :value="p.id">{{ p.label }}</option>
+            </select>
+          </label>
+
           <details class="group relative min-w-0">
             <summary
               class="flex max-w-full cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
             >
-              <span class="max-w-[10rem] min-w-0 truncate text-sm font-medium text-slate-900 dark:text-slate-100">
-                {{ currentPresetLabel }}
-              </span>
-              <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-            </summary>
-            <div
-              class="absolute left-0 top-[calc(100%+6px)] z-[100] min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-950"
-            >
-              <ul class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1">
-                <li v-for="p in presetDefs" :key="p.id">
-                  <button
-                    type="button"
-                    :class="[
-                      'flex w-full rounded-lg px-3 py-2 text-left text-sm transition',
-                      preset === p.id
-                        ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
-                        : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800',
-                    ]"
-                    @click="onApplyPreset(p.id, $event)"
-                  >
-                    {{ p.label }}
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </details>
-
-          <details class="group relative min-w-0">
-            <summary
-              class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
-            >
-              <CalendarDaysIcon class="h-4 w-4 shrink-0 text-violet-500 dark:text-violet-400" aria-hidden="true" />
+              <span class="shrink-0 text-xs font-medium text-slate-500 dark:text-slate-400">{{
+                t('dashboard_analytics.filter_dates_label')
+              }}</span>
               <span class="flex min-w-0 max-w-[11rem] items-center gap-1.5 sm:max-w-[14rem]">
                 <span class="min-w-0 truncate text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100">
-                  {{ rangeDisplayFormatted }}
+                  {{ rangeChipSummary }}
                 </span>
                 <span
-                  v-if="rangeValid && rangeDaySpan > 0"
+                  v-if="hasDateRangeFilter && rangeValid && rangeDaySpan > 0"
                   class="shrink-0 rounded-md bg-violet-100/90 px-1.5 py-px text-[10px] font-bold tabular-nums text-violet-800 dark:bg-violet-950/70 dark:text-violet-200"
                 >
                   {{ rangeDaySpan }}
@@ -209,6 +200,13 @@
               </div>
               <div class="p-3">
                 <div class="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    class="rounded-lg border border-slate-200/90 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:border-teal-300 hover:bg-teal-50/80 hover:text-teal-900 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:border-teal-700 dark:hover:bg-teal-950/40 dark:hover:text-teal-100"
+                    @click="onApplyPresetAllTime($event)"
+                  >
+                    {{ t('dashboard_analytics.preset_all_time') }}
+                  </button>
                   <button
                     v-for="chip in dateQuickChips"
                     :key="chip.kind"
@@ -270,38 +268,23 @@
             </div>
           </details>
 
-          <template v-for="fd in visibleDimensionFilters" :key="fd.id">
-            <details class="group relative min-w-0">
-              <summary
-                class="flex max-w-full cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
-              >
-                <span class="max-w-[9rem] min-w-0 truncate text-sm font-medium text-slate-900 dark:text-slate-100 sm:max-w-[10rem]">
-                  {{ fd.summary }}
-                </span>
-                <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-              </summary>
-              <div
-                class="absolute left-0 top-[calc(100%+6px)] z-[100] max-h-[min(70vh,24rem)] min-w-[220px] overflow-y-auto rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-950 max-sm:fixed max-sm:inset-x-3 max-sm:top-24 max-sm:z-[200] max-sm:max-h-[min(75vh,28rem)] max-sm:w-auto"
-              >
-                <ul class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1">
-                  <li v-for="opt in fd.options" :key="String(opt.value) + opt.label">
-                    <button
-                      type="button"
-                      :class="[
-                        'flex w-full rounded-lg px-3 py-2 text-left text-sm transition',
-                        fd.isSelected(opt.value)
-                          ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
-                          : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800',
-                      ]"
-                      @click="onDimensionPick(fd, opt.value, $event)"
-                    >
-                      {{ opt.label }}
-                    </button>
-                  </li>
-                </ul>
-              </div>
-            </details>
-          </template>
+          <label
+            v-for="fd in visibleDimensionFilters"
+            :key="fd.id"
+            class="inline-flex min-w-0 shrink-0 items-center gap-1.5"
+          >
+            <span class="whitespace-nowrap text-xs font-medium text-slate-600 dark:text-slate-400">{{ fd.label }}</span>
+            <select
+              :value="dimensionSelectValue(fd)"
+              class="h-9 max-w-[min(100%,11rem)] rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+              :aria-label="fd.label"
+              @change="onDimensionSelect(fd, $event.target.value)"
+            >
+              <option v-for="opt in fd.options" :key="String(opt.value) + opt.label" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+          </label>
         </div>
       </div>
       </AppFilterBar>
@@ -803,12 +786,12 @@ function startOfQuarter(d) {
   return new Date(d.getFullYear(), q0, 1)
 }
 
-const today = new Date()
-const rangeFrom = ref(ymd(new Date(today.getFullYear(), today.getMonth(), 1)))
-const rangeTo = ref(ymd(today))
-const preset = ref('month')
+const rangeFrom = ref('')
+const rangeTo = ref('')
+const preset = ref('all')
 
 const presetDefs = computed(() => [
+  { id: 'all', label: t('dashboard_analytics.preset_all_time') },
   { id: 'month', label: t('dashboard_analytics.preset_month') },
   { id: 'last30', label: t('dashboard_analytics.preset_last30') },
   { id: 'last7', label: t('dashboard_analytics.preset_last7') },
@@ -819,9 +802,14 @@ const presetDefs = computed(() => [
 const currentPresetLabel = computed(() => presetDefs.value.find((p) => p.id === preset.value)?.label ?? '')
 
 const rangeValid = computed(() => {
-  if (!rangeFrom.value || !rangeTo.value) return false
-  return rangeFrom.value <= rangeTo.value
+  const from = rangeFrom.value
+  const to = rangeTo.value
+  if (!from && !to) return true
+  if (!from || !to) return false
+  return from <= to
 })
+
+const hasDateRangeFilter = computed(() => !!(filters.from || filters.to))
 
 const rangeDaySpan = computed(() => {
   if (!rangeFrom.value || !rangeTo.value || rangeFrom.value > rangeTo.value) return 0
@@ -841,6 +829,10 @@ const rangeDisplayFormatted = computed(
   () => `${formatDisplayDate(rangeFrom.value)} — ${formatDisplayDate(rangeTo.value)}`,
 )
 
+const rangeChipSummary = computed(() =>
+  hasDateRangeFilter.value ? rangeDisplayFormatted.value : t('dashboard_analytics.filter_all'),
+)
+
 const dateQuickChips = computed(() => [
   { kind: 'today', label: t('dashboard_analytics.date_range_quick_today') },
   { kind: 'yesterday', label: t('dashboard_analytics.date_range_quick_yesterday') },
@@ -849,6 +841,11 @@ const dateQuickChips = computed(() => [
 ])
 
 function syncRangeForPreset(id) {
+  if (id === 'all') {
+    rangeFrom.value = ''
+    rangeTo.value = ''
+    return
+  }
   const now = new Date()
   const end = ymd(now)
   if (id === 'month') {
@@ -873,8 +870,12 @@ function closeParentDetails(ev) {
   if (d) d.open = false
 }
 
-function onApplyPreset(id, ev) {
+function onPresetSelectChange(id) {
   applyPreset(id)
+}
+
+function onApplyPresetAllTime(ev) {
+  applyPreset('all')
   closeParentDetails(ev)
 }
 
@@ -883,14 +884,23 @@ function onApplyQuickDateRange(kind, ev) {
   closeParentDetails(ev)
 }
 
-function onDimensionPick(fd, value, ev) {
+function dimensionSelectValue(fd) {
+  if (fd.id === 'urgent') return filters.is_urgent ? '1' : ''
+  if (fd.id === 'run') return filters.status
+  if (fd.id === 'channel') return filters.source_channel
+  if (fd.id === 'paper') return filters.paper_status
+  if (fd.id === 'fleet') return filters.fleet_mode
+  return ''
+}
+
+function onDimensionSelect(fd, raw) {
+  const value = raw === '' || raw == null ? '' : String(raw)
   fd.pick(value)
-  closeParentDetails(ev)
 }
 
 function applyPreset(id) {
   preset.value = id
-  if (id !== 'custom') {
+  if (id === 'all' || id !== 'custom') {
     syncRangeForPreset(id)
     syncFiltersFromRange()
     onFilterChange()
@@ -948,12 +958,12 @@ function syncFiltersFromRange() {
 }
 
 const runStatusOptions = computed(() => [
-  { value: '', label: t('dashboard_analytics.filter_all') },
+  { value: '', label: t('requests_page.filter_option_any') },
   ...TRIP_STATUS_VALUES.map((s) => ({ value: s, label: labelTripStatus(s) })),
 ])
 
 const dimensionFilters = computed(() => {
-  const fa = t('dashboard_analytics.filter_all')
+  const fa = t('requests_page.filter_option_any')
   const channelOpts = [
     { value: '', label: fa },
     { value: 'portal', label: t('labels.source_channel.portal') },
@@ -977,7 +987,6 @@ const dimensionFilters = computed(() => {
     {
       id: 'run',
       label: t('dashboard_analytics.filter_trip_run_status'),
-      summary: filters.status ? labelTripStatus(filters.status) : fa,
       options: runStatusOptions.value,
       isSelected: (v) => (v === '' ? !filters.status : filters.status === v),
       pick: (v) => {
@@ -988,9 +997,6 @@ const dimensionFilters = computed(() => {
     {
       id: 'channel',
       label: t('dashboard_analytics.filter_channel'),
-      summary: filters.source_channel
-        ? t(`labels.source_channel.${filters.source_channel}`)
-        : fa,
       options: channelOpts,
       isSelected: (v) => (v === '' ? !filters.source_channel : filters.source_channel === v),
       pick: (v) => {
@@ -1001,7 +1007,6 @@ const dimensionFilters = computed(() => {
     {
       id: 'paper',
       label: t('dashboard_analytics.filter_paper'),
-      summary: filters.paper_status ? t(`labels.paper_status.${filters.paper_status}`) : fa,
       options: paperOpts,
       isSelected: (v) => (v === '' ? !filters.paper_status : filters.paper_status === v),
       pick: (v) => {
@@ -1012,14 +1017,6 @@ const dimensionFilters = computed(() => {
     {
       id: 'fleet',
       label: t('dashboard_analytics.filter_fleet'),
-      summary: filters.fleet_mode
-        ? {
-            internal: t('dashboard_analytics.fleet_internal'),
-            vendor_hire: t('dashboard_analytics.fleet_vendor_hire'),
-            taxi: t('dashboard_analytics.fleet_taxi'),
-            unspecified: t('dashboard_analytics.fleet_unspecified'),
-          }[filters.fleet_mode] ?? filters.fleet_mode
-        : fa,
       options: fleetOpts,
       isSelected: (v) => (v === '' ? !filters.fleet_mode : filters.fleet_mode === v),
       pick: (v) => {
@@ -1030,7 +1027,6 @@ const dimensionFilters = computed(() => {
     {
       id: 'urgent',
       label: t('dashboard_analytics.filter_urgent'),
-      summary: filters.is_urgent ? t('dashboard_analytics.filter_urgent_only') : fa,
       options: [
         { value: '', label: fa },
         { value: '1', label: t('dashboard_analytics.filter_urgent_only') },
@@ -1076,6 +1072,7 @@ const activeFilterLines = computed(() => {
 
 const activeFilterCount = computed(() => {
   let n = 0
+  if (hasDateRangeFilter.value) n++
   if (filters.status) n++
   if (filters.source_channel) n++
   if (filters.paper_status) n++
@@ -1405,8 +1402,8 @@ function resetFilters() {
   searchInput.value = ''
   filters.per_page = 20
   filters.page = 1
-  preset.value = 'month'
-  syncRangeForPreset('month')
+  preset.value = 'all'
+  syncRangeForPreset('all')
   syncFiltersFromRange()
   applyStatusFromRoute()
   if (funnelDetailsRef.value) funnelDetailsRef.value.open = false
@@ -1457,7 +1454,7 @@ watch(
 
 onMounted(() => {
   loadFilterDropdownVisibility()
-  syncRangeForPreset('month')
+  syncRangeForPreset('all')
   syncFiltersFromRange()
   applyStatusFromRoute()
   reloadStats()
