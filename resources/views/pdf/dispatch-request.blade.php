@@ -7,9 +7,9 @@
         // header.png 1999×393 px → ~41.3mm khi scale theo chiều ngang A4 (210mm)
         $hdrBandMm = 41.3;
         $pageOrient = $isCargo ? 'landscape' : 'portrait';
-        $pageMarginTop = $isCargo ? '16mm' : ($hdrBandMm + 5.7) . 'mm';
-        $pageMarginX   = $isCargo ? '12mm' : '18mm';
-        $pageMarginBot = $isCargo ? '16mm' : '24mm';
+        $pageMarginTop = $isCargo ? '12mm' : ($hdrBandMm + 4) . 'mm';
+        $pageMarginX   = $isCargo ? '8mm' : '10mm';
+        $pageMarginBot = $isCargo ? '12mm' : '14mm';
         $bgW = $isCargo ? '297mm' : '210mm';
         $bgH = $isCargo ? '210mm' : '297mm';
         $useBranding = ! $isCargo;
@@ -20,7 +20,7 @@
             size: A4 {{ $pageOrient }};
         }
 
-        * { box-sizing: border-box; font-family: 'DejaVu Sans', sans-serif; }
+        * { box-sizing: border-box; font-family: 'Garbata', 'DejaVu Sans', sans-serif; }
 
         body {
             font-size: 7.5pt;
@@ -84,17 +84,14 @@
             margin-bottom: 5pt;
         }
 
-        .doc-head::after {
-            content: '';
-            display: block;
-            clear: both;
+        .doc-head-row {
+            width: 100%;
+            border-collapse: collapse;
         }
 
-        .doc-meta {
-            float: right;
-            width: 52%;
-            margin-right: -{{ $pageMarginX }};
-        }
+        .doc-head-row td { padding: 0; vertical-align: top; }
+
+        .doc-meta { width: 52%; vertical-align: top; }
 
         .meta-tbl {
             width: 100%;
@@ -124,16 +121,15 @@
             text-align: right;
             color: #111;
             width: 58%;
-            padding-right: {{ $pageMarginX }};
+            padding-right: 8pt;
         }
 
         .meta-code { color: #7B1E3B; }
 
         .doc-heading {
-            clear: both;
             width: 100%;
             text-align: center;
-            padding: 3pt 0 1pt;
+            padding: 4pt 0 2pt;
         }
 
         .doc-title {
@@ -265,7 +261,7 @@
         }
 
         /* ── CHECKBOX ── */
-        .cb { font-family: 'DejaVu Sans', sans-serif; font-size: 8pt; margin-right: 3pt; }
+        .cb { font-family: 'Garbata', 'DejaVu Sans', sans-serif; font-size: 8pt; margin-right: 3pt; }
 
         /* ── DATA TABLES ── */
         table.dt { width: 100%; border-collapse: collapse; font-size: 6.5pt; }
@@ -426,36 +422,40 @@
 
     {{-- ────────── DOCUMENT TITLE ────────── --}}
     <div class="doc-head">
-        <div class="doc-meta">
-            <table class="meta-tbl">
-                <tr>
-                    <td class="meta-lbl">Ký hiệu</td>
-                    <td class="meta-val">BM.03/MH.QT.04</td>
-                </tr>
-                <tr>
-                    <td class="meta-lbl">Ngày ban hành</td>
-                    <td class="meta-val">29/08/2025</td>
-                </tr>
-                <tr>
-                    <td class="meta-lbl">Lần ban hành</td>
-                    <td class="meta-val">01</td>
-                </tr>
-                <tr>
-                    <td class="meta-lbl">Mã phiếu</td>
-                    <td class="meta-val"><span class="meta-code">{{ $reqCode }}</span></td>
-                </tr>
-            </table>
-        </div>
-        <div class="doc-heading">
-            <div class="doc-title">Phiếu Đề Nghị Điều Vận</div>
-            <div class="doc-subtitle">
-                @if($isCargo) Điều chuyển Hàng hóa
-                @elseif($isP2P) Vận chuyển Điểm — Điểm
-                @elseif($isBusiness) Công tác
-                @else Đưa đón tận nơi
-                @endif
-            </div>
-        </div>
+        <table class="doc-head-row">
+            <tr>
+                <td style="width:48%; vertical-align:middle; text-align:center; padding-right:8pt;">
+                    <div class="doc-title">Phiếu Đề Nghị Điều Vận</div>
+                    <div class="doc-subtitle">
+                        @if($isCargo) Điều chuyển Hàng hóa
+                        @elseif($isP2P) Vận chuyển Điểm — Điểm
+                        @elseif($isBusiness) Công tác
+                        @else Đưa đón tận nơi
+                        @endif
+                    </div>
+                </td>
+                <td class="doc-meta">
+                    <table class="meta-tbl">
+                        <tr>
+                            <td class="meta-lbl">Ký hiệu</td>
+                            <td class="meta-val">BM.03/MH.QT.04</td>
+                        </tr>
+                        <tr>
+                            <td class="meta-lbl">Ngày ban hành</td>
+                            <td class="meta-val">29/08/2025</td>
+                        </tr>
+                        <tr>
+                            <td class="meta-lbl">Lần ban hành</td>
+                            <td class="meta-val">01</td>
+                        </tr>
+                        <tr>
+                            <td class="meta-lbl">Mã phiếu</td>
+                            <td class="meta-val"><span class="meta-code">{{ $reqCode }}</span></td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
     </div>
 
     {{-- ────────── A · NGƯỜI ĐỀ NGHỊ ────────── --}}
