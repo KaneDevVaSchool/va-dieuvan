@@ -193,24 +193,36 @@
                   <!-- ===== Tab: Tổng quan ===== -->
                   <div v-show="activeTab === 'form'" class="space-y-5">
                     <!-- Route hero -->
-                    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+                    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                      <div class="flex items-center gap-2.5 border-b border-slate-100 bg-slate-50/80 px-5 py-3 dark:border-slate-800 dark:bg-slate-800/40">
+                        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-va-50 text-va-700 dark:bg-va-950/50 dark:text-va-300">
+                          <MapIcon class="h-4 w-4" aria-hidden="true" />
+                        </span>
+                        <h2 class="text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">
+                          {{ t('request_detail.route_map_heading') }}
+                        </h2>
+                      </div>
                       <div class="grid gap-0 lg:grid-cols-[1fr_auto_1fr] lg:items-stretch">
                         <div class="border-b border-slate-100 bg-emerald-50/60 px-5 py-4 dark:border-slate-800 dark:bg-emerald-950/20 lg:border-b-0 lg:border-r">
-                          <div class="flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
-                            <MapPinIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-                            <span class="text-xs font-bold uppercase tracking-wide">{{ t('request_detail.lbl_origin') }}</span>
-                          </div>
-                          <p class="mt-1.5 text-xl font-bold leading-snug text-slate-900 dark:text-white">{{ req.origin || friendlyEmpty }}</p>
+                          <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-600/90 dark:text-emerald-400/90">
+                            {{ t('request_detail.lbl_origin') }}
+                          </p>
+                          <p class="mt-1.5 flex items-start gap-2 text-xl font-bold leading-snug text-slate-900 dark:text-white">
+                            <MapPinIcon class="mt-1 h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                            <span class="min-w-0">{{ req.origin || friendlyEmpty }}</span>
+                          </p>
                         </div>
-                        <div class="hidden items-center justify-center px-3 lg:flex">
+                        <div class="flex items-center justify-center border-b border-slate-100 bg-slate-50/50 px-3 py-2 dark:border-slate-800 dark:bg-slate-800/30 lg:border-b-0">
                           <ArrowRightIcon class="h-6 w-6 shrink-0 text-slate-300 dark:text-slate-600" aria-hidden="true" />
                         </div>
                         <div class="border-t border-slate-100 bg-rose-50/60 px-5 py-4 dark:border-slate-800 dark:bg-rose-950/20 lg:border-l lg:border-t-0">
-                          <div class="flex items-center gap-2 text-rose-700 dark:text-rose-400">
-                            <MapPinIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-                            <span class="text-xs font-bold uppercase tracking-wide">{{ t('request_detail.lbl_destination') }}</span>
-                          </div>
-                          <p class="mt-1.5 text-xl font-bold leading-snug text-slate-900 dark:text-white">{{ req.destination || friendlyEmpty }}</p>
+                          <p class="text-[10px] font-bold uppercase tracking-wider text-rose-600/90 dark:text-rose-400/90">
+                            {{ t('request_detail.lbl_destination') }}
+                          </p>
+                          <p class="mt-1.5 flex items-start gap-2 text-xl font-bold leading-snug text-slate-900 dark:text-white">
+                            <MapPinIcon class="mt-1 h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400" aria-hidden="true" />
+                            <span class="min-w-0">{{ req.destination || friendlyEmpty }}</span>
+                          </p>
                         </div>
                       </div>
                       <div class="grid grid-cols-2 gap-3 border-t border-slate-100 bg-slate-50/80 px-5 py-4 dark:border-slate-800 dark:bg-slate-800/40 sm:grid-cols-4">
@@ -278,9 +290,10 @@
                             </span>
                             <h2 class="text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">{{ t('request_detail.ops_schedule_heading') }}</h2>
                           </div>
-                          <dl class="mt-4 space-y-3.5">
-                            <FieldRow :label="t('request_detail.ops_lbl_proposed_date')" :value="fmtDateOnly(formData.proposed_date)" />
+                          <dl class="mt-4 grid gap-2.5 sm:grid-cols-2">
+                            <FieldRow boxed :label="t('request_detail.ops_lbl_proposed_date')" :value="fmtDateOnly(formData.proposed_date)" />
                             <FieldRow
+                              boxed
                               :label="t('request_detail.ops_lbl_date_needed')"
                               :value="fmtDateOnly(formData.date_needed)"
                               :highlight="!!formData.date_needed"
@@ -300,9 +313,9 @@
                             </span>
                             <h2 class="text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">{{ t('request_detail.ops_purpose_heading') }}</h2>
                           </div>
-                          <dl class="mt-4 space-y-3.5">
-                            <FieldRow :label="t('request_detail.ops_lbl_purpose')" :value="nz(formData.purpose)" multiline />
-                            <FieldRow :label="t('request_detail.ops_lbl_basis')" :value="basisText" multiline />
+                          <dl class="mt-4 grid gap-2.5">
+                            <FieldRow boxed :label="t('request_detail.ops_lbl_purpose')" :value="nz(formData.purpose)" multiline />
+                            <FieldRow boxed :label="t('request_detail.ops_lbl_basis')" :value="basisText" multiline />
                           </dl>
                         </div>
                       </div>
@@ -314,13 +327,22 @@
                           </span>
                           <h2 class="text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">{{ t('request_detail.ops_targets_heading') }}</h2>
                         </div>
-                        <div v-if="targets.length" class="mt-4 flex flex-wrap gap-2">
-                          <span v-for="(tg, i) in targets" :key="i" class="inline-flex rounded-lg bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">{{ tg }}</span>
+                        <div v-if="targets.length" class="mt-4">
+                          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                            {{ t('request_detail.ops_lbl_target_audience') }}
+                          </p>
+                          <div class="mt-2 flex flex-wrap gap-2">
+                            <span
+                              v-for="(tg, i) in targets"
+                              :key="i"
+                              class="inline-flex rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-sm font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                            >{{ tg }}</span>
+                          </div>
                         </div>
-                        <dl v-if="coordinatorName" class="mt-4 grid gap-x-6 gap-y-3.5 sm:grid-cols-3">
-                          <FieldRow :label="t('request_detail.ops_lbl_coordinator')" :value="coordinatorName" />
-                          <FieldRow :label="t('request_detail.lbl_email')" :value="nz(formData.coordinator_email)" />
-                          <FieldRow :label="t('request_detail.lbl_phone')" :value="nz(formData.coordinator_phone)" />
+                        <dl v-if="coordinatorName" class="mt-4 grid gap-2.5 sm:grid-cols-3">
+                          <FieldRow boxed :label="t('request_detail.ops_lbl_coordinator')" :value="coordinatorName" />
+                          <FieldRow boxed :label="t('request_detail.lbl_email')" :value="nz(formData.coordinator_email)" />
+                          <FieldRow boxed :label="t('request_detail.lbl_phone')" :value="nz(formData.coordinator_phone)" />
                         </dl>
                       </div>
                     </div>
@@ -337,7 +359,19 @@
                     />
 
                     <template v-else>
-                      <h2 :class="sectionTitleClass">{{ t('request_detail.ops_itinerary_heading') }}</h2>
+                      <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3 dark:border-slate-800">
+                        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-va-50 text-va-700 dark:bg-va-950/50 dark:text-va-300">
+                          <MapIcon class="h-4 w-4" aria-hidden="true" />
+                        </span>
+                        <div class="min-w-0">
+                          <h2 class="text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">
+                            {{ t('request_detail.ops_itinerary_heading') }}
+                          </h2>
+                          <p v-if="itineraryCards.length" class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                            {{ t('request_detail.ops_itinerary_count', { n: itineraryCards.length }) }}
+                          </p>
+                        </div>
+                      </div>
                       <p
                         v-if="!itineraryCards.length"
                         class="rounded-2xl border border-dashed border-slate-200 px-4 py-12 text-center text-base text-slate-400 dark:border-slate-700 dark:text-slate-500"
@@ -345,32 +379,50 @@
                       <div
                         v-for="card in itineraryCards"
                         :key="card.key"
-                        class="rounded-2xl border border-slate-200 p-5 dark:border-slate-800"
+                        class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
                       >
-                        <div class="flex flex-wrap items-start justify-between gap-2">
+                        <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 bg-slate-50/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/40">
                           <div class="flex min-w-0 flex-1 items-start gap-3">
                             <span
-                              class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-va-50 text-sm font-bold text-va-800 dark:bg-va-950/50 dark:text-va-300"
+                              class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-va-100 text-sm font-bold text-va-800 dark:bg-va-950/50 dark:text-va-300"
                               :aria-label="t('request_detail.ops_row_badge_aria', { n: card.idx })"
                             >
                               {{ card.idx }}
                             </span>
-                            <div class="min-w-0 flex-1 space-y-1">
-                              <p class="text-base font-semibold leading-snug text-slate-900 dark:text-white">
+                            <div class="min-w-0 flex-1">
+                              <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                {{ t('request_detail.ops_itinerary_row_label') }}
+                              </p>
+                              <p class="mt-0.5 text-base font-semibold leading-snug text-slate-900 dark:text-white">
                                 {{ card.title }}
                               </p>
-                              <ul
-                                v-if="card.summaryLines.length"
-                                class="space-y-0.5 text-sm leading-snug text-slate-600 dark:text-slate-400"
-                              >
-                                <li v-for="(line, li) in card.summaryLines" :key="li" class="break-words">{{ line }}</li>
-                              </ul>
                             </div>
                           </div>
-                          <span v-if="card.price" class="shrink-0 text-base font-bold tabular-nums text-teal-600 dark:text-teal-400">{{ card.price }}</span>
+                          <div
+                            v-if="card.price"
+                            class="shrink-0 rounded-xl border border-teal-200/80 bg-teal-50/80 px-3 py-2 text-right dark:border-teal-900/50 dark:bg-teal-950/30"
+                          >
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-teal-600/90 dark:text-teal-400/90">
+                              {{ t('request_detail.ops_lbl_row_cost') }}
+                            </p>
+                            <p class="mt-0.5 text-base font-bold tabular-nums text-teal-700 dark:text-teal-300">{{ card.price }}</p>
+                          </div>
                         </div>
-                        <dl v-if="card.fields.length" class="mt-4 grid gap-x-6 gap-y-3 sm:grid-cols-2">
-                          <FieldRow v-for="(f, fi) in card.fields" :key="fi" :label="f.label" :value="f.value" :multiline="f.multiline" />
+                        <div
+                          v-if="card.summaryLines.length"
+                          class="flex flex-wrap gap-2 border-b border-slate-100 px-4 py-3 dark:border-slate-800"
+                        >
+                          <span
+                            v-for="(line, li) in card.summaryLines"
+                            :key="li"
+                            class="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white px-2.5 py-1.5 text-xs font-medium leading-snug text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                          >
+                            <component :is="itinerarySummaryIcon(line)" class="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+                            <span class="min-w-0 break-words">{{ line }}</span>
+                          </span>
+                        </div>
+                        <dl v-if="card.fields.length" class="grid gap-2.5 px-4 py-4 sm:grid-cols-2">
+                          <FieldRow v-for="(f, fi) in card.fields" :key="fi" boxed :label="f.label" :value="f.value" :multiline="f.multiline" />
                         </dl>
                       </div>
 
@@ -392,85 +444,102 @@
                       {{ uploadErrLocal || attachErr || ocrErr }}
                     </p>
 
-                    <DocGroup
-                      :title="t('request_detail.ops_docs_general')"
-                      :files="generalAttachments"
-                      :highlight-id="docsHighlightAttachmentId"
-                      :deleting-id="deletingId"
-                      :can-delete="canDeleteAttachment"
-                      :can-ocr="canUploadAttachment"
-                      :can-upload="canUploadAttachment"
-                      :uploading="uploadingGeneral"
-                      :fmt-size="fmtSize"
-                      :fmt-date="fmt"
-                      :previewable="isPreviewable"
-                      @preview="openAttachmentPreview"
-                      @download="downloadFile"
-                      @delete="removeAttachment"
-                      @ocr="runOcr"
-                      @pick="onPickGeneral"
-                    />
+                    <div class="grid gap-4 lg:grid-cols-3 lg:items-stretch">
+                      <DocGroup
+                        column
+                        accent="sky"
+                        :header-icon="PaperClipIcon"
+                        :title="t('request_detail.ops_docs_general')"
+                        :files="generalAttachments"
+                        :highlight-id="docsHighlightAttachmentId"
+                        :deleting-id="deletingId"
+                        :can-delete="canDeleteAttachment"
+                        :can-ocr="canUploadAttachment"
+                        :can-upload="canUploadAttachment"
+                        :uploading="uploadingGeneral"
+                        :fmt-size="fmtSize"
+                        :fmt-date="fmt"
+                        :previewable="isPreviewable"
+                        @preview="openAttachmentPreview"
+                        @download="downloadFile"
+                        @delete="removeAttachment"
+                        @ocr="runOcr"
+                        @pick="onPickGeneral"
+                      />
 
-                    <DocGroup
-                      :title="t('request_detail.ops_docs_signed')"
-                      :files="signedPaperAttachments"
-                      :deleting-id="deletingId"
-                      :can-delete="canDeleteAttachment"
-                      :can-upload="false"
-                      :fmt-size="fmtSize"
-                      :fmt-date="fmt"
-                      :previewable="isPreviewable"
-                      @preview="openAttachmentPreview"
-                      @download="downloadFile"
-                      @delete="removeAttachment"
-                    >
-                      <div v-if="signedDocumentCurrent" class="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800/40">
-                        <span class="text-sm font-semibold text-slate-600 dark:text-slate-300">{{ t('request_detail.ops_signed_doc_status') }}</span>
-                        <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold" :class="signedVerifyBadgeClass">{{ signedVerifyLabel }}</span>
-                        <div v-if="canManagePaper" class="ml-auto flex flex-wrap gap-2">
-                          <button type="button" :class="btnGhostClass" :disabled="signedOcrBusy" @click="onSignedRerunOcr">{{ signedOcrBusy ? t('request_detail.docs_ocr_running') : t('request_detail.ops_rerun_ocr') }}</button>
-                          <button type="button" :class="btnTealClass" :disabled="signedVerifyBusy" @click="onSignedVerify('approve')">{{ t('request_detail.ops_verify_pass') }}</button>
-                          <button type="button" :class="btnDangerGhostClass" :disabled="signedVerifyBusy" @click="onSignedVerify('reject')">{{ t('request_detail.ops_verify_fail') }}</button>
-                        </div>
-                      </div>
-                    </DocGroup>
-
-                    <DocGroup
-                      :title="t('request_detail.ops_docs_scan')"
-                      :files="paperScans"
-                      :deleting-id="deletingId"
-                      :can-delete="canDeleteAttachment"
-                      :can-upload="canUploadAttachment"
-                      :uploading="uploadingScan"
-                      :fmt-size="fmtSize"
-                      :fmt-date="fmt"
-                      :previewable="isPreviewable"
-                      @preview="openAttachmentPreview"
-                      @download="downloadFile"
-                      @delete="removeAttachment"
-                      @pick="onPickScan"
-                    >
-                      <form
-                        v-if="canManagePaper && (req.paper_status === 'pending' || req.paper_status === 'received')"
-                        class="mt-3 space-y-3 rounded-lg border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-700 dark:bg-slate-800/40"
-                        @submit.prevent="doMarkPaper"
+                      <DocGroup
+                        column
+                        accent="amber"
+                        :header-icon="DocumentCheckIcon"
+                        :title="t('request_detail.ops_docs_signed')"
+                        :files="signedPaperAttachments"
+                        :deleting-id="deletingId"
+                        :can-delete="canDeleteAttachment"
+                        :can-upload="false"
+                        :fmt-size="fmtSize"
+                        :fmt-date="fmt"
+                        :previewable="isPreviewable"
+                        @preview="openAttachmentPreview"
+                        @download="downloadFile"
+                        @delete="removeAttachment"
                       >
-                        <p class="text-sm font-bold text-slate-600 dark:text-slate-300">
-                          {{ req.paper_status === 'received' ? t('request_detail.paper_update_section_title') : t('request_detail.paper_confirm_received_title') }}
-                        </p>
-                        <Input v-model="paperForm.paper_reference" :label="t('request_detail.paper_ref_input_label')" :placeholder="t('request_detail.paper_ref_placeholder')" />
-                        <Input v-model="paperForm.paper_received_at" :label="t('request_detail.paper_received_at_input_label')" type="datetime-local" />
-                        <div class="flex flex-wrap items-center gap-2">
-                          <Button :loading="paperActing" type="submit" class="!bg-teal-600 hover:!bg-teal-700">
-                            {{ req.paper_status === 'received' ? t('request_detail.paper_save_changes_btn') : t('request_detail.paper_mark_received_btn') }}
-                          </Button>
-                          <Button v-if="req.paper_status === 'received'" variant="secondary" type="button" class="!border-amber-200 !text-amber-900 hover:!bg-amber-50" :disabled="paperActing || paperRevertActing" @click="doRevertPaper">
-                            {{ t('request_detail.paper_revert_btn') }}
-                          </Button>
-                          <span v-if="paperMsg" class="text-sm text-slate-500 dark:text-slate-400">{{ paperMsg }}</span>
+                        <div
+                          v-if="signedDocumentCurrent"
+                          class="shrink-0 space-y-2.5 rounded-xl border border-amber-200/80 bg-amber-50/60 p-3 dark:border-amber-900/50 dark:bg-amber-950/25"
+                        >
+                          <p class="text-[10px] font-bold uppercase tracking-wider text-amber-700/90 dark:text-amber-400/90">
+                            {{ t('request_detail.ops_signed_doc_status') }}
+                          </p>
+                          <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold" :class="signedVerifyBadgeClass">{{ signedVerifyLabel }}</span>
+                          <div v-if="canManagePaper" class="flex flex-col gap-2">
+                            <button type="button" class="w-full" :class="btnGhostClass" :disabled="signedOcrBusy" @click="onSignedRerunOcr">{{ signedOcrBusy ? t('request_detail.docs_ocr_running') : t('request_detail.ops_rerun_ocr') }}</button>
+                            <button type="button" class="w-full" :class="btnTealClass" :disabled="signedVerifyBusy" @click="onSignedVerify('approve')">{{ t('request_detail.ops_verify_pass') }}</button>
+                            <button type="button" class="w-full" :class="btnDangerGhostClass" :disabled="signedVerifyBusy" @click="onSignedVerify('reject')">{{ t('request_detail.ops_verify_fail') }}</button>
+                          </div>
                         </div>
-                      </form>
-                    </DocGroup>
+                      </DocGroup>
+
+                      <DocGroup
+                        column
+                        accent="teal"
+                        :header-icon="DocumentDuplicateIcon"
+                        :title="t('request_detail.ops_docs_scan')"
+                        :files="paperScans"
+                        :deleting-id="deletingId"
+                        :can-delete="canDeleteAttachment"
+                        :can-upload="canUploadAttachment"
+                        :uploading="uploadingScan"
+                        :fmt-size="fmtSize"
+                        :fmt-date="fmt"
+                        :previewable="isPreviewable"
+                        empty-text-key="docs_empty_paper_scan"
+                        @preview="openAttachmentPreview"
+                        @download="downloadFile"
+                        @delete="removeAttachment"
+                        @pick="onPickScan"
+                      >
+                        <form
+                          v-if="canManagePaper && (req.paper_status === 'pending' || req.paper_status === 'received')"
+                          class="shrink-0 space-y-3 rounded-xl border border-teal-200/80 bg-teal-50/50 p-3 dark:border-teal-900/50 dark:bg-teal-950/25"
+                          @submit.prevent="doMarkPaper"
+                        >
+                          <p class="text-[10px] font-bold uppercase tracking-wider text-teal-700/90 dark:text-teal-400/90">
+                            {{ req.paper_status === 'received' ? t('request_detail.paper_update_section_title') : t('request_detail.paper_confirm_received_title') }}
+                          </p>
+                          <Input v-model="paperForm.paper_reference" :label="t('request_detail.paper_ref_input_label')" :placeholder="t('request_detail.paper_ref_placeholder')" />
+                          <Input v-model="paperForm.paper_received_at" :label="t('request_detail.paper_received_at_input_label')" type="datetime-local" />
+                          <div class="flex flex-col gap-2">
+                            <Button :loading="paperActing" type="submit" class="w-full !bg-teal-600 hover:!bg-teal-700">
+                              {{ req.paper_status === 'received' ? t('request_detail.paper_save_changes_btn') : t('request_detail.paper_mark_received_btn') }}
+                            </Button>
+                            <Button v-if="req.paper_status === 'received'" variant="secondary" type="button" class="w-full !border-amber-200 !text-amber-900 hover:!bg-amber-50" :disabled="paperActing || paperRevertActing" @click="doRevertPaper">
+                              {{ t('request_detail.paper_revert_btn') }}
+                            </Button>
+                            <span v-if="paperMsg" class="text-center text-sm text-slate-500 dark:text-slate-400">{{ paperMsg }}</span>
+                          </div>
+                        </form>
+                      </DocGroup>
+                    </div>
                   </div>
 
                   <!-- ===== Tab: Học sinh ===== -->
@@ -490,24 +559,71 @@
                     <p v-if="auditLoading" class="py-10 text-center text-base text-slate-400 dark:text-slate-500">{{ t('request_detail.audit_timeline_loading') }}</p>
                     <p v-else-if="auditError" class="py-4 text-sm text-rose-600 dark:text-rose-400">{{ auditError }}</p>
                     <p v-else-if="!auditItems.length" class="py-10 text-center text-base text-slate-400 dark:text-slate-500">{{ t('request_detail.audit_timeline_empty') }}</p>
-                    <ol v-else class="space-y-1">
-                      <li
-                        v-for="row in auditItems"
-                        :key="row.id"
-                        class="flex items-start gap-3 rounded-xl border border-slate-100 px-3.5 py-3 dark:border-slate-800"
+                    <template v-else>
+                      <div class="mb-3 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+                        <p class="text-sm tabular-nums text-slate-500 dark:text-slate-400">
+                          {{ t('request_detail.audit_pagination_showing', { from: auditShowFrom, to: auditShowTo, total: auditTotal }) }}
+                        </p>
+                        <label class="inline-flex items-center gap-2">
+                          <span class="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">{{ t('request_detail.audit_per_page_label') }}</span>
+                          <select
+                            v-model.number="auditPageSize"
+                            class="h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-sm font-medium text-slate-800 shadow-sm outline-none focus:ring-2 focus:ring-va-500/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                            :aria-label="t('request_detail.audit_per_page_aria')"
+                          >
+                            <option v-for="opt in auditPageSizeOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                          </select>
+                        </label>
+                      </div>
+
+                      <ol class="space-y-1">
+                        <li
+                          v-for="row in paginatedAuditItems"
+                          :key="row.id"
+                          class="flex items-start gap-3 rounded-xl border border-slate-100 px-3.5 py-3 dark:border-slate-800"
+                        >
+                          <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" :class="auditMeta(row.event).cls">
+                            <component :is="auditMeta(row.event).icon" class="h-5 w-5" aria-hidden="true" />
+                          </span>
+                          <div class="min-w-0 flex-1">
+                            <p class="text-base font-semibold text-slate-800 dark:text-slate-100">{{ auditEventLabel(row.event) }}</p>
+                            <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+                              <span class="font-medium text-slate-600 dark:text-slate-300">{{ row.actor?.name ?? t('request_detail.audit_actor_system') }}</span>
+                              <span class="text-slate-300 dark:text-slate-600"> · </span>{{ fmt(row.created_at) }}
+                            </p>
+                          </div>
+                        </li>
+                      </ol>
+
+                      <div
+                        v-if="auditPaginationVisible"
+                        class="mt-3 flex flex-col gap-2 border-t border-slate-100 pt-3 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800"
                       >
-                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" :class="auditMeta(row.event).cls">
-                          <component :is="auditMeta(row.event).icon" class="h-5 w-5" aria-hidden="true" />
-                        </span>
-                        <div class="min-w-0 flex-1">
-                          <p class="text-base font-semibold text-slate-800 dark:text-slate-100">{{ auditEventLabel(row.event) }}</p>
-                          <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-                            <span class="font-medium text-slate-600 dark:text-slate-300">{{ row.actor?.name ?? t('request_detail.audit_actor_system') }}</span>
-                            <span class="text-slate-300 dark:text-slate-600"> · </span>{{ fmt(row.created_at) }}
-                          </p>
+                        <p class="text-xs tabular-nums text-slate-500 dark:text-slate-400">
+                          {{ t('request_detail.audit_pagination_page', { page: auditPage, total: auditTotalPages }) }}
+                        </p>
+                        <div class="flex items-center gap-2">
+                          <button
+                            type="button"
+                            class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                            :disabled="auditPage <= 1"
+                            @click="auditPage--"
+                          >
+                            <ChevronLeftIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                            {{ t('request_detail.audit_pagination_prev') }}
+                          </button>
+                          <button
+                            type="button"
+                            class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                            :disabled="auditPage >= auditTotalPages"
+                            @click="auditPage++"
+                          >
+                            {{ t('request_detail.audit_pagination_next') }}
+                            <ChevronRightIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                          </button>
                         </div>
-                      </li>
-                    </ol>
+                      </div>
+                    </template>
                   </div>
                 </div>
               </div>
@@ -692,7 +808,7 @@
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent, h, ref } from 'vue'
+import { computed, defineAsyncComponent, h, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import {
   ArrowDownTrayIcon,
@@ -706,11 +822,15 @@ import {
   CalendarDaysIcon,
   CheckBadgeIcon,
   CheckCircleIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   ClipboardDocumentIcon,
   ClockIcon,
   CurrencyDollarIcon,
   DocumentCheckIcon,
+  DocumentDuplicateIcon,
   DocumentTextIcon,
+  PaperClipIcon,
   ExclamationTriangleIcon,
   MapIcon,
   MapPinIcon,
@@ -1048,6 +1168,62 @@ function auditMeta(event) {
   return AUDIT_ICON[seg] || { icon: ClockIcon, cls: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' }
 }
 
+function itinerarySummaryIcon(line) {
+  const s = String(line || '')
+  if (/^(Đi|Về|Out|Back|Tập kết|Giao|Pickup|Delivery):/i.test(s)) return ClockIcon
+  if (/khách|guest|Phụ trách|In charge/i.test(s)) return UserGroupIcon
+  return MapPinIcon
+}
+
+const AUDIT_PAGE_SIZE_ALL = 0
+const auditPageSize = ref(10)
+const auditPage = ref(1)
+
+const auditPageSizeOptions = computed(() => [
+  { value: 5, label: '5' },
+  { value: 10, label: '10' },
+  { value: 15, label: '15' },
+  { value: 20, label: '20' },
+  { value: AUDIT_PAGE_SIZE_ALL, label: t('request_detail.audit_per_page_all') },
+])
+
+const auditTotal = computed(() => auditItems.value.length)
+
+const auditTotalPages = computed(() => {
+  if (auditPageSize.value === AUDIT_PAGE_SIZE_ALL || auditTotal.value === 0) return 1
+  return Math.max(1, Math.ceil(auditTotal.value / auditPageSize.value))
+})
+
+const paginatedAuditItems = computed(() => {
+  if (auditPageSize.value === AUDIT_PAGE_SIZE_ALL) return auditItems.value
+  const start = (auditPage.value - 1) * auditPageSize.value
+  return auditItems.value.slice(start, start + auditPageSize.value)
+})
+
+const auditShowFrom = computed(() => {
+  if (auditTotal.value === 0) return 0
+  if (auditPageSize.value === AUDIT_PAGE_SIZE_ALL) return 1
+  return (auditPage.value - 1) * auditPageSize.value + 1
+})
+
+const auditShowTo = computed(() => {
+  if (auditTotal.value === 0) return 0
+  if (auditPageSize.value === AUDIT_PAGE_SIZE_ALL) return auditTotal.value
+  return Math.min(auditPage.value * auditPageSize.value, auditTotal.value)
+})
+
+const auditPaginationVisible = computed(
+  () => auditPageSize.value !== AUDIT_PAGE_SIZE_ALL && auditTotalPages.value > 1,
+)
+
+watch(auditPageSize, () => {
+  auditPage.value = 1
+})
+
+watch(auditItems, () => {
+  if (auditPage.value > auditTotalPages.value) auditPage.value = auditTotalPages.value
+})
+
 // ── Docs ──
 const uploadingGeneral = ref(false)
 const uploadingScan = ref(false)
@@ -1098,24 +1274,49 @@ const FieldRow = {
     multiline: { type: Boolean, default: false },
     highlight: { type: Boolean, default: false },
     emphasize: { type: Boolean, default: false },
+    boxed: { type: Boolean, default: false },
   },
   setup(props) {
     const empty = computed(() => props.value === '' || props.value == null)
     const valueClass = computed(() => {
-      if (empty.value) return 'mt-0.5 text-sm italic text-slate-300 dark:text-slate-600'
-      const base = ['mt-0.5 text-base break-words', props.multiline ? 'whitespace-pre-wrap' : '']
+      if (empty.value) return 'mt-1 text-sm italic text-slate-400 dark:text-slate-500'
+      const base = ['mt-1 break-words', props.multiline ? 'whitespace-pre-wrap text-sm leading-relaxed' : 'text-sm']
       if (props.emphasize) base.push('font-semibold text-rose-800 dark:text-rose-200')
       else if (props.highlight) base.push('font-semibold text-va-800 dark:text-va-200')
-      else base.push('text-slate-800 dark:text-slate-200')
+      else base.push('font-medium text-slate-800 dark:text-slate-200')
       return base
     })
+    const labelClass = props.boxed
+      ? 'text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500'
+      : 'text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500'
+    const wrapClass = props.boxed
+      ? 'min-w-0 rounded-xl border border-slate-100 bg-slate-50/70 px-3.5 py-2.5 dark:border-slate-800 dark:bg-slate-800/40'
+      : 'min-w-0'
     return () =>
-      h('div', { class: 'min-w-0' }, [
-        h('dt', { class: 'text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500' }, props.label),
+      h('div', { class: wrapClass }, [
+        h('dt', { class: labelClass }, props.label),
         empty.value
-          ? h('dd', { class: 'mt-0.5 text-sm italic text-slate-300 dark:text-slate-600' }, t('request_detail.ops_no_data'))
+          ? h('dd', { class: 'mt-1 text-sm italic text-slate-400 dark:text-slate-500' }, t('request_detail.ops_no_data'))
           : h('dd', { class: valueClass.value }, String(props.value)),
       ])
+  },
+}
+
+const DOC_GROUP_ACCENT = {
+  sky: {
+    icon: 'bg-sky-50 text-sky-600 dark:bg-sky-950/40 dark:text-sky-400',
+    top: 'border-t-sky-200/80 dark:border-t-sky-900/50',
+    badge: 'bg-sky-100 text-sky-800 dark:bg-sky-950/50 dark:text-sky-300',
+  },
+  amber: {
+    icon: 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400',
+    top: 'border-t-amber-200/80 dark:border-t-amber-900/50',
+    badge: 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300',
+  },
+  teal: {
+    icon: 'bg-teal-50 text-teal-600 dark:bg-teal-950/40 dark:text-teal-400',
+    top: 'border-t-teal-200/80 dark:border-t-teal-900/50',
+    badge: 'bg-teal-100 text-teal-800 dark:bg-teal-950/50 dark:text-teal-300',
   },
 }
 
@@ -1132,6 +1333,10 @@ const DocGroup = {
     fmtSize: { type: Function, required: true },
     fmtDate: { type: Function, required: true },
     previewable: { type: Function, required: true },
+    column: { type: Boolean, default: false },
+    accent: { type: String, default: 'sky' },
+    headerIcon: { type: [Object, Function], default: null },
+    emptyTextKey: { type: String, default: 'docs_empty_attachments' },
   },
   emits: ['preview', 'download', 'delete', 'ocr', 'pick'],
   setup(props, { emit, slots }) {
@@ -1150,46 +1355,92 @@ const DocGroup = {
         onClick: handler,
       }, [h(icon, { class: 'h-4 w-4' })])
 
-    return () =>
-      h('section', { class: 'rounded-2xl border border-slate-200 p-4 dark:border-slate-800 sm:p-5' }, [
-        h('div', { class: 'flex items-center justify-between gap-2' }, [
-          h('h3', { class: 'text-sm font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400' }, props.title),
+    const accentStyle = computed(() => DOC_GROUP_ACCENT[props.accent] || DOC_GROUP_ACCENT.sky)
+
+    const emptyMessage = computed(() => {
+      const key = `request_detail.${props.emptyTextKey}`
+      const tr = t(key)
+      return tr !== key ? tr : t('request_detail.docs_empty_attachments')
+    })
+
+    const fileList = () =>
+      props.files.length === 0
+        ? h('p', {
+            class: props.column
+              ? 'flex flex-1 items-center justify-center rounded-xl border border-dashed border-slate-200 px-3 py-8 text-center text-sm leading-relaxed text-slate-400 dark:border-slate-700 dark:text-slate-500'
+              : 'rounded-lg border border-dashed border-slate-200 px-3 py-5 text-center text-sm text-slate-400 dark:border-slate-700 dark:text-slate-500',
+          }, emptyMessage.value)
+        : props.files.map((a) =>
+            h('div', {
+              key: a.id,
+              class: ['flex items-center gap-2 rounded-lg border px-2.5 py-2 transition',
+                props.column ? 'flex-col items-stretch sm:flex-row sm:items-center' : 'gap-3 px-3 py-2.5',
+                String(props.highlightId) === String(a.id) ? 'border-teal-300 bg-teal-50/60 dark:border-teal-700 dark:bg-teal-950/30' : 'border-slate-200 dark:border-slate-800'],
+            }, [
+              h('div', { class: 'min-w-0 flex-1' }, [
+                h('p', { class: ['font-medium text-slate-800 dark:text-slate-200', props.column ? 'line-clamp-2 text-sm leading-snug' : 'truncate text-base'] }, a.original_name || '—'),
+                h('p', { class: 'mt-0.5 text-[11px] text-slate-400 dark:text-slate-500' }, [
+                  props.fmtSize(a.size) ? `${props.fmtSize(a.size)} · ` : '',
+                  props.fmtDate(a.created_at),
+                  a.ocr_status === 'completed' ? ' · OCR ✓' : (a.ocr_status === 'queued' || a.ocr_status === 'processing') ? ' · OCR…' : '',
+                ].join('')),
+              ]),
+              h('div', { class: ['flex shrink-0 items-center gap-1', props.column ? 'justify-end' : ''] }, [
+                props.previewable(a) ? actionBtn(EyeIcon, t('request_detail.ops_preview'), () => emit('preview', a)) : null,
+                actionBtn(ArrowDownTraySolid, t('request_detail.download_action'), () => emit('download', a)),
+                props.canOcr ? actionBtn(SparklesIcon, t('request_detail.ops_run_ocr'), () => emit('ocr', a.id)) : null,
+                props.canDelete ? actionBtn(TrashIcon, t('request_detail.delete_action'), () => emit('delete', a), 'danger') : null,
+              ]),
+            ]),
+          )
+
+    return () => {
+      if (!props.column) {
+        return h('section', { class: 'rounded-2xl border border-slate-200 p-4 dark:border-slate-800 sm:p-5' }, [
+          h('div', { class: 'flex items-center justify-between gap-2' }, [
+            h('h3', { class: 'text-sm font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400' }, props.title),
+            props.canUpload
+              ? h('label', { class: 'inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800' }, [
+                  h(ArrowDownTraySolid, { class: 'h-4 w-4 rotate-180' }),
+                  props.uploading ? t('request_detail.docs_ocr_running') : t('request_detail.ops_upload_file'),
+                  h('input', { type: 'file', class: 'hidden', disabled: props.uploading, onChange }),
+                ])
+              : null,
+          ]),
+          h('div', { class: 'mt-3 space-y-2' }, [fileList()]),
+          slots.default ? slots.default() : null,
+        ])
+      }
+
+      return h('section', {
+        class: ['flex h-full min-h-[22rem] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900'],
+      }, [
+        h('div', { class: ['flex shrink-0 items-start justify-between gap-2 border-b border-slate-100 px-4 py-3 dark:border-slate-800', accentStyle.value.top] }, [
+          h('div', { class: 'flex min-w-0 items-center gap-2.5' }, [
+            props.headerIcon
+              ? h('span', { class: ['flex h-8 w-8 shrink-0 items-center justify-center rounded-lg', accentStyle.value.icon] }, [
+                  h(props.headerIcon, { class: 'h-4 w-4', 'aria-hidden': 'true' }),
+                ])
+              : null,
+            h('div', { class: 'min-w-0' }, [
+              h('h3', { class: 'text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300' }, props.title),
+              h('p', { class: 'mt-0.5 text-xs text-slate-500 dark:text-slate-400' }, t('request_detail.ops_docs_file_count', { n: props.files.length })),
+            ]),
+          ]),
           props.canUpload
-            ? h('label', { class: 'inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800' }, [
-                h(ArrowDownTraySolid, { class: 'h-4 w-4 rotate-180' }),
-                props.uploading ? t('request_detail.docs_ocr_running') : t('request_detail.ops_upload_file'),
+            ? h('label', { class: 'inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800' }, [
+                h(ArrowDownTraySolid, { class: 'h-3.5 w-3.5 rotate-180' }),
+                props.uploading ? '…' : t('request_detail.ops_upload_file'),
                 h('input', { type: 'file', class: 'hidden', disabled: props.uploading, onChange }),
               ])
-            : null,
+            : h('span', { class: ['inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-full px-1.5 text-xs font-bold tabular-nums', accentStyle.value.badge] }, String(props.files.length)),
         ]),
-        h('div', { class: 'mt-3 space-y-2' }, [
-          props.files.length === 0
-            ? h('p', { class: 'rounded-lg border border-dashed border-slate-200 px-3 py-5 text-center text-sm text-slate-400 dark:border-slate-700 dark:text-slate-500' }, t('request_detail.docs_empty_attachments'))
-            : props.files.map((a) =>
-                h('div', {
-                  key: a.id,
-                  class: ['flex items-center gap-3 rounded-lg border px-3 py-2.5 transition',
-                    String(props.highlightId) === String(a.id) ? 'border-teal-300 bg-teal-50/60 dark:border-teal-700 dark:bg-teal-950/30' : 'border-slate-200 dark:border-slate-800'],
-                }, [
-                  h('div', { class: 'min-w-0 flex-1' }, [
-                    h('p', { class: 'truncate text-base font-medium text-slate-800 dark:text-slate-200' }, a.original_name || '—'),
-                    h('p', { class: 'mt-0.5 text-xs text-slate-400 dark:text-slate-500' }, [
-                      props.fmtSize(a.size) ? `${props.fmtSize(a.size)} · ` : '',
-                      props.fmtDate(a.created_at),
-                      a.ocr_status === 'completed' ? ' · OCR ✓' : (a.ocr_status === 'queued' || a.ocr_status === 'processing') ? ' · OCR…' : '',
-                    ].join('')),
-                  ]),
-                  h('div', { class: 'flex shrink-0 items-center gap-1' }, [
-                    props.previewable(a) ? actionBtn(EyeIcon, t('request_detail.ops_preview'), () => emit('preview', a)) : null,
-                    actionBtn(ArrowDownTraySolid, t('request_detail.download_action'), () => emit('download', a)),
-                    props.canOcr ? actionBtn(SparklesIcon, t('request_detail.ops_run_ocr'), () => emit('ocr', a.id)) : null,
-                    props.canDelete ? actionBtn(TrashIcon, t('request_detail.delete_action'), () => emit('delete', a), 'danger') : null,
-                  ]),
-                ]),
-              ),
+        h('div', { class: 'flex min-h-0 flex-1 flex-col gap-3 p-3' }, [
+          h('div', { class: 'flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain' }, [fileList()]),
+          slots.default ? h('div', { class: 'shrink-0 space-y-2 border-t border-slate-100 pt-3 dark:border-slate-800' }, [slots.default()]) : null,
         ]),
-        slots.default ? slots.default() : null,
       ])
+    }
   },
 }
 </script>

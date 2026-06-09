@@ -1,19 +1,29 @@
 <template>
   <section
-    class="rounded-2xl border p-4 sm:p-5"
+    class="overflow-hidden rounded-2xl border p-4 sm:p-5"
     :class="
       variant === 'staff'
-        ? 'border-slate-200 bg-transparent dark:border-slate-800'
+        ? 'border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900'
         : 'border-slate-200 bg-white'
     "
   >
-    <h2
+    <div
       v-if="title"
-      class="text-sm font-bold uppercase tracking-wide"
-      :class="variant === 'staff' ? 'text-slate-500 dark:text-slate-400' : 'font-semibold text-slate-900'"
+      class="flex items-center gap-2.5 border-b border-slate-100 pb-3 dark:border-slate-800"
     >
-      {{ title }}
-    </h2>
+      <span
+        v-if="variant === 'staff'"
+        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-va-50 text-va-700 dark:bg-va-950/50 dark:text-va-300"
+      >
+        <QueueListIcon class="h-4 w-4" aria-hidden="true" />
+      </span>
+      <h2
+        class="text-sm font-bold uppercase tracking-wide"
+        :class="variant === 'staff' ? 'text-slate-600 dark:text-slate-300' : 'font-semibold text-slate-900'"
+      >
+        {{ title }}
+      </h2>
+    </div>
 
     <!-- Mobile: vertical -->
     <ol class="mt-4 md:hidden">
@@ -40,9 +50,13 @@
           <p class="text-sm font-semibold leading-snug" :class="labelClass(step.state)">
             {{ step.label }}
           </p>
-          <p v-if="step.actor" class="mt-0.5 text-xs text-slate-600 dark:text-slate-400">{{ step.actor }}</p>
-          <p v-if="step.sub && step.sub !== '—'" class="mt-0.5 text-xs text-slate-500 dark:text-slate-500">
-            {{ step.sub }}
+          <p v-if="step.actor" class="mt-1.5 text-xs text-slate-600 dark:text-slate-400">
+            <span class="font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">{{ actorLabel }}</span>
+            <span class="mt-0.5 block font-medium text-slate-700 dark:text-slate-300">{{ step.actor }}</span>
+          </p>
+          <p v-if="step.sub && step.sub !== '—'" class="mt-1.5 text-xs text-slate-500 dark:text-slate-500">
+            <span class="font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">{{ timeLabel }}</span>
+            <span class="mt-0.5 block tabular-nums font-medium text-slate-600 dark:text-slate-400">{{ step.sub }}</span>
           </p>
         </div>
       </li>
@@ -73,14 +87,16 @@
             <p class="mt-2 line-clamp-2 text-xs font-semibold leading-tight sm:text-sm" :class="labelClass(step.state)">
               {{ step.label }}
             </p>
-            <p v-if="step.actor" class="mt-0.5 line-clamp-1 text-[11px] text-slate-600 dark:text-slate-400">
-              {{ step.actor }}
+            <p v-if="step.actor" class="mt-1 line-clamp-1 text-[11px] text-slate-600 dark:text-slate-400">
+              <span class="block font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">{{ actorLabel }}</span>
+              <span class="mt-0.5 block truncate font-medium text-slate-700 dark:text-slate-300">{{ step.actor }}</span>
             </p>
             <p
               v-if="step.sub && step.sub !== '—'"
-              class="mt-0.5 text-[11px] tabular-nums text-slate-500 dark:text-slate-500"
+              class="mt-1 text-[11px] tabular-nums text-slate-500 dark:text-slate-500"
             >
-              {{ step.sub }}
+              <span class="block font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">{{ timeLabel }}</span>
+              <span class="mt-0.5 block font-medium text-slate-600 dark:text-slate-400">{{ step.sub }}</span>
             </p>
           </div>
           <div
@@ -96,7 +112,9 @@
 </template>
 
 <script setup>
-import { CheckIcon } from '@heroicons/vue/24/outline'
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { CheckIcon, QueueListIcon } from '@heroicons/vue/24/outline'
 
 defineProps({
   title: { type: String, default: '' },
@@ -104,6 +122,10 @@ defineProps({
   /** `staff` — dark shell on /mng request detail */
   variant: { type: String, default: 'portal' },
 })
+
+const { t } = useI18n()
+const actorLabel = computed(() => t('portal.timeline_lbl_actor'))
+const timeLabel = computed(() => t('portal.timeline_lbl_time'))
 
 function circleClass(state) {
   if (state === 'done') return 'border-va-600 bg-va-600 text-white dark:border-va-500 dark:bg-va-500'
