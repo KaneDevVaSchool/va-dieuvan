@@ -24,6 +24,65 @@ function contentTypeLooksPdf(ct) {
  * Laravel trả lỗi JSON nhưng axios `responseType: 'blob'` nhận Blob — gắn lại object cho modal lỗi.
  * @param {unknown} err
  */
+/**
+ * Chuẩn hóa URL /storage từ API (APP_URL) sang origin backend khi dev Vite.
+ * @param {string} url
+ */
+export function resolveAttachmentAbsoluteUrl(url) {
+  const u = url
+  if (!u) return ''
+  if (typeof window === 'undefined') return u
+  const viteBackend =
+    import.meta.env.DEV && import.meta.env.VITE_APP_URL
+      ? String(import.meta.env.VITE_APP_URL).trim().replace(/\/$/, '')
+      : ''
+  try {
+    const parsed = new URL(u, window.location.origin)
+    if (parsed.pathname.startsWith('/storage')) {
+      const base = viteBackend || window.location.origin
+      return `${base}${parsed.pathname}${parsed.search}`
+    }
+    return parsed.href
+  } catch {
+    const path = u.startsWith('/') ? u : `/${u}`
+    if (path.startsWith('/storage')) {
+      const base = viteBackend || window.location.origin
+      return `${base}${path}`
+    }
+    return `${window.location.origin}${path}`
+  }
+}
+
+/**
+ * Tải blob đính kèm qua Sanctum (xem ảnh/PDF trong SPA, không dùng thẻ img + /storage).
+ * @param {number} attachmentId
+ * @returns {Promise<Blob>}
+ */
+export async function fetchAttachmentBlob(attachmentId) {
+  let res
+  try {
+    res = await http.get(`/attachments/${attachmentId}/download`, {
+      responseType: 'blob',
+      headers: { Accept: '*/*' },
+    })
+  } catch (e) {
+    await normalizeAxiosBlobError(e)
+    throw e
+  }
+
+  const blob = res.data
+  if (!(blob instanceof Blob)) {
+    throw new Error('invalid_response')
+  }
+
+  const ct = String(res.headers['content-type'] || '').toLowerCase()
+  if (ct.includes('text/html') || ct.includes('application/json')) {
+    throw new Error('unexpected_body')
+  }
+
+  return blob
+}
+
 export async function normalizeAxiosBlobError(err) {
   const res = err?.response
   if (!res || !(res.data instanceof Blob)) return err

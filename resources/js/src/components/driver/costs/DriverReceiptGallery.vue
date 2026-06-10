@@ -59,7 +59,7 @@
           @click="openPreview(idx)"
         >
           <img
-            :src="row.url"
+            :src="rowImageSrc(row)"
             :alt="previewAlt"
             loading="lazy"
             decoding="async"
@@ -203,7 +203,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import {
   CameraIcon,
   ChevronDownIcon,
@@ -217,6 +217,7 @@ import { uploadAttachment, deleteAttachment } from '../../../api/attachments'
 import { compressImageFile } from '../../../util/imageCompress'
 import { confirmAction } from '../../../composables/useConfirm'
 import { showAppError, showAppErrorFromApi } from '../../../composables/appMessage'
+import { fetchAttachmentBlob, resolveAttachmentAbsoluteUrl } from '../../../util/downloadPdfAttachment'
 
 const props = defineProps({
   tripId: { type: Number, default: null },
@@ -258,8 +259,63 @@ const uploadingKeys = ref(new Set())
 const optimisticRows = ref([])
 /** @type {import('vue').Ref<{ file: File, name: string }[]>} */
 const failedJobs = ref([])
+/** @type {import('vue').Ref<Map<number, string>>} */
+const blobUrlByAttachmentId = ref(new Map())
+const hydratingAttachmentIds = ref(new Set())
 
 const STORAGE_ORDER_KEY = computed(() => `driver-cost-gallery-order:${props.costId}`)
+
+function revokeAllBlobUrls() {
+  for (const u of blobUrlByAttachmentId.value.values()) {
+    URL.revokeObjectURL(u)
+  }
+  blobUrlByAttachmentId.value = new Map()
+}
+
+async function hydrateAttachmentBlob(attachmentId) {
+  const id = Number(attachmentId)
+  if (!Number.isFinite(id) || id < 1) return
+  if (blobUrlByAttachmentId.value.has(id) || hydratingAttachmentIds.value.has(id)) return
+  hydratingAttachmentIds.value.add(id)
+  try {
+    const blob = await fetchAttachmentBlob(id)
+    const objectUrl = URL.createObjectURL(blob)
+    const next = new Map(blobUrlByAttachmentId.value)
+    next.set(id, objectUrl)
+    blobUrlByAttachmentId.value = next
+  } catch {
+    /* fallback: resolveAttachmentAbsoluteUrl(row.url) */
+  } finally {
+    hydratingAttachmentIds.value.delete(id)
+  }
+}
+
+function rowImageSrc(row) {
+  if (!row) return ''
+  if (row.progress != null || String(row.key).startsWith('tmp')) return row.url
+  const id = row.attachmentId
+  if (id != null) {
+    const cached = blobUrlByAttachmentId.value.get(id)
+    if (cached) return cached
+    void hydrateAttachmentBlob(id)
+  }
+  return resolveAttachmentAbsoluteUrl(row.url)
+}
+
+function syncAttachmentBlobCache() {
+  const ids = new Set(
+    (props.attachments || []).map((a) => a?.id).filter((x) => x != null && Number(x) > 0),
+  )
+  const next = new Map()
+  for (const [id, url] of blobUrlByAttachmentId.value) {
+    if (ids.has(id)) next.set(id, url)
+    else URL.revokeObjectURL(url)
+  }
+  blobUrlByAttachmentId.value = next
+  for (const id of ids) {
+    void hydrateAttachmentBlob(id)
+  }
+}
 
 function normAttachmentList() {
   const rows = []
@@ -317,9 +373,12 @@ watch(
   () => [props.attachments, props.legacyReceiptUrl],
   () => {
     serverRows.value = normAttachmentList()
+    syncAttachmentBlobCache()
   },
-  { deep: true },
+  { deep: true, immediate: true },
 )
+
+onBeforeUnmount(revokeAllBlobUrls)
 
 const displayRows = computed(() => {
   const opt = optimisticRows.value.filter((o) => uploadingKeys.value.has(o.key))
@@ -329,7 +388,7 @@ const displayRows = computed(() => {
 
 const queueLen = computed(() => uploadingKeys.value.size)
 
-const previewSrc = computed(() => displayRows.value[previewIndex.value]?.url ?? '')
+const previewSrc = computed(() => rowImageSrc(displayRows.value[previewIndex.value]))
 
 const canReorder = computed(() => props.canMutate && !props.readonly)
 

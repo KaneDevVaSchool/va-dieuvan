@@ -20,6 +20,7 @@ use App\Http\Resources\SignedDocumentVersionResource;
 use App\Services\Ocr\PaperOcrStubService;
 use App\Services\SignedDocuments\SignedDocumentUploadService;
 use App\Support\FinancialDataLock;
+use App\Support\TripCostAccess;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -160,6 +161,12 @@ class AttachmentController extends Controller
         $name = $attachment->original_name ?: 'download';
 
         $binary = $attachment->file_binary;
+        if ($binary !== null && $binary !== '') {
+            $expectedBytes = $attachment->size_bytes;
+            if ($expectedBytes !== null && strlen($binary) !== (int) $expectedBytes) {
+                $binary = null;
+            }
+        }
         if ($binary !== null && $binary !== '') {
             return response($binary, 200, [
                 'Content-Type' => $attachment->mime_type ?: 'application/octet-stream',
@@ -400,6 +407,9 @@ class AttachmentController extends Controller
 
         if ($parent instanceof TripCost) {
             if ($user->can('trip.cost.view') || $user->can('trip.cost.reconcile')) {
+                return;
+            }
+            if (TripCostAccess::userCanView($user, $parent)) {
                 return;
             }
             abort(403);
