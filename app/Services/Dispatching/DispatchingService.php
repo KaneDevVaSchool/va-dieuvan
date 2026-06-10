@@ -214,9 +214,16 @@ class DispatchingService
             return;
         }
 
+        $dbDriver = DB::getDriverName();
+        $plannedEndExpr = $dbDriver === 'mysql'
+            ? 'COALESCE(arrive_by, DATE_ADD(depart_at, INTERVAL 2 HOUR))'
+            : "COALESCE(arrive_by, datetime(depart_at, '+2 hours'))";
+
         $others = Trip::query()
             ->where('id', '!=', $trip->id)
             ->whereIn('status', ['assigned', 'driver_confirmed', 'in_progress'])
+            ->where('depart_at', '<', $arriveBy)
+            ->whereRaw("($plannedEndExpr) > ?", [$departAt])
             ->with(['dispatchRequest:id,wizard_snapshot,trip_type'])
             ->get(['id', 'driver_id', 'vehicle_id', 'depart_at', 'arrive_by', 'schedule_assignments', 'dispatch_request_id']);
 
@@ -225,14 +232,26 @@ class DispatchingService
                 if (! $this->intervalsOverlap($departAt, $arriveBy, $slot['start'], $slot['end'])) {
                     continue;
                 }
+                $range = $this->formatSlotRange($slot['start'], $slot['end']);
+                $code = $this->tripReferenceCode((int) $other->id);
                 if ($driverId && $slot['driver_id'] && (int) $slot['driver_id'] === (int) $driverId) {
-                    abort(409, 'Tài xế bị trùng lịch trong khung giờ này.');
+                    abort(409, sprintf('%s (chuyến %s, %s).', Messages::RESOURCE_DRIVER_OVERLAP, $code, $range));
                 }
                 if ($vehicleId && $slot['vehicle_id'] && (int) $slot['vehicle_id'] === (int) $vehicleId) {
-                    abort(409, 'Xe bị trùng lịch trong khung giờ này.');
+                    abort(409, sprintf('%s (chuyến %s, %s).', Messages::RESOURCE_VEHICLE_OVERLAP, $code, $range));
                 }
             }
         }
+    }
+
+    private function tripReferenceCode(int $tripId): string
+    {
+        return 'TRP-'.str_pad((string) $tripId, 4, '0', STR_PAD_LEFT);
+    }
+
+    private function formatSlotRange(Carbon $start, Carbon $end): string
+    {
+        return $start->format('d/m/Y H:i').'–'.$end->format('H:i');
     }
 
     private function intervalsOverlap(Carbon $aStart, Carbon $aEnd, Carbon $bStart, Carbon $bEnd): bool
