@@ -179,7 +179,7 @@ class PortalDispatchRequestController extends Controller
             'approver:id,name',
             'priceFiller:id,name',
             'trip.driver:id,full_name,phone',
-            'trip.vehicle:id,license_plate,name',
+            'trip.vehicle:id,license_plate,type',
             'trip.dispatcher:id,name',
             'dispatchRequestTemplate.dispatchPackage',
             'attachments' => fn ($q) => $q->orderByDesc('id'),

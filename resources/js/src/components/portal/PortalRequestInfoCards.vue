@@ -235,7 +235,7 @@ const driverName = computed(() => {
 const vehicleName = computed(() => {
   const tr = trip.value
   if (!tr) return ''
-  const name = tr.vehicle?.name || tr.external_vehicle_ref
+  const name = tr.vehicle?.type || tr.external_vehicle_ref
   return name ? String(name).trim() : ''
 })
 
