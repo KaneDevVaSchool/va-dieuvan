@@ -156,9 +156,19 @@ export function useRequestDetailPage() {
       auth.hasPermission('request.fill_price'),
   )
 
-  /** Dispatcher / admin: điền giá xong duyệt luôn (không chờ Trưởng BP). */
+  const assignedDeptHeadIdOnReq = computed(() => {
+    const raw = req.value?.assigned_dept_head_id
+    if (raw == null || raw === '') return null
+    const n = Number(raw)
+    return Number.isFinite(n) && n > 0 ? n : null
+  })
+
+  /** Điền giá xong duyệt luôn chỉ khi phiếu chưa gán Trưởng BP (portal). */
   const fillPriceAutoApproves = computed(
-    () => showFillPriceSection.value && auth.hasPermission('request.approve'),
+    () =>
+      showFillPriceSection.value &&
+      auth.hasPermission('request.approve') &&
+      assignedDeptHeadIdOnReq.value == null,
   )
 
   const showD2dDecisionSection = computed(

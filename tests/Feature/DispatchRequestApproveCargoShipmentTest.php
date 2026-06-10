@@ -62,6 +62,13 @@ class DispatchRequestApproveCargoShipmentTest extends TestCase
             'service_price' => 250000,
         ])->assertSuccessful();
 
+        $this->assertSame('price_filled', DispatchRequest::query()->findOrFail($dr->id)->status);
+
+        $this->actingAs($departmentHead);
+        $this->postJson("/api/dispatch-requests/{$dr->id}/dept-decision", [
+            'decision' => 'approve',
+        ])->assertSuccessful();
+
         $this->assertSame('approved', DispatchRequest::query()->findOrFail($dr->id)->status);
         $this->assertSame(1, CargoShipment::query()->where('dispatch_request_id', $dr->id)->count());
 

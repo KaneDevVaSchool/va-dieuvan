@@ -250,3 +250,138 @@
 .dispatch-wizard .dw-cell.dw-cell--vnd {
   @apply tabular-nums tracking-tight;
 }
+
+/* Portal — tạo yêu cầu (/portal/new): form gọn, phân cấp rõ */
+.dispatch-wizard.portal-create {
+  @apply text-slate-800;
+}
+.dispatch-wizard.portal-create .dw-portal-surface {
+  @apply rounded-2xl border border-slate-200/80 bg-gradient-to-b from-white via-white to-slate-50/30 p-4 shadow-md shadow-slate-900/[0.04] ring-1 ring-slate-900/[0.03] sm:p-6 lg:p-7;
+}
+.dispatch-wizard.portal-create .dw-portal-step2 {
+  @apply space-y-4 sm:space-y-5;
+}
+.dispatch-wizard.portal-create .dw-portal-step-head {
+  @apply space-y-1;
+}
+.dispatch-wizard.portal-create .dw-portal-step-head h2 {
+  @apply text-base font-semibold tracking-tight text-slate-900 sm:text-lg;
+}
+.dispatch-wizard.portal-create .dw-portal-step-lead {
+  @apply text-xs leading-relaxed text-slate-500 sm:text-[13px];
+}
+.dispatch-wizard.portal-create .dw-portal-subtabs {
+  @apply grid grid-cols-4 gap-1 rounded-2xl bg-slate-100/80 p-1 ring-1 ring-inset ring-slate-200/90;
+}
+.dispatch-wizard.portal-create .dw-portal-subtab {
+  @apply flex min-h-[2.75rem] min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-2 text-center text-[10px] font-semibold leading-tight text-slate-600 transition disabled:cursor-not-allowed disabled:opacity-40 sm:min-h-[3rem] sm:flex-row sm:gap-1.5 sm:px-2 sm:text-xs;
+}
+.dispatch-wizard.portal-create .dw-portal-subtab[aria-selected='true'] {
+  @apply bg-white text-va-800 shadow-sm ring-1 ring-slate-200/80;
+}
+.dispatch-wizard.portal-create .dw-portal-subtab__num {
+  @apply flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold sm:h-6 sm:w-6 sm:text-[11px];
+}
+.dispatch-wizard.portal-create .dw-portal-subtab[aria-selected='true'] .dw-portal-subtab__num {
+  @apply bg-va-800 text-white;
+}
+.dispatch-wizard.portal-create .dw-portal-subtab:not([aria-selected='true']):not(:disabled) .dw-portal-subtab__num {
+  @apply bg-slate-200/90 text-slate-600;
+}
+.dispatch-wizard.portal-create .dw-portal-subtab__label {
+  @apply truncate leading-snug;
+}
+.dispatch-wizard.portal-create .dw-portal-panel {
+  @apply rounded-2xl border border-slate-200/70 bg-white/90 p-4 ring-1 ring-slate-900/[0.03] sm:p-5;
+}
+.dispatch-wizard.portal-create .dw-portal-panel-title {
+  @apply mb-3 text-sm font-semibold text-slate-900 sm:mb-3.5;
+}
+.dispatch-wizard.portal-create .dw-form-stack {
+  @apply flex flex-col gap-3.5 sm:gap-4;
+}
+.dispatch-wizard.portal-create .dw-form-grid-2 {
+  @apply grid gap-3.5 sm:grid-cols-2 sm:gap-4;
+}
+.dispatch-wizard.portal-create .dw-fieldset {
+  @apply rounded-2xl border-slate-200/70 bg-white/90 p-4 shadow-none ring-1 ring-slate-900/[0.03] sm:p-5;
+}
+.dispatch-wizard.portal-create .dw-section-title {
+  @apply mb-3 border-0 pb-0 text-sm font-semibold normal-case tracking-normal text-slate-900;
+}
+.dispatch-wizard.portal-create .dw-label,
+.dispatch-wizard.portal-create .dw-label-text {
+  @apply mb-1 text-xs font-medium text-slate-600 sm:text-[13px];
+}
+.dispatch-wizard.portal-create .dw-input {
+  @apply rounded-xl border-slate-200/90 bg-slate-50/60 px-3 py-2.5 text-sm shadow-inner shadow-slate-900/[0.02] transition placeholder:text-slate-400 focus:border-va-700/40 focus:bg-white focus:ring-2 focus:ring-va-800/15;
+}
+.dispatch-wizard.portal-create .dw-input.dw-input--invalid {
+  @apply border-rose-200 bg-rose-50/30 ring-2 ring-rose-200/80;
+}
+.dispatch-wizard.portal-create .dw-combobox__menu {
+  @apply absolute z-30 mt-1 max-h-52 w-full overflow-auto rounded-xl border border-slate-200/90 bg-white py-1 text-sm shadow-lg shadow-slate-900/10 ring-1 ring-slate-900/5;
+}
+.dispatch-wizard.portal-create .dw-combobox__option {
+  @apply flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition hover:bg-va-50/90;
+}
+.dispatch-wizard.portal-create .dw-combobox__empty {
+  @apply px-3 py-2.5 text-slate-500;
+}
+.dispatch-wizard.portal-create .dw-portal-card-muted {
+  @apply rounded-xl border border-slate-200/80 bg-slate-50/50 p-3.5 sm:p-4;
+}
+.dispatch-wizard.portal-create .dw-portal-card-muted--urgent {
+  @apply border-rose-100/90 bg-gradient-to-br from-rose-50/40 via-white to-slate-50/30;
+}
+.dispatch-wizard.portal-create .dw-portal-segment {
+  @apply mb-3 flex flex-wrap gap-2;
+}
+.dispatch-wizard.portal-create .dw-portal-segment__opt {
+  @apply flex min-h-[2.75rem] flex-1 cursor-pointer items-center gap-2 rounded-xl border border-slate-200/90 bg-slate-50/50 px-3 py-2 text-sm text-slate-800 transition hover:border-va-700/25 has-[:checked]:border-va-700/50 has-[:checked]:bg-va-50 has-[:checked]:font-medium has-[:checked]:text-va-900 has-[:checked]:ring-2 has-[:checked]:ring-va-800/10 sm:flex-none sm:px-4;
+}
+.dispatch-wizard.portal-create .dw-portal-dropzone {
+  @apply flex min-h-[6.5rem] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200/90 bg-slate-50/40 px-4 py-5 transition sm:min-h-[7rem];
+}
+.dispatch-wizard.portal-create .dw-portal-dropzone--active {
+  @apply border-va-600/70 bg-va-50/50;
+}
+.dispatch-wizard.portal-create .dw-portal-dropzone:hover {
+  @apply border-slate-300 bg-slate-50/70;
+}
+.dispatch-wizard.portal-create .dw-portal-file-row {
+  @apply flex items-center gap-3 rounded-xl border border-slate-200/80 bg-white px-3 py-2.5 text-sm ring-1 ring-slate-900/[0.02];
+}
+.dispatch-wizard.portal-create .dw-portal-chip {
+  @apply inline-flex items-center gap-1 rounded-full border border-va-200/80 bg-va-50/90 px-2.5 py-0.5 text-xs font-medium text-va-900 sm:px-3 sm:py-1 sm:text-sm;
+}
+.dispatch-wizard.portal-create .dw-portal-chip__remove {
+  @apply rounded-full p-0.5 text-va-700 transition hover:bg-va-200/80 hover:text-va-950;
+}
+.dispatch-wizard.portal-create .dw-portal-icon-btn {
+  @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200/90 bg-white text-va-800 shadow-sm transition hover:border-va-300 hover:bg-va-50 active:scale-[0.98];
+}
+.dispatch-wizard.portal-create .dw-portal-icon-btn--on {
+  @apply border-va-400/80 bg-va-50 ring-2 ring-va-800/10;
+}
+.dispatch-wizard.portal-create .dw-portal-footer {
+  @apply mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-5 sm:mt-7;
+}
+.dispatch-wizard.portal-create .dw-portal-btn-ghost {
+  @apply rounded-xl px-3.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40;
+}
+.dispatch-wizard.portal-create .dw-portal-btn-primary {
+  @apply rounded-xl bg-va-800 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-va-900/15 transition hover:bg-va-900 disabled:opacity-40;
+}
+.dispatch-wizard.portal-create .dw-portal-panel-stack {
+  @apply flex flex-col gap-4;
+}
+.dispatch-wizard.portal-create .dw-field-error {
+  @apply mt-1 text-xs font-medium text-rose-600;
+}
+.dispatch-wizard.portal-create .dw-field-hint {
+  @apply mt-1 text-xs text-slate-500;
+}
+.dispatch-wizard.portal-create .dw-portal-callout-warn {
+  @apply text-xs leading-relaxed text-amber-800/90;
+}

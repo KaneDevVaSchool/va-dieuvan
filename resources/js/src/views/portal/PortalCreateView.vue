@@ -1,6 +1,6 @@
 <template>
   <div
-    class="dispatch-wizard mx-auto max-w-6xl space-y-6 px-4 py-6 text-slate-900 supports-[padding:max(0px)]:pl-[max(1rem,env(safe-area-inset-left))] supports-[padding:max(0px)]:pr-[max(1rem,env(safe-area-inset-right))] sm:px-6 lg:py-8"
+    class="dispatch-wizard portal-create mx-auto max-w-3xl space-y-5 px-4 py-5 text-slate-900 supports-[padding:max(0px)]:pl-[max(1rem,env(safe-area-inset-left))] supports-[padding:max(0px)]:pr-[max(1rem,env(safe-area-inset-right))] sm:px-6 sm:py-6 lg:max-w-4xl lg:py-7"
     :class="step === 3 && !created ? 'pb-28 sm:pb-24' : 'pb-10'"
     :aria-label="
       form.is_urgent && !loading ? t('dispatch_wizard.create.form_priority_frame_aria') : undefined
@@ -143,7 +143,7 @@
 
     <div>
       <!-- Main card -->
-      <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8 lg:p-10">
+      <section class="dw-portal-surface">
         <!-- Step 1 -->
         <div v-show="step === 0">
           <PortalTripTypeGrid
@@ -156,19 +156,20 @@
         </div>
 
         <!-- Step 2 -->
-        <div v-show="step === 1" class="space-y-5 sm:space-y-6">
+        <div v-show="step === 1" class="dw-portal-step2">
           <p
             v-if="replaceDraftRequestId"
-            class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-950"
+            class="rounded-xl border border-amber-200/90 bg-amber-50/90 px-3 py-2 text-xs font-medium text-amber-950"
           >
             {{ t('dispatch_wizard.create.replace_banner') }}
           </p>
-          <div>
-            <h2 class="text-lg font-semibold text-slate-900">{{ t('dispatch_wizard.create.step2_title') }}</h2>
+          <div class="dw-portal-step-head">
+            <h2>{{ t('dispatch_wizard.create.step2_title') }}</h2>
+            <p class="dw-portal-step-lead">{{ t('dispatch_wizard.create.step2_lead') }}</p>
           </div>
 
           <div
-            class="-mx-1 flex gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-slate-50/90 p-1 supports-[overflow:clip]:overflow-x-clip sm:mx-0"
+            class="dw-portal-subtabs"
             role="tablist"
             :aria-label="t('dispatch_wizard.create.step2_sub_nav_aria')"
           >
@@ -177,34 +178,15 @@
               :key="tab.id"
               type="button"
               role="tab"
+              class="dw-portal-subtab"
               :aria-selected="step2Sub === tab.id"
               :aria-controls="`portal-step2-panel-${tab.id}`"
               :tabindex="step2Sub === tab.id ? 0 : -1"
-              class="flex min-h-[44px] min-w-[7.5rem] shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium transition sm:min-w-0 sm:flex-1 sm:justify-center"
-              :class="
-                step2Sub === tab.id
-                  ? 'bg-white text-va-800 shadow-sm ring-1 ring-slate-200'
-                  : idx <= maxReachedStep2Sub
-                    ? 'text-slate-700 hover:bg-white/70'
-                    : 'cursor-not-allowed text-slate-400'
-              "
               :disabled="idx > maxReachedStep2Sub"
               @click="setStep2Sub(tab.id)"
             >
-              <span
-                class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold"
-                :class="
-                  step2Sub === tab.id
-                    ? 'bg-va-800 text-white'
-                    : idx < step2SubIndex
-                      ? 'bg-va-100 text-va-800'
-                      : 'bg-slate-200 text-slate-600'
-                "
-                aria-hidden="true"
-              >
-                {{ idx + 1 }}
-              </span>
-              <span class="truncate">{{ tab.label }}</span>
+              <span class="dw-portal-subtab__num" aria-hidden="true">{{ idx + 1 }}</span>
+              <span class="dw-portal-subtab__label">{{ tab.label }}</span>
             </button>
           </div>
 
@@ -212,11 +194,10 @@
             v-show="step2Sub === 'requester'"
             id="portal-step2-panel-requester"
             role="tabpanel"
-            class="dw-fieldset space-y-4"
+            class="dw-portal-panel dw-form-stack"
           >
-              <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_requester') }}</h3>
+              <p class="dw-portal-panel-title">{{ t('dispatch_wizard.create.sec_requester') }}</p>
 
-              <!-- Tìm theo tên -->
               <div class="relative">
                 <label class="dw-label">
                   <span>{{ t('dispatch_wizard.create.search_by_name') }}</span>
@@ -247,15 +228,15 @@
                 <ul
                   v-if="requesterDropdownOpen && requesterSearchQ.trim().length >= 2"
                   id="dw-requester-search-list"
-                  class="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg ring-1 ring-black/5"
+                  class="dw-combobox__menu"
                   role="listbox"
                 >
-                  <li v-if="requesterSearchLoading" class="px-3 py-2.5 text-slate-500">{{ t('dispatch_wizard.create.searching') }}</li>
+                  <li v-if="requesterSearchLoading" class="dw-combobox__empty">{{ t('dispatch_wizard.create.searching') }}</li>
                   <template v-else-if="requesterSearchResults.length">
                     <li v-for="u in requesterSearchResults" :key="u.id">
                       <button
                         type="button"
-                        class="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition hover:bg-va-50"
+                        class="dw-combobox__option"
                         @mousedown.prevent="pickRequester(u)"
                       >
                         <span class="font-medium text-slate-900">{{ u.name }}</span>
@@ -263,19 +244,17 @@
                       </button>
                     </li>
                   </template>
-                  <li v-else class="px-3 py-2.5 text-slate-500">{{ t('dispatch_wizard.create.no_staff') }}</li>
+                  <li v-else class="dw-combobox__empty">{{ t('dispatch_wizard.create.no_staff') }}</li>
                 </ul>
-                <p v-if="requesterSearchError" class="mt-2 text-xs font-medium text-rose-600">{{ requesterSearchError }}</p>
+                <p v-if="requesterSearchError" class="dw-field-error">{{ requesterSearchError }}</p>
               </div>
 
-              <!-- Họ tên đầy đủ -->
               <label class="block">
                 <span class="dw-label-text">{{ t('dispatch_wizard.create.full_name') }} <span class="dw-req" aria-hidden="true">*</span></span>
                 <input v-model="form.requester_name" type="text" class="dw-input mt-1" :placeholder="t('dispatch_wizard.create.full_name_ph')" />
               </label>
 
-              <!-- Email + Số điện thoại -->
-              <div class="grid gap-4 sm:grid-cols-2">
+              <div class="dw-form-grid-2">
                 <div>
                   <label class="block">
                     <span class="dw-label-text">{{ t('dispatch_wizard.create.requester_email_label') }} <span class="dw-req" aria-hidden="true">*</span></span>
@@ -283,11 +262,11 @@
                       v-model="form.requester_email"
                       type="email"
                       :placeholder="t('dispatch_wizard.create.requester_email_ph')"
-                      :class="['dw-input mt-1', step2RequesterEmailInvalid ? 'ring-1 ring-rose-300' : '']"
+                      :class="['dw-input mt-1', step2RequesterEmailInvalid ? 'dw-input--invalid' : '']"
                       @blur="onRequesterEmailBlur"
                     />
                   </label>
-                  <p v-if="step2RequesterEmailInvalid" class="mt-1 text-xs text-rose-600">
+                  <p v-if="step2RequesterEmailInvalid" class="dw-field-error">
                     {{ t('dispatch_wizard.create.email_invalid') }}
                   </p>
                 </div>
@@ -306,7 +285,6 @@
                 </label>
               </div>
 
-              <!-- Đơn vị -->
               <label class="block">
                 <span class="dw-label-text">{{ t('dispatch_wizard.create.unit') }}</span>
                 <input v-model="form.requester_unit" type="text" :placeholder="t('dispatch_wizard.create.unit_ph')" class="dw-input mt-1" />
@@ -317,12 +295,11 @@
             v-show="step2Sub === 'time'"
             id="portal-step2-panel-time"
             role="tabpanel"
-            class="dw-fieldset space-y-4"
+            class="dw-portal-panel dw-form-stack"
           >
-              <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_time') }}</h3>
+              <p class="dw-portal-panel-title">{{ t('dispatch_wizard.create.sec_time') }}</p>
 
-              <!-- Ngày đề xuất + Ngày giờ cần xe -->
-              <div class="grid gap-4 sm:grid-cols-2">
+              <div class="dw-form-grid-2">
                 <label class="block">
                   <span class="dw-label-text" :title="t('dispatch_wizard.create.proposed_date_title')">
                     {{ t('dispatch_wizard.create.proposed_date') }} <span class="dw-req" aria-hidden="true">*</span>
@@ -343,16 +320,18 @@
                     v-model="requestedDateTime"
                     type="datetime-local"
                     lang="vi"
-                    :class="['dw-input mt-1 min-h-[2.75rem]', step2DateOrderInvalid ? 'ring-1 ring-rose-300' : '']"
+                    :class="['dw-input mt-1 min-h-[2.75rem]', step2DateOrderInvalid ? 'dw-input--invalid' : '']"
                   />
                 </label>
               </div>
-              <p v-if="step2DateOrderInvalid" class="text-xs font-medium text-rose-600">
+              <p v-if="step2DateOrderInvalid" class="dw-field-error">
                 {{ t('dispatch_wizard.create.date_order_error') }}
               </p>
 
-              <!-- Card Yêu cầu gấp -->
-              <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+              <div
+                class="dw-portal-card-muted"
+                :class="form.is_urgent ? 'dw-portal-card-muted--urgent' : ''"
+              >
                 <!-- Toggle row -->
                 <div class="flex items-center justify-between gap-3">
                   <div class="flex items-center gap-2">
@@ -428,7 +407,7 @@
                   :aria-expanded="deptHeadDropdownOpen && deptHeadQ.trim().length >= 2"
                   aria-controls="portal-dept-head-list"
                   :placeholder="t('request_detail.assign_dept_head_combo_ph')"
-                  :class="['dw-input', deptHeadClientError ? 'ring-1 ring-rose-300' : '']"
+                  :class="['dw-input', deptHeadClientError ? 'dw-input--invalid' : '']"
                   @input="scheduleDeptHeadSearch"
                   @focus="onDeptHeadSearchFocus"
                   @blur="onDeptHeadSearchBlur"
@@ -440,17 +419,17 @@
                 <ul
                   v-if="deptHeadDropdownOpen && deptHeadQ.trim().length >= 2"
                   id="portal-dept-head-list"
-                  class="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg ring-1 ring-black/5"
+                  class="dw-combobox__menu"
                   role="listbox"
                 >
-                  <li v-if="deptHeadLoading" class="px-3 py-2.5 text-slate-500">
+                  <li v-if="deptHeadLoading" class="dw-combobox__empty">
                     {{ t('request_detail.assign_dept_head_loading') }}
                   </li>
                   <template v-else-if="deptHeadResults.length">
                     <li v-for="u in deptHeadResults" :key="u.id">
                       <button
                         type="button"
-                        class="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition hover:bg-va-50"
+                        class="dw-combobox__option"
                         @mousedown.prevent="pickDeptHead(u)"
                       >
                         <span class="font-medium text-slate-900">{{ u.name }}</span>
@@ -458,11 +437,11 @@
                       </button>
                     </li>
                   </template>
-                  <li v-else class="px-3 py-2.5 text-slate-500">{{ t('request_detail.assign_dept_head_no_match') }}</li>
+                  <li v-else class="dw-combobox__empty">{{ t('request_detail.assign_dept_head_no_match') }}</li>
                 </ul>
-                <p v-if="deptHeadSearchError" class="mt-1 text-xs font-medium text-rose-600">{{ deptHeadSearchError }}</p>
-                <p v-else-if="deptHeadClientError" class="mt-1 text-xs font-medium text-rose-600">{{ deptHeadClientError }}</p>
-                <p v-else class="mt-1 text-xs text-slate-500">{{ t('request_detail.assign_dept_head_combo_hint') }}</p>
+                <p v-if="deptHeadSearchError" class="dw-field-error">{{ deptHeadSearchError }}</p>
+                <p v-else-if="deptHeadClientError" class="dw-field-error">{{ deptHeadClientError }}</p>
+                <p v-else class="dw-field-hint">{{ t('request_detail.assign_dept_head_combo_hint') }}</p>
               </div>
           </div>
 
@@ -470,34 +449,30 @@
             v-show="step2Sub === 'purpose'"
             id="portal-step2-panel-purpose"
             role="tabpanel"
-            class="dw-fieldset"
+            class="dw-portal-panel dw-form-stack"
           >
-            <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_purpose') }}</h3>
+            <p class="dw-portal-panel-title">{{ t('dispatch_wizard.create.sec_purpose') }}</p>
             <div
               v-if="form.trip_type === 'point_to_point'"
-              class="mb-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-3"
+              class="dw-portal-segment"
               role="radiogroup"
               :aria-label="t('dispatch_wizard.create.purpose_tab_aria')"
             >
-              <label
-                class="flex w-full min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-800 shadow-sm transition hover:border-va-800/25 has-[:checked]:border-sky-500 has-[:checked]:bg-sky-50 has-[:checked]:ring-1 has-[:checked]:ring-sky-200 sm:w-auto"
-              >
+              <label class="dw-portal-segment__opt">
                 <input
                   v-model="form.point_purpose_kind"
                   type="radio"
                   value="point_to_point"
-                  class="h-4 w-4 border-slate-300 text-va-800 focus:ring-va-800"
+                  class="h-4 w-4 shrink-0 border-slate-300 text-va-800 focus:ring-va-800"
                 />
                 <span>{{ t('dispatch_wizard.create.purpose_point') }}</span>
               </label>
-              <label
-                class="flex w-full min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-800 shadow-sm transition hover:border-va-800/25 has-[:checked]:border-sky-500 has-[:checked]:bg-sky-50 has-[:checked]:ring-1 has-[:checked]:ring-sky-200 sm:w-auto"
-              >
+              <label class="dw-portal-segment__opt">
                 <input
                   v-model="form.point_purpose_kind"
                   type="radio"
                   value="extracurricular"
-                  class="h-4 w-4 border-slate-300 text-va-800 focus:ring-va-800"
+                  class="h-4 w-4 shrink-0 border-slate-300 text-va-800 focus:ring-va-800"
                 />
                 <span>{{ t('dispatch_wizard.create.purpose_extra') }}</span>
               </label>
@@ -506,14 +481,14 @@
               <span class="dw-label-text">{{ t('dispatch_wizard.create.purpose_label') }} <span class="dw-req" aria-hidden="true">*</span></span>
               <textarea
                 v-model="form.purpose"
-                rows="4"
-                class="dw-input min-h-[5.25rem] resize-y sm:min-h-[6rem]"
+                rows="3"
+                class="dw-input mt-1 min-h-[4.5rem] resize-y"
                 :placeholder="t('dispatch_wizard.create.purpose_ph')"
               />
             </label>
-            <div class="mt-4">
-              <span class="mb-2 flex flex-nowrap items-center gap-1.5">
-                <span class="text-xs font-medium text-slate-700">{{ t('dispatch_wizard.create.basis_label') }}</span>
+            <div>
+              <span class="mb-1.5 flex flex-nowrap items-center gap-1.5">
+                <span class="dw-label-text mb-0">{{ t('dispatch_wizard.create.basis_label') }}</span>
                 <span
                   class="inline-flex shrink-0 cursor-help text-slate-400 hover:text-slate-600"
                   :title="t('dispatch_wizard.create.basis_title')"
@@ -522,20 +497,16 @@
                 </span>
               </span>
               <div
-                class="mt-2 flex min-h-[7.5rem] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-4 py-6 transition sm:min-h-[8rem] sm:py-8"
-                :class="
-                  basisDragOver
-                    ? 'border-va-600 bg-va-800/5'
-                    : 'border-slate-200 bg-slate-50/80 hover:border-slate-300 hover:bg-slate-50'
-                "
+                class="dw-portal-dropzone"
+                :class="basisDragOver ? 'dw-portal-dropzone--active' : ''"
                 @dragover.prevent="basisDragOver = true"
                 @dragleave.prevent="basisDragOver = false"
                 @drop.prevent="onBasisDrop"
                 @click="basisFileInput?.click()"
               >
-                <CloudArrowUpIcon class="h-9 w-9 text-slate-400 sm:h-10 sm:w-10" aria-hidden="true" />
+                <CloudArrowUpIcon class="h-8 w-8 text-slate-400" aria-hidden="true" />
                 <p class="mt-2 text-center text-sm font-medium text-slate-800">{{ t('dispatch_wizard.create.basis_drop') }}</p>
-                <p class="mt-1 text-center text-xs text-slate-500">{{ t('dispatch_wizard.create.basis_types') }}</p>
+                <p class="mt-0.5 text-center text-xs text-slate-500">{{ t('dispatch_wizard.create.basis_types') }}</p>
                 <input
                   ref="basisFileInput"
                   type="file"
@@ -544,10 +515,10 @@
                   @change="onBasisFileChange"
                 />
               </div>
-              <p v-if="basisFileError" class="mt-2 text-xs font-medium text-rose-600">{{ basisFileError }}</p>
+              <p v-if="basisFileError" class="dw-field-error">{{ basisFileError }}</p>
               <div
                 v-if="basisFile"
-                class="mt-3 flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm"
+                class="dw-portal-file-row"
               >
                 <PaperClipIcon class="h-5 w-5 shrink-0 text-va-800" aria-hidden="true" />
                 <div class="min-w-0 flex-1">
@@ -569,21 +540,21 @@
             v-show="step2Sub === 'coordination'"
             id="portal-step2-panel-coordination"
             role="tabpanel"
-            class="grid gap-5 lg:grid-cols-2 lg:items-start lg:gap-6"
+            class="dw-portal-panel-stack"
           >
-            <div class="dw-fieldset">
-              <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_targets') }}</h3>
+            <div class="dw-portal-panel dw-form-stack">
+              <p class="dw-portal-panel-title">{{ t('dispatch_wizard.create.sec_targets') }}</p>
 
-              <div v-if="form.targets.length" class="mb-3 flex flex-wrap gap-1.5">
+              <div v-if="form.targets.length" class="flex flex-wrap gap-1.5">
                 <span
                   v-for="chip in form.targets"
                   :key="chip"
-                  class="inline-flex items-center gap-1 rounded-full border border-va-200 bg-va-50 px-3 py-1 text-sm font-medium text-va-800"
+                  class="dw-portal-chip"
                 >
                   {{ chip }}
                   <button
                     type="button"
-                    class="ml-0.5 rounded-full p-0.5 hover:bg-va-200 hover:text-va-900"
+                    class="dw-portal-chip__remove"
                     @click="removeTarget(chip)"
                   >
                     <XMarkIcon class="h-3.5 w-3.5" aria-hidden="true" />
@@ -610,29 +581,29 @@
                   <ul
                     v-if="targetDropdownOpen && targetSearchQ.trim().length >= 1"
                     id="dw-target-search-list"
-                    class="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg ring-1 ring-black/5"
+                    class="dw-combobox__menu"
                     role="listbox"
                   >
                     <template v-if="targetSearchResults.length">
                       <li v-for="opt in targetSearchResults" :key="opt">
                         <button
                           type="button"
-                          class="flex w-full px-3 py-2.5 text-left transition hover:bg-va-50"
+                          class="dw-combobox__option"
                           @mousedown.prevent="pickTarget(opt)"
                         >
                           {{ opt }}
                         </button>
                       </li>
                     </template>
-                    <li v-else class="px-3 py-2.5 text-slate-500">
+                    <li v-else class="dw-combobox__empty">
                       {{ t('dispatch_wizard.create.targets_no_match') }}
                     </li>
                   </ul>
                 </div>
                 <button
                   type="button"
-                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-va-800 shadow-sm transition hover:border-va-300 hover:bg-va-50 active:scale-95"
-                  :class="targetCustomAddOpen ? 'border-va-400 bg-va-50 ring-1 ring-va-200' : ''"
+                  class="dw-portal-icon-btn"
+                  :class="targetCustomAddOpen ? 'dw-portal-icon-btn--on' : ''"
                   :title="t('dispatch_wizard.create.targets_add_custom')"
                   :aria-expanded="targetCustomAddOpen"
                   @click="toggleTargetCustomAdd"
@@ -660,19 +631,19 @@
                 </button>
               </div>
 
-              <p v-if="form.targets.length" class="mt-2 text-xs text-slate-500">
+              <p v-if="form.targets.length" class="dw-field-hint">
                 {{ t('dispatch_wizard.create.targets_selected', { n: form.targets.length }) }}
               </p>
               <p
                 v-else-if="form.trip_type === 'point_to_point'"
-                class="mt-2 text-xs leading-relaxed text-amber-800/90"
+                class="dw-portal-callout-warn"
               >
                 {{ t('dispatch_wizard.create.targets_warn') }}
               </p>
             </div>
 
-            <div class="dw-fieldset space-y-4">
-              <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_coordinator') }}</h3>
+            <div class="dw-portal-panel dw-form-stack">
+              <p class="dw-portal-panel-title">{{ t('dispatch_wizard.create.sec_coordinator') }}</p>
 
               <!-- Tìm theo tên -->
               <div class="relative">
@@ -705,15 +676,15 @@
                 <ul
                   v-if="coordinatorDropdownOpen && coordinatorSearchQ.trim().length >= 2"
                   id="dw-coordinator-search-list"
-                  class="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg ring-1 ring-black/5"
+                  class="dw-combobox__menu"
                   role="listbox"
                 >
-                  <li v-if="coordinatorSearchLoading" class="px-3 py-2.5 text-slate-500">{{ t('dispatch_wizard.create.searching') }}</li>
+                  <li v-if="coordinatorSearchLoading" class="dw-combobox__empty">{{ t('dispatch_wizard.create.searching') }}</li>
                   <template v-else-if="coordinatorSearchResults.length">
                     <li v-for="u in coordinatorSearchResults" :key="u.id">
                       <button
                         type="button"
-                        class="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition hover:bg-va-50"
+                        class="dw-combobox__option"
                         @mousedown.prevent="pickCoordinator(u)"
                       >
                         <span class="font-medium text-slate-900">{{ u.name }}</span>
@@ -721,12 +692,11 @@
                       </button>
                     </li>
                   </template>
-                  <li v-else class="px-3 py-2.5 text-slate-500">{{ t('dispatch_wizard.create.no_staff') }}</li>
+                  <li v-else class="dw-combobox__empty">{{ t('dispatch_wizard.create.no_staff') }}</li>
                 </ul>
-                <p v-if="coordinatorSearchError" class="mt-2 text-xs font-medium text-rose-600">{{ coordinatorSearchError }}</p>
+                <p v-if="coordinatorSearchError" class="dw-field-error">{{ coordinatorSearchError }}</p>
               </div>
 
-              <!-- Họ tên -->
               <label class="block">
                 <span class="dw-label-text">{{ t('dispatch_wizard.create.full_name') }}</span>
                 <input
@@ -737,20 +707,19 @@
                 />
               </label>
 
-              <!-- Email + Điện thoại -->
-              <div class="grid gap-4 sm:grid-cols-2">
+              <div class="dw-form-grid-2">
                 <div>
                   <label class="block">
                     <span class="dw-label-text">{{ t('dispatch_wizard.create.coord_email_label') }}</span>
                     <input
                       v-model="form.coordinator_email"
                       type="email"
-                      :class="['dw-input mt-1', step2CoordinatorEmailInvalid ? 'ring-1 ring-rose-300' : '']"
+                      :class="['dw-input mt-1', step2CoordinatorEmailInvalid ? 'dw-input--invalid' : '']"
                       :placeholder="t('dispatch_wizard.create.coord_email_ph')"
                       @blur="onCoordinatorEmailBlur"
                     />
                   </label>
-                  <p v-if="step2CoordinatorEmailInvalid" class="mt-1 text-xs text-rose-600">
+                  <p v-if="step2CoordinatorEmailInvalid" class="dw-field-error">
                     {{ t('dispatch_wizard.create.coord_email_invalid') }}
                   </p>
                 </div>
@@ -779,29 +748,24 @@
         <ConfirmSummary v-if="step === 3" />
 
         <!-- Nav buttons -->
-        <div
-          v-if="step !== 3"
-          class="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-6"
-        >
+        <div v-if="step !== 3" class="dw-portal-footer">
           <button
             type="button"
-            class="rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40"
+            class="dw-portal-btn-ghost"
             :disabled="step === 0"
             @click="portalPrevStep"
           >
             {{ t('dispatch_wizard.create.back') }}
           </button>
-          <div class="flex gap-2">
-            <button
-              v-if="step < 3"
-              type="button"
-              class="rounded-lg bg-va-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-va-900 disabled:opacity-40"
-              :disabled="!portalCanGoNext"
-              @click="portalNextStep"
-            >
-              {{ t('dispatch_wizard.create.next') }}
-            </button>
-          </div>
+          <button
+            v-if="step < 3"
+            type="button"
+            class="dw-portal-btn-primary"
+            :disabled="!portalCanGoNext"
+            @click="portalNextStep"
+          >
+            {{ t('dispatch_wizard.create.next') }}
+          </button>
         </div>
       </section>
     </div>

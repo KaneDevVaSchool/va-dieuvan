@@ -89,6 +89,12 @@
             <p class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
               Lưu ý: Tối thiểu 03 ngày làm việc trước ngày cấp xe; từ 2.000 kg trở lên cần báo sớm ít nhất 05 ngày làm việc.
             </p>
+            <BmRoField
+              v-if="showAssignedDeptHeadOnForm"
+              class="border-t border-slate-100 pt-4"
+              :label="t('request_detail.assign_dept_head_preset_label')"
+              :model-value="deptHeadDisplayLine"
+            />
             <div class="grid gap-4 border-t border-slate-100 pt-4 sm:grid-cols-2">
               <div class="flex flex-wrap items-start gap-2">
                 <input type="checkbox" class="mt-1 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600" :checked="isUrgent" disabled />
@@ -642,6 +648,13 @@ const presetDeptHeadId = computed(() => {
 
 const deptHeadPresetLocked = computed(() => presetDeptHeadId.value != null)
 
+const showAssignedDeptHeadOnForm = computed(() => {
+  if (props.req?.trip_type === 'door_to_door') return false
+  if (presetDeptHeadId.value != null) return true
+  const snapLabel = props.req?.wizard_snapshot?.form?.dept_head_label
+  return Boolean(snapLabel && String(snapLabel).trim())
+})
+
 const canSubmitFillPrice = computed(
   () => props.showFillPriceSection && deptHeadPresetLocked.value && !props.fillPriceActing,
 )
@@ -663,11 +676,11 @@ const deptHeadDisplayLine = computed(() => {
 })
 
 watch(
-  () => [props.showFillPriceSection, props.req?.id, props.req?.assigned_dept_head_id, props.req?.assigned_dept_head],
-  async ([show, rid, hid]) => {
+  () => [props.req?.id, props.req?.assigned_dept_head_id, props.req?.assigned_dept_head],
+  async ([rid, hid]) => {
     deptHeadsLoadErr.value = ''
     deptHeadLockedLabel.value = ''
-    if (!show || rid == null || hid == null || hid === '') return
+    if (rid == null || hid == null || hid === '') return
     const h = props.req?.assigned_dept_head
     if (h && Number(h.id) === Number(hid)) {
       deptHeadLockedLabel.value = formatDeptHeadChosenLabel(h)

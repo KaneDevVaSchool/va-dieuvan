@@ -92,12 +92,12 @@ class DispatchRequestFillPriceDeptHeadTest extends TestCase
         ])
             ->assertSuccessful();
 
-        Notification::assertNotSentTo($head, DeptHeadApprovalRequestedNotification::class);
+        Notification::assertSentTo($head, DeptHeadApprovalRequestedNotification::class);
 
         $fresh = DispatchRequest::query()->findOrFail($dr->id);
-        $this->assertSame('approved', $fresh->status);
+        $this->assertSame('price_filled', $fresh->status);
         $this->assertSame($head->id, $fresh->assigned_dept_head_id);
-        $this->assertNotNull($fresh->approved_by);
+        $this->assertNull($fresh->approved_by);
     }
 
     public function test_fill_price_dispatches_notification_only_to_assigned_department_head(): void
@@ -156,11 +156,11 @@ class DispatchRequestFillPriceDeptHeadTest extends TestCase
         ])
             ->assertSuccessful();
 
-        Notification::assertNotSentTo($headChosen, DeptHeadApprovalRequestedNotification::class);
+        Notification::assertSentTo($headChosen, DeptHeadApprovalRequestedNotification::class);
         Notification::assertNotSentTo($headOther, DeptHeadApprovalRequestedNotification::class);
 
         $fresh = DispatchRequest::query()->findOrFail($dr->id);
-        $this->assertSame('approved', $fresh->status);
+        $this->assertSame('price_filled', $fresh->status);
         $this->assertSame($headChosen->id, $fresh->assigned_dept_head_id);
     }
 
@@ -238,7 +238,7 @@ class DispatchRequestFillPriceDeptHeadTest extends TestCase
             ->assertSuccessful();
 
         $fresh = DispatchRequest::query()->findOrFail($dr->id);
-        $this->assertSame('approved', $fresh->status);
+        $this->assertSame('price_filled', $fresh->status);
         $this->assertSame($headB->id, $fresh->assigned_dept_head_id);
     }
 

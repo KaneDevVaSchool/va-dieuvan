@@ -255,7 +255,13 @@ class DispatchRequestController extends Controller
                 ],
             );
 
-            if ($user->can('request.approve')) {
+            $deptHeadRoleExists = Role::query()
+                ->where('name', 'department_head')
+                ->where('guard_name', 'web')
+                ->exists();
+            $routeViaAssignedDeptHead = $chosenDeptHeadId !== null && $deptHeadRoleExists;
+
+            if ($user->can('request.approve') && ! $routeViaAssignedDeptHead) {
                 $result = app(DispatchRequestApprovalService::class)->createTripAfterApproval(
                     $dr->fresh(),
                     $user,
@@ -271,8 +277,7 @@ class DispatchRequestController extends Controller
                 ]);
             }
 
-            if ($chosenDeptHeadId !== null
-                && Role::query()->where('name', 'department_head')->where('guard_name', 'web')->exists()) {
+            if ($routeViaAssignedDeptHead) {
                 $recipients = User::query()->whereKey($chosenDeptHeadId)->get();
                 if ($recipients->isNotEmpty()) {
                     Notification::send(
