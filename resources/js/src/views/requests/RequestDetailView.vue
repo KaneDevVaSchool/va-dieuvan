@@ -243,6 +243,7 @@
                   :signed-document-current="signedDocumentCurrent"
                   :approval-tab-needs-focus="approvalTabNeedsFocus"
                   @save-row-prices="onSaveRowPrices"
+                  @open-reference-pricing="referencePricingModalOpen = true"
                   @download-signed="downloadFile"
                   @signed-uploaded="onSignedUploaded"
                 />
@@ -403,12 +404,14 @@
         @close="closeD2dReject"
         @confirm="submitD2dReject"
       />
+
+      <ReferencePricingModal :open="referencePricingModalOpen" @close="referencePricingModalOpen = false" />
     </template>
   </div>
 </template>
 
 <script setup>
-import { defineAsyncComponent } from 'vue'
+import { defineAsyncComponent, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import {
   ArrowDownTrayIcon,
@@ -430,6 +433,7 @@ import AttachmentPreviewModal from '../../components/requests/AttachmentPreviewM
 import DeptApprovalSection from '../../components/requests/DeptApprovalSection.vue'
 import DispatchD2dDecisionSection from '../../components/requests/DispatchD2dDecisionSection.vue'
 import RejectReasonModal from '../../components/requests/RejectReasonModal.vue'
+import ReferencePricingModal from '../../components/pricing/ReferencePricingModal.vue'
 import PortalRequestJourneyCard from '../../components/portal/PortalRequestJourneyCard.vue'
 import PortalStatusTimeline from '../../components/portal/PortalStatusTimeline.vue'
 import { useRequestDetailPage } from '../../composables/useRequestDetailPage'
@@ -551,4 +555,6 @@ const {
   previewAttachment,
   closeAttachmentPreview,
 } = page
+
+const referencePricingModalOpen = ref(false)
 </script>

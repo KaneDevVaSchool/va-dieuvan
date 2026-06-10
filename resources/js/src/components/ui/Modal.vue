@@ -41,10 +41,14 @@ const props = defineProps({
   description: { type: String, default: '' },
   /** Form phức tạp (ví dụ bảng giá nhiều cột). */
   wide: { type: Boolean, default: false },
+  /** Bảng tra cứu rộng (bảng giá tham chiếu). */
+  extraWide: { type: Boolean, default: false },
 })
 
 const panelClass = computed(() => {
-  const width = props.wide ? 'max-w-3xl' : 'max-w-lg'
+  let width = 'max-w-lg'
+  if (props.extraWide) width = 'max-w-6xl'
+  else if (props.wide) width = 'max-w-3xl'
   return `${width} flex max-h-[min(90dvh,calc(100dvh-3rem))] flex-col overflow-hidden`
 })
 

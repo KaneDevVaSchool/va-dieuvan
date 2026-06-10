@@ -390,6 +390,7 @@
                       actions-in-sidebar
                       @save="onSaveRowPrices"
                       @summary-change="fillPriceSummary = $event"
+                      @open-reference-pricing="referencePricingModalOpen = true"
                     />
 
                     <template v-else>
@@ -847,6 +848,16 @@
                           : t('request_detail.fill_price_submit_preset_dept')
                       }}
                     </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      class="w-full"
+                      data-testid="fill-price-sidebar-open-reference-pricing"
+                      :disabled="fillPriceActing"
+                      @click="referencePricingModalOpen = true"
+                    >
+                      {{ t('request_detail.reference_pricing_link') }}
+                    </Button>
                     <p v-if="fillPriceMsg" class="text-xs text-slate-500 dark:text-slate-400">{{ fillPriceMsg }}</p>
                   </div>
 
@@ -1061,6 +1072,7 @@
         @close="closeD2dReject"
         @confirm="submitD2dReject"
       />
+      <ReferencePricingModal :open="referencePricingModalOpen" @close="referencePricingModalOpen = false" />
     </template>
   </div>
 </template>
@@ -1112,6 +1124,7 @@ import StatusBadge from '../../components/ui/StatusBadge.vue'
 import AttachmentPreviewModal from '../../components/requests/AttachmentPreviewModal.vue'
 import AssignedDeptHeadFormCard from '../../components/requests/AssignedDeptHeadFormCard.vue'
 import RejectReasonModal from '../../components/requests/RejectReasonModal.vue'
+import ReferencePricingModal from '../../components/pricing/ReferencePricingModal.vue'
 import PortalStatusTimeline from '../../components/portal/PortalStatusTimeline.vue'
 import { useRequestDetailPage } from '../../composables/useRequestDetailPage'
 import { useAssignedDeptHeadDisplay } from '../../composables/useAssignedDeptHeadDisplay'
@@ -1228,6 +1241,8 @@ const btnDangerGhostClass = 'inline-flex items-center rounded-md border border-r
 
 const friendlyEmpty = computed(() => t('request_detail.ops_no_data'))
 const linkedTripCode = computed(() => formatTripCode(req.value?.trip?.id))
+
+const referencePricingModalOpen = ref(false)
 
 const fillPricePanelRef = ref(null)
 const fillPriceSummary = ref({

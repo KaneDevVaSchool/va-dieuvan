@@ -1,14 +1,26 @@
 <template>
   <section id="request-focus-fill-price" class="scroll-mt-24 space-y-3">
     <!-- Intro banner -->
-    <div class="flex items-center gap-3 rounded-2xl border border-sky-200/80 bg-gradient-to-r from-sky-50 to-slate-50 px-5 py-4 dark:border-sky-900/40 dark:from-sky-950/30 dark:to-slate-900">
-      <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-600 text-white shadow-sm">
-        <CurrencyDollarIcon class="h-5 w-5" aria-hidden="true" />
-      </span>
-      <div class="min-w-0">
-        <h2 class="text-base font-bold text-slate-900 dark:text-white">{{ t('request_detail.fill_price_title') }}</h2>
-        <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{{ t('request_detail.fill_price_lead') }}</p>
+    <div class="flex flex-wrap items-start justify-between gap-3 rounded-2xl border border-sky-200/80 bg-gradient-to-r from-sky-50 to-slate-50 px-5 py-4 dark:border-sky-900/40 dark:from-sky-950/30 dark:to-slate-900">
+      <div class="flex min-w-0 items-center gap-3">
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-600 text-white shadow-sm">
+          <CurrencyDollarIcon class="h-5 w-5" aria-hidden="true" />
+        </span>
+        <div class="min-w-0">
+          <h2 class="text-base font-bold text-slate-900 dark:text-white">{{ t('request_detail.fill_price_title') }}</h2>
+          <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{{ t('request_detail.fill_price_lead') }}</p>
+        </div>
       </div>
+      <Button
+        type="button"
+        variant="secondary"
+        class="shrink-0 !border-teal-200 !text-teal-900 hover:!bg-teal-50 dark:!border-teal-900/50 dark:!text-teal-200 dark:hover:!bg-teal-950/40"
+        data-testid="fill-price-open-reference-pricing"
+        :disabled="acting"
+        @click="emit('open-reference-pricing')"
+      >
+        {{ t('request_detail.reference_pricing_link') }}
+      </Button>
     </div>
 
     <!-- Row cards -->
@@ -196,6 +208,15 @@
           >
             {{ t('request_detail.fill_price_submit_preset_dept') }}
           </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            :disabled="acting"
+            data-testid="fill-price-open-reference-pricing-footer"
+            @click="emit('open-reference-pricing')"
+          >
+            {{ t('request_detail.reference_pricing_link') }}
+          </Button>
           <span v-if="message" class="text-sm text-slate-500 dark:text-slate-400">{{ message }}</span>
         </div>
       </div>
@@ -235,7 +256,7 @@ const props = defineProps({
   actionsInSidebar: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['save', 'summary-change'])
+const emit = defineEmits(['save', 'summary-change', 'open-reference-pricing'])
 
 const snap = computed(() => props.req?.wizard_snapshot ?? {})
 const isCargo = computed(() => props.req?.trip_type === 'cargo')
