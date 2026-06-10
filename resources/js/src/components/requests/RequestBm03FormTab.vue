@@ -167,6 +167,7 @@
                     </th>
                     <th rowspan="2" class="border border-slate-300 px-1 py-1 text-center align-middle">
                       Chi phí<br />
+
                       <span class="font-normal opacity-75">(Gồm VAT)</span>
                     </th>
                   </tr>
@@ -214,7 +215,7 @@
                         inputmode="numeric"
                         autocomplete="off"
                         class="w-full min-w-[5.5rem] rounded border border-teal-200/70 bg-white px-1 py-0.5 text-right text-[11px] tabular-nums outline-none ring-teal-500/20 focus:border-teal-500 focus:ring-1"
-                        aria-label="Chi phí dòng hàng hóa"
+                       aria-label="Chi phí dòng hàng hóa"
                         :value="cargoCostDraft[idx]"
                         @input="onCargoCostInput(idx, $event.target.value)"
                       />

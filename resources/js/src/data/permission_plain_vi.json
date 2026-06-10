@@ -12,8 +12,8 @@
     "trip.update_status": "Được cập nhật trạng thái chuyến (đang chạy, hoàn thành…).",
     "trip.record.create": "Được thêm bản ghi/ghi chú vận hành trên chuyến.",
     "trip.event.create": "Được thêm sự kiện (checkpoint, sự cố…) trên chuyến.",
-    "trip.cost.view": "Xem chi phí liên quan chuyến.",
-    "trip.cost.reconcile": "Được duyệt/từ chối và đối chiếu chi phí chuyến (điều vận/kế toán tùy cấu hình role).",
+    "trip.cost.view": "Xem doanh thu liên quan chuyến.",
+    "trip.cost.reconcile": "Được duyệt/từ chối và đối chiếu doanh thu chuyến (điều vận/kế toán tùy cấu hình role).",
     "payment.reconcile": "Được mở kỳ đối soát, rà soát công nợ và chốt số liệu trước khi thanh toán.",
     "payment.execute": "Được ghi nhận khoản đã trả và đánh dấu chuyến hoặc kỳ đối soát là đã thanh toán trên hệ thống.",
     "cargo.manage": "Quản lý thông tin hàng hóa (cargo) trên hệ thống.",
@@ -40,9 +40,9 @@
     "tp_attendance.manage": "Điểm danh, báo vắng và thông báo phụ huynh trên lịch vận chuyển.",
     "tp_attendance.confirm": "Xác nhận điểm danh đã khóa (sau khi điều phối duyệt).",
     "tp_driver_assign.manage": "Gán tài xế chính/dự phòng theo ngày hoặc ca trên chương trình.",
-    "tp_cost.manage": "Quản lý và đối chiếu chi phí vận chuyển học sinh.",
+    "tp_cost.manage": "Quản lý và đối chiếu doanh thu vận chuyển học sinh.",
     "tp_import.manage": "Import danh sách học sinh (file Excel) và xử lý lỗi import.",
-    "tp_report.view": "Xem báo cáo vắng mặt và chi phí Transport Program.",
+    "tp_report.view": "Xem báo cáo vắng mặt và doanh thu Transport Program.",
     "tp_audit.view": "Xem nhật ký thao tác trên module Transport Program.",
     "tp_execution.force_complete": "Buộc hoàn thành chuyến/ngày vận chuyển (thao tác điều phối đặc biệt)."
 }

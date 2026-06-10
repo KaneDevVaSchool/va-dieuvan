@@ -3,7 +3,7 @@
     <Card title="Hướng dẫn nhanh">
       <p class="text-sm leading-relaxed text-slate-700">
         Phần mềm hỗ trợ quy trình: <strong>tạo yêu cầu</strong> → <strong>duyệt</strong> → <strong>phân công chuyến</strong> →
-        <strong>vận hành</strong> → <strong>chi phí / đối soát</strong>.
+        <strong>vận hành</strong> → <strong>doanh thu / đối soát</strong>.
       </p>
     </Card>
 

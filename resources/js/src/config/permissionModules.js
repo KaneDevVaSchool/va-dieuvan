@@ -7,74 +7,81 @@
  * Keep in sync with RbacSeeder.php when new permissions are added.
  */
 export const PERMISSION_MODULES = Object.freeze([
-  {
-    id: 'request',
-    label: 'Yêu cầu điều xe',
-    icon: 'ClipboardDocumentListIcon',
-    prefixes: ['request.'],
-  },
-  {
-    id: 'trip',
-    label: 'Chuyến',
-    icon: 'TruckIcon',
-    // trip.cost.* handled by its own module — list explicit non-cost prefixes first
-    prefixes: ['trip.assign', 'trip.view_all', 'trip.view_own', 'trip.update_status', 'trip.record.', 'trip.event.'],
-  },
-  {
-    id: 'trip_cost',
-    label: 'Chi phí chuyến',
-    icon: 'CurrencyDollarIcon',
-    prefixes: ['trip.cost.'],
-  },
-  {
-    id: 'payment',
-    label: 'Thanh toán',
-    icon: 'BanknotesIcon',
-    prefixes: ['payment.'],
-  },
-  {
-    id: 'report',
-    label: 'Báo cáo',
-    icon: 'ChartBarIcon',
-    prefixes: ['report.'],
-  },
-  {
-    id: 'cargo',
-    label: 'Hàng hóa (Cargo)',
-    icon: 'ArchiveBoxIcon',
-    prefixes: ['cargo.'],
-  },
-  {
-    id: 'resource',
-    label: 'Tài nguyên',
-    icon: 'WrenchScrewdriverIcon',
-    prefixes: ['resource.', 'reference_pricing.'],
-  },
-  {
-    id: 'ops',
-    label: 'Vận hành',
-    icon: 'CogIcon',
-    prefixes: ['attachment.', 'data.', 'dispatch.settings.', 'audit_log.'],
-  },
-  {
-    id: 'users',
-    label: 'Người dùng',
-    icon: 'UsersIcon',
-    prefixes: ['user.'],
-  },
-  {
-    id: 'system',
-    label: 'Hệ thống',
-    icon: 'ShieldCheckIcon',
-    prefixes: ['system.'],
-  },
-  {
-    id: 'transport_program',
-    label: 'Vận chuyển học sinh (TP)',
-    icon: 'AcademicCapIcon',
-    prefixes: ['tp_'],
-  },
-])
+    {
+        id: "request",
+        label: "Yêu cầu điều xe",
+        icon: "ClipboardDocumentListIcon",
+        prefixes: ["request."],
+    },
+    {
+        id: "trip",
+        label: "Chuyến",
+        icon: "TruckIcon",
+        // trip.cost.* handled by its own module — list explicit non-cost prefixes first
+        prefixes: [
+            "trip.assign",
+            "trip.view_all",
+            "trip.view_own",
+            "trip.update_status",
+            "trip.record.",
+            "trip.event.",
+        ],
+    },
+    {
+        id: "trip_cost",
+        label: "Chi phí chuyến",
+        icon: "CurrencyDollarIcon",
+        prefixes: ["trip.cost."],
+    },
+    {
+        id: "payment",
+        label: "Thanh toán",
+        icon: "BanknotesIcon",
+        prefixes: ["payment."],
+    },
+    {
+        id: "report",
+        label: "Báo cáo",
+        icon: "ChartBarIcon",
+        prefixes: ["report."],
+    },
+    {
+        id: "cargo",
+        label: "Hàng hóa (Cargo)",
+        icon: "ArchiveBoxIcon",
+        prefixes: ["cargo."],
+    },
+    {
+        id: "resource",
+        label: "Tài nguyên",
+        icon: "WrenchScrewdriverIcon",
+        prefixes: ["resource.", "reference_pricing."],
+    },
+    {
+        id: "ops",
+        label: "Vận hành",
+        icon: "CogIcon",
+        prefixes: ["attachment.", "data.", "dispatch.settings.", "audit_log."],
+    },
+    {
+        id: "users",
+        label: "Người dùng",
+        icon: "UsersIcon",
+        prefixes: ["user."],
+    },
+    {
+        id: "system",
+        label: "Hệ thống",
+        icon: "ShieldCheckIcon",
+        prefixes: ["system."],
+    },
+    {
+        id: "transport_program",
+        label: "Vận chuyển học sinh (TP)",
+        icon: "AcademicCapIcon",
+        prefixes: ["tp_"],
+    },
+]);
 
 /**
  * Returns the module id that a given permission name belongs to.
