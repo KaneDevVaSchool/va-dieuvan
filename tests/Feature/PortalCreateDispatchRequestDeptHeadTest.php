@@ -58,6 +58,47 @@ class PortalCreateDispatchRequestDeptHeadTest extends TestCase
         $this->assertSame('pending', $fresh->status);
     }
 
+    public function test_portal_extracurricular_recurring_template_does_not_require_dept_head(): void
+    {
+        $this->seed(RbacSeeder::class);
+
+        User::factory()->create(['is_active' => true])->assignRole('department_head');
+
+        $requester = User::factory()->create(['is_active' => true]);
+        $requester->assignRole('internal_user');
+
+        $this->actingAs($requester);
+
+        $tz = config('app.timezone') ?: 'UTC';
+        $depart = now($tz)->addDays(7)->setTime(7, 0);
+
+        $this->postJson('/api/portal/dispatch-request-templates', [
+            'trip_type' => 'point_to_point',
+            'source_channel' => 'portal',
+            'origin' => 'Đón A',
+            'destination' => 'Trả B',
+            'depart_at' => $depart->toIso8601String(),
+            'start_date' => $depart->toDateString(),
+            'return_time' => '17:00',
+            'recurrence_rule' => [
+                'freq' => 'weekly',
+                'interval' => 1,
+                'byweekday' => [1, 2, 3, 4, 5],
+            ],
+            'recurrence_end_date' => $depart->copy()->addDays(6)->toDateString(),
+            'plan_label' => 'CLB không cần trưởng BP lúc tạo',
+            'wizard_snapshot' => [
+                'form' => [
+                    'point_purpose_kind' => 'extracurricular',
+                    'trip_type' => 'point_to_point',
+                    'plan_name' => 'CLB không cần trưởng BP lúc tạo',
+                ],
+            ],
+        ], ['Idempotency-Key' => 'portal-extracurricular-no-dept-head'])
+            ->assertCreated()
+            ->assertJsonPath('data.dispatch_request.assigned_dept_head_id', null);
+    }
+
     public function test_portal_dept_head_search_returns_active_heads(): void
     {
         $this->seed(RbacSeeder::class);
