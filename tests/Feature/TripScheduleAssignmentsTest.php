@@ -318,4 +318,66 @@ class TripScheduleAssignmentsTest extends TestCase
         $this->assertSame('assigned', $updated->status);
         $this->assertSame($driverMorning->id, (int) $updated->driver_id);
     }
+
+    public function test_assign_uses_trip_depart_when_snapshot_leg_has_no_times(): void
+    {
+        $this->seed(RbacSeeder::class);
+        $vehicle = Vehicle::query()->create([
+            'license_plate' => '51A-NOTIME',
+            'type' => 'bus',
+            'seat_count' => 16,
+            'status' => 'active',
+        ]);
+        $driver = Driver::query()->create([
+            'user_id' => User::factory()->create()->id,
+            'full_name' => 'Free Driver',
+            'phone' => '0900000099',
+            'status' => 'active',
+        ]);
+
+        $day = '2026-08-15';
+        $tripDepart = Carbon::parse("{$day} 14:00:00");
+        $tripArrive = Carbon::parse("{$day} 16:00:00");
+
+        $dr = DispatchRequest::create([
+            'requester_id' => User::factory()->create()->id,
+            'trip_type' => 'business',
+            'origin' => 'X',
+            'destination' => 'Y',
+            'depart_at' => $tripDepart,
+            'arrive_by' => $tripArrive,
+            'status' => 'approved',
+            'source_channel' => 'portal',
+            'is_urgent' => false,
+            'paper_status' => 'pending',
+            'wizard_snapshot' => [
+                'businessRows' => [
+                    ['pickup' => 'X', 'dropoff' => 'Y', 'guests' => '1'],
+                ],
+            ],
+        ]);
+
+        $trip = Trip::create([
+            'dispatch_request_id' => $dr->id,
+            'status' => 'approved',
+            'depart_at' => $tripDepart,
+            'arrive_by' => $tripArrive,
+            'lock_version' => 0,
+        ]);
+
+        $dispatching = app(DispatchingService::class);
+        $updated = $dispatching->assignResources($trip, [
+            'lock_version' => 0,
+            'schedule_assignments' => [
+                [
+                    'key' => 'business:0',
+                    'driver_id' => $driver->id,
+                    'vehicle_id' => $vehicle->id,
+                ],
+            ],
+        ]);
+
+        $this->assertSame('assigned', $updated->status);
+        $this->assertSame($driver->id, (int) $updated->driver_id);
+    }
 }

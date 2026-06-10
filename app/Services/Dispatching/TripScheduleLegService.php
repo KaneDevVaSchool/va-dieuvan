@@ -496,6 +496,42 @@ class TripScheduleLegService
     }
 
     /**
+     * Khung giờ chặng: merge định nghĩa + phân công, fallback cột chuyến (khớp FE tripScheduleConflict).
+     *
+     * @param  array<string, mixed>  $assign
+     * @param  array<string, mixed>|null  $def
+     * @return array{0: Carbon, 1: Carbon}
+     */
+    public function resolveLegTimeWindow(Trip $trip, array $assign, ?array $def = null): array
+    {
+        $merged = array_merge($def ?? [], $assign);
+
+        $departRaw = $merged['depart_at'] ?? null;
+        if (($departRaw === null || $departRaw === '') && $trip->depart_at !== null) {
+            $departRaw = $trip->depart_at instanceof Carbon
+                ? $trip->depart_at->toIso8601String()
+                : (string) $trip->depart_at;
+        }
+
+        $departAt = ($departRaw !== null && $departRaw !== '')
+            ? Carbon::parse((string) $departRaw)
+            : Carbon::now();
+
+        $arriveRaw = $merged['arrive_by'] ?? null;
+        if ($arriveRaw !== null && $arriveRaw !== '') {
+            $arriveBy = Carbon::parse((string) $arriveRaw);
+        } elseif ($trip->arrive_by !== null) {
+            $arriveBy = $trip->arrive_by instanceof Carbon
+                ? $trip->arrive_by->copy()
+                : Carbon::parse((string) $trip->arrive_by);
+        } else {
+            $arriveBy = $departAt->copy()->addHours(2);
+        }
+
+        return [$departAt, $arriveBy];
+    }
+
+    /**
      * Khung giờ phân bổ tài xế/xe theo từng lịch (tránh coi driver_id cấp chuyến là bận cả ngày).
      *
      * @return list<array{driver_id: ?int, vehicle_id: ?int, start: Carbon, end: Carbon}>
@@ -523,8 +559,8 @@ class TripScheduleLegService
                     continue;
                 }
                 $key = (string) ($assign['key'] ?? '');
-                $merged = array_merge($defsByKey[$key] ?? [], $assign);
-                [$start, $end] = $this->legTimeWindow($merged);
+                $def = $defsByKey[$key] ?? null;
+                [$start, $end] = $this->resolveLegTimeWindow($trip, $assign, is_array($def) ? $def : null);
                 $slots[] = [
                     'driver_id' => isset($assign['driver_id']) ? (int) $assign['driver_id'] : null,
                     'vehicle_id' => isset($assign['vehicle_id']) ? (int) $assign['vehicle_id'] : null,
@@ -547,6 +583,26 @@ class TripScheduleLegService
             'start' => $departAt,
             'end' => $arriveBy,
         ]];
+    }
+
+    /**
+     * Slots JSON cho client kiểm tra trùng lịch (khớp resourceOccupancySlots).
+     *
+     * @return list<array{driver_id: ?int, vehicle_id: ?int, start: string, end: string}>
+     */
+    public function occupancySlotsForApi(Trip $trip): array
+    {
+        $out = [];
+        foreach ($this->resourceOccupancySlots($trip) as $slot) {
+            $out[] = [
+                'driver_id' => $slot['driver_id'],
+                'vehicle_id' => $slot['vehicle_id'],
+                'start' => $slot['start']->toIso8601String(),
+                'end' => $slot['end']->toIso8601String(),
+            ];
+        }
+
+        return $out;
     }
 
     /**

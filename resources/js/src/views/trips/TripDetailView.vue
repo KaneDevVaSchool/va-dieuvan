@@ -788,6 +788,7 @@ import {
     tripPlannedEndMs,
     tripIntervalsOverlap,
     resourceOccupancySlots,
+    internalLegResourceOverlaps,
 } from "../../util/tripScheduleConflict";
 import { parseMoneyVnd } from "../../util/money";
 import {
@@ -1974,6 +1975,35 @@ const busyVehicleIds = computed(() =>
 const busyVehicleIdList = computed(() => [...busyVehicleIds.value]);
 const busyDriverIdList = computed(() => [...busyDriverIds.value]);
 
+const multiLegAssignmentWindows = computed(() => {
+    if (!multiScheduleMode.value) return [];
+    const fallback = scheduleWindowForConflicts.value;
+    if (!fallback) return [];
+    return scheduleCards.value.map((card) => {
+        const p =
+            card.key === activeAssignLegKey.value
+                ? dispatchResources.value
+                : legResourcesByKey.value[card.key];
+        return {
+            key: card.key,
+            driver_id: p?.driver_id ?? null,
+            vehicle_id: p?.vehicle_id ?? null,
+            depart_at: card.depart_at ?? null,
+            arrive_by: card.arrive_by ?? null,
+        };
+    });
+});
+
+const internalLegResourceConflict = computed(() => {
+    if (!multiScheduleMode.value) return null;
+    const fallback = scheduleWindowForConflicts.value;
+    if (!fallback) return null;
+    return internalLegResourceOverlaps(
+        multiLegAssignmentWindows.value,
+        fallback,
+    );
+});
+
 const coordinationTripSnapshot = computed(() => {
     const key =
         activeAssignLegKey.value || scheduleCards.value[0]?.key || "";
@@ -2084,6 +2114,7 @@ const assignReady = computed(() => {
                 return false;
         }
         if (sameRejectedDriverSelected.value) return false;
+        if (internalLegResourceConflict.value) return false;
         return true;
     }
     const p = dispatchResources.value;
@@ -2236,6 +2267,7 @@ async function loadSameDayTrips() {
                 to: key,
                 per_page: 100,
                 page,
+                schedule_conflict: 1,
             });
             const items = res.items ?? [];
             for (const x of items) {
@@ -2662,6 +2694,21 @@ async function onApproveTransfer() {
     if (sameRejectedDriverSelected.value) {
         assignFeedbackKind.value = "error";
         assignMsg.value = t("trip_detail.driver_rejected.same_driver_blocked_hint");
+        return;
+    }
+    const internalConflict = internalLegResourceConflict.value;
+    if (internalConflict?.kind === "driver") {
+        assignFeedbackKind.value = "error";
+        assignMsg.value = t(
+            "trip_detail.coordination.validation_internal_driver_overlap",
+        );
+        return;
+    }
+    if (internalConflict?.kind === "vehicle") {
+        assignFeedbackKind.value = "error";
+        assignMsg.value = t(
+            "trip_detail.coordination.validation_internal_vehicle_overlap",
+        );
         return;
     }
     if (p.driver_id && busyDriverIds.value.has(Number(p.driver_id))) {

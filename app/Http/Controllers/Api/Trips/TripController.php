@@ -93,6 +93,12 @@ class TripController extends Controller
     {
         $data = $request->validated();
         $user = $request->user();
+        $forScheduleConflict = ! empty($data['schedule_conflict']);
+
+        $dispatchRequestSelect = 'id,status,trip_type,origin,destination,arrive_by,passenger_count,source_channel,paper_status,is_urgent,depart_at,notes';
+        if ($forScheduleConflict) {
+            $dispatchRequestSelect .= ',wizard_snapshot';
+        }
 
         $q = $this->newTripListBuilder($user)
             ->with([
@@ -101,7 +107,7 @@ class TripController extends Controller
                 'driver:id,full_name,phone',
                 'transportProvider:id,name',
                 'record:id,trip_id,distance_km',
-                'dispatchRequest:id,status,trip_type,origin,destination,arrive_by,passenger_count,source_channel,paper_status,is_urgent,depart_at,notes',
+                'dispatchRequest:'.$dispatchRequestSelect,
                 'dispatchRequest.requester:id,name,phone,email,employee_code,avatar_url',
             ])
             ->orderByDesc('trips.depart_at')
@@ -111,6 +117,16 @@ class TripController extends Controller
 
         $perPage = (int) ($data['per_page'] ?? 20);
         $results = $q->paginate($perPage);
+
+        if ($forScheduleConflict) {
+            $scheduleLegs = app(\App\Services\Dispatching\TripScheduleLegService::class);
+            foreach ($results as $trip) {
+                $trip->setAttribute(
+                    'occupancy_slots',
+                    $scheduleLegs->occupancySlotsForApi($trip),
+                );
+            }
+        }
 
         return $this->ok([
             'items' => $results->items(),

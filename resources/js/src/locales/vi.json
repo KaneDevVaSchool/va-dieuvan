@@ -3428,6 +3428,8 @@
             "external_mode_hint": "Có thể kết hợp xe/tài xế nội bộ với taxi hoặc NCC. Nhiều taxi/NCC được ghi thêm trong «Tham chiếu xe ngoài» (tối đa 255 ký tự).",
             "validation_busy_driver": "Tài xế đang bận trong khung giờ chuyến này — chọn tài xế khác hoặc đổi giờ.",
             "validation_busy_vehicle": "Xe đang bận trong khung giờ chuyến này — chọn xe khác hoặc đổi giờ.",
+            "validation_internal_driver_overlap": "Cùng một tài xế không thể phụ trách hai lịch trùng giờ trong cùng chuyến.",
+            "validation_internal_vehicle_overlap": "Cùng một xe không thể phụ trách hai lịch trùng giờ trong cùng chuyến.",
             "tab_internal": "Nội bộ",
             "tab_taxi": "Taxi",
             "tab_ncc": "NCC",

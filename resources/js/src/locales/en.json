@@ -3623,6 +3623,8 @@
             "external_mode_hint": "You can combine internal vehicle/driver with taxi or vendor. Extra taxi/vendor rows are appended to «External vehicle reference» (max 255 characters).",
             "validation_busy_driver": "That driver is busy in this trip window — pick another driver or reschedule.",
             "validation_busy_vehicle": "That vehicle is busy in this trip window — pick another vehicle or reschedule.",
+            "validation_internal_driver_overlap": "The same driver cannot cover two overlapping schedules on one trip.",
+            "validation_internal_vehicle_overlap": "The same vehicle cannot cover two overlapping schedules on one trip.",
             "tab_internal": "Internal",
             "tab_taxi": "Taxi",
             "tab_ncc": "Vendor",

@@ -82,13 +82,13 @@ class DispatchingService
                     'pickup' => '',
                     'dropoff' => '',
                 ];
-                [$departAt, $arriveBy] = $this->scheduleLegs->legTimeWindow($def);
+                [$departAt, $arriveBy] = $this->scheduleLegs->resolveLegTimeWindow($trip, $assign, $def);
                 $vehicleId = $assign['vehicle_id'] ?? null;
                 $driverId = $assign['driver_id'] ?? null;
                 $this->assertNoResourceConflict($trip, $departAt, $arriveBy, $vehicleId, $driverId);
             }
 
-            $this->assertNoInternalLegOverlaps($assignments, $defsByKey);
+            $this->assertNoInternalLegOverlaps($trip, $assignments, $defsByKey);
 
             $primary = $this->scheduleLegs->primaryTripColumnsFromAssignments($assignments);
             $allAssigned = $this->scheduleLegs->allLegsAssigned($assignments, $trip);
@@ -169,13 +169,13 @@ class DispatchingService
      * @param  list<array<string, mixed>>  $assignments
      * @param  array<string, array<string, mixed>>  $defsByKey
      */
-    private function assertNoInternalLegOverlaps(array $assignments, array $defsByKey): void
+    private function assertNoInternalLegOverlaps(Trip $trip, array $assignments, array $defsByKey): void
     {
         $windows = [];
         foreach ($assignments as $assign) {
             $key = (string) ($assign['key'] ?? '');
-            $def = $defsByKey[$key] ?? $assign;
-            [$start, $end] = $this->scheduleLegs->legTimeWindow($def);
+            $def = $defsByKey[$key] ?? null;
+            [$start, $end] = $this->scheduleLegs->resolveLegTimeWindow($trip, $assign, is_array($def) ? $def : null);
             $windows[] = [
                 'key' => $key,
                 'start' => $start,

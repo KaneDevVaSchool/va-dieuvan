@@ -52,6 +52,7 @@ class ListTripsRequest extends ApiFormRequest
             'q' => ['nullable', 'string', 'max:120'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
             'page' => ['nullable', 'integer', 'min:1'],
+            'schedule_conflict' => ['nullable', 'boolean'],
         ];
     }
 }
