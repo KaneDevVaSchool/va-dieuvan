@@ -86,6 +86,26 @@ function sortScheduleTrips(list) {
   })
 }
 
+function addDaysYmd(baseYmd, days) {
+  const [y, m, day] = String(baseYmd).slice(0, 10).split('-').map(Number)
+  const d = new Date(y, m - 1, day, 12, 0, 0, 0)
+  d.setDate(d.getDate() + days)
+  return ymd(d)
+}
+
+function filterUpcomingScheduleTrips(mergedTrips, fromYmd, toYmd) {
+  return sortScheduleTrips(
+    mergedTrips.filter((x) => {
+      const d = tripDepartYmd(x)
+      if (d == null || d < fromYmd || d > toYmd) return false
+      const s = tripStatusNorm(x)
+      if (s === 'completed' || s === 'cancelled') return false
+      if (!isTpTripVisibleInTodaySchedule(x)) return false
+      return true
+    }),
+  )
+}
+
 function emptyStatsShape() {
   return {
     total: 0,
@@ -259,18 +279,21 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
       return mergeDriverConfirmationBannerTrips(expanded)
     },
 
-    upcomingScheduleTrips() {
+    upcomingScheduleTripsToday() {
       const today = ymd(new Date())
-      return sortScheduleTrips(
-        this.dashboardMergedTrips.filter((x) => {
-          const d = tripDepartYmd(x)
-          if (d == null || d !== today) return false
-          const s = tripStatusNorm(x)
-          if (s === 'completed' || s === 'cancelled') return false
-          if (!isTpTripVisibleInTodaySchedule(x)) return false
-          return true
-        }),
-      )
+      return filterUpcomingScheduleTrips(this.dashboardMergedTrips, today, today)
+    },
+
+    /** Ngày mai → hết ngày thứ 7 kể từ hôm nay (7 ngày sắp tới, không trùng hôm nay). */
+    upcomingScheduleTripsNextSevenDays() {
+      const today = ymd(new Date())
+      const from = addDaysYmd(today, 1)
+      const to = addDaysYmd(today, 7)
+      return filterUpcomingScheduleTrips(this.dashboardMergedTrips, from, to)
+    },
+
+    upcomingScheduleTrips() {
+      return this.upcomingScheduleTripsToday
     },
 
     tpCalendarSlots() {

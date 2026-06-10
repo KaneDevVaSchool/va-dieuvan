@@ -57,9 +57,23 @@
         />
 
         <DriverUpcomingTripsSection
-          :trips="dash.upcomingScheduleTrips"
+          :trips="dash.upcomingScheduleTripsToday"
           :list-loading="dash.listLoadingForUi"
           :start-busy-trip-id="dash.startBusyTripId"
+          title-key="driver_home.today_trips_section"
+          :compact-empty="dash.upcomingScheduleTripsNextSevenDays.length > 0"
+          show-schedule-link
+          @start-trip="onStartTrip"
+        />
+
+        <DriverUpcomingTripsSection
+          v-if="dash.upcomingScheduleTripsNextSevenDays.length > 0"
+          :trips="dash.upcomingScheduleTripsNextSevenDays"
+          :list-loading="false"
+          :start-busy-trip-id="dash.startBusyTripId"
+          title-key="driver_home.next_seven_days_section"
+          :compact-empty="false"
+          :show-schedule-link="false"
           @start-trip="onStartTrip"
         />
       </div>

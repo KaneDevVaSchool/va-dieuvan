@@ -2,9 +2,10 @@
   <section class="space-y-2 pb-2 pt-1">
     <div class="flex items-end justify-between gap-2">
       <h2 class="text-sm font-bold uppercase tracking-wide text-[#64748b]">
-        {{ t('driver_home.today_trips_section') }}
+        {{ t(titleKey) }}
       </h2>
       <RouterLink
+        v-if="showScheduleLink"
         to="/driver/schedule"
         class="shrink-0 text-base font-bold text-[#4ade80] transition hover:text-[#7fdcc8]"
       >
@@ -25,7 +26,14 @@
       </div>
     </div>
 
-    <DriverTodayEmptyState v-else-if="trips.length === 0" />
+    <DriverTodayEmptyState v-else-if="trips.length === 0 && !compactEmpty" />
+
+    <p
+      v-else-if="trips.length === 0 && compactEmpty"
+      class="rounded-xl border border-white/5 bg-[#0a1512]/60 px-4 py-3 text-sm text-[#64748b]"
+    >
+      {{ t('driver_home.empty_today_short') }}
+    </p>
 
     <div
       v-else
@@ -67,6 +75,10 @@ defineProps({
   /** Skeleton khi đang tải lần đầu và chưa có dữ liệu */
   listLoading: { type: Boolean, default: false },
   startBusyTripId: { type: [Number, String], default: null },
+  titleKey: { type: String, default: 'driver_home.today_trips_section' },
+  showScheduleLink: { type: Boolean, default: true },
+  /** Không hiện empty lớn khi còn chuyến ở section khác */
+  compactEmpty: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['start-trip'])

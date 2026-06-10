@@ -89,12 +89,6 @@
             <p class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
               Lưu ý: Tối thiểu 03 ngày làm việc trước ngày cấp xe; từ 2.000 kg trở lên cần báo sớm ít nhất 05 ngày làm việc.
             </p>
-            <BmRoField
-              v-if="showAssignedDeptHeadOnForm"
-              class="border-t border-slate-100 pt-4"
-              :label="t('request_detail.assign_dept_head_preset_label')"
-              :model-value="deptHeadDisplayLine"
-            />
             <div class="grid gap-4 border-t border-slate-100 pt-4 sm:grid-cols-2">
               <div class="flex flex-wrap items-start gap-2">
                 <input type="checkbox" class="mt-1 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600" :checked="isUrgent" disabled />
@@ -118,30 +112,33 @@
           </div>
         </div>
 
-        <!-- D -->
-        <div class="pt-5">
-          <div class="flex items-center gap-2 rounded-t-lg bg-slate-50 px-3 py-2.5 sm:px-4">
-            <span class="inline-flex items-center justify-center rounded bg-slate-800 px-2 py-0.5 text-xs font-bold text-white">D</span>
-            <span class="text-xs font-bold uppercase tracking-wide text-slate-700">Khu vực / Đối tượng được phân bổ</span>
-          </div>
-          <div class="-mt-px rounded-b-lg border border-t-0 border-slate-200 px-3 py-4 sm:px-4">
-            <p class="mb-3 text-[11px] font-bold uppercase tracking-wide text-slate-700">d.1 Đối tượng sử dụng</p>
-            <div class="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-4">
-              <label
-                v-for="opt in TARGET_OPTIONS"
-                :key="opt"
-                class="flex cursor-default items-start gap-2 text-xs text-slate-800"
-              >
-                <input type="checkbox" class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600" :checked="targetsSet.has(opt)" disabled />
-                <span class="leading-snug">{{ opt }}</span>
-              </label>
+        <!-- D + Trưởng đơn vị -->
+        <div class="pt-5 lg:grid lg:grid-cols-2 lg:items-start lg:gap-4">
+          <div>
+            <div class="flex items-center gap-2 rounded-t-lg bg-slate-50 px-3 py-2.5 sm:px-4">
+              <span class="inline-flex items-center justify-center rounded bg-slate-800 px-2 py-0.5 text-xs font-bold text-white">D</span>
+              <span class="text-xs font-bold uppercase tracking-wide text-slate-700">Khu vực / Đối tượng được phân bổ</span>
             </div>
-            <div class="mt-4 grid gap-4 border-t border-slate-200 pt-4 sm:grid-cols-3">
-              <BmRoField label="d.2 Nhân sự phụ trách — Họ tên" :model-value="nz(form.coordinator_name)" />
-              <BmRoField label="Email" :model-value="nz(form.coordinator_email)" />
-              <BmRoField label="SĐT" :model-value="nz(form.coordinator_phone)" />
+            <div class="-mt-px rounded-b-lg border border-t-0 border-slate-200 px-3 py-4 sm:px-4 lg:min-h-full">
+              <p class="mb-3 text-[11px] font-bold uppercase tracking-wide text-slate-700">d.1 Đối tượng sử dụng</p>
+              <div class="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-2">
+                <label
+                  v-for="opt in TARGET_OPTIONS"
+                  :key="opt"
+                  class="flex cursor-default items-start gap-2 text-xs text-slate-800"
+                >
+                  <input type="checkbox" class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600" :checked="targetsSet.has(opt)" disabled />
+                  <span class="leading-snug">{{ opt }}</span>
+                </label>
+              </div>
+              <div class="mt-4 grid gap-4 border-t border-slate-200 pt-4 sm:grid-cols-1">
+                <BmRoField label="d.2 Nhân sự phụ trách — Họ tên" :model-value="nz(form.coordinator_name)" />
+                <BmRoField label="Email" :model-value="nz(form.coordinator_email)" />
+                <BmRoField label="SĐT" :model-value="nz(form.coordinator_phone)" />
+              </div>
             </div>
           </div>
+          <AssignedDeptHeadFormCard :req="req" variant="bm03" class="mt-5 lg:mt-0" />
         </div>
         </template>
 
@@ -594,14 +591,15 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, ref, toRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Button from '../ui/Button.vue'
 import SignedPaperUpload from './SignedPaperUpload.vue'
 import CostLimitAlert from './CostLimitAlert.vue'
+import AssignedDeptHeadFormCard from './AssignedDeptHeadFormCard.vue'
 import BmRoField from './RequestBm03RoField.vue'
 import BmRoTd from './RequestBm03RoTd.vue'
-import { getAvailableDeptHeads } from '../../api/requests'
+import { useAssignedDeptHeadDisplay } from '../../composables/useAssignedDeptHeadDisplay'
 import { TARGET_OPTIONS, isPassengerRowFilled, isBusinessRowFilled } from '../../composables/dispatchWizardConstants'
 import { parseMoneyVnd, formatVndWhileTyping, formatMoneyDraftDisplay } from '../../util/money'
 import { labelTripType } from '../../util/labels'
@@ -636,68 +634,11 @@ const emit = defineEmits([
   'signedUploaded',
 ])
 
-const deptHeadsLoadErr = ref('')
-const deptHeadLockedLabel = ref('')
-
-const presetDeptHeadId = computed(() => {
-  const raw = props.req?.assigned_dept_head_id
-  if (raw == null || raw === '') return null
-  const n = Number(raw)
-  return Number.isFinite(n) && n > 0 ? n : null
-})
-
-const deptHeadPresetLocked = computed(() => presetDeptHeadId.value != null)
-
-const showAssignedDeptHeadOnForm = computed(() => {
-  if (props.req?.trip_type === 'door_to_door') return false
-  if (presetDeptHeadId.value != null) return true
-  const snapLabel = props.req?.wizard_snapshot?.form?.dept_head_label
-  return Boolean(snapLabel && String(snapLabel).trim())
-})
+const { presetDeptHeadId, deptHeadDisplayLine, deptHeadsLoadErr, deptHeadPresetLocked } =
+  useAssignedDeptHeadDisplay(toRef(props, 'req'))
 
 const canSubmitFillPrice = computed(
   () => props.showFillPriceSection && deptHeadPresetLocked.value && !props.fillPriceActing,
-)
-
-function formatDeptHeadChosenLabel(u) {
-  const email = u?.email ? String(u.email).trim() : ''
-  const name = u?.name ? String(u.name).trim() : ''
-  return email !== '' ? `${name} — ${email}` : name
-}
-
-const deptHeadDisplayLine = computed(() => {
-  if (deptHeadLockedLabel.value.trim()) return deptHeadLockedLabel.value.trim()
-  const h = props.req?.assigned_dept_head
-  if (h) return formatDeptHeadChosenLabel(h)
-  const snap = props.req?.wizard_snapshot?.form
-  const fromSnap = snap?.dept_head_label ? String(snap.dept_head_label).trim() : ''
-  if (fromSnap) return fromSnap
-  return presetDeptHeadId.value != null ? `#${presetDeptHeadId.value}` : '—'
-})
-
-watch(
-  () => [props.req?.id, props.req?.assigned_dept_head_id, props.req?.assigned_dept_head],
-  async ([rid, hid]) => {
-    deptHeadsLoadErr.value = ''
-    deptHeadLockedLabel.value = ''
-    if (rid == null || hid == null || hid === '') return
-    const h = props.req?.assigned_dept_head
-    if (h && Number(h.id) === Number(hid)) {
-      deptHeadLockedLabel.value = formatDeptHeadChosenLabel(h)
-      return
-    }
-    try {
-      const list = await getAvailableDeptHeads(rid, { pick: hid })
-      const u = (list ?? []).find((row) => Number(row.id) === Number(hid))
-      if (u) deptHeadLockedLabel.value = formatDeptHeadChosenLabel(u)
-    } catch (e) {
-      deptHeadsLoadErr.value =
-        typeof e?.response?.data?.message === 'string'
-          ? e.response.data.message
-          : t('request_detail.assign_dept_head_load_err')
-    }
-  },
-  { immediate: true },
 )
 
 /** Indices 0..10 — read-only data columns; 11–12 filled by dispatch */

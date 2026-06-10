@@ -335,30 +335,46 @@
                         </div>
                       </div>
 
-                      <div v-if="targets.length || coordinatorName" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                        <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3 dark:border-slate-800">
-                          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
-                            <UserGroupIcon class="h-4 w-4" aria-hidden="true" />
-                          </span>
-                          <h2 class="text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">{{ t('request_detail.ops_targets_heading') }}</h2>
-                        </div>
-                        <div v-if="targets.length" class="mt-4">
-                          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                            {{ t('request_detail.ops_lbl_target_audience') }}
-                          </p>
-                          <div class="mt-2 flex flex-wrap gap-2">
-                            <span
-                              v-for="(tg, i) in targets"
-                              :key="i"
-                              class="inline-flex rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-sm font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                            >{{ tg }}</span>
+                      <div
+                        v-if="targets.length || coordinatorName || showDeptHeadPanel"
+                        class="grid gap-4 lg:grid-cols-2 lg:items-start"
+                      >
+                        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                          <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3 dark:border-slate-800">
+                            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
+                              <UserGroupIcon class="h-4 w-4" aria-hidden="true" />
+                            </span>
+                            <h2 class="text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">{{ t('request_detail.ops_targets_heading') }}</h2>
                           </div>
+                          <div v-if="targets.length" class="mt-4">
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                              {{ t('request_detail.ops_lbl_target_audience') }}
+                            </p>
+                            <div class="mt-2 flex flex-wrap gap-2">
+                              <span
+                                v-for="(tg, i) in targets"
+                                :key="i"
+                                class="inline-flex rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-sm font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                              >{{ tg }}</span>
+                            </div>
+                          </div>
+                          <dl
+                            v-if="coordinatorName"
+                            class="mt-4 grid gap-2.5"
+                            :class="targets.length ? 'sm:grid-cols-3' : 'sm:grid-cols-1'"
+                          >
+                            <FieldRow boxed :label="t('request_detail.ops_lbl_coordinator')" :value="coordinatorName" />
+                            <FieldRow boxed :label="t('request_detail.lbl_email')" :value="nz(formData.coordinator_email)" />
+                            <FieldRow boxed :label="t('request_detail.lbl_phone')" :value="nz(formData.coordinator_phone)" />
+                          </dl>
+                          <p
+                            v-if="!targets.length && !coordinatorName"
+                            class="mt-4 text-sm text-slate-500 dark:text-slate-400"
+                          >
+                            —
+                          </p>
                         </div>
-                        <dl v-if="coordinatorName" class="mt-4 grid gap-2.5 sm:grid-cols-3">
-                          <FieldRow boxed :label="t('request_detail.ops_lbl_coordinator')" :value="coordinatorName" />
-                          <FieldRow boxed :label="t('request_detail.lbl_email')" :value="nz(formData.coordinator_email)" />
-                          <FieldRow boxed :label="t('request_detail.lbl_phone')" :value="nz(formData.coordinator_phone)" />
-                        </dl>
+                        <AssignedDeptHeadFormCard :req="req" variant="staff" />
                       </div>
                     </div>
                   </div>
@@ -1094,9 +1110,11 @@ import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
 import StatusBadge from '../../components/ui/StatusBadge.vue'
 import AttachmentPreviewModal from '../../components/requests/AttachmentPreviewModal.vue'
+import AssignedDeptHeadFormCard from '../../components/requests/AssignedDeptHeadFormCard.vue'
 import RejectReasonModal from '../../components/requests/RejectReasonModal.vue'
 import PortalStatusTimeline from '../../components/portal/PortalStatusTimeline.vue'
 import { useRequestDetailPage } from '../../composables/useRequestDetailPage'
+import { useAssignedDeptHeadDisplay } from '../../composables/useAssignedDeptHeadDisplay'
 import { formatVndCurrency as formatVndMoney, parseMoneyVnd, VND_CURRENCY_SUFFIX, vndAmountInWords } from '../../util/money'
 import {
   formatItineraryTimelineDt,
@@ -1198,6 +1216,8 @@ const {
   auditLoading,
   auditError,
 } = page
+
+const { showDeptHeadPanel } = useAssignedDeptHeadDisplay(req)
 
 // ── Style tokens ──
 const cardClass = 'overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900'
