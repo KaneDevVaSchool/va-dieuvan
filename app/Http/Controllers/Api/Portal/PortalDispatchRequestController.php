@@ -425,6 +425,11 @@ class PortalDispatchRequestController extends Controller
                 : [];
             $updates['wizard_snapshot'] = array_replace_recursive($merged, $data['wizard_snapshot']);
         }
+        if (array_key_exists('dept_head_user_id', $data) && $data['dept_head_user_id'] !== null) {
+            $updates['assigned_dept_head_id'] = DispatchRequestDeptHeadAssignment::resolveValidatedId(
+                $data['dept_head_user_id'],
+            );
+        }
 
         if ($updates !== []) {
             $dispatchRequest->update($updates);

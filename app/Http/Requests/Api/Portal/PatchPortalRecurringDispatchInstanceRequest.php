@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api\Portal;
 use App\Http\Requests\Api\ApiFormRequest;
 use App\Http\Requests\Api\Portal\Concerns\ValidatesPortalRecurringExtracurricularInstance;
 use App\Models\DispatchRequest;
+use App\Support\DispatchRequestDeptHeadAssignment;
 use Carbon\Carbon;
 use Illuminate\Validation\Validator;
 
@@ -36,6 +37,7 @@ class PatchPortalRecurringDispatchInstanceRequest extends ApiFormRequest
             'destination' => ['nullable', 'string', 'max:500'],
             'notes' => ['nullable', 'string', 'max:5000'],
             'wizard_snapshot' => ['nullable', 'array'],
+            'dept_head_user_id' => ['nullable', 'integer', 'exists:users,id'],
         ];
     }
 
@@ -61,10 +63,16 @@ class PatchPortalRecurringDispatchInstanceRequest extends ApiFormRequest
                 || $this->filled('origin')
                 || $this->filled('destination')
                 || $this->has('notes')
-                || $this->filled('wizard_snapshot');
+                || $this->filled('wizard_snapshot')
+                || $this->filled('dept_head_user_id');
 
             if (! $hasField) {
                 $v->errors()->add('payload', 'Cần ít nhất một trường cập nhật.');
+            }
+
+            if ($this->filled('dept_head_user_id')
+                && DispatchRequestDeptHeadAssignment::requiresChoice((string) $dr->trip_type)) {
+                DispatchRequestDeptHeadAssignment::resolveValidatedId($this->input('dept_head_user_id'));
             }
 
             if ($this->filled('depart_at')) {

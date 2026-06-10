@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api\Portal;
 use App\Http\Requests\Api\ApiFormRequest;
 use App\Http\Requests\Api\Portal\Concerns\ValidatesPortalRecurringExtracurricularInstance;
 use App\Models\DispatchRequest;
+use App\Models\Role;
 use App\Support\Messages;
 use Illuminate\Validation\Validator;
 
@@ -60,6 +61,23 @@ class SubmitPortalRecurringDispatchInstanceRequest extends ApiFormRequest
             }
 
             $this->validatePortalRecurringWithin24hOrSubmitted($v, $dr, 'depart_at');
+
+            if ($this->requiresAssignedDeptHeadOnRequest($dr) && $dr->assigned_dept_head_id === null) {
+                $v->errors()->add('dept_head_user_id', Messages::REQUEST_DEPT_HEAD_REQUIRED);
+            }
         });
+    }
+
+    private function requiresAssignedDeptHeadOnRequest(DispatchRequest $dr): bool
+    {
+        if (! Role::query()->where('name', 'department_head')->where('guard_name', 'web')->exists()) {
+            return false;
+        }
+
+        if ($dr->trip_type === 'door_to_door') {
+            return false;
+        }
+
+        return true;
     }
 }

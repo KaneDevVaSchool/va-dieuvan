@@ -87,6 +87,29 @@ class PortalRecurringInstanceTest extends TestCase
         Notification::assertSentTo($admin, RecurringStudentCountSubmittedNotification::class);
     }
 
+    public function test_portal_patch_recurring_instance_persists_dept_head(): void
+    {
+        $this->seed(RbacSeeder::class);
+
+        $requester = User::factory()->create(['is_active' => true]);
+        $requester->assignRole('internal_user');
+
+        $head = User::factory()->create(['is_active' => true, 'email' => 'head.clb@example.test']);
+        $head->assignRole('department_head');
+
+        $dr = $this->recurringRequestFor($requester);
+
+        $this->actingAs($requester);
+
+        $this->patchJson("/api/portal/dispatch-requests/{$dr->id}/recurring-instance", [
+            'dept_head_user_id' => $head->id,
+        ])->assertOk()
+            ->assertJsonPath('data.assigned_dept_head_id', $head->id);
+
+        $dr->refresh();
+        $this->assertSame($head->id, $dr->assigned_dept_head_id);
+    }
+
     public function test_portal_patch_response_includes_wizard_snapshot_for_bm03(): void
     {
         $this->seed(RbacSeeder::class);

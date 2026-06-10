@@ -99,6 +99,49 @@ class PortalCreateDispatchRequestDeptHeadTest extends TestCase
             ->assertJsonPath('data.dispatch_request.assigned_dept_head_id', null);
     }
 
+    public function test_portal_submit_recurring_requires_dept_head_when_role_exists(): void
+    {
+        $this->seed(RbacSeeder::class);
+
+        User::factory()->create(['is_active' => true])->assignRole('department_head');
+
+        $requester = User::factory()->create(['is_active' => true]);
+        $requester->assignRole('internal_user');
+
+        $template = \App\Models\DispatchRequestTemplate::create([
+            'requester_id' => $requester->id,
+            'is_active' => true,
+            'trip_type' => 'point_to_point',
+            'origin' => 'A',
+            'destination' => 'B',
+            'recurrence_rule' => ['freq' => 'weekly', 'interval' => 1, 'byweekday' => [1]],
+            'recurrence_time' => '08:00:00',
+            'start_date' => now()->toDateString(),
+            'recurrence_end_date' => now()->addDays(5)->toDateString(),
+            'return_time' => '17:00:00',
+            'wizard_snapshot' => ['form' => ['point_purpose_kind' => 'extracurricular']],
+        ]);
+
+        $dr = DispatchRequest::create([
+            'requester_id' => $requester->id,
+            'dispatch_request_template_id' => $template->id,
+            'trip_type' => 'point_to_point',
+            'origin' => 'A',
+            'destination' => 'B',
+            'depart_at' => now()->addDays(3),
+            'status' => 'pending',
+            'source_channel' => 'portal',
+            'student_count_actual' => 15,
+            'wizard_snapshot' => ['form' => ['point_purpose_kind' => 'extracurricular']],
+        ]);
+
+        $this->actingAs($requester);
+
+        $this->postJson("/api/portal/dispatch-requests/{$dr->id}/submit-recurring")
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['dept_head_user_id']);
+    }
+
     public function test_portal_dept_head_search_returns_active_heads(): void
     {
         $this->seed(RbacSeeder::class);

@@ -75,6 +75,81 @@
             autocomplete="organization"
             :disabled="!canEditForm"
           />
+          <div v-if="needsDeptHead" class="relative sm:col-span-2">
+            <template v-if="canEditForm">
+              <label class="block" for="bm03-dept-head">
+                <span class="text-[11px] font-bold uppercase tracking-wide text-slate-600">
+                  {{ t('request_detail.assign_dept_head_label') }}
+                  <span class="text-rose-600" aria-hidden="true">*</span>
+                </span>
+                <span
+                  class="ml-1 inline-flex cursor-help text-slate-400 hover:text-slate-600"
+                  :title="t('portal.create.assign_dept_head_tooltip')"
+                >
+                  <InformationCircleIcon class="h-4 w-4" aria-hidden="true" />
+                </span>
+                <p class="mt-0.5 text-xs text-slate-500">{{ t('request_detail.assign_dept_head_combo_hint') }}</p>
+                <input
+                  id="bm03-dept-head"
+                  v-model="deptHeadQ"
+                  type="search"
+                  role="combobox"
+                  autocomplete="off"
+                  data-testid="bm03-dept-head-search"
+                  :aria-expanded="deptHeadDropdownOpen && deptHeadQ.trim().length >= 2"
+                  aria-controls="bm03-dept-head-list"
+                  :placeholder="t('request_detail.assign_dept_head_combo_ph')"
+                  class="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-400/30"
+                  :class="deptHeadClientError || fieldErrors.deptHead ? 'border-rose-400 ring-rose-200' : ''"
+                  @input="scheduleDeptHeadSearch"
+                  @focus="onDeptHeadSearchFocus"
+                  @blur="onDeptHeadSearchBlur"
+                />
+              </label>
+              <div
+                v-if="deptHeadLoading"
+                class="pointer-events-none absolute right-3 top-[4.75rem] h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-slate-700"
+              />
+              <ul
+                v-if="deptHeadDropdownOpen && deptHeadQ.trim().length >= 2"
+                id="bm03-dept-head-list"
+                class="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg ring-1 ring-black/5"
+                role="listbox"
+              >
+                <li v-if="deptHeadLoading" class="px-3 py-2.5 text-slate-500">
+                  {{ t('request_detail.assign_dept_head_loading') }}
+                </li>
+                <template v-else-if="deptHeadResults.length">
+                  <li v-for="u in deptHeadResults" :key="u.id">
+                    <button
+                      type="button"
+                      class="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition hover:bg-slate-50"
+                      data-testid="bm03-dept-head-option"
+                      @mousedown.prevent="pickDeptHead(u)"
+                    >
+                      <span class="font-medium text-slate-900">{{ u.name }}</span>
+                      <span class="truncate text-xs text-slate-500">{{ u.email }}</span>
+                    </button>
+                  </li>
+                </template>
+                <li v-else class="px-3 py-2.5 text-slate-500">{{ t('request_detail.assign_dept_head_no_match') }}</li>
+              </ul>
+              <p v-if="deptHeadSearchError" class="mt-2 text-xs font-medium text-rose-600" role="alert">
+                {{ deptHeadSearchError }}
+              </p>
+              <p v-else-if="deptHeadClientError || fieldErrors.deptHead" class="mt-2 text-xs font-medium text-rose-700" role="alert">
+                {{ deptHeadClientError || fieldErrors.deptHead }}
+              </p>
+            </template>
+            <div
+              v-else-if="showAssignedDeptHeadOnForm"
+              class="rounded-lg border border-sky-200 bg-sky-50/60 px-3 py-2.5"
+            >
+              <p class="text-xs font-medium text-slate-600">{{ t('request_detail.assign_dept_head_preset_label') }}</p>
+              <p class="mt-1 text-sm font-semibold text-slate-900">{{ deptHeadDisplayLine }}</p>
+              <p v-if="deptHeadsLoadErr" class="mt-1 text-xs text-rose-600">{{ deptHeadsLoadErr }}</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -452,6 +527,8 @@ import { TARGET_OPTIONS } from '../../../composables/dispatchWizardConstants'
 import { labelTripType } from '../../../util/labels'
 import { confirmAction } from '../../../composables/useConfirm'
 import { usePortalCoordinatorUserSearch, sanitizeVnPhoneDigits } from '../../../composables/usePortalCoordinatorUserSearch'
+import { usePortalDeptHeadSearch } from '../../../composables/usePortalDeptHeadSearch'
+import { useAssignedDeptHeadDisplay } from '../../../composables/useAssignedDeptHeadDisplay'
 import { saveAs } from 'file-saver'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -513,6 +590,31 @@ const {
   pickCoordinator,
   syncCoordinatorSearchFromDraft,
 } = usePortalCoordinatorUserSearch(draft)
+
+const needsDeptHead = computed(() => props.req?.trip_type !== 'door_to_door')
+
+const deptHeadForm = ref({ dept_head_user_id: '', dept_head_label: '' })
+
+const {
+  deptHeadQ,
+  deptHeadResults,
+  deptHeadLoading,
+  deptHeadDropdownOpen,
+  deptHeadSearchError,
+  deptHeadClientError,
+  scheduleDeptHeadSearch,
+  onDeptHeadSearchFocus,
+  onDeptHeadSearchBlur,
+  pickDeptHead,
+  validateDeptHeadSelected,
+  syncDeptHeadFromForm,
+} = usePortalDeptHeadSearch(deptHeadForm, needsDeptHead)
+
+const {
+  deptHeadDisplayLine,
+  deptHeadsLoadErr,
+  showAssignedDeptHeadOnForm,
+} = useAssignedDeptHeadDisplay(computed(() => props.req))
 
 const existingBasis = computed(() => {
   const list = props.req?.attachments ?? []
@@ -663,7 +765,7 @@ function clearFieldErrors() {
   for (const k of Object.keys(fieldErrors)) delete fieldErrors[k]
 }
 
-function validateClient() {
+function validateClient({ requireDeptHead = false } = {}) {
   clearFieldErrors()
   let ok = true
   if (!draft.requesterName.trim()) {
@@ -722,6 +824,10 @@ function validateClient() {
   }
   if (!draft.destination.trim()) {
     fieldErrors.destination = t('portal.recurring_edit.bm03_err.required')
+    ok = false
+  }
+  if (requireDeptHead && needsDeptHead.value && !validateDeptHeadSelected()) {
+    fieldErrors.deptHead = deptHeadClientError.value
     ok = false
   }
   if (!ok) {
@@ -798,6 +904,25 @@ function requesterProfileFromReq(r) {
   }
 }
 
+function deptHeadLabelFromReq(r) {
+  const h = r?.assigned_dept_head
+  if (h) {
+    const email = String(h.email ?? '').trim()
+    const name = String(h.name ?? '').trim()
+    return email ? `${name} — ${email}` : name
+  }
+  const snap = r?.wizard_snapshot?.form?.dept_head_label
+  return snap ? String(snap).trim() : ''
+}
+
+function syncDeptHeadFromReq(r) {
+  const id = r?.assigned_dept_head_id
+  deptHeadForm.value.dept_head_user_id =
+    id != null && id !== '' ? String(id) : ''
+  deptHeadForm.value.dept_head_label = deptHeadLabelFromReq(r)
+  syncDeptHeadFromForm()
+}
+
 function syncFromReq(r) {
   const form = r?.wizard_snapshot?.form ?? {}
   const reqA = requesterProfileFromReq(r)
@@ -818,6 +943,7 @@ function syncFromReq(r) {
   draft.origin = r.origin || ''
   draft.destination = r.destination || ''
   syncCoordinatorSearchFromDraft()
+  syncDeptHeadFromReq(r)
   basisPendingFile.value = null
   if (basisFileInput.value) basisFileInput.value.value = ''
   revokeBasisPreview()
@@ -881,6 +1007,10 @@ function buildPayload() {
   }
   if (dep) payload.depart_at = dep
   if (arr) payload.arrive_by = arr
+  const headId = String(deptHeadForm.value.dept_head_user_id ?? '').trim()
+  if (needsDeptHead.value && headId) {
+    payload.dept_head_user_id = Number(headId)
+  }
   return payload
 }
 
@@ -909,7 +1039,7 @@ async function save() {
 
 async function submitToDispatch() {
   if (!canEditForm.value || !canSubmit.value || submitting.value) return
-  if (!validateClient()) return
+  if (!validateClient({ requireDeptHead: true })) return
   const n = row.actualStudentCount(props.req)
   const ok = await confirmAction({
     title: t('portal.extracurricular_table.submit_confirm_title'),
