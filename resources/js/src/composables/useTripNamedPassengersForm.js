@@ -1,6 +1,9 @@
 import { ref, watch } from "vue";
 import { usePassengerManager } from "./usePassengerManager";
-import { tripLockVersion } from "../util/tripLock";
+import {
+    withTripLockVersion,
+    syncTripLockFromApi,
+} from "../util/tripLock";
 
 /**
  * Form lưu danh sách hành khách đặt tên (door_to_door / point_to_point).
@@ -60,15 +63,21 @@ export function useTripNamedPassengersForm(ctx) {
 
         saving.value = true;
         try {
-            await ctx.updateTripPassengerList(tid, {
-                passenger_count: n,
-                passengers: list.map((r) => ({
-                    name: String(r.name ?? "").trim(),
-                    phone: String(r.phone ?? "").trim() || null,
-                    note: String(r.note ?? "").trim() || null,
-                })),
-                lock_version: tripLockVersion(trip),
-            });
+            const updatedTrip = await ctx.updateTripPassengerList(
+                tid,
+                withTripLockVersion(
+                    {
+                        passenger_count: n,
+                        passengers: list.map((r) => ({
+                            name: String(r.name ?? "").trim(),
+                            phone: String(r.phone ?? "").trim() || null,
+                            note: String(r.note ?? "").trim() || null,
+                        })),
+                    },
+                    trip,
+                ),
+            );
+            syncTripLockFromApi(ctx.tripRef, null, updatedTrip);
             ctx.showAppSuccess(ctx.t("trip_detail.passengers.named_save_ok"));
             await ctx.load({ silent: true });
             return true;

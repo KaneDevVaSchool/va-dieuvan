@@ -1628,6 +1628,7 @@ async function onToggleCheck(row: PassengerRow) {
         passengerKey: key,
         nextChecked: next,
         lockVersion: Number(props.trip?.lock_version ?? 0),
+        tripSnapshot: props.trip ?? null,
         errorMessage: t("trip_detail.passengers.checkin_error"),
     });
     checkingKey.value = null;

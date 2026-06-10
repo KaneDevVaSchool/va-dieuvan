@@ -704,6 +704,12 @@ import { getCargoShipment, getCargoShipmentTimeline, updateCargoStatus } from '.
 import { addTripEvent, assignTrip, getTrip, listTrips } from '../../api/trips'
 import { listVehicles, listDrivers, listTransportProviders, createTransportProvider } from '../../api/operational'
 import { newIdempotencyKey } from '../../util/idempotency'
+import {
+  withTripLockVersion,
+  runWithOptimisticLockRetry,
+  isOptimisticLockConflict,
+  patchTripFromApi,
+} from '../../util/tripLock'
 import { labelCargoStatus } from '../../util/labels'
 import { useAuthStore } from '../../store'
 import { useNotificationStore } from '../../store/notificationCenter'
@@ -1229,23 +1235,39 @@ async function submitCargoTripAssign() {
 
   assignSaving.value = true
   try {
-    const lockVersion = tripForAssign.value.lock_version ?? 0
-    const payload = { lock_version: lockVersion }
-    if (hireExternal.value && hasExternal) {
-      payload.transport_provider_id = Number(providerChoice.value)
-      payload.vehicle_id = null
-      payload.driver_id = null
-    } else {
-      payload.transport_provider_id = null
-      if (vehicleChoice.value) payload.vehicle_id = Number(vehicleChoice.value)
-      if (driverChoice.value) payload.driver_id = Number(driverChoice.value)
+    const buildAssignBody = () => {
+      const body = {}
+      if (hireExternal.value && hasExternal) {
+        body.transport_provider_id = Number(providerChoice.value)
+        body.vehicle_id = null
+        body.driver_id = null
+      } else {
+        body.transport_provider_id = null
+        if (vehicleChoice.value) body.vehicle_id = Number(vehicleChoice.value)
+        if (driverChoice.value) body.driver_id = Number(driverChoice.value)
+      }
+      if (externalVehicleRef.value?.trim()) body.external_vehicle_ref = externalVehicleRef.value.trim()
+      else body.external_vehicle_ref = null
+      if (externalDriverRef.value?.trim()) body.external_driver_ref = externalDriverRef.value.trim()
+      else body.external_driver_ref = null
+      return body
     }
-    if (externalVehicleRef.value?.trim()) payload.external_vehicle_ref = externalVehicleRef.value.trim()
-    else payload.external_vehicle_ref = null
-    if (externalDriverRef.value?.trim()) payload.external_driver_ref = externalDriverRef.value.trim()
-    else payload.external_driver_ref = null
 
-    await assignTrip(shipment.value.trip_id, payload, { idempotencyKey: newIdempotencyKey() })
+    const tid = shipment.value.trip_id
+    await runWithOptimisticLockRetry({
+      getTrip: () => tripForAssign.value,
+      refreshTrip: async () => {
+        const data = await getTrip(tid)
+        patchTripFromApi(tripForAssign, data)
+        return tripForAssign.value
+      },
+      execute: async (snap) =>
+        assignTrip(
+          tid,
+          withTripLockVersion(buildAssignBody(), snap ?? tripForAssign.value),
+          { idempotencyKey: newIdempotencyKey() },
+        ),
+    })
 
     const note = assignCoordinationNotes.value.trim()
     if (note) {
@@ -1262,7 +1284,17 @@ async function submitCargoTripAssign() {
     await loadSameDayTripsForCargo()
   } catch (e) {
     assignFeedbackKind.value = 'error'
-    assignMsg.value = formatApiMessage(e)
+    if (isOptimisticLockConflict(e)) {
+      try {
+        const data = await getTrip(shipment.value.trip_id)
+        patchTripFromApi(tripForAssign, data)
+      } catch {
+        /* keep message */
+      }
+      assignMsg.value = t('trip_detail.coordination.lock_refresh_hint')
+    } else {
+      assignMsg.value = formatApiMessage(e)
+    }
   } finally {
     assignSaving.value = false
   }

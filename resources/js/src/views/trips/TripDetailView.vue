@@ -773,6 +773,8 @@ import {
     withTripLockVersion,
     isOptimisticLockConflict,
     syncTripLockFromApi,
+    patchTripFromApi,
+    runWithOptimisticLockRetry,
     tripLockVersion,
 } from "../../util/tripLock";
 import { labelTripStatus } from "../../util/labels";
@@ -2272,9 +2274,25 @@ async function loadSameDayTrips() {
 }
 
 function applyTripPayload(data) {
-    if (!data) return;
-    trip.value = { ...trip.value, ...data };
-    assign.value.lock_version = tripLockVersion(trip.value);
+    patchTripFromApi(trip, data, assign);
+}
+
+async function refreshTripFromServer() {
+    const fresh = await getTrip(route.params.id);
+    patchTripFromApi(trip, fresh, assign);
+    rescheduleDepartLocal.value = toDatetimeLocalValue(
+        trip.value?.depart_at,
+    );
+    return trip.value;
+}
+
+/** @param {(snap: Record<string, unknown> | null | undefined) => Promise<unknown>} execute */
+async function runLockedTripMutation(execute) {
+    return runWithOptimisticLockRetry({
+        getTrip: () => trip.value,
+        refreshTrip: refreshTripFromServer,
+        execute,
+    });
 }
 
 async function onTripLockConflict() {
@@ -2464,10 +2482,15 @@ async function doReschedule() {
     }
     rescheduling.value = true;
     try {
-        await rescheduleTrip(route.params.id, {
-            depart_at: d.toISOString(),
-            lock_version: assign.value.lock_version ?? 0,
-        });
+        await runLockedTripMutation((snap) =>
+            rescheduleTrip(
+                route.params.id,
+                withTripLockVersion(
+                    { depart_at: d.toISOString() },
+                    snap ?? trip.value,
+                ),
+            ),
+        );
         rescheduleFeedbackIsError.value = false;
         rescheduleMsg.value = t("trip_detail.reschedule.success");
         await load({ silent: true });
@@ -2476,7 +2499,14 @@ async function doReschedule() {
         );
     } catch (e) {
         rescheduleFeedbackIsError.value = true;
-        rescheduleMsg.value = formatApiMessage(e);
+        if (isOptimisticLockConflict(e)) {
+            await load({ silent: true });
+            rescheduleMsg.value = t(
+                "trip_detail.coordination.lock_refresh_hint",
+            );
+        } else {
+            rescheduleMsg.value = formatApiMessage(e);
+        }
     } finally {
         rescheduling.value = false;
     }
@@ -2606,7 +2636,7 @@ async function load(opts = {}) {
         const data = await getTrip(route.params.id);
         if (seq !== tripDetailLoadSeq) return;
         trip.value = data;
-        assign.value.lock_version = trip.value.lock_version ?? 0;
+        assign.value.lock_version = tripLockVersion(trip.value);
         rescheduleDepartLocal.value = toDatetimeLocalValue(
             trip.value.depart_at,
         );
@@ -2705,23 +2735,13 @@ async function onApproveTransfer() {
             };
         }
 
-        const runAssign = async () => {
-            await assignTrip(
+        await runLockedTripMutation((snap) =>
+            assignTrip(
                 route.params.id,
-                withTripLockVersion(payload, trip.value),
+                withTripLockVersion(payload, snap ?? trip.value),
                 { idempotencyKey: newIdempotencyKey() },
-            );
-        };
-
-        try {
-            await runAssign();
-        } catch (e) {
-            if (!isOptimisticLockConflict(e)) throw e;
-            const fresh = await getTrip(route.params.id);
-            trip.value = { ...trip.value, ...fresh };
-            assign.value.lock_version = tripLockVersion(trip.value);
-            await runAssign();
-        }
+            ),
+        );
 
         const note = coordinationNotes.value.trim();
         if (note) {
@@ -2767,14 +2787,13 @@ async function onRejectTrip() {
     rejecting.value = true;
     try {
         const msg = coordinationNotes.value.trim() || undefined;
-        await updateTripStatus(
-            route.params.id,
-            withTripLockVersion(
-                {
-                    status: "cancelled",
-                    message: msg,
-                },
-                trip.value,
+        await runLockedTripMutation((snap) =>
+            updateTripStatus(
+                route.params.id,
+                withTripLockVersion(
+                    { status: "cancelled", message: msg },
+                    snap ?? trip.value,
+                ),
             ),
         );
         assignFeedbackKind.value = "success";
@@ -2804,9 +2823,14 @@ async function doAdvanceTripStatus(to) {
     statusing.value = true;
     try {
         const msg = tripStatusWorkflowNote.value.trim() || undefined;
-        await updateTripStatus(
-            route.params.id,
-            withTripLockVersion({ status: to, message: msg }, trip.value),
+        await runLockedTripMutation((snap) =>
+            updateTripStatus(
+                route.params.id,
+                withTripLockVersion(
+                    { status: to, message: msg },
+                    snap ?? trip.value,
+                ),
+            ),
         );
         tripStatusWorkflowNote.value = "";
         await load({ silent: true });
@@ -2833,14 +2857,13 @@ async function onWorkflowCancelTrip() {
     rejecting.value = true;
     try {
         const msg = tripStatusWorkflowNote.value.trim() || undefined;
-        await updateTripStatus(
-            route.params.id,
-            withTripLockVersion(
-                {
-                    status: "cancelled",
-                    message: msg,
-                },
-                trip.value,
+        await runLockedTripMutation((snap) =>
+            updateTripStatus(
+                route.params.id,
+                withTripLockVersion(
+                    { status: "cancelled", message: msg },
+                    snap ?? trip.value,
+                ),
             ),
         );
         tripStatusWorkflowNote.value = "";

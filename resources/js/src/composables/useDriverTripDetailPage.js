@@ -2,7 +2,13 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { addTripEvent, getTrip, updateTripStatus, upsertTripRecord } from '../api/trips'
-import { isTripLockConflict } from '../util/tripLock'
+import {
+  mergeTripRowFromApi,
+  isOptimisticLockConflict,
+  withTripLockVersion,
+  runWithOptimisticLockRetry,
+  patchTripFromApi,
+} from '../util/tripLock'
 import { submitStandaloneTripCost, submitTripCost } from '../api/costs'
 import { isPassengerRowFilled, isBusinessRowFilled, isCargoRowFilled } from './dispatchWizardConstants'
 import { useDriverWebPushBoot } from './useDriverWebPushBoot'
@@ -243,12 +249,25 @@ export function useDriverTripDetailPage() {
     return waiting ?? pool[0] ?? null
   })
 
-  function buildStatusPayload(status) {
-    const payload = { status, lock_version: Number(trip.value?.lock_version ?? 0) }
+  function buildStatusPayload(status, tripSnap = trip.value) {
+    const payload = { status }
     if (multiScheduleLegTrip.value && driverOperationalLeg.value?.key) {
       payload.schedule_key = driverOperationalLeg.value.key
     }
-    return payload
+    return withTripLockVersion(payload, tripSnap)
+  }
+
+  async function mutateTripStatus(status) {
+    const id = tripId.value
+    if (id == null) return
+    const updated = await runWithOptimisticLockRetry({
+      getTrip: () => trip.value,
+      refreshTrip: refresh,
+      execute: (snap) => updateTripStatus(id, buildStatusPayload(status, snap ?? trip.value)),
+    })
+    if (updated && typeof updated === 'object') {
+      patchTripFromApi(trip, updated)
+    }
   }
 
   const driverLegStatus = computed(
@@ -609,11 +628,11 @@ export function useDriverTripDetailPage() {
     if (id == null || actionBusy.value) return
     actionBusy.value = true
     try {
-      await updateTripStatus(id, buildStatusPayload('completed'))
+      await mutateTripStatus('completed')
       await refresh()
       void driverDashboardStore.refreshTripsQuiet()
     } catch (e) {
-      if (isTripLockConflict(e)) await refresh()
+      if (isOptimisticLockConflict(e)) await refresh()
       loadError.value = t('driver_trip_detail.status_err')
     } finally {
       actionBusy.value = false
@@ -671,11 +690,11 @@ export function useDriverTripDetailPage() {
     if (id == null || actionBusy.value) return
     actionBusy.value = true
     try {
-      await updateTripStatus(id, buildStatusPayload('in_progress'))
+      await mutateTripStatus('in_progress')
       await refresh()
       void driverDashboardStore.refreshTripsQuiet()
     } catch (e) {
-      if (isTripLockConflict(e)) await refresh()
+      if (isOptimisticLockConflict(e)) await refresh()
       loadError.value = t('driver_trip_detail.status_err')
     } finally {
       actionBusy.value = false

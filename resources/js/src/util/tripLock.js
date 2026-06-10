@@ -28,9 +28,21 @@ export function isOptimisticLockConflict(err) {
 }
 
 /**
+ * Gộp trip từ API vào state local (giữ quan hệ/field cũ nếu response thiếu).
+ * @param {import('vue').Ref<Record<string, unknown> | null | undefined>} tripRef
+ * @param {Record<string, unknown> | null | undefined} apiTrip
+ * @param {import('vue').Ref<{ lock_version?: number } & Record<string, unknown>> | null} [assignRef]
+ */
+export function patchTripFromApi(tripRef, apiTrip, assignRef = null) {
+  if (!apiTrip || !tripRef?.value) return
+  tripRef.value = { ...tripRef.value, ...apiTrip }
+  syncTripLockFromApi(tripRef, assignRef, apiTrip)
+}
+
+/**
  * Cập nhật lock_version ngay sau mutation (trước khi load() hoàn tất).
  * @param {import('vue').Ref<Record<string, unknown> | null | undefined>} tripRef
- * @param {import('vue').Ref<{ lock_version?: number } & Record<string, unknown>>} assignRef
+ * @param {import('vue').Ref<{ lock_version?: number } & Record<string, unknown>> | null} assignRef
  * @param {Record<string, unknown> | null | undefined} apiTrip
  */
 export function syncTripLockFromApi(tripRef, assignRef, apiTrip) {
@@ -41,6 +53,26 @@ export function syncTripLockFromApi(tripRef, assignRef, apiTrip) {
   }
   if (assignRef?.value) {
     assignRef.value = { ...assignRef.value, lock_version: v }
+  }
+}
+
+/**
+ * Mutation có lock_version: nếu optimistic lock fail thì refresh và thử lại một lần.
+ * @template T
+ * @param {{
+ *   getTrip: () => Record<string, unknown> | null | undefined,
+ *   refreshTrip: () => Promise<Record<string, unknown> | null | undefined>,
+ *   execute: (trip: Record<string, unknown> | null | undefined) => Promise<T>,
+ * }} ctx
+ * @returns {Promise<T>}
+ */
+export async function runWithOptimisticLockRetry({ getTrip, refreshTrip, execute }) {
+  try {
+    return await execute(getTrip())
+  } catch (e) {
+    if (!isOptimisticLockConflict(e)) throw e
+    const fresh = await refreshTrip()
+    return await execute(fresh ?? getTrip())
   }
 }
 
