@@ -769,7 +769,12 @@ import {
 } from "../../api/operational";
 import { uploadAttachment, deleteAttachment } from "../../api/attachments";
 import { newIdempotencyKey } from "../../util/idempotency";
-import { withTripLockVersion, isTripLockConflict } from "../../util/tripLock";
+import {
+    withTripLockVersion,
+    isOptimisticLockConflict,
+    syncTripLockFromApi,
+    tripLockVersion,
+} from "../../util/tripLock";
 import { labelTripStatus } from "../../util/labels";
 import {
     formatDispatchRequestNotesForDisplay,
@@ -1171,7 +1176,11 @@ async function persistPassengerListSnapshot(mutator) {
         payload = { passenger_rows: filled };
     }
     try {
-        await updateTripPassengerList(tid, withTripLockVersion(payload, trip.value));
+        const updatedTrip = await updateTripPassengerList(
+            tid,
+            withTripLockVersion(payload, trip.value),
+        );
+        syncTripLockFromApi(trip, assign, updatedTrip);
         await load({ silent: true });
         showAppSuccess(t("trip_detail.passengers.dt_save_ok"));
         return true;
@@ -1217,7 +1226,7 @@ async function saveNamedPassengerSlot(rowIndex, draft, options = {}) {
         };
     });
     try {
-        await updateTripPassengerList(
+        const updatedTrip = await updateTripPassengerList(
             tid,
             withTripLockVersion(
                 {
@@ -1227,6 +1236,7 @@ async function saveNamedPassengerSlot(rowIndex, draft, options = {}) {
                 trip.value,
             ),
         );
+        syncTripLockFromApi(trip, assign, updatedTrip);
         const busIdx = options.businessRowIndex;
         if (
             dr.trip_type === "business" &&
@@ -2263,8 +2273,8 @@ async function loadSameDayTrips() {
 
 function applyTripPayload(data) {
     if (!data) return;
-    trip.value = data;
-    assign.value.lock_version = trip.value.lock_version ?? 0;
+    trip.value = { ...trip.value, ...data };
+    assign.value.lock_version = tripLockVersion(trip.value);
 }
 
 async function onTripLockConflict() {
@@ -2664,7 +2674,6 @@ async function onApproveTransfer() {
         let payload;
         if (multiScheduleMode.value) {
             payload = {
-                lock_version: assign.value.lock_version,
                 schedule_assignments: scheduleCards.value.map((card) => {
                     const legP =
                         card.key === activeAssignLegKey.value
@@ -2687,7 +2696,6 @@ async function onApproveTransfer() {
             };
         } else {
             payload = {
-                lock_version: assign.value.lock_version,
                 vehicle_id: p.vehicle_id,
                 driver_id: p.driver_id,
                 transport_provider_id: p.transport_provider_id,
@@ -2697,9 +2705,23 @@ async function onApproveTransfer() {
             };
         }
 
-        await assignTrip(route.params.id, payload, {
-            idempotencyKey: newIdempotencyKey(),
-        });
+        const runAssign = async () => {
+            await assignTrip(
+                route.params.id,
+                withTripLockVersion(payload, trip.value),
+                { idempotencyKey: newIdempotencyKey() },
+            );
+        };
+
+        try {
+            await runAssign();
+        } catch (e) {
+            if (!isOptimisticLockConflict(e)) throw e;
+            const fresh = await getTrip(route.params.id);
+            trip.value = { ...trip.value, ...fresh };
+            assign.value.lock_version = tripLockVersion(trip.value);
+            await runAssign();
+        }
 
         const note = coordinationNotes.value.trim();
         if (note) {
@@ -2718,7 +2740,7 @@ async function onApproveTransfer() {
         await load({ silent: true });
     } catch (e) {
         assignFeedbackKind.value = "error";
-        if (isTripLockConflict(e)) {
+        if (isOptimisticLockConflict(e)) {
             await load({ silent: true });
             assignMsg.value = t("trip_detail.coordination.lock_refresh_hint");
         } else {
@@ -2766,7 +2788,7 @@ async function onRejectTrip() {
 }
 
 async function handleTripStatusMutateError(e) {
-    if (isTripLockConflict(e)) {
+    if (isOptimisticLockConflict(e)) {
         await load({ silent: true });
         assignFeedbackKind.value = "error";
         assignMsg.value = t("trip_detail.coordination.lock_refresh_hint");

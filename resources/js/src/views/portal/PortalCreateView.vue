@@ -552,62 +552,24 @@
                   class="dw-portal-chip"
                 >
                   {{ chip }}
-                  <button
-                    type="button"
-                    class="dw-portal-chip__remove"
-                    @click="removeTarget(chip)"
-                  >
-                    <XMarkIcon class="h-3.5 w-3.5" aria-hidden="true" />
-                  </button>
                 </span>
               </div>
 
-              <div class="flex gap-2">
-                <div class="relative min-w-0 flex-1">
-                  <input
-                    type="search"
-                    readonly
-                    autocomplete="off"
-                    role="combobox"
-                    :aria-expanded="targetPickerModalOpen"
-                    aria-controls="dw-target-picker-modal"
-                    :placeholder="t('dispatch_wizard.create.targets_search_ph')"
-                    class="dw-input cursor-pointer"
-                    data-testid="portal-targets-search"
-                    @focus="openTargetPickerModal"
-                    @click="openTargetPickerModal"
-                    @keydown.enter.prevent="openTargetPickerModal"
-                  />
-                </div>
-                <button
-                  type="button"
-                  class="dw-portal-icon-btn"
-                  :class="targetCustomAddOpen ? 'dw-portal-icon-btn--on' : ''"
-                  :title="t('dispatch_wizard.create.targets_add_custom')"
-                  :aria-expanded="targetCustomAddOpen"
-                  @click="toggleTargetCustomAdd"
-                >
-                  <PlusIcon class="h-5 w-5" aria-hidden="true" />
-                </button>
-              </div>
-
-              <div v-if="targetCustomAddOpen" class="mt-2 flex gap-2">
+              <div class="relative min-w-0">
                 <input
-                  v-model="customTargetInput"
-                  type="text"
-                  class="dw-input flex-1"
-                  :placeholder="t('dispatch_wizard.create.targets_custom_ph')"
-                  maxlength="100"
-                  @keydown.enter.prevent="addCustomTarget"
+                  type="search"
+                  readonly
+                  autocomplete="off"
+                  role="combobox"
+                  :aria-expanded="targetPickerModalOpen"
+                  aria-controls="dw-target-picker-modal"
+                  :placeholder="t('dispatch_wizard.create.targets_search_ph')"
+                  class="dw-input cursor-pointer"
+                  data-testid="portal-targets-search"
+                  @focus="openTargetPickerModal"
+                  @click="openTargetPickerModal"
+                  @keydown.enter.prevent="openTargetPickerModal"
                 />
-                <button
-                  type="button"
-                  class="shrink-0 rounded-xl bg-va-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-va-700 active:scale-95 disabled:opacity-50"
-                  :disabled="!customTargetInput.trim()"
-                  @click="addCustomTarget"
-                >
-                  {{ t('dispatch_wizard.create.targets_add_custom') }}
-                </button>
               </div>
 
               <p v-if="form.targets.length" class="dw-field-hint">
@@ -1297,6 +1259,52 @@
                 <span class="leading-snug">{{ opt }}</span>
               </label>
             </div>
+            <div class="mt-4 border-t border-slate-100 pt-4">
+              <label class="mb-1.5 block text-xs font-medium text-slate-600" for="dw-target-custom-input">
+                {{ t('dispatch_wizard.create.targets_add_custom') }}
+              </label>
+              <div class="flex gap-2">
+                <input
+                  id="dw-target-custom-input"
+                  v-model="customTargetInput"
+                  type="text"
+                  class="dw-input min-w-0 flex-1"
+                  :placeholder="t('dispatch_wizard.create.targets_custom_ph')"
+                  maxlength="100"
+                  data-testid="portal-targets-custom-input"
+                  @keydown.enter.prevent="addCustomTarget"
+                />
+                <button
+                  type="button"
+                  class="shrink-0 rounded-xl bg-va-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-va-700 active:scale-95 disabled:opacity-50"
+                  :disabled="!customTargetInput.trim()"
+                  data-testid="portal-targets-custom-add"
+                  @click="addCustomTarget"
+                >
+                  {{ t('dispatch_wizard.create.targets_add_custom') }}
+                </button>
+              </div>
+              <div
+                v-if="selectedCustomTargets.length"
+                class="mt-3 flex flex-wrap gap-1.5"
+              >
+                <span
+                  v-for="chip in selectedCustomTargets"
+                  :key="chip"
+                  class="dw-portal-chip"
+                >
+                  {{ chip }}
+                  <button
+                    type="button"
+                    class="dw-portal-chip__remove"
+                    :data-testid="`portal-target-custom-remove-${chip}`"
+                    @click="removeTarget(chip)"
+                  >
+                    <XMarkIcon class="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
+                </span>
+              </div>
+            </div>
           </div>
           <div class="border-t border-slate-100 bg-slate-50/90 px-4 py-3 sm:flex sm:items-center sm:justify-between sm:gap-3">
             <p v-if="form.targets.length" class="mb-2 text-xs text-slate-600 sm:mb-0">
@@ -1335,7 +1343,6 @@ import {
   InformationCircleIcon,
   PaperClipIcon,
   PencilIcon,
-  PlusIcon,
   TrashIcon,
   XCircleIcon,
   XMarkIcon,
@@ -1684,11 +1691,10 @@ watch(
   },
 )
 
-// --- Đối tượng phân bổ: modal checkbox danh sách chuẩn, + để thêm tùy chỉnh ---
+// --- Đối tượng phân bổ: chọn / thêm tùy chỉnh trong modal ---
 const targetPickerModalOpen = ref(false)
 const targetModalFilterQ = ref('')
 const targetModalFilterEl = ref(null)
-const targetCustomAddOpen = ref(false)
 const customTargetInput = ref('')
 
 function normalizeTargetSearch(s) {
@@ -1705,6 +1711,10 @@ const targetModalOptions = computed(() => {
   return targetOptions.filter((opt) => normalizeTargetSearch(opt).includes(q))
 })
 
+const selectedCustomTargets = computed(() =>
+  form.value.targets.filter((name) => !targetOptions.includes(name)),
+)
+
 function openTargetPickerModal() {
   targetPickerModalOpen.value = true
   window.requestAnimationFrame(() => {
@@ -1715,6 +1725,7 @@ function openTargetPickerModal() {
 function closeTargetPickerModal() {
   targetPickerModalOpen.value = false
   targetModalFilterQ.value = ''
+  customTargetInput.value = ''
 }
 
 function toggleTargetCheckbox(val, checked) {
@@ -1728,25 +1739,11 @@ function toggleTargetCheckbox(val, checked) {
   }
 }
 
-function toggleTargetCustomAdd(forceOpen) {
-  const next =
-    forceOpen === true ? true : forceOpen === false ? false : !targetCustomAddOpen.value
-  targetCustomAddOpen.value = next
-  if (next) {
-    const q = targetModalFilterQ.value.trim()
-    if (q && !targetModalOptions.value.length && !customTargetInput.value.trim()) {
-      customTargetInput.value = q
-    }
-    closeTargetPickerModal()
-  }
-}
-
 function addCustomTarget() {
   const val = customTargetInput.value.trim()
   if (!val || form.value.targets.includes(val)) return
   form.value.targets.push(val)
   customTargetInput.value = ''
-  targetCustomAddOpen.value = false
 }
 
 function removeTarget(val) {
