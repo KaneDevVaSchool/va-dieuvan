@@ -210,50 +210,26 @@ class DispatchingService
         mixed $vehicleId,
         mixed $driverId,
     ): void {
-        $dbDriver = DB::getDriverName();
-        $plannedEndExpr = $dbDriver === 'mysql'
-            ? 'COALESCE(arrive_by, DATE_ADD(depart_at, INTERVAL 2 HOUR))'
-            : "COALESCE(arrive_by, datetime(depart_at, '+2 hours'))";
-
-        $conflictBase = Trip::query()
-            ->where('id', '!=', $trip->id)
-            ->whereIn('status', ['assigned', 'driver_confirmed', 'in_progress'])
-            ->where('depart_at', '<', $arriveBy)
-            ->whereRaw("($plannedEndExpr) > ?", [$departAt]);
-
-        if ($vehicleId) {
-            if ((clone $conflictBase)->where('vehicle_id', $vehicleId)->exists()) {
-                abort(409, 'Xe bị trùng lịch trong khung giờ này.');
-            }
+        if (! $vehicleId && ! $driverId) {
+            return;
         }
 
-        if ($driverId) {
-            if ((clone $conflictBase)->where('driver_id', $driverId)->exists()) {
-                abort(409, 'Tài xế bị trùng lịch trong khung giờ này.');
-            }
+        $others = Trip::query()
+            ->where('id', '!=', $trip->id)
+            ->whereIn('status', ['assigned', 'driver_confirmed', 'in_progress'])
+            ->with(['dispatchRequest:id,wizard_snapshot,trip_type'])
+            ->get(['id', 'driver_id', 'vehicle_id', 'depart_at', 'arrive_by', 'schedule_assignments', 'dispatch_request_id']);
 
-            $others = Trip::query()
-                ->where('id', '!=', $trip->id)
-                ->whereIn('status', ['assigned', 'driver_confirmed', 'in_progress'])
-                ->whereNotNull('schedule_assignments')
-                ->get(['id', 'schedule_assignments', 'depart_at', 'arrive_by']);
-
-            foreach ($others as $other) {
-                foreach (is_array($other->schedule_assignments) ? $other->schedule_assignments : [] as $leg) {
-                    if (! is_array($leg) || (int) ($leg['driver_id'] ?? 0) !== (int) $driverId) {
-                        continue;
-                    }
-                    $legDepart = ! empty($leg['depart_at'])
-                        ? Carbon::parse($leg['depart_at'])
-                        : ($other->depart_at instanceof Carbon ? $other->depart_at : Carbon::parse($other->depart_at));
-                    $legEnd = ! empty($leg['arrive_by'])
-                        ? Carbon::parse($leg['arrive_by'])
-                        : ($other->arrive_by
-                            ? ($other->arrive_by instanceof Carbon ? $other->arrive_by : Carbon::parse($other->arrive_by))
-                            : $legDepart->copy()->addHours(2));
-                    if ($this->intervalsOverlap($departAt, $arriveBy, $legDepart, $legEnd)) {
-                        abort(409, 'Tài xế bị trùng lịch trong khung giờ này.');
-                    }
+        foreach ($others as $other) {
+            foreach ($this->scheduleLegs->resourceOccupancySlots($other) as $slot) {
+                if (! $this->intervalsOverlap($departAt, $arriveBy, $slot['start'], $slot['end'])) {
+                    continue;
+                }
+                if ($driverId && $slot['driver_id'] && (int) $slot['driver_id'] === (int) $driverId) {
+                    abort(409, 'Tài xế bị trùng lịch trong khung giờ này.');
+                }
+                if ($vehicleId && $slot['vehicle_id'] && (int) $slot['vehicle_id'] === (int) $vehicleId) {
+                    abort(409, 'Xe bị trùng lịch trong khung giờ này.');
                 }
             }
         }
@@ -288,6 +264,7 @@ class DispatchingService
                     'trip_id' => $trip->id,
                     'driver_id' => $driverId,
                 ]);
+
                 continue;
             }
             $uid = (int) $driverUser->getKey();

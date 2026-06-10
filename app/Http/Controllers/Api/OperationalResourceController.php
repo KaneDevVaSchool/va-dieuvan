@@ -4,9 +4,24 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Operational\BulkDeleteDriversRequest;
+use App\Http\Requests\Api\Operational\BulkDeleteTransportProvidersRequest;
+use App\Http\Requests\Api\Operational\BulkDeleteVehiclesRequest;
+use App\Http\Requests\Api\Operational\BulkForceDeleteDriversRequest;
+use App\Http\Requests\Api\Operational\BulkForceDeleteTransportProvidersRequest;
+use App\Http\Requests\Api\Operational\BulkForceDeleteVehiclesRequest;
+use App\Http\Requests\Api\Operational\DeleteDriverRequest;
+use App\Http\Requests\Api\Operational\DeleteTransportProviderRequest;
+use App\Http\Requests\Api\Operational\DeleteVehicleRequest;
+use App\Http\Requests\Api\Operational\ForceDeleteDriverRequest;
+use App\Http\Requests\Api\Operational\ForceDeleteTransportProviderRequest;
+use App\Http\Requests\Api\Operational\ForceDeleteVehicleRequest;
 use App\Http\Requests\Api\Operational\ListDriversRequest;
 use App\Http\Requests\Api\Operational\ListTransportProvidersRequest;
 use App\Http\Requests\Api\Operational\ListVehiclesRequest;
+use App\Http\Requests\Api\Operational\RestoreDriverRequest;
+use App\Http\Requests\Api\Operational\RestoreTransportProviderRequest;
+use App\Http\Requests\Api\Operational\RestoreVehicleRequest;
 use App\Http\Requests\Api\Operational\ShowDriverRequest;
 use App\Http\Requests\Api\Operational\ShowVehicleRequest;
 use App\Http\Requests\Api\Operational\StoreDriverFromUserRequest;
@@ -15,21 +30,6 @@ use App\Http\Requests\Api\Operational\StoreTransportProviderRequest;
 use App\Http\Requests\Api\Operational\StoreVehicleRequest;
 use App\Http\Requests\Api\Operational\UpdateDriverRequest;
 use App\Http\Requests\Api\Operational\UpdateTransportProviderRequest;
-use App\Http\Requests\Api\Operational\DeleteDriverRequest;
-use App\Http\Requests\Api\Operational\DeleteTransportProviderRequest;
-use App\Http\Requests\Api\Operational\BulkDeleteDriversRequest;
-use App\Http\Requests\Api\Operational\BulkDeleteTransportProvidersRequest;
-use App\Http\Requests\Api\Operational\BulkDeleteVehiclesRequest;
-use App\Http\Requests\Api\Operational\BulkForceDeleteDriversRequest;
-use App\Http\Requests\Api\Operational\BulkForceDeleteTransportProvidersRequest;
-use App\Http\Requests\Api\Operational\BulkForceDeleteVehiclesRequest;
-use App\Http\Requests\Api\Operational\DeleteVehicleRequest;
-use App\Http\Requests\Api\Operational\ForceDeleteDriverRequest;
-use App\Http\Requests\Api\Operational\ForceDeleteTransportProviderRequest;
-use App\Http\Requests\Api\Operational\ForceDeleteVehicleRequest;
-use App\Http\Requests\Api\Operational\RestoreDriverRequest;
-use App\Http\Requests\Api\Operational\RestoreTransportProviderRequest;
-use App\Http\Requests\Api\Operational\RestoreVehicleRequest;
 use App\Http\Requests\Api\Operational\UpdateVehicleRequest;
 use App\Http\Requests\Api\Operational\VehicleConflictsRequest;
 use App\Models\Driver;
@@ -37,6 +37,7 @@ use App\Models\TransportProvider;
 use App\Models\Trip;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Services\Dispatching\TripScheduleLegService;
 use App\Support\TripVisibility;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -86,8 +87,11 @@ class OperationalResourceController extends Controller
         return $this->ok($this->serializeVehicle($vehicle));
     }
 
-    public function vehicleScheduleConflicts(VehicleConflictsRequest $request, Vehicle $vehicle)
-    {
+    public function vehicleScheduleConflicts(
+        VehicleConflictsRequest $request,
+        Vehicle $vehicle,
+        TripScheduleLegService $scheduleLegs,
+    ) {
         $data = $request->validated();
         $tripId = isset($data['trip_id']) ? (int) $data['trip_id'] : null;
         if ($tripId === null || $tripId < 1) {
@@ -113,24 +117,39 @@ class OperationalResourceController extends Controller
             ? 'COALESCE(arrive_by, DATE_ADD(depart_at, INTERVAL 2 HOUR))'
             : "COALESCE(arrive_by, datetime(depart_at, '+2 hours'))";
 
-        $other = Trip::query()
+        $candidates = Trip::query()
             ->where('id', '!=', $excludeId)
             ->whereIn('status', ['assigned', 'driver_confirmed', 'in_progress'])
-            ->where('vehicle_id', $vehicle->id)
             ->where('depart_at', '<', $arriveBy)
             ->whereRaw("($plannedEndExpr) > ?", [$departAt])
-            ->with(['dispatchRequest.requester:id,name'])
+            ->with([
+                'dispatchRequest:id,wizard_snapshot,trip_type,requester_id',
+                'dispatchRequest.requester:id,name',
+            ])
             ->orderBy('depart_at')
-            ->first();
+            ->get(['id', 'driver_id', 'vehicle_id', 'depart_at', 'arrive_by', 'schedule_assignments', 'dispatch_request_id']);
+
+        $other = null;
+        $slotStart = null;
+        $slotEnd = null;
+
+        foreach ($candidates as $candidate) {
+            foreach ($scheduleLegs->resourceOccupancySlots($candidate) as $slot) {
+                if ((int) ($slot['vehicle_id'] ?? 0) !== (int) $vehicle->id) {
+                    continue;
+                }
+                if ($departAt->lt($slot['end']) && $slot['start']->lt($arriveBy)) {
+                    $other = $candidate;
+                    $slotStart = $slot['start'];
+                    $slotEnd = $slot['end'];
+                    break 2;
+                }
+            }
+        }
 
         if (! $other instanceof Trip) {
             return $this->ok(['conflict' => null]);
         }
-
-        $oStart = $other->depart_at instanceof Carbon ? $other->depart_at : Carbon::parse($other->depart_at);
-        $oEnd = $other->arrive_by
-            ? ($other->arrive_by instanceof Carbon ? $other->arrive_by : Carbon::parse($other->arrive_by))
-            : $oStart->copy()->addHours(2);
 
         $dr = $other->dispatchRequest;
         $requester = $dr?->requester?->name ?? '—';
@@ -138,7 +157,7 @@ class OperationalResourceController extends Controller
         return $this->ok([
             'conflict' => [
                 'trip_code' => 'TRP-'.str_pad((string) $other->id, 4, '0', STR_PAD_LEFT),
-                'time_range' => $oStart->format('d/m/Y H:i').'–'.$oEnd->format('H:i'),
+                'time_range' => $slotStart->format('d/m/Y H:i').'–'.$slotEnd->format('H:i'),
                 'requester' => $requester,
             ],
         ]);

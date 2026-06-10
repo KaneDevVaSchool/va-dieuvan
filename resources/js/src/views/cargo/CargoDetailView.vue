@@ -714,6 +714,11 @@ import { labelCargoStatus } from '../../util/labels'
 import { useAuthStore } from '../../store'
 import { useNotificationStore } from '../../store/notificationCenter'
 import { i18n } from '../../i18n'
+import {
+  collectBusyDriverIds,
+  collectBusyVehicleIds,
+  tripPlannedEndMs,
+} from '../../util/tripScheduleConflict'
 
 const route = useRoute()
 const { t, te, locale } = useI18n()
@@ -880,15 +885,7 @@ function toLocalDateKey(iso) {
 }
 
 function tripPlannedEndForCargo(t) {
-  const dr = t?.dispatch_request
-  const endIso = t?.arrive_by ?? dr?.arrive_by
-  if (endIso) return new Date(endIso)
-  const s = new Date(t.depart_at)
-  return new Date(s.getTime() + 2 * 60 * 60 * 1000)
-}
-
-function tripIntervalsOverlap(aStart, aEnd, bStart, bEnd) {
-  return aStart < bEnd && bStart < aEnd
+  return new Date(tripPlannedEndMs(t))
 }
 
 const scheduleDateKeyForAssign = computed(() => {
@@ -905,37 +902,23 @@ const assignScheduleWindow = computed(() => {
   return { start, end }
 })
 
-const assignBusyDriverIds = computed(() => {
-  const w = assignScheduleWindow.value
-  const cur = tripForAssign.value
-  if (!w || !cur?.id) return new Set()
-  const busy = new Set()
-  for (const o of sameDayTrips.value) {
-    if (!o?.id || o.id === cur.id) continue
-    if (!o.driver_id) continue
-    if (!TRIP_ASSIGN_CONFLICT_STATUSES.includes(o.status)) continue
-    const oStart = new Date(o.depart_at).getTime()
-    const oEnd = tripPlannedEndForCargo(o).getTime()
-    if (tripIntervalsOverlap(w.start, w.end, oStart, oEnd)) busy.add(o.driver_id)
-  }
-  return busy
-})
+const assignBusyDriverIds = computed(() =>
+  collectBusyDriverIds(
+    sameDayTrips.value,
+    assignScheduleWindow.value,
+    tripForAssign.value?.id,
+    TRIP_ASSIGN_CONFLICT_STATUSES,
+  ),
+)
 
-const assignBusyVehicleIds = computed(() => {
-  const w = assignScheduleWindow.value
-  const cur = tripForAssign.value
-  if (!w || !cur?.id) return new Set()
-  const busy = new Set()
-  for (const o of sameDayTrips.value) {
-    if (!o?.id || o.id === cur.id) continue
-    if (!o.vehicle_id) continue
-    if (!TRIP_ASSIGN_CONFLICT_STATUSES.includes(o.status)) continue
-    const oStart = new Date(o.depart_at).getTime()
-    const oEnd = tripPlannedEndForCargo(o).getTime()
-    if (tripIntervalsOverlap(w.start, w.end, oStart, oEnd)) busy.add(o.vehicle_id)
-  }
-  return busy
-})
+const assignBusyVehicleIds = computed(() =>
+  collectBusyVehicleIds(
+    sameDayTrips.value,
+    assignScheduleWindow.value,
+    tripForAssign.value?.id,
+    TRIP_ASSIGN_CONFLICT_STATUSES,
+  ),
+)
 
 function assignScheduleTimeRange(tr) {
   const a = tr?.depart_at

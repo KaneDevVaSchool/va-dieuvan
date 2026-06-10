@@ -2,7 +2,6 @@
 
 namespace App\Services\Dispatching;
 
-use App\Models\DispatchRequest;
 use App\Models\Trip;
 use Illuminate\Support\Carbon;
 
@@ -494,6 +493,60 @@ class TripScheduleLegService
             : $departAt->copy()->addHours(2);
 
         return [$departAt, $arriveBy];
+    }
+
+    /**
+     * Khung giờ phân bổ tài xế/xe theo từng lịch (tránh coi driver_id cấp chuyến là bận cả ngày).
+     *
+     * @return list<array{driver_id: ?int, vehicle_id: ?int, start: Carbon, end: Carbon}>
+     */
+    public function resourceOccupancySlots(Trip $trip): array
+    {
+        $trip->loadMissing('dispatchRequest');
+        $assignments = array_values(is_array($trip->schedule_assignments) ? $trip->schedule_assignments : []);
+
+        if ($assignments !== []) {
+            $defsByKey = [];
+            $dr = $trip->dispatchRequest;
+            if ($dr) {
+                foreach ($this->buildLegDefinitionsFromSnapshot(
+                    is_array($dr->wizard_snapshot) ? $dr->wizard_snapshot : null,
+                    (string) ($dr->trip_type ?? ''),
+                ) as $def) {
+                    $defsByKey[$def['key']] = $def;
+                }
+            }
+
+            $slots = [];
+            foreach ($assignments as $assign) {
+                if (! is_array($assign)) {
+                    continue;
+                }
+                $key = (string) ($assign['key'] ?? '');
+                $merged = array_merge($defsByKey[$key] ?? [], $assign);
+                [$start, $end] = $this->legTimeWindow($merged);
+                $slots[] = [
+                    'driver_id' => isset($assign['driver_id']) ? (int) $assign['driver_id'] : null,
+                    'vehicle_id' => isset($assign['vehicle_id']) ? (int) $assign['vehicle_id'] : null,
+                    'start' => $start,
+                    'end' => $end,
+                ];
+            }
+
+            return $slots;
+        }
+
+        $departAt = $trip->depart_at instanceof Carbon ? $trip->depart_at : Carbon::parse($trip->depart_at);
+        $arriveBy = $trip->arrive_by
+            ? ($trip->arrive_by instanceof Carbon ? $trip->arrive_by : Carbon::parse($trip->arrive_by))
+            : $departAt->copy()->addHours(2);
+
+        return [[
+            'driver_id' => $trip->driver_id !== null ? (int) $trip->driver_id : null,
+            'vehicle_id' => $trip->vehicle_id !== null ? (int) $trip->vehicle_id : null,
+            'start' => $departAt,
+            'end' => $arriveBy,
+        ]];
     }
 
     /**

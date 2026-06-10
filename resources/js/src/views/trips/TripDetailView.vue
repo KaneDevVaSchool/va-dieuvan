@@ -782,6 +782,13 @@ import {
     formatDispatchRequestNotesForDisplay,
     isLegacyBm03NotesBlock,
 } from "../../util/formatDispatchNotes";
+import {
+    collectBusyDriverIds,
+    collectBusyVehicleIds,
+    tripPlannedEndMs,
+    tripIntervalsOverlap,
+    resourceOccupancySlots,
+} from "../../util/tripScheduleConflict";
 import { parseMoneyVnd } from "../../util/money";
 import {
     dispatchRequestDisplayPassengerCount,
@@ -1887,17 +1894,8 @@ function toLocalDateKey(iso) {
     return `${y}-${m}-${day}`;
 }
 
-/** Cùng logic backend DispatchingService: kết thúc kế hoạch = arrive_by hoặc depart + 2h */
 function tripPlannedEnd(t) {
-    const dr = t?.dispatch_request;
-    const endIso = t?.arrive_by ?? dr?.arrive_by;
-    if (endIso) return new Date(endIso);
-    const s = new Date(t.depart_at);
-    return new Date(s.getTime() + 2 * 60 * 60 * 1000);
-}
-
-function tripIntervalsOverlap(aStart, aEnd, bStart, bEnd) {
-    return aStart < bEnd && bStart < aEnd;
+    return new Date(tripPlannedEndMs(t));
 }
 
 function getActiveScheduleDateKey() {
@@ -1955,39 +1953,23 @@ const schedulePreviewDirty = computed(() => {
     );
 });
 
-const busyDriverIds = computed(() => {
-    const w = scheduleWindowForConflicts.value;
-    const cur = trip.value;
-    if (!w || !cur?.id) return new Set();
-    const busy = new Set();
-    for (const o of sameDayTrips.value) {
-        if (!o?.id || o.id === cur.id) continue;
-        if (!o.driver_id) continue;
-        if (!TRIP_ASSIGN_CONFLICT_STATUSES.includes(o.status)) continue;
-        const oStart = new Date(o.depart_at).getTime();
-        const oEnd = tripPlannedEnd(o).getTime();
-        if (tripIntervalsOverlap(w.start, w.end, oStart, oEnd))
-            busy.add(o.driver_id);
-    }
-    return busy;
-});
+const busyDriverIds = computed(() =>
+    collectBusyDriverIds(
+        sameDayTrips.value,
+        scheduleWindowForConflicts.value,
+        trip.value?.id,
+        TRIP_ASSIGN_CONFLICT_STATUSES,
+    ),
+);
 
-const busyVehicleIds = computed(() => {
-    const w = scheduleWindowForConflicts.value;
-    const cur = trip.value;
-    if (!w || !cur?.id) return new Set();
-    const busy = new Set();
-    for (const o of sameDayTrips.value) {
-        if (!o?.id || o.id === cur.id) continue;
-        if (!o.vehicle_id) continue;
-        if (!TRIP_ASSIGN_CONFLICT_STATUSES.includes(o.status)) continue;
-        const oStart = new Date(o.depart_at).getTime();
-        const oEnd = tripPlannedEnd(o).getTime();
-        if (tripIntervalsOverlap(w.start, w.end, oStart, oEnd))
-            busy.add(o.vehicle_id);
-    }
-    return busy;
-});
+const busyVehicleIds = computed(() =>
+    collectBusyVehicleIds(
+        sameDayTrips.value,
+        scheduleWindowForConflicts.value,
+        trip.value?.id,
+        TRIP_ASSIGN_CONFLICT_STATUSES,
+    ),
+);
 
 const busyVehicleIdList = computed(() => [...busyVehicleIds.value]);
 const busyDriverIdList = computed(() => [...busyDriverIds.value]);
@@ -2026,9 +2008,10 @@ const overlappingOtherTrips = computed(() => {
     for (const o of sameDayTrips.value) {
         if (!o?.id || o.id === cur.id) continue;
         if (!TRIP_ASSIGN_CONFLICT_STATUSES.includes(o.status)) continue;
-        const oStart = new Date(o.depart_at).getTime();
-        const oEnd = tripPlannedEnd(o).getTime();
-        if (!tripIntervalsOverlap(w.start, w.end, oStart, oEnd)) continue;
+        const overlaps = resourceOccupancySlots(o).some((slot) =>
+            tripIntervalsOverlap(w.start, w.end, slot.start, slot.end),
+        );
+        if (!overlaps) continue;
         const dr = o.dispatch_request;
         const label = dr
             ? `${dr.origin || "—"} → ${dr.destination || "—"}`
