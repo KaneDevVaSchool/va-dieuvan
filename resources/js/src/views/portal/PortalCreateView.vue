@@ -167,10 +167,53 @@
             <h2 class="text-lg font-semibold text-slate-900">{{ t('dispatch_wizard.create.step2_title') }}</h2>
           </div>
 
-          <!-- Người đề nghị (+ Thời gian) -->
-          <div class="grid gap-5 lg:grid-cols-2 lg:items-start lg:gap-6">
-            <!-- Người đề nghị -->
-            <div class="dw-fieldset space-y-4">
+          <div
+            class="-mx-1 flex gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-slate-50/90 p-1 supports-[overflow:clip]:overflow-x-clip sm:mx-0"
+            role="tablist"
+            :aria-label="t('dispatch_wizard.create.step2_sub_nav_aria')"
+          >
+            <button
+              v-for="(tab, idx) in step2SubTabs"
+              :key="tab.id"
+              type="button"
+              role="tab"
+              :aria-selected="step2Sub === tab.id"
+              :aria-controls="`portal-step2-panel-${tab.id}`"
+              :tabindex="step2Sub === tab.id ? 0 : -1"
+              class="flex min-h-[44px] min-w-[7.5rem] shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium transition sm:min-w-0 sm:flex-1 sm:justify-center"
+              :class="
+                step2Sub === tab.id
+                  ? 'bg-white text-va-800 shadow-sm ring-1 ring-slate-200'
+                  : idx <= maxReachedStep2Sub
+                    ? 'text-slate-700 hover:bg-white/70'
+                    : 'cursor-not-allowed text-slate-400'
+              "
+              :disabled="idx > maxReachedStep2Sub"
+              @click="setStep2Sub(tab.id)"
+            >
+              <span
+                class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+                :class="
+                  step2Sub === tab.id
+                    ? 'bg-va-800 text-white'
+                    : idx < step2SubIndex
+                      ? 'bg-va-100 text-va-800'
+                      : 'bg-slate-200 text-slate-600'
+                "
+                aria-hidden="true"
+              >
+                {{ idx + 1 }}
+              </span>
+              <span class="truncate">{{ tab.label }}</span>
+            </button>
+          </div>
+
+          <div
+            v-show="step2Sub === 'requester'"
+            id="portal-step2-panel-requester"
+            role="tabpanel"
+            class="dw-fieldset space-y-4"
+          >
               <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_requester') }}</h3>
 
               <!-- Tìm theo tên -->
@@ -268,9 +311,14 @@
                 <span class="dw-label-text">{{ t('dispatch_wizard.create.unit') }}</span>
                 <input v-model="form.requester_unit" type="text" :placeholder="t('dispatch_wizard.create.unit_ph')" class="dw-input mt-1" />
               </label>
-            </div>
+          </div>
 
-            <div class="dw-fieldset space-y-4">
+          <div
+            v-show="step2Sub === 'time'"
+            id="portal-step2-panel-time"
+            role="tabpanel"
+            class="dw-fieldset space-y-4"
+          >
               <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_time') }}</h3>
 
               <!-- Ngày đề xuất + Ngày giờ cần xe -->
@@ -416,10 +464,14 @@
                 <p v-else-if="deptHeadClientError" class="mt-1 text-xs font-medium text-rose-600">{{ deptHeadClientError }}</p>
                 <p v-else class="mt-1 text-xs text-slate-500">{{ t('request_detail.assign_dept_head_combo_hint') }}</p>
               </div>
-            </div>
           </div>
 
-          <div class="dw-fieldset">
+          <div
+            v-show="step2Sub === 'purpose'"
+            id="portal-step2-panel-purpose"
+            role="tabpanel"
+            class="dw-fieldset"
+          >
             <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_purpose') }}</h3>
             <div
               v-if="form.trip_type === 'point_to_point'"
@@ -513,60 +565,20 @@
             </div>
           </div>
 
-          <div class="grid gap-5 lg:grid-cols-2 lg:items-start lg:gap-6">
+          <div
+            v-show="step2Sub === 'coordination'"
+            id="portal-step2-panel-coordination"
+            role="tabpanel"
+            class="grid gap-5 lg:grid-cols-2 lg:items-start lg:gap-6"
+          >
             <div class="dw-fieldset">
               <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_targets') }}</h3>
 
-              <!-- Chip grid thay thế checkbox list — dễ tap trên mobile -->
-              <div class="flex flex-wrap gap-2">
-                <button
-                  v-for="target in targetOptions"
-                  :key="target"
-                  type="button"
-                  class="inline-flex min-h-[36px] items-center rounded-full border px-3 py-1 text-sm transition select-none"
-                  :class="
-                    form.targets.includes(target)
-                      ? 'border-va-700 bg-va-50 text-va-800 font-medium ring-1 ring-va-200'
-                      : 'border-slate-200 bg-white text-slate-700 hover:border-va-300 hover:bg-va-50/50'
-                  "
-                  @click="toggleTarget(target)"
-                >
-                  <CheckIcon
-                    v-if="form.targets.includes(target)"
-                    class="mr-1 h-3.5 w-3.5 shrink-0 text-va-700"
-                    aria-hidden="true"
-                  />
-                  {{ target }}
-                </button>
-              </div>
-
-              <!-- Quick-add đối tượng tùy chỉnh -->
-              <div class="mt-3 flex gap-2">
-                <input
-                  v-model="customTargetInput"
-                  type="text"
-                  class="dw-input flex-1"
-                  placeholder="Thêm đối tượng khác... (VD: Ban Giám Hiệu)"
-                  maxlength="100"
-                  @keydown.enter.prevent="addCustomTarget"
-                />
-                <button
-                  type="button"
-                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-va-800 text-white shadow-sm transition hover:bg-va-700 active:scale-95 disabled:opacity-50"
-                  :disabled="!customTargetInput.trim()"
-                  title="Thêm đối tượng"
-                  @click="addCustomTarget"
-                >
-                  <PlusIcon class="h-5 w-5" aria-hidden="true" />
-                </button>
-              </div>
-
-              <!-- Custom chips (đối tượng không có trong danh sách chuẩn) -->
-              <div v-if="customTargetChips.length" class="mt-2 flex flex-wrap gap-1.5">
+              <div v-if="form.targets.length" class="mb-3 flex flex-wrap gap-1.5">
                 <span
-                  v-for="chip in customTargetChips"
+                  v-for="chip in form.targets"
                   :key="chip"
-                  class="inline-flex items-center gap-1 rounded-full bg-va-100 px-3 py-1 text-sm font-medium text-va-800"
+                  class="inline-flex items-center gap-1 rounded-full border border-va-200 bg-va-50 px-3 py-1 text-sm font-medium text-va-800"
                 >
                   {{ chip }}
                   <button
@@ -577,6 +589,75 @@
                     <XMarkIcon class="h-3.5 w-3.5" aria-hidden="true" />
                   </button>
                 </span>
+              </div>
+
+              <div class="flex gap-2">
+                <div class="relative min-w-0 flex-1">
+                  <input
+                    v-model="targetSearchQ"
+                    type="search"
+                    autocomplete="off"
+                    role="combobox"
+                    :aria-expanded="targetDropdownOpen && targetSearchQ.trim().length >= 1"
+                    aria-controls="dw-target-search-list"
+                    :placeholder="t('dispatch_wizard.create.targets_search_ph')"
+                    class="dw-input"
+                    @input="targetDropdownOpen = true"
+                    @focus="onTargetSearchFocus"
+                    @blur="onTargetSearchBlur"
+                    @keydown.enter.prevent="onTargetSearchEnter"
+                  />
+                  <ul
+                    v-if="targetDropdownOpen && targetSearchQ.trim().length >= 1"
+                    id="dw-target-search-list"
+                    class="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg ring-1 ring-black/5"
+                    role="listbox"
+                  >
+                    <template v-if="targetSearchResults.length">
+                      <li v-for="opt in targetSearchResults" :key="opt">
+                        <button
+                          type="button"
+                          class="flex w-full px-3 py-2.5 text-left transition hover:bg-va-50"
+                          @mousedown.prevent="pickTarget(opt)"
+                        >
+                          {{ opt }}
+                        </button>
+                      </li>
+                    </template>
+                    <li v-else class="px-3 py-2.5 text-slate-500">
+                      {{ t('dispatch_wizard.create.targets_no_match') }}
+                    </li>
+                  </ul>
+                </div>
+                <button
+                  type="button"
+                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-va-800 shadow-sm transition hover:border-va-300 hover:bg-va-50 active:scale-95"
+                  :class="targetCustomAddOpen ? 'border-va-400 bg-va-50 ring-1 ring-va-200' : ''"
+                  :title="t('dispatch_wizard.create.targets_add_custom')"
+                  :aria-expanded="targetCustomAddOpen"
+                  @click="toggleTargetCustomAdd"
+                >
+                  <PlusIcon class="h-5 w-5" aria-hidden="true" />
+                </button>
+              </div>
+
+              <div v-if="targetCustomAddOpen" class="mt-2 flex gap-2">
+                <input
+                  v-model="customTargetInput"
+                  type="text"
+                  class="dw-input flex-1"
+                  :placeholder="t('dispatch_wizard.create.targets_custom_ph')"
+                  maxlength="100"
+                  @keydown.enter.prevent="addCustomTarget"
+                />
+                <button
+                  type="button"
+                  class="shrink-0 rounded-xl bg-va-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-va-700 active:scale-95 disabled:opacity-50"
+                  :disabled="!customTargetInput.trim()"
+                  @click="addCustomTarget"
+                >
+                  {{ t('dispatch_wizard.create.targets_add_custom') }}
+                </button>
               </div>
 
               <p v-if="form.targets.length" class="mt-2 text-xs text-slate-500">
@@ -706,7 +787,7 @@
             type="button"
             class="rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40"
             :disabled="step === 0"
-            @click="prevStep"
+            @click="portalPrevStep"
           >
             {{ t('dispatch_wizard.create.back') }}
           </button>
@@ -715,8 +796,8 @@
               v-if="step < 3"
               type="button"
               class="rounded-lg bg-va-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-va-900 disabled:opacity-40"
-              :disabled="!canGoNext"
-              @click="nextStep"
+              :disabled="!portalCanGoNext"
+              @click="portalNextStep"
             >
               {{ t('dispatch_wizard.create.next') }}
             </button>
@@ -1277,6 +1358,8 @@ const {
   coordinatorSearchError,
   step2DateOrderInvalid,
   step2RequesterEmailInvalid,
+  requesterEmailFormatInvalid,
+  coordinatorEmailFormatInvalid,
   draftSaveFlash,
   draftSaveError,
   lastAutoSavedAt,
@@ -1357,6 +1440,7 @@ const {
   onDeptHeadSearchFocus,
   onDeptHeadSearchBlur,
   pickDeptHead,
+  validateDeptHeadSelected,
 } = wizard
 
 const draftMenuOpen = ref(false)
@@ -1456,18 +1540,176 @@ onMounted(() => {
   form.value.recurring_enabled = false
 })
 
-// --- Custom target quick-add ---
-const customTargetInput = ref('')
+// --- Bước 2 portal: tab con (không hiển thị toàn bộ form một lần) ---
+const STEP2_SUB_IDS = ['requester', 'time', 'purpose', 'coordination']
 
-const customTargetChips = computed(() =>
-  (form.value.targets ?? []).filter((t) => !targetOptions.includes(t)),
+const step2Sub = ref('requester')
+const maxReachedStep2Sub = ref(0)
+
+const step2SubTabs = computed(() =>
+  STEP2_SUB_IDS.map((id) => ({
+    id,
+    label: t(`dispatch_wizard.create.step2_sub_${id}`),
+  })),
 )
 
-function toggleTarget(val) {
-  const list = form.value.targets
-  const idx = list.indexOf(val)
-  if (idx === -1) list.push(val)
-  else list.splice(idx, 1)
+const step2SubIndex = computed(() => STEP2_SUB_IDS.indexOf(step2Sub.value))
+
+function portalStep2SubComplete(subId) {
+  if (subId === 'requester') {
+    return (
+      !!form.value.requester_name?.trim() &&
+      !!form.value.requester_email?.trim() &&
+      !requesterEmailFormatInvalid.value
+    )
+  }
+  if (subId === 'time') {
+    const deptOk =
+      !portalNeedsDeptHead.value || !!String(form.value.dept_head_user_id ?? '').trim()
+    return (
+      !!form.value.proposed_date &&
+      !!form.value.date_needed &&
+      !step2DateOrderInvalid.value &&
+      (!form.value.is_urgent || !!form.value.urgent_reason?.trim()) &&
+      deptOk
+    )
+  }
+  if (subId === 'purpose') {
+    return !!form.value.purpose?.trim()
+  }
+  return !coordinatorEmailFormatInvalid.value
+}
+
+const portalCanGoNext = computed(() => {
+  if (step.value !== 1) return canGoNext.value
+  if (step2SubIndex.value === STEP2_SUB_IDS.length - 1) return canGoNext.value
+  return portalStep2SubComplete(step2Sub.value)
+})
+
+function setStep2Sub(id) {
+  const idx = STEP2_SUB_IDS.indexOf(id)
+  if (idx === -1 || idx > maxReachedStep2Sub.value) return
+  step2Sub.value = id
+}
+
+function portalNextStep() {
+  if (step.value !== 1) {
+    nextStep()
+    return
+  }
+  if (!portalCanGoNext.value) {
+    if (
+      step2Sub.value === 'time' &&
+      portalNeedsDeptHead.value &&
+      !String(form.value.dept_head_user_id ?? '').trim()
+    ) {
+      validateDeptHeadSelected?.()
+    }
+    return
+  }
+  const idx = step2SubIndex.value
+  if (idx < STEP2_SUB_IDS.length - 1) {
+    maxReachedStep2Sub.value = Math.max(maxReachedStep2Sub.value, idx + 1)
+    step2Sub.value = STEP2_SUB_IDS[idx + 1]
+    return
+  }
+  nextStep()
+}
+
+function portalPrevStep() {
+  if (step.value === 1 && step2SubIndex.value > 0) {
+    step2Sub.value = STEP2_SUB_IDS[step2SubIndex.value - 1]
+    return
+  }
+  prevStep()
+}
+
+watch(step, (v, oldV) => {
+  if (v === 1 && oldV === 0) {
+    step2Sub.value = 'requester'
+    maxReachedStep2Sub.value = 0
+  }
+})
+
+watch(
+  () => [
+    form.value.requester_name,
+    form.value.requester_email,
+    form.value.proposed_date,
+    form.value.date_needed,
+    form.value.purpose,
+    step2RequesterEmailInvalid.value,
+    step2DateOrderInvalid.value,
+    form.value.dept_head_user_id,
+  ],
+  () => {
+    if (step.value !== 1) return
+    let max = 0
+    if (portalStep2SubComplete('requester')) max = 1
+    if (max >= 1 && portalStep2SubComplete('time')) max = 2
+    if (max >= 2 && portalStep2SubComplete('purpose')) max = 3
+    maxReachedStep2Sub.value = Math.max(maxReachedStep2Sub.value, max)
+  },
+)
+
+// --- Đối tượng phân bổ: tìm trong danh sách chuẩn, + để thêm tùy chỉnh ---
+const targetSearchQ = ref('')
+const targetDropdownOpen = ref(false)
+const targetCustomAddOpen = ref(false)
+const customTargetInput = ref('')
+
+function normalizeTargetSearch(s) {
+  return String(s)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+}
+
+const targetSearchResults = computed(() => {
+  const q = normalizeTargetSearch(targetSearchQ.value)
+  if (!q) return []
+  const selected = form.value.targets ?? []
+  return targetOptions.filter(
+    (opt) => !selected.includes(opt) && normalizeTargetSearch(opt).includes(q),
+  )
+})
+
+function onTargetSearchFocus() {
+  if (targetSearchQ.value.trim().length >= 1) targetDropdownOpen.value = true
+}
+
+function onTargetSearchBlur() {
+  window.setTimeout(() => {
+    targetDropdownOpen.value = false
+  }, 150)
+}
+
+function pickTarget(val) {
+  if (!val || form.value.targets.includes(val)) return
+  form.value.targets.push(val)
+  targetSearchQ.value = ''
+  targetDropdownOpen.value = false
+}
+
+function onTargetSearchEnter() {
+  const first = targetSearchResults.value[0]
+  if (first) pickTarget(first)
+  else if (targetSearchQ.value.trim()) toggleTargetCustomAdd(true)
+}
+
+function toggleTargetCustomAdd(forceOpen) {
+  const next =
+    forceOpen === true ? true : forceOpen === false ? false : !targetCustomAddOpen.value
+  targetCustomAddOpen.value = next
+  if (next) {
+    const q = targetSearchQ.value.trim()
+    if (q && !targetSearchResults.value.length && !customTargetInput.value.trim()) {
+      customTargetInput.value = q
+    }
+    targetSearchQ.value = ''
+    targetDropdownOpen.value = false
+  }
 }
 
 function addCustomTarget() {
@@ -1475,6 +1717,7 @@ function addCustomTarget() {
   if (!val || form.value.targets.includes(val)) return
   form.value.targets.push(val)
   customTargetInput.value = ''
+  targetCustomAddOpen.value = false
 }
 
 function removeTarget(val) {

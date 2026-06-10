@@ -2032,6 +2032,8 @@ export function useDispatchRequestWizard(options = {}) {
     draftSaveError,
     draftSaveFlash,
     step2CoordinatorEmailInvalid,
+    requesterEmailFormatInvalid,
+    coordinatorEmailFormatInvalid,
     passengerRows,
     businessRows,
     cargoRows,
@@ -2120,6 +2122,7 @@ export function useDispatchRequestWizard(options = {}) {
           onDeptHeadSearchFocus: portalDeptHeadSearch.onDeptHeadSearchFocus,
           onDeptHeadSearchBlur: portalDeptHeadSearch.onDeptHeadSearchBlur,
           pickDeptHead: portalDeptHeadSearch.pickDeptHead,
+          validateDeptHeadSelected: portalDeptHeadSearch.validateDeptHeadSelected,
         }
       : {}),
     // Portal form templates
