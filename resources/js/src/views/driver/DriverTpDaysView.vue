@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-full w-full max-w-[430px] bg-driver-bg pb-28 text-driver-ink sm:max-w-none">
+  <div class="mx-auto min-h-full w-full max-w-[430px] overflow-x-hidden bg-driver-bg pb-28 text-driver-ink sm:max-w-2xl">
     <!-- Header -->
     <header
       class="sticky top-0 z-[25] flex items-center gap-3 border-b border-white/5 bg-driver-bg/90 px-4 py-3 backdrop-blur-md [-webkit-backdrop-filter:blur(12px)]"
