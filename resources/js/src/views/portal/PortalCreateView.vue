@@ -565,40 +565,19 @@
               <div class="flex gap-2">
                 <div class="relative min-w-0 flex-1">
                   <input
-                    v-model="targetSearchQ"
                     type="search"
+                    readonly
                     autocomplete="off"
                     role="combobox"
-                    :aria-expanded="targetDropdownOpen && targetSearchQ.trim().length >= 1"
-                    aria-controls="dw-target-search-list"
+                    :aria-expanded="targetPickerModalOpen"
+                    aria-controls="dw-target-picker-modal"
                     :placeholder="t('dispatch_wizard.create.targets_search_ph')"
-                    class="dw-input"
-                    @input="targetDropdownOpen = true"
-                    @focus="onTargetSearchFocus"
-                    @blur="onTargetSearchBlur"
-                    @keydown.enter.prevent="onTargetSearchEnter"
+                    class="dw-input cursor-pointer"
+                    data-testid="portal-targets-search"
+                    @focus="openTargetPickerModal"
+                    @click="openTargetPickerModal"
+                    @keydown.enter.prevent="openTargetPickerModal"
                   />
-                  <ul
-                    v-if="targetDropdownOpen && targetSearchQ.trim().length >= 1"
-                    id="dw-target-search-list"
-                    class="dw-combobox__menu"
-                    role="listbox"
-                  >
-                    <template v-if="targetSearchResults.length">
-                      <li v-for="opt in targetSearchResults" :key="opt">
-                        <button
-                          type="button"
-                          class="dw-combobox__option"
-                          @mousedown.prevent="pickTarget(opt)"
-                        >
-                          {{ opt }}
-                        </button>
-                      </li>
-                    </template>
-                    <li v-else class="dw-combobox__empty">
-                      {{ t('dispatch_wizard.create.targets_no_match') }}
-                    </li>
-                  </ul>
                 </div>
                 <button
                   type="button"
@@ -1246,6 +1225,95 @@
         </div>
       </div>
     </Transition>
+
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="targetPickerModalOpen"
+        id="dw-target-picker-modal"
+        class="fixed inset-0 z-[201] flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-[3px]"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="dw-target-picker-title"
+        data-testid="portal-targets-picker-modal"
+        @click.self="closeTargetPickerModal"
+      >
+        <div
+          class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl shadow-slate-900/20 ring-1 ring-black/5"
+          @click.stop
+        >
+          <div class="shrink-0 border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-sky-50/30 px-5 pb-4 pt-5">
+            <h3 id="dw-target-picker-title" class="text-base font-semibold leading-snug text-slate-900">
+              {{ t('dispatch_wizard.create.sec_targets') }}
+            </h3>
+            <p class="mt-1 text-xs leading-relaxed text-slate-600">
+              {{ t('dispatch_wizard.create.targets_hint') }}
+            </p>
+          </div>
+          <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4 sm:px-5">
+            <label class="sr-only" for="dw-target-modal-filter">{{
+              t('dispatch_wizard.create.targets_search_ph')
+            }}</label>
+            <input
+              id="dw-target-modal-filter"
+              ref="targetModalFilterEl"
+              v-model="targetModalFilterQ"
+              type="search"
+              autocomplete="off"
+              class="dw-input mb-4 w-full"
+              :placeholder="t('dispatch_wizard.create.targets_search_ph')"
+              data-testid="portal-targets-modal-filter"
+            />
+            <p
+              v-if="targetModalOptions.length === 0"
+              class="rounded-lg border border-dashed border-slate-200 bg-slate-50/80 px-4 py-6 text-center text-sm text-slate-600"
+            >
+              {{ t('dispatch_wizard.create.targets_no_match') }}
+            </p>
+            <div
+              v-else
+              class="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2"
+              role="group"
+              :aria-label="t('dispatch_wizard.create.sec_targets')"
+            >
+              <label
+                v-for="opt in targetModalOptions"
+                :key="opt"
+                class="flex cursor-pointer items-start gap-2.5 rounded-lg border border-transparent px-2 py-1.5 text-sm text-slate-800 transition hover:border-slate-200 hover:bg-slate-50"
+                :data-testid="`portal-target-option-${opt}`"
+              >
+                <input
+                  type="checkbox"
+                  class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
+                  :checked="form.targets.includes(opt)"
+                  @change="toggleTargetCheckbox(opt, $event.target.checked)"
+                />
+                <span class="leading-snug">{{ opt }}</span>
+              </label>
+            </div>
+          </div>
+          <div class="border-t border-slate-100 bg-slate-50/90 px-4 py-3 sm:flex sm:items-center sm:justify-between sm:gap-3">
+            <p v-if="form.targets.length" class="mb-2 text-xs text-slate-600 sm:mb-0">
+              {{ t('dispatch_wizard.create.targets_selected', { n: form.targets.length }) }}
+            </p>
+            <button
+              type="button"
+              class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 sm:ml-auto sm:w-auto"
+              data-testid="portal-targets-picker-close"
+              @click="closeTargetPickerModal"
+            >
+              {{ t('dispatch_wizard.create.library_close') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </Teleport>
 </template>
 
@@ -1616,9 +1684,10 @@ watch(
   },
 )
 
-// --- Đối tượng phân bổ: tìm trong danh sách chuẩn, + để thêm tùy chỉnh ---
-const targetSearchQ = ref('')
-const targetDropdownOpen = ref(false)
+// --- Đối tượng phân bổ: modal checkbox danh sách chuẩn, + để thêm tùy chỉnh ---
+const targetPickerModalOpen = ref(false)
+const targetModalFilterQ = ref('')
+const targetModalFilterEl = ref(null)
 const targetCustomAddOpen = ref(false)
 const customTargetInput = ref('')
 
@@ -1630,36 +1699,33 @@ function normalizeTargetSearch(s) {
     .trim()
 }
 
-const targetSearchResults = computed(() => {
-  const q = normalizeTargetSearch(targetSearchQ.value)
-  if (!q) return []
-  const selected = form.value.targets ?? []
-  return targetOptions.filter(
-    (opt) => !selected.includes(opt) && normalizeTargetSearch(opt).includes(q),
-  )
+const targetModalOptions = computed(() => {
+  const q = normalizeTargetSearch(targetModalFilterQ.value)
+  if (!q) return targetOptions
+  return targetOptions.filter((opt) => normalizeTargetSearch(opt).includes(q))
 })
 
-function onTargetSearchFocus() {
-  if (targetSearchQ.value.trim().length >= 1) targetDropdownOpen.value = true
+function openTargetPickerModal() {
+  targetPickerModalOpen.value = true
+  window.requestAnimationFrame(() => {
+    targetModalFilterEl.value?.focus?.()
+  })
 }
 
-function onTargetSearchBlur() {
-  window.setTimeout(() => {
-    targetDropdownOpen.value = false
-  }, 150)
+function closeTargetPickerModal() {
+  targetPickerModalOpen.value = false
+  targetModalFilterQ.value = ''
 }
 
-function pickTarget(val) {
-  if (!val || form.value.targets.includes(val)) return
-  form.value.targets.push(val)
-  targetSearchQ.value = ''
-  targetDropdownOpen.value = false
-}
-
-function onTargetSearchEnter() {
-  const first = targetSearchResults.value[0]
-  if (first) pickTarget(first)
-  else if (targetSearchQ.value.trim()) toggleTargetCustomAdd(true)
+function toggleTargetCheckbox(val, checked) {
+  if (!val) return
+  const list = form.value.targets
+  const idx = list.indexOf(val)
+  if (checked) {
+    if (idx === -1) list.push(val)
+  } else if (idx !== -1) {
+    list.splice(idx, 1)
+  }
 }
 
 function toggleTargetCustomAdd(forceOpen) {
@@ -1667,12 +1733,11 @@ function toggleTargetCustomAdd(forceOpen) {
     forceOpen === true ? true : forceOpen === false ? false : !targetCustomAddOpen.value
   targetCustomAddOpen.value = next
   if (next) {
-    const q = targetSearchQ.value.trim()
-    if (q && !targetSearchResults.value.length && !customTargetInput.value.trim()) {
+    const q = targetModalFilterQ.value.trim()
+    if (q && !targetModalOptions.value.length && !customTargetInput.value.trim()) {
       customTargetInput.value = q
     }
-    targetSearchQ.value = ''
-    targetDropdownOpen.value = false
+    closeTargetPickerModal()
   }
 }
 
