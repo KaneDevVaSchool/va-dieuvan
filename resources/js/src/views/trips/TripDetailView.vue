@@ -2793,8 +2793,10 @@ async function onApproveTransfer() {
         if (isOptimisticLockConflict(e)) {
             await load({ silent: true });
             assignMsg.value = t("trip_detail.coordination.lock_refresh_hint");
+            showAppError(assignMsg.value);
         } else {
             assignMsg.value = formatApiMessage(e);
+            showAppError(assignMsg.value);
         }
     } finally {
         assigning.value = false;

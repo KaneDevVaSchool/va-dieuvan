@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -47,6 +48,8 @@ return new class extends Migration
             $table->index(['uploaded_by', 'created_at'], 'attachments_uploader_created_idx');
             $table->index(['attachable_type', 'attachable_id', 'kind'], 'attachments_attachable_kind_idx');
         });
+
+        DB::statement('ALTER TABLE `attachments` MODIFY `file_binary` LONGBLOB NULL');
     }
 
     public function down(): void
