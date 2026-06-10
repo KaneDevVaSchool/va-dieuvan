@@ -24,6 +24,7 @@ export default {
           700: '#ad0043',
           800: '#9a0036',
           900: '#7d0029',
+          950: '#52001c',
           brand: '#9a0036',
         },
         /** Shell / fleet UI — trùng token với LayoutDriver & DriverDashboard */

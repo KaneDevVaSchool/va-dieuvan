@@ -472,7 +472,7 @@
               <th v-if="colVisible.notes" class="costs-th min-w-[6rem]">{{ t('costs_page.col_notes') }}</th>
               <th v-if="colVisible.trip" class="costs-th min-w-[5rem]">{{ t('costs_page.col_trip') }}</th>
               <th v-if="colVisible.trip_type" class="costs-th min-w-[7rem] whitespace-nowrap">{{ t('costs_page.col_trip_type') }}</th>
-              <th v-if="canReconcileCosts && colVisible.actions" class="costs-th min-w-[9rem] whitespace-nowrap">{{ t('costs_page.col_actions') }}</th>
+              <th v-if="canReconcileCosts && colVisible.actions" class="costs-th w-12 text-right">{{ t('costs_page.col_actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -546,9 +546,9 @@
               <td v-if="colVisible.trip" class="costs-td">
                 <RouterLink
                   v-if="c.trip_id"
-                  class="font-semibold text-teal-700 underline decoration-teal-700/30 underline-offset-2 hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-200"
+                  class="font-mono text-xs font-semibold text-teal-700 underline decoration-teal-700/30 underline-offset-2 hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-200 sm:text-sm"
                   :to="`/trips/${c.trip_id}`"
-                  >#{{ c.trip_id }}</RouterLink
+                  >{{ costTripCode(c) }}</RouterLink
                 >
                 <span
                   v-else-if="!isWizardEstimateLine(c)"
@@ -566,35 +566,47 @@
                   "
                 >{{ isWizardEstimateLine(c) ? estimateKindLabel(c) : typeLabel(c.type) }}</span>
               </td>
-              <td v-if="canReconcileCosts && colVisible.actions" class="costs-td">
-                <div v-if="!isWizardEstimateLine(c)" class="flex flex-wrap gap-1">
-                  <template v-if="isCostPendingDecision(c)">
-                    <button
-                      type="button"
-                      class="rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50"
-                      :disabled="decidingId != null"
-                      @click="quickApproveCost(c)"
-                    >
-                      {{ t('costs_page.action_approve') }}
-                    </button>
-                    <button
-                      type="button"
-                      class="rounded-md border border-rose-300 bg-white px-2 py-1 text-[11px] font-semibold text-rose-800 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-800 dark:bg-slate-900 dark:text-rose-200 dark:hover:bg-rose-950/40"
-                      :disabled="decidingId != null"
-                      @click="quickRejectCost(c)"
-                    >
-                      {{ t('costs_page.action_reject') }}
-                    </button>
-                  </template>
+              <td v-if="canReconcileCosts && colVisible.actions" class="costs-td text-right">
+                <AppRowActionsMenu
+                  v-if="!isWizardEstimateLine(c)"
+                  align="end"
+                  root-class="text-right"
+                  :aria-label="t('costs_page.col_actions')"
+                  :trigger-sr-only="t('costs_page.col_actions')"
+                  :disabled="decidingId != null || deletingCostId != null"
+                >
+                  <button
+                    v-if="isCostPendingDecision(c)"
+                    type="button"
+                    role="menuitem"
+                    class="costs-menu-item text-emerald-800 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
+                    @click="quickApproveCost(c)"
+                  >
+                    {{ t('costs_page.action_approve') }}
+                  </button>
+                  <button
+                    v-if="isCostPendingDecision(c)"
+                    type="button"
+                    role="menuitem"
+                    class="costs-menu-item text-rose-800 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950/40"
+                    @click="quickRejectCost(c)"
+                  >
+                    {{ t('costs_page.action_reject') }}
+                  </button>
+                  <div
+                    v-if="isCostPendingDecision(c)"
+                    class="my-1 border-t border-slate-100 dark:border-slate-700"
+                    role="separator"
+                  />
                   <button
                     type="button"
-                    class="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-700 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-rose-950/40 dark:hover:text-rose-300"
-                    :disabled="deletingCostId != null"
+                    role="menuitem"
+                    class="costs-menu-item text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
                     @click="openDeleteModal(c)"
                   >
                     {{ t('costs_page.action_delete') }}
                   </button>
-                </div>
+                </AppRowActionsMenu>
                 <span v-else class="text-[11px] text-slate-400">—</span>
               </td>
             </tr>
@@ -770,9 +782,9 @@
                 <td class="costs-td">
                   <RouterLink
                     :to="{ name: 'tripDetail', params: { id: row.trip_id } }"
-                    class="font-semibold text-teal-700 underline decoration-teal-700/30 underline-offset-2 hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-200"
+                    class="font-mono text-xs font-semibold text-teal-700 underline decoration-teal-700/30 underline-offset-2 hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-200 sm:text-sm"
                   >
-                    #{{ row.trip_id }}
+                    {{ formatTripCode(row.trip_id) }}
                   </RouterLink>
                 </td>
                 <td class="costs-td">
@@ -978,7 +990,7 @@
               <p
                 class="mt-2 rounded-lg border border-rose-200/80 bg-white/80 px-3 py-2 text-xs font-medium text-rose-900 dark:border-rose-800/60 dark:bg-rose-950/30 dark:text-rose-100"
               >
-                {{ t('costs_page.reject_modal_summary', { id: rejectTarget.id, trip: rejectTarget.trip_id ?? '—' }) }}
+                {{ t('costs_page.reject_modal_summary', { id: rejectTarget.id, trip: costTripCode(rejectTarget) }) }}
                 <span v-if="rejectTarget.amount != null" class="mt-1 block tabular-nums text-slate-600 dark:text-slate-300">
                   {{ formatVnd(rejectTarget.amount) }}
                 </span>
@@ -1059,7 +1071,7 @@
               <p
                 class="mt-2 rounded-lg border border-rose-200/80 bg-white/80 px-3 py-2 text-xs font-medium text-rose-900 dark:border-rose-800/60 dark:bg-rose-950/30 dark:text-rose-100"
               >
-                {{ t('costs_page.delete_modal_summary', { id: deleteTarget.id, trip: deleteTarget.trip_id ?? '—' }) }}
+                {{ t('costs_page.delete_modal_summary', { id: deleteTarget.id, trip: costTripCode(deleteTarget) }) }}
                 <span v-if="deleteTarget.amount != null" class="mt-1 block tabular-nums text-slate-600 dark:text-slate-300">
                   {{ formatVnd(deleteTarget.amount) }}
                 </span>
@@ -1155,7 +1167,8 @@ import {
 } from '../../api/costs'
 import { listTrips } from '../../api/trips'
 import { newIdempotencyKey } from '../../util/idempotency'
-import { formatVnd, formatVndDigitsInput, labelTripType } from '../../util/labels'
+import { formatTripCode, formatVnd, formatVndDigitsInput, labelTripType } from '../../util/labels'
+import AppRowActionsMenu from '../../components/ui/AppRowActionsMenu.vue'
 import { showAppErrorFromApi } from '../../composables/appMessage'
 import { useAuthStore } from '../../store'
 
@@ -1731,9 +1744,9 @@ const bpTripFilterSummaryShort = computed(() => {
     const dr = tr.dispatch_request ?? tr.dispatchRequest
     const o = (dr?.origin ?? '—').trim().slice(0, 22)
     const d = (dr?.destination ?? '—').trim().slice(0, 22)
-    return `#${tr.id} · ${o} → ${d}`
+    return `${formatTripCode(tr.id)} · ${o} → ${d}`
   }
-  return `#${bpFilters.trip_id}`
+  return formatTripCode(bpFilters.trip_id)
 })
 
 const selectedFilterTrip = computed(() => {
@@ -1746,7 +1759,7 @@ const selectedFilterTrip = computed(() => {
 const tripFilterSummaryFull = computed(() => {
   if (!filters.trip_id) return t('costs_page.trip_all')
   const tr = selectedFilterTrip.value
-  return tr ? formatTripPickerLabel(tr) : t('costs_page.trip_filter_chip', { id: filters.trip_id })
+  return tr ? formatTripPickerLabel(tr) : t('costs_page.trip_filter_chip', { id: formatTripCode(filters.trip_id) })
 })
 
 const tripFilterSummaryShort = computed(() => {
@@ -1756,9 +1769,9 @@ const tripFilterSummaryShort = computed(() => {
     const dr = tr.dispatch_request ?? tr.dispatchRequest
     const o = (dr?.origin ?? '—').trim().slice(0, 22)
     const d = (dr?.destination ?? '—').trim().slice(0, 22)
-    return `#${tr.id} · ${o} → ${d}`
+    return `${formatTripCode(tr.id)} · ${o} → ${d}`
   }
-  return `#${filters.trip_id}`
+  return formatTripCode(filters.trip_id)
 })
 
 const displayedItems = computed(() => {
@@ -1883,6 +1896,10 @@ function formatDateDMY(iso) {
   }
 }
 
+function costTripCode(c) {
+  return formatTripCode(c?.trip_id ?? c?.trip?.id)
+}
+
 function formatTripPickerLabel(tripRow) {
   const dr = tripRow.dispatch_request ?? tripRow.dispatchRequest
   const o = (dr?.origin ?? '—').trim().slice(0, 40)
@@ -1890,7 +1907,7 @@ function formatTripPickerLabel(tripRow) {
   const dep = formatDateDMY(tripRow.depart_at)
   const typSlug = dr?.trip_type ?? null
   const typStr = typSlug ? ` [${labelTripType(typSlug)}]` : ''
-  return `#${tripRow.id}${typStr} · ${o} → ${d} · ${dep}`
+  return `${formatTripCode(tripRow.id)}${typStr} · ${o} → ${d} · ${dep}`
 }
 
 async function loadTripPickerOptions() {
@@ -2276,5 +2293,9 @@ onActivated(() => {
 
 .costs-td--money {
   @apply text-right tabular-nums;
+}
+
+.costs-menu-item {
+  @apply flex w-full items-center px-3 py-2 text-left text-sm font-medium transition;
 }
 </style>
