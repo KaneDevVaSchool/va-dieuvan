@@ -1,5 +1,7 @@
 <template>
-  <div class="min-h-0 w-full bg-[#020B0B] pb-24 text-[#eaf8f5]">
+  <div
+    class="min-h-0 w-full bg-[#020B0B] pb-[max(6rem,calc(var(--driver-bottom-nav-height,3.5rem)+5rem+env(safe-area-inset-bottom)))] text-[#eaf8f5]"
+  >
     <div
       class="relative isolate w-full overflow-hidden rounded-b-[1.75rem] shadow-[0_10px_40px_-8px_rgba(34,211,238,0.18)] ring-1 ring-[#7fdcc8]/10 -mt-[env(safe-area-inset-top,0px)] pt-[env(safe-area-inset-top,0px)]"
     >

@@ -35,26 +35,46 @@
       {{ t('driver_home.empty_today_short') }}
     </p>
 
+    <TransitionGroup
+      v-else-if="isSingleTrip"
+      name="dash-trip-carousel"
+      tag="div"
+      class="flex w-full min-w-0 flex-col gap-3 pb-1"
+    >
+      <DriverTripCard
+        v-for="trip in trips"
+        :key="trip.id"
+        class="w-full min-w-0"
+        layout="stacked"
+        :trip="trip"
+        :busy="startBusyTripId != null && String(startBusyTripId) === String(trip.id)"
+        data-testid="driver-dash-trip-card"
+        @start="emit('start-trip', $event)"
+      />
+    </TransitionGroup>
+
     <div
       v-else
       class="-mx-3 snap-x snap-mandatory overflow-x-auto px-3 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       style="-webkit-overflow-scrolling: touch"
+      data-testid="driver-dash-trip-carousel"
     >
       <TransitionGroup
         name="dash-trip-carousel"
         tag="div"
-        class="flex w-max max-w-none snap-x snap-mandatory gap-3 pb-2"
+        class="flex w-max max-w-none snap-x snap-mandatory gap-3 pb-2 pl-0.5 pr-3"
       >
         <div
           v-for="trip in trips"
           :key="trip.id"
-          class="dash-carousel-card snap-center"
+          class="dash-carousel-card snap-center first:snap-start last:pr-[max(0.75rem,env(safe-area-inset-right))]"
         >
           <DriverTripCard
-            v-memo="[trip.id, trip.status, trip.depart_at, trip.depart_date, startBusyTripId]"
-            class="w-[min(88vw,20rem)] shrink-0 will-change-transform"
+            class="w-[min(82vw,20rem)] shrink-0 will-change-transform"
+            layout="carousel"
             :trip="trip"
             :busy="startBusyTripId != null && String(startBusyTripId) === String(trip.id)"
+            data-testid="driver-dash-trip-card"
             @start="emit('start-trip', $event)"
           />
         </div>
@@ -64,13 +84,14 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { TransitionGroup } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import DriverTripCard from '../DriverTripCard.vue'
 import DriverTodayEmptyState from '../DriverTodayEmptyState.vue'
 
-defineProps({
+const props = defineProps({
   trips: { type: Array, required: true },
   /** Skeleton khi đang tải lần đầu và chưa có dữ liệu */
   listLoading: { type: Boolean, default: false },
@@ -84,6 +105,8 @@ defineProps({
 const emit = defineEmits(['start-trip'])
 
 const { t } = useI18n()
+
+const isSingleTrip = computed(() => props.trips.length === 1)
 </script>
 
 <style scoped>

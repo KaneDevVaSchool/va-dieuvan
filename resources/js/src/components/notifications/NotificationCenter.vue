@@ -74,85 +74,6 @@
         </div>
 
         <div
-          v-if="isDriverApp"
-          class="border-b border-slate-100 px-3 py-2.5 dark:border-slate-800"
-        >
-          <!-- All set: permission granted + push subscribed -->
-          <div
-            v-if="notificationPermission === 'granted' && notifStore.pushState === 'subscribed'"
-            class="flex items-center gap-3 rounded-2xl bg-emerald-50 px-4 py-3 dark:bg-emerald-950/30"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true">
-              <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clip-rule="evenodd" />
-            </svg>
-            <p class="text-base font-semibold text-emerald-800 dark:text-emerald-200">
-              {{ t('notify.driver_status_on') }}
-            </p>
-          </div>
-
-          <!-- Notifications blocked by user -->
-          <div
-            v-else-if="notificationPermission === 'denied'"
-            class="rounded-2xl bg-amber-50 px-4 py-3 dark:bg-amber-950/30"
-          >
-            <p class="text-base font-semibold text-amber-900 dark:text-amber-100">
-              {{ t('notify.driver_denied_title') }}
-            </p>
-            <p class="mt-1 text-sm leading-relaxed text-amber-700 dark:text-amber-300">
-              {{ t('notify.driver_denied_body') }}
-            </p>
-          </div>
-
-          <!-- Setup flow: chưa granted hoặc dev -->
-          <div v-else class="flex flex-col gap-2.5">
-            <!-- Step 1: Request browser permission (or combined flow if prod) -->
-            <button
-              v-if="notificationPermission !== 'granted'"
-              type="button"
-              :disabled="pushLoading"
-              class="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-sky-600 text-base font-bold text-white shadow-sm active:bg-sky-700 disabled:opacity-60 dark:bg-sky-600 dark:active:bg-sky-500"
-              @click="onEnableAll"
-            >
-              <span
-                v-if="pushLoading"
-                class="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"
-                aria-hidden="true"
-              />
-              <span v-else>{{ t('notify.driver_enable_btn') }}</span>
-            </button>
-
-            <!-- Prod: đã cho quyền trình duyệt nhưng chưa đăng ký push (VAPID) -->
-            <button
-              v-if="notificationPermission === 'granted' && isProd && notifStore.pushState !== 'subscribed'"
-              type="button"
-              :disabled="pushLoading"
-              class="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-[#7fdcc8] text-base font-bold text-[#020B0B] shadow-sm active:opacity-90 disabled:opacity-60"
-              @click="onEnableAll"
-            >
-              <span
-                v-if="pushLoading"
-                class="h-5 w-5 animate-spin rounded-full border-2 border-[#020B0B] border-t-transparent"
-                aria-hidden="true"
-              />
-              <span v-else>{{ t('notify.driver_enable_push') }}</span>
-            </button>
-
-            <!-- Permission granted, non-prod: show done state -->
-            <div
-              v-if="notificationPermission === 'granted' && !isProd"
-              class="flex items-center gap-3 rounded-2xl bg-emerald-50 px-4 py-3 dark:bg-emerald-950/30"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true">
-                <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clip-rule="evenodd" />
-              </svg>
-              <p class="text-base font-semibold text-emerald-800 dark:text-emerald-200">
-                {{ t('notify.driver_step_done') }}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div
           v-if="notifStore.loading"
           class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-2 py-2"
           aria-busy="true"
@@ -236,13 +157,12 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { BellIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import NotificationItem from './NotificationItem.vue'
 import { buildStaffPrefixedPath } from '../../config/dispatchWebBase'
-import { showAppError, showAppSuccess } from '../../composables/appMessage'
 import { useNotificationStore } from '../../store/notificationCenter'
 import { useAuthStore } from '../../store'
 import { useSidebarLayout } from '../../composables/useSidebarLayout'
@@ -253,7 +173,6 @@ const notifStore = useNotificationStore()
 const router = useRouter()
 const route = useRoute()
 const isDriverApp = computed(() => !!route.meta?.driverApp)
-const isProd = import.meta.env.PROD
 const hubPath = computed(() =>
   isDriverApp.value ? '/driver' : buildStaffPrefixedPath('/notifications'),
 )
@@ -276,43 +195,6 @@ const showAudienceTabs = computed(() => {
   if (u.is_superadmin) return true
   return (auth.roleNames ?? []).some((name) => name === 'admin')
 })
-
-const notificationPermission = ref('default')
-const pushLoading = ref(false)
-const attemptedDriverPushThisOpen = ref(false)
-
-function syncNotifPerm() {
-  notificationPermission.value = typeof Notification !== 'undefined'
-    ? Notification.permission
-    : 'denied'
-}
-
-function showPushResult(result) {
-  if (result?.ok) {
-    showAppSuccess(t('notify.push_ok'))
-  } else if (result?.reason === 'denied') {
-    showAppError(t('notify.push_err_denied'))
-  } else if (result?.reason === 'network') {
-    showAppError(t('notify.push_err_network'))
-  } else if (result && !result.ok && result.reason !== 'unsupported' && result.reason !== 'no_vapid') {
-    showAppError(t('notify.push_err_api'))
-  }
-}
-
-async function onEnableAll() {
-  pushLoading.value = true
-  try {
-    await notifStore.requestBrowserNotificationPermission()
-    syncNotifPerm()
-    if (typeof Notification !== 'undefined' && Notification.permission === 'granted' && isProd) {
-      const result = await notifStore.registerWebPush()
-      showPushResult(result)
-    }
-  } finally {
-    pushLoading.value = false
-    syncNotifPerm()
-  }
-}
 
 function startOfLocalDay(d) {
   const x = new Date(d)
@@ -578,7 +460,6 @@ function onBellClick() {
 }
 
 onMounted(() => {
-  syncNotifPerm()
   if (auth.isLoggedIn) {
     notifStore.startPolling()
   }
@@ -599,36 +480,4 @@ watch(
   },
 )
 
-watch(
-  () => [notifStore.panelOpen, route.path],
-  () => {
-    if (notifStore.panelOpen && isDriverApp.value) {
-      syncNotifPerm()
-    }
-  },
-)
-
-watch(
-  () => notifStore.panelOpen,
-  async (open) => {
-    if (!open) {
-      attemptedDriverPushThisOpen.value = false
-      return
-    }
-    await nextTick()
-    syncNotifPerm()
-    if (!isDriverApp.value || !isProd) return
-    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return
-    if (notifStore.pushState === 'subscribed') return
-    if (attemptedDriverPushThisOpen.value) return
-    attemptedDriverPushThisOpen.value = true
-    try {
-      // Chỉ đăng ký nền: không mở AppMessageModal (tránh chặn UX khi user mở panel để đọc thông báo;
-      // lỗi mạng/timeouts push hay bị nhầm là “bấm thông báo bị lỗi”).
-      await notifStore.registerWebPush()
-    } finally {
-      syncNotifPerm()
-    }
-  },
-)
 </script>

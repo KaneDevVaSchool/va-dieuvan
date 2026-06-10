@@ -1,12 +1,20 @@
 <template>
   <div
-    class="flex w-full min-w-0 flex-col gap-0 rounded-2xl text-left outline-none transition"
+    class="flex w-full min-w-0 flex-col gap-0 rounded-2xl text-left outline-none transition touch-manipulation"
     :class="rootClass"
+    data-testid="driver-trip-card"
     @click="onRootClick"
   >
     <!-- Header -->
-    <div class="flex items-start justify-between gap-2 px-4 pt-4">
-      <div class="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+    <div
+      class="flex gap-2 px-4 pt-4"
+      :class="
+        isStackedLayout
+          ? 'flex-col items-stretch'
+          : 'flex-col items-stretch sm:flex-row sm:items-start sm:justify-between'
+      "
+    >
+      <div class="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 sm:gap-2">
         <span
           class="inline-flex shrink-0 rounded-lg px-2.5 py-1 text-xs font-bold uppercase tracking-wide"
           :style="typeBadgeStyle"
@@ -20,13 +28,16 @@
         >
           {{ shiftLabel }}
         </span>
-        <span class="text-sm font-medium text-[#64748b]">
+        <span
+          class="min-w-0 max-w-full truncate text-xs font-medium text-[#94a3b8] sm:text-sm"
+          :title="tripCode"
+        >
           {{ tripCode }}
         </span>
       </div>
       <span
-        class="inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold"
-        :class="statusPillClass"
+        class="inline-flex w-fit max-w-full items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold leading-tight"
+        :class="[statusPillClass, isStackedLayout ? 'self-start' : 'shrink-0 sm:max-w-[11rem] sm:truncate']"
       >
         <component :is="statusIcon" v-if="statusIcon" class="h-3.5 w-3.5" />
         {{ statusLabelText }}
@@ -38,7 +49,7 @@
       <span class="text-[22px] font-bold tabular-nums leading-none" :class="timeClass">
         {{ pickupTime }}
       </span>
-      <span class="text-sm font-medium text-[#64748b]">
+      <span class="text-sm font-medium text-[#94a3b8]">
         {{ dayContextLabel }}
       </span>
     </div>
@@ -63,11 +74,7 @@
     <!-- Footer -->
     <div
       class="mt-4 flex gap-2 px-4 pb-4"
-      :class="
-        cardMode === 'pending' && showPendingActions
-          ? 'flex-col'
-          : 'items-center justify-between'
-      "
+      :class="footerLayoutClass"
     >
       <p
         class="min-w-0 text-sm text-[#94a3b8]"
@@ -81,7 +88,9 @@
       <template v-if="cardMode === 'in_progress'">
         <button
           type="button"
-          class="inline-flex shrink-0 items-center gap-1 rounded-xl bg-[#22c55e] px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-black/25"
+          class="inline-flex min-h-12 items-center justify-center gap-1 rounded-xl bg-[#22c55e] px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-black/25 active:scale-[0.98]"
+          :class="primaryActionClass"
+          data-testid="driver-trip-card-open"
           @click.stop="goDetail"
         >
           {{ t('driver_home.card_open_trip') }}
@@ -90,8 +99,10 @@
       <template v-else-if="cardMode === 'confirmed'">
         <button
           type="button"
-          class="inline-flex shrink-0 items-center justify-center rounded-xl bg-[#22c55e] px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-black/20 disabled:cursor-not-allowed disabled:opacity-50"
+          class="inline-flex min-h-12 items-center justify-center rounded-xl bg-[#22c55e] px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-black/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+          :class="primaryActionClass"
           :disabled="busy"
+          data-testid="driver-trip-card-start"
           @click.stop="emit('start', trip.id)"
         >
           {{ t('driver_home.card_start') }}
@@ -153,6 +164,8 @@ const props = defineProps({
   /** Hiển thị nút Xác nhận / Từ chối (banner chờ xác nhận). */
   showPendingActions: { type: Boolean, default: false },
   busy: { type: Boolean, default: false },
+  /** `stacked` = full-width dashboard; `carousel` = horizontal snap strip */
+  layout: { type: String, default: 'carousel' },
 })
 
 const emit = defineEmits(['start', 'confirm', 'decline'])
@@ -161,6 +174,8 @@ const router = useRouter()
 const { locale, t } = useI18n()
 
 const tripRaw = computed(() => props.trip)
+
+const isStackedLayout = computed(() => props.layout === 'stacked')
 
 function drOf(t) {
   return t?.dispatch_request ?? t?.dispatchRequest ?? {}
@@ -224,6 +239,16 @@ const cardMode = computed(() => {
   if (s === 'incident') return 'pending'
   return 'pending'
 })
+
+const footerLayoutClass = computed(() => {
+  if (cardMode.value === 'pending' && props.showPendingActions) return 'flex-col'
+  if (isStackedLayout.value) return 'flex-col items-stretch gap-3'
+  return 'flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'
+})
+
+const primaryActionClass = computed(() =>
+  isStackedLayout.value ? 'w-full shrink-0' : 'w-full shrink-0 sm:w-auto',
+)
 
 const statusLabelText = computed(() => {
   const m = cardMode.value
