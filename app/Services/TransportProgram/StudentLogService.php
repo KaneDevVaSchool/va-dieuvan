@@ -47,7 +47,12 @@ class StudentLogService
             if ($execution->total_absent > 0) {
                 $execution->decrement('total_absent');
             }
-            $this->attendance->markPresent($log->execution->programDay, $log->student_id, $actorId);
+            $this->attendance->markPresent(
+                $log->execution->programDay,
+                $log->student_id,
+                $actorId,
+                $log->execution->shift,
+            );
         }
         $log->execution->increment('total_boarded');
 
@@ -122,6 +127,7 @@ class StudentLogService
             $category,
             $reasonCode,
             syncExecution: false,
+            shift: $log->execution->shift,
         );
 
         return $log->fresh();
@@ -165,7 +171,7 @@ class StudentLogService
         if ($execution->total_absent > 0) {
             $execution->decrement('total_absent');
         }
-        $this->attendance->unmarkAbsent($log->execution->programDay, $log->student_id, $actorId);
+        $this->attendance->unmarkAbsent($log->execution->programDay, $log->student_id, $actorId, $log->execution->shift);
         $this->audit->log($actorId, 'log.absence_undone', $log, $log->execution->program);
 
         return $log->fresh();

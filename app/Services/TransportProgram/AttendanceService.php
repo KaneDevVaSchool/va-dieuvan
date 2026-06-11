@@ -12,7 +12,9 @@ use Illuminate\Support\Facades\DB;
 class AttendanceService
 {
     public const STATUS_NOT_STARTED = 'not_started';
+
     public const STATUS_DRAFT = 'draft';
+
     public const STATUS_CONFIRMED = 'confirmed';
 
     public function __construct(
@@ -545,9 +547,16 @@ class AttendanceService
 
         $map = [];
         foreach ($execution->studentLogs()->get(['student_id', 'boarded_at', 'final_status']) as $log) {
-            if ($log->final_status === TpTripStudentLog::FINAL_BOARDED && $log->boarded_at) {
-                $map[(int) $log->student_id] = $log->boarded_at->toIso8601String();
+            if (! $log->boarded_at) {
+                continue;
             }
+            if (! in_array($log->final_status, [
+                TpTripStudentLog::FINAL_BOARDED,
+                TpTripStudentLog::FINAL_ALIGHTED,
+            ], true)) {
+                continue;
+            }
+            $map[(int) $log->student_id] = $log->boarded_at->toIso8601String();
         }
 
         return $map;

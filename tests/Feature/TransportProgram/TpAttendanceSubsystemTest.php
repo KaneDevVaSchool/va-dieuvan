@@ -232,6 +232,45 @@ class TpAttendanceSubsystemTest extends TestCase
         Carbon::setTestNow();
     }
 
+    public function test_boarded_at_still_visible_on_attendance_after_driver_alights(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-07-03 06:20:00'));
+
+        $driver = Driver::create(['full_name' => 'TX alight']);
+        $result = app(CreateTransportProgramAction::class)->execute([
+            'name' => 'CT alight attendance',
+            'departure_time' => '06:30',
+            'return_time' => '17:00',
+            'start_date' => Carbon::today()->toDateString(),
+            'end_date' => Carbon::today()->toDateString(),
+            'runs_on' => ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+            'default_driver_id' => $driver->id,
+            'settings' => [
+                'morning' => ['enabled' => true, 'departure' => '06:30', 'arrival' => '07:30'],
+                'afternoon' => ['enabled' => true, 'departure' => '17:00', 'arrival' => '18:00'],
+            ],
+        ], null);
+
+        $program = TpProgram::findOrFail($result['program']['id']);
+        $student = TpStudent::create(['code' => 'AL001', 'full_name' => 'HS alight', 'status' => 'active', 'class_name' => '6A']);
+        app(ProgramEnrollmentService::class)->enrollBulk($program, [$student->id], null);
+        $day = $program->days()->orderBy('scheduled_date')->first();
+
+        $execution = app(TripExecutionService::class)->start($day->fresh(), $driver, null, 'morning');
+        $log = $execution->studentLogs()->where('student_id', $student->id)->firstOrFail();
+        $logService = app(StudentLogService::class);
+        $logService->board($log, null);
+        $logService->alight($log->fresh(), null);
+
+        $item = collect(app(AttendanceService::class)->getAttendance($day->fresh(), 'morning')['items'])
+            ->firstWhere('student_id', $student->id);
+
+        $this->assertNotEmpty($item['boarded_at']);
+        $this->assertStringContainsString('06:20', Carbon::parse($item['boarded_at'])->format('H:i'));
+
+        Carbon::setTestNow();
+    }
+
     public function test_board_rejects_when_student_already_boarded_or_alighted(): void
     {
         $driver = Driver::create(['full_name' => 'TX guard']);
