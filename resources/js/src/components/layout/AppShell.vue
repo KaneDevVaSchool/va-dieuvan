@@ -1,7 +1,7 @@
 <template>
   <div
     :class="[
-      'h-dvh min-h-0 w-full overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100',
+      'h-full min-h-0 w-full overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100',
       'supports-[padding:max(0px)]:pt-[env(safe-area-inset-top)] supports-[padding:max(0px)]:pb-[env(safe-area-inset-bottom)]',
       isVertical ? 'flex flex-row' : 'flex flex-col',
     ]"
@@ -10,7 +10,7 @@
     <main
       id="app-main-scroll"
       :class="[
-        'flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-y-contain scrollbar-hidden px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5 lg:px-8 lg:py-6',
+        'flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-y-contain bg-slate-50 scrollbar-hidden px-3 py-3 dark:bg-slate-950 sm:px-4 sm:py-4 md:px-6 md:py-5 lg:px-8 lg:py-6',
         isHorizontalMobilePad,
       ]"
     >

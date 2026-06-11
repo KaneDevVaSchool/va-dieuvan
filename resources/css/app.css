@@ -40,11 +40,15 @@
   }
 }
 
-/* Smooth defaults — nền tối khớp app tài xế / PWA, tránh flash trắng khi cuộn hoặc vùng system UI */
+/* Smooth defaults — nền staff (slate); driver PWA dùng .driver-scroll-lock bên dưới */
 html,
 body {
   height: 100%;
-  background-color: #020b0b;
+  background-color: rgb(248 250 252);
+}
+
+html.dark body {
+  background-color: rgb(2 6 23);
 }
 
 /* Splash PWA — ẩn sau khi Vue mount (main.js) */
@@ -318,6 +322,7 @@ html.driver-scroll-lock body {
   height: 100%;
   overflow: hidden;
   overscroll-behavior: none;
+  background-color: #020b0b;
 }
 
 /* --- Mobile polish: bỏ tap-highlight xấu, tắt double-tap zoom delay --- */

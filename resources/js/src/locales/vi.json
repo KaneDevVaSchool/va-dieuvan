@@ -88,7 +88,7 @@
         "requests": "Yêu cầu điều xe",
         "new_request": "Tạo yêu cầu",
         "trips": "Chuyến đi",
-        "costs": "Ghi chú",
+        "costs": "Chi phí",
         "cargo": "Hàng hóa",
         "resources": "Quản lý nguồn lực",
         "payments": "Đối Soát",
@@ -115,7 +115,7 @@
         "bottom_dispatcher": "Điều vận",
         "bottom_requests": "Yêu cầu",
         "bottom_trips": "Chuyến",
-        "bottom_costs": "Ghi chú",
+        "bottom_costs": "Chi phí",
         "bottom_notifications": "Thông báo",
         "bar": {
             "section_ops": "Điều vận",
