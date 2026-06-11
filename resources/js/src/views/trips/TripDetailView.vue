@@ -2066,7 +2066,18 @@ const coordinationSeatTotals = computed(() => {
     if (!p) return null;
 
     let internalCap = 0;
-    if (p.vehicle_id != null) {
+    const internalIds = Array.isArray(p.internal_vehicle_ids)
+        ? p.internal_vehicle_ids
+        : [];
+    if (internalIds.length) {
+        for (const vid of internalIds) {
+            const vv = vehicles.value.find(
+                (x) => Number(x.id) === Number(vid),
+            );
+            const n = Number(vv?.seat_count);
+            if (Number.isFinite(n) && n > 0) internalCap += Math.floor(n);
+        }
+    } else if (p.vehicle_id != null) {
         const vv = vehicles.value.find(
             (x) => Number(x.id) === Number(p.vehicle_id),
         );

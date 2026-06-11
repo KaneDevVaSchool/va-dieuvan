@@ -39,30 +39,14 @@
       </template>
 
       <div class="space-y-2.5 pt-0.5">
-        <div
-          class="grid grid-cols-1 gap-2.5 lg:grid-cols-2"
-          :class="
-            hideInternalVehicleSection || hideInternalDriverSection ? 'lg:grid-cols-1' : ''
-          "
-        >
-        <div
+        <div class="flex flex-col gap-2.5">
+        <InternalVehicleStrip
           v-if="!hideInternalVehicleSection"
-          class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900/50"
-        >
-          <ResourceSection
-            v-model="selected.internalVehicles"
-            :options="internalVehicleOptions"
-            :is-loading="isLoading"
-            :disabled="disabled"
-            show-native-select
-            inline-native-select
-            :native-select-placeholder="t('trip_detail.coordination.resource_native_pick_vehicle')"
-            :title="t('trip_detail.coordination.resource_section_internal_title')"
-            :subtitle="t('trip_detail.coordination.resource_section_internal_sub')"
-            :placeholder="t('trip_detail.coordination.resource_section_internal_ph')"
-            :icon="TruckIcon"
-          />
-        </div>
+          v-model="selected.internalVehicles"
+          :options="internalVehicleOptions"
+          :is-loading="isLoading"
+          :disabled="disabled"
+        />
 
         <div
           v-if="!hideInternalDriverSection"
@@ -192,10 +176,10 @@ import { useI18n } from 'vue-i18n'
 import {
   BuildingOfficeIcon,
   MapPinIcon,
-  TruckIcon,
   UserIcon,
 } from '@heroicons/vue/24/outline'
 import CollapsiblePanelSection from './CollapsiblePanelSection.vue'
+import InternalVehicleStrip from './InternalVehicleStrip.vue'
 import ResourceSection from './ResourceSection.vue'
 import SupplementTransportSection from './SupplementTransportSection.vue'
 import DriverWorkloadBadge from './DriverWorkloadBadge.vue'
@@ -340,11 +324,12 @@ const unifiedCollapsedSummary = computed(() => {
   return parts.filter(Boolean).join(' · ')
 })
 
-const internalSeatCapacity = computed(() => {
-  const v = selected.value.internalVehicles[0]
-  const n = Number(v?.seatCount)
-  return Number.isFinite(n) && n > 0 ? n : 0
-})
+const internalSeatCapacity = computed(() =>
+  selected.value.internalVehicles.reduce((acc, v) => {
+    const n = Number(v?.seatCount)
+    return acc + (Number.isFinite(n) && n > 0 ? Math.floor(n) : 0)
+  }, 0),
+)
 
 const capacityGapRemaining = computed(() => {
   const need = minSeatsNeeded()
@@ -431,9 +416,13 @@ function syncInternalVehicleToDriver() {
   if (!d || !Number.isFinite(Number(d.id))) return
   const veh = findBestVehicleForDriver(Number(d.id))
   if (!veh) return
-  const cur = selected.value.internalVehicles[0]
-  if (cur && Number(cur.id) === Number(veh.id)) return
-  selected.value.internalVehicles = [veh]
+  const list = selected.value.internalVehicles
+  if (list.some((x) => Number(x.id) === Number(veh.id))) return
+  if (list.length === 0) {
+    selected.value.internalVehicles = [veh]
+    return
+  }
+  selected.value.internalVehicles = [...list, veh]
 }
 
 watch(
