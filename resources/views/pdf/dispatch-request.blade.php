@@ -18,31 +18,13 @@
         $useBranding = ! $isCargo;
     @endphp
     @php
-        $garbataDir = storage_path('fonts/garbata/');
-        $garbataFaces = [
-            ['GarbataTrial-Regular',    'normal', 'normal'],
-            ['GarbataTrial-Italic',     'italic', 'normal'],
-            ['GarbataTrial-Bold',       'normal', 'bold'],
-            ['GarbataTrial-BoldItalic', 'italic', 'bold'],
-            ['GarbataTrial-Medium',     'normal', '500'],
-            ['GarbataTrial-Light',      'normal', '300'],
-        ];
-        $fontFaceCss = '';
-        foreach ($garbataFaces as [$gFile, $gStyle, $gWeight]) {
-            $absPath = $garbataDir . $gFile . '.ttf';
-            if (! file_exists($absPath)) {
-                continue;
-            }
-            $path = str_replace('\\', '/', $absPath);
-            $fontFaceCss .= "@font-face { font-family: 'GarbataTrial'; font-style: {$gStyle}; font-weight: {$gWeight}; src: url(\"{$path}\") format('truetype'); }\n";
-        }
-        $pdfFontFamily = "'GarbataTrial', sans-serif";
-        $pdfTabularFont = "'DejaVu Sans', sans-serif";
+        // Fonts pre-installed under storage/fonts (see installed-fonts.json). Do not use @font-face:
+        // Dompdf re-registers fonts on each request and writes installed-fonts.json (needs writable storage).
+        $pdfFontFamily = 'garbatatrial, sans-serif';
+        $pdfTabularFont = 'dejavu sans, sans-serif';
         $pdfTextColor = '#000';
     @endphp
     <style>
-        {!! $fontFaceCss !!}
-
         @page {
             margin: {{ $pageMarginTop }} {{ $pageMarginX }} {{ $pageMarginBot }} {{ $pageMarginX }};
             size: A4 {{ $pageOrient }};

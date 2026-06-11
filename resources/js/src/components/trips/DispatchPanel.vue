@@ -1,37 +1,12 @@
 <template>
     <section
-        class="overflow-visible rounded-2xl bg-white shadow-sm shadow-slate-900/5 print:hidden dark:bg-slate-950/40 dark:shadow-black/25"
+        class="flex min-h-0 flex-col overflow-hidden rounded-2xl bg-white shadow-sm shadow-slate-900/5 print:hidden dark:bg-slate-950/40 dark:shadow-black/25"
         :aria-label="t('trip_detail.coordination.title')"
     >
-        <div class="space-y-3.5 p-3.5">
-            <!-- Header: chip label + badges + frozen status -->
-            <div class="flex items-center justify-between gap-2">
-                <span
-                    class="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:bg-slate-800/90 dark:text-slate-400"
-                >
-                    {{ t("trip_detail.coordination.title") }}
-                </span>
-                <div class="flex shrink-0 flex-wrap items-center justify-end gap-2">
-                    <span
-                        v-if="capacityBannerText"
-                        class="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#FAEEDA] px-2.5 py-0.5 text-[11px] font-medium text-[#854F0B] shadow-sm shadow-amber-900/5 dark:bg-amber-950/45 dark:text-[#F2C07D]"
-                    >
-                        <ExclamationTriangleIcon class="size-3 shrink-0" aria-hidden="true" />
-                        {{ t("trip_detail.coordination.capacity_short_badge") }}
-                    </span>
-                    <span
-                        v-if="coordinationActionsLocked"
-                        class="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-amber-100/90 px-2.5 py-1 text-amber-800 shadow-sm shadow-amber-900/5 dark:bg-amber-950/50 dark:text-amber-200"
-                        role="img"
-                        :aria-label="
-                            t('trip_detail.coordination.actions_locked_after_assign')
-                        "
-                    >
-                        <LockClosedIcon class="size-3 shrink-0" aria-hidden="true" />
-                    </span>
-                </div>
-            </div>
-
+        <div
+            class="min-h-0 flex-1 space-y-3.5 overflow-y-auto overscroll-y-contain p-3.5"
+            data-testid="dispatch-panel-scroll"
+        >
             <div
                 v-if="coordinationActionsLocked"
                 class="flex items-start gap-2.5 rounded-2xl bg-slate-100/80 px-3.5 py-2.5 shadow-inner shadow-slate-900/5 dark:bg-slate-800/50 dark:shadow-black/20"
@@ -46,56 +21,6 @@
                 </p>
             </div>
 
-            <!-- Departure datetime -->
-            <CollapsiblePanelSection
-                v-if="canRescheduleTrip"
-                :title="t('trip_detail.coordination.section_reschedule_title')"
-                :summary-collapsed="rescheduleCollapsedSummary"
-                :default-expanded="!coordinationActionsLocked"
-                :persist-key="collapseStorageKey('reschedule')"
-            >
-                <div class="rounded-xl bg-slate-100/50 p-3 shadow-inner shadow-slate-900/5 dark:bg-slate-900/25 dark:shadow-black/15">
-                    <div
-                        class="flex flex-nowrap items-center gap-2 overflow-x-auto"
-                    >
-                        <span class="shrink-0 text-[11px] font-semibold tracking-wide text-slate-500 dark:text-slate-400">
-                            {{ t("trip_detail.reschedule.depart_label") }}
-                        </span>
-                        <input
-                            :value="rescheduleDepartLocal"
-                            type="datetime-local"
-                            class="min-w-0 flex-1 shrink rounded-xl bg-white px-2.5 py-1.5 text-[13px] font-normal text-slate-800 shadow-inner shadow-slate-900/5 outline-none focus:bg-white focus:shadow-md focus:shadow-slate-900/10 disabled:opacity-55 dark:bg-slate-800/90 dark:text-slate-100 dark:shadow-black/25 dark:focus:shadow-lg sm:min-w-[10rem]"
-                            :disabled="coordinationActionsLocked"
-                            @input="onRescheduleDateInput"
-                        />
-                        <button
-                            type="button"
-                            class="shrink-0 rounded-xl bg-white px-2.5 py-1.5 text-[12px] font-medium text-slate-800 shadow-sm shadow-slate-900/10 hover:bg-slate-50 disabled:opacity-50 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700/80 dark:shadow-black/25"
-                            :disabled="rescheduling || coordinationActionsLocked"
-                            @click="$emit('reschedule')"
-                        >
-                            <span
-                                v-if="rescheduling"
-                                class="mr-1 inline-block h-2.5 w-2.5 animate-spin rounded-full border-2 border-slate-300 border-t-[#8B1A1A] dark:border-slate-600 dark:border-t-amber-200"
-                            />
-                            {{ t("trip_detail.reschedule.save") }}
-                        </button>
-                    </div>
-                    <div
-                        v-if="rescheduleMsg"
-                        class="mt-2 rounded-xl px-2.5 py-1.5 text-[12px] font-normal leading-snug shadow-sm"
-                        :class="
-                            rescheduleFeedbackIsError
-                                ? 'bg-rose-50 text-rose-900 dark:bg-rose-950/40 dark:text-rose-100'
-                                : 'bg-emerald-50 text-emerald-900 dark:bg-emerald-950/35 dark:text-emerald-100'
-                        "
-                        role="status"
-                    >
-                        {{ rescheduleMsg }}
-                    </div>
-                </div>
-            </CollapsiblePanelSection>
-
             <!-- Capacity shortfall -->
             <div
                 v-if="capacityBannerText"
@@ -108,97 +33,6 @@
                 />
                 <span class="min-w-0 leading-snug">{{ capacityBannerText }}</span>
             </div>
-
-            <CollapsiblePanelSection
-                :title="t('trip_detail.coordination.schedule_alerts_heading')"
-                :summary-collapsed="scheduleSectionSummaryCollapsed"
-                :persist-key="collapseStorageKey('schedule')"
-            >
-                <template #header-end>
-                    <button
-                        type="button"
-                        class="rounded-xl p-2 text-slate-500 transition-colors hover:bg-white/75 hover:text-slate-800 dark:hover:bg-slate-800/70 dark:hover:text-slate-100"
-                        :aria-label="
-                            t('trip_detail.coordination.open_schedule_popup_aria')
-                        "
-                        @click.stop="scheduleDetailPopupOpen = true"
-                    >
-                        <ArrowsPointingOutIcon class="size-4 shrink-0" aria-hidden="true" />
-                    </button>
-                </template>
-                <div>
-                    <div
-                        class="flex items-center gap-3 rounded-2xl bg-gradient-to-br from-slate-50 via-white to-slate-50/90 px-3.5 py-3 shadow-sm shadow-slate-900/5 dark:from-slate-900/50 dark:via-slate-900/35 dark:to-slate-950/60 dark:shadow-black/25"
-                    >
-                        <CalendarDaysIcon
-                            class="size-4 shrink-0 text-slate-400 dark:text-slate-500"
-                            aria-hidden="true"
-                        />
-                        <strong
-                            class="text-[13px] font-semibold leading-snug text-slate-800 dark:text-slate-50"
-                        >
-                            {{
-                                scheduleInfoLines.length
-                                    ? scheduleInfoLines[0]
-                                    : t(
-                                          'trip_detail.coordination.toolbar_funnel_empty',
-                                      )
-                            }}
-                        </strong>
-                    </div>
-                    <div
-                        v-if="canAssign && overlappingOtherTrips.length"
-                        class="mt-2 rounded-2xl bg-red-50/90 px-3.5 py-2.5 shadow-sm shadow-red-900/10 dark:bg-red-950/35 dark:shadow-black/25"
-                    >
-                        <div
-                            class="mb-1.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-red-600 dark:text-red-400"
-                        >
-                            <ExclamationTriangleIcon
-                                class="size-3.5 shrink-0"
-                                aria-hidden="true"
-                            />
-                            {{
-                                t('trip_detail.coordination.overlap_section_title')
-                            }}
-                        </div>
-                        <ul class="schedule-overlap-ul max-h-36 space-y-1.5 overflow-y-auto overscroll-contain pr-0.5 text-[12px]">
-                            <li
-                                v-for="row in overlappingOtherTrips"
-                                :key="row.id"
-                                class="flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-600 dark:text-slate-400"
-                            >
-                                <RouterLink
-                                    :to="tripDetailPathFor(row.id)"
-                                    class="font-medium text-sky-700 underline-offset-2 hover:underline dark:text-sky-400"
-                                >
-                                    #{{ row.id }}
-                                </RouterLink>
-                                <span
-                                    class="rounded-md bg-white/70 px-1.5 py-0.5 text-[11px] tabular-nums text-slate-600 shadow-inner shadow-slate-900/5 dark:bg-slate-800/70 dark:text-slate-400"
-                                    >{{ fmtTime(row.depart_at) }}</span
-                                >
-                                <span class="text-slate-600 dark:text-slate-400">{{
-                                    row.label
-                                }}</span>
-                                <span
-                                    v-if="row.driverName || row.vehiclePlate"
-                                    class="text-slate-500 dark:text-slate-500"
-                                >
-                                    <template v-if="row.driverName">{{
-                                        row.driverName
-                                    }}</template>
-                                    <template v-if="row.driverName && row.vehiclePlate"
-                                        >&nbsp;·&nbsp;</template
-                                    >
-                                    <template v-if="row.vehiclePlate">{{
-                                        row.vehiclePlate
-                                    }}</template>
-                                </span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </CollapsiblePanelSection>
 
             <div
                 v-if="scheduleAssignTabs && scheduleAssignTabs.length > 1"
@@ -367,153 +201,52 @@
                 {{ t("trip_detail.coordination.no_permission_assign") }}
             </p>
 
-            <!-- Sticky assignment actions -->
-            <div
-                v-if="showAssignFooter"
-                class="sticky bottom-0 z-10 -mx-3.5 -mb-3.5 mt-2 bg-white/92 px-3.5 py-3 shadow-[0_-12px_32px_-8px_rgba(15,23,42,0.1)] backdrop-blur-md supports-[backdrop-filter]:bg-white/80 dark:bg-slate-950/92 dark:shadow-[0_-12px_32px_-8px_rgba(0,0,0,0.45)]"
-            >
-                <div class="flex flex-col gap-2">
-                    <button
-                        type="button"
-                        class="w-full rounded-xl bg-[#8B1A1A] px-3 py-2 text-[12px] font-semibold text-white shadow-md shadow-[#8B1A1A]/25 outline-none hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-45 dark:shadow-[#8B1A1A]/30"
-                        :disabled="assigning || !assignReady"
-                        @click="emit('assign')"
-                    >
-                        <span
-                            v-if="assigning"
-                            class="mr-2 inline-block h-3 w-3 animate-spin rounded-full border border-white/40 border-t-white"
-                        />
-                        <span v-if="assigning" class="sr-only">{{ t("trip_detail.coordination.footer_loading_aria") }}</span>
-                        {{
-                            t("trip_detail.coordination.footer_confirm_assign")
-                        }}
-                    </button>
-                    <button
-                        type="button"
-                        class="w-full rounded-xl bg-slate-100 px-3 py-2 text-[12px] font-medium text-slate-700 shadow-sm hover:bg-slate-200/80 disabled:opacity-55 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                        :disabled="assigning"
-                        @click="emit('cancel')"
-                    >
-                        {{ t("trip_detail.coordination.footer_cancel") }}
-                    </button>
-                </div>
+        </div>
+
+        <div
+            v-if="showAssignFooter"
+            class="shrink-0 border-t border-slate-200/90 bg-white/95 px-3.5 py-3 shadow-[0_-8px_24px_-6px_rgba(15,23,42,0.12)] backdrop-blur-md supports-[backdrop-filter]:bg-white/90 dark:border-slate-700/80 dark:bg-slate-950/95 dark:shadow-[0_-8px_24px_-6px_rgba(0,0,0,0.4)]"
+            style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom))"
+            data-testid="dispatch-assign-footer"
+        >
+            <div class="flex flex-col gap-2">
+                <button
+                    type="button"
+                    class="w-full rounded-xl bg-[#8B1A1A] px-3 py-2.5 text-[12px] font-semibold text-white shadow-md shadow-[#8B1A1A]/25 outline-none hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-45 dark:shadow-[#8B1A1A]/30"
+                    :disabled="assigning || !assignReady"
+                    data-testid="dispatch-confirm-assign"
+                    @click="emit('assign')"
+                >
+                    <span
+                        v-if="assigning"
+                        class="mr-2 inline-block h-3 w-3 animate-spin rounded-full border border-white/40 border-t-white"
+                    />
+                    <span v-if="assigning" class="sr-only">{{ t("trip_detail.coordination.footer_loading_aria") }}</span>
+                    {{
+                        t("trip_detail.coordination.footer_confirm_assign")
+                    }}
+                </button>
+                <button
+                    type="button"
+                    class="w-full rounded-xl bg-slate-100 px-3 py-2 text-[12px] font-medium text-slate-700 shadow-sm hover:bg-slate-200/80 disabled:opacity-55 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                    :disabled="assigning"
+                    data-testid="dispatch-cancel-assign"
+                    @click="emit('cancel')"
+                >
+                    {{ t("trip_detail.coordination.footer_cancel") }}
+                </button>
             </div>
         </div>
 
-        <Teleport to="body">
-            <div
-                v-if="scheduleDetailPopupOpen"
-                class="fixed inset-0 z-[240] flex items-start justify-center overflow-y-auto bg-black/45 p-4 pb-10 pt-10 dark:bg-black/55"
-                role="dialog"
-                aria-modal="true"
-                :aria-label="
-                    t('trip_detail.coordination.popup_schedule_title')
-                "
-                @click.self="scheduleDetailPopupOpen = false"
-            >
-                <div
-                    class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-slate-900"
-                    @click.stop
-                >
-                    <div class="mb-0 flex shrink-0 items-center justify-between gap-2 p-4 pb-3">
-                        <h2
-                            class="text-[13px] font-semibold text-slate-800 dark:text-slate-100"
-                        >
-                            {{
-                                t(
-                                    "trip_detail.coordination.popup_schedule_title",
-                                )
-                            }}
-                        </h2>
-                        <button
-                            type="button"
-                            class="rounded-lg bg-slate-100 px-2.5 py-1 text-[12px] font-medium text-slate-700 shadow-sm dark:bg-slate-800 dark:text-slate-200"
-                            @click="scheduleDetailPopupOpen = false"
-                        >
-                            {{
-                                t(
-                                    "trip_detail.coordination.popup_schedule_close",
-                                )
-                            }}
-                        </button>
-                    </div>
-                    <div class="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-y-contain px-4 pb-4">
-                    <div
-                        class="flex items-center gap-3 rounded-2xl bg-gradient-to-br from-slate-50 via-white to-slate-50/90 px-3.5 py-3 shadow-sm dark:from-slate-900/50 dark:via-slate-900/35 dark:to-slate-950/60"
-                    >
-                        <CalendarDaysIcon
-                            class="size-4 shrink-0 text-slate-400 dark:text-slate-500"
-                            aria-hidden="true"
-                        />
-                        <strong
-                            class="text-[13px] font-semibold leading-snug text-slate-800 dark:text-slate-50"
-                        >
-                            {{
-                                scheduleInfoLines.length
-                                    ? scheduleInfoLines[0]
-                                    : t(
-                                          "trip_detail.coordination.toolbar_funnel_empty",
-                                      )
-                            }}
-                        </strong>
-                    </div>
-                    <div
-                        v-if="canAssign && overlappingOtherTrips.length"
-                        class="mt-3 rounded-2xl bg-red-50/90 px-3.5 py-2.5 shadow-sm dark:bg-red-950/35"
-                    >
-                        <div
-                            class="mb-1.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-red-600 dark:text-red-400"
-                        >
-                            <ExclamationTriangleIcon
-                                class="size-3.5 shrink-0"
-                                aria-hidden="true"
-                            />
-                            {{
-                                t(
-                                    "trip_detail.coordination.overlap_section_title",
-                                )
-                            }}
-                        </div>
-                        <ul class="space-y-1.5 text-[12px]">
-                            <li
-                                v-for="row in overlappingOtherTrips"
-                                :key="'pop-' + row.id"
-                                class="flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-600 dark:text-slate-400"
-                            >
-                                <RouterLink
-                                    :to="tripDetailPathFor(row.id)"
-                                    class="font-medium text-sky-700 underline-offset-2 hover:underline dark:text-sky-400"
-                                    @click="scheduleDetailPopupOpen = false"
-                                >
-                                    #{{ row.id }}
-                                </RouterLink>
-                                <span
-                                    class="rounded-md bg-white/70 px-1.5 py-0.5 text-[11px] tabular-nums text-slate-600 shadow-inner dark:bg-slate-800/70 dark:text-slate-400"
-                                    >{{ fmtTime(row.depart_at) }}</span
-                                >
-                                <span class="text-slate-600 dark:text-slate-400">{{
-                                    row.label
-                                }}</span>
-                            </li>
-                        </ul>
-                    </div>
-                    </div>
-                </div>
-            </div>
-        </Teleport>
     </section>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { RouterLink, useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 import {
-    ArrowsPointingOutIcon,
-    CalendarDaysIcon,
     ExclamationTriangleIcon,
     InformationCircleIcon,
-    LockClosedIcon,
 } from "@heroicons/vue/24/outline";
 import CollapsiblePanelSection from "../dispatch/CollapsiblePanelSection.vue";
 import ResourcePanel from "../dispatch/ResourcePanel.vue";
@@ -523,20 +256,14 @@ import CurrentAssignmentList, {
     type AssignmentListVehicle,
 } from "./CurrentAssignmentList.vue";
 import type { SupplementItem } from "../../types/dispatch";
-import { buildStaffPrefixedPath as staffPath } from "../../config/dispatchWebBase";
 
 const props = withDefaults(
     defineProps<{
     canAssign: boolean;
     canUpdateStatus: boolean;
-    canRescheduleTrip: boolean;
     /** Chuyến đã qua bước gán trên timeline — khóa chỉnh sửa panel điều phối */
     coordinationActionsLocked?: boolean;
     canQuickCreateProvider: boolean;
-    rescheduleDepartLocal: string;
-    rescheduling: boolean;
-    rescheduleMsg: string;
-    rescheduleFeedbackIsError: boolean;
     assignmentVehicles: AssignmentListVehicle[];
     assignmentDrivers: AssignmentListDriver[];
     vehicleConflictBanner: VehicleConflict | null;
@@ -547,17 +274,9 @@ const props = withDefaults(
     busyVehicleIds: number[];
     busyDriverIds: number[];
     tripSnapshot: object | null;
-    overlappingOtherTrips: {
-        id: number;
-        depart_at: string;
-        label: string;
-        driverName: string;
-        vehiclePlate: string;
-    }[];
     coordinationNotes: string;
     assignMsg: string;
     assignFeedbackKind: string;
-    scheduleInfoLines: string[];
     capacityBannerText: string;
     showAssignFooter: boolean;
     assignReady: boolean;
@@ -581,27 +300,22 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
-    reschedule: [];
     "vehicle-card-change": [];
     "driver-card-change": [];
     "conflict-pick-again": [];
     "conflict-keep": [];
     "update:resources": [payload: unknown];
     "create-vendor": [];
-    "update:rescheduleDepartLocal": [value: string];
     "update:coordinationNotes": [value: string];
     assign: [];
     cancel: [];
     "update:activeScheduleKey": [key: string];
 }>();
 
-const { t, locale } = useI18n();
-const route = useRoute();
+const { t } = useI18n();
 
 const resourcePanelRef = ref<InstanceType<typeof ResourcePanel> | null>(null);
 defineExpose({ resourcePanel: resourcePanelRef });
-
-const scheduleDetailPopupOpen = ref(false);
 
 function collapseStorageKey(segment: string): string | null {
     const id = props.tripId;
@@ -609,36 +323,11 @@ function collapseStorageKey(segment: string): string | null {
     return `va-trip-${String(id)}-dispatch-${segment}`;
 }
 
-const rescheduleCollapsedSummary = computed(() => {
-    const raw = String(props.rescheduleDepartLocal ?? "").trim();
-    if (!raw) return t("trip_detail.reschedule.depart_label");
-    return raw.replace("T", " ");
-});
-
-const scheduleSectionSummaryCollapsed = computed(() => {
-    const first = props.scheduleInfoLines?.[0]?.trim() ?? "";
-    const base =
-        first ||
-        t("trip_detail.coordination.toolbar_funnel_empty");
-    if (props.canAssign && props.overlappingOtherTrips.length > 0) {
-        return `${base} · ${t("trip_detail.coordination.section_overlap_count", {
-            n: props.overlappingOtherTrips.length,
-        })}`;
-    }
-    return base;
-});
-
 const notesCollapsedSummary = computed(() => {
     const n = props.coordinationNotes?.trim()?.length ?? 0;
     if (!n)
         return t("trip_detail.coordination.notes_collapsed_empty");
     return t("trip_detail.coordination.notes_chars_summary", { n });
-});
-
-const secondaryScheduleHint = computed(() => {
-    const lines = props.scheduleInfoLines ?? [];
-    if (lines.length <= 1) return "";
-    return lines.slice(1).join(" · ");
 });
 
 function formatSupplementLine(it: SupplementItem): string {
@@ -756,26 +445,6 @@ const assignmentCollapsedSummary = computed(() => {
         ? bits.join(" · ")
         : t("trip_detail.coordination.assignment_collapsed_empty");
 });
-
-function tripDetailPathFor(id: number) {
-    return route.path.startsWith("/driver")
-        ? `/driver/trips/${id}`
-        : staffPath(`/trips/${id}`);
-}
-
-function fmtTime(v: string) {
-    const l = locale.value === "en" ? "en-US" : "vi-VN";
-    return v
-        ? new Date(v).toLocaleTimeString(l, {
-              hour: "2-digit",
-              minute: "2-digit",
-          })
-        : "-";
-}
-
-function onRescheduleDateInput(e: Event) {
-    emit("update:rescheduleDepartLocal", (e.target as HTMLInputElement).value);
-}
 
 function onCoordNotesInput(e: Event) {
     emit("update:coordinationNotes", (e.target as HTMLTextAreaElement).value);

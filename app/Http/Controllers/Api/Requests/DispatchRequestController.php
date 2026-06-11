@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Requests;
 use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Api\Concerns\PresentsDispatchRequest;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Requests\ApplyDispatchRequestPricingHintsRequest;
 use App\Http\Requests\Api\Requests\CloneDispatchRequestRequest;
 use App\Http\Requests\Api\Requests\CreateDispatchRequestRequest;
 use App\Http\Requests\Api\Requests\DecideDispatchRequestRequest;
@@ -14,7 +15,7 @@ use App\Http\Requests\Api\Requests\FillPriceDispatchRequestRequest;
 use App\Http\Requests\Api\Requests\MarkDispatchRequestPaperReceivedRequest;
 use App\Http\Requests\Api\Requests\RevertDispatchRequestPaperRequest;
 use App\Http\Requests\Api\Requests\ShowDispatchRequestRequest;
-use App\Http\Requests\Api\Requests\ApplyDispatchRequestPricingHintsRequest;
+use App\Http\Requests\Api\Requests\SubmitRecurringDispatchRequestStudentCountRequest;
 use App\Http\Requests\Api\Requests\UpdateDispatchRequestWizardRequest;
 use App\Http\Requests\Api\Requests\UpdateRecurringDispatchRequestPassengerCountRequest;
 use App\Models\AuditLog;
@@ -25,12 +26,10 @@ use App\Models\User;
 use App\Notifications\DeptHeadApprovalRequestedNotification;
 use App\Notifications\DeptHeadDecisionNotification;
 use App\Notifications\SignedPaperUploadReminderNotification;
-use App\Services\Notifications\DispatchStaffNotificationRecipients;
-use App\Http\Requests\Api\Requests\SubmitRecurringDispatchRequestStudentCountRequest;
 use App\Services\Auditing\AuditLogger;
 use App\Services\DispatchRequests\DispatchRequestApprovalService;
 use App\Services\DispatchRequests\DispatchRequestPdfPresenter;
-use App\Support\DispatchCargoShipmentProvisioner;
+use App\Services\Notifications\DispatchStaffNotificationRecipients;
 use App\Support\DispatchWizardPassengerCount;
 use App\Support\Messages;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -375,7 +374,7 @@ class DispatchRequestController extends Controller
         return Pdf::loadView('pdf.dispatch-request', $data)
             ->setPaper('a4', $data['isCargo'] ? 'landscape' : 'portrait')
             ->setOptions([
-                'defaultFont' => 'GarbataTrial',
+                'defaultFont' => 'garbatatrial',
                 'enable_unicode' => true,
                 'isHtml5ParserEnabled' => true,
                 'isRemoteEnabled' => false,

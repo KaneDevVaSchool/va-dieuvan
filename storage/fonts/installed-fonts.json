@@ -1,10 +1,10 @@
 {
     "garbatatrial": {
-        "normal": "C:\\Users\\Admin\\Desktop\\ServBayWeb\\va-dieuvan\\storage\\fonts\/garbatatrial_normal_13f56fb302bbd5f0e85f01d0bf65c4cb",
-        "italic": "C:\\Users\\Admin\\Desktop\\ServBayWeb\\va-dieuvan\\storage\\fonts\/garbatatrial_italic_633bdeabdaf515359675da690986b693",
-        "bold": "C:\\Users\\Admin\\Desktop\\ServBayWeb\\va-dieuvan\\storage\\fonts\/garbatatrial_bold_e4e51dbec46a58b690af99fe4a252a46",
-        "bold_italic": "C:\\Users\\Admin\\Desktop\\ServBayWeb\\va-dieuvan\\storage\\fonts\/garbatatrial_bold_italic_a5e19ad08161b64c2b357bd8f86173ba",
-        "500": "C:\\Users\\Admin\\Desktop\\ServBayWeb\\va-dieuvan\\storage\\fonts\/garbatatrial_500_9638b4b17deb358cbf3c90421e8b47d2",
+        "normal": "garbatatrial_normal_13f56fb302bbd5f0e85f01d0bf65c4cb",
+        "italic": "garbatatrial_italic_633bdeabdaf515359675da690986b693",
+        "bold": "garbatatrial_bold_e4e51dbec46a58b690af99fe4a252a46",
+        "bold_italic": "garbatatrial_bold_italic_a5e19ad08161b64c2b357bd8f86173ba",
+        "500": "garbatatrial_500_9638b4b17deb358cbf3c90421e8b47d2",
         "300": "garbatatrial_300_868bb2df4175e0e459ee3101624d9c5a"
     }
 }

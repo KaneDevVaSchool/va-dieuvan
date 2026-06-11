@@ -6,13 +6,13 @@
         >
             <div class="animate-pulse space-y-4">
                 <div class="h-10 max-w-md rounded-xl bg-slate-200/90" />
-                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
-                    <div class="min-w-0 space-y-4">
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
+                    <div class="min-w-0 space-y-4 lg:col-span-5">
                         <div class="h-64 rounded-2xl bg-slate-200/80" />
                         <div class="h-48 rounded-2xl bg-slate-200/70" />
                         <div class="h-56 rounded-2xl bg-slate-200/70" />
                     </div>
-                    <div class="min-w-0 space-y-4">
+                    <div class="min-w-0 space-y-4 lg:col-span-7">
                         <div class="h-72 rounded-2xl bg-slate-200/80" />
                         <div class="h-40 rounded-2xl bg-slate-200/70" />
                     </div>
@@ -115,9 +115,11 @@
                 </div>
 
                 <div
-                    class="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start lg:gap-8"
+                    class="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start lg:gap-8"
                 >
-                    <div class="min-w-0 flex w-full flex-col gap-4">
+                    <div
+                        class="flex min-w-0 w-full flex-col gap-4 lg:col-span-5"
+                    >
                         <h2
                             class="text-xs font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400"
                         >
@@ -155,26 +157,21 @@
                         />
                     </div>
 
-                    <div class="min-w-0 flex w-full flex-col gap-3">
+                    <div
+                        class="flex min-h-0 w-full min-w-0 flex-col gap-3 lg:col-span-7 lg:sticky lg:top-14 lg:max-h-[calc(100dvh-3.5rem)] lg:min-h-[calc(100dvh-3.5rem)] lg:self-start"
+                    >
                         <h2
-                            class="text-xs font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400"
+                            class="shrink-0 text-xs font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400"
                         >
                             {{ t("trip_detail.coordination_column_title") }}
                         </h2>
                         <DispatchPanel
-                            class="w-full min-w-0"
+                            class="flex min-h-0 w-full min-w-0 flex-1 flex-col"
                             ref="dispatchPanelRef"
                             :can-assign="canAssign"
                             :can-update-status="canUpdateStatus"
-                            :can-reschedule-trip="canRescheduleForCoordinationPanel"
                             :coordination-actions-locked="coordinationActionsLocked"
                             :can-quick-create-provider="canQuickCreateProvider"
-                            :reschedule-depart-local="rescheduleDepartLocal"
-                            :rescheduling="rescheduling"
-                            :reschedule-msg="rescheduleMsg"
-                            :reschedule-feedback-is-error="
-                                rescheduleFeedbackIsError
-                            "
                             :assignment-vehicles="coordinationAssignmentVehicles"
                             :assignment-drivers="coordinationAssignmentDrivers"
                             :vehicle-conflict-banner="vehicleConflictBanner"
@@ -185,14 +182,12 @@
                             :busy-vehicle-ids="busyVehicleIdList"
                             :busy-driver-ids="busyDriverIdList"
                             :trip-snapshot="coordinationTripSnapshot"
-                            :overlapping-other-trips="overlappingOtherTrips"
                             :supplement-assignments="
                                 coordinationSupplementsForAssignment
                             "
                             :coordination-notes="coordinationNotes"
                             :assign-msg="assignMsg"
                             :assign-feedback-kind="assignFeedbackKind"
-                            :schedule-info-lines="coordinationScheduleLines"
                             :capacity-banner-text="coordinationCapacityBanner"
                             :show-assign-footer="showCoordinationAssignFooter"
                             :assign-ready="assignReady"
@@ -201,7 +196,6 @@
                             :active-schedule-key="activeAssignLegKey"
                             :assign-progress-label="assignProgressLabel"
                             @update:active-schedule-key="onActiveAssignLegChange"
-                            @reschedule="doReschedule"
                             @vehicle-card-change="onVehicleCardChange"
                             @driver-card-change="onDriverCardChange"
                             @conflict-pick-again="onVehicleConflictPickAgain"
@@ -210,9 +204,6 @@
                             @create-vendor="openProviderModal"
                             @assign="onApproveTransfer"
                             @cancel="onCoordinationCancel"
-                            @update:reschedule-depart-local="
-                                rescheduleDepartLocal = $event
-                            "
                             @update:coordination-notes="
                                 coordinationNotes = $event
                             "
@@ -1060,10 +1051,6 @@ const coordinationActionsLocked = computed(() => {
     if (s === "cancelled" && driverCancellationEvent.value) return false;
     return true;
 });
-
-const canRescheduleForCoordinationPanel = computed(
-    () => canRescheduleTrip.value && !coordinationActionsLocked.value,
-);
 
 const canEditPassengerList = computed(() => {
     if (tripBlocksPassengerAndCostEdits.value) return false;

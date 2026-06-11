@@ -5,7 +5,7 @@
       :clip-overflow="false"
       :title="t('trip_detail.coordination.section_resources_title')"
       :summary-collapsed="unifiedCollapsedSummary"
-      :default-expanded="true"
+      :default-expanded="!hideInternalVehicleSection && !hideInternalDriverSection"
       :persist-key="null"
     >
       <template #header-end>
@@ -40,8 +40,11 @@
       </template>
 
       <div class="space-y-2.5 pt-0.5">
-        <div class="flex flex-col gap-2.5">
+        <div
+          class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:items-start"
+        >
         <InternalMultiPickSection
+          class="min-w-0"
           v-if="!hideInternalVehicleSection"
           v-model="selected.internalVehicles"
           :options="internalVehicleOptions"
@@ -58,6 +61,7 @@
 
         <InternalMultiPickSection
           v-if="!hideInternalDriverSection"
+          class="min-w-0"
           v-model="selected.internalDrivers"
           :options="internalDriverOptions"
           :is-loading="isLoading"
@@ -94,8 +98,11 @@
 
         <template v-if="supplementBlockVisible">
           <div
+            class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:items-start"
+          >
+          <div
             v-if="!hideTaxiSection"
-            class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900/50"
+            class="min-w-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900/50"
           >
             <SupplementTransportSection
               v-model="selected.taxis"
@@ -114,7 +121,7 @@
 
           <div
             v-if="!hideVendorSection"
-            class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900/50"
+            class="min-w-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900/50"
           >
             <SupplementTransportSection
               v-model="selected.vendors"
@@ -131,6 +138,7 @@
               :icon="BuildingOfficeIcon"
               @create-vendor="$emit('create-vendor')"
             />
+          </div>
           </div>
         </template>
       </div>
