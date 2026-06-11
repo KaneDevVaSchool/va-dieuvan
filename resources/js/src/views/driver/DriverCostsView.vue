@@ -21,7 +21,7 @@
     />
 
     <div
-      class="mx-auto w-full max-w-lg px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-4 sm:max-w-2xl sm:px-5"
+      class="driver-stagger mx-auto w-full max-w-lg px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-4 sm:max-w-2xl sm:px-5"
     >
       <div class="flex flex-wrap items-end justify-between gap-3">
         <div class="min-w-0">

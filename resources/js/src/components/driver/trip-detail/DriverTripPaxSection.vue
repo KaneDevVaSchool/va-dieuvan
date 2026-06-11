@@ -21,9 +21,9 @@
             class="flex cursor-pointer items-start gap-3 px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-[#7fdcc8]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-driver-card"
             :aria-expanded="expandedStudentIdx === p._origIndex ? 'true' : 'false'"
             :aria-label="studentRowLabel(p)"
-            @click="$emit('toggle-student', p._origIndex)"
-            @keydown.enter.prevent="$emit('toggle-student', p._origIndex)"
-            @keydown.space.prevent="$emit('toggle-student', p._origIndex)"
+            @click="onToggle(p._origIndex)"
+            @keydown.enter.prevent="onToggle(p._origIndex)"
+            @keydown.space.prevent="onToggle(p._origIndex)"
           >
             <div class="relative shrink-0">
               <div class="flex h-12 w-12 items-center justify-center rounded-full bg-driver-elevated text-base font-bold text-driver-muted">
@@ -37,7 +37,7 @@
               </div>
               <div
                 v-if="rowState(p._origIndex) === 'picked_up'"
-                class="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white ring-2 ring-white"
+                class="driver-pop absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white ring-2 ring-white"
               >
                 <CheckIcon class="h-3.5 w-3.5" aria-hidden="true" />
               </div>
@@ -73,35 +73,38 @@
             </div>
           </div>
 
-          <div v-if="expandedStudentIdx === p._origIndex" class="flex flex-wrap gap-2 border-t border-white/[0.06] bg-driver-surface/50 px-4 py-3">
-            <a
-              v-if="p.phone"
-              :href="`tel:${p.phone}`"
-              class="flex min-h-[48px] min-w-[44px] flex-1 basis-[calc(50%-0.25rem)] items-center justify-center gap-2 rounded-xl bg-emerald-500 px-3 py-3 text-base font-bold text-white active:opacity-90 sm:flex-none sm:basis-auto"
-            >
-              <PhoneIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
-              {{ t('driver_trip_detail.call') }}
-            </a>
-            <button
-              v-if="canMarkPickup && rowState(p._origIndex) !== 'picked_up'"
-              type="button"
-              :disabled="eventPosting"
-              class="flex min-h-[48px] min-w-[44px] flex-1 basis-[calc(50%-0.25rem)] items-center justify-center gap-2 rounded-xl bg-[#7fdcc8] px-3 py-3 text-base font-bold text-driver-bg disabled:opacity-50 active:opacity-90 sm:flex-none sm:basis-auto"
-              @click.stop="$emit('set-row-state', p._origIndex, 'picked_up')"
-            >
-              <CheckIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
-              {{ t('driver_trip_detail.btn_picked') }}
-            </button>
-            <button
-              v-if="canMarkPickup && rowState(p._origIndex) !== 'absent'"
-              type="button"
-              :disabled="eventPosting"
-              class="flex min-h-[48px] min-w-[44px] flex-1 basis-full items-center justify-center gap-2 rounded-xl bg-driver-surface px-3 py-3 text-base font-semibold text-driver-muted disabled:opacity-50 active:opacity-90 sm:basis-auto"
-              @click.stop="$emit('set-row-state', p._origIndex, 'absent')"
-            >
-              {{ t('driver_trip_detail.btn_absent') }}
-            </button>
-          </div>
+          <Transition :css="false" @enter="onRowEnter" @leave="onRowLeave">
+            <div v-if="expandedStudentIdx === p._origIndex" class="flex flex-wrap gap-2 border-t border-white/[0.06] bg-driver-surface/50 px-4 py-3">
+              <a
+                v-if="p.phone"
+                :href="`tel:${p.phone}`"
+                class="flex min-h-[48px] min-w-[44px] flex-1 basis-[calc(50%-0.25rem)] items-center justify-center gap-2 rounded-xl bg-emerald-500 px-3 py-3 text-base font-bold text-white transition active:scale-[0.97] active:opacity-90 sm:flex-none sm:basis-auto"
+                @click="haptics.tap()"
+              >
+                <PhoneIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+                {{ t('driver_trip_detail.call') }}
+              </a>
+              <button
+                v-if="canMarkPickup && rowState(p._origIndex) !== 'picked_up'"
+                type="button"
+                :disabled="eventPosting"
+                class="flex min-h-[48px] min-w-[44px] flex-1 basis-[calc(50%-0.25rem)] items-center justify-center gap-2 rounded-xl bg-[#7fdcc8] px-3 py-3 text-base font-bold text-driver-bg transition active:scale-[0.97] disabled:opacity-50 active:opacity-90 sm:flex-none sm:basis-auto"
+                @click.stop="onSetState(p._origIndex, 'picked_up')"
+              >
+                <CheckIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+                {{ t('driver_trip_detail.btn_picked') }}
+              </button>
+              <button
+                v-if="canMarkPickup && rowState(p._origIndex) !== 'absent'"
+                type="button"
+                :disabled="eventPosting"
+                class="flex min-h-[48px] min-w-[44px] flex-1 basis-full items-center justify-center gap-2 rounded-xl bg-driver-surface px-3 py-3 text-base font-semibold text-driver-muted transition active:scale-[0.98] disabled:opacity-50 active:opacity-90 sm:basis-auto"
+                @click.stop="onSetState(p._origIndex, 'absent')"
+              >
+                {{ t('driver_trip_detail.btn_absent') }}
+              </button>
+            </div>
+          </Transition>
         </li>
       </ul>
     </div>
@@ -155,6 +158,7 @@ import {
   PhoneIcon,
   UserGroupIcon,
 } from '@heroicons/vue/24/outline'
+import { useHaptics } from '../../../composables/useHaptics'
 
 defineProps({
   paxKind: { type: String, required: true },
@@ -172,9 +176,74 @@ defineProps({
   isNextIndex: { type: Function, required: true },
 })
 
-defineEmits(['toggle-student', 'set-row-state'])
+const emit = defineEmits(['toggle-student', 'set-row-state'])
 
 const { t } = useI18n()
+const haptics = useHaptics()
+
+function onToggle(idx) {
+  haptics.tap()
+  emit('toggle-student', idx)
+}
+
+function onSetState(idx, st) {
+  if (st === 'picked_up') haptics.success()
+  else haptics.select()
+  emit('set-row-state', idx, st)
+}
+
+// ── Mở/đóng hàng học sinh: animate chiều cao + mờ (JS hooks) ───────────
+const ROW_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)'
+
+function reduceMotion() {
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  )
+}
+
+function animateRow(el, fromH, toH, fromO, toO, dur, done) {
+  let finished = false
+  const finish = () => {
+    if (finished) return
+    finished = true
+    el.removeEventListener('transitionend', onEnd)
+    el.style.height = ''
+    el.style.opacity = ''
+    el.style.overflow = ''
+    el.style.transition = ''
+    done()
+  }
+  const onEnd = (e) => {
+    if (e.target === el && e.propertyName === 'height') finish()
+  }
+  el.style.overflow = 'hidden'
+  el.style.height = fromH
+  el.style.opacity = fromO
+  void el.offsetHeight // force reflow
+  el.style.transition = `height ${dur}s ${ROW_EASE}, opacity ${dur}s ${ROW_EASE}`
+  el.addEventListener('transitionend', onEnd)
+  setTimeout(finish, dur * 1000 + 80) // fallback nếu transitionend không bắn
+  el.style.height = toH
+  el.style.opacity = toO
+}
+
+function onRowEnter(el, done) {
+  if (reduceMotion()) {
+    done()
+    return
+  }
+  animateRow(el, '0px', `${el.scrollHeight}px`, '0', '1', 0.24, done)
+}
+
+function onRowLeave(el, done) {
+  if (reduceMotion()) {
+    done()
+    return
+  }
+  animateRow(el, `${el.scrollHeight}px`, '0px', '1', '0', 0.2, done)
+}
 
 function initials(name) {
   const n = (name || '').trim() || '?'

@@ -14,9 +14,9 @@
       </span>
       <button
         type="button"
-        class="flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-driver-muted transition active:bg-driver-elevated sm:text-base"
+        class="flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-driver-muted transition active:scale-[0.97] active:bg-driver-elevated sm:text-base"
         :class="isPaused ? 'border-[#7fdcc8] bg-[#7fdcc8]/10 text-driver-accent' : ''"
-        @click="$emit('toggle-pause')"
+        @click="onTogglePause"
       >
         <PauseIcon v-if="!isPaused" class="h-4 w-4 shrink-0" aria-hidden="true" />
         <PlayIcon v-else class="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -28,8 +28,8 @@
       v-if="canStart"
       type="button"
       :disabled="actionBusy"
-      class="mb-2 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3.5 text-base font-bold text-white shadow-md disabled:opacity-50 active:opacity-90 sm:text-lg"
-      @click="$emit('start-trip')"
+      class="mb-2 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3.5 text-base font-bold text-white shadow-md transition-transform disabled:opacity-50 active:scale-[0.98] active:opacity-90 sm:text-lg"
+      @click="onStart"
     >
       <PlayIcon class="h-6 w-6 shrink-0 sm:h-5 sm:w-5" aria-hidden="true" />
       {{ t('driver_trip_detail.btn_start_trip') }}
@@ -38,8 +38,8 @@
       v-else-if="canEndTrip"
       type="button"
       :disabled="actionBusy"
-      class="mb-2 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-driver-bg px-4 py-3.5 text-base font-bold text-white shadow-md disabled:opacity-50 active:opacity-90 sm:text-lg"
-      @click="$emit('end-trip')"
+      class="mb-2 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-driver-bg px-4 py-3.5 text-base font-bold text-white shadow-md transition-transform disabled:opacity-50 active:scale-[0.98] active:opacity-90 sm:text-lg"
+      @click="onEnd"
     >
       <FlagIcon class="h-6 w-6 shrink-0 sm:h-5 sm:w-5" aria-hidden="true" />
       {{ t('driver_trip_detail.btn_end_trip') }}
@@ -57,6 +57,7 @@
 <script setup>
 import { useI18n } from 'vue-i18n'
 import { FlagIcon, PauseIcon, PlayIcon } from '@heroicons/vue/24/outline'
+import { useHaptics } from '../../../composables/useHaptics'
 
 defineProps({
   tripStatus: { type: String, default: '' },
@@ -69,9 +70,23 @@ defineProps({
   actionBusy: { type: Boolean, default: false },
 })
 
-defineEmits(['toggle-pause', 'start-trip', 'end-trip'])
+const emit = defineEmits(['toggle-pause', 'start-trip', 'end-trip'])
 
 const { t } = useI18n()
+const haptics = useHaptics()
+
+function onStart() {
+  haptics.impact()
+  emit('start-trip')
+}
+function onEnd() {
+  haptics.impact()
+  emit('end-trip')
+}
+function onTogglePause() {
+  haptics.tap()
+  emit('toggle-pause')
+}
 </script>
 
 <style scoped>

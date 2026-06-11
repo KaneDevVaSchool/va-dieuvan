@@ -2,6 +2,31 @@
   <div
     class="min-h-0 w-full bg-[#020B0B] pb-[max(6rem,calc(var(--driver-bottom-nav-height,3.5rem)+5rem+env(safe-area-inset-bottom)))] text-[#eaf8f5]"
   >
+    <!-- Pull-to-refresh: overlay cố định, không đẩy header (giữ nguyên xử lý safe-area) -->
+    <div
+      v-if="ptrPulling || ptrRefreshing"
+      class="pointer-events-none fixed inset-x-0 top-0 z-[60] flex justify-center pt-[max(0.5rem,env(safe-area-inset-top))]"
+      aria-live="polite"
+    >
+      <div
+        class="flex items-center gap-2 rounded-full bg-driver-card/90 px-3 py-1.5 text-xs font-semibold text-[#7fdcc8] shadow-lg ring-1 ring-[#7fdcc8]/25 backdrop-blur-md"
+        :style="{ opacity: ptrRefreshing ? 1 : Math.min(ptrDist / 36, 1) }"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          class="h-4 w-4"
+          :class="ptrRefreshing ? 'animate-spin' : 'transition-transform'"
+          :style="!ptrRefreshing ? { transform: `rotate(${Math.min((ptrDist / 72) * 270, 270)}deg)` } : {}"
+          aria-hidden="true"
+        >
+          <path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.311h2.433a.75.75 0 0 0 0-1.5H3.989a.75.75 0 0 0-.75.75v4.242a.75.75 0 0 0 1.5 0v-2.43l.31.31a7 7 0 0 0 11.712-3.138.75.75 0 0 0-1.449-.39Zm1.23-3.723a.75.75 0 0 0 .219-.53V2.929a.75.75 0 0 0-1.5 0V5.36l-.31-.31A7 7 0 0 0 3.239 8.188a.75.75 0 1 0 1.448.389A5.5 5.5 0 0 1 13.89 6.11l.311.31h-2.432a.75.75 0 0 0 0 1.5h4.243a.75.75 0 0 0 .53-.219Z" clip-rule="evenodd" />
+        </svg>
+        <span>{{ ptrRefreshing ? t('trip_history_page.releasing') : t('trip_history_page.pull_to_refresh') }}</span>
+      </div>
+    </div>
+
     <div
       class="relative isolate w-full overflow-hidden rounded-b-[1.75rem] shadow-[0_10px_40px_-8px_rgba(34,211,238,0.18)] ring-1 ring-[#7fdcc8]/10 -mt-[env(safe-area-inset-top,0px)] pt-[env(safe-area-inset-top,0px)]"
     >
@@ -36,7 +61,7 @@
     </div>
 
     <div class="mx-auto w-full min-h-0 min-w-0 max-w-full px-3 pt-4 sm:px-4">
-      <div class="min-w-0 space-y-4">
+      <div class="driver-stagger min-w-0 space-y-4">
         <DriverPendingConfirmationSection
           v-if="dash.needsConfirmationTrips.length > 0 || dash.loadingInitial"
           :trips="dash.needsConfirmationTrips"
@@ -86,7 +111,8 @@
         <a
           v-if="dispatcherPhone"
           :href="`tel:${dispatcherPhone}`"
-          class="pointer-events-auto flex min-h-[48px] min-w-[44px] items-center gap-2 rounded-2xl bg-[#9A0036] px-4 text-white shadow-xl shadow-black/40 ring-1 ring-white/10 transition hover:bg-[#850030] active:scale-[0.98]"
+          class="pointer-events-auto flex min-h-[48px] min-w-[44px] items-center gap-2 rounded-2xl bg-[#9A0036] px-4 text-white shadow-xl shadow-black/40 ring-1 ring-white/10 transition hover:bg-[#850030] active:scale-[0.96]"
+          @click="haptics.impact()"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -113,6 +139,8 @@ import { computed, nextTick, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDriverVisiblePoll } from '../../composables/useDriverVisiblePoll'
 import { useDriverWebPushBoot } from '../../composables/useDriverWebPushBoot'
+import { useHaptics } from '../../composables/useHaptics'
+import { usePullToRefresh } from '../../composables/usePullToRefresh'
 import { useAuthStore, useDriverDashboardStore } from '../../store/index'
 import { dashPerfMounted } from '../../util/devDriverDashboardPerf'
 import { playNotificationChime } from '../../util/notificationChime'
@@ -123,7 +151,18 @@ import DriverUpcomingTripsSection from '../../components/driver/dashboard/Driver
 const { t } = useI18n()
 const auth = useAuthStore()
 const dash = useDriverDashboardStore()
+const haptics = useHaptics()
 const { bootDriverOutboundNotifications } = useDriverWebPushBoot()
+
+// ── Pull-to-refresh (dùng chung composable usePullToRefresh) ─────────────
+const {
+  pulling: ptrPulling,
+  pullDist: ptrDist,
+  refreshing: ptrRefreshing,
+} = usePullToRefresh(async () => {
+  haptics.impact()
+  await dash.fetchDashboard({ silent: true, force: true })
+})
 
 const user = computed(() => auth.user)
 const avatarUrl = computed(() => user.value?.avatar_url || null)

@@ -10,7 +10,11 @@
   />
   <template v-else>
     <LayoutDriver v-if="isDriverApp">
-      <RouterView />
+      <RouterView v-slot="{ Component, route: rv }">
+        <Transition :name="driverTransition" mode="out-in">
+          <component :is="Component" :key="rv.path" />
+        </Transition>
+      </RouterView>
     </LayoutDriver>
     <AppShell v-else-if="!isLoginLayout && !isDeptShell">
       <RouterView />
@@ -28,7 +32,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 import { useAuthStore } from './store'
 import { useOnboarding } from './composables/useOnboarding'
@@ -57,6 +61,29 @@ const isLoginLayout = computed(
 )
 const isDriverApp = computed(() => !!route.meta?.driverApp)
 const isAuthenticated = computed(() => auth.isAuthenticated)
+
+/**
+ * Hướng chuyển trang trong driver shell:
+ *  - đi sâu hơn (vd. lịch → chi tiết chuyến) → trượt tới (fwd)
+ *  - quay lại (ít cấp hơn) → trượt lui (back)
+ *  - cùng cấp (đổi tab bottom nav) → fade nhẹ
+ */
+const driverTransition = ref('driver-fade')
+function segDepth(p) {
+  return String(p || '')
+    .split('/')
+    .filter(Boolean).length
+}
+watch(
+  () => route.path,
+  (to, from) => {
+    const dTo = segDepth(to)
+    const dFrom = segDepth(from)
+    if (dTo > dFrom) driverTransition.value = 'driver-fwd'
+    else if (dTo < dFrom) driverTransition.value = 'driver-back'
+    else driverTransition.value = 'driver-fade'
+  },
+)
 
 const showSplash = ref(true)
 const splashAppReady = ref(false)

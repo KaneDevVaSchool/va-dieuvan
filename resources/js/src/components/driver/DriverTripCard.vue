@@ -103,7 +103,7 @@
           :class="primaryActionClass"
           :disabled="busy"
           data-testid="driver-trip-card-start"
-          @click.stop="emit('start', trip.id)"
+          @click.stop="onStart"
         >
           {{ t('driver_home.card_start') }}
         </button>
@@ -115,15 +115,15 @@
               type="button"
               class="inline-flex items-center justify-center rounded-xl bg-[#22c55e] px-3 py-2.5 text-sm font-bold text-white shadow-md shadow-black/25 disabled:cursor-not-allowed disabled:opacity-50"
               :disabled="busy"
-              @click.stop="emit('confirm', trip)"
+              @click.stop="onConfirm"
             >
               {{ t('driver_home.btn_confirm') }}
             </button>
             <button
               type="button"
-              class="inline-flex items-center justify-center rounded-xl border-2 border-rose-500/70 bg-transparent px-3 py-2.5 text-sm font-bold text-rose-400 disabled:cursor-not-allowed disabled:opacity-50"
+              class="inline-flex items-center justify-center rounded-xl border-2 border-rose-500/70 bg-transparent px-3 py-2.5 text-sm font-bold text-rose-400 transition active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
               :disabled="busy"
-              @click.stop="emit('decline', trip)"
+              @click.stop="onDecline"
             >
               {{ t('driver_home.btn_decline') }}
             </button>
@@ -158,6 +158,7 @@ import {
   tripTypeBadgeText,
 } from '../../composables/useDriverTripDisplay'
 import { dispatchRequestDisplayPassengerCount } from '../../util/dispatchRequestPassengers'
+import { useHaptics } from '../../composables/useHaptics'
 
 const props = defineProps({
   trip: { type: Object, required: true },
@@ -172,6 +173,20 @@ const emit = defineEmits(['start', 'confirm', 'decline'])
 
 const router = useRouter()
 const { locale, t } = useI18n()
+const haptics = useHaptics()
+
+function onStart() {
+  haptics.impact()
+  emit('start', props.trip.id)
+}
+function onConfirm() {
+  haptics.success()
+  emit('confirm', props.trip)
+}
+function onDecline() {
+  haptics.warn()
+  emit('decline', props.trip)
+}
 
 const tripRaw = computed(() => props.trip)
 

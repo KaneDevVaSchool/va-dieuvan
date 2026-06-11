@@ -31,7 +31,7 @@
 
       <DriverTripDetailSkeleton v-if="loading && !trip" />
 
-      <template v-else-if="trip">
+      <div v-else-if="trip" class="driver-stagger space-y-3">
         <DriverTripRouteSection
           :origin-main="originMain"
           :origin-sub="originSub"
@@ -93,7 +93,7 @@
           :format-cost-time="formatCostTime"
           @open-modal="openCostModal"
         />
-      </template>
+      </div>
     </div>
 
     <DriverTripBottomBar

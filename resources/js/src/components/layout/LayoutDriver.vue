@@ -23,6 +23,26 @@
 </template>
 
 <script setup>
+import { onBeforeUnmount, onMounted } from 'vue'
 import AppOpenInPwaBanner from '../AppOpenInPwaBanner.vue'
 import MobileBottomNav from '../nav/MobileBottomNav.vue'
+
+/**
+ * Khóa cuộn document trong suốt phiên driver shell → chỉ #app-main-scroll cuộn.
+ * Ngăn thanh địa chỉ mobile co/giãn theo document scroll, giữ viewport ổn định
+ * và loại bỏ hiện tượng footer (bottom nav) giật lên lúc mới vào app.
+ */
+const SCROLL_LOCK_CLASS = 'driver-scroll-lock'
+
+onMounted(() => {
+  if (typeof document !== 'undefined') {
+    document.documentElement.classList.add(SCROLL_LOCK_CLASS)
+  }
+})
+
+onBeforeUnmount(() => {
+  if (typeof document !== 'undefined') {
+    document.documentElement.classList.remove(SCROLL_LOCK_CLASS)
+  }
+})
 </script>

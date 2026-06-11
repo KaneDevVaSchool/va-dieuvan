@@ -3,7 +3,7 @@
     :to="to"
     :class="linkClass"
     :title="linkTitle"
-    @click="$emit('navigate')"
+    @click="onNavClick"
   >
     <component
       v-if="showIcon"
@@ -33,6 +33,7 @@ import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { isDispatchStaffHomePath } from '../../config/dispatchWebBase'
 import { NAV_ICON_MAP } from '../../config/navIconMap'
+import { useHaptics } from '../../composables/useHaptics'
 
 const props = defineProps({
   to: { type: String, required: true },
@@ -61,9 +62,15 @@ const props = defineProps({
   },
 })
 
-defineEmits(['navigate'])
+const emit = defineEmits(['navigate'])
 
 const route = useRoute()
+const haptics = useHaptics()
+
+function onNavClick() {
+  if (props.driverBottomNav && !isActive.value) haptics.tap()
+  emit('navigate')
+}
 
 const IconComp = computed(() => NAV_ICON_MAP[props.icon] ?? NAV_ICON_MAP.home)
 
@@ -104,7 +111,10 @@ const statusPillClass = computed(() => {
 
 const iconClass = computed(() => {
   if (props.variant === 'bottom') {
-    return 'h-6 w-6 shrink-0 text-current opacity-90'
+    return [
+      'h-6 w-6 shrink-0 text-current opacity-90 transition-transform duration-200 ease-out',
+      isActive.value ? '-translate-y-0.5 scale-110' : '',
+    ].join(' ')
   }
   if (props.variant === 'horizontal') {
     return 'h-4 w-4 shrink-0 text-current opacity-90 sm:h-[1.125rem] sm:w-[1.125rem]'

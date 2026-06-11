@@ -3,7 +3,7 @@
     class="min-h-full w-full bg-driver-bg pb-[calc(7rem+env(safe-area-inset-bottom))] text-driver-ink"
   >
     <div
-      class="mx-auto w-full min-w-0 max-w-full space-y-3 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-4"
+      class="driver-stagger mx-auto w-full min-w-0 max-w-full space-y-3 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-4"
     >
       <!-- Header chrome -->
       <div class="flex items-center justify-between gap-3 pt-1">
@@ -174,8 +174,8 @@
       <section class="rounded-[20px] border border-white/[0.06] bg-driver-card p-4 sm:p-5">
         <button
           type="button"
-          class="inline-flex min-h-[54px] w-full items-center justify-center gap-2 rounded-2xl bg-driver-accent/12 px-4 text-base font-bold text-driver-accent ring-1 ring-driver-accent/30 transition hover:bg-driver-accent/20 active:scale-[0.99]"
-          @click="logoutConfirmOpen = true"
+          class="inline-flex min-h-[54px] w-full items-center justify-center gap-2 rounded-2xl bg-driver-accent/12 px-4 text-base font-bold text-driver-accent ring-1 ring-driver-accent/30 transition hover:bg-driver-accent/20 active:scale-[0.98]"
+          @click="openLogoutConfirm"
         >
           <ArrowRightOnRectangleIcon class="h-6 w-6 shrink-0" aria-hidden="true" />
           {{ t('driver_account.logout') }}
@@ -206,14 +206,14 @@
           <div class="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:gap-3">
             <button
               type="button"
-              class="inline-flex w-full min-h-[50px] items-center justify-center rounded-xl border border-white/[0.12] px-4 text-base font-semibold text-driver-ink transition hover:bg-white/5 sm:w-auto"
+              class="inline-flex w-full min-h-[50px] items-center justify-center rounded-xl border border-white/[0.12] px-4 text-base font-semibold text-driver-ink transition hover:bg-white/5 active:scale-[0.98] sm:w-auto"
               @click="logoutConfirmOpen = false"
             >
               {{ t('app.cancel') }}
             </button>
             <button
               type="button"
-              class="inline-flex w-full min-h-[50px] items-center justify-center rounded-xl bg-driver-accent px-4 text-base font-bold text-driver-bg transition hover:brightness-110 sm:w-auto"
+              class="inline-flex w-full min-h-[50px] items-center justify-center rounded-xl bg-driver-accent px-4 text-base font-bold text-driver-bg transition hover:brightness-110 active:scale-[0.98] sm:w-auto"
               @click="confirmLogout"
             >
               {{ t('app.logout_confirm_action') }}
@@ -242,10 +242,17 @@ import { listTripsAll } from '../../api/trips'
 import NotificationBell from '../../components/notifications/NotificationBell.vue'
 import { useAuthStore } from '../../store'
 import { useAuthLogout } from '../../composables/useAuthLogout'
+import { useHaptics } from '../../composables/useHaptics'
 const { t } = useI18n()
 const router = useRouter()
 const auth = useAuthStore()
 const { performLogout } = useAuthLogout()
+const haptics = useHaptics()
+
+function openLogoutConfirm() {
+  haptics.tap()
+  logoutConfirmOpen.value = true
+}
 
 const loading = ref(true)
 const errorMsg = ref('')
@@ -256,6 +263,7 @@ const avatarFileInput = ref(null)
 const avatarUploading = ref(false)
 
 function openAvatarPicker() {
+  haptics.tap()
   avatarFileInput.value?.click()
 }
 
@@ -470,6 +478,7 @@ async function fetchData() {
 }
 
 async function confirmLogout() {
+  haptics.impact()
   logoutConfirmOpen.value = false
   await performLogout()
 }
