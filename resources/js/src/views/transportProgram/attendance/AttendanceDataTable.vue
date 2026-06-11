@@ -1,5 +1,5 @@
 <template>
-  <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+  <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
     <div
       v-if="selectedCount > 0"
       class="flex flex-wrap items-center gap-2 border-b border-teal-100 bg-teal-50/80 px-3 py-2 text-sm"

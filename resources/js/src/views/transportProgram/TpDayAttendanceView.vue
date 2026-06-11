@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="flex w-full min-w-0 flex-1 flex-col gap-4 min-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-4.5rem)] sm:min-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-5.5rem)]"
-  >
+  <div class="flex w-full min-w-0 flex-col gap-4">
     <header
       class="min-w-0 rounded-2xl border border-slate-200/90 bg-white px-4 py-4 shadow-sm sm:px-5 sm:py-5"
     >
@@ -136,12 +134,12 @@
     </template>
 
     <template v-else-if="data">
-      <div class="flex min-h-0 flex-1 flex-col gap-4">
+      <div class="flex flex-col gap-4">
         <AttendanceStatsBar :summary="data.summary" />
 
         <div
           v-if="data.attendance_status === 'confirmed'"
-          class="flex shrink-0 items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3"
+          class="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3"
         >
           <div class="flex items-center gap-2 text-sm font-medium text-emerald-800">
             <LockClosedIcon class="h-4 w-4 shrink-0" />
@@ -152,8 +150,7 @@
           </Button>
         </div>
 
-        <div class="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div class="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-y-contain">
+        <div class="space-y-4">
       <div class="sticky top-0 z-40 -mx-1 px-1 pt-1">
         <AppFilterBar>
           <div class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
@@ -387,10 +384,7 @@
               v-model.number="perPage"
               class="h-9 rounded-lg border-0 bg-white/90 pl-2 pr-6 text-sm ring-1 ring-slate-200/80 text-slate-900"
             >
-              <option :value="10">10</option>
-              <option :value="25">25</option>
-              <option :value="50">50</option>
-              <option :value="100">100</option>
+              <option v-for="n in perPageOptions" :key="n" :value="n">{{ n }}</option>
             </select>
           </div>
         </AppFilterBar>
@@ -434,31 +428,56 @@
         </template>
       </AttendanceDataTable>
 
-      <div v-if="totalFiltered > perPage" class="flex items-center justify-between text-sm text-slate-600">
-        <span>{{ t('tp_attendance_page.pagination', { page, total: totalPages }) }}</span>
-        <div class="flex gap-1">
-          <button
-            type="button"
-            class="rounded-lg border border-slate-200 px-2 py-1 disabled:opacity-40"
-            :disabled="page <= 1"
-            @click="page--"
-          >
-            <ChevronLeftIcon class="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            class="rounded-lg border border-slate-200 px-2 py-1 disabled:opacity-40"
-            :disabled="page >= totalPages"
-            @click="page++"
-          >
-            <ChevronRightIcon class="h-4 w-4" />
-          </button>
+      <div
+        v-if="totalFiltered > 0"
+        class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-600 shadow-sm"
+        data-testid="tp-attendance-pagination"
+      >
+        <span class="text-xs sm:text-sm">
+          {{ t('tp_attendance_page.pagination_showing', { from: pageRangeFrom, to: pageRangeTo, total: totalFiltered }) }}
+        </span>
+        <div class="flex flex-wrap items-center gap-2">
+          <label class="flex items-center gap-1.5 text-xs text-slate-600">
+            {{ t('tp_attendance_page.filter_vis_per_page') }}
+            <select
+              v-model.number="perPage"
+              class="h-8 rounded-lg border border-slate-200 bg-white py-1 pl-2 pr-7 text-sm text-slate-900"
+              data-testid="tp-attendance-per-page"
+            >
+              <option v-for="n in perPageOptions" :key="n" :value="n">{{ n }}</option>
+            </select>
+          </label>
+          <div class="flex items-center gap-0.5">
+            <button
+              type="button"
+              class="rounded-lg border border-slate-200 p-1.5 disabled:opacity-40"
+              :disabled="page <= 1"
+              :aria-label="t('tp_attendance_page.pagination_prev')"
+              data-testid="tp-attendance-page-prev"
+              @click="page--"
+            >
+              <ChevronLeftIcon class="h-4 w-4" />
+            </button>
+            <span class="min-w-[4rem] text-center text-xs tabular-nums">
+              {{ t('tp_attendance_page.pagination', { page, total: totalPages }) }}
+            </span>
+            <button
+              type="button"
+              class="rounded-lg border border-slate-200 p-1.5 disabled:opacity-40"
+              :disabled="page >= totalPages"
+              :aria-label="t('tp_attendance_page.pagination_next')"
+              data-testid="tp-attendance-page-next"
+              @click="page++"
+            >
+              <ChevronRightIcon class="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
-          </div>
+        </div>
 
           <div
-            class="shrink-0 z-30 -mx-3 border-t border-slate-200/90 bg-white/95 shadow-[0_-4px_12px_-4px_rgba(15,23,42,0.08)] backdrop-blur supports-[padding:max(0px)]:pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:-mx-4 md:-mx-6 lg:-mx-8"
+            class="rounded-2xl border border-slate-200/90 bg-white shadow-sm"
             data-testid="tp-attendance-footer"
           >
             <div
@@ -470,7 +489,7 @@
                 {{ data.missing_reason_count }} học sinh chưa có lý do vắng (chọn danh mục hoặc nhập ghi chú)
               </span>
             </div>
-            <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-3 py-3 sm:px-4 md:px-6 lg:px-8">
+            <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3 sm:px-5">
               <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600">
                 <span>
                   <span class="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" />
@@ -511,7 +530,6 @@
               </div>
             </div>
           </div>
-        </div>
       </div>
     </template>
 
@@ -589,6 +607,7 @@ import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessag
 import { useFilterBarVisibility } from '../../composables/useFilterBarVisibility'
 import {
   ATTENDANCE_FILTER_VIS_IDS,
+  ATTENDANCE_PER_PAGE_OPTIONS,
   useTpAttendanceList,
 } from '../../composables/useTpAttendanceList'
 import { exportAttendanceExcel } from '../../composables/useTpAttendanceExcelExport'
@@ -669,6 +688,15 @@ const {
   resetFilters,
   toggleSort,
 } = useTpAttendanceList(() => data.value?.items || [])
+
+const perPageOptions = ATTENDANCE_PER_PAGE_OPTIONS
+
+const pageRangeFrom = computed(() =>
+  totalFiltered.value === 0 ? 0 : (page.value - 1) * perPage.value + 1,
+)
+const pageRangeTo = computed(() =>
+  Math.min(page.value * perPage.value, totalFiltered.value),
+)
 
 const selectedCount = computed(() => selectedIds.value.size)
 const selectedIdList = computed(() => [...selectedIds.value])

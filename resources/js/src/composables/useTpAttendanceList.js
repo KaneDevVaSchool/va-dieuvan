@@ -12,6 +12,8 @@ export const ATTENDANCE_FILTER_VIS_IDS = [
 
 export const ATTENDANCE_COL_STORAGE_KEY = 'va-tp-attendance-cols-v2'
 
+export const ATTENDANCE_PER_PAGE_OPTIONS = [5, 10, 15, 20]
+
 export const ATTENDANCE_COL_DEFAULTS = {
   class_name: true,
   boarded_time: true,
@@ -58,7 +60,7 @@ export function useTpAttendanceList(getItems) {
 
   const sort = reactive({ key: 'student', dir: 'asc' })
   const page = ref(1)
-  const perPage = ref(25)
+  const perPage = ref(10)
 
   const columnVisible = ref(loadColumnPrefs())
   watch(
@@ -190,7 +192,7 @@ export function useTpAttendanceList(getItems) {
     if (filters.grade) n++
     if (filters.boardedFrom || filters.boardedTo) n++
     if (filters.marked) n++
-    if (perPage.value !== 25) n++
+    if (perPage.value !== 10) n++
     if (sort.key !== 'student' || sort.dir !== 'asc') n++
     return n
   })
@@ -204,7 +206,7 @@ export function useTpAttendanceList(getItems) {
     filters.boardedFrom = ''
     filters.boardedTo = ''
     filters.marked = ''
-    perPage.value = 25
+    perPage.value = 10
     sort.key = 'student'
     sort.dir = 'asc'
   }
