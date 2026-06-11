@@ -50,9 +50,8 @@
     ═══════════════════════════════════════════════════════════════ -->
     <template v-if="activeTab === 'all_trips' || activeTab === 'standalone'">
 
-      <!-- ── Filter strip row 1 ──────────────────────────────── -->
-      <div class="cv-filter-strip mt-4">
-        <!-- Status chips -->
+      <!-- ── Bộ lọc ────────────────────────────────────────────── -->
+      <div class="cv-secondary-filters mt-4">
         <div
           v-if="filterControlVisible.status"
           class="flex flex-wrap items-center gap-1.5"
@@ -71,13 +70,6 @@
           </button>
         </div>
 
-        <div
-          v-if="filterControlVisible.status && filterControlVisible.date"
-          class="hidden h-6 w-px bg-slate-200 dark:bg-slate-700 sm:block"
-          aria-hidden="true"
-        />
-
-        <!-- Date range -->
         <div v-if="filterControlVisible.date" class="flex items-center gap-1">
           <input
             v-model="filters.from"
@@ -96,7 +88,6 @@
           />
         </div>
 
-        <!-- Search -->
         <input
           v-if="filterControlVisible.search"
           v-model="searchQ"
@@ -106,48 +97,6 @@
           :aria-label="t('costs_page.filter_search_page')"
         />
 
-        <!-- More filters toggle -->
-        <button
-          type="button"
-          class="cv-more-btn"
-          :class="showSecondaryFilters ? 'cv-more-btn--active' : ''"
-          @click="showSecondaryFilters = !showSecondaryFilters"
-        >
-          {{ t('costs_page.filter_more') }}
-          <span v-if="secondaryActiveFilterCount > 0" class="cv-more-badge">{{ secondaryActiveFilterCount }}</span>
-          <ChevronDownIcon
-            class="h-3.5 w-3.5 shrink-0 transition-transform"
-            :class="showSecondaryFilters ? 'rotate-180' : ''"
-            aria-hidden="true"
-          />
-        </button>
-
-        <!-- Right: clear + add -->
-        <div class="ml-auto flex shrink-0 items-center gap-2">
-          <button
-            v-if="activeFilterCount > 0"
-            type="button"
-            class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-            @click="resetFilters"
-          >
-            <XMarkIcon class="h-3.5 w-3.5" aria-hidden="true" />
-            {{ t('costs_page.filter_clear') }}
-          </button>
-          <button
-            v-if="showAddCostButton"
-            type="button"
-            class="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg bg-va-800 px-3.5 text-sm font-semibold text-white shadow-sm ring-1 ring-black/5 transition hover:bg-va-900 focus:outline-none focus:ring-2 focus:ring-va-800/35 dark:ring-white/10"
-            data-testid="costs-add-btn"
-            @click="openAddCostModal"
-          >
-            <PlusCircleIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-            {{ activeTab === 'standalone' ? t('costs_page.add_standalone_cost') : t('costs_page.add_cost') }}
-          </button>
-        </div>
-      </div>
-
-      <!-- ── Filter strip row 2: secondary (collapsible) ───────── -->
-      <div v-show="showSecondaryFilters" class="cv-secondary-filters mt-2">
         <!-- Type -->
         <select
           v-if="filterControlVisible.type"
@@ -283,6 +232,95 @@
         </button>
       </div>
 
+      <!-- ── Hiển thị bộ lọc / cột + thao tác ─────────────────── -->
+      <div class="cv-display-controls mt-2 flex flex-wrap items-center gap-2">
+        <details ref="filterPickerRef" class="cv-picker-details group relative">
+          <summary
+            class="cv-picker-trigger"
+            :aria-label="t('costs_page.filter_visibility_title')"
+            data-testid="costs-filter-visibility-trigger"
+          >
+            <FunnelIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>{{ t('costs_page.filter_visibility_title') }}</span>
+            <ChevronDownIcon class="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
+          </summary>
+          <div class="cv-picker-panel" @click.stop>
+            <p class="cv-picker-panel-title">{{ t('costs_page.filter_show_controls_title') }}</p>
+            <p class="cv-picker-panel-hint">{{ t('costs_page.filter_show_controls_hint') }}</p>
+            <ul class="mt-3 max-h-[min(50vh,280px)] space-y-2.5 overflow-y-auto pr-0.5">
+              <li v-for="fd in filterControlDefs" :key="'costs-filter-vis-' + fd.id" class="flex items-start gap-2.5">
+                <input
+                  :id="'costs-filter-vis-' + fd.id"
+                  v-model="filterControlVisible[fd.id]"
+                  type="checkbox"
+                  class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900"
+                  :data-testid="`costs-filter-vis-${fd.id}`"
+                />
+                <label
+                  :for="'costs-filter-vis-' + fd.id"
+                  class="cursor-pointer text-sm font-medium leading-snug text-slate-700 dark:text-slate-300"
+                >
+                  {{ fd.label }}
+                </label>
+              </li>
+            </ul>
+          </div>
+        </details>
+        <details ref="columnPickerRef" class="cv-picker-details group relative">
+          <summary
+            class="cv-picker-trigger"
+            :aria-label="t('costs_page.column_visibility_title')"
+            data-testid="costs-column-visibility-trigger"
+          >
+            <ViewColumnsIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>{{ t('costs_page.column_visibility_title') }}</span>
+            <ChevronDownIcon class="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
+          </summary>
+          <div class="cv-picker-panel" @click.stop>
+            <p class="cv-picker-panel-title">{{ t('costs_page.column_visibility_title') }}</p>
+            <ul class="mt-3 max-h-[min(50vh,320px)] space-y-2.5 overflow-y-auto pr-0.5">
+              <li v-for="cd in colControlDefs" :key="'costs-col-vis-' + cd.id" class="flex items-start gap-2.5">
+                <input
+                  :id="'costs-col-vis-' + cd.id"
+                  v-model="colVisible[cd.id]"
+                  type="checkbox"
+                  class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900"
+                  :data-testid="`costs-col-vis-${cd.id}`"
+                />
+                <label
+                  :for="'costs-col-vis-' + cd.id"
+                  class="cursor-pointer text-sm font-medium leading-snug text-slate-700 dark:text-slate-300"
+                >
+                  {{ cd.label }}
+                </label>
+              </li>
+            </ul>
+          </div>
+        </details>
+        <div class="ml-auto flex shrink-0 flex-wrap items-center gap-2">
+          <button
+            v-if="activeFilterCount > 0"
+            type="button"
+            class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            data-testid="costs-filter-clear"
+            @click="resetFilters"
+          >
+            <XMarkIcon class="h-4 w-4" aria-hidden="true" />
+            {{ t('costs_page.filter_clear') }}
+          </button>
+          <button
+            v-if="showAddCostButton"
+            type="button"
+            class="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-va-800 px-3.5 text-sm font-semibold text-white shadow-sm ring-1 ring-black/5 transition hover:bg-va-900 focus:outline-none focus:ring-2 focus:ring-va-800/35 dark:ring-white/10"
+            data-testid="costs-add-btn"
+            @click="openAddCostModal"
+          >
+            <PlusCircleIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+            {{ activeTab === 'standalone' ? t('costs_page.add_standalone_cost') : t('costs_page.add_cost') }}
+          </button>
+        </div>
+      </div>
+
       <!-- ── KPI summary bar ─────────────────────────────────── -->
       <div v-if="!tableBusy || items.length > 0" class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <div class="cv-kpi-card">
@@ -319,76 +357,11 @@
               {{ t('costs_page.standalone_intro') }}
             </p>
           </div>
-          <div class="flex shrink-0 flex-wrap items-center gap-2">
-            <details ref="filterPickerRef" class="cv-picker-details group relative">
-              <summary
-                class="cv-picker-trigger"
-                :aria-label="t('costs_page.filter_visibility_title')"
-                data-testid="costs-filter-visibility-trigger"
-              >
-                <FunnelIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-                <span>{{ t('costs_page.filter_visibility_title') }}</span>
-                <ChevronDownIcon class="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
-              </summary>
-              <div class="cv-picker-panel cv-picker-panel--end" @click.stop>
-                <p class="cv-picker-panel-title">{{ t('costs_page.filter_show_controls_title') }}</p>
-                <p class="cv-picker-panel-hint">{{ t('costs_page.filter_show_controls_hint') }}</p>
-                <ul class="mt-3 max-h-[min(50vh,280px)] space-y-2.5 overflow-y-auto pr-0.5">
-                  <li v-for="fd in filterControlDefs" :key="'costs-filter-vis-' + fd.id" class="flex items-start gap-2.5">
-                    <input
-                      :id="'costs-filter-vis-' + fd.id"
-                      v-model="filterControlVisible[fd.id]"
-                      type="checkbox"
-                      class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900"
-                      :data-testid="`costs-filter-vis-${fd.id}`"
-                    />
-                    <label
-                      :for="'costs-filter-vis-' + fd.id"
-                      class="cursor-pointer text-sm font-medium leading-snug text-slate-700 dark:text-slate-300"
-                    >
-                      {{ fd.label }}
-                    </label>
-                  </li>
-                </ul>
-              </div>
-            </details>
-            <details ref="columnPickerRef" class="cv-picker-details group relative">
-              <summary
-                class="cv-picker-trigger"
-                :aria-label="t('costs_page.column_visibility_title')"
-                data-testid="costs-column-visibility-trigger"
-              >
-                <ViewColumnsIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-                <span>{{ t('costs_page.column_visibility_title') }}</span>
-                <ChevronDownIcon class="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
-              </summary>
-              <div class="cv-picker-panel cv-picker-panel--end" @click.stop>
-                <p class="cv-picker-panel-title">{{ t('costs_page.column_visibility_title') }}</p>
-                <ul class="mt-3 max-h-[min(50vh,320px)] space-y-2.5 overflow-y-auto pr-0.5">
-                  <li v-for="cd in colControlDefs" :key="'costs-col-vis-' + cd.id" class="flex items-start gap-2.5">
-                    <input
-                      :id="'costs-col-vis-' + cd.id"
-                      v-model="colVisible[cd.id]"
-                      type="checkbox"
-                      class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900"
-                      :data-testid="`costs-col-vis-${cd.id}`"
-                    />
-                    <label
-                      :for="'costs-col-vis-' + cd.id"
-                      class="cursor-pointer text-sm font-medium leading-snug text-slate-700 dark:text-slate-300"
-                    >
-                      {{ cd.label }}
-                    </label>
-                  </li>
-                </ul>
-              </div>
-            </details>
-            <span
-              v-if="tableBusy"
-              class="inline-block size-4 animate-spin rounded-full border-2 border-slate-200 border-t-teal-600"
-              aria-hidden="true"
-            />
-          </div>
+          <span
+            v-if="tableBusy"
+            class="inline-block size-4 shrink-0 animate-spin rounded-full border-2 border-slate-200 border-t-teal-600"
+            aria-hidden="true"
+          />
         </div>
 
         <div class="overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
@@ -424,17 +397,25 @@
                 <!-- # Nội dung -->
                 <td class="cv-td">
                   <p
+                    v-if="displayTextOrNull(c.description)"
                     class="line-clamp-2 text-sm font-medium text-slate-900 dark:text-slate-100"
-                    :title="c.description || ''"
+                    :title="c.description"
                   >
-                    {{ c.description || '—' }}
+                    {{ c.description }}
+                  </p>
+                  <p
+                    v-else
+                    class="line-clamp-2 text-sm font-normal italic text-slate-400 dark:text-slate-500"
+                  >
+                    {{ t('costs_page.empty_description') }}
                   </p>
                   <div class="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span class="cv-type-badge">{{ typeLabel(c.type) }}</span>
                     <span
                       v-if="colVisible.submitter"
-                      class="text-xs text-slate-500 dark:text-slate-400"
-                    >{{ costSubmitterLabel(c) }}</span>
+                      class="text-xs"
+                      :class="costSubmitterDisplayName(c) ? 'text-slate-500 dark:text-slate-400' : 'italic text-slate-400 dark:text-slate-500'"
+                    >{{ costSubmitterDisplayName(c) || t('costs_page.empty_not_available') }}</span>
                     <span
                       v-if="costEvidenceCount(c) > 0"
                       class="inline-flex items-center rounded-full bg-teal-50 px-1.5 py-0.5 text-[11px] font-medium text-teal-700 ring-1 ring-teal-200/70 dark:bg-teal-950/40 dark:text-teal-300 dark:ring-teal-800/50"
@@ -497,7 +478,12 @@
                   >
                     {{ statusLabel(c.status) }}
                   </span>
-                  <p class="mt-1 text-xs tabular-nums text-slate-500 dark:text-slate-400">{{ formatDateDMY(c.created_at) }}</p>
+                  <p
+                    class="mt-1 text-xs tabular-nums"
+                    :class="displayTextOrNull(c.created_at) ? 'text-slate-500 dark:text-slate-400' : 'italic text-slate-400 dark:text-slate-500'"
+                  >
+                    {{ formatDateDMYDisplay(c.created_at) }}
+                  </p>
                   <p v-if="c.confirmer?.name" class="text-xs text-slate-500 dark:text-slate-400">{{ c.confirmer.name }}</p>
                   <p
                     v-if="c.rejection_reason"
@@ -508,23 +494,28 @@
 
                 <!-- # Thao tác -->
                 <td v-if="canReconcileCosts && colVisible.actions" class="cv-td text-right" @click.stop>
-                  <div class="flex flex-col items-end gap-1">
-                    <span class="font-mono text-xs font-semibold text-slate-500 dark:text-slate-400">
-                      {{ costRowReferenceLabel(c) }}
-                    </span>
+                  <AppRowActionsMenu
+                    align="end"
+                    :aria-label="t('costs_page.row_actions_aria', { code: costRowReferenceLabel(c) })"
+                    :trigger-sr-only="t('costs_page.col_actions')"
+                    :disabled="decidingId != null || deletingCostId != null"
+                    root-class="text-right"
+                    data-testid="cost-row-actions-menu"
+                  >
                     <button
                       type="button"
-                      class="text-sm font-semibold text-teal-700 underline decoration-teal-700/30 underline-offset-2 hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-200"
+                      role="menuitem"
+                      class="flex w-full items-center gap-2 px-3 py-2 text-left text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
                       data-testid="cost-row-detail-btn"
-                      :disabled="decidingId != null || deletingCostId != null"
                       @click="openCostDetail(c)"
                     >
                       {{ t('costs_page.action_view_detail') }}
                     </button>
-                    <div v-if="isCostPendingDecision(c)" class="flex flex-wrap justify-end gap-x-2 gap-y-0.5">
+                    <template v-if="isCostPendingDecision(c)">
                       <button
                         type="button"
-                        class="text-xs font-semibold text-emerald-700 hover:text-emerald-900 dark:text-emerald-400"
+                        role="menuitem"
+                        class="flex w-full items-center gap-2 px-3 py-2 text-left font-semibold text-emerald-800 transition hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/40"
                         data-testid="cost-row-approve-btn"
                         :disabled="decidingId != null"
                         @click="quickApproveCost(c)"
@@ -533,24 +524,31 @@
                       </button>
                       <button
                         type="button"
-                        class="text-xs font-semibold text-rose-700 hover:text-rose-900 dark:text-rose-400"
+                        role="menuitem"
+                        class="flex w-full items-center gap-2 px-3 py-2 text-left font-semibold text-rose-800 transition hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40"
                         data-testid="cost-row-reject-btn"
                         :disabled="decidingId != null"
                         @click="quickRejectCost(c)"
                       >
                         {{ t('costs_page.action_reject') }}
                       </button>
-                    </div>
+                    </template>
+                    <div
+                      v-if="isCostPendingDecision(c)"
+                      class="my-1 border-t border-slate-100 dark:border-slate-700"
+                      role="separator"
+                    />
                     <button
                       type="button"
-                      class="text-xs font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                      role="menuitem"
+                      class="flex w-full items-center gap-2 px-3 py-2 text-left text-red-800 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
                       data-testid="cost-row-delete-btn"
                       :disabled="deletingCostId != null"
                       @click="openDeleteModal(c)"
                     >
                       {{ t('costs_page.action_delete') }}
                     </button>
-                  </div>
+                  </AppRowActionsMenu>
                 </td>
               </tr>
             </tbody>
@@ -739,20 +737,28 @@
                   </RouterLink>
                 </td>
                 <td class="cv-td">
-                  <span class="line-clamp-2">{{ row.personnel_label || '—' }}</span>
+                  <span
+                    class="line-clamp-2"
+                    :class="displayTextOrNull(row.personnel_label) ? '' : 'italic text-slate-400 dark:text-slate-500'"
+                  >
+                    {{ displayTextOrNull(row.personnel_label) || t('costs_page.empty_not_available') }}
+                  </span>
                   <span v-if="row.guests" class="mt-0.5 block text-[11px] text-slate-500 dark:text-slate-400">{{ row.guests }}</span>
                 </td>
                 <td class="cv-td text-slate-700 dark:text-slate-300">
-                  <span v-if="row.pickup || row.dropoff">{{ row.pickup || '…' }} → {{ row.dropoff || '…' }}</span>
-                  <span v-else-if="row.request_origin || row.request_destination">
-                    {{ row.request_origin || '…' }} → {{ row.request_destination || '…' }}
-                  </span>
-                  <span v-else>—</span>
+                  <span v-if="bpRoutePrimary(row)">{{ bpRoutePrimary(row) }}</span>
+                  <span v-else class="italic text-slate-400 dark:text-slate-500">{{ t('costs_page.empty_route') }}</span>
                 </td>
                 <td class="cv-td text-right tabular-nums">{{ formatVnd(row.unit_price) }}</td>
                 <td class="cv-td text-right tabular-nums">{{ formatVnd(row.extra_fee) }}</td>
                 <td class="cv-td text-right font-semibold tabular-nums text-slate-900 dark:text-slate-100">{{ formatVnd(row.amount_total) }}</td>
-                <td class="cv-td">{{ row.requester_name || '—' }}</td>
+                <td class="cv-td">
+                  <span
+                    :class="displayTextOrNull(row.requester_name) ? '' : 'italic text-slate-400 dark:text-slate-500'"
+                  >
+                    {{ displayTextOrNull(row.requester_name) || t('costs_page.empty_not_available') }}
+                  </span>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -1125,8 +1131,10 @@ import { listTrips } from '../../api/trips'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { formatTripCode, formatVnd, formatVndDigitsInput, labelTripType } from '../../util/labels'
 import StaffCostDetailModal from '../../components/costs/StaffCostDetailModal.vue'
+import AppRowActionsMenu from '../../components/ui/AppRowActionsMenu.vue'
 import { showAppErrorFromApi } from '../../composables/appMessage'
 import { useAuthStore } from '../../store'
+import { displayTextOrNull, isEmptyDisplay } from '../../util/displayValue'
 
 const { t, te, locale } = useI18n()
 const route = useRoute()
@@ -1170,7 +1178,7 @@ const EXTRA_TYPES_STORAGE_KEY = 'va.costs.extra_types_v1'
 const extraCostTypes = ref([])
 
 function typeLabel(slug) {
-  if (!slug) return '—'
+  if (!slug) return t('costs_page.empty_not_available')
   const key = `trip_detail.costs.type_${slug}`
   if (te(key)) return t(key)
   const hit = extraCostTypes.value.find((x) => x.slug === slug)
@@ -1223,11 +1231,41 @@ function dispatchRequestFromCost(c) {
   return c?.trip?.dispatch_request ?? c?.trip?.dispatchRequest ?? null
 }
 
-function costSubmitterLabel(c) {
+function costSubmitterRawName(c) {
   const dr = dispatchRequestFromCost(c)
   const requester = dr?.requester?.name
   if (tripTypeFromCost(c) === 'business' && requester) return requester
-  return c.creator?.name || '—'
+  return c.creator?.name ?? ''
+}
+
+function costSubmitterDisplayName(c) {
+  return displayTextOrNull(costSubmitterRawName(c))
+}
+
+function costSubmitterLabel(c) {
+  return costSubmitterDisplayName(c) || ''
+}
+
+function bpRoutePart(value) {
+  return displayTextOrNull(value)
+}
+
+function bpRoutePrimary(row) {
+  const pickup = bpRoutePart(row.pickup)
+  const dropoff = bpRoutePart(row.dropoff)
+  if (pickup || dropoff) {
+    const from = pickup || t('costs_page.empty_not_available')
+    const to = dropoff || t('costs_page.empty_not_available')
+    return `${from} → ${to}`
+  }
+  const origin = bpRoutePart(row.request_origin)
+  const dest = bpRoutePart(row.request_destination)
+  if (origin || dest) {
+    const from = origin || t('costs_page.empty_not_available')
+    const to = dest || t('costs_page.empty_not_available')
+    return `${from} → ${to}`
+  }
+  return null
 }
 
 function parseAmountFilterDigits(val) {
@@ -1342,7 +1380,6 @@ useDetailsAutoClose(filterTripDropdownRef)
 useDetailsAutoClose(bpFilterTripDropdownRef)
 
 // Secondary filters collapse state
-const showSecondaryFilters = ref(false)
 
 // ── Decide / reject / delete ─────────────────────────────────────
 const decidingId = ref(null)
@@ -1594,17 +1631,6 @@ const activeFilterCount = computed(() => {
   return n
 })
 
-const secondaryActiveFilterCount = computed(() => {
-  let n = 0
-  if (filters.type) n++
-  if (filters.trip_type) n++
-  if (filters.trip_id) n++
-  if (filters.provider) n++
-  if (filters.fleet_mode) n++
-  if (filters.amount_min || filters.amount_max) n++
-  return n
-})
-
 const amountRangeSummary = computed(() => {
   if (!filters.amount_min && !filters.amount_max) return t('costs_page.filter_amount_range')
   const min = filters.amount_min ? formatVndDigitsInput(String(filters.amount_min).replace(/\D/g, '')) : '…'
@@ -1849,6 +1875,12 @@ function formatDateDMY(iso) {
   } catch {
     return '—'
   }
+}
+
+function formatDateDMYDisplay(iso) {
+  if (isEmptyDisplay(iso)) return t('costs_page.empty_date')
+  const formatted = formatDateDMY(iso)
+  return isEmptyDisplay(formatted) ? t('costs_page.empty_date') : formatted
 }
 
 function costTripCode(c) {
@@ -2250,6 +2282,10 @@ onMounted(async () => {
 
 .cv-picker-panel--end {
   @apply right-0;
+}
+
+.cv-display-controls {
+  @apply rounded-xl border border-slate-200/70 bg-slate-50/80 px-3 py-2.5 dark:border-slate-700/60 dark:bg-slate-800/40;
 }
 
 .cv-picker-panel-title {

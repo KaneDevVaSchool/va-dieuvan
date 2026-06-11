@@ -17,11 +17,11 @@ use App\Http\Requests\Api\Costs\UploadTripCostReceiptRequest;
 use App\Models\Trip;
 use App\Models\TripCost;
 use App\Services\Auditing\AuditLogger;
-use App\Support\FinancialDataLock;
-use App\Support\Messages;
 use App\Services\Costs\BusinessPersonnelCostLinesQuery;
 use App\Services\Costs\WizardSnapshotCostLinesQuery;
 use App\Services\RecurringDispatch\RecurringBudgetAlertService;
+use App\Support\FinancialDataLock;
+use App\Support\Messages;
 use App\Support\TripCostAccess;
 use App\Support\TripVisibility;
 use Illuminate\Database\Eloquent\Builder;
@@ -255,8 +255,11 @@ class TripCostController extends Controller
             'attachments' => fn ($q) => $q->orderByDesc('id'),
             'creator:id,name,email',
             'confirmer:id,name,email',
-            'trip',
-            'trip.dispatchRequest:id,origin,destination,status,arrive_by',
+            'trip:id,status,depart_at,driver_id,transport_provider_id,vehicle_id,dispatch_request_id',
+            'trip.vehicle:id,license_plate,type',
+            'trip.driver:id,full_name,phone',
+            'trip.transportProvider:id,name,type',
+            'trip.dispatchRequest:id,origin,destination,status,arrive_by,trip_type',
         ]);
 
         abort_unless(TripCostAccess::userCanView($request->user(), $tripCost), 403);
