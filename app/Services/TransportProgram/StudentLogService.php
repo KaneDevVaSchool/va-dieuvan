@@ -43,7 +43,10 @@ class StudentLogService
         ]);
 
         if ($wasAbsent) {
-            $log->execution->decrement('total_absent');
+            $execution = $log->execution->fresh();
+            if ($execution->total_absent > 0) {
+                $execution->decrement('total_absent');
+            }
             $this->attendance->markPresent($log->execution->programDay, $log->student_id, $actorId);
         }
         $log->execution->increment('total_boarded');
@@ -99,9 +102,9 @@ class StudentLogService
 
         if ($wasPending) {
             $log->execution->increment('total_absent');
-        }
-        if ($wasBoarded) {
+        } elseif ($wasBoarded) {
             $log->execution->decrement('total_boarded');
+            $log->execution->increment('total_absent');
         }
 
         $day = $log->execution->programDay;
@@ -158,7 +161,10 @@ class StudentLogService
             'absent_by' => null,
             'absence_type' => null,
         ]);
-        $log->execution->decrement('total_absent');
+        $execution = $log->execution->fresh();
+        if ($execution->total_absent > 0) {
+            $execution->decrement('total_absent');
+        }
         $this->attendance->unmarkAbsent($log->execution->programDay, $log->student_id, $actorId);
         $this->audit->log($actorId, 'log.absence_undone', $log, $log->execution->program);
 

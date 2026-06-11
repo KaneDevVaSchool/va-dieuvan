@@ -3,14 +3,23 @@
 
 echo "🔍 Running pre-commit checks..."
 
-# PHP Pint (code style)
-echo "→ PHP Pint..."
-./vendor/bin/pint --test
-if [ $? -ne 0 ]; then
-  echo "❌ Pint failed. Run: ./vendor/bin/pint"
-  exit 1
+# PHP Pint (code style) — chỉ file PHP đang stage
+STAGED_PHP=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.php$' || true)
+if [ -n "$STAGED_PHP" ]; then
+  echo "→ PHP Pint..."
+  PHP_BIN="php"
+  if ! command -v php >/dev/null 2>&1; then
+    if [ -f "/c/ServBay/bin/php.cmd" ]; then
+      PHP_BIN="/c/ServBay/bin/php.cmd"
+    fi
+  fi
+  echo "$STAGED_PHP" | xargs "$PHP_BIN" vendor/bin/pint --test
+  if [ $? -ne 0 ]; then
+    echo "❌ Pint failed. Run: ./vendor/bin/pint"
+    exit 1
+  fi
+  echo "✅ PHP Pint passed"
 fi
-echo "✅ PHP Pint passed"
 
 # ESLint (nếu có staged JS/Vue/TS files)
 STAGED_JS=$(git diff --cached --name-only --diff-filter=ACM | grep -E "\.(js|ts|vue)$" || true)

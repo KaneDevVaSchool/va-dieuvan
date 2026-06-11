@@ -69,6 +69,42 @@ class TpExecutionFlowTest extends TestCase
         $this->assertSame(0, $completed->studentLogs()->where('final_status', TpTripStudentLog::FINAL_PENDING)->count());
     }
 
+    public function test_board_after_driver_marks_boarded_student_absent_does_not_underflow_total_absent(): void
+    {
+        $driver = Driver::create(['full_name' => 'Tài xế vắng sau lên']);
+
+        $result = app(CreateTransportProgramAction::class)->execute([
+            'name' => 'CT vắng sau lên',
+            'departure_time' => '06:30',
+            'start_date' => Carbon::today()->toDateString(),
+            'end_date' => Carbon::today()->toDateString(),
+            'runs_on' => ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+            'default_driver_id' => $driver->id,
+        ], null);
+
+        $program = TpProgram::findOrFail($result['program']['id']);
+        $student = TpStudent::create(['code' => 'EX003', 'full_name' => 'HS 3', 'status' => 'active']);
+        app(ProgramEnrollmentService::class)->enrollBulk($program, [$student->id], null);
+
+        $day = $program->days()->orderBy('scheduled_date')->first();
+        $execution = app(TripExecutionService::class)->start($day, $driver);
+        $log = $execution->studentLogs()->where('student_id', $student->id)->firstOrFail();
+
+        $logService = app(StudentLogService::class);
+        $logService->board($log, null);
+        $logService->markAbsent($log->fresh(), 'no_notice', null, null);
+
+        $execution->refresh();
+        $this->assertSame(0, (int) $execution->total_boarded);
+        $this->assertSame(1, (int) $execution->total_absent);
+
+        $logService->board($log->fresh(), null);
+
+        $execution->refresh();
+        $this->assertSame(1, (int) $execution->total_boarded);
+        $this->assertSame(0, (int) $execution->total_absent);
+    }
+
     public function test_driver_can_save_student_notes_during_trip(): void
     {
         $driver = Driver::create(['full_name' => 'Tài xế ghi chú']);

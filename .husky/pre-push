@@ -3,9 +3,16 @@
 
 echo "🚀 Running pre-push checks..."
 
+PHP_BIN="php"
+if ! command -v php >/dev/null 2>&1; then
+  if [ -f "/c/ServBay/bin/php.cmd" ]; then
+    PHP_BIN="/c/ServBay/bin/php.cmd"
+  fi
+fi
+
 # PHPUnit tests
 echo "→ PHPUnit..."
-php artisan test --parallel --stop-on-failure
+"$PHP_BIN" artisan test --parallel --stop-on-failure
 if [ $? -ne 0 ]; then
   echo "❌ PHPUnit tests failed!"
   exit 1
