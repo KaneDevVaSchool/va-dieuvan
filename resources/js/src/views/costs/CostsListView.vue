@@ -53,7 +53,12 @@
       <!-- ── Filter strip row 1 ──────────────────────────────── -->
       <div class="cv-filter-strip mt-4">
         <!-- Status chips -->
-        <div class="flex flex-wrap items-center gap-1.5" role="group" :aria-label="t('filter_bar.status')">
+        <div
+          v-if="filterControlVisible.status"
+          class="flex flex-wrap items-center gap-1.5"
+          role="group"
+          :aria-label="t('filter_bar.status')"
+        >
           <button
             v-for="opt in statusChipOptions"
             :key="opt.value === '' ? '_all' : opt.value"
@@ -66,10 +71,14 @@
           </button>
         </div>
 
-        <div class="hidden h-6 w-px bg-slate-200 dark:bg-slate-700 sm:block" aria-hidden="true" />
+        <div
+          v-if="filterControlVisible.status && filterControlVisible.date"
+          class="hidden h-6 w-px bg-slate-200 dark:bg-slate-700 sm:block"
+          aria-hidden="true"
+        />
 
         <!-- Date range -->
-        <div class="flex items-center gap-1">
+        <div v-if="filterControlVisible.date" class="flex items-center gap-1">
           <input
             v-model="filters.from"
             type="date"
@@ -89,6 +98,7 @@
 
         <!-- Search -->
         <input
+          v-if="filterControlVisible.search"
           v-model="searchQ"
           type="search"
           class="cv-search-input"
@@ -140,6 +150,7 @@
       <div v-show="showSecondaryFilters" class="cv-secondary-filters mt-2">
         <!-- Type -->
         <select
+          v-if="filterControlVisible.type"
           v-model="filters.type"
           class="cv-select"
           :aria-label="t('costs_page.filter_cost_type')"
@@ -152,7 +163,7 @@
 
         <!-- Trip type (not standalone) -->
         <select
-          v-if="activeTab !== 'standalone'"
+          v-if="filterControlVisible.trip_type && activeTab !== 'standalone'"
           v-model="filters.trip_type"
           class="cv-select"
           :aria-label="t('costs_page.filter_trip_type')"
@@ -165,7 +176,7 @@
 
         <!-- Trip picker (not standalone) -->
         <details
-          v-if="activeTab !== 'standalone'"
+          v-if="filterControlVisible.trip && activeTab !== 'standalone'"
           ref="filterTripDropdownRef"
           class="cv-dropdown-details group relative shrink-0"
         >
@@ -215,7 +226,7 @@
 
         <!-- Provider (not standalone) -->
         <select
-          v-if="activeTab !== 'standalone'"
+          v-if="filterControlVisible.provider && activeTab !== 'standalone'"
           v-model="filters.provider"
           class="cv-select"
           :aria-label="t('costs_page.filter_provider')"
@@ -227,7 +238,7 @@
         </select>
 
         <!-- Amount range -->
-        <div class="flex items-center gap-1">
+        <div v-if="filterControlVisible.amount_range" class="flex items-center gap-1">
           <input
             :value="formatVndDigitsInput(String(filters.amount_min).replace(/\D/g, ''))"
             type="text"
@@ -251,7 +262,7 @@
 
         <!-- Fleet mode (not standalone) -->
         <select
-          v-if="activeTab !== 'standalone'"
+          v-if="filterControlVisible.fleet_mode && activeTab !== 'standalone'"
           v-model="filters.fleet_mode"
           class="cv-select"
           :aria-label="t('dashboard_analytics.filter_fleet')"
@@ -299,8 +310,8 @@
       <!-- ── Table card ──────────────────────────────────────── -->
       <div class="mt-4 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
         <!-- Table header -->
-        <div class="flex items-center justify-between border-b border-slate-200/90 px-4 py-3 dark:border-slate-700">
-          <div>
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/90 px-4 py-3 dark:border-slate-700">
+          <div class="min-w-0">
             <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
               {{ activeTab === 'standalone' ? t('costs_page.table_title_standalone') : t('costs_page.table_title') }}
             </h2>
@@ -308,11 +319,76 @@
               {{ t('costs_page.standalone_intro') }}
             </p>
           </div>
-          <span
-            v-if="tableBusy"
-            class="inline-block size-4 animate-spin rounded-full border-2 border-slate-200 border-t-teal-600"
-            aria-hidden="true"
-          />
+          <div class="flex shrink-0 flex-wrap items-center gap-2">
+            <details ref="filterPickerRef" class="cv-picker-details group relative">
+              <summary
+                class="cv-picker-trigger"
+                :aria-label="t('costs_page.filter_visibility_title')"
+                data-testid="costs-filter-visibility-trigger"
+              >
+                <FunnelIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>{{ t('costs_page.filter_visibility_title') }}</span>
+                <ChevronDownIcon class="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
+              </summary>
+              <div class="cv-picker-panel cv-picker-panel--end" @click.stop>
+                <p class="cv-picker-panel-title">{{ t('costs_page.filter_show_controls_title') }}</p>
+                <p class="cv-picker-panel-hint">{{ t('costs_page.filter_show_controls_hint') }}</p>
+                <ul class="mt-3 max-h-[min(50vh,280px)] space-y-2.5 overflow-y-auto pr-0.5">
+                  <li v-for="fd in filterControlDefs" :key="'costs-filter-vis-' + fd.id" class="flex items-start gap-2.5">
+                    <input
+                      :id="'costs-filter-vis-' + fd.id"
+                      v-model="filterControlVisible[fd.id]"
+                      type="checkbox"
+                      class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900"
+                      :data-testid="`costs-filter-vis-${fd.id}`"
+                    />
+                    <label
+                      :for="'costs-filter-vis-' + fd.id"
+                      class="cursor-pointer text-sm font-medium leading-snug text-slate-700 dark:text-slate-300"
+                    >
+                      {{ fd.label }}
+                    </label>
+                  </li>
+                </ul>
+              </div>
+            </details>
+            <details ref="columnPickerRef" class="cv-picker-details group relative">
+              <summary
+                class="cv-picker-trigger"
+                :aria-label="t('costs_page.column_visibility_title')"
+                data-testid="costs-column-visibility-trigger"
+              >
+                <ViewColumnsIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>{{ t('costs_page.column_visibility_title') }}</span>
+                <ChevronDownIcon class="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
+              </summary>
+              <div class="cv-picker-panel cv-picker-panel--end" @click.stop>
+                <p class="cv-picker-panel-title">{{ t('costs_page.column_visibility_title') }}</p>
+                <ul class="mt-3 max-h-[min(50vh,320px)] space-y-2.5 overflow-y-auto pr-0.5">
+                  <li v-for="cd in colControlDefs" :key="'costs-col-vis-' + cd.id" class="flex items-start gap-2.5">
+                    <input
+                      :id="'costs-col-vis-' + cd.id"
+                      v-model="colVisible[cd.id]"
+                      type="checkbox"
+                      class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900"
+                      :data-testid="`costs-col-vis-${cd.id}`"
+                    />
+                    <label
+                      :for="'costs-col-vis-' + cd.id"
+                      class="cursor-pointer text-sm font-medium leading-snug text-slate-700 dark:text-slate-300"
+                    >
+                      {{ cd.label }}
+                    </label>
+                  </li>
+                </ul>
+              </div>
+            </details>
+            <span
+              v-if="tableBusy"
+              class="inline-block size-4 animate-spin rounded-full border-2 border-slate-200 border-t-teal-600"
+              aria-hidden="true"
+            />
+          </div>
         </div>
 
         <div class="overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
@@ -321,26 +397,23 @@
               <tr>
                 <th class="cv-th w-10 text-center">{{ t('costs_page.col_no') }}</th>
                 <th class="cv-th min-w-[16rem]">{{ t('costs_page.col_description') }}</th>
-                <th class="cv-th min-w-[9rem]">{{ t('costs_page.col_trip') }}</th>
-                <th class="cv-th min-w-[8rem]">{{ t('costs_page.col_provider') }}</th>
+                <th v-if="colVisible.trip" class="cv-th min-w-[9rem]">{{ t('costs_page.col_trip') }}</th>
+                <th v-if="colVisible.provider" class="cv-th min-w-[8rem]">{{ t('costs_page.col_provider') }}</th>
                 <th class="cv-th min-w-[8rem] text-right">{{ t('costs_page.col_payment') }}</th>
                 <th class="cv-th min-w-[9.5rem]">{{ t('costs_page.col_status_info') }}</th>
-                <th v-if="canReconcileCosts" class="cv-th w-12 text-right">{{ t('costs_page.col_actions') }}</th>
+                <th v-if="canReconcileCosts && colVisible.actions" class="cv-th min-w-[7.5rem] text-right">{{ t('costs_page.col_actions') }}</th>
               </tr>
             </thead>
             <tbody>
               <tr
                 v-for="(c, idx) in displayedItems"
                 :key="costRowKey(c)"
-                class="cv-row"
-                :class="[
-                  idx % 2 === 1 ? 'cv-row--alt' : '',
-                  isWizardEstimateLine(c) ? 'cv-row--estimate' : 'cv-row--clickable',
-                ]"
-                :role="isWizardEstimateLine(c) ? undefined : 'button'"
-                :tabindex="isWizardEstimateLine(c) ? undefined : 0"
-                :data-testid="isWizardEstimateLine(c) ? undefined : `cost-row-${c.id}`"
-                :aria-label="isWizardEstimateLine(c) ? undefined : t('costs_page.open_cost_row', { id: c.id })"
+                class="cv-row cv-row--clickable"
+                :class="idx % 2 === 1 ? 'cv-row--alt' : ''"
+                role="button"
+                tabindex="0"
+                :data-testid="`cost-row-${c.id}`"
+                :aria-label="t('costs_page.open_cost_row', { code: costRowReferenceLabel(c) })"
                 @click="onCostRowActivate(c)"
                 @keydown.enter.prevent="onCostRowActivate(c)"
                 @keydown.space.prevent="onCostRowActivate(c)"
@@ -356,20 +429,12 @@
                   >
                     {{ c.description || '—' }}
                   </p>
-                  <p
-                    v-if="isWizardEstimateLine(c)"
-                    class="mt-0.5 text-xs font-medium text-violet-700 dark:text-violet-400"
-                  >
-                    {{ estimateKindLabel(c) }}
-                  </p>
                   <div class="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span class="cv-type-badge">{{ typeLabel(c.type) }}</span>
                     <span
-                      class="cv-type-badge"
-                      :class="isWizardEstimateLine(c) ? 'cv-type-badge--estimate' : ''"
-                    >
-                      {{ isWizardEstimateLine(c) ? estimateKindLabel(c) : typeLabel(c.type) }}
-                    </span>
-                    <span class="text-xs text-slate-500 dark:text-slate-400">{{ costSubmitterLabel(c) }}</span>
+                      v-if="colVisible.submitter"
+                      class="text-xs text-slate-500 dark:text-slate-400"
+                    >{{ costSubmitterLabel(c) }}</span>
                     <span
                       v-if="costEvidenceCount(c) > 0"
                       class="inline-flex items-center rounded-full bg-teal-50 px-1.5 py-0.5 text-[11px] font-medium text-teal-700 ring-1 ring-teal-200/70 dark:bg-teal-950/40 dark:text-teal-300 dark:ring-teal-800/50"
@@ -379,35 +444,37 @@
                   </div>
                 </td>
 
-                <!-- # Chuyến -->
-                <td class="cv-td" @click.stop>
+                <!-- # Mã chuyến -->
+                <td v-if="colVisible.trip" class="cv-td" @click.stop>
                   <RouterLink
                     v-if="c.trip_id"
                     class="font-mono text-sm font-bold text-teal-700 underline decoration-teal-700/30 underline-offset-2 hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-200"
                     :to="`/trips/${c.trip_id}`"
                   >{{ costTripCode(c) }}</RouterLink>
                   <span
-                    v-else-if="!isWizardEstimateLine(c)"
+                    v-else
                     class="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-200/60 dark:bg-amber-950/30 dark:text-amber-400 dark:ring-amber-800/40"
                   >
                     {{ t('costs_page.badge_standalone') }}
                   </span>
-                  <span v-else class="text-slate-400">—</span>
-                  <div v-if="tripTypeFromCost(c) || tripFleetModeFromCost(c) !== 'unspecified'" class="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                  <div
+                    v-if="tripTypeFromCost(c) || (colVisible.fleet && tripFleetModeFromCost(c) !== 'unspecified')"
+                    class="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5"
+                  >
                     <span
                       v-if="tripTypeFromCost(c)"
                       class="text-xs font-medium"
                       :class="tripTypeTextClass(tripTypeFromCost(c))"
                     >{{ labelTripType(tripTypeFromCost(c)) }}</span>
                     <span
-                      v-if="tripFleetModeFromCost(c) !== 'unspecified'"
+                      v-if="colVisible.fleet && tripFleetModeFromCost(c) !== 'unspecified'"
                       class="text-xs text-slate-400 dark:text-slate-500"
                     >{{ fleetModeLabel(tripFleetModeFromCost(c)) }}</span>
                   </div>
                 </td>
 
                 <!-- # NCC / Đơn vị -->
-                <td class="cv-td">
+                <td v-if="colVisible.provider" class="cv-td">
                   <span
                     v-if="costProviderName(c)"
                     class="text-sm text-slate-700 dark:text-slate-300"
@@ -420,17 +487,6 @@
                   <span class="text-sm font-bold tabular-nums text-slate-900 dark:text-slate-100">
                     {{ formatVnd(c.amount) }}
                   </span>
-                  <div
-                    v-if="isWizardEstimateLine(c) && (Number(c.unit_price) > 0 || Number(c.extra_fee) > 0)"
-                    class="mt-0.5 space-y-0.5 text-right"
-                  >
-                    <span v-if="Number(c.unit_price) > 0" class="block text-xs text-slate-400 tabular-nums">
-                      {{ t('costs_page.note_unit_price_short') }} {{ formatVnd(c.unit_price) }}
-                    </span>
-                    <span v-if="Number(c.extra_fee) > 0" class="block text-xs text-slate-400 tabular-nums">
-                      {{ t('costs_page.note_extra_fee_short') }} {{ formatVnd(c.extra_fee) }}
-                    </span>
-                  </div>
                 </td>
 
                 <!-- # Trạng thái -->
@@ -439,7 +495,7 @@
                     class="cv-status-badge"
                     :class="costStatusBadgeClass(c.status)"
                   >
-                    {{ isWizardEstimateLine(c) ? estimateKindLabel(c) : statusLabel(c.status) }}
+                    {{ statusLabel(c.status) }}
                   </span>
                   <p class="mt-1 text-xs tabular-nums text-slate-500 dark:text-slate-400">{{ formatDateDMY(c.created_at) }}</p>
                   <p v-if="c.confirmer?.name" class="text-xs text-slate-500 dark:text-slate-400">{{ c.confirmer.name }}</p>
@@ -451,58 +507,50 @@
                 </td>
 
                 <!-- # Thao tác -->
-                <td v-if="canReconcileCosts" class="cv-td text-right" @click.stop>
-                  <AppRowActionsMenu
-                    v-if="!isWizardEstimateLine(c)"
-                    align="end"
-                    root-class="text-right"
-                    :aria-label="t('costs_page.col_actions')"
-                    :trigger-sr-only="t('costs_page.col_actions')"
-                    :disabled="decidingId != null || deletingCostId != null"
-                  >
+                <td v-if="canReconcileCosts && colVisible.actions" class="cv-td text-right" @click.stop>
+                  <div class="flex flex-col items-end gap-1">
+                    <span class="font-mono text-xs font-semibold text-slate-500 dark:text-slate-400">
+                      {{ costRowReferenceLabel(c) }}
+                    </span>
                     <button
                       type="button"
-                      role="menuitem"
-                      class="costs-menu-item text-teal-800 hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-teal-950/40"
-                      data-testid="cost-row-detail-menu"
+                      class="text-sm font-semibold text-teal-700 underline decoration-teal-700/30 underline-offset-2 hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-200"
+                      data-testid="cost-row-detail-btn"
+                      :disabled="decidingId != null || deletingCostId != null"
                       @click="openCostDetail(c)"
                     >
                       {{ t('costs_page.action_view_detail') }}
                     </button>
-                    <div class="my-1 border-t border-slate-100 dark:border-slate-700" role="separator" />
-                    <button
-                      v-if="isCostPendingDecision(c)"
-                      type="button"
-                      role="menuitem"
-                      class="costs-menu-item text-emerald-800 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
-                      @click="quickApproveCost(c)"
-                    >
-                      {{ t('costs_page.action_approve') }}
-                    </button>
-                    <button
-                      v-if="isCostPendingDecision(c)"
-                      type="button"
-                      role="menuitem"
-                      class="costs-menu-item text-rose-800 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950/40"
-                      @click="quickRejectCost(c)"
-                    >
-                      {{ t('costs_page.action_reject') }}
-                    </button>
-                    <div
-                      v-if="isCostPendingDecision(c)"
-                      class="my-1 border-t border-slate-100 dark:border-slate-700"
-                      role="separator"
-                    />
+                    <div v-if="isCostPendingDecision(c)" class="flex flex-wrap justify-end gap-x-2 gap-y-0.5">
+                      <button
+                        type="button"
+                        class="text-xs font-semibold text-emerald-700 hover:text-emerald-900 dark:text-emerald-400"
+                        data-testid="cost-row-approve-btn"
+                        :disabled="decidingId != null"
+                        @click="quickApproveCost(c)"
+                      >
+                        {{ t('costs_page.action_approve') }}
+                      </button>
+                      <button
+                        type="button"
+                        class="text-xs font-semibold text-rose-700 hover:text-rose-900 dark:text-rose-400"
+                        data-testid="cost-row-reject-btn"
+                        :disabled="decidingId != null"
+                        @click="quickRejectCost(c)"
+                      >
+                        {{ t('costs_page.action_reject') }}
+                      </button>
+                    </div>
                     <button
                       type="button"
-                      role="menuitem"
-                      class="costs-menu-item text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                      class="text-xs font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                      data-testid="cost-row-delete-btn"
+                      :disabled="deletingCostId != null"
                       @click="openDeleteModal(c)"
                     >
                       {{ t('costs_page.action_delete') }}
                     </button>
-                  </AppRowActionsMenu>
-                  <span v-else class="text-[11px] text-slate-400">—</span>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -892,7 +940,7 @@
               <p
                 class="mt-2 rounded-lg border border-rose-200/80 bg-white/80 px-3 py-2 text-xs font-medium text-rose-900 dark:border-rose-800/60 dark:bg-rose-950/30 dark:text-rose-100"
               >
-                {{ t('costs_page.reject_modal_summary', { id: rejectTarget.id, trip: costTripCode(rejectTarget) }) }}
+                {{ t('costs_page.reject_modal_summary', { code: costRowReferenceLabel(rejectTarget) }) }}
                 <span v-if="rejectTarget.amount != null" class="mt-1 block tabular-nums text-slate-600 dark:text-slate-300">
                   {{ formatVnd(rejectTarget.amount) }}
                 </span>
@@ -974,7 +1022,7 @@
               <p
                 class="mt-2 rounded-lg border border-rose-200/80 bg-white/80 px-3 py-2 text-xs font-medium text-rose-900 dark:border-rose-800/60 dark:bg-rose-950/30 dark:text-rose-100"
               >
-                {{ t('costs_page.delete_modal_summary', { id: deleteTarget.id, trip: costTripCode(deleteTarget) }) }}
+                {{ t('costs_page.delete_modal_summary', { code: costRowReferenceLabel(deleteTarget) }) }}
                 <span v-if="deleteTarget.amount != null" class="mt-1 block tabular-nums text-slate-600 dark:text-slate-300">
                   {{ formatVnd(deleteTarget.amount) }}
                 </span>
@@ -1063,12 +1111,11 @@
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ChevronDownIcon, PlusCircleIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { ChevronDownIcon, FunnelIcon, PlusCircleIcon, ViewColumnsIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { useDetailsAutoClose } from '../../composables/useDetailsAutoClose.js'
 import {
   listTripCosts,
   listBusinessPersonnelCostLines,
-  listWizardEstimateLines,
   submitTripCost,
   submitStandaloneTripCost,
   decideTripCost,
@@ -1077,7 +1124,6 @@ import {
 import { listTrips } from '../../api/trips'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { formatTripCode, formatVnd, formatVndDigitsInput, labelTripType } from '../../util/labels'
-import AppRowActionsMenu from '../../components/ui/AppRowActionsMenu.vue'
 import StaffCostDetailModal from '../../components/costs/StaffCostDetailModal.vue'
 import { showAppErrorFromApi } from '../../composables/appMessage'
 import { useAuthStore } from '../../store'
@@ -1092,6 +1138,29 @@ const activeTab = ref('all_trips')
 
 const COSTS_PER_PAGE_OPTIONS = [5, 10, 15, 20]
 const DEFAULT_PER_PAGE = 10
+const COSTS_COL_VISIBILITY_KEY = 'va.costs.col_visibility_v2'
+const FILTER_CONTROL_IDS = [
+  'status',
+  'date',
+  'search',
+  'type',
+  'trip_type',
+  'trip',
+  'amount_range',
+  'provider',
+  'fleet_mode',
+]
+const COL_IDS = ['trip', 'provider', 'submitter', 'fleet', 'actions']
+
+function defaultFilterControlVisibility() {
+  return Object.fromEntries(
+    FILTER_CONTROL_IDS.map((id) => [id, ['status', 'date', 'search'].includes(id)]),
+  )
+}
+
+function defaultColVisibility() {
+  return Object.fromEntries(COL_IDS.map((id) => [id, true]))
+}
 
 const unitLabel = computed(() => t('costs_page.unit_label_const'))
 
@@ -1114,7 +1183,7 @@ const detailModalOpen = ref(false)
 const detailCostId = ref(null)
 
 function openCostDetail(c) {
-  if (!c?.id || isWizardEstimateLine(c)) return
+  if (!c?.id) return
   detailCostId.value = Number(c.id)
   detailModalOpen.value = true
 }
@@ -1130,52 +1199,18 @@ function onCostRowActivate(c) {
 
 // ── Evidence helpers ─────────────────────────────────────────────
 function costEvidenceCount(c) {
-  if (isWizardEstimateLine(c)) return 0
   let n = Number(c.attachments_count) || 0
   if (c.receipt_url) n += 1
   return n
 }
 
-function isWizardEstimateLine(c) {
-  return Boolean(c?.is_wizard_estimate_line)
-}
-
 function costRowKey(c) {
-  if (isWizardEstimateLine(c)) return `wiz-${c.trip_id}-${c.line_key}`
   return c.id
 }
 
-function mapWizardLineToCostRow(line) {
-  return {
-    id: `wiz-${line.trip_id}-${line.line_key}`,
-    is_wizard_estimate_line: true,
-    line_key: line.line_key,
-    estimate_kind: line.estimate_kind,
-    trip_id: line.trip_id,
-    trip: line.trip,
-    amount: line.amount,
-    unit_price: line.unit_price,
-    extra_fee: line.extra_fee,
-    description: line.description,
-    type: line.type || 'wizard_estimate',
-    status: 'estimate',
-    created_at: line.created_at,
-    requester_name: line.requester_name,
-  }
-}
-
-function estimateKindLabel(c) {
-  const k = c?.estimate_kind
-  if (k === 'business_row') return t('costs_page.cost_type_estimate_e2')
-  if (k === 'passenger_row') return t('costs_page.cost_type_estimate_passenger')
-  if (k === 'cargo_row') return t('costs_page.cost_type_estimate_cargo')
-  return typeLabel('wizard_estimate')
-}
-
-function estimatePassesListFilters(c) {
-  if (filters.status && filters.status !== 'submitted') return false
-  if (filters.type && filters.type !== 'wizard_estimate') return false
-  return passesClientRowFiltersForCost(c)
+function costRowReferenceLabel(c) {
+  if (!c?.trip_id) return t('costs_page.badge_standalone')
+  return formatTripCode(c?.trip_id ?? c?.trip?.id)
 }
 
 const TRIP_TYPE_SLUGS = ['point_to_point', 'cargo', 'business', 'door_to_door']
@@ -1189,9 +1224,6 @@ function dispatchRequestFromCost(c) {
 }
 
 function costSubmitterLabel(c) {
-  if (isWizardEstimateLine(c)) {
-    return c.requester_name || dispatchRequestFromCost(c)?.requester?.name || '—'
-  }
   const dr = dispatchRequestFromCost(c)
   const requester = dr?.requester?.name
   if (tripTypeFromCost(c) === 'business' && requester) return requester
@@ -1266,7 +1298,6 @@ function costStatusBadgeClass(status) {
   if (s === 'confirmed') return 'cv-status-badge--confirmed'
   if (s === 'rejected') return 'cv-status-badge--rejected'
   if (s === 'submitted' || s === 'draft') return 'cv-status-badge--pending'
-  if (s === 'estimate') return 'cv-status-badge--estimate'
   return 'cv-status-badge--default'
 }
 
@@ -1282,10 +1313,14 @@ const modalCostTypeOptions = computed(() => {
 
 // ── Data refs ────────────────────────────────────────────────────
 const loading = ref(false)
-const estimatesLoading = ref(false)
 const items = ref([])
-const estimateItems = ref([])
 const meta = ref({})
+const filterPickerRef = ref(null)
+const columnPickerRef = ref(null)
+const filterControlVisible = reactive(defaultFilterControlVisibility())
+const colVisible = reactive(defaultColVisibility())
+useDetailsAutoClose(filterPickerRef)
+useDetailsAutoClose(columnPickerRef)
 
 const bpLoading = ref(false)
 const bpLines = ref([])
@@ -1348,7 +1383,6 @@ function hydrateCostStatusFromRoute() {
 }
 
 function isCostPendingDecision(c) {
-  if (isWizardEstimateLine(c)) return false
   const s = String(c?.status ?? '').toLowerCase()
   return s === 'submitted' || s === 'draft'
 }
@@ -1403,7 +1437,7 @@ function quickRejectCost(c) {
 }
 
 function openDeleteModal(c) {
-  if (!c?.id || isWizardEstimateLine(c)) return
+  if (!c?.id) return
   deleteTarget.value = c
   deleteModalOpen.value = true
 }
@@ -1492,7 +1526,6 @@ const perPageFilterOptions = computed(() =>
 
 const typeFilterOptions = computed(() => {
   const rows = [{ value: '', label: t('costs_page.filter_cost_type') }]
-  rows.push({ value: 'wizard_estimate', label: typeLabel('wizard_estimate') })
   for (const value of BUILTIN_COST_TYPES) {
     rows.push({ value, label: typeLabel(value) })
   }
@@ -1516,6 +1549,35 @@ const fleetModeFilterOptions = computed(() => [
   { value: 'taxi', label: fleetModeLabel('taxi') },
   { value: 'unspecified', label: fleetModeLabel('unspecified') },
 ])
+
+const filterControlDefs = computed(() => [
+  { id: 'status', label: t('filter_bar.status') },
+  { id: 'date', label: t('costs_page.filter_recorded_date') },
+  { id: 'search', label: t('costs_page.filter_search_page') },
+  { id: 'type', label: t('costs_page.filter_cost_type') },
+  { id: 'trip_type', label: t('costs_page.filter_trip_type') },
+  { id: 'trip', label: t('costs_page.filter_trip') },
+  { id: 'amount_range', label: t('costs_page.filter_amount_range') },
+  { id: 'provider', label: t('costs_page.filter_provider') },
+  { id: 'fleet_mode', label: t('dashboard_analytics.filter_fleet') },
+])
+
+function tableColLabel(colId) {
+  const keys = {
+    trip: 'col_trip',
+    provider: 'col_provider',
+    submitter: 'col_submitter',
+    fleet: 'col_fleet_source',
+    actions: 'col_actions',
+  }
+  const k = keys[colId]
+  return k ? t(`costs_page.${k}`) : colId
+}
+
+const colControlDefs = computed(() => {
+  const ids = COL_IDS.filter((id) => id !== 'actions' || canReconcileCosts.value)
+  return ids.map((id) => ({ id, label: tableColLabel(id) }))
+})
 
 const activeFilterCount = computed(() => {
   let n = 0
@@ -1664,20 +1726,15 @@ const tripFilterSummaryShort = computed(() => {
 // ── Displayed items & KPI ─────────────────────────────────────────
 const displayedItems = computed(() => {
   const q = searchQ.value.trim().toLowerCase()
-  const est =
-    activeTab.value === 'standalone'
-      ? []
-      : estimateItems.value.filter((c) => estimatePassesListFilters(c))
-  let list = items.value.filter((c) => passesClientRowFiltersForCost(c))
-  const merged = activeTab.value === 'standalone' ? list : [...est, ...list]
-  if (!q) return merged
-  return merged.filter((c) => {
+  const list = items.value.filter((c) => passesClientRowFiltersForCost(c))
+  if (!q) return list
+  return list.filter((c) => {
     const d = String(c.description ?? '').toLowerCase()
     const creator = String(c.creator?.name ?? '').toLowerCase()
     const submitter = String(costSubmitterLabel(c) ?? '').toLowerCase()
     const ty = String(c.type ?? '').toLowerCase()
-    const kind = String(c.estimate_kind ?? '').toLowerCase()
-    const trip = String(c.trip_id ?? '')
+    const trip = String(c.trip_id ?? '').toLowerCase()
+    const tripCode = costRowReferenceLabel(c).toLowerCase()
     const prov = costProviderName(c).toLowerCase()
     const fleet = fleetModeLabel(tripFleetModeFromCost(c)).toLowerCase()
     return (
@@ -1685,8 +1742,8 @@ const displayedItems = computed(() => {
       creator.includes(q) ||
       submitter.includes(q) ||
       ty.includes(q) ||
-      kind.includes(q) ||
       trip.includes(q) ||
+      tripCode.includes(q) ||
       prov.includes(q) ||
       fleet.includes(q)
     )
@@ -1694,7 +1751,7 @@ const displayedItems = computed(() => {
 })
 
 const kpiSummary = computed(() => {
-  const all = displayedItems.value.filter((c) => !isWizardEstimateLine(c))
+  const all = displayedItems.value
   const sumAmt = (arr) => arr.reduce((s, c) => s + Number(c.amount || 0), 0)
   const confirmed = all.filter((c) => c.status === 'confirmed')
   const pending = all.filter((c) => ['submitted', 'draft'].includes(c.status))
@@ -1707,7 +1764,7 @@ const kpiSummary = computed(() => {
 })
 
 const hasTableRows = computed(() => displayedItems.value.length > 0)
-const tableBusy = computed(() => loading.value || estimatesLoading.value)
+const tableBusy = computed(() => loading.value)
 
 function rowIndex(idx) {
   const page = meta.value.current_page ?? 1
@@ -1979,7 +2036,6 @@ function resetSecondaryFilters() {
 // ── API reload ───────────────────────────────────────────────────
 async function reload() {
   loading.value = true
-  estimatesLoading.value = true
   try {
     const p = { ...filters }
     for (const k of ['provider', 'amount_min', 'amount_max']) {
@@ -1992,33 +2048,11 @@ async function reload() {
       delete p.trip_type
       delete p.fleet_mode
     }
-    const estimateParams = {
-      trip_id: p.trip_id,
-      trip_type: p.trip_type,
-      from: p.from,
-      to: p.to,
-      fleet_mode: p.fleet_mode,
-    }
-    Object.keys(estimateParams).forEach((k) =>
-      estimateParams[k] === undefined || estimateParams[k] === '' ? delete estimateParams[k] : null,
-    )
-    if (activeTab.value === 'standalone') {
-      const res = await listTripCosts(p)
-      items.value = res.items ?? []
-      meta.value = res.meta ?? {}
-      estimateItems.value = []
-    } else {
-      const [res, estRes] = await Promise.all([
-        listTripCosts(p),
-        listWizardEstimateLines(estimateParams),
-      ])
-      items.value = res.items ?? []
-      meta.value = res.meta ?? {}
-      estimateItems.value = (estRes.items ?? []).map(mapWizardLineToCostRow)
-    }
+    const res = await listTripCosts(p)
+    items.value = res.items ?? []
+    meta.value = res.meta ?? {}
   } finally {
     loading.value = false
-    estimatesLoading.value = false
   }
 }
 
@@ -2115,8 +2149,36 @@ watch(activeTab, (tab) => {
 })
 
 // ── Lifecycle ────────────────────────────────────────────────────
+function loadColVisibility() {
+  try {
+    const raw = localStorage.getItem(COSTS_COL_VISIBILITY_KEY)
+    if (!raw) return
+    const o = JSON.parse(raw)
+    const base = defaultColVisibility()
+    for (const id of COL_IDS) {
+      if (typeof o[id] === 'boolean') base[id] = o[id]
+    }
+    Object.assign(colVisible, base)
+  } catch {
+    /* ignore */
+  }
+}
+
+watch(
+  colVisible,
+  (v) => {
+    try {
+      localStorage.setItem(COSTS_COL_VISIBILITY_KEY, JSON.stringify({ ...v }))
+    } catch {
+      /* ignore */
+    }
+  },
+  { deep: true },
+)
+
 onMounted(async () => {
   loadExtraCostTypesFromStorage()
+  loadColVisibility()
   hydrateCostStatusFromRoute()
   await loadTripPickerOptions()
   await reload()
@@ -2172,6 +2234,30 @@ onMounted(async () => {
 
 .cv-more-badge {
   @apply rounded-full bg-teal-600 px-1.5 py-0.5 text-[10px] font-bold text-white;
+}
+
+.cv-picker-details {
+  @apply relative shrink-0;
+}
+
+.cv-picker-trigger {
+  @apply flex cursor-pointer list-none items-center gap-2 rounded-xl border border-slate-200/90 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-teal-300 hover:bg-teal-50/50 hover:text-teal-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/35 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-teal-700 dark:hover:bg-teal-950/30 dark:hover:text-teal-300 [&::-webkit-details-marker]:hidden;
+}
+
+.cv-picker-panel {
+  @apply absolute top-[calc(100%+8px)] z-[110] min-w-[260px] rounded-2xl border border-slate-200/90 bg-white p-4 shadow-xl ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-950/50;
+}
+
+.cv-picker-panel--end {
+  @apply right-0;
+}
+
+.cv-picker-panel-title {
+  @apply text-sm font-semibold text-slate-900 dark:text-slate-100;
+}
+
+.cv-picker-panel-hint {
+  @apply mt-1 text-xs leading-snug text-slate-500 dark:text-slate-400;
 }
 
 /* ── Secondary filters ────────────────────────────────────────── */
@@ -2274,17 +2360,9 @@ onMounted(async () => {
   @apply bg-slate-50/30 dark:bg-slate-900/20;
 }
 
-.cv-row--estimate {
-  @apply bg-violet-50/30 hover:bg-violet-50/50 dark:bg-violet-950/15 dark:hover:bg-violet-950/25;
-}
-
 /* ── Type badge ───────────────────────────────────────────────── */
 .cv-type-badge {
   @apply rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-400;
-}
-
-.cv-type-badge--estimate {
-  @apply bg-violet-100 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300;
 }
 
 /* ── Status badge ─────────────────────────────────────────────── */
@@ -2302,10 +2380,6 @@ onMounted(async () => {
 
 .cv-status-badge--rejected {
   @apply bg-rose-100 text-rose-800 dark:bg-rose-950/50 dark:text-rose-300;
-}
-
-.cv-status-badge--estimate {
-  @apply bg-violet-100 text-violet-700 dark:bg-violet-950/50 dark:text-violet-300;
 }
 
 .cv-status-badge--default {
