@@ -6,7 +6,7 @@
         >
             <div class="animate-pulse space-y-4">
                 <div class="h-10 max-w-md rounded-xl bg-slate-200/90" />
-                <div class="grid gap-6 xl:grid-cols-2">
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
                     <div class="min-w-0 space-y-4">
                         <div class="h-64 rounded-2xl bg-slate-200/80" />
                         <div class="h-48 rounded-2xl bg-slate-200/70" />
@@ -114,8 +114,10 @@
                     {{ t("trip_detail.banner.request_pending") }}
                 </div>
 
-                <div class="grid gap-6 xl:grid-cols-2">
-                    <div class="min-w-0 space-y-4">
+                <div
+                    class="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start lg:gap-8"
+                >
+                    <div class="min-w-0 flex w-full flex-col gap-4">
                         <h2
                             class="text-xs font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400"
                         >
@@ -153,13 +155,14 @@
                         />
                     </div>
 
-                    <div class="min-w-0 space-y-3">
+                    <div class="min-w-0 flex w-full flex-col gap-3">
                         <h2
                             class="text-xs font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400"
                         >
                             {{ t("trip_detail.coordination_column_title") }}
                         </h2>
                         <DispatchPanel
+                            class="w-full min-w-0"
                             ref="dispatchPanelRef"
                             :can-assign="canAssign"
                             :can-update-status="canUpdateStatus"
@@ -214,10 +217,12 @@
                                 coordinationNotes = $event
                             "
                         />
+                    </div>
+                </div>
 
-                        <section
-                            class="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-950/40"
-                        >
+                <section
+                    class="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-950/40"
+                >
                             <div
                                 class="flex flex-col gap-2 sm:flex-row sm:items-stretch sm:justify-between sm:gap-3"
                             >
@@ -495,9 +500,9 @@
                                     </div>
                                 </div>
                             </div>
-                        </section>
-                    </div>
-                    <div class="min-w-0 space-y-4 xl:col-span-12">
+                </section>
+
+                <div class="min-w-0 space-y-4">
                         <PassengerCheckIn
                             :trip-id="trip.id"
                             :trip="trip"
@@ -644,7 +649,6 @@
                                 </div>
                             </div>
                         </section>
-                    </div>
                 </div>
             </div>
 
