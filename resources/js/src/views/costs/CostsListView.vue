@@ -1,5 +1,5 @@
 <template>
-  <div class="costs-page flex min-h-full min-w-0 flex-1 flex-col space-y-4 pb-12 text-slate-900 md:space-y-5 dark:text-slate-100">
+  <div class="costs-page min-h-0 min-w-0 space-y-4 pb-12 text-slate-900 md:space-y-5 dark:text-slate-100">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div>
         <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl md:text-2xl">

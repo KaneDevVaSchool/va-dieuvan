@@ -284,6 +284,7 @@ import {
   XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import NotificationBell from '../../components/notifications/NotificationBell.vue'
+import { useAppViewportLock } from '../../composables/useAppViewportLock'
 import { useAuthStore } from '../../store'
 import { useAuthLogout } from '../../composables/useAuthLogout'
 import { getDeptSummary } from '../../api/requests'
@@ -294,6 +295,8 @@ const { t, te } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
+
+useAppViewportLock()
 
 const summary = ref({
   pending_count: 0,

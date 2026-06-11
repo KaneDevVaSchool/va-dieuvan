@@ -1,7 +1,7 @@
 <template>
   <div
     :class="[
-      'h-full min-h-0 w-full overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100',
+      'h-dvh min-h-0 w-full overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100',
       'supports-[padding:max(0px)]:pt-[env(safe-area-inset-top)] supports-[padding:max(0px)]:pb-[env(safe-area-inset-bottom)]',
       isVertical ? 'flex flex-row' : 'flex flex-col',
     ]"
@@ -33,6 +33,7 @@
 
 <script setup>
 import { computed, onMounted } from 'vue'
+import { useAppViewportLock } from '../../composables/useAppViewportLock'
 import AppSidebar from './AppSidebar.vue'
 import OperationalStatusBanner from './OperationalStatusBanner.vue'
 import MobileBottomNav from '../nav/MobileBottomNav.vue'
@@ -40,6 +41,8 @@ import { useSidebarLayout } from '../../composables/useSidebarLayout'
 import { useAuthStore } from '../../store'
 
 const { isVertical, isHorizontal } = useSidebarLayout()
+
+useAppViewportLock()
 
 const isHorizontalMobilePad = computed(() =>
   isHorizontal.value

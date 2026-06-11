@@ -52,7 +52,7 @@
     </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
   </head>
-  <body class="min-h-dvh antialiased bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-    <div id="app" class="h-dvh min-h-0 overflow-hidden bg-slate-50 dark:bg-slate-950"></div>
+  <body class="h-dvh max-h-dvh overflow-hidden antialiased bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <div id="app" class="h-full min-h-0 overflow-hidden bg-slate-50 dark:bg-slate-950"></div>
   </body>
 </html>

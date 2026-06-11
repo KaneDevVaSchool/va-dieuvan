@@ -51,6 +51,15 @@ html.dark body {
   background-color: rgb(2 6 23);
 }
 
+/* Khóa cuộn document — shell staff / dept; cuộn trong #app-main-scroll */
+html.app-viewport-lock,
+html.app-viewport-lock body {
+  height: 100%;
+  max-height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 /* Splash PWA — ẩn sau khi Vue mount (main.js) */
 .pwa-splash {
   position: fixed;

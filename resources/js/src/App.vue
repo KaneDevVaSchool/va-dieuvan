@@ -1,34 +1,38 @@
 <template>
-  <SplashScreen
-    v-if="showSplash"
-    :app-ready="splashAppReady"
-    @done="showSplash = false"
-  />
-  <Onboarding
-    v-if="onboardingViewportOk && !hasOnboarded && isAuthenticated && !isPortalShell && !isDeptShell"
-    @done="completeOnboarding"
-  />
-  <template v-else>
-    <LayoutDriver v-if="isDriverApp">
-      <RouterView v-slot="{ Component, route: rv }">
-        <Transition :name="driverTransition" mode="out-in">
-          <component :is="Component" :key="rv.path" />
-        </Transition>
-      </RouterView>
-    </LayoutDriver>
-    <AppShell v-else-if="!isLoginLayout && !isDeptShell">
-      <RouterView />
-    </AppShell>
-    <RouterView v-else-if="isDeptShell" />
-    <RouterView v-else />
-  </template>
+  <div
+    class="flex h-full min-h-0 flex-col"
+    :class="rootScrollable ? 'overflow-y-auto overscroll-y-contain' : 'overflow-hidden'"
+  >
+    <SplashScreen
+      v-if="showSplash"
+      :app-ready="splashAppReady"
+      @done="showSplash = false"
+    />
+    <Onboarding
+      v-if="onboardingViewportOk && !hasOnboarded && isAuthenticated && !isPortalShell && !isDeptShell"
+      @done="completeOnboarding"
+    />
+    <template v-else>
+      <LayoutDriver v-if="isDriverApp">
+        <RouterView v-slot="{ Component, route: rv }">
+          <Transition :name="driverTransition" mode="out-in">
+            <component :is="Component" :key="rv.path" />
+          </Transition>
+        </RouterView>
+      </LayoutDriver>
+      <AppShell v-else-if="!isLoginLayout && !isDeptShell">
+        <RouterView />
+      </AppShell>
+      <RouterView v-else-if="isDeptShell" />
+      <RouterView v-else />
+    </template>
 
-  <AppMessageModal />
-  <ConfirmModal />
+    <AppMessageModal />
+    <ConfirmModal />
 
-  <NotificationCenter />
-  <NotificationToast />
-
+    <NotificationCenter />
+    <NotificationToast />
+  </div>
 </template>
 
 <script setup>
@@ -59,6 +63,21 @@ const isDeptShell = computed(
 const isLoginLayout = computed(
   () => route.name === 'login' || route.name === 'home' || isPortalShell.value,
 )
+const showOnboarding = computed(
+  () =>
+    onboardingViewportOk.value &&
+    !hasOnboarded.value &&
+    isAuthenticated.value &&
+    !isPortalShell.value &&
+    !isDeptShell.value,
+)
+
+/** Login / portal: cuộn trong #app; shell điều vận: cuộn trong #app-main-scroll. */
+const rootScrollable = computed(() => {
+  if (showSplash.value) return false
+  if (showOnboarding.value) return false
+  return isLoginLayout.value
+})
 const isDriverApp = computed(() => !!route.meta?.driverApp)
 const isAuthenticated = computed(() => auth.isAuthenticated)
 
