@@ -595,7 +595,7 @@
         "step_trip_title": "Select trip",
         "step_trip_hint": "Completed trips from the last 30 days are listed first.",
         "step_vehicle_title": "Assign vehicle",
-        "step_vehicle_hint": "Plate · type · seats — required when off-trip; linked trips pre-fill when the trip has a vehicle.",
+        "step_vehicle_hint": "Plate · type · seats — only when the cost is not linked to a trip.",
         "vehicle_pick": "— Select vehicle —",
         "vehicle_option": "{plate} · {type}",
         "vehicle_option_with_seats": "{plate} · {type} · {seats} seats",

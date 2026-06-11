@@ -652,7 +652,7 @@
         "step_trip_title": "Chọn chuyến",
         "step_trip_hint": "Ưu tiên chuyến đã hoàn thành trong 30 ngày gần đây.",
         "step_vehicle_title": "Chọn xe gán chi phí",
-        "step_vehicle_hint": "Biển số · loại xe · số chỗ — bắt buộc khi không gắn chuyến; gắn chuyến thì tự điền nếu chuyến đã có xe.",
+        "step_vehicle_hint": "Biển số · loại xe · số chỗ — chỉ dùng khi chi phí không gắn chuyến.",
         "vehicle_pick": "— Chọn xe —",
         "vehicle_option": "{plate} · {type}",
         "vehicle_option_with_seats": "{plate} · {type} · {seats} chỗ",
