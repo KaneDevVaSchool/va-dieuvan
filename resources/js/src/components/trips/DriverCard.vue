@@ -11,7 +11,7 @@
       <div class="min-w-0 flex-1">
         <div class="flex items-start justify-between gap-2 flex-nowrap">
           <div class="min-w-0 truncate text-[13px] font-medium text-slate-900 dark:text-slate-100">
-            {{ driver?.full_name ?? '—' }}
+            <EmptyValue :value="driver?.full_name" empty-key="trip_detail.empty.driver" />
           </div>
           <button
             v-if="props.allowChange"
@@ -50,6 +50,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import EmptyValue from '../ui/EmptyValue.vue'
+import { isEmptyDisplay } from '../../util/displayValue'
 
 const props = withDefaults(
   defineProps<{
@@ -73,7 +75,7 @@ const { t } = useI18n()
 
 const initials = computed(() => {
   const name = String(props.driver?.full_name ?? '').trim()
-  if (!name || name === '—') return '?'
+  if (!name || isEmptyDisplay(name)) return '?'
   const parts = name.split(/\s+/).filter(Boolean)
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()

@@ -1,6 +1,7 @@
 import { computed, onUnmounted, ref, type Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { labelTripType } from '../util/labels'
+import { isEmptyDisplay } from '../util/displayValue'
 
 /** Trip payload from GET /trips/:id — kept loose to match existing JS view. */
 export type TripDetail = Record<string, any> | null
@@ -21,14 +22,26 @@ export function useTripDetail(trip: Ref<TripDetail>, workflowStatus?: Ref<string
 
   function fmtTime(v: string | null | undefined) {
     const l = locale.value === 'en' ? 'en-US' : 'vi-VN'
-    return v ? new Date(v).toLocaleTimeString(l, { hour: '2-digit', minute: '2-digit' }) : '-'
+    if (!v) return ''
+    return new Date(v).toLocaleTimeString(l, { hour: '2-digit', minute: '2-digit', hour12: false })
+  }
+
+  function fmtTimeDisplay(v: string | null | undefined) {
+    const s = fmtTime(v)
+    return s || t('trip_detail.empty.time')
   }
 
   function fmtDateLong(v: string | null | undefined) {
     const l = locale.value === 'en' ? 'en-US' : 'vi-VN'
+    if (!v) return ''
+    return new Date(v).toLocaleDateString(l, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  }
+
+  function fmtDateCompact(v: string | null | undefined) {
+    const l = locale.value === 'en' ? 'en-US' : 'vi-VN'
     return v
-      ? new Date(v).toLocaleDateString(l, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-      : '—'
+      ? new Date(v).toLocaleDateString(l, { weekday: 'short', day: 'numeric', month: 'short' })
+      : ''
   }
 
   const countdown = computed(() => {
@@ -37,9 +50,14 @@ export function useTripDetail(trip: Ref<TripDetail>, workflowStatus?: Ref<string
     if (!dep) return null
     const diffMin = Math.round((new Date(dep).getTime() - Date.now()) / 60_000)
     if (diffMin <= 0) return null
+    if (diffMin >= 24 * 60) {
+      const days = Math.floor(diffMin / (24 * 60))
+      return t('trip_detail.overview.countdown_days', { n: days })
+    }
     const h = Math.floor(diffMin / 60)
     const m = diffMin % 60
-    return h > 0 ? `${h}h ${m}p` : `${m}p`
+    if (h > 0) return t('trip_detail.overview.countdown_hours', { h, m })
+    return t('trip_detail.overview.countdown_minutes', { m })
   })
 
   const tripTypeLabel = computed(() => labelTripType(trip.value?.dispatch_request?.trip_type))
@@ -56,7 +74,7 @@ export function useTripDetail(trip: Ref<TripDetail>, workflowStatus?: Ref<string
     return { kind: 'ok' as const, text: t('trip_detail.sla.remaining_minutes', { n: min }) }
   })
 
-  const requesterName = computed(() => trip.value?.dispatch_request?.requester?.name ?? '—')
+  const requesterName = computed(() => trip.value?.dispatch_request?.requester?.name?.trim() || '')
 
   const requesterSubtitle = computed(() => {
     const s = trip.value?.dispatch_request?.wizard_snapshot
@@ -64,24 +82,43 @@ export function useTripDetail(trip: Ref<TripDetail>, workflowStatus?: Ref<string
     if (u?.trim()) return u.trim()
     const code = trip.value?.dispatch_request?.requester?.employee_code
     if (code) return t('trip_detail.overview.employee_code', { code })
-    return trip.value?.dispatch_request?.requester?.email ?? '—'
+    return trip.value?.dispatch_request?.requester?.email?.trim() || ''
   })
 
   const requesterInitials = computed(() => {
     const name = requesterName.value.trim()
-    if (!name || name === '—') return '?'
+    if (!name) return '?'
     const parts = name.split(/\s+/).filter(Boolean)
     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
   })
 
   const scheduleDateLong = computed(() => fmtDateLong(trip.value?.depart_at))
+  const scheduleDepartTime = computed(() => fmtTime(trip.value?.depart_at))
+  const scheduleArriveTime = computed(() => fmtTime(trip.value?.arrive_by))
+
+  const scheduleArriveDateShort = computed(() => {
+    const a = trip.value?.depart_at
+    const b = trip.value?.arrive_by
+    if (!a || !b) return ''
+    const da = new Date(a)
+    const db = new Date(b)
+    if (da.toDateString() === db.toDateString()) return ''
+    return fmtDateCompact(b)
+  })
+
   const scheduleTimeRange = computed(() => {
     const a = trip.value?.depart_at
     const b = trip.value?.arrive_by
-    if (!a) return '—'
-    if (!b) return fmtTime(a)
-    return `${fmtTime(a)} – ${fmtTime(b)}`
+    if (!a) return ''
+    if (!b) return scheduleDepartTime.value
+    const end =
+      scheduleArriveDateShort.value !== ''
+        ? `${scheduleArriveTime.value} (${scheduleArriveDateShort.value})`
+        : scheduleArriveTime.value
+    if (!scheduleDepartTime.value && !end) return ''
+    if (!end) return scheduleDepartTime.value
+    return `${scheduleDepartTime.value} → ${end}`
   })
 
   const scheduleDuration = computed(() => {
@@ -100,16 +137,22 @@ export function useTripDetail(trip: Ref<TripDetail>, workflowStatus?: Ref<string
     if (!dr || !tr) return []
     const out: string[] = []
     if (dr.depart_at && tr.depart_at && !scheduleSame(dr.depart_at, tr.depart_at)) {
-      out.push(t('trip_detail.overview.depart_vs_request', { req: fmtTime(dr.depart_at), trip: fmtTime(tr.depart_at) }))
+      out.push(t('trip_detail.overview.depart_vs_request', { req: fmtTimeDisplay(dr.depart_at), trip: fmtTimeDisplay(tr.depart_at) }))
     }
     if (dr.arrive_by && tr.arrive_by && !scheduleSame(dr.arrive_by, tr.arrive_by)) {
-      out.push(t('trip_detail.overview.arrive_vs_request', { req: fmtTime(dr.arrive_by), trip: fmtTime(tr.arrive_by) }))
+      out.push(t('trip_detail.overview.arrive_vs_request', { req: fmtTimeDisplay(dr.arrive_by), trip: fmtTimeDisplay(tr.arrive_by) }))
     }
     return out
   })
 
-  const originLabel = computed(() => trip.value?.dispatch_request?.origin ?? '—')
-  const destinationLabel = computed(() => trip.value?.dispatch_request?.destination ?? '—')
+  const originLabel = computed(() => {
+    const o = trip.value?.dispatch_request?.origin
+    return isEmptyDisplay(o) ? '' : String(o).trim()
+  })
+  const destinationLabel = computed(() => {
+    const d = trip.value?.dispatch_request?.destination
+    return isEmptyDisplay(d) ? '' : String(d).trim()
+  })
   const statusForWorkflow = computed(() => workflowStatus?.value ?? trip.value?.status)
 
   const stepPickup = computed(() => {
@@ -136,6 +179,9 @@ export function useTripDetail(trip: Ref<TripDetail>, workflowStatus?: Ref<string
     requesterSubtitle,
     requesterInitials,
     scheduleDateLong,
+    scheduleDepartTime,
+    scheduleArriveTime,
+    scheduleArriveDateShort,
     scheduleTimeRange,
     scheduleDuration,
     scheduleMismatchNotes,

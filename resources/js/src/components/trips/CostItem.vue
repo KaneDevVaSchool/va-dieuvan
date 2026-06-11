@@ -132,7 +132,7 @@ const costStatusClass = computed(() => {
 const formattedAmount = computed(() => {
   const n = Number(props.cost.amount)
   const c = props.cost.currency || 'VND'
-  if (!Number.isFinite(n)) return `— ${c}`
+  if (!Number.isFinite(n)) return t('trip_detail.empty.amount')
   return `${new Intl.NumberFormat(locale.value === 'en' ? 'en-US' : 'vi-VN').format(n)} ${c}`
 })
 

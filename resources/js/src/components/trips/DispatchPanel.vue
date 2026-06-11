@@ -4,7 +4,7 @@
         :aria-label="t('trip_detail.coordination.title')"
     >
         <div
-            class="min-h-0 flex-1 space-y-3.5 overflow-y-auto overscroll-y-contain p-3.5"
+            class="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-y-contain scrollbar-hidden p-3"
             data-testid="dispatch-panel-scroll"
         >
             <div
@@ -45,7 +45,7 @@
                     {{ assignProgressLabel }}
                 </p>
                 <div
-                    class="flex gap-1.5 overflow-x-auto pb-0.5"
+                    class="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hidden"
                     role="tablist"
                     :aria-label="t('trip_detail.schedules.assign_tabs_aria')"
                 >
@@ -209,33 +209,22 @@
             style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom))"
             data-testid="dispatch-assign-footer"
         >
-            <div class="flex flex-col gap-2">
-                <button
-                    type="button"
-                    class="w-full rounded-xl bg-[#8B1A1A] px-3 py-2.5 text-[12px] font-semibold text-white shadow-md shadow-[#8B1A1A]/25 outline-none hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-45 dark:shadow-[#8B1A1A]/30"
-                    :disabled="assigning || !assignReady"
-                    data-testid="dispatch-confirm-assign"
-                    @click="emit('assign')"
-                >
-                    <span
-                        v-if="assigning"
-                        class="mr-2 inline-block h-3 w-3 animate-spin rounded-full border border-white/40 border-t-white"
-                    />
-                    <span v-if="assigning" class="sr-only">{{ t("trip_detail.coordination.footer_loading_aria") }}</span>
-                    {{
-                        t("trip_detail.coordination.footer_confirm_assign")
-                    }}
-                </button>
-                <button
-                    type="button"
-                    class="w-full rounded-xl bg-slate-100 px-3 py-2 text-[12px] font-medium text-slate-700 shadow-sm hover:bg-slate-200/80 disabled:opacity-55 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                    :disabled="assigning"
-                    data-testid="dispatch-cancel-assign"
-                    @click="emit('cancel')"
-                >
-                    {{ t("trip_detail.coordination.footer_cancel") }}
-                </button>
-            </div>
+            <button
+                type="button"
+                class="w-full rounded-xl bg-[#8B1A1A] px-3 py-2.5 text-[12px] font-semibold text-white shadow-md shadow-[#8B1A1A]/25 outline-none hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-45 dark:shadow-[#8B1A1A]/30"
+                :disabled="assigning || !assignReady"
+                data-testid="dispatch-confirm-assign"
+                @click="emit('assign')"
+            >
+                <span
+                    v-if="assigning"
+                    class="mr-2 inline-block h-3 w-3 animate-spin rounded-full border border-white/40 border-t-white"
+                />
+                <span v-if="assigning" class="sr-only">{{ t("trip_detail.coordination.footer_loading_aria") }}</span>
+                {{
+                    t("trip_detail.coordination.footer_confirm_assign")
+                }}
+            </button>
         </div>
 
     </section>
@@ -308,7 +297,6 @@ const emit = defineEmits<{
     "create-vendor": [];
     "update:coordinationNotes": [value: string];
     assign: [];
-    cancel: [];
     "update:activeScheduleKey": [key: string];
 }>();
 
@@ -416,24 +404,26 @@ const assignmentCollapsedSummary = computed(() => {
     const dn = props.assignmentDrivers?.length ?? 0;
     if (vn) {
         const first = props.assignmentVehicles[0]?.license_plate?.trim();
+        const plateFallback = t("trip_detail.empty.plate");
         bits.push(
             vn > 1
                 ? t("trip_detail.coordination.assignment_list_vehicles_short", {
                       n: vn,
-                      plate: first || "—",
+                      plate: first || plateFallback,
                   })
-                : first || "—",
+                : first || plateFallback,
         );
     }
     if (dn) {
         const first = props.assignmentDrivers[0]?.full_name?.trim();
+        const nameFallback = t("trip_detail.empty.driver");
         bits.push(
             dn > 1
                 ? t("trip_detail.coordination.assignment_list_drivers_short", {
                       n: dn,
-                      name: first || "—",
+                      name: first || nameFallback,
                   })
-                : first || "—",
+                : first || nameFallback,
         );
     }
     if (

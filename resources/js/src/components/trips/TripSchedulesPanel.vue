@@ -2,7 +2,8 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ChevronDownIcon } from '@heroicons/vue/24/outline'
-import { labelTripStatus } from '../../util/labels'
+import EmptyValue from '../ui/EmptyValue.vue'
+import { isEmptyDisplay } from '../../util/displayValue'
 
 const props = defineProps({
   cards: { type: Array, default: () => [] },
@@ -83,15 +84,29 @@ const showPanel = computed(() => (props.cards?.length ?? 0) > 0)
 const showGuestTotalFooter = computed(
   () =>
     props.tripType !== 'cargo' &&
-    (props.cards?.length ?? 0) >= 1 &&
+    (props.cards?.length ?? 0) > 1 &&
     (props.totalGuests ?? 0) > 0,
 )
+
+function routeLine(card) {
+  const a = card?.pickup?.trim()
+  const b = card?.dropoff?.trim()
+  if (a && b) return { from: a, to: b, show: true }
+  if (a) return { from: a, to: '', show: true }
+  if (b) return { from: '', to: b, show: true }
+  return { from: '', to: '', show: false }
+}
+
+function displayLineValue(val) {
+  if (isEmptyDisplay(val)) return ''
+  return String(val).trim()
+}
 </script>
 
 <template>
   <section
     v-if="showPanel"
-    class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm"
+    class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm"
   >
     <div class="flex flex-wrap items-center justify-between gap-2">
       <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">
@@ -124,7 +139,13 @@ const showGuestTotalFooter = computed(
           />
           <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-center gap-2">
-              <span class="text-sm font-semibold text-slate-900">{{ card.heading }}</span>
+              <span class="text-sm font-semibold text-slate-900">
+                {{
+                  card.labelSeq
+                    ? t('trip_detail.schedules.tab_short', { n: card.labelSeq })
+                    : t('trip_detail.schedules.title')
+                }}
+              </span>
               <span
                 class="rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1"
                 :class="statusChipClass(assignmentStatus(card.key))"
@@ -139,10 +160,22 @@ const showGuestTotalFooter = computed(
                 {{ operationStatusLabel(card.key) }}
               </span>
             </div>
-            <p class="mt-0.5 truncate text-xs text-slate-600">
-              {{ card.pickup || '—' }}
-              <span class="text-slate-400">→</span>
-              {{ card.dropoff || '—' }}
+            <p
+              v-if="routeLine(card).show"
+              class="mt-0.5 truncate text-xs text-slate-600"
+            >
+              <template v-if="routeLine(card).from">
+                {{ routeLine(card).from }}
+              </template>
+              <span
+                v-if="routeLine(card).from && routeLine(card).to"
+                class="text-slate-400"
+              >
+                →
+              </span>
+              <template v-if="routeLine(card).to">
+                {{ routeLine(card).to }}
+              </template>
             </p>
           </div>
         </button>
@@ -159,7 +192,13 @@ const showGuestTotalFooter = computed(
               <dt class="text-[11px] font-medium uppercase tracking-wide text-slate-500">
                 {{ ln.label }}
               </dt>
-              <dd class="sm:col-span-2 text-sm text-slate-800">{{ ln.value }}</dd>
+              <dd class="sm:col-span-2 text-[13px] text-slate-800">
+                <EmptyValue
+                  v-if="!displayLineValue(ln.value)"
+                  empty-key="trip_detail.empty.not_available"
+                />
+                <span v-else>{{ displayLineValue(ln.value) }}</span>
+              </dd>
             </div>
           </dl>
         </div>

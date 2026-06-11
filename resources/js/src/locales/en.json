@@ -3310,7 +3310,25 @@
             "page_title": "Trip detail & dispatch",
             "request_ref": "Request #{code}",
             "trip_ref": "Trip {code}",
+            "trip_code_label": "Trip code",
             "notifications": "Notifications"
+        },
+        "empty": {
+            "not_available": "Not available yet",
+            "datetime": "No date or time",
+            "time": "No time set",
+            "schedule_date": "No date set",
+            "route": "No route",
+            "place": "No location",
+            "contact": "No contact",
+            "notes": "No notes",
+            "address": "No address",
+            "plate": "No plate assigned",
+            "driver": "No driver assigned",
+            "vehicle_type": "Type not set",
+            "amount": "Not entered",
+            "cost_type": "Uncategorized",
+            "cell": "Not applicable"
         },
         "quick": {
             "duplicate": "Duplicate trip",
@@ -3335,6 +3353,15 @@
         "overview": {
             "title": "Trip overview",
             "schedule": "Schedule",
+            "time_depart": "Departure",
+            "time_arrive": "Arrival",
+            "duration_label": "Duration",
+            "multi_schedule_hint": "This trip has {n} itineraries — see details below.",
+            "countdown_days": "{n} days left",
+            "countdown_hours": "{h}h {m}m left",
+            "countdown_minutes": "{m} min left",
+            "finance_section": "Estimates",
+            "finance_empty": "No distance or revenue estimate yet",
             "est_distance": "Estimated distance",
             "est_cost": "Estimated revenue",
             "duration_hours": "{n} hours",
@@ -3503,17 +3530,17 @@
             "named_sheet_close_overlay": "Close and return"
         },
         "costs_block": {
-            "title": "Trip revenue",
-            "subtitle": "Quick entry and your latest revenue lines (up to 50 records)."
+            "title": "Trip expenses",
+            "subtitle": "Log fuel, tolls, parking, and other costs with receipts; up to 50 latest entries on this trip."
         },
         "status_block": {
             "title": "Status",
             "subtitle": "Update the operational step: driver confirmed, in progress, completed, or cancelled."
         },
         "lower_panel": {
-            "aria": "Trip status and revenue",
+            "aria": "Trip status and expenses",
             "tab_workflow": "Status",
-            "tab_costs": "Revenue"
+            "tab_costs": "Expenses"
         },
         "status_workflow": {
             "assign_vehicle": "Assign vehicle",
@@ -3757,6 +3784,11 @@
         },
         "timeline": {
             "title": "Activity timeline",
+            "step_created": "Request created",
+            "step_approved": "Approved",
+            "step_assigned": "Vehicle & driver assigned",
+            "step_running": "In progress",
+            "step_completed": "Completed",
             "empty": "No activity yet.",
             "trip_created": "Trip created",
             "trip_created_subtitle": "Type: {type}",
@@ -3861,22 +3893,28 @@
             "update": "Update"
         },
         "costs": {
-            "title": "Revenue (latest 50)",
+            "title": "Expenses (latest 50)",
             "empty": "None yet.",
-            "empty_title": "No revenue yet",
-            "empty_cta": "Add the first revenue",
+            "empty_title": "No expenses yet",
+            "empty_hint": "Add line items as they occur during the trip (receipt optional).",
+            "empty_cta": "Add first expense",
             "view_all": "View all",
             "attach_receipt_aria": "Attach receipt (image or PDF)",
             "total": "Total: {amount}",
-            "open_list": "Open revenue page",
-            "quick_title": "Quick log revenue",
-            "quick_type": "Type",
+            "open_list": "Open expenses page",
+            "quick_title": "Quick expense entry",
+            "quick_type": "Expense type",
             "quick_amount": "Amount (VND)",
             "quick_amount_ph": "e.g. 150000",
             "quick_desc": "Description (optional)",
             "quick_desc_ph": "Receipt note…",
-            "quick_submit": "Submit revenue",
+            "quick_submit": "Save expense",
             "quick_invalid": "Pick a type and enter a valid amount.",
+            "summary_aria": "Trip expense summary",
+            "summary_count_label": "Items",
+            "summary_approved_label": "Approved",
+            "summary_pending_label": "Pending",
+            "summary_none": "—",
             "type_fuel": "Fuel",
             "type_toll": "Toll / road fee",
             "type_parking": "Parking",
@@ -3887,8 +3925,8 @@
             "receipt_drop_hint": "Drop or click — image/PDF",
             "receipt_uploading": "Uploading…",
             "breakdown_title": "Breakdown by type",
-            "add_btn": "+ Add revenue",
-            "add_btn_cancel": "Close",
+            "add_btn": "+ Add expense",
+            "add_btn_cancel": "Close form",
             "breakdown_total": "Total",
             "embedded_summary": "{count} items · {total}",
             "summary_approved_only": "Approved: {amount}",

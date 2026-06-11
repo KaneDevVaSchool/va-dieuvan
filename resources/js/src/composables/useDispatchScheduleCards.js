@@ -7,6 +7,7 @@ import {
 } from './dispatchWizardConstants'
 import { parseMoneyVnd } from '../util/money'
 import { wizardSnapshotGuestTotal } from '../util/dispatchRequestPassengers'
+import { joinScheduleParts } from '../util/displayValue'
 
 function rowLineTotal(row) {
   return parseMoneyVnd(row?.unit_price) + parseMoneyVnd(row?.extra_fee)
@@ -24,10 +25,10 @@ export function useDispatchScheduleCards(snapshot, tripType) {
   const localeTag = computed(() => (locale.value === 'en' ? 'en-US' : 'vi-VN'))
 
   function formatShortDt(val) {
-    if (!val) return '—'
+    if (!val) return ''
     try {
       const d = new Date(val)
-      if (Number.isNaN(d.getTime())) return '—'
+      if (Number.isNaN(d.getTime())) return ''
       return new Intl.DateTimeFormat(localeTag.value, {
         day: '2-digit',
         month: '2-digit',
@@ -35,8 +36,12 @@ export function useDispatchScheduleCards(snapshot, tripType) {
         minute: '2-digit',
       }).format(d)
     } catch {
-      return '—'
+      return ''
     }
+  }
+
+  function lineValue(dt, place) {
+    return joinScheduleParts(formatShortDt(dt), place?.trim?.() ?? place)
   }
 
   const scheduleCards = computed(() => {
@@ -64,15 +69,15 @@ export function useDispatchScheduleCards(snapshot, tripType) {
           lines: [
             {
               label: t('dispatch_wizard.s3.cargo_name'),
-              value: row.name?.trim() || '—',
+              value: row.name?.trim() || '',
             },
             {
               label: t('dispatch_wizard.confirm.lbl_pickup'),
-              value: `${formatShortDt(row.pickup_at)} — ${row.pickup_place?.trim() || '—'}`,
+              value: lineValue(row.pickup_at, row.pickup_place),
             },
             {
               label: t('dispatch_wizard.confirm.lbl_delivery'),
-              value: `${formatShortDt(row.delivery_at)} — ${row.delivery_place?.trim() || '—'}`,
+              value: lineValue(row.delivery_at, row.delivery_place),
             },
           ],
         })
@@ -99,16 +104,16 @@ export function useDispatchScheduleCards(snapshot, tripType) {
           lines: [
             {
               label: t('dispatch_wizard.confirm.lbl_out'),
-              value: `${formatShortDt(row.depart_at)} — ${row.pickup?.trim() || '—'}`,
+              value: lineValue(row.depart_at, row.pickup),
             },
             {
               label: t('dispatch_wizard.confirm.lbl_back'),
-              value: `${formatShortDt(row.return_at)} — ${row.dropoff?.trim() || '—'}`,
+              value: lineValue(row.return_at, row.dropoff),
             },
             {
               lineKey: 'guests_per_leg',
               label: t('trip_detail.schedules.guests_per_leg'),
-              value: String(row.guests ?? '').trim() || '—',
+              value: String(row.guests ?? '').trim() || '',
             },
           ],
         })
@@ -123,16 +128,16 @@ export function useDispatchScheduleCards(snapshot, tripType) {
         const lines = [
           {
             label: t('dispatch_wizard.confirm.lbl_out'),
-            value: `${formatShortDt(row.depart_at)} — ${row.pickup?.trim() || '—'}`,
+            value: lineValue(row.depart_at, row.pickup),
           },
           {
             label: t('dispatch_wizard.confirm.lbl_back'),
-            value: `${formatShortDt(row.return_at)} — ${row.dropoff?.trim() || '—'}`,
+            value: lineValue(row.return_at, row.dropoff),
           },
           {
             lineKey: 'guests_per_leg',
             label: t('trip_detail.schedules.guests_per_leg'),
-            value: String(row.guests ?? '').trim() || '—',
+            value: String(row.guests ?? '').trim() || '',
           },
         ]
         if (row.waypoint?.trim()) {

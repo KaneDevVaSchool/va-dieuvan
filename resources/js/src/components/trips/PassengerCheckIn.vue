@@ -425,7 +425,7 @@
                                         />
                                     </template>
                                     <template v-else>
-                                        <span class="text-slate-500">—</span>
+                                        <EmptyValue empty-key="trip_detail.empty.cell" />
                                     </template>
                                 </template>
                                 <template v-else>
@@ -441,9 +441,11 @@
                                             {{ row.contact }}
                                         </a>
                                     </template>
-                                    <span v-else class="text-slate-600">{{
-                                        row.contact || "—"
-                                    }}</span>
+                                    <EmptyValue
+                                        v-else
+                                        :value="row.contact"
+                                        empty-key="trip_detail.empty.contact"
+                                    />
                                 </template>
                             </td>
                             <td
@@ -534,7 +536,10 @@
                                                 aria-hidden="true"
                                             />
                                         </span>
-                                        <span>{{ row.notes || "—" }}</span>
+                                        <EmptyValue
+                                            :value="row.notes"
+                                            empty-key="trip_detail.empty.notes"
+                                        />
                                     </div>
                                 </template>
                             </td>
@@ -584,9 +589,10 @@
                                             }}
                                         </div>
                                         <div class="mt-0.5">
-                                            {{
-                                                row.pickupAddress?.trim() || "—"
-                                            }}
+                                            <EmptyValue
+                                                :value="row.pickupAddress"
+                                                empty-key="trip_detail.empty.address"
+                                            />
                                         </div>
                                     </div>
                                     <div>
@@ -598,7 +604,10 @@
                                             }}
                                         </div>
                                         <div class="mt-0.5 whitespace-pre-wrap">
-                                            {{ row.notes?.trim() || "—" }}
+                                            <EmptyValue
+                                                :value="row.notes"
+                                                empty-key="trip_detail.empty.notes"
+                                            />
                                         </div>
                                     </div>
                                 </div>
@@ -1183,6 +1192,8 @@ import {
 import { showAppError } from "../../composables/appMessage";
 import { togglePassengerCheckInApi } from "../../composables/usePassengerCheckIn";
 import { confirmAction } from "../../composables/useConfirm";
+import EmptyValue from "../ui/EmptyValue.vue";
+import { isEmptyDisplay } from "../../util/displayValue";
 
 const WheelchairGlyph = {
     name: "WheelchairGlyph",
@@ -1433,7 +1444,7 @@ const tableColSpan = computed(() => {
 
 function initials(name: string) {
     const n = String(name ?? "").trim();
-    if (!n || n === "—") return "?";
+    if (!n || isEmptyDisplay(n)) return "?";
     const parts = n.split(/\s+/).filter(Boolean);
     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
@@ -1441,7 +1452,7 @@ function initials(name: string) {
 
 function telHref(contact: string) {
     const raw = String(contact ?? "").trim();
-    if (!raw || raw === "—") return "";
+    if (isEmptyDisplay(raw)) return "";
     const digits = raw.replace(/[^\d+]/g, "");
     if (digits.length < 8) return "";
     return `tel:${digits}`;

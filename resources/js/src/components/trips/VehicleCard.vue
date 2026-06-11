@@ -11,7 +11,7 @@
       <div class="min-w-0 flex-1">
         <div class="flex items-start justify-between gap-2">
           <div class="min-w-0 flex-1 truncate text-[13px] font-medium tabular-nums text-slate-900 dark:text-slate-100">
-            {{ vehicle?.license_plate ?? '—' }}
+            <EmptyValue :value="vehicle?.license_plate" empty-key="trip_detail.empty.plate" />
           </div>
           <button
             v-if="props.allowChange"
@@ -42,7 +42,7 @@
           </span>
         </div>
         <div class="mt-0.5 text-[13px] font-normal text-slate-600 dark:text-slate-400">
-          {{ typeLabel }}
+          <EmptyValue :value="typeLabelRaw" empty-key="trip_detail.empty.vehicle_type" />
         </div>
         <p v-if="busy" class="mt-2 text-[11px] font-normal text-rose-700 dark:text-rose-400">
           {{ t('trip_detail.coordination.vehicle_busy_hint') }}
@@ -56,6 +56,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { TruckIcon } from '@heroicons/vue/24/outline'
+import EmptyValue from '../ui/EmptyValue.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -78,10 +79,7 @@ defineEmits<{
 
 const { t } = useI18n()
 
-const typeLabel = computed(() => {
-  const x = props.vehicle?.type
-  return x && String(x).trim() ? String(x) : '—'
-})
+const typeLabelRaw = computed(() => props.vehicle?.type ?? '')
 
 const seatChipText = computed(() => {
   const n = props.vehicle?.seat_count

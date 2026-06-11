@@ -1,18 +1,20 @@
 <template>
-    <div class="min-h-screen w-full min-w-0 bg-[#F8F9FA]">
+    <div
+        class="min-h-screen w-full min-w-0 bg-[#F8F9FA] text-[13px] leading-snug -mx-3 sm:-mx-4 md:-mx-6 lg:-mx-8"
+    >
         <div
             v-if="loading && !trip"
-            class="mx-auto w-full max-w-none space-y-6 px-4 py-10 sm:px-6 lg:px-8"
+            class="w-full max-w-none space-y-6 px-2 py-8 sm:px-3 md:px-4 lg:px-5"
         >
             <div class="animate-pulse space-y-4">
                 <div class="h-10 max-w-md rounded-xl bg-slate-200/90" />
-                <div class="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
-                    <div class="min-w-0 space-y-4 lg:col-span-5">
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-6 xl:gap-8">
+                    <div class="min-w-0 space-y-4 lg:col-span-4">
                         <div class="h-64 rounded-2xl bg-slate-200/80" />
                         <div class="h-48 rounded-2xl bg-slate-200/70" />
                         <div class="h-56 rounded-2xl bg-slate-200/70" />
                     </div>
-                    <div class="min-w-0 space-y-4 lg:col-span-7">
+                    <div class="min-w-0 space-y-4 lg:col-span-8">
                         <div class="h-72 rounded-2xl bg-slate-200/80" />
                         <div class="h-40 rounded-2xl bg-slate-200/70" />
                     </div>
@@ -36,6 +38,8 @@
         <template v-else-if="trip">
             <StickyTripHeader
                 :trip="trip"
+                :display-code="tripDisplayCode"
+                :countdown-label="countdown"
                 :status-label-override="tripStatusLabelOverride"
                 :can-approve="canAssign"
                 :can-reject="canRejectTripFromHeader"
@@ -46,18 +50,18 @@
                 @approve="onApproveTransfer"
                 @reject="onRejectTrip"
             />
-            <p class="mx-auto w-full max-w-none px-4 pt-1 text-xs text-slate-500 sm:px-6 lg:px-8">
+            <p class="w-full max-w-none px-2 pt-1 text-[11px] text-slate-500 sm:px-3 md:px-4 lg:px-5">
                 {{
                     t("trip_detail.created_at", { time: fmt(trip.created_at) })
                 }}
             </p>
             <p
                 v-if="silentLoadError"
-                class="mx-auto w-full max-w-none px-4 pt-2 text-xs text-amber-900 sm:px-6 lg:px-8"
+                class="w-full max-w-none px-2 pt-2 text-[11px] text-amber-900 sm:px-3 md:px-4 lg:px-5"
             >
                 {{ silentLoadError }}
             </p>
-            <div class="mx-auto w-full max-w-none space-y-4 px-4 pb-12 pt-3 sm:px-6 lg:px-8">
+            <div class="w-full max-w-none space-y-4 px-2 pb-8 pt-2 sm:px-3 md:px-4 lg:px-5">
                 <TripTimeline
                     class="w-full min-w-0"
                     :current-status="timelineWorkflowStatus"
@@ -66,7 +70,7 @@
 
                 <div
                     v-if="driverCancellationEvent"
-                    class="mx-auto w-full max-w-none px-4 sm:px-6 lg:px-8"
+                    class="w-full max-w-none"
                     role="alert"
                 >
                     <div
@@ -115,27 +119,25 @@
                 </div>
 
                 <div
-                    class="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start lg:gap-8"
+                    class="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-start lg:gap-6 xl:gap-8"
                 >
                     <div
-                        class="flex min-w-0 w-full flex-col gap-4 lg:col-span-5"
+                        class="flex min-w-0 w-full flex-col gap-3 lg:col-span-4 xl:col-span-4"
                     >
-                        <h2
-                            class="text-xs font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400"
-                        >
-                            {{ t("trip_detail.overview_column_title") }}
-                        </h2>
                         <TripInfoCard
                             :trip="trip"
-                            :status-label-override="tripStatusLabelOverride"
-                            :countdown="countdown"
                             :passenger-count="unifiedPassengerCount"
                             :schedule-date-long="scheduleDateLong"
+                            :schedule-depart-time="scheduleDepartTime"
+                            :schedule-arrive-time="scheduleArriveTime"
+                            :schedule-arrive-date-short="scheduleArriveDateShort"
                             :schedule-time-range="scheduleTimeRange"
                             :schedule-duration="scheduleDuration"
                             :schedule-mismatch-notes="scheduleMismatchNotes"
                             :estimated-distance-label="estimatedDistanceLabel"
                             :estimated-cost-label="estimatedCostLabel"
+                            :schedule-card="routeInfoScheduleCard"
+                            :schedule-leg-count="scheduleCount"
                             :requester-initials="requesterInitials"
                             :requester-name="requesterName"
                             :requester-subtitle="requesterSubtitle"
@@ -147,7 +149,7 @@
                             :destination-label="displayDestinationLabel"
                         />
                         <TripSchedulesPanel
-                            v-if="scheduleCount > 0"
+                            v-if="scheduleCount > 1"
                             :cards="scheduleCardsForPanel"
                             :schedule-legs="scheduleLegs"
                             :selected-key="selectedScheduleKey"
@@ -158,7 +160,7 @@
                     </div>
 
                     <div
-                        class="flex min-h-0 w-full min-w-0 flex-col gap-3 lg:col-span-7 lg:sticky lg:top-14 lg:max-h-[calc(100dvh-3.5rem)] lg:min-h-[calc(100dvh-3.5rem)] lg:self-start"
+                        class="flex min-h-0 w-full min-w-0 flex-col gap-2 lg:col-span-8 xl:col-span-8 lg:sticky lg:top-14 lg:max-h-[calc(100dvh-3.5rem)] lg:self-start"
                     >
                         <h2
                             class="shrink-0 text-xs font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400"
@@ -203,7 +205,6 @@
                             @update:resources="onDispatchResourcesUpdate"
                             @create-vendor="openProviderModal"
                             @assign="onApproveTransfer"
-                            @cancel="onCoordinationCancel"
                             @update:coordination-notes="
                                 coordinationNotes = $event
                             "
@@ -405,7 +406,7 @@
                                             }}
                                         </div>
                                         <div
-                                            class="mt-1 max-h-40 overflow-y-auto whitespace-pre-wrap"
+                                            class="mt-1 max-h-40 overflow-y-auto overscroll-y-contain whitespace-pre-wrap scrollbar-hidden"
                                         >
                                             {{ tripRequestNotesFromUser }}
                                         </div>
@@ -511,135 +512,48 @@
 
                         <section
                             class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700/80 dark:bg-slate-950/40"
-                            :aria-label="t('trip_detail.lower_panel.aria')"
+                            :aria-label="t('trip_detail.status_block.title')"
                         >
-                            <!-- <xl: tabs + một panel -->
-                            <div class="xl:hidden">
-                                <div
-                                    class="flex gap-1 border-b border-slate-100 bg-slate-50/90 px-2 pt-2 dark:border-slate-700/80 dark:bg-slate-900/60"
-                                    role="tablist"
-                                >
-                                    <button
-                                        type="button"
-                                        role="tab"
-                                        :aria-selected="
-                                            mainLowerTab === 'workflow'
-                                        "
-                                        class="min-h-[2.75rem] flex-1 rounded-t-lg px-3 py-2 text-center text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900"
-                                        :class="
-                                            mainLowerTab === 'workflow'
-                                                ? 'bg-white text-blue-700 shadow-[0_-1px_0_0_white] dark:bg-slate-950 dark:text-blue-400 dark:shadow-[0_-1px_0_0_rgb(15,23,42)]'
-                                                : 'text-slate-600 hover:bg-white/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/80 dark:hover:text-slate-200'
-                                        "
-                                        @click="mainLowerTab = 'workflow'"
-                                    >
-                                        {{
-                                            t(
-                                                "trip_detail.lower_panel.tab_workflow",
-                                            )
-                                        }}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        role="tab"
-                                        :aria-selected="
-                                            mainLowerTab === 'costs'
-                                        "
-                                        class="relative min-h-[2.75rem] flex-1 rounded-t-lg px-3 py-2 text-center text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900"
-                                        :class="
-                                            mainLowerTab === 'costs'
-                                                ? 'bg-white text-blue-700 shadow-[0_-1px_0_0_white] dark:bg-slate-950 dark:text-blue-400 dark:shadow-[0_-1px_0_0_rgb(15,23,42)]'
-                                                : 'text-slate-600 hover:bg-white/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/80 dark:hover:text-slate-200'
-                                        "
-                                        @click="mainLowerTab = 'costs'"
-                                    >
-                                        {{
-                                            t(
-                                                "trip_detail.lower_panel.tab_costs",
-                                            )
-                                        }}
-                                        <span
-                                            v-if="(trip.costs ?? []).length"
-                                            class="ml-1 inline-block min-w-[1.125rem] rounded-full bg-blue-100 px-1 py-px text-[10px] font-bold tabular-nums text-blue-800 dark:bg-blue-950/70 dark:text-blue-200"
-                                        >
-                                            {{ (trip.costs ?? []).length }}
-                                        </span>
-                                    </button>
-                                </div>
-
-                                <div class="p-4">
-                                    <div
-                                        v-show="mainLowerTab === 'workflow'"
-                                        class="space-y-0"
-                                    >
-                                        <StatusActions
-                                            embedded
-                                            :trip-status="trip.status"
-                                            :can-assign="canAssign"
-                                            :can-update-status="canUpdateStatus"
-                                            :assign-ready="assignReady"
-                                            :assigning="assigning"
-                                            :statusing="statusing"
-                                            :rejecting="rejecting"
-                                            v-model="tripStatusWorkflowNote"
-                                            @assign="onApproveTransfer"
-                                            @advance="doAdvanceTripStatus"
-                                            @cancel="onWorkflowCancelTrip"
-                                        />
-                                    </div>
-                                    <div v-show="mainLowerTab === 'costs'">
-                                        <CostTracker
-                                            embedded
-                                            :trip-id="trip.id"
-                                            :costs="trip.costs ?? []"
-                                            :can-submit="canSubmitQuickCost"
-                                            :show-costs-link="
-                                                auth.canAccessDispatchWebApp()
-                                            "
-                                            @updated="load({ silent: true })"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- xl+: hai cột, dùng hết chiều ngang -->
                             <div
-                                class="hidden gap-6 p-5 xl:grid xl:grid-cols-2"
+                                class="border-b border-slate-100 bg-slate-50/80 px-4 py-3 dark:border-slate-700/80 dark:bg-slate-900/50 sm:px-5"
                             >
-                                <div
-                                    class="min-w-0 border-r border-slate-100 p-4 dark:border-slate-700/60"
+                                <h2
+                                    class="text-sm font-semibold text-slate-800 dark:text-slate-100"
                                 >
-                                    <StatusActions
-                                        embedded
-                                        :trip-status="trip.status"
-                                        :can-assign="canAssign"
-                                        :can-update-status="canUpdateStatus"
-                                        :assign-ready="assignReady"
-                                        :assigning="assigning"
-                                        :statusing="statusing"
-                                        :rejecting="rejecting"
-                                        v-model="tripStatusWorkflowNote"
-                                        @assign="onApproveTransfer"
-                                        @advance="doAdvanceTripStatus"
-                                        @cancel="onWorkflowCancelTrip"
-                                    />
-                                </div>
-                                <div
-                                    class="min-w-0 p-4"
+                                    {{ t("trip_detail.status_block.title") }}
+                                </h2>
+                                <p
+                                    class="mt-0.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400"
                                 >
-                                    <CostTracker
-                                        embedded
-                                        :trip-id="trip.id"
-                                        :costs="trip.costs ?? []"
-                                        :can-submit="canSubmitQuickCost"
-                                        :show-costs-link="
-                                            auth.canAccessDispatchWebApp()
-                                        "
-                                        @updated="load({ silent: true })"
-                                    />
-                                </div>
+                                    {{ t("trip_detail.status_block.subtitle") }}
+                                </p>
+                            </div>
+                            <div class="p-4 sm:p-5">
+                            <StatusActions
+                                embedded
+                                hide-section-title
+                                :trip-status="trip.status"
+                                :can-assign="canAssign"
+                                :can-update-status="canUpdateStatus"
+                                :assign-ready="assignReady"
+                                :assigning="assigning"
+                                :statusing="statusing"
+                                :rejecting="rejecting"
+                                v-model="tripStatusWorkflowNote"
+                                @assign="onApproveTransfer"
+                                @advance="doAdvanceTripStatus"
+                                @cancel="onWorkflowCancelTrip"
+                            />
                             </div>
                         </section>
+
+                        <CostTracker
+                            :trip-id="trip.id"
+                            :costs="trip.costs ?? []"
+                            :can-submit="canSubmitQuickCost"
+                            :show-costs-link="auth.canAccessDispatchWebApp()"
+                            @updated="load({ silent: true })"
+                        />
                 </div>
             </div>
 
@@ -788,6 +702,8 @@ import {
     internalLegResourceOverlaps,
 } from "../../util/tripScheduleConflict";
 import { parseMoneyVnd } from "../../util/money";
+import { resolveTripDisplayCode } from "../../util/tripDisplayCode";
+import { isEmptyDisplay, LEGACY_EMPTY_MARK } from "../../util/displayValue";
 import {
     dispatchRequestDisplayPassengerCount,
     tripNamedPassengerDisplayCount,
@@ -874,6 +790,9 @@ const {
     requesterSubtitle,
     requesterInitials,
     scheduleDateLong,
+    scheduleDepartTime,
+    scheduleArriveTime,
+    scheduleArriveDateShort,
     scheduleTimeRange,
     scheduleDuration,
     scheduleMismatchNotes,
@@ -979,7 +898,6 @@ const coordinationNotes = ref("");
 const dispatchPanelRef = ref(null);
 const dispatchResources = ref(null);
 /** Tab cột trái: trạng thái vs chi phí */
-const mainLowerTab = ref("workflow");
 const providerModalOpen = ref(false);
 const newProviderName = ref("");
 const newProviderType = ref("vendor");
@@ -1315,17 +1233,17 @@ async function onPassengerListAddSubmit({ kind, draft, resolve }) {
 
 function fmt(v) {
     const l = locale.value === "en" ? "en-US" : "vi-VN";
-    return v ? new Date(v).toLocaleString(l) : "-";
+    if (!v) return t("trip_detail.empty.datetime");
+    return new Date(v).toLocaleString(l);
 }
 
 function fmtTime(v) {
     const l = locale.value === "en" ? "en-US" : "vi-VN";
-    return v
-        ? new Date(v).toLocaleTimeString(l, {
-              hour: "2-digit",
-              minute: "2-digit",
-          })
-        : "-";
+    if (!v) return t("trip_detail.empty.time");
+    return new Date(v).toLocaleTimeString(l, {
+        hour: "2-digit",
+        minute: "2-digit",
+    });
 }
 
 function toDatetimeLocalValue(iso) {
@@ -1345,20 +1263,7 @@ function fmtFileSize(bytes) {
     return `${(n / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-const tripCode = computed(() => {
-    const id = trip.value?.id;
-    if (!id) return "TRP-—";
-    return `TRP-${String(id).padStart(4, "0")}`;
-});
-
-const requestRefCode = computed(() => {
-    const r = trip.value?.dispatch_request;
-    if (!r?.id) return "—";
-    const d = r.created_at ? new Date(r.created_at) : new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    return `REQ-${y}${m}-${String(r.id).padStart(3, "0")}`;
-});
+const tripDisplayCode = computed(() => resolveTripDisplayCode(trip.value));
 
 const snap = computed(
     () => trip.value?.dispatch_request?.wizard_snapshot ?? null,
@@ -1390,7 +1295,7 @@ const scheduleCardsForPanel = computed(() => {
         lines: card.lines.map((ln) => {
             if (ln.lineKey !== "guests_per_leg") return ln;
             const v = String(ln.value ?? "").trim();
-            if (!v || v === "—") {
+            if (!v || v === LEGACY_EMPTY_MARK) {
                 return { ...ln, value: String(effective) };
             }
             const snapN = parseInt(v, 10);
@@ -1558,12 +1463,12 @@ const tripRequestNotesFromUser = computed(() => {
 const estimatedDistanceLabel = computed(() => {
     const km = trip.value?.record?.distance_km;
     if (km != null && km !== "") return `${km} km`;
-    return "—";
+    return "";
 });
 
 const estimatedCostLabel = computed(() => {
     const n = estimatedCostVnd.value;
-    if (n == null || n <= 0) return "—";
+    if (n == null || n <= 0) return "";
     return `${new Intl.NumberFormat(locale.value === "en" ? "en-US" : "vi-VN").format(n)} VNĐ`;
 });
 
@@ -2036,9 +1941,16 @@ const overlappingOtherTrips = computed(() => {
         );
         if (!overlaps) continue;
         const dr = o.dispatch_request;
-        const label = dr
-            ? `${dr.origin || "—"} → ${dr.destination || "—"}`
-            : "—";
+        const origin = dr?.origin;
+        const dest = dr?.destination;
+        let label = t("trip_detail.empty.route");
+        if (!isEmptyDisplay(origin) && !isEmptyDisplay(dest)) {
+            label = `${String(origin).trim()} → ${String(dest).trim()}`;
+        } else if (!isEmptyDisplay(origin)) {
+            label = String(origin).trim();
+        } else if (!isEmptyDisplay(dest)) {
+            label = String(dest).trim();
+        }
         out.push({
             id: o.id,
             depart_at: o.depart_at,
@@ -2235,7 +2147,7 @@ const coordinationScheduleHint = computed(() => {
     if (!trip.value?.depart_at) return "";
     const r = scheduleTimeRange.value;
     const d = scheduleDateLong.value;
-    if (!r || r === "—") return d ? `${d}` : "";
+    if (!r || isEmptyDisplay(r)) return d ? `${d}` : "";
     return t("trip_detail.coordination.schedule_window_hint", {
         date: d,
         range: r,
@@ -2293,9 +2205,6 @@ const showCoordinationAssignFooter = computed(() => {
     return st === "cancelled" && Boolean(driverCancellationEvent.value);
 });
 
-function onCoordinationCancel() {
-    coordinationNotes.value = "";
-}
 
 async function loadSameDayTrips() {
     const key = scheduleDateKeyForList.value;

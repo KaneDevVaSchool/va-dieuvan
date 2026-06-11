@@ -1,8 +1,8 @@
 <template>
-  <section class="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
-    <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ $t('trip_detail.timeline.title') }}</h2>
-    <div class="mt-4 overflow-x-auto pb-2">
-      <div class="flex min-w-[640px] items-start justify-between gap-2 px-1">
+  <section class="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm">
+    <h2 class="text-[11px] font-bold uppercase tracking-wide text-slate-500">{{ $t('trip_detail.timeline.title') }}</h2>
+    <div class="mt-3 overflow-x-auto pb-1 scrollbar-hidden">
+      <div class="flex w-full min-w-0 items-start justify-between gap-1 sm:gap-2 px-0.5">
         <template v-for="(step, idx) in STEPS" :key="step.key">
           <div class="flex flex-1 flex-col items-center">
             <div class="relative flex w-full items-center">
@@ -66,22 +66,22 @@ export type TimelineLog = {
   actor_name: string
 }
 
-const STEPS: TimelineStep[] = [
-  { key: 'created', label: 'Tạo yêu cầu', icon: 'Plus' },
-  { key: 'approved', label: 'Phê duyệt', icon: 'CheckCircle' },
-  { key: 'assigned', label: 'Gán xe & tài xế', icon: 'Car' },
-  { key: 'running', label: 'Đang chạy', icon: 'Navigation' },
-  { key: 'completed', label: 'Hoàn thành', icon: 'Flag' },
-]
-
 const props = defineProps<{
   currentStatus: string
   logs: TimelineLog[]
 }>()
 
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 
-const currentStepIndex = computed(() => STEPS.findIndex((s) => s.key === props.currentStatus))
+const STEPS = computed((): TimelineStep[] => [
+  { key: 'created', label: t('trip_detail.timeline.step_created'), icon: 'Plus' },
+  { key: 'approved', label: t('trip_detail.timeline.step_approved'), icon: 'CheckCircle' },
+  { key: 'assigned', label: t('trip_detail.timeline.step_assigned'), icon: 'Car' },
+  { key: 'running', label: t('trip_detail.timeline.step_running'), icon: 'Navigation' },
+  { key: 'completed', label: t('trip_detail.timeline.step_completed'), icon: 'Flag' },
+])
+
+const currentStepIndex = computed(() => STEPS.value.findIndex((s) => s.key === props.currentStatus))
 
 function logFor(key: string) {
   return props.logs.find((l) => l.status === key)

@@ -8,8 +8,12 @@
         :aria-label="t('trip_detail.status_block.title')"
     >
         <!-- Header: title + status badge -->
-        <div class="flex flex-wrap items-center justify-between gap-2">
+        <div
+            class="flex flex-wrap items-center gap-2"
+            :class="hideSectionTitle ? 'justify-end' : 'justify-between'"
+        >
             <h2
+                v-if="!hideSectionTitle"
                 :class="
                     embedded
                         ? 'text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400'
@@ -229,6 +233,8 @@ const props = defineProps<{
     statusing: boolean;
     modelValue: string;
     embedded?: boolean;
+    /** Parent card already shows section title */
+    hideSectionTitle?: boolean;
 }>();
 
 const emit = defineEmits<{

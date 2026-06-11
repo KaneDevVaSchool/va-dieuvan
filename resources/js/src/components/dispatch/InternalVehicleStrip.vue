@@ -196,6 +196,7 @@
 import { computed, ref, useId, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { TruckIcon } from '@heroicons/vue/24/outline'
+import { isEmptyDisplay } from '../../util/displayValue'
 
 const props = defineProps({
   modelValue: { type: Array, required: true },
@@ -279,10 +280,15 @@ function plateOf(opt) {
 }
 
 function typeOf(opt) {
+  const emptyType = t('trip_detail.empty.vehicle_type')
   const s = String(opt.label ?? '')
   const i = s.indexOf(' · ')
-  if (i < 0) return opt.sublabel?.trim() || '—'
-  return s.slice(i + 3).replace(/\s*\(\d+\)\s*$/, '').trim() || '—'
+  if (i < 0) {
+    const sub = opt.sublabel?.trim()
+    return sub && !isEmptyDisplay(sub) ? sub : emptyType
+  }
+  const part = s.slice(i + 3).replace(/\s*\(\d+\)\s*$/, '').trim()
+  return part && !isEmptyDisplay(part) ? part : emptyType
 }
 
 function seatCountOf(opt) {
@@ -306,7 +312,8 @@ function nativeOptionLine(opt) {
   const seats = seatCountOf(opt)
   const seatPart = seats > 0 ? ` · ${t('trip_detail.coordination.seats_n', { n: seats })}` : ''
   const busy = opt.available === false ? ` (${t('trip_detail.coordination.resource_busy_badge')})` : ''
-  const typePart = type && type !== '—' ? ` — ${type}` : ''
+  const emptyType = t('trip_detail.empty.vehicle_type')
+  const typePart = type && type !== emptyType ? ` · ${type}` : ''
   return `${plate}${typePart}${seatPart}${busy}`
 }
 

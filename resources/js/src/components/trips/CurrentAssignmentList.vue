@@ -29,10 +29,10 @@
           </div>
           <div class="min-w-0 flex-1">
             <div class="truncate text-[13px] font-semibold tabular-nums text-slate-900 dark:text-slate-100">
-              {{ v.license_plate || '—' }}
+              <EmptyValue :value="v.license_plate" empty-key="trip_detail.empty.plate" />
             </div>
             <div class="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-400">
-              <span>{{ v.type?.trim() || '—' }}</span>
+              <EmptyValue :value="v.type" empty-key="trip_detail.empty.vehicle_type" />
               <span v-if="v.seat_count" class="text-emerald-700 dark:text-emerald-400">
                 {{ t('trip_detail.coordination.seats_n', { n: v.seat_count }) }}
               </span>
@@ -83,7 +83,7 @@
           </div>
           <div class="min-w-0 flex-1">
             <div class="truncate text-[13px] font-semibold text-slate-900 dark:text-slate-100">
-              {{ d.full_name || '—' }}
+              <EmptyValue :value="d.full_name" empty-key="trip_detail.empty.driver" />
             </div>
             <div v-if="d.phone" class="mt-0.5 truncate text-[11px] text-slate-500 dark:text-slate-400">
               {{ d.phone }}
@@ -110,6 +110,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { TruckIcon } from '@heroicons/vue/24/outline'
+import EmptyValue from '../ui/EmptyValue.vue'
 
 export type AssignmentListVehicle = {
   id?: number | string | null
