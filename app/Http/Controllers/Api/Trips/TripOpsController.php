@@ -136,6 +136,8 @@ class TripOpsController extends Controller
 
     public function addEvent(AddTripEventRequest $request, Trip $trip)
     {
+        abort_unless(TripVisibility::userCanViewTrip($request->user(), $trip), 403);
+
         $data = $request->validated();
 
         $user = $request->user();

@@ -107,20 +107,21 @@
                 type="button"
                 class="relative flex aspect-square w-full overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
                 :data-testid="`cost-detail-evidence-${row.key}`"
-                @click="openPreview(row.url)"
+                @click="openPreview(row)"
               >
                 <img
-                  :src="row.url"
+                  :src="rowImageSrc(row)"
                   :alt="row.name"
                   loading="lazy"
                   decoding="async"
                   class="h-full w-full object-cover"
+                  @error="onEvidenceImageError(row)"
                 />
               </button>
             </template>
             <a
               v-else
-              :href="row.url"
+              :href="resolvedFileUrl(row)"
               target="_blank"
               rel="noopener noreferrer"
               class="flex min-h-[7rem] flex-col items-center justify-center gap-2 px-3 py-4 text-center text-sm font-semibold text-teal-800 hover:bg-slate-50 dark:text-teal-300 dark:hover:bg-slate-800/80"
@@ -156,7 +157,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { DocumentTextIcon } from '@heroicons/vue/24/outline'
@@ -164,6 +165,7 @@ import Modal from '../ui/Modal.vue'
 import { getTripCost } from '../../api/costs'
 import { showAppErrorFromApi } from '../../composables/appMessage'
 import { formatTripCode, formatVnd } from '../../util/labels'
+import { fetchAttachmentBlob, resolveAttachmentAbsoluteUrl } from '../../util/downloadPdfAttachment'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -181,6 +183,75 @@ const loadError = ref('')
 /** @type {import('vue').Ref<Record<string, unknown> | null>} */
 const cost = ref(null)
 const previewUrl = ref(null)
+/** @type {import('vue').Ref<Map<number, string>>} */
+const blobUrlByAttachmentId = ref(new Map())
+const hydratingAttachmentIds = ref(new Set())
+
+function revokeAllBlobUrls() {
+  for (const u of blobUrlByAttachmentId.value.values()) {
+    URL.revokeObjectURL(u)
+  }
+  blobUrlByAttachmentId.value = new Map()
+}
+
+async function hydrateAttachmentBlob(attachmentId) {
+  const id = Number(attachmentId)
+  if (!Number.isFinite(id) || id < 1) return
+  if (blobUrlByAttachmentId.value.has(id) || hydratingAttachmentIds.value.has(id)) return
+  hydratingAttachmentIds.value.add(id)
+  try {
+    const blob = await fetchAttachmentBlob(id)
+    const objectUrl = URL.createObjectURL(blob)
+    const next = new Map(blobUrlByAttachmentId.value)
+    next.set(id, objectUrl)
+    blobUrlByAttachmentId.value = next
+  } catch {
+    /* fallback: resolveAttachmentAbsoluteUrl */
+  } finally {
+    hydratingAttachmentIds.value.delete(id)
+  }
+}
+
+function syncAttachmentBlobCache() {
+  const ids = new Set(
+    (cost.value?.attachments || []).map((a) => a?.id).filter((x) => x != null && Number(x) > 0),
+  )
+  const next = new Map()
+  for (const [id, url] of blobUrlByAttachmentId.value) {
+    if (ids.has(id)) next.set(id, url)
+    else URL.revokeObjectURL(url)
+  }
+  blobUrlByAttachmentId.value = next
+  for (const id of ids) {
+    void hydrateAttachmentBlob(id)
+  }
+}
+
+function looksLikeImage(mime, name, url) {
+  const m = String(mime || '').toLowerCase()
+  if (m.startsWith('image/')) return true
+  const probe = `${name || ''} ${url || ''}`.toLowerCase()
+  return /\.(jpe?g|png|gif|webp|bmp|heic|heif)(\?|$)/i.test(probe)
+}
+
+function rowImageSrc(row) {
+  if (!row) return ''
+  const id = row.attachmentId
+  if (id != null) {
+    const cached = blobUrlByAttachmentId.value.get(id)
+    if (cached) return cached
+    void hydrateAttachmentBlob(id)
+  }
+  return resolveAttachmentAbsoluteUrl(row.url)
+}
+
+function resolvedFileUrl(row) {
+  return resolveAttachmentAbsoluteUrl(row?.url || '')
+}
+
+function onEvidenceImageError(row) {
+  if (row?.attachmentId) void hydrateAttachmentBlob(row.attachmentId)
+}
 
 const modalTitle = computed(() => {
   if (!props.costId) return t('costs_page.detail_modal_title')
@@ -213,7 +284,8 @@ const evidenceRows = computed(() => {
       key: `att-${a.id}`,
       url,
       name,
-      isImage: mime.startsWith('image/'),
+      attachmentId: a.id ?? null,
+      isImage: looksLikeImage(mime, name, url),
     })
   }
   const leg = cost.value?.receipt_url
@@ -224,7 +296,8 @@ const evidenceRows = computed(() => {
       key: 'legacy-receipt',
       url: leg,
       name: t('costs_page.detail_legacy_receipt'),
-      isImage: !isPdf,
+      attachmentId: null,
+      isImage: !isPdf && looksLikeImage('', '', leg),
     })
   }
   return rows
@@ -271,8 +344,9 @@ function formatDateTime(iso) {
   }
 }
 
-function openPreview(url) {
-  previewUrl.value = url
+async function openPreview(row) {
+  if (row?.attachmentId) await hydrateAttachmentBlob(row.attachmentId)
+  previewUrl.value = rowImageSrc(row)
 }
 
 async function loadDetail() {
@@ -285,6 +359,7 @@ async function loadDetail() {
   loadError.value = ''
   try {
     cost.value = await getTripCost(props.costId)
+    syncAttachmentBlobCache()
   } catch (e) {
     cost.value = null
     loadError.value = t('costs_page.detail_load_err')
@@ -302,8 +377,13 @@ watch(
     else {
       cost.value = null
       loadError.value = ''
+      revokeAllBlobUrls()
     }
   },
   { immediate: true },
 )
+
+onUnmounted(() => {
+  revokeAllBlobUrls()
+})
 </script>

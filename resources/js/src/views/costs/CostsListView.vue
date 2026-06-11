@@ -680,95 +680,185 @@
     </template>
 
     <section v-else class="space-y-3" aria-labelledby="costs-section-business-personnel">
-      <AppFilterBar>
-        <div class="flex flex-wrap items-center gap-2">
-          <AppFilterDropdown
-            root-class="shrink-0"
-            :panel-title="t('costs_page.filter_recorded_date')"
-            :show-chip-label="false"
-            :label="t('costs_page.filter_recorded_date')"
-            :summary-text="bpFilterDateSummary"
-            :active="!!(bpFilters.from || bpFilters.to)"
-            :aria-label="t('costs_page.filter_recorded_date')"
-            panel-class="min-w-[260px] p-3"
-          >
-            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <label class="flex flex-1 flex-col gap-1 text-xs font-medium text-slate-600 dark:text-slate-400">
-                {{ t('payments_hub.label_start_date') }}
-                <input v-model="bpFilters.from" type="date" class="costs-input h-9 w-full text-sm" @change="onBpFiltersChange" />
-              </label>
-              <span class="hidden text-slate-400 sm:inline">—</span>
-              <label class="flex flex-1 flex-col gap-1 text-xs font-medium text-slate-600 dark:text-slate-400">
-                {{ t('payments_hub.label_end_date') }}
-                <input v-model="bpFilters.to" type="date" class="costs-input h-9 w-full text-sm" @change="onBpFiltersChange" />
-              </label>
+      <h2
+        id="costs-section-business-personnel-filters"
+        class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+      >
+        {{ t('costs_page.section_filters') }}
+      </h2>
+      <div class="relative z-40">
+        <AppFilterBar>
+          <div class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+            <AppFilterFunnelMenu ref="bpFilterMenuRef" :active="bpActiveFilterCount > 0">
+              <p class="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+                {{ t('dashboard_analytics.filter_applied_title') }}
+              </p>
+              <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
+                <li v-if="bpFilters.from || bpFilters.to" class="flex justify-between gap-2">
+                  <span class="text-slate-500 dark:text-slate-400">{{ t('costs_page.filter_recorded_date') }}</span>
+                  <span class="text-right font-medium">{{ bpFilters.from || '…' }} → {{ bpFilters.to || '…' }}</span>
+                </li>
+                <li v-if="bpFilters.trip_id" class="flex justify-between gap-2">
+                  <span class="text-slate-500 dark:text-slate-400">{{ t('costs_page.filter_trip') }}</span>
+                  <span class="max-w-[12rem] truncate text-right font-medium" :title="bpTripFilterSummaryFull">{{
+                    bpTripFilterSummaryFull
+                  }}</span>
+                </li>
+                <li v-if="bpActiveFilterCount === 0" class="text-slate-400 dark:text-slate-500">{{ t('filter_bar.empty') }}</li>
+              </ul>
+              <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+                  {{ t('trips_page.filter_show_controls_title') }}
+                </p>
+                <p class="mt-1 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+                  {{ t('trips_page.filter_show_controls_hint') }}
+                </p>
+                <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
+                  <li v-for="fd in bpFilterControlDefs" :key="'costs-bp-vis-' + fd.id" class="flex items-start gap-2">
+                    <input
+                      :id="'costs-bp-filter-vis-' + fd.id"
+                      v-model="bpFilterControlVisible[fd.id]"
+                      type="checkbox"
+                      class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:focus:ring-offset-slate-900"
+                    />
+                    <label
+                      :for="'costs-bp-filter-vis-' + fd.id"
+                      class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
+                    >
+                      {{ fd.label }}
+                    </label>
+                  </li>
+                </ul>
+              </div>
+              <button
+                type="button"
+                class="mt-3 w-full rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                @click="resetBpFilters(); closeBpFunnelMenu()"
+              >
+                {{ t('dashboard_analytics.filter_clear_all') }}
+              </button>
+            </AppFilterFunnelMenu>
+
+            <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
+
+            <div class="ml-auto flex shrink-0 items-center gap-1 pl-2 sm:gap-2 sm:pl-3">
+              <button
+                type="button"
+                class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
+                :title="t('filter_bar.clear_icon')"
+                :aria-label="t('filter_bar.clear_icon')"
+                @click="resetBpFilters"
+              >
+                <span class="relative inline-flex">
+                  <FunnelIcon class="h-5 w-5" aria-hidden="true" />
+                  <XMarkIcon
+                    class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/40"
+                  />
+                </span>
+              </button>
             </div>
-          </AppFilterDropdown>
+          </div>
 
-          <AppFilterDropdown
-            root-class="shrink-0 min-w-0 max-w-full"
-            :panel-title="t('costs_page.filter_trip')"
-            :show-chip-label="false"
-            :label="t('costs_page.filter_trip')"
-            :summary-text="bpTripFilterSummaryShort"
-            :active="!!bpFilters.trip_id"
-            :aria-label="t('costs_page.filter_trip')"
-            summary-text-class="max-w-[10rem]"
-            panel-class="w-[min(100vw-1.5rem,320px)] p-2"
+          <div
+            v-if="hasVisibleBpBarFilters"
+            class="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-2 border-t border-violet-100/80 pt-2 dark:border-violet-900/30 sm:gap-x-3"
           >
-            <input
-              v-model="bpFilterTripSearch"
-              type="search"
-              class="costs-input mb-2 h-9 w-full text-sm"
-              :placeholder="t('costs_page.trip_search_ph')"
-              @click.stop
-            />
-            <ul class="max-h-[min(50vh,280px)] space-y-0.5 overflow-y-auto">
-              <li>
-                <button
-                  type="button"
-                  class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
-                  :class="
-                    !bpFilters.trip_id
-                      ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
-                      : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
-                  "
-                  @click="applyBpTripFilter($event, '')"
-                >
-                  {{ t('costs_page.trip_all') }}
-                </button>
-              </li>
-              <li v-for="tripRow in filteredTripsForBpFilter" :key="tripRow.id">
-                <button
-                  type="button"
-                  class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
-                  :class="
-                    String(bpFilters.trip_id) === String(tripRow.id)
-                      ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
-                      : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
-                  "
-                  @click="applyBpTripFilter($event, String(tripRow.id))"
-                >
-                  {{ formatTripPickerLabel(tripRow) }}
-                </button>
-              </li>
-            </ul>
-            <p v-if="tripOptionsRaw.length === 0 && !tripsForModalLoading" class="px-2 py-2 text-[11px] text-slate-500">
-              {{ t('costs_page.trip_empty_scope') }}
-            </p>
-          </AppFilterDropdown>
+            <AppFilterDropdown
+              v-if="bpFilterControlVisible.date"
+              root-class="shrink-0"
+              :panel-title="t('costs_page.filter_recorded_date')"
+              :show-chip-label="false"
+              :label="t('costs_page.filter_recorded_date')"
+              :summary-text="bpFilterDateSummary"
+              :active="!!(bpFilters.from || bpFilters.to)"
+              :aria-label="t('costs_page.filter_recorded_date')"
+              full-width-summary
+              panel-class="w-[min(100vw-1.5rem,320px)] p-3 sm:w-max"
+            >
+              <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <input
+                  v-model="bpFilters.from"
+                  type="date"
+                  class="h-9 w-full rounded-md border-0 bg-white px-2 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 sm:w-auto dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+                  @change="onBpFilterDropdownChange"
+                />
+                <span class="hidden text-slate-300 dark:text-slate-600 sm:inline">—</span>
+                <input
+                  v-model="bpFilters.to"
+                  type="date"
+                  class="h-9 w-full rounded-md border-0 bg-white px-2 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 sm:w-auto dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+                  @change="onBpFilterDropdownChange"
+                />
+              </div>
+            </AppFilterDropdown>
 
-          <button
-            type="button"
-            class="costs-btn-ghost h-9 shrink-0"
-            :title="t('dashboard_analytics.filter_clear_all')"
-            :aria-label="t('dashboard_analytics.filter_clear_all')"
-            @click="resetBpFilters"
-          >
-            {{ t('dashboard_analytics.filter_clear_all') }}
-          </button>
-        </div>
-      </AppFilterBar>
+            <AppFilterDropdown
+              v-if="bpFilterControlVisible.trip"
+              root-class="shrink-0"
+              :panel-title="t('costs_page.filter_trip')"
+              :show-chip-label="false"
+              :label="t('costs_page.filter_trip')"
+              :summary-text="bpTripFilterSummaryShort"
+              :summary-title="bpTripFilterSummaryFull"
+              :active="!!bpFilters.trip_id"
+              :aria-label="t('costs_page.filter_trip')"
+              summary-text-class="max-w-[11rem]"
+              panel-class="w-[min(100vw-1.5rem,320px)] p-3 sm:w-max sm:min-w-[280px]"
+            >
+              <input
+                v-model="bpFilterTripSearch"
+                type="search"
+                class="costs-input mb-2 h-9 w-full text-sm"
+                :placeholder="t('costs_page.trip_search_ph')"
+                autocomplete="off"
+                @click.stop
+              />
+              <ul class="max-h-[min(50vh,280px)] space-y-0.5 overflow-y-auto px-0.5 py-0.5">
+                <li>
+                  <button
+                    type="button"
+                    class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                    :class="
+                      !bpFilters.trip_id
+                        ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
+                        : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                    "
+                    @click="applyBpTripFilter($event, '')"
+                  >
+                    {{ t('costs_page.trip_all') }}
+                  </button>
+                </li>
+                <li v-for="tripRow in filteredTripsForBpFilter" :key="tripRow.id">
+                  <button
+                    type="button"
+                    class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                    :class="
+                      String(bpFilters.trip_id) === String(tripRow.id)
+                        ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
+                        : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                    "
+                    @click="applyBpTripFilter($event, String(tripRow.id))"
+                  >
+                    {{ formatTripPickerLabel(tripRow) }}
+                  </button>
+                </li>
+              </ul>
+              <p
+                v-if="!tripsForModalLoading && tripOptionsRaw.length && !filteredTripsForBpFilter.length"
+                class="mt-2 text-[11px] text-amber-800 dark:text-amber-200"
+              >
+                {{ t('costs_page.trip_no_match') }}
+              </p>
+              <p v-else-if="tripsForModalLoading" class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+                {{ t('costs_page.trip_loading') }}
+              </p>
+              <p v-else-if="!tripsForModalLoading && !tripOptionsRaw.length" class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+                {{ t('costs_page.trip_empty_scope') }}
+              </p>
+            </AppFilterDropdown>
+          </div>
+        </AppFilterBar>
+      </div>
 
       <div class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
         <div class="border-b border-slate-200/90 px-4 py-3 dark:border-slate-700">
@@ -1218,6 +1308,11 @@ const BUILTIN_COST_TYPES = ['fuel', 'toll', 'parking', 'other']
 const EXTRA_TYPES_STORAGE_KEY = 'va.costs.extra_types_v1'
 const COSTS_COL_VISIBILITY_KEY = 'va.costs.col_visibility_v1'
 const FILTER_CONTROL_IDS = ['status', 'type', 'trip_type', 'date', 'trip', 'search', 'per_page', 'amount_range', 'provider', 'fleet_mode']
+const BP_FILTER_CONTROL_IDS = ['date', 'trip']
+
+function defaultBpFilterControlVisibility() {
+  return Object.fromEntries(BP_FILTER_CONTROL_IDS.map((id) => [id, false]))
+}
 const COL_IDS = [
   'unit',
   'category',
@@ -1434,6 +1529,8 @@ const bpFilters = reactive({
   from: '',
   to: '',
 })
+const bpFilterControlVisible = reactive(defaultBpFilterControlVisibility())
+const bpFilterMenuRef = ref(null)
 const searchQ = ref('')
 const filterMenuRef = ref(null)
 const columnPickerRef = ref(null)
@@ -1468,6 +1565,11 @@ function tableColLabel(colId) {
   const k = keys[colId]
   return k ? t(`costs_page.${k}`) : colId
 }
+
+const bpFilterControlDefs = computed(() => [
+  { id: 'date', label: t('costs_page.filter_recorded_date') },
+  { id: 'trip', label: t('costs_page.filter_trip') },
+])
 
 const filterControlDefs = computed(() => [
   { id: 'status', label: t('filter_bar.status') },
@@ -1792,10 +1894,22 @@ const bpFilterDateSummary = computed(() => {
   return `${bpFilters.from || '…'} → ${bpFilters.to || '…'}`
 })
 
+const selectedBpFilterTrip = computed(() => {
+  if (!bpFilters.trip_id) return null
+  const id = Number(bpFilters.trip_id)
+  if (!Number.isFinite(id)) return null
+  return tripOptionsRaw.value.find((tripRow) => Number(tripRow.id) === id) ?? null
+})
+
+const bpTripFilterSummaryFull = computed(() => {
+  if (!bpFilters.trip_id) return t('costs_page.trip_all')
+  const tr = selectedBpFilterTrip.value
+  return tr ? formatTripPickerLabel(tr) : t('costs_page.trip_filter_chip', { id: formatTripCode(bpFilters.trip_id) })
+})
+
 const bpTripFilterSummaryShort = computed(() => {
   if (!bpFilters.trip_id) return t('costs_page.filter_trip')
-  const id = Number(bpFilters.trip_id)
-  const tr = tripOptionsRaw.value.find((tripRow) => Number(tripRow.id) === id)
+  const tr = selectedBpFilterTrip.value
   if (tr) {
     const dr = tr.dispatch_request ?? tr.dispatchRequest
     const o = (dr?.origin ?? '—').trim().slice(0, 22)
@@ -1804,6 +1918,17 @@ const bpTripFilterSummaryShort = computed(() => {
   }
   return formatTripCode(bpFilters.trip_id)
 })
+
+const bpActiveFilterCount = computed(() => {
+  let n = 0
+  if (bpFilters.from || bpFilters.to) n++
+  if (bpFilters.trip_id) n++
+  return n
+})
+
+const hasVisibleBpBarFilters = computed(() =>
+  BP_FILTER_CONTROL_IDS.some((id) => bpFilterControlVisible[id] === true),
+)
 
 const selectedFilterTrip = computed(() => {
   if (!filters.trip_id) return null
@@ -2065,6 +2190,10 @@ function closeFunnelMenu() {
   filterMenuRef.value?.close?.()
 }
 
+function closeBpFunnelMenu() {
+  bpFilterMenuRef.value?.close?.()
+}
+
 function applyFilterPatch(ev, patch) {
   Object.assign(filters, patch)
   filters.page = 1
@@ -2175,7 +2304,8 @@ async function reloadBp() {
   }
 }
 
-function onBpFiltersChange() {
+function onBpFilterDropdownChange(ev) {
+  closeParentDetails(ev)
   reloadBp()
 }
 
@@ -2190,7 +2320,12 @@ function resetBpFilters() {
   bpFilters.from = ''
   bpFilters.to = ''
   bpFilterTripSearch.value = ''
+  closeBpFunnelMenu()
   reloadBp()
+}
+
+function resetBpFilterBarVisibility() {
+  Object.assign(bpFilterControlVisible, defaultBpFilterControlVisibility())
 }
 
 function page(d) {
@@ -2271,6 +2406,7 @@ watch(
 
 watch(activeTab, (tab) => {
   if (tab === 'business_personnel') {
+    resetBpFilterBarVisibility()
     reloadBp()
     return
   }

@@ -150,8 +150,10 @@
           </Button>
         </div>
 
-        <div class="space-y-4">
-      <div class="sticky top-0 z-40 -mx-1 px-1 pt-1">
+        <div
+          class="sticky top-0 z-40 -mx-3 border-b border-slate-200/90 bg-slate-50/95 px-3 py-2 shadow-[0_4px_14px_-6px_rgba(15,23,42,0.12)] backdrop-blur-md sm:-mx-4 sm:px-4 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8"
+          data-testid="tp-attendance-filter-sticky"
+        >
         <AppFilterBar>
           <div class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
             <div class="relative min-w-[200px] flex-1 basis-[200px]">
@@ -388,8 +390,9 @@
             </select>
           </div>
         </AppFilterBar>
-      </div>
+        </div>
 
+        <div class="space-y-4">
       <AttendanceDataTable
         :rows="pagedItems"
         :reasons="reasons"
