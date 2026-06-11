@@ -164,14 +164,8 @@
                             :reschedule-feedback-is-error="
                                 rescheduleFeedbackIsError
                             "
-                            :show-internal-vehicle-card="
-                                showInternalVehicleCard
-                            "
-                            :selected-vehicle-for-card="selectedVehicleForCard"
-                            :vehicle-card-busy="vehicleCardBusy"
-                            :show-internal-driver-card="showInternalDriverCard"
-                            :selected-driver-for-card="selectedDriverForCard"
-                            :driver-card-busy="driverCardBusy"
+                            :assignment-vehicles="coordinationAssignmentVehicles"
+                            :assignment-drivers="coordinationAssignmentDrivers"
                             :vehicle-conflict-banner="vehicleConflictBanner"
                             :trip-id="trip.id"
                             :schedule-date-key-for-list="scheduleDateKeyForList"
@@ -2119,9 +2113,23 @@ const assignReady = computed(() => {
                     ? dispatchResources.value
                     : legResourcesByKey.value[card.key];
             if (!p?.readyForSubmit) return false;
-            if (p.driver_id && busyDriverIds.value.has(Number(p.driver_id)))
+            const legDriverIds =
+                Array.isArray(p.internal_driver_ids) &&
+                p.internal_driver_ids.length
+                    ? uniqueNumericIds(p.internal_driver_ids)
+                    : p.driver_id != null
+                      ? [Number(p.driver_id)]
+                      : [];
+            const legVehicleIds =
+                Array.isArray(p.internal_vehicle_ids) &&
+                p.internal_vehicle_ids.length
+                    ? uniqueNumericIds(p.internal_vehicle_ids)
+                    : p.vehicle_id != null
+                      ? [Number(p.vehicle_id)]
+                      : [];
+            if (legDriverIds.some((id) => busyDriverIds.value.has(id)))
                 return false;
-            if (p.vehicle_id && busyVehicleIds.value.has(Number(p.vehicle_id)))
+            if (legVehicleIds.some((id) => busyVehicleIds.value.has(id)))
                 return false;
         }
         if (sameRejectedDriverSelected.value) return false;
@@ -2131,43 +2139,75 @@ const assignReady = computed(() => {
     const p = dispatchResources.value;
     if (!p?.readyForSubmit) return false;
     if (sameRejectedDriverSelected.value) return false;
-    if (p.driver_id && busyDriverIds.value.has(Number(p.driver_id)))
-        return false;
-    if (p.vehicle_id && busyVehicleIds.value.has(Number(p.vehicle_id)))
-        return false;
+    for (const id of dispatchInternalDriverIds()) {
+        if (busyDriverIds.value.has(id)) return false;
+    }
+    for (const id of dispatchInternalVehicleIds()) {
+        if (busyVehicleIds.value.has(id)) return false;
+    }
     return true;
 });
 
-const showInternalVehicleCard = computed(
-    () => dispatchResources.value?.vehicle_id != null,
+function uniqueNumericIds(ids) {
+    const out = [];
+    const seen = new Set();
+    for (const raw of ids ?? []) {
+        const n = Number(raw);
+        if (!Number.isFinite(n) || seen.has(n)) continue;
+        seen.add(n);
+        out.push(n);
+    }
+    return out;
+}
+
+function dispatchInternalVehicleIds() {
+    const p = dispatchResources.value;
+    if (!p) return [];
+    if (Array.isArray(p.internal_vehicle_ids) && p.internal_vehicle_ids.length) {
+        return uniqueNumericIds(p.internal_vehicle_ids);
+    }
+    if (p.vehicle_id != null) return [Number(p.vehicle_id)];
+    return [];
+}
+
+function dispatchInternalDriverIds() {
+    const p = dispatchResources.value;
+    if (!p) return [];
+    if (Array.isArray(p.internal_driver_ids) && p.internal_driver_ids.length) {
+        return uniqueNumericIds(p.internal_driver_ids);
+    }
+    if (p.driver_id != null) return [Number(p.driver_id)];
+    return [];
+}
+
+const coordinationAssignmentVehicles = computed(() =>
+    dispatchInternalVehicleIds().map((id) => {
+        const v =
+            vehicles.value.find((x) => Number(x.id) === id) ??
+            (Number(trip.value?.vehicle?.id) === id ? trip.value.vehicle : null);
+        return {
+            id,
+            license_plate: v?.license_plate ?? `#${id}`,
+            type: v?.type ?? null,
+            seat_count: v?.seat_count ?? null,
+            busy: busyVehicleIds.value.has(id),
+        };
+    }),
 );
-const showInternalDriverCard = computed(
-    () => dispatchResources.value?.driver_id != null,
+
+const coordinationAssignmentDrivers = computed(() =>
+    dispatchInternalDriverIds().map((id) => {
+        const d =
+            driversList.value.find((x) => Number(x.id) === id) ??
+            (Number(trip.value?.driver?.id) === id ? trip.value.driver : null);
+        return {
+            id,
+            full_name: d?.full_name ?? `#${id}`,
+            phone: d?.phone ?? null,
+            busy: busyDriverIds.value.has(id),
+        };
+    }),
 );
-
-const selectedVehicleForCard = computed(() => {
-    const id = dispatchResources.value?.vehicle_id;
-    if (id == null) return null;
-    const v = vehicles.value.find((x) => Number(x.id) === Number(id));
-    return v ?? trip.value?.vehicle ?? null;
-});
-
-const selectedDriverForCard = computed(() => {
-    const id = dispatchResources.value?.driver_id;
-    if (id == null) return null;
-    const d = driversList.value.find((x) => Number(x.id) === Number(id));
-    return d ?? trip.value?.driver ?? null;
-});
-
-const vehicleCardBusy = computed(() => {
-    const id = dispatchResources.value?.vehicle_id;
-    return id != null && busyVehicleIds.value.has(Number(id));
-});
-
-const driverCardBusy = computed(() => {
-    const id = dispatchResources.value?.driver_id;
-    return id != null && busyDriverIds.value.has(Number(id));
-});
 
 const vehicleConflictBanner = computed(() => {
     if (suppressVehicleScheduleConflict.value) return null;
@@ -2331,10 +2371,19 @@ function onVehicleCardChange() {
     vehicleScheduleConflict.value = null;
     suppressVehicleScheduleConflict.value = false;
     dispatchPanelRef.value?.resourcePanel?.clearInternalVehicle?.();
+    scrollToDispatchSection("dispatch-internal-vehicle-strip");
 }
 
 function onDriverCardChange() {
     dispatchPanelRef.value?.resourcePanel?.clearInternalDriver?.();
+    scrollToDispatchSection("dispatch-internal-driver-section");
+}
+
+function scrollToDispatchSection(testIdOrId) {
+    const el =
+        document.querySelector(`[data-testid="${testIdOrId}"]`) ??
+        document.getElementById(testIdOrId);
+    el?.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 function onVehicleConflictPickAgain() {
@@ -2722,12 +2771,18 @@ async function onApproveTransfer() {
         );
         return;
     }
-    if (p.driver_id && busyDriverIds.value.has(Number(p.driver_id))) {
+    const busyDrv = dispatchInternalDriverIds().find((id) =>
+        busyDriverIds.value.has(id),
+    );
+    if (busyDrv != null) {
         assignFeedbackKind.value = "error";
         assignMsg.value = t("trip_detail.coordination.validation_busy_driver");
         return;
     }
-    if (p.vehicle_id && busyVehicleIds.value.has(Number(p.vehicle_id))) {
+    const busyVeh = dispatchInternalVehicleIds().find((id) =>
+        busyVehicleIds.value.has(id),
+    );
+    if (busyVeh != null) {
         assignFeedbackKind.value = "error";
         assignMsg.value = t("trip_detail.coordination.validation_busy_vehicle");
         return;

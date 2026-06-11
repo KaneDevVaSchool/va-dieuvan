@@ -24,7 +24,6 @@ export interface ResourceItem {
 
 export interface SelectedResources {
   internalVehicles: ResourceItem[]
-  /** Tối đa 1 tài xế — UI dùng ResourceSection multiple=false */
   internalDrivers: ResourceItem[]
   taxis: ResourceItem[]
   vendors: ResourceItem[]
@@ -48,6 +47,10 @@ export interface SupplementItem {
 export interface SupplementTransports {
   taxis: SupplementItem[]
   vendors: SupplementItem[]
+  /** Xe nội bộ bổ sung (ngoài vehicle_id chính). */
+  internal_vehicles?: SupplementItem[]
+  /** Tài xế nội bộ bổ sung (ngoài driver_id chính). */
+  internal_drivers?: SupplementItem[]
 }
 
 export interface TripScheduleAssignment {
@@ -94,6 +97,7 @@ export interface ResourceDispatchPayload {
   external_vehicle_ref: string | null
   external_driver_ref: string | null
   internal_vehicle_ids: Array<string | number>
+  internal_driver_ids: Array<string | number>
   taxi_ids: Array<string | number>
   vendor_ids: Array<string | number>
   primaryVehicleId: number | null

@@ -260,10 +260,15 @@ export function useResourceSelector(
     const userEvInput = [taxiExt.vehicle, vendorExt.vehicle].filter(Boolean).join(' · ')
     const userEdInput = [taxiExt.driver, vendorExt.driver].filter(Boolean).join(' · ')
 
+    const extraInternalVehicles = intV.slice(1).map(toSupplementItem)
+    const extraInternalDrivers = intD.slice(1).map(toSupplementItem)
+
     // Chuẩn bị danh sách đầy đủ để lưu DB
     const supplementTransports: SupplementTransports = {
       taxis: txs.map(toSupplementItem),
       vendors: vds.map(toSupplementItem),
+      ...(extraInternalVehicles.length ? { internal_vehicles: extraInternalVehicles } : {}),
+      ...(extraInternalDrivers.length ? { internal_drivers: extraInternalDrivers } : {}),
     }
 
     const base: ResourceDispatchPayload = {
@@ -276,6 +281,7 @@ export function useResourceSelector(
       external_vehicle_ref: null,
       external_driver_ref: userEdInput ? userEdInput : null,
       internal_vehicle_ids: intV.map((x) => x.id),
+      internal_driver_ids: intD.map((x) => x.id),
       taxi_ids: txs.map((x) => x.id),
       vendor_ids: vds.map((x) => x.id),
       primaryVehicleId: null,
@@ -387,8 +393,46 @@ export function useResourceSelector(
       }
     }
 
+    function pushInternalVehicleIfNew(id: string | number, label?: string) {
+      if (selected.value.internalVehicles.some((x) => Number(x.id) === Number(id))) return
+      const found = internalVehicleOptions.value.find((x) => Number(x.id) === Number(id))
+      if (found) selected.value.internalVehicles.push(found)
+      else {
+        selected.value.internalVehicles.push({
+          id,
+          label: label ?? `#${id}`,
+          available: true,
+        })
+      }
+    }
+
+    function pushInternalDriverIfNew(id: string | number, label?: string) {
+      if (selected.value.internalDrivers.some((x) => Number(x.id) === Number(id))) return
+      const found = internalDriverOptions.value.find((x) => Number(x.id) === Number(id))
+      if (found) selected.value.internalDrivers.push(found)
+      else {
+        selected.value.internalDrivers.push({
+          id,
+          value: Number(id),
+          label: label ?? `#${id}`,
+          available: true,
+        })
+      }
+    }
+
     // --- Bổ sung phương tiện: ưu tiên snapshot đầy đủ ---
     const supp = snapshot.supplementTransports
+    if (supp?.internal_vehicles?.length) {
+      for (const item of supp.internal_vehicles) {
+        pushInternalVehicleIfNew(item.id, item.label)
+      }
+    }
+    if (supp?.internal_drivers?.length) {
+      for (const item of supp.internal_drivers) {
+        pushInternalDriverIfNew(item.id, item.label)
+      }
+    }
+
     if (supp && (supp.taxis?.length || supp.vendors?.length)) {
       // Khôi phục taxi — kết hợp label/sublabel từ options nếu có
       selected.value.taxis = (supp.taxis ?? []).map((item): ResourceItem => {

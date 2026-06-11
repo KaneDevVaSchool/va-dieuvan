@@ -768,7 +768,7 @@ class TripScheduleLegService
 
     /**
      * @param  array<string, mixed>|null  $raw
-     * @return array{taxis: list<array>, vendors: list<array>}|null
+     * @return array{taxis: list<array>, vendors: list<array>, internal_vehicles: list<array>, internal_drivers: list<array>}|null
      */
     private function normalizeSupplementArray(mixed $raw): ?array
     {
@@ -777,11 +777,18 @@ class TripScheduleLegService
         }
         $taxis = array_values(array_filter($raw['taxis'] ?? [], 'is_array'));
         $vendors = array_values(array_filter($raw['vendors'] ?? [], 'is_array'));
-        if ($taxis === [] && $vendors === []) {
+        $internalVehicles = array_values(array_filter($raw['internal_vehicles'] ?? [], 'is_array'));
+        $internalDrivers = array_values(array_filter($raw['internal_drivers'] ?? [], 'is_array'));
+        if ($taxis === [] && $vendors === [] && $internalVehicles === [] && $internalDrivers === []) {
             return null;
         }
 
-        return ['taxis' => $taxis, 'vendors' => $vendors];
+        return [
+            'taxis' => $taxis,
+            'vendors' => $vendors,
+            'internal_vehicles' => $internalVehicles,
+            'internal_drivers' => $internalDrivers,
+        ];
     }
 
     private function encodeSupplement(mixed $raw): ?string

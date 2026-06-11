@@ -202,11 +202,7 @@
 
             <!-- Current assignment (summary cards) -->
             <CollapsiblePanelSection
-                v-if="
-                    showInternalVehicleCard ||
-                    showInternalDriverCard ||
-                    vehicleConflictBanner
-                "
+                v-if="hasCurrentAssignmentList || vehicleConflictBanner"
                 :title="
                     t('trip_detail.coordination.current_assignment_section')
                 "
@@ -214,28 +210,14 @@
                 :persist-key="collapseStorageKey('assignment')"
             >
                 <div class="space-y-3">
-                    <div
-                        class="space-y-3 md:grid md:grid-cols-2 md:gap-3 md:space-y-0"
-                    >
-                        <VehicleCard
-                            v-if="
-                                showInternalVehicleCard && selectedVehicleForCard
-                            "
-                            :vehicle="selectedVehicleForCard"
-                            :busy="vehicleCardBusy"
-                            :allow-change="!coordinationActionsLocked"
-                            @change="$emit('vehicle-card-change')"
-                        />
-                        <DriverCard
-                            v-if="
-                                showInternalDriverCard && selectedDriverForCard
-                            "
-                            :driver="selectedDriverForCard"
-                            :busy="driverCardBusy"
-                            :allow-change="!coordinationActionsLocked"
-                            @change="$emit('driver-card-change')"
-                        />
-                    </div>
+                    <CurrentAssignmentList
+                        v-if="hasCurrentAssignmentList"
+                        :vehicles="assignmentVehicles"
+                        :drivers="assignmentDrivers"
+                        :allow-change="!coordinationActionsLocked"
+                        @edit-vehicles="$emit('vehicle-card-change')"
+                        @edit-drivers="$emit('driver-card-change')"
+                    />
                     <div
                         v-if="showAssignmentSupplementsPanel"
                         class="rounded-2xl bg-emerald-50/85 px-3.5 py-3 shadow-sm shadow-emerald-900/10 dark:bg-emerald-950/35 dark:shadow-black/20"
@@ -330,7 +312,7 @@
                     :busy-driver-ids="busyDriverIds"
                     :trip-snapshot="tripSnapshot"
                     :can-quick-create-vendor="canQuickCreateProvider"
-                    :hide-internal-vehicle-section="showInternalVehicleCard"
+                    :hide-internal-vehicle-section="coordinationActionsLocked"
                     :hide-internal-driver-section="coordinationActionsLocked"
                     :disabled="coordinationActionsLocked"
                     @update:resources="$emit('update:resources', $event)"
@@ -536,8 +518,10 @@ import {
 import CollapsiblePanelSection from "../dispatch/CollapsiblePanelSection.vue";
 import ResourcePanel from "../dispatch/ResourcePanel.vue";
 import ConflictBanner, { type VehicleConflict } from "./ConflictBanner.vue";
-import DriverCard from "./DriverCard.vue";
-import VehicleCard from "./VehicleCard.vue";
+import CurrentAssignmentList, {
+    type AssignmentListDriver,
+    type AssignmentListVehicle,
+} from "./CurrentAssignmentList.vue";
 import type { SupplementItem } from "../../types/dispatch";
 import { buildStaffPrefixedPath as staffPath } from "../../config/dispatchWebBase";
 
@@ -553,12 +537,8 @@ const props = withDefaults(
     rescheduling: boolean;
     rescheduleMsg: string;
     rescheduleFeedbackIsError: boolean;
-    showInternalVehicleCard: boolean;
-    selectedVehicleForCard: object | null;
-    vehicleCardBusy: boolean;
-    showInternalDriverCard: boolean;
-    selectedDriverForCard: object | null;
-    driverCardBusy: boolean;
+    assignmentVehicles: AssignmentListVehicle[];
+    assignmentDrivers: AssignmentListDriver[];
     vehicleConflictBanner: VehicleConflict | null;
     tripId: number | null;
     scheduleDateKeyForList: string;
@@ -591,6 +571,8 @@ const props = withDefaults(
 }>(),
     {
         coordinationActionsLocked: false,
+        assignmentVehicles: () => [],
+        assignmentDrivers: () => [],
         supplementAssignments: null,
         scheduleAssignTabs: () => [],
         activeScheduleKey: "",
@@ -727,27 +709,44 @@ const supplementAssignmentsFlattened = computed<SupplementFlatten[]>(() => {
     return out;
 });
 
-/** Khi đã chọn & hiển thị tài xế nội bộ — bổ sung phương tiện gộp vào khối phân công. */
+const hasCurrentAssignmentList = computed(
+    () =>
+        (props.assignmentVehicles?.length ?? 0) > 0 ||
+        (props.assignmentDrivers?.length ?? 0) > 0,
+);
+
+/** Khi đã chọn tài xế nội bộ — bổ sung taxi/NCC gộp vào khối phân công. */
 const showAssignmentSupplementsPanel = computed(() => {
-    if (!props.showInternalDriverCard) return false;
+    if ((props.assignmentDrivers?.length ?? 0) === 0) return false;
     return supplementAssignmentsFlattened.value.length > 0;
 });
 
 const assignmentCollapsedSummary = computed(() => {
     const bits: string[] = [];
-    const v = props.selectedVehicleForCard as {
-        license_plate?: string | null;
-    } | null;
-    const d = props.selectedDriverForCard as {
-        full_name?: string | null;
-    } | null;
-    if (props.showInternalVehicleCard && v) {
+    const vn = props.assignmentVehicles?.length ?? 0;
+    const dn = props.assignmentDrivers?.length ?? 0;
+    if (vn) {
+        const first = props.assignmentVehicles[0]?.license_plate?.trim();
         bits.push(
-            v.license_plate?.trim()?.length ? String(v.license_plate).trim() : "—",
+            vn > 1
+                ? t("trip_detail.coordination.assignment_list_vehicles_short", {
+                      n: vn,
+                      plate: first || "—",
+                  })
+                : first || "—",
         );
     }
-    if (props.showInternalDriverCard && d?.full_name?.trim()?.length)
-        bits.push(String(d.full_name).trim());
+    if (dn) {
+        const first = props.assignmentDrivers[0]?.full_name?.trim();
+        bits.push(
+            dn > 1
+                ? t("trip_detail.coordination.assignment_list_drivers_short", {
+                      n: dn,
+                      name: first || "—",
+                  })
+                : first || "—",
+        );
+    }
     if (
         showAssignmentSupplementsPanel.value &&
         supplementAssignmentsFlattened.value.length > 0

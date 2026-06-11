@@ -32,6 +32,12 @@ class AssignTripRequest extends ApiFormRequest
             'supplement_transports.vendors.*.externalVehicleRef' => ['nullable', 'string', 'max:255'],
             'supplement_transports.vendors.*.externalDriverRef' => ['nullable', 'string', 'max:255'],
             'supplement_transports.vendors.*.contactNotes' => ['nullable', 'string', 'max:500'],
+            'supplement_transports.internal_vehicles' => ['nullable', 'array'],
+            'supplement_transports.internal_vehicles.*.id' => ['required', 'string'],
+            'supplement_transports.internal_vehicles.*.label' => ['required', 'string', 'max:255'],
+            'supplement_transports.internal_drivers' => ['nullable', 'array'],
+            'supplement_transports.internal_drivers.*.id' => ['required', 'string'],
+            'supplement_transports.internal_drivers.*.label' => ['required', 'string', 'max:255'],
         ];
 
         return array_merge([

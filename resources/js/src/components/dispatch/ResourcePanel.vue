@@ -48,46 +48,16 @@
           :disabled="disabled"
         />
 
-        <div
+        <InternalDriverStrip
           v-if="!hideInternalDriverSection"
-          id="dispatch-internal-driver-section"
-          class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900/50"
-        >
-          <ResourceSection
-            v-model="selected.internalDrivers"
-            :options="internalDriverOptions"
-            :is-loading="isLoading"
-            :disabled="disabled"
-            :multiple="false"
-            show-native-select
-            inline-native-select
-            :native-select-placeholder="t('trip_detail.coordination.resource_native_pick_driver')"
-            :body-slot-before-native="false"
-            :title="t('trip_detail.coordination.resource_section_driver_title')"
-            :subtitle="t('trip_detail.coordination.resource_section_driver_sub')"
-            :placeholder="t('trip_detail.coordination.resource_section_driver_ph')"
-            :icon="UserIcon"
-            :option-label-class-fn="driverOptionLabelClass"
-          >
-            <template #body-before-search>
-              <button
-                type="button"
-                class="w-full rounded-xl bg-white px-2.5 py-1.5 text-left text-[11px] font-semibold leading-snug text-[#8B1A1A] shadow-sm shadow-slate-900/5 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45 dark:bg-slate-800/70 dark:text-[#e57373] dark:hover:bg-slate-800 dark:shadow-black/25"
-                :disabled="!tripDate || disabled"
-                @click="showWorkloadPanel = true"
-              >
-                {{ t('trip_detail.coordination.workload_open_panel') }}
-              </button>
-            </template>
-            <template #option-extra="{ option }">
-              <DriverWorkloadBadge
-                v-if="driverWorkloadEntry(option.id)"
-                :workload="driverWorkloadEntry(option.id)"
-                :color-fn="loadColor"
-              />
-            </template>
-          </ResourceSection>
-        </div>
+          v-model="selected.internalDrivers"
+          :options="internalDriverOptions"
+          :is-loading="isLoading"
+          :disabled="disabled"
+          :trip-date="tripDate"
+          :workload-map="workloadMap"
+          @open-workload="showWorkloadPanel = true"
+        />
         </div>
 
         <template v-if="supplementBlockVisible">
@@ -176,13 +146,11 @@ import { useI18n } from 'vue-i18n'
 import {
   BuildingOfficeIcon,
   MapPinIcon,
-  UserIcon,
 } from '@heroicons/vue/24/outline'
 import CollapsiblePanelSection from './CollapsiblePanelSection.vue'
+import InternalDriverStrip from './InternalDriverStrip.vue'
 import InternalVehicleStrip from './InternalVehicleStrip.vue'
-import ResourceSection from './ResourceSection.vue'
 import SupplementTransportSection from './SupplementTransportSection.vue'
-import DriverWorkloadBadge from './DriverWorkloadBadge.vue'
 import DriverWorkloadPanel from './DriverWorkloadPanel.vue'
 import { useResourceSelector } from '../../composables/useResourceSelector'
 import { useDriverWorkload } from '../../composables/useDriverWorkload'
@@ -361,17 +329,6 @@ function emitResources() {
   emit('update:resources', p)
 }
 
-function driverWorkloadEntry(id) {
-  const n = Number(id)
-  if (!Number.isFinite(n)) return null
-  return workloadMap.value[String(n)] ?? null
-}
-
-function driverOptionLabelClass(opt) {
-  const w = driverWorkloadEntry(opt.id)
-  return w?.load_level === 'high' ? 'text-rose-700/90 dark:text-rose-300' : ''
-}
-
 const selectedInternalDriverId = computed(() => {
   const first = selected.value.internalDrivers[0]
   if (!first) return null
@@ -383,7 +340,9 @@ function onAssignFromWorkloadPanel(driverId) {
   const id = Number(driverId)
   const driver = internalDriverOptions.value.find((d) => Number(d.id) === id)
   if (!driver) return
-  selected.value.internalDrivers = [driver]
+  if (!selected.value.internalDrivers.some((x) => Number(x.id) === id)) {
+    selected.value.internalDrivers = [...selected.value.internalDrivers, driver]
+  }
   syncInternalVehicleToDriver()
   showWorkloadPanel.value = false
   lastPayloadJson.value = ''
