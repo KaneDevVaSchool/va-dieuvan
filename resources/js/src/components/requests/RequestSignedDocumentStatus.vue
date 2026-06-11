@@ -4,7 +4,7 @@
     class="mb-4 rounded-xl border border-slate-200 bg-slate-50/90 px-3 py-3 sm:px-4"
   >
     <div class="flex flex-wrap items-center gap-2">
-      <span class="text-[11px] font-bold uppercase tracking-wide text-slate-600">{{ t('request_detail.signed_doc_status_heading') }}</span>
+      <span class="text-[11px] font-medium uppercase tracking-wide text-slate-600">{{ t('request_detail.signed_doc_status_heading') }}</span>
       <span class="rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold ring-1 ring-slate-200">
         v{{ current.version_no }}
       </span>

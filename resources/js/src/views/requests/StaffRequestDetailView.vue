@@ -450,13 +450,13 @@
                         >
                           <div class="flex min-w-0 flex-1 items-start gap-3">
                             <span
-                              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-va-100 text-sm font-bold text-va-800 dark:bg-va-950/50 dark:text-va-300"
+                              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-va-100 text-sm font-semibold text-va-800 dark:bg-va-950/50 dark:text-va-300"
                               :aria-hidden="itineraryCollapsible ? true : undefined"
                             >
                               {{ card.idx }}
                             </span>
                             <div class="min-w-0 flex-1">
-                              <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                              <p class="text-[10px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">
                                 {{ t('request_detail.ops_itinerary_row_label') }}
                               </p>
                               <p v-if="card.title && card.title !== card.subtitle" class="mt-0.5 text-base font-semibold leading-snug text-slate-900 dark:text-white">{{ card.title }}</p>
@@ -478,57 +478,15 @@
                           v-if="itineraryCollapsible && !isItineraryExpanded(card.key) && card.timeline.length"
                           class="border-b border-slate-100 px-4 py-3 dark:border-slate-800"
                         >
-                          <div
-                            class="grid gap-2"
-                            :class="card.timeline.length === 2 ? 'sm:grid-cols-[1fr_auto_1fr] sm:gap-0' : 'sm:grid-cols-2'"
-                          >
-                            <template v-for="(leg, li) in card.timeline" :key="`peek-${li}`">
-                              <div
-                                v-if="card.timeline.length === 2 && li === 1"
-                                class="hidden items-center justify-center px-2 sm:flex"
-                                aria-hidden="true"
-                              >
-                                <ArrowRightIcon class="h-4 w-4 text-slate-300 dark:text-slate-600" />
-                              </div>
-                              <div
-                                class="min-w-0 rounded-lg border px-3 py-2"
-                                :class="itineraryLegSurfaceClass(leg.tone)"
-                              >
-                                <p class="text-[10px] font-bold uppercase tracking-wider opacity-80">{{ leg.label }}</p>
-                                <p v-if="leg.time" class="mt-0.5 text-xs font-semibold tabular-nums">{{ leg.time }}</p>
-                                <p v-if="leg.place" class="mt-0.5 truncate text-xs font-medium opacity-90">{{ leg.place }}</p>
-                              </div>
-                            </template>
-                          </div>
+                          <RequestItineraryTimelineTabs :legs="card.timeline" compact />
                         </div>
 
                         <div v-show="!itineraryCollapsible || isItineraryExpanded(card.key)">
                         <div
                           v-if="card.timeline.length"
-                          class="border-b border-slate-100 px-4 py-4 dark:border-slate-800"
+                          class="border-b border-slate-100 px-4 py-2 dark:border-slate-800"
                         >
-                          <div
-                            class="grid gap-3"
-                            :class="card.timeline.length === 2 ? 'sm:grid-cols-[1fr_auto_1fr] sm:gap-0' : 'sm:grid-cols-2 lg:grid-cols-3'"
-                          >
-                            <template v-for="(leg, li) in card.timeline" :key="li">
-                              <div
-                                v-if="card.timeline.length === 2 && li === 1"
-                                class="hidden items-center justify-center bg-slate-50/50 px-2 dark:bg-slate-800/30 sm:flex"
-                                aria-hidden="true"
-                              >
-                                <ArrowRightIcon class="h-5 w-5 text-slate-300 dark:text-slate-600" />
-                              </div>
-                              <div
-                                class="min-w-0 rounded-xl border px-4 py-3"
-                                :class="itineraryLegSurfaceClass(leg.tone)"
-                              >
-                                <p class="text-[10px] font-bold uppercase tracking-wider opacity-80">{{ leg.label }}</p>
-                                <p v-if="leg.time" class="mt-1 text-sm font-semibold tabular-nums">{{ leg.time }}</p>
-                                <p v-if="leg.place" class="mt-1 text-sm font-semibold leading-snug">{{ leg.place }}</p>
-                              </div>
-                            </template>
-                          </div>
+                          <RequestItineraryTimelineTabs :legs="card.timeline" />
                         </div>
 
                         <div
@@ -584,7 +542,11 @@
                   </div>
 
                   <!-- ===== Tab: Hồ sơ ===== -->
-                  <div v-show="activeTab === 'docs'" class="space-y-4">
+                  <div
+                    v-show="activeTab === 'docs'"
+                    class="space-y-4 text-[90%] leading-snug"
+                    data-testid="request-tab-docs"
+                  >
                     <p v-if="uploadErrLocal || attachErr || ocrErr" class="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
                       {{ uploadErrLocal || attachErr || ocrErr }}
                     </p>
@@ -632,7 +594,7 @@
                           v-if="signedDocumentCurrent"
                           class="shrink-0 space-y-2.5 rounded-xl border border-amber-200/80 bg-amber-50/60 p-3 dark:border-amber-900/50 dark:bg-amber-950/25"
                         >
-                          <p class="text-[10px] font-bold uppercase tracking-wider text-amber-700/90 dark:text-amber-400/90">
+                          <p class="text-[10px] font-medium uppercase tracking-wider text-amber-700/90 dark:text-amber-400/90">
                             {{ t('request_detail.ops_signed_doc_status') }}
                           </p>
                           <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold" :class="signedVerifyBadgeClass">{{ signedVerifyLabel }}</span>
@@ -668,7 +630,7 @@
                           class="shrink-0 space-y-3 rounded-xl border border-teal-200/80 bg-teal-50/50 p-3 dark:border-teal-900/50 dark:bg-teal-950/25"
                           @submit.prevent="doMarkPaper"
                         >
-                          <p class="text-[10px] font-bold uppercase tracking-wider text-teal-700/90 dark:text-teal-400/90">
+                          <p class="text-[10px] font-medium uppercase tracking-wider text-teal-700/90 dark:text-teal-400/90">
                             {{ req.paper_status === 'received' ? t('request_detail.paper_update_section_title') : t('request_detail.paper_confirm_received_title') }}
                           </p>
                           <Input v-model="paperForm.paper_reference" :label="t('request_detail.paper_ref_input_label')" :placeholder="t('request_detail.paper_ref_placeholder')" />
@@ -1126,11 +1088,11 @@ import AssignedDeptHeadFormCard from '../../components/requests/AssignedDeptHead
 import RejectReasonModal from '../../components/requests/RejectReasonModal.vue'
 import ReferencePricingModal from '../../components/pricing/ReferencePricingModal.vue'
 import PortalStatusTimeline from '../../components/portal/PortalStatusTimeline.vue'
+import RequestItineraryTimelineTabs from '../../components/requests/RequestItineraryTimelineTabs.vue'
 import { useRequestDetailPage } from '../../composables/useRequestDetailPage'
 import { useAssignedDeptHeadDisplay } from '../../composables/useAssignedDeptHeadDisplay'
 import { formatVndCurrency as formatVndMoney, parseMoneyVnd, VND_CURRENCY_SUFFIX, vndAmountInWords } from '../../util/money'
 import {
-  formatItineraryTimelineDt,
   itineraryRowEndpoints,
   itineraryRowHeading,
   resolveItineraryTripType,
@@ -1313,19 +1275,10 @@ function fmtDateOnly(v) {
   return Number.isNaN(d.getTime()) ? s : d.toLocaleDateString('vi-VN')
 }
 function fmtRowDt(v) {
-  return formatItineraryTimelineDt(v)
+  if (!v) return ''
+  return fmt(v)
 }
 
-const ITINERARY_LEG_SURFACE = {
-  out: 'border-emerald-200/80 bg-emerald-50/60 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/25 dark:text-emerald-100',
-  pickup: 'border-emerald-200/80 bg-emerald-50/60 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/25 dark:text-emerald-100',
-  waypoint: 'border-amber-200/80 bg-amber-50/60 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/25 dark:text-amber-100',
-  back: 'border-rose-200/80 bg-rose-50/60 text-rose-900 dark:border-rose-900/50 dark:bg-rose-950/25 dark:text-rose-100',
-}
-
-function itineraryLegSurfaceClass(tone) {
-  return ITINERARY_LEG_SURFACE[tone] || ITINERARY_LEG_SURFACE.back
-}
 function money(v) {
   const n = parseMoneyVnd(v)
   return n > 0 ? formatVndCurrency(n) : ''
@@ -1504,7 +1457,7 @@ const itineraryCards = computed(() => {
 })
 
 const itineraryExpandedKeys = ref(new Set())
-const itineraryCollapsible = computed(() => itineraryCards.value.length > 1)
+const itineraryCollapsible = computed(() => itineraryCards.value.some((c) => c.timeline?.length))
 
 function isItineraryExpanded(key) {
   if (!itineraryCollapsible.value) return true
@@ -1816,8 +1769,8 @@ const DocGroup = {
                 String(props.highlightId) === String(a.id) ? 'border-teal-300 bg-teal-50/60 dark:border-teal-700 dark:bg-teal-950/30' : 'border-slate-200 dark:border-slate-800'],
             }, [
               h('div', { class: 'min-w-0 flex-1' }, [
-                h('p', { class: ['font-medium text-slate-800 dark:text-slate-200', props.column ? 'line-clamp-2 text-sm leading-snug' : 'truncate text-base'] }, a.original_name || '—'),
-                h('p', { class: 'mt-0.5 text-[11px] text-slate-400 dark:text-slate-500' }, [
+                h('p', { class: ['font-medium text-slate-800 dark:text-slate-200', props.column ? 'line-clamp-2 text-sm leading-snug' : 'truncate text-sm'] }, a.original_name || '—'),
+                h('p', { class: 'mt-0.5 text-xs tabular-nums text-slate-500 dark:text-slate-400' }, [
                   props.fmtSize(a.size) ? `${props.fmtSize(a.size)} · ` : '',
                   props.fmtDate(a.created_at),
                   a.ocr_status === 'completed' ? ' · OCR ✓' : (a.ocr_status === 'queued' || a.ocr_status === 'processing') ? ' · OCR…' : '',
@@ -1836,7 +1789,7 @@ const DocGroup = {
       if (!props.column) {
         return h('section', { class: 'rounded-2xl border border-slate-200 p-4 dark:border-slate-800 sm:p-5' }, [
           h('div', { class: 'flex items-center justify-between gap-2' }, [
-            h('h3', { class: 'text-sm font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400' }, props.title),
+            h('h3', { class: 'text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400' }, props.title),
             props.canUpload
               ? h('label', { class: 'inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800' }, [
                   h(ArrowDownTraySolid, { class: 'h-4 w-4 rotate-180' }),
@@ -1861,17 +1814,17 @@ const DocGroup = {
                 ])
               : null,
             h('div', { class: 'min-w-0' }, [
-              h('h3', { class: 'text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300' }, props.title),
+              h('h3', { class: 'text-sm font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300' }, props.title),
               h('p', { class: 'mt-0.5 text-xs text-slate-500 dark:text-slate-400' }, t('request_detail.ops_docs_file_count', { n: props.files.length })),
             ]),
           ]),
           props.canUpload
-            ? h('label', { class: 'inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800' }, [
+              ? h('label', { class: 'inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800' }, [
                 h(ArrowDownTraySolid, { class: 'h-3.5 w-3.5 rotate-180' }),
                 props.uploading ? '…' : t('request_detail.ops_upload_file'),
                 h('input', { type: 'file', class: 'hidden', disabled: props.uploading, onChange }),
               ])
-            : h('span', { class: ['inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-full px-1.5 text-xs font-bold tabular-nums', accentStyle.value.badge] }, String(props.files.length)),
+            : h('span', { class: ['inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-full px-1.5 text-xs font-semibold tabular-nums', accentStyle.value.badge] }, String(props.files.length)),
         ]),
         h('div', { class: 'flex min-h-0 flex-1 flex-col gap-3 p-3' }, [
           h('div', { class: 'flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain' }, [fileList()]),

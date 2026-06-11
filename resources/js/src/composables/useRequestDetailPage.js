@@ -247,13 +247,23 @@ export function useRequestDetailPage() {
   const journeyDepartLine = computed(() => {
     const r = req.value
     if (!r?.depart_at) return ''
-    return `${fmtDateVi(r.depart_at)} · ${fmtTimeWindow(r.depart_at, r.arrive_by)}`
+    const start = fmt(r.depart_at)
+    if (!r.arrive_by) return start
+    const loc = requestDetailLocaleTag()
+    const hour12 = locale.value === 'en'
+    const arrive = new Date(r.arrive_by).toLocaleTimeString(loc, {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12,
+    })
+    return `${start} – ${arrive}`
   })
 
   const overviewScheduleLine = computed(() => {
     const r = req.value
     if (!r) return ''
-    const window = `${fmtDateVi(r.depart_at)} · ${fmtTimeWindow(r.depart_at, r.arrive_by)}`
+    const window = journeyDepartLine.value
+    if (!window) return ''
     const dist =
       costEstimate.value?.distanceLabel != null
         ? t('request_detail.distance_badge_approx', { label: costEstimate.value.distanceLabel })

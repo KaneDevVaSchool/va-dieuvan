@@ -1,5 +1,5 @@
 <template>
-  <div id="request-docs-panel" class="space-y-5">
+  <div id="request-docs-panel" class="space-y-5 text-[90%] leading-snug">
     <!-- Step strip -->
     <ol
       class="flex items-start gap-0"
@@ -18,7 +18,7 @@
             aria-hidden="true"
           />
           <span
-            class="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-all"
+            class="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-all"
             :class="stepNodeClass(step.state)"
           >
             <CheckIcon v-if="step.state === 'done'" class="h-4 w-4" aria-hidden="true" />
@@ -33,7 +33,7 @@
           />
         </div>
         <p
-          class="mt-2 max-w-[7rem] text-center text-[11px] font-semibold leading-tight sm:max-w-none sm:text-xs"
+          class="mt-2 max-w-[7rem] text-center text-[11px] font-medium leading-tight sm:max-w-none sm:text-xs"
           :class="step.state === 'upcoming' ? 'text-slate-400' : 'text-slate-800'"
         >
           {{ step.label }}
@@ -50,7 +50,7 @@
       <div class="rounded-xl bg-white px-4 py-4 sm:px-5 sm:py-5">
         <header class="mb-4 flex flex-wrap items-start justify-between gap-2">
           <div>
-            <h2 :id="heroHeadingId" class="text-base font-semibold tracking-tight text-slate-900 sm:text-lg">
+            <h2 :id="heroHeadingId" class="text-sm font-medium tracking-tight text-slate-900 sm:text-base">
               {{ t('request_detail.docs_signed_paper_heading') }}
             </h2>
             <p class="mt-0.5 text-xs leading-relaxed text-slate-500 sm:text-sm">
@@ -59,7 +59,7 @@
           </div>
           <span
             v-if="heroComplete"
-            class="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2.5 py-1 text-[11px] font-semibold text-teal-800 ring-1 ring-teal-200/80"
+            class="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2.5 py-1 text-[11px] font-medium text-teal-800 ring-1 ring-teal-200/80"
           >
             <CheckIcon class="h-3.5 w-3.5" aria-hidden="true" />
             {{ t('request_detail.docs_step_3_label') }}
@@ -88,7 +88,7 @@
           >
             <div class="flex flex-col items-center px-4 py-8 text-center sm:py-10">
               <CloudArrowUpIcon class="h-10 w-10 text-slate-300 sm:h-11 sm:w-11" aria-hidden="true" />
-              <p class="mt-3 text-sm font-semibold text-slate-900 sm:text-base">
+              <p class="mt-3 text-sm font-medium text-slate-900">
                 {{ t('request_detail.docs_hero_empty_title') }}
               </p>
               <p class="mt-1 max-w-md text-xs text-slate-500 sm:text-sm">
@@ -135,23 +135,23 @@
                 <DocumentTextIcon v-else class="h-7 w-7 text-slate-400" aria-hidden="true" />
               </div>
               <div class="min-w-0 flex-1">
-                <p class="truncate text-sm font-semibold text-slate-900" :title="fileTitle(a)">
+                <p class="truncate text-sm font-medium text-slate-900" :title="fileTitle(a)">
                   {{ fileTitle(a) }}
                 </p>
                 <p class="mt-0.5 text-xs text-slate-500">
                   {{ fmtFileSize(a.size_bytes) }}
                   <span v-if="a.kind" class="text-slate-400"> · {{ attachmentKindLabel(a.kind) }}</span>
                 </p>
-                <p class="mt-1 text-[11px] text-slate-500">
+                <p class="mt-1 text-xs tabular-nums text-slate-500">
                   {{ t('request_detail.docs_hero_uploaded_by') }}
-                  <span class="font-medium text-slate-700">{{ uploaderLabel(a) }}</span>
+                  <span class="font-normal text-slate-700">{{ uploaderLabel(a) }}</span>
                   <span v-if="a.created_at" class="text-slate-400"> · {{ formatDateTime(a.created_at) }}</span>
                 </p>
 
                 <div class="mt-2 flex flex-wrap items-center gap-2">
                   <span
                     v-if="ocrBusy === a.id"
-                    class="inline-flex items-center gap-1.5 rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-semibold text-violet-800"
+                    class="inline-flex items-center gap-1.5 rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-medium text-violet-800"
                   >
                     <span
                       class="h-3 w-3 animate-spin rounded-full border-2 border-violet-300 border-t-violet-700"
@@ -161,7 +161,7 @@
                   </span>
                   <span
                     v-else-if="a.ocr_processed_at"
-                    class="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2 py-0.5 text-[11px] font-semibold text-teal-800 ring-1 ring-teal-200/60"
+                    class="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2 py-0.5 text-[11px] font-medium text-teal-800 ring-1 ring-teal-200/60"
                   >
                     <SparklesIcon class="h-3.5 w-3.5" aria-hidden="true" />
                     {{ t('request_detail.docs_ocr_done_badge') }}
@@ -169,7 +169,7 @@
                   <button
                     v-else-if="canRunOcrOn(a)"
                     type="button"
-                    class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold text-violet-800 hover:bg-violet-50"
+                    class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-medium text-violet-800 hover:bg-violet-50"
                     @click="$emit('ocr', a.id)"
                   >
                     <SparklesIcon class="h-3.5 w-3.5" aria-hidden="true" />
@@ -181,7 +181,7 @@
                 <button
                   v-if="isPreviewableMime(a.mime_type)"
                   type="button"
-                  class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                  class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
                   @click="$emit('preview', a)"
                 >
                   <EyeIcon class="h-4 w-4" aria-hidden="true" />
@@ -189,7 +189,7 @@
                 </button>
                 <button
                   type="button"
-                  class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-teal-800 hover:bg-teal-50"
+                  class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-teal-800 hover:bg-teal-50"
                   @click="$emit('download', a)"
                 >
                   <ArrowDownTrayIcon class="h-4 w-4" aria-hidden="true" />
@@ -198,7 +198,7 @@
                 <button
                   v-if="canDeleteAttachment && a.kind === 'paper_scan'"
                   type="button"
-                  class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+                  class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50"
                   :disabled="deletingId === a.id"
                   @click="$emit('delete', a)"
                 >
@@ -211,7 +211,7 @@
             <div v-if="a.ocr_text" class="border-t border-slate-100 bg-slate-50/50 px-3 py-2 sm:px-4">
               <button
                 type="button"
-                class="flex w-full items-center justify-between gap-2 text-left text-[11px] font-semibold text-slate-600"
+                class="flex w-full items-center justify-between gap-2 text-left text-[11px] font-medium text-slate-600"
                 @click="toggleOcrText(a.id)"
               >
                 {{ t('request_detail.docs_ocr_show_text') }}
@@ -254,7 +254,7 @@
 
         <dl
           v-if="req?.paper_status === 'received' && (req?.paper_reference || req?.paper_received_at)"
-          class="mt-4 flex flex-wrap gap-x-4 gap-y-1 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-700"
+          class="mt-4 flex flex-wrap gap-x-4 gap-y-1 rounded-lg bg-slate-50 px-3 py-2 text-xs tabular-nums text-slate-700"
         >
           <div v-if="req.paper_reference">
             <dt class="inline font-medium text-slate-500">{{ t('request_detail.paper_ref_label_short') }}</dt>
@@ -275,11 +275,11 @@
       :open="generalAttachments.length > 0"
     >
       <summary
-        class="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-semibold text-slate-800 [&::-webkit-details-marker]:hidden"
+        class="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-medium text-slate-800 [&::-webkit-details-marker]:hidden"
       >
         <PaperClipIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
         <span class="min-w-0 flex-1">{{ t('request_detail.docs_general_section') }}</span>
-        <span class="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-slate-600">
+        <span class="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-slate-600">
           {{ generalAttachments.length }}
         </span>
         <ChevronDownIcon
@@ -331,7 +331,7 @@
 
     <!-- Timeline -->
     <section v-if="timelineEvents.length || ocrBusy" class="px-1">
-      <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-400">
+      <h3 class="text-[11px] font-medium uppercase tracking-wide text-slate-400">
         {{ t('request_detail.docs_timeline_heading') }}
       </h3>
       <ol class="relative mt-3 space-y-0 pl-4">
@@ -350,9 +350,9 @@
             class="absolute -left-[13px] top-3 h-[calc(100%-4px)] w-px bg-slate-200"
             aria-hidden="true"
           />
-          <p class="text-xs font-medium text-slate-800">{{ ev.label }}</p>
-          <p v-if="ev.sub" class="text-[10px] text-slate-500">{{ ev.sub }}</p>
-          <p v-if="ev.time" class="mt-0.5 text-[10px] tabular-nums text-slate-400">
+          <p class="text-xs font-normal text-slate-800">{{ ev.label }}</p>
+          <p v-if="ev.sub" class="text-xs text-slate-500">{{ ev.sub }}</p>
+          <p v-if="ev.time" class="mt-0.5 text-xs tabular-nums text-slate-500">
             {{ formatDateTime(ev.time) }}
           </p>
         </li>
