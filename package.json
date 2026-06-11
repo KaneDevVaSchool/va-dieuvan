@@ -12,21 +12,21 @@
         "lint": "eslint resources/js --ext .vue,.js,.ts",
         "lint:fix": "eslint resources/js --ext .vue,.js,.ts --fix",
         "format": "prettier --write resources/js/**/*.{vue,js,ts}",
-        "commit": "npx lint-staged",
+        "commit": "lint-staged",
+        "suggest:commit": "node scripts/suggest-commit-message.mjs",
         "prepare": "husky"
     },
     "lint-staged": {
-        "*.php": ["./vendor/bin/pint"],
-        "*.{js,ts,vue}": ["npx eslint --fix", "npx prettier --write"]
+        "*.php": ["php vendor/bin/pint"]
     },
     "devDependencies": {
         "@playwright/test": "^1.49.0",
-        "husky": "^9.0.0",
-        "lint-staged": "^15.0.0",
         "@vitejs/plugin-vue": "^5.2.4",
         "autoprefixer": "^10.4.27",
         "axios": "^1.6.4",
+        "husky": "^9.0.0",
         "laravel-vite-plugin": "^1.0.0",
+        "lint-staged": "^15.0.0",
         "pinia": "^2.3.0",
         "postcss": "^8.5.8",
         "tailwindcss": "^3.4.17",
