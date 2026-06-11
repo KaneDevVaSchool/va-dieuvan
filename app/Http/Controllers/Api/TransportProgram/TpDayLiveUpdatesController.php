@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\TransportProgram;
 
 use App\Http\Controllers\Controller;
 use App\Models\TpProgramDay;
+use App\Models\TpTripExecution;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -19,18 +20,33 @@ class TpDayLiveUpdatesController extends Controller
         $user = $request->user();
         abort_unless($user && ($user->isSuperAdmin() || $user->can('tp_program.view') || $user->can('tp_attendance.manage')), 403);
 
+        $shift = $request->query('shift');
+        $shiftKey = in_array($shift, ['morning', 'afternoon'], true) ? $shift : null;
+
         $tick = 3;
         $maxSeconds = 60;
         $maxIterations = max(1, (int) ceil($maxSeconds / max(1, $tick)));
 
-        return response()->stream(function () use ($tpProgramDay, $tick, $maxIterations) {
-            $this->emit('ready', ['day_id' => $tpProgramDay->id]);
+        return response()->stream(function () use ($tpProgramDay, $tick, $maxIterations, $shiftKey) {
+            $this->emit('ready', ['day_id' => $tpProgramDay->id, 'shift' => $shiftKey]);
             $lastSeen = Carbon::now()->subDecade();
+            $lastExecFingerprint = null;
 
             for ($i = 0; $i < $maxIterations && ! connection_aborted(); $i++) {
-                $execution = $tpProgramDay->execution()->first();
+                $tpProgramDay->refresh();
+                $execution = $shiftKey !== null
+                    ? $tpProgramDay->executionForShift($shiftKey)
+                    : $tpProgramDay->execution()->first();
 
                 if ($execution) {
+                    $execution->refresh();
+                    $fingerprint = $this->executionFingerprint($execution);
+
+                    if ($lastExecFingerprint !== null && $fingerprint !== $lastExecFingerprint) {
+                        $this->emitExecutionChanged($execution);
+                    }
+                    $lastExecFingerprint = $fingerprint;
+
                     $logs = $execution->studentLogs()
                         ->where('updated_at', '>', $lastSeen)
                         ->get();
@@ -48,6 +64,8 @@ class TpDayLiveUpdatesController extends Controller
                             'changed' => $logs->map(fn ($l) => [
                                 'student_id' => $l->student_id,
                                 'final_status' => $l->final_status,
+                                'boarded_at' => $l->boarded_at?->toIso8601String(),
+                                'driver_notes' => $l->driver_notes,
                             ])->values()->all(),
                         ]);
                         $lastSeen = Carbon::parse($logs->max('updated_at'));
@@ -55,6 +73,10 @@ class TpDayLiveUpdatesController extends Controller
                         echo ": heartbeat\n\n";
                     }
                 } else {
+                    if ($lastExecFingerprint !== null && $lastExecFingerprint !== 'none') {
+                        $this->emit('execution_changed', ['execution_id' => null, 'status' => null]);
+                    }
+                    $lastExecFingerprint = 'none';
                     echo ": heartbeat\n\n";
                 }
 
@@ -68,6 +90,32 @@ class TpDayLiveUpdatesController extends Controller
             'Cache-Control' => 'no-cache',
             'Connection' => 'keep-alive',
             'X-Accel-Buffering' => 'no',
+        ]);
+    }
+
+    private function executionFingerprint(TpTripExecution $execution): string
+    {
+        return implode(':', [
+            $execution->id,
+            $execution->status,
+            $execution->updated_at?->timestamp ?? 0,
+            $execution->total_boarded,
+            $execution->total_absent,
+            $execution->total_alighted,
+        ]);
+    }
+
+    private function emitExecutionChanged(TpTripExecution $execution): void
+    {
+        $this->emit('execution_changed', [
+            'execution_id' => $execution->id,
+            'status' => $execution->status,
+            'totals' => [
+                'expected' => $execution->total_expected,
+                'boarded' => $execution->total_boarded,
+                'alighted' => $execution->total_alighted,
+                'absent' => $execution->total_absent,
+            ],
         ]);
     }
 

@@ -562,7 +562,7 @@
 </template>
 
 <script setup>
-import { computed, onActivated, onMounted, ref, watch } from 'vue'
+import { computed, onActivated, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -618,6 +618,7 @@ import { slotsForProgram } from '../../composables/tpProgramSlots'
 import { confirmAction } from '../../composables/useConfirm'
 import { useAuthStore } from '../../store'
 import { useDetailsAutoClose } from '../../composables/useDetailsAutoClose.js'
+import { useTpDayLiveUpdates } from '../../composables/useTpDayLiveUpdates.js'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -820,6 +821,16 @@ const hasNextDay = computed(() => {
   return idx >= 0 && idx < sortedSiblings.value.length - 1
 })
 
+async function refreshAttendanceQuiet() {
+  if (!route.params.dayId || saving.value) return
+  try {
+    const att = await getDayAttendance(route.params.dayId, shiftQueryOpts())
+    data.value = att
+  } catch {
+    /* nền — không làm gián đoạn thao tác điều vận */
+  }
+}
+
 async function load() {
   loading.value = true
   data.value = null
@@ -842,6 +853,21 @@ async function load() {
     loading.value = false
   }
 }
+
+const liveDayId = computed(() => route.params.dayId)
+const liveShift = computed(() => {
+  if (data.value && typeof data.value.multi_slot === 'boolean' && !data.value.multi_slot) {
+    return null
+  }
+  if (programSlots.value.length <= 1 && data.value?.multi_slot !== true) {
+    return null
+  }
+  return activeShift.value
+})
+
+const { start: startLiveUpdates, stop: stopLiveUpdates } = useTpDayLiveUpdates(liveDayId, liveShift, {
+  onChange: refreshAttendanceQuiet,
+})
 
 watch(() => route.params.dayId, () => { if (route.params.dayId) load() })
 watch(activeShift, (next, prev) => { if (prev && next !== prev && route.params.dayId) load() })
@@ -1190,9 +1216,11 @@ function formatTime(isoOrDatetime) {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   onAttendanceFilterBarEnter()
-  load()
+  await load()
+  startLiveUpdates()
 })
 onActivated(onAttendanceFilterBarEnter)
+onUnmounted(() => stopLiveUpdates())
 </script>

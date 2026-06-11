@@ -12,7 +12,9 @@
         "lint": "eslint resources/js --ext .vue,.js,.ts",
         "lint:fix": "eslint resources/js --ext .vue,.js,.ts --fix",
         "format": "prettier --write resources/js/**/*.{vue,js,ts}",
-        "commit": "lint-staged",
+        "commit": "node scripts/commit.mjs",
+        "commit:lint": "lint-staged",
+        "commit:push": "node scripts/commit.mjs --push",
         "suggest:commit": "node scripts/suggest-commit-message.mjs",
         "prepare": "husky"
     },
