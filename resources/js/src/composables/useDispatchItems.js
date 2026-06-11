@@ -47,6 +47,8 @@ export function autoFillScheduleRowFromPrevious(rows, index, variant) {
   if (variant === 'cargo') {
     row.pickup_at = prev.pickup_at ?? ''
     row.pickup_place = prev.pickup_place ?? ''
+    row.pickup_contact = prev.pickup_contact ?? ''
+    row.pickup_contact_phone = prev.pickup_contact_phone ?? ''
   } else {
     row.depart_at = prev.depart_at ?? ''
     row.pickup = prev.pickup ?? ''

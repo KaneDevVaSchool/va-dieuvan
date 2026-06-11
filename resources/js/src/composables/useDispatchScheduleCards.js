@@ -55,6 +55,32 @@ export function useDispatchScheduleCards(snapshot, tripType) {
         if (!isCargoRowFilled(row)) continue
         seq += 1
         const key = `cargo:${idx}`
+        const shipper = [row.pickup_contact?.trim(), row.pickup_contact_phone?.trim()]
+          .filter(Boolean)
+          .join(' · ')
+        const receiver = [row.delivery_contact?.trim(), row.delivery_contact_phone?.trim()]
+          .filter(Boolean)
+          .join(' · ')
+        const lines = [
+          {
+            label: t('dispatch_wizard.s3.cargo_name'),
+            value: row.name?.trim() || '',
+          },
+          {
+            label: t('dispatch_wizard.confirm.lbl_pickup'),
+            value: lineValue(row.pickup_at, row.pickup_place),
+          },
+        ]
+        if (shipper) {
+          lines.push({ label: t('dispatch_wizard.s3.shipper_col'), value: shipper })
+        }
+        lines.push({
+          label: t('dispatch_wizard.confirm.lbl_delivery'),
+          value: lineValue(row.delivery_at, row.delivery_place),
+        })
+        if (receiver) {
+          lines.push({ label: t('dispatch_wizard.s3.receiver_col'), value: receiver })
+        }
         cards.push({
           key,
           variant: 'cargo',
@@ -66,20 +92,7 @@ export function useDispatchScheduleCards(snapshot, tripType) {
           pickup: (row.pickup_place ?? '').trim(),
           dropoff: (row.delivery_place ?? '').trim(),
           waypoint: '',
-          lines: [
-            {
-              label: t('dispatch_wizard.s3.cargo_name'),
-              value: row.name?.trim() || '',
-            },
-            {
-              label: t('dispatch_wizard.confirm.lbl_pickup'),
-              value: lineValue(row.pickup_at, row.pickup_place),
-            },
-            {
-              label: t('dispatch_wizard.confirm.lbl_delivery'),
-              value: lineValue(row.delivery_at, row.delivery_place),
-            },
-          ],
+          lines,
         })
       }
       return cards

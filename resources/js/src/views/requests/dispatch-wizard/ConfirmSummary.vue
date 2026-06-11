@@ -222,6 +222,7 @@ import {
   isCargoRowFilled,
 } from '../../../composables/dispatchWizardConstants'
 import { parseMoneyVnd } from '../../../util/money'
+import { formatDatetimeLocalAmPm } from '../../../util/datetime'
 import { buildStaffPrefixedPath as staffPath } from '../../../config/dispatchWebBase'
 
 const { t, locale } = useI18n()
@@ -335,6 +336,9 @@ function formatIsoDate(iso) {
 
 function formatShortDt(val) {
   if (!val) return '—'
+  // Đồng bộ định dạng dd/mm/yyyy h:mm AM/PM với bước Chi tiết
+  const ampm = formatDatetimeLocalAmPm(val)
+  if (ampm) return ampm
   try {
     const d = new Date(val)
     if (Number.isNaN(d.getTime())) return '—'
@@ -358,6 +362,12 @@ const scheduleCards = computed(() => {
       if (!isCargoRowFilled(row)) return
       seq += 1
       const heading = t('dispatch_wizard.confirm.cargo_trip_heading', { n: seq })
+      const shipper = [row.pickup_contact?.trim(), row.pickup_contact_phone?.trim()]
+        .filter(Boolean)
+        .join(' · ')
+      const receiver = [row.delivery_contact?.trim(), row.delivery_contact_phone?.trim()]
+        .filter(Boolean)
+        .join(' · ')
       const lines = [
         {
           label: t('dispatch_wizard.s3.cargo_name'),
@@ -367,15 +377,21 @@ const scheduleCards = computed(() => {
           label: t('dispatch_wizard.confirm.lbl_pickup'),
           value: `${formatShortDt(row.pickup_at)} — ${row.pickup_place?.trim() || '—'}`,
         },
-        {
-          label: t('dispatch_wizard.confirm.lbl_delivery'),
-          value: `${formatShortDt(row.delivery_at)} — ${row.delivery_place?.trim() || '—'}`,
-        },
-        {
-          label: t('dispatch_wizard.confirm.cost_line'),
-          value: formatCurrency(parseMoneyVnd(row.cost)),
-        },
       ]
+      if (shipper) {
+        lines.push({ label: t('dispatch_wizard.s3.shipper_col'), value: shipper })
+      }
+      lines.push({
+        label: t('dispatch_wizard.confirm.lbl_delivery'),
+        value: `${formatShortDt(row.delivery_at)} — ${row.delivery_place?.trim() || '—'}`,
+      })
+      if (receiver) {
+        lines.push({ label: t('dispatch_wizard.s3.receiver_col'), value: receiver })
+      }
+      lines.push({
+        label: t('dispatch_wizard.s3.cost'),
+        value: formatCurrency(parseMoneyVnd(row.cost)),
+      })
       cards.push({ key: `c-${row.id ?? idx}`, heading, lines })
     })
     return cards

@@ -99,9 +99,11 @@ export function emptyCargoRow() {
     pickup_at: '',
     pickup_place: '',
     pickup_contact: '',
+    pickup_contact_phone: '',
     delivery_at: '',
     delivery_place: '',
     delivery_contact: '',
+    delivery_contact_phone: '',
     transport_note: '',
     cost: '',
   }
@@ -219,7 +221,9 @@ export function isCargoRowFilled(r) {
     r.pickup_at ||
     r.delivery_at ||
     r.pickup_contact?.trim() ||
+    r.pickup_contact_phone?.trim() ||
     r.delivery_contact?.trim() ||
+    r.delivery_contact_phone?.trim() ||
     (r.cost && String(r.cost).trim() !== '') ||
     (r.qty && String(r.qty).trim() !== '' && String(r.qty).trim() !== '1') ||
     r.dimensions?.trim() ||

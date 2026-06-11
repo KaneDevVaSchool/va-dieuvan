@@ -36,10 +36,55 @@
       </div>
     </div>
 
+    <!-- Cargo: thông tin hàng hóa -->
+    <section
+      v-if="variant === 'cargo'"
+      class="rounded-lg border border-slate-200/80 bg-slate-50/60 p-3"
+    >
+      <h4 class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+        {{ t('dispatch_wizard.s3.cargo_info_heading') }}
+      </h4>
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <BaseInput
+          class="col-span-2"
+          :label="t('dispatch_wizard.s3.cargo_name')"
+          :model-value="row.name"
+          :placeholder="t('dispatch_wizard.s3.cargo_name_ph')"
+          @update:model-value="(v) => (row.name = v)"
+        />
+        <BaseInput
+          :label="t('dispatch_wizard.s3.qty')"
+          :model-value="row.qty"
+          :placeholder="t('dispatch_wizard.s3.qty_ph')"
+          @update:model-value="(v) => (row.qty = v)"
+        />
+        <BaseInput
+          :label="t('dispatch_wizard.s3.weight')"
+          :model-value="row.weight"
+          :placeholder="t('dispatch_wizard.s3.weight_ph')"
+          @update:model-value="(v) => (row.weight = v)"
+        />
+        <BaseInput
+          class="col-span-2"
+          :label="t('dispatch_wizard.s3.dim')"
+          :model-value="row.dimensions"
+          :placeholder="t('dispatch_wizard.s3.dim_ph')"
+          @update:model-value="(v) => (row.dimensions = v)"
+        />
+        <BaseInput
+          class="col-span-2"
+          :label="t('dispatch_wizard.s3.item_notes')"
+          :model-value="row.item_notes"
+          :placeholder="t('dispatch_wizard.s3.item_notes_ph')"
+          @update:model-value="(v) => (row.item_notes = v)"
+        />
+      </div>
+    </section>
+
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <fieldset class="flex flex-col gap-2 rounded-lg border border-sky-100 bg-sky-50/50 p-3">
         <legend class="px-1 text-xs font-semibold text-sky-700">
-          {{ t('dispatch_wizard.s3.trip_out') }}
+          {{ tripOutLegend }}
         </legend>
         <div class="flex flex-col gap-1">
           <template v-if="index === 0">
@@ -64,26 +109,45 @@
             :label="t('dispatch_wizard.s3.time')"
             :model-value="outboundDepartModel"
             :error="errs.departTime"
+            :hint="outboundTimeHint"
             @update:model-value="setOutboundDepart"
           />
         </div>
         <BaseInput
-          :label="t('dispatch_wizard.s3.place')"
+          :label="placeOutLabel"
           :model-value="pickupModel"
           :placeholder="pickupPh"
           @update:model-value="setPickup"
         />
+        <div v-if="variant === 'cargo'" class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <BaseInput
+            :label="t('dispatch_wizard.s3.shipper_col')"
+            :model-value="row.pickup_contact"
+            :placeholder="t('dispatch_wizard.s3.pickup_contact_ph')"
+            @update:model-value="(v) => (row.pickup_contact = v)"
+          />
+          <BaseInput
+            :label="t('dispatch_wizard.s3.shipper_phone')"
+            inputmode="numeric"
+            autocomplete="tel"
+            maxlength="11"
+            :model-value="row.pickup_contact_phone"
+            :placeholder="t('dispatch_wizard.create.phone_ph')"
+            @update:model-value="(v) => (row.pickup_contact_phone = v)"
+          />
+        </div>
       </fieldset>
 
       <fieldset class="flex flex-col gap-2 rounded-lg border border-emerald-100 bg-emerald-50/40 p-3">
         <legend class="px-1 text-xs font-semibold text-emerald-700">
-          {{ t('dispatch_wizard.s3.trip_back') }}
+          {{ tripBackLegend }}
         </legend>
         <div class="flex flex-col gap-1">
           <BaseDateTime
             :label="t('dispatch_wizard.s3.time')"
             :model-value="returnModel"
             :error="errs.returnTime"
+            :hint="returnTimeHint"
             @update:model-value="setReturn"
           />
           <p v-if="tripDurationLabel" class="text-xs font-medium text-slate-600">
@@ -91,12 +155,29 @@
           </p>
         </div>
         <BaseInput
-          :label="t('dispatch_wizard.s3.place')"
+          :label="placeBackLabel"
           :model-value="dropoffModel"
           :placeholder="dropoffPh"
           :error="errs.returnPlace"
           @update:model-value="setDropoff"
         />
+        <div v-if="variant === 'cargo'" class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <BaseInput
+            :label="t('dispatch_wizard.s3.receiver_col')"
+            :model-value="row.delivery_contact"
+            :placeholder="t('dispatch_wizard.s3.delivery_contact_ph')"
+            @update:model-value="(v) => (row.delivery_contact = v)"
+          />
+          <BaseInput
+            :label="t('dispatch_wizard.s3.receiver_phone')"
+            inputmode="numeric"
+            autocomplete="tel"
+            maxlength="11"
+            :model-value="row.delivery_contact_phone"
+            :placeholder="t('dispatch_wizard.create.phone_ph')"
+            @update:model-value="(v) => (row.delivery_contact_phone = v)"
+          />
+        </div>
       </fieldset>
     </div>
 
@@ -109,19 +190,17 @@
       />
     </template>
 
-    <div :class="detailGridClass">
-      <template v-if="variant !== 'cargo'">
-        <BaseInput
-          :class="guestsInputClass"
-          type="number"
-          min="1"
-          :label="t('dispatch_wizard.s3.guests')"
-          :model-value="String(row.guests ?? '')"
-          :placeholder="t('dispatch_wizard.s3.guests_ph')"
-          :error="errs.passengers"
-          @update:model-value="(v) => (row.guests = v)"
-        />
-      </template>
+    <div v-if="variant !== 'cargo'" :class="detailGridClass">
+      <BaseInput
+        :class="guestsInputClass"
+        type="number"
+        min="1"
+        :label="t('dispatch_wizard.s3.guests')"
+        :model-value="String(row.guests ?? '')"
+        :placeholder="t('dispatch_wizard.s3.guests_ph')"
+        :error="errs.passengers"
+        @update:model-value="(v) => (row.guests = v)"
+      />
 
       <BaseInput
         v-if="variant === 'passenger'"
@@ -132,7 +211,7 @@
         @update:model-value="(v) => (row.person_in_charge = v)"
       />
 
-      <template v-if="variant !== 'cargo' && !isPortalUser">
+      <template v-if="!isPortalUser">
         <BaseInput
           :class="moneyFieldClass"
           inputmode="numeric"
@@ -153,19 +232,6 @@
         />
       </template>
 
-      <template v-if="variant === 'cargo'">
-        <BaseInput
-          :class="costFieldClass"
-          inputmode="numeric"
-          autocomplete="off"
-          :label="t('dispatch_wizard.s3.cost')"
-          :model-value="row.cost"
-          :placeholder="t('dispatch_wizard.s3.vnd_ph')"
-          :disabled="lockCargoRowMoney"
-          @update:model-value="(v) => vndRow(row, 'cost', v)"
-        />
-      </template>
-
       <BaseInput
         v-if="!isPortalUser"
         :class="notesFieldClass"
@@ -176,61 +242,30 @@
       />
     </div>
 
-    <template v-if="variant === 'cargo'">
-      <div class="grid grid-cols-2 gap-3 border-t border-slate-100 pt-3 sm:grid-cols-4">
+    <!-- Cargo: chi phí & ghi chú vận chuyển -->
+    <section v-else class="rounded-lg border border-slate-200/80 p-3">
+      <h4 class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+        {{ t('dispatch_wizard.s3.cargo_cost_heading') }}
+      </h4>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <BaseInput
-          class="col-span-2"
-          :label="t('dispatch_wizard.s3.cargo_name')"
-          :model-value="row.name"
-          :placeholder="t('dispatch_wizard.s3.cargo_name_ph')"
-          @update:model-value="(v) => (row.name = v)"
+          :class="costFieldClass"
+          inputmode="numeric"
+          autocomplete="off"
+          :label="t('dispatch_wizard.s3.cost')"
+          :model-value="row.cost"
+          :placeholder="t('dispatch_wizard.s3.vnd_ph')"
+          :disabled="lockCargoRowMoney"
+          @update:model-value="(v) => vndRow(row, 'cost', v)"
         />
         <BaseInput
-          :label="t('dispatch_wizard.s3.qty')"
-          :model-value="row.qty"
-          :placeholder="t('dispatch_wizard.s3.qty_ph')"
-          @update:model-value="(v) => (row.qty = v)"
-        />
-        <BaseInput
-          :label="t('dispatch_wizard.s3.dim')"
-          :model-value="row.dimensions"
-          :placeholder="t('dispatch_wizard.s3.dim_ph')"
-          @update:model-value="(v) => (row.dimensions = v)"
-        />
-        <BaseInput
-          :label="t('dispatch_wizard.s3.weight')"
-          :model-value="row.weight"
-          :placeholder="t('dispatch_wizard.s3.weight_ph')"
-          @update:model-value="(v) => (row.weight = v)"
-        />
-        <BaseInput
-          :label="t('dispatch_wizard.s3.shipper_col')"
-          :model-value="row.pickup_contact"
-          :placeholder="t('dispatch_wizard.s3.pickup_contact_ph')"
-          @update:model-value="(v) => (row.pickup_contact = v)"
-        />
-        <BaseInput
-          :label="t('dispatch_wizard.s3.receiver_col')"
-          :model-value="row.delivery_contact"
-          :placeholder="t('dispatch_wizard.s3.delivery_contact_ph')"
-          @update:model-value="(v) => (row.delivery_contact = v)"
-        />
-        <BaseInput
-          class="col-span-2"
           :label="t('dispatch_wizard.s3.transport_note')"
           :model-value="row.transport_note"
           :placeholder="t('dispatch_wizard.s3.trans_ph')"
           @update:model-value="(v) => (row.transport_note = v)"
         />
-        <BaseInput
-          class="col-span-2"
-          :label="t('dispatch_wizard.s3.item_notes')"
-          :model-value="row.item_notes"
-          :placeholder="t('dispatch_wizard.s3.item_notes_ph')"
-          @update:model-value="(v) => (row.item_notes = v)"
-        />
       </div>
-    </template>
+    </section>
   </div>
 </template>
 
@@ -246,6 +281,7 @@ import BaseInput from '../../../components/base/BaseInput.vue'
 import BaseDateTime from '../../../components/base/BaseDateTime.vue'
 import { dispatchScheduleRowErrors } from '../../../composables/dispatchScheduleRowErrors'
 import { formatVndWhileTyping } from '../../../util/money'
+import { formatDatetimeLocalAmPm } from '../../../util/datetime'
 import { DISPATCH_WIZARD_KEY } from './injectionKeys'
 
 const props = defineProps({
@@ -296,10 +332,33 @@ const notesFieldClass = computed(() => {
   return 'col-span-2 sm:col-span-3 lg:col-span-1'
 })
 
-const costFieldClass = computed(() => {
-  const base = 'col-span-2 sm:col-span-1'
-  return lockCargoRowMoney.value ? `${base} opacity-50 pointer-events-none` : base
-})
+const costFieldClass = computed(() =>
+  lockCargoRowMoney.value ? 'opacity-50 pointer-events-none' : '',
+)
+
+const tripOutLegend = computed(() =>
+  props.variant === 'cargo'
+    ? t('dispatch_wizard.s3.cargo_pickup_legend')
+    : t('dispatch_wizard.s3.trip_out'),
+)
+
+const tripBackLegend = computed(() =>
+  props.variant === 'cargo'
+    ? t('dispatch_wizard.s3.cargo_delivery_legend')
+    : t('dispatch_wizard.s3.trip_back'),
+)
+
+const placeOutLabel = computed(() =>
+  props.variant === 'cargo'
+    ? t('dispatch_wizard.s3.cargo_pickup_place')
+    : t('dispatch_wizard.s3.place'),
+)
+
+const placeBackLabel = computed(() =>
+  props.variant === 'cargo'
+    ? t('dispatch_wizard.s3.cargo_delivery_place')
+    : t('dispatch_wizard.s3.place'),
+)
 
 const formattedTripStart = computed(() => wizard?.formattedRequestedDateTime?.value ?? '')
 
@@ -322,6 +381,11 @@ const returnModel = computed(() =>
   props.variant === 'cargo' ? props.row.delivery_at ?? '' : props.row.return_at ?? '',
 )
 
+/** Hiển thị đồng bộ dd/mm/yyyy h:mm AM/PM dưới ô datetime. */
+const outboundTimeHint = computed(() => formatDatetimeLocalAmPm(outboundDepartModel.value))
+
+const returnTimeHint = computed(() => formatDatetimeLocalAmPm(String(returnModel.value ?? '')))
+
 const tripDurationLabel = computed(() => {
   const startRaw = outboundDepartRaw.value
   const retRaw = String(returnModel.value ?? '').trim()
@@ -339,17 +403,17 @@ function vndRow(row, key, raw) {
   row[key] = formatVndWhileTyping(raw)
 }
 
-const pickupPh = computed(() =>
-  props.variant === 'business'
-    ? t('dispatch_wizard.s3.biz_pickup_ph')
-    : t('dispatch_wizard.s3.pickup_ph'),
-)
+const pickupPh = computed(() => {
+  if (props.variant === 'business') return t('dispatch_wizard.s3.biz_pickup_ph')
+  if (props.variant === 'cargo') return t('dispatch_wizard.s3.pickup_place_ph')
+  return t('dispatch_wizard.s3.pickup_ph')
+})
 
-const dropoffPh = computed(() =>
-  props.variant === 'business'
-    ? t('dispatch_wizard.s3.biz_drop_ph')
-    : t('dispatch_wizard.s3.dropoff_ph'),
-)
+const dropoffPh = computed(() => {
+  if (props.variant === 'business') return t('dispatch_wizard.s3.biz_drop_ph')
+  if (props.variant === 'cargo') return t('dispatch_wizard.s3.delivery_place_ph')
+  return t('dispatch_wizard.s3.dropoff_ph')
+})
 
 const notesPh = computed(() =>
   props.variant === 'business'
@@ -365,7 +429,7 @@ const dropoffModel = computed(() =>
   props.variant === 'cargo' ? props.row.delivery_place ?? '' : props.row.dropoff ?? '',
 )
 
-const notesModel = computed(() => props.row.notes ?? props.row.item_notes ?? '')
+const notesModel = computed(() => props.row.notes ?? '')
 
 function setReturn(v) {
   if (props.variant === 'cargo') props.row.delivery_at = v
@@ -383,8 +447,7 @@ function setDropoff(v) {
 }
 
 function setNotes(v) {
-  if (props.variant === 'cargo') props.row.item_notes = v
-  else props.row.notes = v
+  props.row.notes = v
 }
 
 const scheduleRowErrorOptions = computed(() => {
