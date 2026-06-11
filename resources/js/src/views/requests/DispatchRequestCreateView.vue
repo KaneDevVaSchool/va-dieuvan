@@ -1,6 +1,6 @@
 <template>
   <div
-    class="dispatch-wizard portal-create mx-auto max-w-3xl space-y-5 px-4 py-5 text-slate-900 supports-[padding:max(0px)]:pl-[max(1rem,env(safe-area-inset-left))] supports-[padding:max(0px)]:pr-[max(1rem,env(safe-area-inset-right))] sm:px-6 sm:py-6 lg:max-w-4xl lg:py-7"
+    class="dispatch-wizard portal-create w-full max-w-none space-y-5 px-4 py-5 text-slate-900 supports-[padding:max(0px)]:pl-[max(1rem,env(safe-area-inset-left))] supports-[padding:max(0px)]:pr-[max(1rem,env(safe-area-inset-right))] sm:px-6 sm:py-6 lg:py-7"
     :class="step === 3 && !created ? 'pb-28 sm:pb-24' : 'pb-10'"
     :aria-label="
       form.is_urgent && !loading ? t('dispatch_wizard.create.form_priority_frame_aria') : undefined
