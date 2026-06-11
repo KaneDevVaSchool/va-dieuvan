@@ -2,6 +2,7 @@
 
 namespace App\Services\TransportProgram;
 
+use App\Models\TpTripExecution;
 use App\Models\TpTripStudentLog;
 use Carbon\Carbon;
 
@@ -14,7 +15,22 @@ class StudentLogService
 
     public function board(TpTripStudentLog $log, ?int $actorId, ?string $clientTs = null): TpTripStudentLog
     {
-        abort_unless(in_array($log->final_status, [TpTripStudentLog::FINAL_PENDING, TpTripStudentLog::FINAL_ABSENT], true), 422);
+        $log->loadMissing('execution');
+        abort_unless(
+            $log->execution->status === TpTripExecution::STATUS_IN_PROGRESS,
+            422,
+            'Chuyến không còn đang chạy — không thể điểm danh lên xe.',
+        );
+
+        if ($log->final_status === TpTripStudentLog::FINAL_BOARDED) {
+            return $log->fresh();
+        }
+
+        abort_unless(
+            in_array($log->final_status, [TpTripStudentLog::FINAL_PENDING, TpTripStudentLog::FINAL_ABSENT], true),
+            422,
+            $this->boardBlockedMessage($log->final_status),
+        );
 
         $wasAbsent = $log->final_status === TpTripStudentLog::FINAL_ABSENT;
 
@@ -37,7 +53,22 @@ class StudentLogService
 
     public function alight(TpTripStudentLog $log, ?int $actorId, ?string $clientTs = null): TpTripStudentLog
     {
-        abort_unless($log->final_status === TpTripStudentLog::FINAL_BOARDED, 422);
+        $log->loadMissing('execution');
+        abort_unless(
+            $log->execution->status === TpTripExecution::STATUS_IN_PROGRESS,
+            422,
+            'Chuyến không còn đang chạy — không thể điểm danh xuống xe.',
+        );
+
+        if ($log->final_status === TpTripStudentLog::FINAL_ALIGHTED) {
+            return $log->fresh();
+        }
+
+        abort_unless(
+            $log->final_status === TpTripStudentLog::FINAL_BOARDED,
+            422,
+            'Chỉ xuống xe khi học sinh đang ở trạng thái đã lên xe.',
+        );
 
         $log->update([
             'final_status' => TpTripStudentLog::FINAL_ALIGHTED,
@@ -147,5 +178,14 @@ class StudentLogService
         $diff = abs(Carbon::parse($clientTs)->diffInMinutes(now()));
 
         return $diff > 30 ? 'timestamp_suspect' : 'synced';
+    }
+
+    private function boardBlockedMessage(string $status): string
+    {
+        return match ($status) {
+            TpTripStudentLog::FINAL_BOARDED => 'Học sinh đã lên xe.',
+            TpTripStudentLog::FINAL_ALIGHTED => 'Học sinh đã xuống xe, không thể lên xe lại trên chuyến này.',
+            default => 'Không thể điểm danh lên xe ở trạng thái hiện tại.',
+        };
     }
 }

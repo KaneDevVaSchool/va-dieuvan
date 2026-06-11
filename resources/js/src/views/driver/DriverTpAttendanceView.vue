@@ -167,7 +167,7 @@
             </div>
             <div class="mt-3 flex gap-2">
               <button
-                v-if="s.final_status !== 'boarded' && s.final_status !== 'completed' && s.final_status !== 'absent'"
+                v-if="canBoardStudent(s.final_status)"
                 class="flex-1 rounded-xl bg-driver-accent/15 py-2.5 text-base font-semibold text-driver-accent active:scale-95"
                 @click="act('board', s)"
               >
@@ -422,14 +422,18 @@ async function complete() {
 }
 
 async function act(type, s) {
+  if (busy.value) return
+  if (type === 'board' && !canBoardStudent(s.final_status)) return
+  if (type === 'alight' && s.final_status !== 'boarded') return
+  busy.value = true
   const ts = new Date().toISOString()
-  applyLocal(type, s)
   try {
     const execId = execution.value.id
     if (type === 'board') await driverBoard(execId, s.student_id, ts)
     else if (type === 'alight') await driverAlight(execId, s.student_id, ts)
     else if (type === 'absent') await driverAbsent(execId, s.student_id, { absence_type: 'no_notice', client_timestamp: ts })
     else if (type === 'undo-absent') await driverUndoAbsent(execId, s.student_id)
+    applyLocal(type, s)
     if (online.value) await refreshTotals()
     if ((type === 'board' || type === 'absent') && route.query.from !== 'list') {
       goBack()
@@ -441,14 +445,25 @@ async function act(type, s) {
     } else {
       pendingCount.value++
     }
+  } finally {
+    busy.value = false
   }
 }
 
 function applyLocal(type, s) {
   const log = execution.value.student_logs.find((l) => l.student_id === s.student_id)
   if (!log) return
-  const map = { board: 'boarded', alight: 'completed', absent: 'absent', 'undo-absent': 'pending' }
+  const map = { board: 'boarded', alight: 'alighted', absent: 'absent', 'undo-absent': 'pending' }
   log.final_status = map[type] ?? log.final_status
+}
+
+/** API dùng `alighted`; UI cũ dùng `completed` — chuẩn hoá để không hiện nút Lên xe nhầm. */
+function isStudentAlighted(status) {
+  return status === 'alighted' || status === 'completed'
+}
+
+function canBoardStudent(status) {
+  return status === 'pending' || status === 'absent'
 }
 
 async function refreshTotals() {
@@ -521,12 +536,15 @@ function execStatusClass(s) {
     completed: 'bg-emerald-500/20 text-emerald-200',
   }[s] || 'bg-white/10 text-driver-muted'
 }
-function logLabel(s) { return { pending: 'Chờ', boarded: 'Đã lên', completed: 'Đã xuống', absent: 'Vắng' }[s] || s }
+function logLabel(s) {
+  if (isStudentAlighted(s)) return 'Đã xuống'
+  return { pending: 'Chờ', boarded: 'Đã lên', absent: 'Vắng' }[s] || s
+}
 function logClass(s) {
+  if (isStudentAlighted(s)) return 'bg-sky-500/20 text-sky-300'
   return {
     pending: 'bg-white/10 text-driver-ink/60',
     boarded: 'bg-driver-accent/20 text-driver-accent',
-    completed: 'bg-sky-500/20 text-sky-300',
     absent: 'bg-rose-500/20 text-rose-300',
   }[s] || 'bg-white/10'
 }

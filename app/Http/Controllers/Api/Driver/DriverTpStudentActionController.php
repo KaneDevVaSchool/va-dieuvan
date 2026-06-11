@@ -22,16 +22,22 @@ class DriverTpStudentActionController extends Controller
 
     public function board(Request $request, TpTripExecution $tpTripExecution, int $student): JsonResponse
     {
+        $data = $request->validate([
+            'client_timestamp' => ['nullable', 'date'],
+        ]);
         $log = $this->resolveLog($request, $tpTripExecution, $student);
-        $result = $this->studentLogService->board($log, $request->user()?->id, $request->input('client_timestamp'));
+        $result = $this->studentLogService->board($log, $request->user()?->id, $data['client_timestamp'] ?? null);
 
         return $this->ok($this->logPayload($result));
     }
 
     public function alight(Request $request, TpTripExecution $tpTripExecution, int $student): JsonResponse
     {
+        $data = $request->validate([
+            'client_timestamp' => ['nullable', 'date'],
+        ]);
         $log = $this->resolveLog($request, $tpTripExecution, $student);
-        $result = $this->studentLogService->alight($log, $request->user()?->id, $request->input('client_timestamp'));
+        $result = $this->studentLogService->alight($log, $request->user()?->id, $data['client_timestamp'] ?? null);
 
         return $this->ok($this->logPayload($result));
     }

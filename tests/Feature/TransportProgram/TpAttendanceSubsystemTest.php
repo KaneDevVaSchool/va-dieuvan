@@ -231,4 +231,40 @@ class TpAttendanceSubsystemTest extends TestCase
 
         Carbon::setTestNow();
     }
+
+    public function test_board_rejects_when_student_already_boarded_or_alighted(): void
+    {
+        $driver = Driver::create(['full_name' => 'TX guard']);
+        $result = app(CreateTransportProgramAction::class)->execute([
+            'name' => 'CT guard board',
+            'departure_time' => '06:30',
+            'start_date' => Carbon::today()->toDateString(),
+            'end_date' => Carbon::today()->toDateString(),
+            'runs_on' => ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+            'default_driver_id' => $driver->id,
+        ], null);
+
+        $program = TpProgram::findOrFail($result['program']['id']);
+        $student = TpStudent::create(['code' => 'BG001', 'full_name' => 'HS guard', 'status' => 'active', 'class_name' => '6A']);
+        app(ProgramEnrollmentService::class)->enrollBulk($program, [$student->id], null);
+        $day = $program->days()->orderBy('scheduled_date')->first();
+        $execution = app(TripExecutionService::class)->start($day->fresh(), $driver, null, null);
+        $log = $execution->studentLogs()->where('student_id', $student->id)->firstOrFail();
+        $service = app(StudentLogService::class);
+
+        $service->board($log->fresh(), null);
+
+        $again = $service->board($log->fresh(), null);
+        $this->assertSame(TpTripStudentLog::FINAL_BOARDED, $again->final_status);
+
+        $service->alight($log->fresh(), null);
+
+        try {
+            $service->board($log->fresh(), null);
+            $this->fail('Expected 422 when boarding after alight');
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            $this->assertSame(422, $e->getStatusCode());
+            $this->assertStringContainsString('xuống xe', $e->getMessage());
+        }
+    }
 }

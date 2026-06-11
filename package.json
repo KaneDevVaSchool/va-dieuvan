@@ -12,11 +12,12 @@
         "lint": "eslint resources/js --ext .vue,.js,.ts",
         "lint:fix": "eslint resources/js --ext .vue,.js,.ts --fix",
         "format": "prettier --write resources/js/**/*.{vue,js,ts}",
+        "commit": "npx lint-staged",
         "prepare": "husky"
     },
     "lint-staged": {
         "*.php": ["./vendor/bin/pint"],
-        "*.{js,ts,vue}": ["eslint --fix", "prettier --write"]
+        "*.{js,ts,vue}": ["npx eslint --fix", "npx prettier --write"]
     },
     "devDependencies": {
         "@playwright/test": "^1.49.0",
