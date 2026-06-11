@@ -67,7 +67,31 @@
         </template>
 
         <div>
-          <label class="text-sm font-semibold text-driver-muted" for="dcc-type">{{ t('driver_trip_detail.cost_type') }}</label>
+          <label class="text-sm font-semibold text-driver-muted" for="dcc-vehicle">{{ t('driver_costs.step_vehicle_title') }}</label>
+          <p class="mt-0.5 text-xs leading-snug text-driver-muted/80">{{ t('driver_costs.step_vehicle_hint') }}</p>
+          <div class="relative mt-1.5">
+            <select
+              id="dcc-vehicle"
+              v-model="form.vehicle_id"
+              data-testid="driver-cost-create-vehicle"
+              class="flex min-h-[48px] w-full appearance-none rounded-xl border border-white/10 bg-driver-surface px-3 py-2.5 pr-10 text-base font-medium text-driver-ink focus:outline-none focus:ring-2 focus:ring-driver-accent/45"
+              :disabled="vehiclesLoading"
+            >
+              <option disabled value="">
+                {{ vehiclesLoading ? t('driver_costs.vehicles_loading') : t('driver_costs.vehicle_pick') }}
+              </option>
+              <option v-for="v in vehicleOptions" :key="v.id" :value="String(v.id)">
+                {{ vehicleSelectLabel(v) }}
+              </option>
+            </select>
+            <ChevronDownIcon class="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-driver-muted/70" aria-hidden="true" />
+          </div>
+          <p v-if="!vehiclesLoading && !vehicleOptions.length" class="mt-1 text-xs text-amber-200/90">
+            {{ t('driver_costs.vehicles_empty') }}
+          </p>
+        </div>
+
+        <div>
           <div class="relative mt-1.5">
             <select
               id="dcc-type"
@@ -127,12 +151,13 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeftIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
-import { listDriverTrips } from '../../api/driver'
+import { listDriverTrips, listDriverCostVehicles } from '../../api/driver'
 import { submitStandaloneTripCost } from '../../api/costs'
 import DriverCostTripPicker from '../../components/driver/costs/DriverCostTripPicker.vue'
 import { isTripEligibleForDriverLinkedCost } from '../../constants/tripStatus'
 import { toLocalDateKey } from '../../util/dates'
 import { formatVndWhileTyping, parseMoneyVnd } from '../../util/money'
+import { formatDriverVehicleSelectLabel, vehicleIdFromDriverTrip } from '../../util/driverVehicleSelect'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -142,6 +167,7 @@ const linkMode = ref('trip')
 
 const form = ref({
   trip_id: '',
+  vehicle_id: '',
   type: 'toll',
   amount: '',
   description: '',
@@ -150,8 +176,11 @@ const form = ref({
 const saving = ref(false)
 const errorMsg = ref('')
 const tripsLoading = ref(false)
+const vehiclesLoading = ref(false)
 /** @type {import('vue').Ref<object[]>} */
 const tripOptions = ref([])
+/** @type {import('vue').Ref<object[]>} */
+const vehicleOptions = ref([])
 
 const costTypes = computed(() => [
   { value: 'fuel', label: t('driver_trip_detail.cost_type_fuel') },
@@ -166,12 +195,27 @@ const canSubmit = computed(() => {
   const num = parseMoneyVnd(form.value.amount)
   if (!Number.isFinite(num) || num <= 0) return false
   if (linkMode.value === 'trip' && !String(form.value.trip_id || '').trim()) return false
+  if (!String(form.value.vehicle_id || '').trim()) return false
   return true
 })
+
+function vehicleSelectLabel(vehicle) {
+  return formatDriverVehicleSelectLabel(vehicle, t)
+}
+
+function syncVehicleFromSelectedTrip() {
+  if (linkMode.value !== 'trip') return
+  const tid = String(form.value.trip_id || '').trim()
+  if (!tid) return
+  const tr = tripOptions.value.find((x) => String(x?.id) === tid)
+  const vid = vehicleIdFromDriverTrip(tr)
+  if (vid) form.value.vehicle_id = String(vid)
+}
 
 function setLinkMode(mode) {
   linkMode.value = mode
   if (mode === 'none') form.value.trip_id = ''
+  else syncVehicleFromSelectedTrip()
   errorMsg.value = ''
 }
 
@@ -193,6 +237,18 @@ function tripPickerDateRange() {
   return { date_from: toLocalDateKey(past), date_to: toLocalDateKey(horizon) }
 }
 
+async function loadVehicles() {
+  vehiclesLoading.value = true
+  try {
+    const res = await listDriverCostVehicles()
+    vehicleOptions.value = res?.items ?? []
+  } catch {
+    vehicleOptions.value = []
+  } finally {
+    vehiclesLoading.value = false
+  }
+}
+
 async function loadTrips() {
   tripsLoading.value = true
   try {
@@ -212,6 +268,7 @@ async function loadTrips() {
         const tb = new Date(b?.depart_at || 0).getTime()
         return tb - ta
       })
+    syncVehicleFromSelectedTrip()
   } catch {
     tripOptions.value = []
   } finally {
@@ -225,6 +282,7 @@ function applyTripFromQuery() {
   if (!id) return
   linkMode.value = 'trip'
   form.value.trip_id = id
+  syncVehicleFromSelectedTrip()
 }
 
 async function submit() {
@@ -243,6 +301,8 @@ async function submit() {
       description: form.value.description?.trim() || null,
       currency: 'VND',
     }
+    const vehicleRaw = String(form.value.vehicle_id || '').trim()
+    if (vehicleRaw) payload.vehicle_id = Number(vehicleRaw)
     if (linkMode.value === 'trip') {
       const tripRaw = String(form.value.trip_id || '').trim()
       if (tripRaw) payload.trip_id = Number(tripRaw)
@@ -264,11 +324,16 @@ async function submit() {
 }
 
 watch(
+  () => form.value.trip_id,
+  () => syncVehicleFromSelectedTrip(),
+)
+
+watch(
   () => route.query.trip_id,
   () => applyTripFromQuery(),
 )
 
 onMounted(() => {
-  void loadTrips().finally(() => applyTripFromQuery())
+  void Promise.all([loadVehicles(), loadTrips()]).finally(() => applyTripFromQuery())
 })
 </script>

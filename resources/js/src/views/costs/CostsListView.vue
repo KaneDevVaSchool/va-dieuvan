@@ -50,275 +50,337 @@
     ═══════════════════════════════════════════════════════════════ -->
     <template v-if="activeTab === 'all_trips' || activeTab === 'standalone'">
 
-      <!-- ── Bộ lọc ────────────────────────────────────────────── -->
-      <div class="cv-secondary-filters mt-4">
-        <div
-          v-if="filterControlVisible.status"
-          class="flex flex-wrap items-center gap-1.5"
-          role="group"
-          :aria-label="t('filter_bar.status')"
-        >
-          <button
-            v-for="opt in statusChipOptions"
-            :key="opt.value === '' ? '_all' : opt.value"
-            type="button"
-            class="cv-status-chip"
-            :class="filters.status === opt.value ? 'cv-status-chip--active' : ''"
-            @click="setStatusFilter(opt.value)"
+      <!-- ── Bộ lọc (chuẩn staff list toolbar) ─────────────────── -->
+      <div class="relative z-40 mt-4">
+        <AppFilterBar>
+          <div ref="costsFilterBarRef" class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+            <AppFilterFunnelMenu ref="filterMenuRef" :badge-count="activeFilterCount">
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                {{ t('costs_page.filter_menu_title') }}
+              </p>
+              <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
+                <li v-if="filters.status" class="flex justify-between gap-2">
+                  <span class="text-slate-500 dark:text-slate-400">{{ t('filter_bar.status') }}</span>
+                  <span class="font-medium">{{ statusLabel(filters.status) }}</span>
+                </li>
+                <li v-if="filters.from || filters.to" class="flex justify-between gap-2 tabular-nums">
+                  <span class="text-slate-500 dark:text-slate-400">{{ t('costs_page.filter_recorded_date') }}</span>
+                  <span class="text-right font-medium">{{ filters.from || '…' }} → {{ filters.to || '…' }}</span>
+                </li>
+                <li v-if="searchQ.trim()" class="flex justify-between gap-2">
+                  <span class="text-slate-500 dark:text-slate-400">{{ t('costs_page.filter_search_page') }}</span>
+                  <span class="max-w-[11rem] truncate text-right font-medium" :title="searchQ">{{ searchQ }}</span>
+                </li>
+                <li v-if="filters.type" class="flex justify-between gap-2">
+                  <span class="text-slate-500 dark:text-slate-400">{{ t('costs_page.filter_cost_type') }}</span>
+                  <span class="font-medium">{{ typeLabel(filters.type) }}</span>
+                </li>
+                <li v-if="filters.trip_type && activeTab !== 'standalone'" class="flex justify-between gap-2">
+                  <span class="text-slate-500 dark:text-slate-400">{{ t('costs_page.filter_trip_type') }}</span>
+                  <span class="font-medium">{{ labelTripType(filters.trip_type) }}</span>
+                </li>
+                <li v-if="filters.trip_id && activeTab !== 'standalone'" class="flex justify-between gap-2">
+                  <span class="text-slate-500 dark:text-slate-400">{{ t('costs_page.filter_trip') }}</span>
+                  <span class="max-w-[11rem] truncate text-right font-medium">{{ tripFilterSummaryShort }}</span>
+                </li>
+                <li v-if="filters.provider && activeTab !== 'standalone'" class="flex justify-between gap-2">
+                  <span class="text-slate-500 dark:text-slate-400">{{ t('costs_page.filter_provider') }}</span>
+                  <span class="max-w-[11rem] truncate text-right font-medium">{{ providerFilterLabel(filters.provider) }}</span>
+                </li>
+                <li v-if="(filters.amount_min || filters.amount_max)" class="flex justify-between gap-2">
+                  <span class="text-slate-500 dark:text-slate-400">{{ t('costs_page.filter_amount_range') }}</span>
+                  <span class="font-medium tabular-nums">{{ amountRangeSummary }}</span>
+                </li>
+                <li v-if="filters.fleet_mode && activeTab !== 'standalone'" class="flex justify-between gap-2">
+                  <span class="text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.filter_fleet') }}</span>
+                  <span class="font-medium">{{ fleetModeLabel(filters.fleet_mode) }}</span>
+                </li>
+                <li v-if="filters.per_page !== DEFAULT_PER_PAGE" class="flex justify-between gap-2">
+                  <span class="text-slate-500 dark:text-slate-400">{{ t('filter_bar.per_page') }}</span>
+                  <span class="font-medium">{{ filters.per_page }}</span>
+                </li>
+                <li v-if="activeFilterCount === 0" class="text-slate-400 dark:text-slate-500">
+                  {{ t('costs_page.filter_menu_empty') }}
+                </li>
+              </ul>
+              <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+                  {{ t('costs_page.filter_show_controls_title') }}
+                </p>
+                <p class="mt-1 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+                  {{ t('costs_page.filter_show_controls_hint') }}
+                </p>
+                <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
+                  <li v-for="opt in costsFilterVisOptions" :key="'costs-vis-' + opt.id" class="flex items-start gap-2">
+                    <input
+                      :id="'costs-filter-vis-' + opt.id"
+                      v-model="filterBarVisible[opt.id]"
+                      type="checkbox"
+                      class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900"
+                      :data-testid="`costs-filter-vis-${opt.id}`"
+                    />
+                    <label
+                      :for="'costs-filter-vis-' + opt.id"
+                      class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
+                    >
+                      {{ t(opt.labelKey) }}
+                    </label>
+                  </li>
+                </ul>
+              </div>
+              <button
+                type="button"
+                class="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                @click="resetFilters(); closeFilterMenu()"
+              >
+                {{ t('costs_page.filter_clear') }}
+              </button>
+            </AppFilterFunnelMenu>
+
+            <details ref="columnPickerRef" class="group relative shrink-0">
+              <summary
+                class="flex cursor-pointer list-none items-center gap-1 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-200 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
+                :aria-label="t('costs_page.column_visibility_title')"
+                data-testid="costs-column-visibility-trigger"
+              >
+                <ViewColumnsIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span class="hidden text-xs font-medium sm:inline">{{ t('costs_page.column_visibility_title') }}</span>
+                <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400 transition-transform group-open:rotate-180" aria-hidden="true" />
+              </summary>
+              <div
+                class="absolute left-0 top-[calc(100%+6px)] z-50 min-w-[240px] rounded-xl border border-slate-200/90 bg-white p-3 text-sm shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-950"
+                @click.stop
+              >
+                <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">{{ t('costs_page.column_visibility_title') }}</p>
+                <ul class="mt-3 max-h-[min(50vh,320px)] space-y-2.5 overflow-y-auto pr-0.5">
+                  <li v-for="cd in colControlDefs" :key="'costs-col-vis-' + cd.id" class="flex items-start gap-2.5">
+                    <input
+                      :id="'costs-col-vis-' + cd.id"
+                      v-model="colVisible[cd.id]"
+                      type="checkbox"
+                      class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900"
+                      :data-testid="`costs-col-vis-${cd.id}`"
+                    />
+                    <label
+                      :for="'costs-col-vis-' + cd.id"
+                      class="cursor-pointer text-sm font-medium leading-snug text-slate-700 dark:text-slate-300"
+                    >
+                      {{ cd.label }}
+                    </label>
+                  </li>
+                </ul>
+              </div>
+            </details>
+
+            <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
+
+            <button
+              type="button"
+              class="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
+              :title="t('costs_page.filter_clear')"
+              :aria-label="t('costs_page.filter_clear')"
+              data-testid="costs-filter-clear"
+              @click="resetFilters"
+            >
+              <span class="relative inline-flex">
+                <FunnelIcon class="h-5 w-5" aria-hidden="true" />
+                <XMarkIcon
+                  class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/40"
+                  aria-hidden="true"
+                />
+              </span>
+            </button>
+
+            <div class="ml-auto flex shrink-0 flex-wrap items-center gap-2">
+              <button
+                v-if="showAddCostButton"
+                type="button"
+                class="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-va-800 px-3.5 text-sm font-semibold text-white shadow-sm ring-1 ring-black/5 transition hover:bg-va-900 focus:outline-none focus:ring-2 focus:ring-va-800/35 dark:ring-white/10"
+                data-testid="costs-add-btn"
+                @click="openAddCostModal"
+              >
+                <PlusCircleIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                {{ activeTab === 'standalone' ? t('costs_page.add_standalone_cost') : t('costs_page.add_cost') }}
+              </button>
+            </div>
+          </div>
+
+          <div
+            v-if="hasVisibleBarFilters"
+            class="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-2 border-t border-violet-100/80 pt-2 dark:border-violet-900/30 sm:gap-x-3"
           >
-            {{ opt.label }}
-          </button>
-        </div>
+            <div
+              v-if="filterBarVisible.status"
+              class="flex flex-wrap items-center gap-1.5"
+              role="group"
+              :aria-label="t('filter_bar.status')"
+            >
+              <button
+                v-for="opt in statusChipOptions"
+                :key="opt.value === '' ? '_all' : opt.value"
+                type="button"
+                class="cv-status-chip"
+                :class="filters.status === opt.value ? 'cv-status-chip--active' : ''"
+                @click="setStatusFilter(opt.value)"
+              >
+                {{ opt.label }}
+              </button>
+            </div>
 
-        <div v-if="filterControlVisible.date" class="flex items-center gap-1">
-          <input
-            v-model="filters.from"
-            type="date"
-            class="cv-date-input"
-            :aria-label="t('costs_page.filter_recorded_date')"
-            @change="onFilterDateChange"
-          />
-          <span class="text-xs text-slate-400">→</span>
-          <input
-            v-model="filters.to"
-            type="date"
-            class="cv-date-input"
-            :aria-label="t('costs_page.filter_recorded_date')"
-            @change="onFilterDateChange"
-          />
-        </div>
+            <div v-if="filterBarVisible.date" class="flex items-center gap-1.5">
+              <input
+                v-model="filters.from"
+                type="date"
+                class="costs-filter-control h-9 rounded-md border-0 bg-white/90 px-2 text-sm tabular-nums shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+                :aria-label="t('costs_page.filter_recorded_date')"
+                @change="onFilterDateChange"
+              />
+              <span class="text-xs font-medium text-slate-400">→</span>
+              <input
+                v-model="filters.to"
+                type="date"
+                class="costs-filter-control h-9 rounded-md border-0 bg-white/90 px-2 text-sm tabular-nums shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+                :aria-label="t('costs_page.filter_recorded_date')"
+                @change="onFilterDateChange"
+              />
+            </div>
 
-        <input
-          v-if="filterControlVisible.search"
-          v-model="searchQ"
-          type="search"
-          class="cv-search-input"
-          :placeholder="t('costs_page.filter_search_page')"
-          :aria-label="t('costs_page.filter_search_page')"
-        />
-
-        <!-- Type -->
-        <select
-          v-if="filterControlVisible.type"
-          v-model="filters.type"
-          class="cv-select"
-          :aria-label="t('costs_page.filter_cost_type')"
-          @change="onSimpleFilterSelectChange"
-        >
-          <option v-for="opt in typeFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
-            {{ opt.label }}
-          </option>
-        </select>
-
-        <!-- Trip type (not standalone) -->
-        <select
-          v-if="filterControlVisible.trip_type && activeTab !== 'standalone'"
-          v-model="filters.trip_type"
-          class="cv-select"
-          :aria-label="t('costs_page.filter_trip_type')"
-          @change="onSimpleFilterSelectChange"
-        >
-          <option v-for="opt in tripTypeFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
-            {{ opt.label }}
-          </option>
-        </select>
-
-        <!-- Trip picker (not standalone) -->
-        <details
-          v-if="filterControlVisible.trip && activeTab !== 'standalone'"
-          ref="filterTripDropdownRef"
-          class="cv-dropdown-details group relative shrink-0"
-        >
-          <summary
-            class="cv-dropdown-trigger"
-            :class="filters.trip_id ? 'cv-dropdown-trigger--active' : ''"
-          >
-            <span class="max-w-[11rem] truncate">{{ filters.trip_id ? tripFilterSummaryShort : t('costs_page.filter_trip') }}</span>
-            <ChevronDownIcon class="ml-1 h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
-          </summary>
-          <div class="cv-dropdown-panel">
             <input
-              v-model="filterTripSearch"
+              v-if="filterBarVisible.search"
+              v-model="searchQ"
               type="search"
-              class="costs-input mb-2 h-8 w-full text-sm"
-              :placeholder="t('costs_page.trip_search_ph')"
-              autocomplete="off"
-              @click.stop
+              class="costs-filter-control h-9 min-w-[8rem] max-w-[min(100%,14rem)] shrink-0 rounded-md border-0 bg-white/90 px-2.5 text-sm shadow-sm ring-1 ring-slate-200/80 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+              :placeholder="t('costs_page.filter_search_page')"
+              :aria-label="t('costs_page.filter_search_page')"
             />
-            <ul class="max-h-[min(50vh,280px)] space-y-0.5 overflow-y-auto px-0.5">
-              <li>
-                <button
-                  type="button"
-                  class="cv-dropdown-item"
-                  :class="!filters.trip_id ? 'cv-dropdown-item--active' : ''"
-                  @click="applyFilterPatch($event, { trip_id: '' })"
-                >
-                  {{ t('costs_page.trip_all') }}
-                </button>
-              </li>
-              <li v-for="tripRow in filteredTripsForFilter" :key="tripRow.id">
-                <button
-                  type="button"
-                  class="cv-dropdown-item"
-                  :class="String(filters.trip_id) === String(tripRow.id) ? 'cv-dropdown-item--active' : ''"
-                  @click="applyFilterPatch($event, { trip_id: String(tripRow.id) })"
-                >
-                  {{ formatTripPickerLabel(tripRow) }}
-                </button>
-              </li>
-            </ul>
-            <p v-if="!tripsForModalLoading && tripOptionsRaw.length && !filteredTripsForFilter.length" class="mt-2 text-[11px] text-amber-800 dark:text-amber-200">{{ t('costs_page.trip_no_match') }}</p>
-            <p v-else-if="tripsForModalLoading" class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">{{ t('costs_page.trip_loading') }}</p>
-            <p v-else-if="!tripsForModalLoading && !tripOptionsRaw.length" class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">{{ t('costs_page.trip_empty_scope') }}</p>
-          </div>
-        </details>
 
-        <!-- Provider (not standalone) -->
-        <select
-          v-if="filterControlVisible.provider && activeTab !== 'standalone'"
-          v-model="filters.provider"
-          class="cv-select"
-          :aria-label="t('costs_page.filter_provider')"
-          @change="onSimpleFilterSelectChange"
-        >
-          <option v-for="opt in providerFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
-            {{ opt.label }}
-          </option>
-        </select>
+            <select
+              v-if="filterBarVisible.type"
+              v-model="filters.type"
+              class="costs-filter-control h-9 max-w-[min(100%,11rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+              :class="filters.type ? 'text-slate-900 dark:text-slate-100' : 'text-slate-600 dark:text-slate-400'"
+              :aria-label="t('costs_page.filter_cost_type')"
+              @change="onSimpleFilterSelectChange"
+            >
+              <option v-for="opt in typeFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
 
-        <!-- Amount range -->
-        <div v-if="filterControlVisible.amount_range" class="flex items-center gap-1">
-          <input
-            :value="formatVndDigitsInput(String(filters.amount_min).replace(/\D/g, ''))"
-            type="text"
-            inputmode="numeric"
-            class="cv-amount-input"
-            :placeholder="t('costs_page.filter_amount_min')"
-            autocomplete="off"
-            @input="onAmountFilterInput('amount_min', $event)"
-          />
-          <span class="text-xs text-slate-400">–</span>
-          <input
-            :value="formatVndDigitsInput(String(filters.amount_max).replace(/\D/g, ''))"
-            type="text"
-            inputmode="numeric"
-            class="cv-amount-input"
-            :placeholder="t('costs_page.filter_amount_max')"
-            autocomplete="off"
-            @input="onAmountFilterInput('amount_max', $event)"
-          />
-        </div>
+            <select
+              v-if="filterBarVisible.trip_type && activeTab !== 'standalone'"
+              v-model="filters.trip_type"
+              class="costs-filter-control h-9 max-w-[min(100%,11rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+              :class="filters.trip_type ? 'text-slate-900 dark:text-slate-100' : 'text-slate-600 dark:text-slate-400'"
+              :aria-label="t('costs_page.filter_trip_type')"
+              @change="onSimpleFilterSelectChange"
+            >
+              <option v-for="opt in tripTypeFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
 
-        <!-- Fleet mode (not standalone) -->
-        <select
-          v-if="filterControlVisible.fleet_mode && activeTab !== 'standalone'"
-          v-model="filters.fleet_mode"
-          class="cv-select"
-          :aria-label="t('dashboard_analytics.filter_fleet')"
-          @change="onSimpleFilterSelectChange"
-        >
-          <option v-for="opt in fleetModeFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
-            {{ opt.label }}
-          </option>
-        </select>
-
-        <button
-          type="button"
-          class="ml-auto inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-rose-600 transition hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30"
-          @click="resetSecondaryFilters"
-        >
-          <XMarkIcon class="h-3.5 w-3.5" aria-hidden="true" />
-          {{ t('costs_page.filter_clear_secondary') }}
-        </button>
-      </div>
-
-      <!-- ── Hiển thị bộ lọc / cột + thao tác ─────────────────── -->
-      <div class="cv-display-controls mt-2 flex flex-wrap items-center gap-2">
-        <details ref="filterPickerRef" class="cv-picker-details group relative">
-          <summary
-            class="cv-picker-trigger"
-            :aria-label="t('costs_page.filter_visibility_title')"
-            data-testid="costs-filter-visibility-trigger"
-          >
-            <FunnelIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-            <span>{{ t('costs_page.filter_visibility_title') }}</span>
-            <ChevronDownIcon class="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
-          </summary>
-          <div class="cv-picker-panel" @click.stop>
-            <p class="cv-picker-panel-title">{{ t('costs_page.filter_show_controls_title') }}</p>
-            <p class="cv-picker-panel-hint">{{ t('costs_page.filter_show_controls_hint') }}</p>
-            <ul class="mt-3 max-h-[min(50vh,280px)] space-y-2.5 overflow-y-auto pr-0.5">
-              <li v-for="fd in filterControlDefs" :key="'costs-filter-vis-' + fd.id" class="flex items-start gap-2.5">
+            <details
+              v-if="filterBarVisible.trip && activeTab !== 'standalone'"
+              ref="filterTripDropdownRef"
+              class="group relative min-w-0 shrink-0"
+            >
+              <summary
+                class="flex max-w-full cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 [&::-webkit-details-marker]:hidden"
+                :class="filters.trip_id ? 'border-teal-200/80 ring-teal-500/20 dark:border-teal-800/50' : ''"
+              >
+                <span class="max-w-[11rem] truncate text-sm font-medium">{{ filters.trip_id ? tripFilterSummaryShort : t('costs_page.filter_trip') }}</span>
+                <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400 transition-transform group-open:rotate-180" aria-hidden="true" />
+              </summary>
+              <div
+                class="absolute left-0 top-[calc(100%+8px)] z-[100] w-[min(100vw-2rem,20rem)] rounded-xl border border-slate-200/90 bg-white p-2 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-950"
+                @click.stop
+              >
                 <input
-                  :id="'costs-filter-vis-' + fd.id"
-                  v-model="filterControlVisible[fd.id]"
-                  type="checkbox"
-                  class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900"
-                  :data-testid="`costs-filter-vis-${fd.id}`"
+                  v-model="filterTripSearch"
+                  type="search"
+                  class="costs-input mb-2 h-8 w-full text-sm"
+                  :placeholder="t('costs_page.trip_search_ph')"
+                  autocomplete="off"
+                  @click.stop
                 />
-                <label
-                  :for="'costs-filter-vis-' + fd.id"
-                  class="cursor-pointer text-sm font-medium leading-snug text-slate-700 dark:text-slate-300"
-                >
-                  {{ fd.label }}
-                </label>
-              </li>
-            </ul>
+                <ul class="max-h-[min(50vh,280px)] space-y-0.5 overflow-y-auto px-0.5">
+                  <li>
+                    <button
+                      type="button"
+                      class="cv-dropdown-item w-full"
+                      :class="!filters.trip_id ? 'cv-dropdown-item--active' : ''"
+                      @click="applyFilterPatch($event, { trip_id: '' })"
+                    >
+                      {{ t('costs_page.trip_all') }}
+                    </button>
+                  </li>
+                  <li v-for="tripRow in filteredTripsForFilter" :key="tripRow.id">
+                    <button
+                      type="button"
+                      class="cv-dropdown-item w-full"
+                      :class="String(filters.trip_id) === String(tripRow.id) ? 'cv-dropdown-item--active' : ''"
+                      @click="applyFilterPatch($event, { trip_id: String(tripRow.id) })"
+                    >
+                      {{ formatTripPickerLabel(tripRow) }}
+                    </button>
+                  </li>
+                </ul>
+                <p v-if="!tripsForModalLoading && tripOptionsRaw.length && !filteredTripsForFilter.length" class="mt-2 text-[11px] text-amber-800 dark:text-amber-200">{{ t('costs_page.trip_no_match') }}</p>
+                <p v-else-if="tripsForModalLoading" class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">{{ t('costs_page.trip_loading') }}</p>
+                <p v-else-if="!tripsForModalLoading && !tripOptionsRaw.length" class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">{{ t('costs_page.trip_empty_scope') }}</p>
+              </div>
+            </details>
+
+            <select
+              v-if="filterBarVisible.provider && activeTab !== 'standalone'"
+              v-model="filters.provider"
+              class="costs-filter-control h-9 max-w-[min(100%,11rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+              :class="filters.provider ? 'text-slate-900 dark:text-slate-100' : 'text-slate-600 dark:text-slate-400'"
+              :aria-label="t('costs_page.filter_provider')"
+              @change="onSimpleFilterSelectChange"
+            >
+              <option v-for="opt in providerFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+
+            <div v-if="filterBarVisible.amount_range" class="flex items-center gap-1.5">
+              <input
+                :value="formatVndDigitsInput(String(filters.amount_min).replace(/\D/g, ''))"
+                type="text"
+                inputmode="numeric"
+                class="costs-filter-control h-9 w-[6.5rem] rounded-md border-0 bg-white/90 px-2 text-sm tabular-nums shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+                :placeholder="t('costs_page.filter_amount_min')"
+                autocomplete="off"
+                @input="onAmountFilterInput('amount_min', $event)"
+              />
+              <span class="text-xs font-medium text-slate-400">–</span>
+              <input
+                :value="formatVndDigitsInput(String(filters.amount_max).replace(/\D/g, ''))"
+                type="text"
+                inputmode="numeric"
+                class="costs-filter-control h-9 w-[6.5rem] rounded-md border-0 bg-white/90 px-2 text-sm tabular-nums shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+                :placeholder="t('costs_page.filter_amount_max')"
+                autocomplete="off"
+                @input="onAmountFilterInput('amount_max', $event)"
+              />
+            </div>
+
+            <select
+              v-if="filterBarVisible.fleet_mode && activeTab !== 'standalone'"
+              v-model="filters.fleet_mode"
+              class="costs-filter-control h-9 max-w-[min(100%,11rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+              :class="filters.fleet_mode ? 'text-slate-900 dark:text-slate-100' : 'text-slate-600 dark:text-slate-400'"
+              :aria-label="t('dashboard_analytics.filter_fleet')"
+              @change="onSimpleFilterSelectChange"
+            >
+              <option v-for="opt in fleetModeFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
           </div>
-        </details>
-        <details ref="columnPickerRef" class="cv-picker-details group relative">
-          <summary
-            class="cv-picker-trigger"
-            :aria-label="t('costs_page.column_visibility_title')"
-            data-testid="costs-column-visibility-trigger"
-          >
-            <ViewColumnsIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-            <span>{{ t('costs_page.column_visibility_title') }}</span>
-            <ChevronDownIcon class="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
-          </summary>
-          <div class="cv-picker-panel" @click.stop>
-            <p class="cv-picker-panel-title">{{ t('costs_page.column_visibility_title') }}</p>
-            <ul class="mt-3 max-h-[min(50vh,320px)] space-y-2.5 overflow-y-auto pr-0.5">
-              <li v-for="cd in colControlDefs" :key="'costs-col-vis-' + cd.id" class="flex items-start gap-2.5">
-                <input
-                  :id="'costs-col-vis-' + cd.id"
-                  v-model="colVisible[cd.id]"
-                  type="checkbox"
-                  class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900"
-                  :data-testid="`costs-col-vis-${cd.id}`"
-                />
-                <label
-                  :for="'costs-col-vis-' + cd.id"
-                  class="cursor-pointer text-sm font-medium leading-snug text-slate-700 dark:text-slate-300"
-                >
-                  {{ cd.label }}
-                </label>
-              </li>
-            </ul>
-          </div>
-        </details>
-        <div class="ml-auto flex shrink-0 flex-wrap items-center gap-2">
-          <button
-            v-if="activeFilterCount > 0"
-            type="button"
-            class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-            data-testid="costs-filter-clear"
-            @click="resetFilters"
-          >
-            <XMarkIcon class="h-4 w-4" aria-hidden="true" />
-            {{ t('costs_page.filter_clear') }}
-          </button>
-          <button
-            v-if="showAddCostButton"
-            type="button"
-            class="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-va-800 px-3.5 text-sm font-semibold text-white shadow-sm ring-1 ring-black/5 transition hover:bg-va-900 focus:outline-none focus:ring-2 focus:ring-va-800/35 dark:ring-white/10"
-            data-testid="costs-add-btn"
-            @click="openAddCostModal"
-          >
-            <PlusCircleIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-            {{ activeTab === 'standalone' ? t('costs_page.add_standalone_cost') : t('costs_page.add_cost') }}
-          </button>
-        </div>
+        </AppFilterBar>
       </div>
 
       <!-- ── KPI summary bar ─────────────────────────────────── -->
@@ -1114,11 +1176,14 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, onActivated, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ChevronDownIcon, FunnelIcon, PlusCircleIcon, ViewColumnsIcon, XMarkIcon } from '@heroicons/vue/24/outline'
-import { useDetailsAutoClose } from '../../composables/useDetailsAutoClose.js'
+import { useDetailsAutoClose, useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
+import { useFilterBarVisibility } from '../../composables/useFilterBarVisibility.js'
+import AppFilterBar from '../../components/filters/AppFilterBar.vue'
+import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vue'
 import {
   listTripCosts,
   listBusinessPersonnelCostLines,
@@ -1160,10 +1225,20 @@ const FILTER_CONTROL_IDS = [
 ]
 const COL_IDS = ['trip', 'provider', 'submitter', 'fleet', 'actions']
 
-function defaultFilterControlVisibility() {
-  return Object.fromEntries(
-    FILTER_CONTROL_IDS.map((id) => [id, ['status', 'date', 'search'].includes(id)]),
-  )
+const COSTS_FILTER_BAR_VIS_DEFAULTS = Object.fromEntries(
+  FILTER_CONTROL_IDS.map((id) => [id, false]),
+)
+
+const COSTS_FILTER_VIS_LABEL_KEYS = {
+  status: 'costs_page.filter_vis_status',
+  date: 'costs_page.filter_vis_date',
+  search: 'costs_page.filter_vis_search',
+  type: 'costs_page.filter_vis_type',
+  trip_type: 'costs_page.filter_vis_trip_type',
+  trip: 'costs_page.filter_vis_trip',
+  amount_range: 'costs_page.filter_vis_amount_range',
+  provider: 'costs_page.filter_vis_provider',
+  fleet_mode: 'costs_page.filter_vis_fleet_mode',
 }
 
 function defaultColVisibility() {
@@ -1353,11 +1428,16 @@ const modalCostTypeOptions = computed(() => {
 const loading = ref(false)
 const items = ref([])
 const meta = ref({})
-const filterPickerRef = ref(null)
+const costsFilterBarRef = ref(null)
+const filterMenuRef = ref(null)
 const columnPickerRef = ref(null)
-const filterControlVisible = reactive(defaultFilterControlVisibility())
+const {
+  visible: filterBarVisible,
+  resetVisibility: resetFilterBarVisibility,
+  hasVisibleOnBar: hasVisibleBarFilters,
+} = useFilterBarVisibility(FILTER_CONTROL_IDS, COSTS_FILTER_BAR_VIS_DEFAULTS)
 const colVisible = reactive(defaultColVisibility())
-useDetailsAutoClose(filterPickerRef)
+useDetailsAutoCloseWithin(costsFilterBarRef)
 useDetailsAutoClose(columnPickerRef)
 
 const bpLoading = ref(false)
@@ -1587,17 +1667,25 @@ const fleetModeFilterOptions = computed(() => [
   { value: 'unspecified', label: fleetModeLabel('unspecified') },
 ])
 
-const filterControlDefs = computed(() => [
-  { id: 'status', label: t('filter_bar.status') },
-  { id: 'date', label: t('costs_page.filter_recorded_date') },
-  { id: 'search', label: t('costs_page.filter_search_page') },
-  { id: 'type', label: t('costs_page.filter_cost_type') },
-  { id: 'trip_type', label: t('costs_page.filter_trip_type') },
-  { id: 'trip', label: t('costs_page.filter_trip') },
-  { id: 'amount_range', label: t('costs_page.filter_amount_range') },
-  { id: 'provider', label: t('costs_page.filter_provider') },
-  { id: 'fleet_mode', label: t('dashboard_analytics.filter_fleet') },
-])
+const costsFilterVisOptions = computed(() =>
+  FILTER_CONTROL_IDS.map((id) => ({
+    id,
+    labelKey: COSTS_FILTER_VIS_LABEL_KEYS[id] ?? `costs_page.filter_vis_${id}`,
+  })),
+)
+
+function providerFilterLabel(value) {
+  if (value === '__none__') return t('costs_page.filter_provider_none')
+  return value
+}
+
+function closeFilterMenu() {
+  filterMenuRef.value?.close?.()
+}
+
+function onCostsFilterBarEnter() {
+  resetFilterBarVisibility()
+}
 
 function tableColLabel(colId) {
   const keys = {
@@ -2052,19 +2140,6 @@ function resetFilters() {
   reload()
 }
 
-function resetSecondaryFilters() {
-  filters.type = ''
-  filters.trip_type = ''
-  filters.trip_id = ''
-  filters.provider = ''
-  filters.fleet_mode = ''
-  filters.amount_min = ''
-  filters.amount_max = ''
-  filters.page = 1
-  filterTripSearch.value = ''
-  reload()
-}
-
 // ── API reload ───────────────────────────────────────────────────
 async function reload() {
   loading.value = true
@@ -2209,11 +2284,16 @@ watch(
 )
 
 onMounted(async () => {
+  onCostsFilterBarEnter()
   loadExtraCostTypesFromStorage()
   loadColVisibility()
   hydrateCostStatusFromRoute()
   await loadTripPickerOptions()
   await reload()
+})
+
+onActivated(() => {
+  onCostsFilterBarEnter()
 })
 </script>
 

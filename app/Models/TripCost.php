@@ -13,6 +13,7 @@ class TripCost extends Model
 
     protected $fillable = [
         'trip_id',
+        'vehicle_id',
         'created_by',
         'confirmed_by',
         'type',
@@ -35,6 +36,11 @@ class TripCost extends Model
         return $this->belongsTo(Trip::class);
     }
 
+    public function vehicle(): BelongsTo
+    {
+        return $this->belongsTo(Vehicle::class);
+    }
+
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -50,4 +56,3 @@ class TripCost extends Model
         return $this->morphMany(Attachment::class, 'attachable');
     }
 }
-

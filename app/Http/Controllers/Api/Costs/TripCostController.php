@@ -16,10 +16,12 @@ use App\Http\Requests\Api\Costs\UpdateTripCostByDriverRequest;
 use App\Http\Requests\Api\Costs\UploadTripCostReceiptRequest;
 use App\Models\Trip;
 use App\Models\TripCost;
+use App\Models\User;
 use App\Services\Auditing\AuditLogger;
 use App\Services\Costs\BusinessPersonnelCostLinesQuery;
 use App\Services\Costs\WizardSnapshotCostLinesQuery;
 use App\Services\RecurringDispatch\RecurringBudgetAlertService;
+use App\Support\DriverAssignableVehicles;
 use App\Support\FinancialDataLock;
 use App\Support\Messages;
 use App\Support\TripCostAccess;
@@ -46,6 +48,7 @@ class TripCostController extends Controller
                 'trip.dispatchRequest.requester:id,name',
                 'trip.transportProvider:id,name,type',
                 'trip.vehicle:id,license_plate',
+                'vehicle:id,license_plate,type,seat_count',
                 'creator:id,name,email',
                 'confirmer:id,name,email',
             ])
@@ -184,6 +187,8 @@ class TripCostController extends Controller
         FinancialDataLock::assertTripNotPaid($trip);
         FinancialDataLock::assertTripAllowsPassengerAndCostEdits($trip);
 
+        $this->resolveVehicleForCostSubmission($user, $data, $trip);
+
         $cost = TripCost::create([
             ...$data,
             'trip_id' => $trip->id,
@@ -222,6 +227,8 @@ class TripCostController extends Controller
 
         unset($data['trip_id']);
 
+        $this->resolveVehicleForCostSubmission($user, $data, $trip);
+
         $cost = TripCost::create([
             ...$data,
             'trip_id' => $trip?->id,
@@ -258,6 +265,7 @@ class TripCostController extends Controller
             'trip:id,status,depart_at,driver_id,transport_provider_id,vehicle_id,dispatch_request_id',
             'trip.vehicle:id,license_plate,type',
             'trip.driver:id,full_name,phone',
+            'vehicle:id,license_plate,type,seat_count',
             'trip.transportProvider:id,name,type',
             'trip.dispatchRequest:id,origin,destination,status,arrive_by,trip_type',
         ]);
@@ -456,5 +464,27 @@ class TripCostController extends Controller
         );
 
         return $this->ok($tripCost);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function resolveVehicleForCostSubmission(User $user, array &$data, ?Trip $trip): void
+    {
+        if ($trip !== null && empty($data['vehicle_id']) && $trip->vehicle_id) {
+            $data['vehicle_id'] = (int) $trip->vehicle_id;
+        }
+
+        $vehicleId = isset($data['vehicle_id']) ? (int) $data['vehicle_id'] : 0;
+
+        if ($trip === null && $vehicleId <= 0) {
+            abort(422, 'Vui lòng chọn xe để gán chi phí.');
+        }
+
+        if ($vehicleId > 0) {
+            abort_unless(DriverAssignableVehicles::userCanAssign($user, $vehicleId), 403, 'Bạn không được gán chi phí cho xe này.');
+        } else {
+            unset($data['vehicle_id']);
+        }
     }
 }

@@ -15,6 +15,12 @@ export async function getDriverSummary() {
   return data.data
 }
 
+/** Danh sách xe tài xế được gán khi ghi chi phí (GET /api/driver/cost-vehicles). */
+export async function listDriverCostVehicles() {
+  const { data } = await http.get('/driver/cost-vehicles')
+  return data.data
+}
+
 /**
  * Một trang lịch sử chuyến tài xế (GET /api/driver/trips).
  * @param {Record<string, unknown>} params date_from, date_to, status, page, per_page

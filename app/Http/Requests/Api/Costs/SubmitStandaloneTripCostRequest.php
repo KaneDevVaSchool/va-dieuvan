@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Api\Costs;
 
+use Illuminate\Validation\Rule;
+
 class SubmitStandaloneTripCostRequest extends SubmitTripCostRequest
 {
     public function authorize(): bool
@@ -17,6 +19,13 @@ class SubmitStandaloneTripCostRequest extends SubmitTripCostRequest
     {
         return array_merge(parent::rules(), [
             'trip_id' => ['nullable', 'integer', 'min:1'],
+            'vehicle_id' => [
+                Rule::requiredIf(fn () => ! $this->filled('trip_id')),
+                'nullable',
+                'integer',
+                'min:1',
+                'exists:vehicles,id',
+            ],
         ]);
     }
 }

@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Api\Driver;
 use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Driver\DriverTripHistoryRequest;
+use App\Models\DispatchRequest;
 use App\Models\Driver;
 use App\Models\Trip;
-use App\Models\DispatchRequest;
 use App\Services\Dispatching\TripScheduleLegService;
 use App\Services\DispatchRequests\DispatchRequestMailPresenter;
 use App\Support\DispatchWizardPassengerCount;
@@ -48,6 +48,7 @@ class DriverTripController extends Controller
                 'dispatchRequest.requester:id,name',
                 'tripPassengers',
                 'record:id,trip_id,distance_km',
+                'vehicle:id,license_plate,type,seat_count',
             ]);
 
         $q->where('trips.depart_at', '>=', Carbon::parse($data['date_from'])->startOfDay())
@@ -170,6 +171,15 @@ class DriverTripController extends Controller
         return [
             'id' => $trip->id,
             'driver_id' => $trip->driver_id,
+            'vehicle_id' => $trip->vehicle_id,
+            'vehicle' => $trip->relationLoaded('vehicle') && $trip->vehicle
+                ? [
+                    'id' => $trip->vehicle->id,
+                    'license_plate' => $trip->vehicle->license_plate,
+                    'type' => $trip->vehicle->type,
+                    'seat_count' => (int) ($trip->vehicle->seat_count ?? 0),
+                ]
+                : null,
             'request_code' => $requestCode,
             'trip_number' => $requestCode ?? ('#'.$trip->id),
             'type' => $this->tripTypeCode($dr?->trip_type),

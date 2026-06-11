@@ -7,6 +7,7 @@ use App\Models\Driver;
 use App\Models\Trip;
 use App\Models\TripCost;
 use App\Models\User;
+use App\Models\Vehicle;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -24,12 +25,29 @@ class StandaloneTripCostTest extends TestCase
         $driver = User::factory()->create(['is_active' => true]);
         $driver->assignRole('driver');
 
+        $driverRow = Driver::query()->create([
+            'user_id' => $driver->id,
+            'full_name' => 'TX Standalone',
+            'phone' => '0900111222',
+            'employment_status' => 'active',
+            'availability_status' => 'available',
+        ]);
+
+        $vehicle = Vehicle::query()->create([
+            'license_plate' => '51A-99999',
+            'type' => 'Xe 16 chỗ',
+            'seat_count' => 16,
+            'status' => 'ready',
+            'default_driver_id' => $driverRow->id,
+        ]);
+
         $this->actingAs($driver);
 
         $create = $this->postJson('/api/trip-costs', [
             'type' => 'other',
             'amount' => 75000,
             'description' => 'Rửa xe định kỳ',
+            'vehicle_id' => $vehicle->id,
         ], ['Idempotency-Key' => 'standalone-cost-1']);
 
         $create->assertCreated();
@@ -40,6 +58,7 @@ class StandaloneTripCostTest extends TestCase
         $this->assertDatabaseHas('trip_costs', [
             'id' => $costId,
             'trip_id' => null,
+            'vehicle_id' => $vehicle->id,
             'created_by' => $driver->id,
         ]);
 
@@ -116,16 +135,26 @@ class StandaloneTripCostTest extends TestCase
             'dispatch_request_id' => $req->id,
             'dispatcher_id' => $driver->id,
             'driver_id' => $driverRow->id,
+            'vehicle_id' => null,
             'status' => 'completed',
             'depart_at' => $req->depart_at,
             'lock_version' => 0,
             'payment_status' => 'unpaid',
         ]);
 
+        $vehicle = Vehicle::query()->create([
+            'license_plate' => '51A-TRIP01',
+            'type' => 'Xe 7 chỗ',
+            'seat_count' => 7,
+            'status' => 'ready',
+            'default_driver_id' => $driverRow->id,
+        ]);
+
         $this->actingAs($driver);
 
         $create = $this->postJson('/api/trip-costs', [
             'trip_id' => $trip->id,
+            'vehicle_id' => $vehicle->id,
             'type' => 'toll',
             'amount' => 45000,
             'description' => 'Phí cầu bổ sung',
