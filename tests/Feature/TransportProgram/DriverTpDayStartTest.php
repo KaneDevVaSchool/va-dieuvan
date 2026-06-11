@@ -106,6 +106,11 @@ class DriverTpDayStartTest extends TestCase
 
         $this->postJson("/api/driver/tp-days/{$day->id}/start", ['shift' => 'afternoon'])
             ->assertStatus(422);
+
+        $detail = $this->getJson("/api/driver/tp-days/{$day->id}?shift=afternoon")
+            ->assertOk()
+            ->json('data');
+        $this->assertSame('morning', $detail['blocking_in_progress_shift']);
     }
 
     private function makeDriver(string $name): Driver

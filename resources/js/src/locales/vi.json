@@ -148,7 +148,9 @@
         "note_placeholder": "Ví dụ: hư quậy, cần nhắc phụ huynh…",
         "note_save": "Lưu",
         "note_cancel": "Huỷ",
-        "note_saved": "Đã lưu ghi chú."
+        "note_saved": "Đã lưu ghi chú.",
+        "blocking_shift_message": "Cần hoàn thành ca {shift} trước khi bắt đầu ca này.",
+        "blocking_shift_open": "Mở ca {shift}"
     },
     "driver_home": {
         "hello": "Xin chào,",

@@ -19,7 +19,7 @@
         "prepare": "husky"
     },
     "lint-staged": {
-        "*.php": ["php", "vendor/bin/pint"]
+        "*.php": "php vendor/bin/pint"
     },
     "devDependencies": {
         "@playwright/test": "^1.49.0",

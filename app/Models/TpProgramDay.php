@@ -11,7 +11,9 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class TpProgramDay extends Model
 {
     public const DAY_OPERATING = 'operating';
+
     public const DAY_CANCELLED = 'cancelled';
+
     public const DAY_MAKEUP = 'makeup';
 
     protected $fillable = [
@@ -124,7 +126,8 @@ class TpProgramDay extends Model
         return $this->executions()->where('shift', $key)->first();
     }
 
-    public function hasInProgressExecutionOtherThan(?string $shift): bool
+    /** Ca khác (cùng ngày) đang chạy — phải hoàn thành trước khi bắt đầu ca mới. */
+    public function inProgressShiftBlockingStart(?string $shift): ?string
     {
         $key = self::normalizeExecutionShift($shift);
         $query = $this->executions()->where('status', TpTripExecution::STATUS_IN_PROGRESS);
@@ -132,7 +135,14 @@ class TpProgramDay extends Model
             $query->where('shift', '!=', $key);
         }
 
-        return $query->exists();
+        $blocking = $query->value('shift');
+
+        return is_string($blocking) ? $blocking : null;
+    }
+
+    public function hasInProgressExecutionOtherThan(?string $shift): bool
+    {
+        return $this->inProgressShiftBlockingStart($shift) !== null;
     }
 
     public function shiftExecutionStarted(?string $shift): bool

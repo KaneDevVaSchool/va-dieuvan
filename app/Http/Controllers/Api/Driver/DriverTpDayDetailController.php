@@ -33,6 +33,7 @@ class DriverTpDayDetailController extends Controller
             : null;
         $payload['execution_status'] = $slotExecution?->status;
         $payload['shift'] = $shift;
+        $payload['blocking_in_progress_shift'] = $tpProgramDay->inProgressShiftBlockingStart($shift);
 
         return $this->ok($payload);
     }

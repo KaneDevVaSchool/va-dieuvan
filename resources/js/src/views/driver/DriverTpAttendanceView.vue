@@ -129,13 +129,32 @@
             <button type="button" class="text-sm text-emerald-200/60 underline disabled:opacity-50" :disabled="busy" @click="unconfirm">Bỏ</button>
           </div>
           <button
+            v-if="!blockingInProgressShift"
             type="button"
             class="w-full rounded-2xl bg-driver-accent py-4 text-center text-lg font-bold text-driver-bg transition active:scale-[0.99] disabled:opacity-50"
             :disabled="busy"
+            data-testid="driver-tp-start-trip"
             @click="start"
           >
             Bắt đầu chuyến
           </button>
+          <div
+            v-else
+            class="space-y-3 rounded-2xl border border-amber-400/30 bg-amber-500/10 px-4 py-4"
+            data-testid="driver-tp-blocking-shift-banner"
+          >
+            <p class="text-base text-amber-100/90">
+              {{ t('driver_tp_attendance.blocking_shift_message', { shift: blockingShiftLabel }) }}
+            </p>
+            <button
+              type="button"
+              class="w-full rounded-2xl bg-amber-500/20 py-3.5 text-center text-base font-bold text-amber-100 ring-1 ring-amber-400/30 active:scale-[0.99]"
+              data-testid="driver-tp-open-blocking-shift"
+              @click="openBlockingShift"
+            >
+              {{ t('driver_tp_attendance.blocking_shift_open', { shift: blockingShiftLabel }) }}
+            </button>
+          </div>
         </div>
 
         <!-- Đang chạy: danh sách học sinh -->
@@ -318,7 +337,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import {
@@ -362,6 +381,26 @@ const slotConfirmedAt = computed(() => {
   if (shift.value === 'afternoon') return day.value.afternoon_confirmed_at ?? day.value.confirmed_at
   return day.value.confirmed_at
 })
+
+const blockingInProgressShift = computed(() => {
+  const s = day.value?.blocking_in_progress_shift
+  return s === 'morning' || s === 'afternoon' ? s : null
+})
+
+const blockingShiftLabel = computed(() => {
+  if (blockingInProgressShift.value === 'morning') return t('driver_home.shift_morning')
+  if (blockingInProgressShift.value === 'afternoon') return t('driver_home.shift_afternoon')
+  return ''
+})
+
+function openBlockingShift() {
+  if (!blockingInProgressShift.value) return
+  router.push({
+    name: 'driverTpAttendance',
+    params: { dayId: route.params.dayId },
+    query: { shift: blockingInProgressShift.value, from: route.query.from ?? 'list' },
+  })
+}
 
 function setOnline() { online.value = navigator.onLine }
 
@@ -578,6 +617,12 @@ onMounted(() => {
   window.addEventListener('online', setOnline)
   window.addEventListener('offline', setOnline)
 })
+watch(
+  () => [route.params.dayId, route.query.shift],
+  () => {
+    void load()
+  },
+)
 onUnmounted(() => {
   window.removeEventListener('online', setOnline)
   window.removeEventListener('offline', setOnline)
