@@ -1,6 +1,6 @@
 <template>
   <div
-    class="dispatch-wizard space-y-6 text-slate-900"
+    class="dispatch-wizard portal-create mx-auto max-w-3xl space-y-5 px-4 py-5 text-slate-900 supports-[padding:max(0px)]:pl-[max(1rem,env(safe-area-inset-left))] supports-[padding:max(0px)]:pr-[max(1rem,env(safe-area-inset-right))] sm:px-6 sm:py-6 lg:max-w-4xl lg:py-7"
     :class="step === 3 && !created ? 'pb-28 sm:pb-24' : 'pb-10'"
     :aria-label="
       form.is_urgent && !loading ? t('dispatch_wizard.create.form_priority_frame_aria') : undefined
@@ -29,50 +29,78 @@
         <div class="flex flex-wrap items-center justify-end gap-2">
           <button
             type="button"
-            class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+            class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm outline-none transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:outline-none"
             @click="onCancel"
           >
             {{ t('dispatch_wizard.create.cancel') }}
           </button>
-          <div class="flex flex-wrap items-center gap-2">
+
+          <!-- Draft dropdown -->
+          <div ref="draftMenuEl" class="relative">
             <button
               type="button"
-              class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50"
-              @click="saveDraft"
+              class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm outline-none transition hover:bg-slate-50 focus:outline-none focus-visible:outline-none"
+              :class="{ 'border-slate-300 bg-slate-50': draftMenuOpen }"
+              @click.stop="draftMenuOpen = !draftMenuOpen"
             >
               <DocumentArrowDownIcon class="h-4 w-4 text-slate-500" />
-              {{ t('dispatch_wizard.create.save_draft') }}
+              {{ t('dispatch_wizard.create.draft_menu_label') }}
+              <ChevronDownIcon
+                class="h-3.5 w-3.5 text-slate-400 transition-transform duration-150"
+                :class="{ 'rotate-180': draftMenuOpen }"
+              />
             </button>
+
             <span
               v-if="draftSaveFlash"
               role="status"
-              class="text-xs font-semibold text-emerald-700"
+              class="absolute -bottom-5 left-0 whitespace-nowrap text-xs font-semibold text-emerald-700"
             >
               {{ t('dispatch_wizard.create.draft_saved_flash') }}
             </span>
+
+            <div
+              v-show="draftMenuOpen"
+              class="absolute right-0 top-full z-50 mt-1.5 w-52 rounded-xl border border-slate-200 bg-white py-1 shadow-lg ring-1 ring-black/5"
+              role="menu"
+            >
+              <button
+                type="button"
+                role="menuitem"
+                class="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-slate-700 transition hover:bg-slate-50"
+                @click="draftMenuAction(saveDraft)"
+              >
+                <DocumentArrowDownIcon class="h-4 w-4 shrink-0 text-slate-400" />
+                {{ t('dispatch_wizard.create.save_draft') }}
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                class="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-slate-700 transition hover:bg-slate-50"
+                @click="draftMenuAction(openDraftsModal)"
+              >
+                <ClipboardDocumentListIcon class="h-4 w-4 shrink-0 text-slate-400" />
+                {{ t('dispatch_wizard.create.drafts_title') }}
+              </button>
+              <template v-if="activeDraftId">
+                <div class="my-1 border-t border-slate-100" />
+                <button
+                  type="button"
+                  role="menuitem"
+                  class="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-rose-600 transition hover:bg-rose-50"
+                  @click="draftMenuAction(openClearDraftModal)"
+                >
+                  <TrashIcon class="h-4 w-4 shrink-0 text-rose-400" />
+                  {{ t('dispatch_wizard.create.clear_draft') }}
+                </button>
+              </template>
+            </div>
           </div>
-          <button
-            type="button"
-            class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50"
-            :title="t('dispatch_wizard.create.drafts_tooltip')"
-            @click="openDraftsModal"
-          >
-            <ClipboardDocumentListIcon class="h-4 w-4 text-slate-500" />
-            {{ t('dispatch_wizard.create.drafts_title') }}
-          </button>
-          <button
-            v-if="activeDraftId"
-            type="button"
-            class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-800"
-            :title="t('dispatch_wizard.create.clear_draft_tooltip')"
-            @click="openClearDraftModal"
-          >
-            {{ t('dispatch_wizard.create.clear_draft') }}
-          </button>
+
           <button
             v-if="!(step === 3 && !created)"
             type="button"
-            class="inline-flex items-center gap-2 rounded-lg bg-va-800 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-va-900 disabled:cursor-not-allowed disabled:opacity-50"
+            class="inline-flex items-center gap-2 rounded-lg bg-va-800 px-4 py-2 text-sm font-semibold text-white shadow-sm outline-none transition hover:bg-va-900 focus:outline-none focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             :disabled="headerPrimaryDisabled"
             @click="primaryAction"
           >
@@ -85,327 +113,297 @@
       </div>
     </header>
 
-    <!-- Stepper — timeline -->
-    <nav
-      class="rounded-xl border border-slate-200 bg-white p-2 shadow-sm sm:p-3"
-      :aria-label="t('dispatch_wizard.create.steps_nav_aria')"
-    >
-      <ol
-        class="flex snap-x snap-mandatory items-stretch gap-0 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-0 [&::-webkit-scrollbar]:hidden"
-      >
-        <template v-for="(s, i) in steps" :key="s.id">
-          <li class="flex min-w-[44%] shrink-0 snap-start flex-col sm:min-w-0 sm:flex-1">
-            <div class="flex items-center">
-              <button
-                type="button"
-                class="group flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left antialiased transition sm:flex-col sm:items-center sm:gap-2 sm:px-2 sm:py-2"
-                :class="
-                  i > maxReachedStep
-                    ? 'cursor-not-allowed opacity-45'
-                    : step === i
-                      ? 'border border-va-800/25 bg-slate-50 text-slate-900 shadow-sm'
-                      : i < step
-                        ? 'border border-transparent text-slate-800 hover:bg-emerald-50'
-                        : 'border border-transparent text-slate-500 hover:bg-slate-50'
-                "
-                :disabled="i > maxReachedStep"
-                :aria-current="step === i ? 'step' : undefined"
-                @click="goStep(i)"
-              >
-                <span
-                  class="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold shadow-sm transition sm:h-8 sm:w-8 sm:text-[11px]"
-                  :class="
-                    step === i
-                      ? 'bg-va-800 text-white ring-1 ring-va-900/20'
-                      : i < step
-                        ? 'bg-emerald-500 text-white'
-                        : i <= maxReachedStep
-                          ? 'bg-slate-200 text-slate-600 group-hover:bg-slate-300'
-                          : 'bg-slate-100 text-slate-400'
-                  "
-                >
-                  <CheckIcon v-if="i < step" class="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
-                  <span v-else>{{ i + 1 }}</span>
-                </span>
-                <span
-                  class="min-w-0 flex-1 text-[11px] font-semibold leading-snug sm:text-center sm:text-xs sm:leading-snug"
-                  :class="step === i ? 'text-slate-900' : i < step ? 'text-slate-800' : 'text-slate-500'"
-                >
-                  {{ s.title }}
-                </span>
-              </button>
-              <div
-                v-if="i < steps.length - 1"
-                class="mx-0.5 hidden h-0.5 w-5 shrink-0 rounded-full bg-slate-200 sm:block md:w-8 lg:w-11"
-                aria-hidden="true"
-              />
-            </div>
-          </li>
-        </template>
-      </ol>
-    </nav>
+    <PortalStepper
+      :steps="stepperSteps"
+      :current="step"
+      :steps-nav-label="t('dispatch_wizard.create.steps_nav_aria')"
+      interactive
+      :max-reached-step="maxReachedStep"
+      @select="goStepFromStepper"
+    />
 
-    <div class="mx-auto max-w-6xl">
+    <div>
       <!-- Main card -->
-      <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8 lg:p-10">
+      <section class="dw-portal-surface">
         <!-- Step 1 -->
         <div v-show="step === 0">
-          <h2 class="text-lg font-semibold text-slate-900">{{ t('dispatch_wizard.create.step1_title') }}</h2>
-          <p class="mt-1 text-sm text-slate-600">{{ t('dispatch_wizard.create.step1_hint') }}</p>
-          <div class="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <button
-              v-for="opt in tripTypeOptions"
-              :key="opt.value"
-              type="button"
-              class="group relative flex flex-col items-center rounded-xl border-2 p-4 text-center transition"
-              :class="
-                form.trip_type === opt.value
-                  ? opt.selectedClass
-                  : 'border-slate-200 bg-slate-50 hover:border-slate-300'
-              "
-              @click="form.trip_type = opt.value"
-            >
-              <component :is="opt.icon" class="mb-3 h-10 w-10 opacity-90" :class="opt.iconClass" />
-              <span class="font-semibold text-slate-900">{{ opt.label }}</span>
-              <span class="mt-1 text-xs leading-snug text-slate-600">{{ opt.hint }}</span>
-              <span
-                v-if="opt.badge"
-                class="mt-2 rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-orange-800"
-              >
-                {{ opt.badge }}
-              </span>
-            </button>
-          </div>
+          <PortalTripTypeGrid
+            :trip-types="TRIP_TYPES"
+            :trip-type="form.trip_type"
+            :hint="t('dispatch_wizard.create.step1_title')"
+            :double-tap-hint="t('portal.double_tap_hint')"
+            @select="onTripTypeClick"
+          />
         </div>
 
         <!-- Step 2 -->
-        <div v-show="step === 1" class="space-y-5 sm:space-y-6">
+        <div v-show="step === 1" class="dw-portal-step2">
           <p
             v-if="replaceDraftRequestId"
-            class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-950"
+            class="rounded-xl border border-amber-200/90 bg-amber-50/90 px-3 py-2 text-xs font-medium text-amber-950"
           >
             {{ t('dispatch_wizard.create.replace_banner') }}
           </p>
-          <div>
-            <h2 class="text-lg font-semibold text-slate-900">{{ t('dispatch_wizard.create.step2_title') }}</h2>
-            <p class="mt-1 text-sm leading-relaxed text-slate-600">
-              {{ t('dispatch_wizard.create.step2_lead') }}
-            </p>
+          <div class="dw-portal-step-head">
+            <h2>{{ t('dispatch_wizard.create.step2_title') }}</h2>
+            <p class="dw-portal-step-lead">{{ t('dispatch_wizard.create.step2_lead') }}</p>
           </div>
 
-          <!-- Người đề nghị + Thời gian: cạnh nhau desktop, xếp dọc mobile -->
-          <div class="grid gap-5 lg:grid-cols-2 lg:items-start lg:gap-6">
-            <div class="dw-fieldset">
-              <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_requester') }}</h3>
-              <div class="relative">
-                <label class="dw-label">
-                  <span>{{ t('dispatch_wizard.create.search_by_name') }} <span class="dw-req" aria-hidden="true">*</span></span>
-                  <span
-                    class="inline-flex cursor-help text-slate-400 hover:text-slate-600"
-                    :title="t('dispatch_wizard.create.search_name_hint')"
-                  >
-                    <InformationCircleIcon class="h-4 w-4" aria-hidden="true" />
-                  </span>
-                </label>
-                <input
-                  v-model="requesterSearchQ"
-                  type="search"
-                  autocomplete="off"
-                  role="combobox"
-                  :aria-expanded="requesterDropdownOpen && requesterSearchQ.trim().length >= 2"
-                  aria-controls="dw-requester-search-list"
-                  :placeholder="t('dispatch_wizard.create.search_ph')"
-                  class="dw-input"
-                  @input="scheduleRequesterSearch"
-                  @focus="onRequesterSearchFocus"
-                  @blur="onRequesterSearchBlur"
-                />
-                <div
-                  v-if="requesterSearchLoading"
-                  class="absolute right-3 top-[2.125rem] h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-va-800"
-                />
-                <ul
-                  v-if="requesterDropdownOpen && requesterSearchQ.trim().length >= 2"
-                  id="dw-requester-search-list"
-                  class="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg ring-1 ring-black/5"
-                  role="listbox"
+          <div
+            class="dw-portal-subtabs"
+            role="tablist"
+            :aria-label="t('dispatch_wizard.create.step2_sub_nav_aria')"
+          >
+            <button
+              v-for="(tab, idx) in step2SubTabs"
+              :key="tab.id"
+              type="button"
+              role="tab"
+              class="dw-portal-subtab"
+              :aria-selected="step2Sub === tab.id"
+              :aria-controls="`staff-step2-panel-${tab.id}`"
+              :tabindex="step2Sub === tab.id ? 0 : -1"
+              :disabled="idx > maxReachedStep2Sub"
+              @click="setStep2Sub(tab.id)"
+            >
+              <span class="dw-portal-subtab__num" aria-hidden="true">{{ idx + 1 }}</span>
+              <span class="dw-portal-subtab__label">{{ tab.label }}</span>
+            </button>
+          </div>
+
+          <!-- Panel: Người đề nghị -->
+          <div
+            v-show="step2Sub === 'requester'"
+            id="staff-step2-panel-requester"
+            role="tabpanel"
+            class="dw-portal-panel dw-form-stack"
+          >
+            <p class="dw-portal-panel-title">{{ t('dispatch_wizard.create.sec_requester') }}</p>
+
+            <div class="relative">
+              <label class="dw-label">
+                <span>{{ t('dispatch_wizard.create.search_by_name') }}</span>
+                <span
+                  class="inline-flex cursor-help text-slate-400 hover:text-slate-600"
+                  :title="t('dispatch_wizard.create.search_name_hint')"
                 >
-                  <li v-if="requesterSearchLoading" class="px-3 py-2.5 text-slate-500">{{ t('dispatch_wizard.create.searching') }}</li>
-                  <template v-else-if="requesterSearchResults.length">
-                    <li v-for="u in requesterSearchResults" :key="u.id">
-                      <button
-                        type="button"
-                        class="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition hover:bg-va-800/5"
-                        @mousedown.prevent="pickRequester(u)"
-                      >
-                        <span class="font-medium text-slate-900">{{ u.name }}</span>
-                        <span class="truncate text-xs text-slate-500">{{ u.email }}</span>
-                      </button>
-                    </li>
-                  </template>
-                  <li v-else class="px-3 py-2.5 text-slate-500">{{ t('dispatch_wizard.create.no_staff') }}</li>
-                </ul>
-                <p v-if="requesterSearchError" class="mt-2 text-xs font-medium text-rose-600">{{ requesterSearchError }}</p>
-              </div>
-              <div class="mt-4 grid gap-3 sm:grid-cols-2">
-                <label class="block min-w-0 sm:col-span-2">
-                  <span class="dw-label-text">{{ t('dispatch_wizard.create.full_name') }} <span class="dw-req" aria-hidden="true">*</span></span>
-                  <input v-model="form.requester_name" type="text" class="dw-input" :placeholder="t('dispatch_wizard.create.full_name_ph')" />
-                </label>
-                <label class="block min-w-0">
+                  <InformationCircleIcon class="h-4 w-4" aria-hidden="true" />
+                </span>
+              </label>
+              <input
+                v-model="requesterSearchQ"
+                type="search"
+                autocomplete="off"
+                role="combobox"
+                :aria-expanded="requesterDropdownOpen && requesterSearchQ.trim().length >= 2"
+                aria-controls="dw-requester-search-list"
+                :placeholder="t('dispatch_wizard.create.search_ph')"
+                class="dw-input"
+                @input="scheduleRequesterSearch"
+                @focus="onRequesterSearchFocus"
+                @blur="onRequesterSearchBlur"
+              />
+              <div
+                v-if="requesterSearchLoading"
+                class="absolute right-3 top-[2.625rem] h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-va-800"
+              />
+              <ul
+                v-if="requesterDropdownOpen && requesterSearchQ.trim().length >= 2"
+                id="dw-requester-search-list"
+                class="dw-combobox__menu"
+                role="listbox"
+              >
+                <li v-if="requesterSearchLoading" class="dw-combobox__empty">{{ t('dispatch_wizard.create.searching') }}</li>
+                <template v-else-if="requesterSearchResults.length">
+                  <li v-for="u in requesterSearchResults" :key="u.id">
+                    <button
+                      type="button"
+                      class="dw-combobox__option"
+                      @mousedown.prevent="pickRequester(u)"
+                    >
+                      <span class="font-medium text-slate-900">{{ u.name }}</span>
+                      <span class="truncate text-xs text-slate-500">{{ u.email }}</span>
+                    </button>
+                  </li>
+                </template>
+                <li v-else class="dw-combobox__empty">{{ t('dispatch_wizard.create.no_staff') }}</li>
+              </ul>
+              <p v-if="requesterSearchError" class="dw-field-error">{{ requesterSearchError }}</p>
+            </div>
+
+            <label class="block">
+              <span class="dw-label-text">{{ t('dispatch_wizard.create.full_name') }} <span class="dw-req" aria-hidden="true">*</span></span>
+              <input v-model="form.requester_name" type="text" class="dw-input mt-1" :placeholder="t('dispatch_wizard.create.full_name_ph')" />
+            </label>
+
+            <div class="dw-form-grid-2">
+              <div>
+                <label class="block">
                   <span class="dw-label-text">{{ t('dispatch_wizard.create.requester_email_label') }} <span class="dw-req" aria-hidden="true">*</span></span>
                   <input
                     v-model="form.requester_email"
                     type="email"
                     :placeholder="t('dispatch_wizard.create.requester_email_ph')"
-                    :class="['dw-input', step2RequesterEmailInvalid ? 'ring-1 ring-rose-300' : '']"
+                    :class="['dw-input mt-1', step2RequesterEmailInvalid ? 'dw-input--invalid' : '']"
                     @blur="onRequesterEmailBlur"
                   />
                 </label>
-                <label class="block min-w-0">
-                  <span class="dw-label-text">{{ t('dispatch_wizard.create.phone') }}</span>
-                  <input
-                    v-model="form.requester_phone"
-                    type="text"
-                    inputmode="numeric"
-                    autocomplete="tel"
-                    :placeholder="t('dispatch_wizard.create.phone_ph')"
-                    class="dw-input"
-                    maxlength="11"
-                    @input="onRequesterPhoneInput"
-                  />
-                </label>
-                <p
-                  v-if="step2RequesterEmailInvalid"
-                  class="text-xs text-rose-600 sm:col-span-2"
-                >
+                <p v-if="step2RequesterEmailInvalid" class="dw-field-error">
                   {{ t('dispatch_wizard.create.email_invalid') }}
                 </p>
-                <label class="block min-w-0 sm:col-span-2">
-                  <span class="dw-label-text">{{ t('dispatch_wizard.create.unit') }}</span>
-                  <input v-model="form.requester_unit" type="text" :placeholder="t('dispatch_wizard.create.unit_ph')" class="dw-input" />
-                </label>
               </div>
+              <label class="block">
+                <span class="dw-label-text">{{ t('dispatch_wizard.create.phone') }}</span>
+                <input
+                  v-model="form.requester_phone"
+                  type="text"
+                  inputmode="numeric"
+                  autocomplete="tel"
+                  :placeholder="t('dispatch_wizard.create.phone_ph')"
+                  class="dw-input mt-1"
+                  maxlength="11"
+                  @input="onRequesterPhoneInput"
+                />
+              </label>
             </div>
 
-            <div class="dw-fieldset">
-              <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_time') }}</h3>
-              <div class="grid gap-3 sm:grid-cols-2">
-                <label class="block min-w-0">
-                  <span class="dw-label-text" :title="t('dispatch_wizard.create.proposed_date_title')">
-                    {{ t('dispatch_wizard.create.proposed_date') }} <span class="dw-req" aria-hidden="true">*</span>
+            <label class="block">
+              <span class="dw-label-text">{{ t('dispatch_wizard.create.unit') }}</span>
+              <input v-model="form.requester_unit" type="text" :placeholder="t('dispatch_wizard.create.unit_ph')" class="dw-input mt-1" />
+            </label>
+          </div>
+
+          <!-- Panel: Thời gian -->
+          <div
+            v-show="step2Sub === 'time'"
+            id="staff-step2-panel-time"
+            role="tabpanel"
+            class="dw-portal-panel dw-form-stack"
+          >
+            <p class="dw-portal-panel-title">{{ t('dispatch_wizard.create.sec_time') }}</p>
+
+            <div class="dw-form-grid-2">
+              <label class="block">
+                <span class="dw-label-text" :title="t('dispatch_wizard.create.proposed_date_title')">
+                  {{ t('dispatch_wizard.create.proposed_date') }} <span class="dw-req" aria-hidden="true">*</span>
+                </span>
+                <input
+                  v-model="form.proposed_date"
+                  type="date"
+                  lang="vi"
+                  class="dw-input dw-date-input mt-1 min-h-[2.75rem]"
+                  @click="openDatePickerFromInput($event)"
+                />
+              </label>
+              <label class="block">
+                <span class="dw-label-text" :title="t('dispatch_wizard.create.date_needed_title')">
+                  {{ t('dispatch_wizard.create.date_needed') }} <span class="dw-req" aria-hidden="true">*</span>
+                </span>
+                <input
+                  v-model="requestedDateTime"
+                  type="datetime-local"
+                  lang="vi"
+                  :class="['dw-input mt-1 min-h-[2.75rem]', step2DateOrderInvalid ? 'dw-input--invalid' : '']"
+                />
+              </label>
+            </div>
+            <p v-if="step2DateOrderInvalid" class="dw-field-error">
+              {{ t('dispatch_wizard.create.date_order_error') }}
+            </p>
+
+            <div
+              class="dw-portal-card-muted"
+              :class="form.is_urgent ? 'dw-portal-card-muted--urgent' : ''"
+            >
+              <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-semibold text-slate-900">{{ t('dispatch_wizard.create.urgent') }}</span>
+                  <span
+                    class="inline-flex cursor-help text-slate-500 hover:text-slate-700"
+                    tabindex="0"
+                    role="tooltip"
+                    :title="urgentExplainTooltip"
+                    aria-label="⚠️"
+                  >
+                    <span aria-hidden="true">⚠️</span>
                   </span>
-                  <input
-                    v-model="form.proposed_date"
-                    type="date"
-                    lang="vi"
-                    class="dw-input dw-date-input mt-1 min-h-[2.75rem]"
-                    @click="openDatePickerFromInput($event)"
-                  />
-                </label>
-                <label class="block min-w-0">
-                  <span class="dw-label-text" :title="t('dispatch_wizard.create.date_needed_title')">
-                    {{ t('dispatch_wizard.create.date_needed') }} <span class="dw-req" aria-hidden="true">*</span>
+                  <span
+                    class="inline-flex cursor-help text-slate-400 hover:text-slate-600"
+                    :title="t('dispatch_wizard.create.urgent_title')"
+                  >
+                    <InformationCircleIcon class="h-4 w-4" aria-hidden="true" />
                   </span>
-                  <input
-                    v-model="requestedDateTime"
-                    type="datetime-local"
-                    lang="vi"
-                    :class="['dw-input mt-1 min-h-[2.75rem]', step2DateOrderInvalid ? 'ring-1 ring-rose-300' : '']"
-                  />
-                </label>
-              </div>
-              <p v-if="step2DateOrderInvalid" class="mt-2 text-xs font-medium text-rose-600">
-                {{ t('dispatch_wizard.create.date_order_error') }}
-              </p>
-              <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50/80 p-3 sm:p-4">
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-4">
-                  <div class="flex items-center justify-between gap-3 sm:min-w-[7.5rem] sm:flex-col sm:items-stretch sm:justify-start sm:pb-0.5">
-                    <div class="flex items-center gap-2">
-                      <span class="text-sm font-semibold text-slate-900">{{ t('dispatch_wizard.create.urgent') }}</span>
-                      <span
-                        class="inline-flex cursor-help text-slate-500 hover:text-slate-700"
-                        tabindex="0"
-                        role="tooltip"
-                        :title="urgentExplainTooltip"
-                        aria-label="⚠️"
-                      >
-                        <span aria-hidden="true">⚠️</span>
-                      </span>
-                      <span
-                        class="hidden cursor-help text-slate-400 hover:text-slate-600 sm:inline-flex"
-                        :title="t('dispatch_wizard.create.urgent_title')"
-                      >
-                        <InformationCircleIcon class="h-4 w-4" aria-hidden="true" />
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      role="switch"
-                      :aria-checked="form.is_urgent"
-                      :disabled="urgentAutoActive || loading || dispatchFormSettingsLoading"
-                      class="inline-flex h-8 w-14 shrink-0 cursor-pointer items-center rounded-full px-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-va-800/30 disabled:cursor-not-allowed disabled:opacity-60"
-                      :class="form.is_urgent ? 'justify-end bg-va-800' : 'justify-start bg-slate-300'"
-                      @click="toggleUrgentManual"
-                    >
-                      <span class="pointer-events-none h-7 w-7 rounded-full bg-white shadow-sm ring-1 ring-black/5" />
-                    </button>
-                  </div>
-                  <div class="min-w-0 flex-1">
-                    <label class="block">
-                      <span class="dw-label-text">{{ t('dispatch_wizard.create.reason') }} <span v-if="form.is_urgent" class="dw-req" aria-hidden="true">*</span></span>
-                      <textarea
-                        v-model="form.urgent_reason"
-                        rows="3"
-                        :placeholder="t('dispatch_wizard.create.reason_ph')"
-                        :disabled="!form.is_urgent"
-                        class="dw-input mt-1 min-h-[4.75rem] resize-y disabled:cursor-not-allowed disabled:opacity-45"
-                      />
-                    </label>
-                  </div>
                 </div>
-                <p v-if="urgentAutoActive" class="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-xs font-medium leading-relaxed text-rose-800 ring-1 ring-rose-100">
-                  {{
-                    t('dispatch_wizard.create.urgent_auto_banner', {
-                      hours: appliedUrgentThresholdHours,
-                    })
-                  }}
-                </p>
+                <button
+                  type="button"
+                  role="switch"
+                  :aria-checked="form.is_urgent"
+                  :disabled="urgentAutoActive || loading || dispatchFormSettingsLoading"
+                  class="inline-flex h-8 w-14 shrink-0 cursor-pointer items-center rounded-full px-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-va-700/30 disabled:cursor-not-allowed disabled:opacity-60"
+                  :class="form.is_urgent ? 'justify-end bg-va-800' : 'justify-start bg-slate-300'"
+                  @click="toggleUrgentManual"
+                >
+                  <span class="pointer-events-none h-7 w-7 rounded-full bg-white shadow-sm ring-1 ring-black/5" />
+                </button>
               </div>
+
+              <div v-show="form.is_urgent" class="mt-3">
+                <label class="block">
+                  <span class="dw-label-text">{{ t('dispatch_wizard.create.reason') }} <span class="dw-req" aria-hidden="true">*</span></span>
+                  <textarea
+                    v-model="form.urgent_reason"
+                    rows="3"
+                    :placeholder="t('dispatch_wizard.create.reason_ph')"
+                    class="dw-input mt-1 min-h-[4.75rem] resize-y"
+                  />
+                </label>
+              </div>
+
+              <p v-if="urgentAutoActive" class="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-xs font-medium leading-relaxed text-rose-800 ring-1 ring-rose-100">
+                {{
+                  t('dispatch_wizard.create.urgent_auto_banner', {
+                    hours: appliedUrgentThresholdHours,
+                  })
+                }}
+              </p>
             </div>
           </div>
 
-          <div class="dw-fieldset">
-            <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_purpose') }}</h3>
+          <!-- Panel: Mục đích -->
+          <div
+            v-show="step2Sub === 'purpose'"
+            id="staff-step2-panel-purpose"
+            role="tabpanel"
+            class="dw-portal-panel dw-form-stack"
+          >
+            <p class="dw-portal-panel-title">{{ t('dispatch_wizard.create.sec_purpose') }}</p>
+
             <div
               v-if="form.trip_type === 'point_to_point'"
-              class="mb-4 flex flex-wrap gap-2 sm:gap-3"
+              class="dw-portal-segment"
               role="radiogroup"
               :aria-label="t('dispatch_wizard.create.purpose_tab_aria')"
             >
-              <label
-                class="inline-flex min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-800 shadow-sm transition hover:border-va-800/25 has-[:checked]:border-sky-500 has-[:checked]:bg-sky-50 has-[:checked]:ring-1 has-[:checked]:ring-sky-200"
-              >
+              <label class="dw-portal-segment__opt">
                 <input
                   v-model="form.point_purpose_kind"
                   type="radio"
                   value="point_to_point"
-                  class="h-4 w-4 border-slate-300 text-va-800 focus:ring-va-800"
+                  class="h-4 w-4 shrink-0 border-slate-300 text-va-800 focus:ring-va-800"
                 />
                 <span>{{ t('dispatch_wizard.create.purpose_point') }}</span>
               </label>
-              <label
-                class="inline-flex min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-800 shadow-sm transition hover:border-va-800/25 has-[:checked]:border-sky-500 has-[:checked]:bg-sky-50 has-[:checked]:ring-1 has-[:checked]:ring-sky-200"
-              >
+              <label class="dw-portal-segment__opt">
                 <input
                   v-model="form.point_purpose_kind"
                   type="radio"
                   value="extracurricular"
-                  class="h-4 w-4 border-slate-300 text-va-800 focus:ring-va-800"
+                  class="h-4 w-4 shrink-0 border-slate-300 text-va-800 focus:ring-va-800"
                 />
                 <span>{{ t('dispatch_wizard.create.purpose_extra') }}</span>
               </label>
             </div>
+
             <RecurringConfigSection
               :trip-type="form.trip_type"
               :point-purpose-kind="form.point_purpose_kind"
@@ -423,18 +421,20 @@
               @toggle-weekday="toggleE1Weekday"
               @go-schedule-step="goStep(2)"
             />
+
             <label class="block">
               <span class="dw-label-text">{{ t('dispatch_wizard.create.purpose_label') }} <span class="dw-req" aria-hidden="true">*</span></span>
               <textarea
                 v-model="form.purpose"
-                rows="4"
-                class="dw-input min-h-[5.25rem] resize-y sm:min-h-[6rem]"
+                rows="3"
+                class="dw-input mt-1 min-h-[4.5rem] resize-y"
                 :placeholder="t('dispatch_wizard.create.purpose_ph')"
               />
             </label>
-            <div class="mt-4">
-              <span class="mb-2 flex flex-nowrap items-center gap-1.5">
-                <span class="text-xs font-medium text-slate-700">{{ t('dispatch_wizard.create.basis_label') }}</span>
+
+            <div>
+              <span class="mb-1.5 flex flex-nowrap items-center gap-1.5">
+                <span class="dw-label-text mb-0">{{ t('dispatch_wizard.create.basis_label') }}</span>
                 <span
                   class="inline-flex shrink-0 cursor-help text-slate-400 hover:text-slate-600"
                   :title="t('dispatch_wizard.create.basis_title')"
@@ -443,20 +443,16 @@
                 </span>
               </span>
               <div
-                class="mt-2 flex min-h-[7.5rem] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-4 py-6 transition sm:min-h-[8rem] sm:py-8"
-                :class="
-                  basisDragOver
-                    ? 'border-va-600 bg-va-800/5'
-                    : 'border-slate-200 bg-slate-50/80 hover:border-slate-300 hover:bg-slate-50'
-                "
+                class="dw-portal-dropzone"
+                :class="basisDragOver ? 'dw-portal-dropzone--active' : ''"
                 @dragover.prevent="basisDragOver = true"
                 @dragleave.prevent="basisDragOver = false"
                 @drop.prevent="onBasisDrop"
                 @click="basisFileInput?.click()"
               >
-                <CloudArrowUpIcon class="h-9 w-9 text-slate-400 sm:h-10 sm:w-10" aria-hidden="true" />
+                <CloudArrowUpIcon class="h-8 w-8 text-slate-400" aria-hidden="true" />
                 <p class="mt-2 text-center text-sm font-medium text-slate-800">{{ t('dispatch_wizard.create.basis_drop') }}</p>
-                <p class="mt-1 text-center text-xs text-slate-500">{{ t('dispatch_wizard.create.basis_types') }}</p>
+                <p class="mt-0.5 text-center text-xs text-slate-500">{{ t('dispatch_wizard.create.basis_types') }}</p>
                 <input
                   ref="basisFileInput"
                   type="file"
@@ -465,11 +461,8 @@
                   @change="onBasisFileChange"
                 />
               </div>
-              <p v-if="basisFileError" class="mt-2 text-xs font-medium text-rose-600">{{ basisFileError }}</p>
-              <div
-                v-if="basisFile"
-                class="mt-3 flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm"
-              >
+              <p v-if="basisFileError" class="dw-field-error">{{ basisFileError }}</p>
+              <div v-if="basisFile" class="dw-portal-file-row">
                 <PaperClipIcon class="h-5 w-5 shrink-0 text-va-800" aria-hidden="true" />
                 <div class="min-w-0 flex-1">
                   <div class="truncate font-medium text-slate-900">{{ basisFile.name }}</div>
@@ -484,32 +477,75 @@
                 </button>
               </div>
             </div>
+
+            <!-- Kênh tiếp nhận (chỉ dành cho nhân viên) -->
+            <div>
+              <label for="dw-source-channel" class="dw-label-text">{{ t('dispatch_wizard.create.channel_label') }}</label>
+              <select
+                id="dw-source-channel"
+                v-model="form.source_channel"
+                class="dw-input mt-1 bg-white"
+              >
+                <option value="portal">{{ t('dispatch_wizard.create.option_portal') }}</option>
+                <option value="zalo">{{ t('dispatch_wizard.create.option_zalo') }}</option>
+                <option value="paper">{{ t('dispatch_wizard.create.option_paper') }}</option>
+              </select>
+            </div>
           </div>
 
-          <div class="grid gap-5 lg:grid-cols-2 lg:items-start lg:gap-6">
-            <div class="dw-fieldset">
-              <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_targets') }}</h3>
-              <div class="max-h-52 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50/80 p-2 sm:max-h-48">
-                <label
-                  v-for="target in targetOptions"
-                  :key="target"
-                  class="flex min-h-[40px] cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm hover:bg-white sm:py-1.5"
+          <!-- Panel: Phối hợp -->
+          <div
+            v-show="step2Sub === 'coordination'"
+            id="staff-step2-panel-coordination"
+            role="tabpanel"
+            class="dw-portal-panel-stack"
+          >
+            <!-- Đối tượng phân bổ -->
+            <div class="dw-portal-panel dw-form-stack">
+              <p class="dw-portal-panel-title">{{ t('dispatch_wizard.create.sec_targets') }}</p>
+
+              <div v-if="form.targets.length" class="flex flex-wrap gap-1.5">
+                <span
+                  v-for="chip in form.targets"
+                  :key="chip"
+                  class="dw-portal-chip"
                 >
-                  <input v-model="form.targets" type="checkbox" :value="target" class="h-4 w-4 shrink-0 rounded border-slate-300 text-va-800" />
-                  <span class="text-slate-800">{{ target }}</span>
-                </label>
+                  {{ chip }}
+                </span>
               </div>
-              <p v-if="form.targets.length" class="mt-2 text-xs text-slate-500">{{ t('dispatch_wizard.create.targets_selected', { n: form.targets.length }) }}</p>
+
+              <div class="relative min-w-0">
+                <input
+                  type="search"
+                  readonly
+                  autocomplete="off"
+                  role="combobox"
+                  :aria-expanded="targetPickerModalOpen"
+                  aria-controls="dw-staff-target-picker-modal"
+                  :placeholder="t('dispatch_wizard.create.targets_search_ph')"
+                  class="dw-input cursor-pointer"
+                  data-testid="staff-targets-search"
+                  @focus="openTargetPickerModal"
+                  @click="openTargetPickerModal"
+                  @keydown.enter.prevent="openTargetPickerModal"
+                />
+              </div>
+
+              <p v-if="form.targets.length" class="dw-field-hint">
+                {{ t('dispatch_wizard.create.targets_selected', { n: form.targets.length }) }}
+              </p>
               <p
                 v-else-if="form.trip_type === 'point_to_point'"
-                class="mt-2 text-xs leading-relaxed text-amber-800/90"
+                class="dw-portal-callout-warn"
               >
                 {{ t('dispatch_wizard.create.targets_warn') }}
               </p>
             </div>
 
-            <div class="dw-fieldset">
-              <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_coordinator') }}</h3>
+            <!-- Người phối hợp -->
+            <div class="dw-portal-panel dw-form-stack">
+              <p class="dw-portal-panel-title">{{ t('dispatch_wizard.create.sec_coordinator') }}</p>
+
               <div class="relative">
                 <label class="dw-label">
                   <span>{{ t('dispatch_wizard.create.coord_search_label') }}</span>
@@ -535,20 +571,20 @@
                 />
                 <div
                   v-if="coordinatorSearchLoading"
-                  class="absolute right-3 top-[2.125rem] h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-va-800"
+                  class="absolute right-3 top-[2.625rem] h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-va-800"
                 />
                 <ul
                   v-if="coordinatorDropdownOpen && coordinatorSearchQ.trim().length >= 2"
                   id="dw-coordinator-search-list"
-                  class="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg ring-1 ring-black/5"
+                  class="dw-combobox__menu"
                   role="listbox"
                 >
-                  <li v-if="coordinatorSearchLoading" class="px-3 py-2.5 text-slate-500">{{ t('dispatch_wizard.create.searching') }}</li>
+                  <li v-if="coordinatorSearchLoading" class="dw-combobox__empty">{{ t('dispatch_wizard.create.searching') }}</li>
                   <template v-else-if="coordinatorSearchResults.length">
                     <li v-for="u in coordinatorSearchResults" :key="u.id">
                       <button
                         type="button"
-                        class="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition hover:bg-va-800/5"
+                        class="dw-combobox__option"
                         @mousedown.prevent="pickCoordinator(u)"
                       >
                         <span class="font-medium text-slate-900">{{ u.name }}</span>
@@ -556,31 +592,38 @@
                       </button>
                     </li>
                   </template>
-                  <li v-else class="px-3 py-2.5 text-slate-500">{{ t('dispatch_wizard.create.no_staff') }}</li>
+                  <li v-else class="dw-combobox__empty">{{ t('dispatch_wizard.create.no_staff') }}</li>
                 </ul>
-                <p v-if="coordinatorSearchError" class="mt-2 text-xs font-medium text-rose-600">{{ coordinatorSearchError }}</p>
+                <p v-if="coordinatorSearchError" class="dw-field-error">{{ coordinatorSearchError }}</p>
               </div>
-              <div class="mt-4 grid gap-3 sm:grid-cols-2">
-                <label class="block min-w-0 sm:col-span-2">
-                  <span class="dw-label-text">{{ t('dispatch_wizard.create.full_name') }}</span>
-                  <input
-                    v-model="form.coordinator_name"
-                    type="text"
-                    class="dw-input"
-                    :placeholder="t('dispatch_wizard.create.coord_name_ph')"
-                  />
-                </label>
-                <label class="block min-w-0">
-                  <span class="dw-label-text">{{ t('dispatch_wizard.create.coord_email_label') }}</span>
-                  <input
-                    v-model="form.coordinator_email"
-                    type="email"
-                    :class="['dw-input', step2CoordinatorEmailInvalid ? 'ring-1 ring-rose-300' : '']"
-                    :placeholder="t('dispatch_wizard.create.coord_email_ph')"
-                    @blur="onCoordinatorEmailBlur"
-                  />
-                </label>
-                <label class="block min-w-0">
+
+              <label class="block">
+                <span class="dw-label-text">{{ t('dispatch_wizard.create.full_name') }}</span>
+                <input
+                  v-model="form.coordinator_name"
+                  type="text"
+                  class="dw-input mt-1"
+                  :placeholder="t('dispatch_wizard.create.coord_name_ph')"
+                />
+              </label>
+
+              <div class="dw-form-grid-2">
+                <div>
+                  <label class="block">
+                    <span class="dw-label-text">{{ t('dispatch_wizard.create.coord_email_label') }}</span>
+                    <input
+                      v-model="form.coordinator_email"
+                      type="email"
+                      :class="['dw-input mt-1', step2CoordinatorEmailInvalid ? 'dw-input--invalid' : '']"
+                      :placeholder="t('dispatch_wizard.create.coord_email_ph')"
+                      @blur="onCoordinatorEmailBlur"
+                    />
+                  </label>
+                  <p v-if="step2CoordinatorEmailInvalid" class="dw-field-error">
+                    {{ t('dispatch_wizard.create.coord_email_invalid') }}
+                  </p>
+                </div>
+                <label class="block">
                   <span class="dw-label-text">{{ t('dispatch_wizard.create.coord_phone') }}</span>
                   <input
                     v-model="form.coordinator_phone"
@@ -588,72 +631,47 @@
                     inputmode="numeric"
                     autocomplete="tel"
                     :placeholder="t('dispatch_wizard.create.coord_phone_ph')"
-                    class="dw-input"
+                    class="dw-input mt-1"
                     maxlength="11"
                     @input="onCoordinatorPhoneInput"
                   />
                 </label>
-                <p v-if="step2CoordinatorEmailInvalid" class="text-xs text-rose-600 sm:col-span-2">
-                  {{ t('dispatch_wizard.create.coord_email_invalid') }}
-                </p>
               </div>
             </div>
           </div>
-
-          <div
-            class="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:py-3.5"
-          >
-            <div class="min-w-0">
-              <label for="dw-source-channel" class="text-xs font-semibold uppercase tracking-wide text-slate-600">{{ t('dispatch_wizard.create.channel_label') }}</label>
-              <p class="mt-0.5 text-xs text-slate-500 sm:hidden">{{ t('dispatch_wizard.create.channel_hint') }}</p>
-            </div>
-            <select
-              id="dw-source-channel"
-              v-model="form.source_channel"
-              class="dw-input max-w-full bg-white sm:max-w-xs lg:max-w-sm"
-            >
-              <option value="portal">{{ t('dispatch_wizard.create.option_portal') }}</option>
-              <option value="zalo">{{ t('dispatch_wizard.create.option_zalo') }}</option>
-              <option value="paper">{{ t('dispatch_wizard.create.option_paper') }}</option>
-            </select>
-          </div>
         </div>
 
-        <!-- Step 3 — lazy chunk + chỉ mount khi step === 2 -->
+        <!-- Step 3 — lazy chunk, chỉ mount khi step === 2 -->
         <DispatchWizardStep3 v-if="step === 2" />
 
         <!-- Step 4 -->
         <ConfirmSummary v-if="step === 3" />
 
         <!-- Nav buttons -->
-        <div
-          v-if="step !== 3"
-          class="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-6"
-        >
+        <div v-if="step !== 3" class="dw-portal-footer">
           <button
             type="button"
-            class="rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40"
+            class="dw-portal-btn-ghost"
             :disabled="step === 0"
-            @click="step--"
+            @click="portalPrevStep"
           >
             {{ t('dispatch_wizard.create.back') }}
           </button>
-          <div class="flex gap-2">
-            <button
-              v-if="step < 3"
-              type="button"
-              class="rounded-lg bg-va-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-va-900 disabled:opacity-40"
-              :disabled="!canGoNext"
-              @click="nextStep"
-            >
-              {{ t('dispatch_wizard.create.next') }}
-            </button>
-          </div>
+          <button
+            v-if="step < 3"
+            type="button"
+            class="dw-portal-btn-primary"
+            :disabled="!portalCanGoNext"
+            @click="portalNextStep"
+          >
+            {{ t('dispatch_wizard.create.next') }}
+          </button>
         </div>
       </section>
     </div>
   </div>
 
+  <!-- Modal: Xoá nháp -->
   <Teleport to="body">
     <Transition
       enter-active-class="transition duration-200 ease-out"
@@ -713,6 +731,7 @@
     </Transition>
   </Teleport>
 
+  <!-- Modal: Kết quả gửi -->
   <Teleport to="body">
     <Transition
       enter-active-class="transition duration-200 ease-out"
@@ -807,6 +826,7 @@
     </Transition>
   </Teleport>
 
+  <!-- Modal: Thư viện nháp -->
   <Teleport to="body">
     <Transition
       enter-active-class="transition duration-200 ease-out"
@@ -891,7 +911,7 @@
               </li>
             </ul>
           </div>
-          <div class="shrink-0 border-t border-slate-100 bg-slate-50/90 px-4 py-3 sm:flex sm:justify-end">
+          <div class="border-t border-slate-100 bg-slate-50/90 px-4 py-3 sm:flex sm:justify-end">
             <button
               type="button"
               class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 sm:w-auto"
@@ -904,27 +924,168 @@
       </div>
     </Transition>
   </Teleport>
+
+  <!-- Modal: Chọn đối tượng phân bổ -->
+  <Teleport to="body">
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="targetPickerModalOpen"
+        id="dw-staff-target-picker-modal"
+        class="fixed inset-0 z-[201] flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-[3px]"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="dw-staff-target-picker-title"
+        data-testid="staff-targets-picker-modal"
+        @click.self="closeTargetPickerModal"
+      >
+        <div
+          class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl shadow-slate-900/20 ring-1 ring-black/5"
+          @click.stop
+        >
+          <div class="shrink-0 border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-sky-50/30 px-5 pb-4 pt-5">
+            <h3 id="dw-staff-target-picker-title" class="text-base font-semibold leading-snug text-slate-900">
+              {{ t('dispatch_wizard.create.sec_targets') }}
+            </h3>
+            <p class="mt-1 text-xs leading-relaxed text-slate-600">
+              {{ t('dispatch_wizard.create.targets_hint') }}
+            </p>
+          </div>
+          <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4 sm:px-5">
+            <label class="sr-only" for="dw-staff-target-modal-filter">{{
+              t('dispatch_wizard.create.targets_search_ph')
+            }}</label>
+            <input
+              id="dw-staff-target-modal-filter"
+              ref="targetModalFilterEl"
+              v-model="targetModalFilterQ"
+              type="search"
+              autocomplete="off"
+              class="dw-input mb-4 w-full"
+              :placeholder="t('dispatch_wizard.create.targets_search_ph')"
+              data-testid="staff-targets-modal-filter"
+            />
+            <p
+              v-if="targetModalOptions.length === 0"
+              class="rounded-lg border border-dashed border-slate-200 bg-slate-50/80 px-4 py-6 text-center text-sm text-slate-600"
+            >
+              {{ t('dispatch_wizard.create.targets_no_match') }}
+            </p>
+            <div
+              v-else
+              class="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2"
+              role="group"
+              :aria-label="t('dispatch_wizard.create.sec_targets')"
+            >
+              <label
+                v-for="opt in targetModalOptions"
+                :key="opt"
+                class="flex cursor-pointer items-start gap-2.5 rounded-lg border border-transparent px-2 py-1.5 text-sm text-slate-800 transition hover:border-slate-200 hover:bg-slate-50"
+                :data-testid="`staff-target-option-${opt}`"
+              >
+                <input
+                  type="checkbox"
+                  class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
+                  :checked="form.targets.includes(opt)"
+                  @change="toggleTargetCheckbox(opt, $event.target.checked)"
+                />
+                <span class="leading-snug">{{ opt }}</span>
+              </label>
+            </div>
+            <div class="mt-4 border-t border-slate-100 pt-4">
+              <label class="mb-1.5 block text-xs font-medium text-slate-600" for="dw-staff-target-custom-input">
+                {{ t('dispatch_wizard.create.targets_add_custom') }}
+              </label>
+              <div class="flex gap-2">
+                <input
+                  id="dw-staff-target-custom-input"
+                  v-model="customTargetInput"
+                  type="text"
+                  class="dw-input min-w-0 flex-1"
+                  :placeholder="t('dispatch_wizard.create.targets_custom_ph')"
+                  maxlength="100"
+                  data-testid="staff-targets-custom-input"
+                  @keydown.enter.prevent="addCustomTarget"
+                />
+                <button
+                  type="button"
+                  class="shrink-0 rounded-xl bg-va-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-va-700 active:scale-95 disabled:opacity-50"
+                  :disabled="!customTargetInput.trim()"
+                  data-testid="staff-targets-custom-add"
+                  @click="addCustomTarget"
+                >
+                  {{ t('dispatch_wizard.create.targets_add_custom') }}
+                </button>
+              </div>
+              <div v-if="selectedCustomTargets.length" class="mt-3 flex flex-wrap gap-1.5">
+                <span
+                  v-for="chip in selectedCustomTargets"
+                  :key="chip"
+                  class="dw-portal-chip"
+                >
+                  {{ chip }}
+                  <button
+                    type="button"
+                    class="dw-portal-chip__remove"
+                    :data-testid="`staff-target-custom-remove-${chip}`"
+                    @click="removeTarget(chip)"
+                  >
+                    <XMarkIcon class="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="border-t border-slate-100 bg-slate-50/90 px-4 py-3 sm:flex sm:items-center sm:justify-between sm:gap-3">
+            <p v-if="form.targets.length" class="mb-2 text-xs text-slate-600 sm:mb-0">
+              {{ t('dispatch_wizard.create.targets_selected', { n: form.targets.length }) }}
+            </p>
+            <button
+              type="button"
+              class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 sm:ml-auto sm:w-auto"
+              data-testid="staff-targets-picker-close"
+              @click="closeTargetPickerModal"
+            >
+              {{ t('dispatch_wizard.create.library_close') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent, provide } from 'vue'
+import { computed, defineAsyncComponent, onMounted, onUnmounted, provide, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowRightIcon,
   CheckCircleIcon,
-  CheckIcon,
+  ChevronDownIcon,
   ClipboardDocumentListIcon,
   CloudArrowUpIcon,
   DocumentArrowDownIcon,
   ExclamationTriangleIcon,
   InformationCircleIcon,
   PaperClipIcon,
+  TrashIcon,
   XCircleIcon,
+  XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import { useDispatchRequestWizard } from '../../composables/useDispatchRequestWizard'
 import { DISPATCH_WIZARD_KEY } from './dispatch-wizard/injectionKeys'
 import ConfirmSummary from './dispatch-wizard/ConfirmSummary.vue'
 import RecurringConfigSection from '../../components/recurring/RecurringConfigSection.vue'
+import PortalStepper from '../../components/portal/PortalStepper.vue'
+import PortalTripTypeGrid from '../../components/portal/PortalTripTypeGrid.vue'
+
+const TRIP_TYPES = ['door_to_door', 'point_to_point', 'business', 'cargo']
 
 const { t } = useI18n()
 const wizard = useDispatchRequestWizard()
@@ -939,10 +1100,8 @@ const {
   step,
   maxReachedStep,
   loading,
-  error,
   created,
   replaceDraftRequestId,
-  hasDraftSnapshot,
   clearDraftModalOpen,
   activeDraftId,
   savedDraftsList,
@@ -965,14 +1124,14 @@ const {
   coordinatorSearchError,
   step2DateOrderInvalid,
   step2RequesterEmailInvalid,
+  requesterEmailFormatInvalid,
+  coordinatorEmailFormatInvalid,
   draftSaveFlash,
   draftSaveError,
   step2CoordinatorEmailInvalid,
   requestedDateTime,
-  tripTypeOptions,
   e1WeekdayOptions,
   toggleE1Weekday,
-  computedDepartAt,
   openDatePickerFromInput,
   onRequesterPhoneInput,
   onCoordinatorPhoneInput,
@@ -999,6 +1158,8 @@ const {
   appliedUrgentThresholdHours,
   canGoNext,
   goStep,
+  goStepFromStepper,
+  prevStep,
   nextStep,
   headerPrimaryLabel,
   headerPrimaryDisabled,
@@ -1027,6 +1188,191 @@ const urgentExplainTooltip = computed(() =>
   }),
 )
 
+const stepperSteps = computed(() => steps.value.map((s) => ({ key: s.id, label: s.title })))
+
+// --- Draft dropdown ---
+const draftMenuOpen = ref(false)
+const draftMenuEl = ref(null)
+
+function onDocClick(e) {
+  if (draftMenuEl.value && !draftMenuEl.value.contains(e.target)) draftMenuOpen.value = false
+}
+onMounted(() => document.addEventListener('click', onDocClick, true))
+onUnmounted(() => document.removeEventListener('click', onDocClick, true))
+
+function draftMenuAction(fn) {
+  draftMenuOpen.value = false
+  fn()
+}
+
+// --- Step 1: chọn loại chuyến (nhấn lại để tiếp tục) ---
+function onTripTypeClick(value) {
+  if (form.value.trip_type === value) {
+    nextStep()
+    return
+  }
+  form.value.trip_type = value
+}
+
+// --- Bước 2: tab con ---
+const STEP2_SUB_IDS = ['requester', 'time', 'purpose', 'coordination']
+
+const step2Sub = ref('requester')
+const maxReachedStep2Sub = ref(0)
+
+const step2SubTabs = computed(() =>
+  STEP2_SUB_IDS.map((id) => ({
+    id,
+    label: t(`dispatch_wizard.create.step2_sub_${id}`),
+  })),
+)
+
+const step2SubIndex = computed(() => STEP2_SUB_IDS.indexOf(step2Sub.value))
+
+function portalStep2SubComplete(subId) {
+  if (subId === 'requester') {
+    return (
+      !!form.value.requester_name?.trim() &&
+      !!form.value.requester_email?.trim() &&
+      !requesterEmailFormatInvalid.value
+    )
+  }
+  if (subId === 'time') {
+    return (
+      !!form.value.proposed_date &&
+      !!form.value.date_needed &&
+      !step2DateOrderInvalid.value &&
+      (!form.value.is_urgent || !!form.value.urgent_reason?.trim())
+    )
+  }
+  if (subId === 'purpose') {
+    return !!form.value.purpose?.trim()
+  }
+  return !coordinatorEmailFormatInvalid.value
+}
+
+const portalCanGoNext = computed(() => {
+  if (step.value !== 1) return canGoNext.value
+  if (step2SubIndex.value === STEP2_SUB_IDS.length - 1) return canGoNext.value
+  return portalStep2SubComplete(step2Sub.value)
+})
+
+function setStep2Sub(id) {
+  const idx = STEP2_SUB_IDS.indexOf(id)
+  if (idx === -1 || idx > maxReachedStep2Sub.value) return
+  step2Sub.value = id
+}
+
+function portalNextStep() {
+  if (step.value !== 1) {
+    nextStep()
+    return
+  }
+  if (!portalCanGoNext.value) return
+  const idx = step2SubIndex.value
+  if (idx < STEP2_SUB_IDS.length - 1) {
+    maxReachedStep2Sub.value = Math.max(maxReachedStep2Sub.value, idx + 1)
+    step2Sub.value = STEP2_SUB_IDS[idx + 1]
+    return
+  }
+  nextStep()
+}
+
+function portalPrevStep() {
+  if (step.value === 1 && step2SubIndex.value > 0) {
+    step2Sub.value = STEP2_SUB_IDS[step2SubIndex.value - 1]
+    return
+  }
+  prevStep()
+}
+
+watch(step, (v, oldV) => {
+  if (v === 1 && oldV === 0) {
+    step2Sub.value = 'requester'
+    maxReachedStep2Sub.value = 0
+  }
+})
+
+watch(
+  () => [
+    form.value.requester_name,
+    form.value.requester_email,
+    form.value.proposed_date,
+    form.value.date_needed,
+    form.value.purpose,
+    step2RequesterEmailInvalid.value,
+    step2DateOrderInvalid.value,
+  ],
+  () => {
+    if (step.value !== 1) return
+    let max = 0
+    if (portalStep2SubComplete('requester')) max = 1
+    if (max >= 1 && portalStep2SubComplete('time')) max = 2
+    if (max >= 2 && portalStep2SubComplete('purpose')) max = 3
+    maxReachedStep2Sub.value = Math.max(maxReachedStep2Sub.value, max)
+  },
+)
+
+// --- Modal chọn đối tượng phân bổ ---
+const targetPickerModalOpen = ref(false)
+const targetModalFilterQ = ref('')
+const targetModalFilterEl = ref(null)
+const customTargetInput = ref('')
+
+function normalizeTargetSearch(s) {
+  return String(s)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+}
+
+const targetModalOptions = computed(() => {
+  const q = normalizeTargetSearch(targetModalFilterQ.value)
+  if (!q) return targetOptions
+  return targetOptions.filter((opt) => normalizeTargetSearch(opt).includes(q))
+})
+
+const selectedCustomTargets = computed(() =>
+  form.value.targets.filter((name) => !targetOptions.includes(name)),
+)
+
+function openTargetPickerModal() {
+  targetPickerModalOpen.value = true
+  window.requestAnimationFrame(() => {
+    targetModalFilterEl.value?.focus?.()
+  })
+}
+
+function closeTargetPickerModal() {
+  targetPickerModalOpen.value = false
+  targetModalFilterQ.value = ''
+  customTargetInput.value = ''
+}
+
+function toggleTargetCheckbox(val, checked) {
+  if (!val) return
+  const list = form.value.targets
+  const idx = list.indexOf(val)
+  if (checked) {
+    if (idx === -1) list.push(val)
+  } else if (idx !== -1) {
+    list.splice(idx, 1)
+  }
+}
+
+function addCustomTarget() {
+  const val = customTargetInput.value.trim()
+  if (!val || form.value.targets.includes(val)) return
+  form.value.targets.push(val)
+  customTargetInput.value = ''
+}
+
+function removeTarget(val) {
+  const list = form.value.targets
+  const idx = list.indexOf(val)
+  if (idx !== -1) list.splice(idx, 1)
+}
 </script>
 
 <style src="./dispatch-wizard/dispatchWizard.styles.css"></style>
