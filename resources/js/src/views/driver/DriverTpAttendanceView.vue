@@ -139,67 +139,132 @@
         </div>
 
         <!-- Đang chạy: danh sách học sinh -->
-        <div v-if="execution && execution.status === 'in_progress'" class="space-y-2.5">
-          <div v-for="s in execution.student_logs" :key="s.student_id" class="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3.5">
-            <div class="flex items-center justify-between gap-3">
-              <div class="min-w-0">
-                <div class="truncate text-base font-semibold">{{ s.full_name }}</div>
-                <div class="mt-0.5 text-sm text-driver-muted">{{ s.code }}</div>
-                <p v-if="s.driver_notes" class="mt-1 line-clamp-2 text-xs text-amber-200/90">
-                  {{ s.driver_notes }}
-                </p>
+        <div v-if="execution && execution.status === 'in_progress'" class="space-y-2">
+          <div
+            v-for="s in execution.student_logs"
+            :key="s.student_id"
+            class="rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-3 sm:px-4"
+            :class="{ 'ring-1 ring-driver-accent/25': actingStudentId === s.student_id }"
+          >
+            <div class="flex items-start justify-between gap-2">
+              <div class="min-w-0 flex-1">
+                <div class="truncate text-[15px] font-semibold leading-snug sm:text-base">{{ s.full_name }}</div>
+                <div class="mt-0.5 text-xs text-driver-muted sm:text-sm">{{ s.code }}</div>
               </div>
-              <div class="flex shrink-0 flex-col items-end gap-1.5">
-                <span class="rounded-lg px-3 py-1 text-sm font-semibold" :class="logClass(s.final_status)">
-                  {{ logLabel(s.final_status) }}
-                </span>
-                <button
-                  type="button"
-                  class="rounded-lg px-2.5 py-1 text-xs font-semibold text-driver-muted ring-1 ring-white/10 transition active:scale-95"
-                  :class="s.driver_notes ? 'bg-amber-500/15 text-amber-200 ring-amber-400/25' : 'bg-white/[0.04] hover:text-driver-ink'"
-                  :aria-label="t('driver_tp_attendance.note_btn_aria', { name: s.full_name })"
-                  data-testid="driver-tp-student-note-open"
-                  @click="openNoteModal(s)"
-                >
-                  {{ s.driver_notes ? t('driver_tp_attendance.note_btn_edit') : t('driver_tp_attendance.note_btn') }}
-                </button>
-              </div>
+              <span
+                class="shrink-0 rounded-lg px-2.5 py-1 text-xs font-semibold sm:px-3 sm:text-sm"
+                :class="logClass(s.final_status)"
+              >
+                {{ logLabel(s.final_status) }}
+              </span>
             </div>
-            <div class="mt-3 flex gap-2">
+
+            <p
+              v-if="s.driver_notes && expandedNoteStudentId !== s.student_id"
+              class="mt-2 line-clamp-2 text-xs text-amber-200/90"
+            >
+              {{ s.driver_notes }}
+            </p>
+
+            <div class="mt-2.5 flex gap-1.5 sm:gap-2">
               <button
                 v-if="canBoardStudent(s.final_status)"
-                class="flex-1 rounded-xl bg-driver-accent/15 py-2.5 text-base font-semibold text-driver-accent active:scale-95"
+                type="button"
+                class="flex min-h-11 flex-1 items-center justify-center rounded-xl bg-driver-accent/15 text-sm font-semibold text-driver-accent active:scale-[0.98] disabled:opacity-50 sm:text-base"
+                :disabled="isStudentBusy(s.student_id)"
+                :data-testid="`driver-tp-board-${s.student_id}`"
                 @click="act('board', s)"
               >
                 Lên xe
               </button>
               <button
                 v-if="s.final_status === 'boarded'"
-                class="flex-1 rounded-xl bg-sky-500/15 py-2.5 text-base font-semibold text-sky-300 active:scale-95"
+                type="button"
+                class="flex min-h-11 flex-1 items-center justify-center rounded-xl bg-sky-500/15 text-sm font-semibold text-sky-300 active:scale-[0.98] disabled:opacity-50 sm:text-base"
+                :disabled="isStudentBusy(s.student_id)"
+                :data-testid="`driver-tp-alight-${s.student_id}`"
                 @click="act('alight', s)"
               >
                 Xuống xe
               </button>
               <button
                 v-if="s.final_status !== 'absent'"
-                class="rounded-xl bg-rose-500/15 px-4 py-2.5 text-base font-semibold text-rose-300 active:scale-95"
+                type="button"
+                class="flex min-h-11 shrink-0 items-center justify-center rounded-xl bg-rose-500/15 px-3 text-sm font-semibold text-rose-300 active:scale-[0.98] disabled:opacity-50 sm:px-4 sm:text-base"
+                :disabled="isStudentBusy(s.student_id)"
+                :data-testid="`driver-tp-absent-${s.student_id}`"
                 @click="act('absent', s)"
               >
                 Vắng
               </button>
               <button
                 v-else
-                class="rounded-xl bg-white/10 px-4 py-2.5 text-base font-semibold text-driver-ink/60 active:scale-95"
+                type="button"
+                class="flex min-h-11 shrink-0 items-center justify-center rounded-xl bg-white/10 px-3 text-sm font-semibold text-driver-ink/60 active:scale-[0.98] disabled:opacity-50 sm:px-4 sm:text-base"
+                :disabled="isStudentBusy(s.student_id)"
+                :data-testid="`driver-tp-undo-absent-${s.student_id}`"
                 @click="act('undo-absent', s)"
               >
                 Hủy vắng
               </button>
             </div>
+
+            <button
+              type="button"
+              class="mt-2 flex w-full min-h-9 items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold transition active:scale-[0.99]"
+              :class="
+                expandedNoteStudentId === s.student_id || s.driver_notes
+                  ? 'bg-amber-500/12 text-amber-200 ring-1 ring-amber-400/20'
+                  : 'text-driver-muted ring-1 ring-white/8'
+              "
+              :aria-label="t('driver_tp_attendance.note_btn_aria', { name: s.full_name })"
+              :aria-expanded="expandedNoteStudentId === s.student_id"
+              data-testid="driver-tp-student-note-toggle"
+              @click="toggleNotePanel(s)"
+            >
+              {{ s.driver_notes ? t('driver_tp_attendance.note_btn_edit') : t('driver_tp_attendance.note_btn') }}
+            </button>
+
+            <div
+              v-if="expandedNoteStudentId === s.student_id"
+              class="mt-2 space-y-2 border-t border-white/6 pt-2"
+              :data-testid="`driver-tp-note-panel-${s.student_id}`"
+            >
+              <textarea
+                v-model="noteDraft"
+                rows="2"
+                maxlength="500"
+                class="w-full resize-none rounded-xl border border-white/10 bg-driver-surface px-3 py-2 text-sm text-driver-ink placeholder:text-driver-muted/70 focus:border-driver-accent/50 focus:outline-none focus:ring-2 focus:ring-driver-accent/25 sm:text-base"
+                :placeholder="t('driver_tp_attendance.note_placeholder')"
+                data-testid="driver-tp-note-input"
+              />
+              <p class="text-right text-[11px] tabular-nums text-driver-muted">{{ noteDraft.length }}/500</p>
+              <div class="flex gap-2">
+                <button
+                  type="button"
+                  class="flex min-h-10 flex-1 items-center justify-center rounded-xl bg-white/10 text-sm font-semibold text-driver-ink active:scale-[0.99]"
+                  data-testid="driver-tp-note-cancel"
+                  @click="closeNotePanel"
+                >
+                  {{ t('driver_tp_attendance.note_cancel') }}
+                </button>
+                <button
+                  type="button"
+                  class="flex min-h-10 flex-1 items-center justify-center rounded-xl bg-driver-accent text-sm font-bold text-driver-bg disabled:opacity-50 active:scale-[0.99]"
+                  :disabled="noteSaving"
+                  data-testid="driver-tp-note-save"
+                  @click="saveNote(s)"
+                >
+                  {{ t('driver_tp_attendance.note_save') }}
+                </button>
+              </div>
+            </div>
           </div>
 
           <button
             type="button"
-            class="mt-2 w-full rounded-2xl bg-sky-500 py-4 text-center text-lg font-bold text-white transition active:scale-[0.99] disabled:opacity-50"
+            class="mb-[max(0.5rem,env(safe-area-inset-bottom))] mt-3 w-full rounded-2xl bg-sky-500 py-3.5 text-center text-base font-bold text-white transition active:scale-[0.99] disabled:opacity-50 sm:py-4 sm:text-lg"
+            data-testid="driver-tp-complete-trip"
             :disabled="busy"
             @click="complete"
           >
@@ -249,56 +314,6 @@
       </template>
     </div>
 
-    <Teleport to="body">
-      <div
-        v-if="noteModalOpen"
-        class="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 p-4 backdrop-blur-[2px] sm:items-center"
-        data-testid="driver-tp-note-modal"
-        @click.self="closeNoteModal"
-      >
-        <div
-          class="w-full max-w-md rounded-2xl border border-white/10 bg-driver-card p-4 text-driver-ink shadow-xl ring-1 ring-white/[0.06] sm:p-5"
-          role="dialog"
-          aria-modal="true"
-          :aria-labelledby="noteModalTitleId"
-        >
-          <h2 :id="noteModalTitleId" class="text-lg font-bold">
-            {{ t('driver_tp_attendance.note_modal_title') }}
-          </h2>
-          <p v-if="noteStudent" class="mt-1 text-sm text-driver-muted">
-            {{ noteStudent.full_name }} · {{ noteStudent.code }}
-          </p>
-          <textarea
-            v-model="noteDraft"
-            rows="4"
-            maxlength="500"
-            class="mt-4 w-full resize-none rounded-xl border border-white/10 bg-driver-surface px-3 py-2.5 text-base text-driver-ink placeholder:text-driver-muted/70 focus:border-driver-accent/50 focus:outline-none focus:ring-2 focus:ring-driver-accent/25"
-            :placeholder="t('driver_tp_attendance.note_placeholder')"
-            data-testid="driver-tp-note-input"
-          />
-          <p class="mt-1 text-right text-xs tabular-nums text-driver-muted">{{ noteDraft.length }}/500</p>
-          <div class="mt-4 flex gap-2">
-            <button
-              type="button"
-              class="flex-1 rounded-xl bg-white/10 py-3 text-base font-semibold text-driver-ink active:scale-[0.99]"
-              data-testid="driver-tp-note-cancel"
-              @click="closeNoteModal"
-            >
-              {{ t('driver_tp_attendance.note_cancel') }}
-            </button>
-            <button
-              type="button"
-              class="flex-1 rounded-xl bg-driver-accent py-3 text-base font-bold text-driver-bg disabled:opacity-50 active:scale-[0.99]"
-              :disabled="noteSaving"
-              data-testid="driver-tp-note-save"
-              @click="saveNote"
-            >
-              {{ t('driver_tp_attendance.note_save') }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
   </div>
 </template>
 
@@ -329,11 +344,10 @@ const day = ref(null)
 const execution = ref(null)
 const online = ref(typeof navigator !== 'undefined' ? navigator.onLine : true)
 const pendingCount = ref(0)
-const noteModalOpen = ref(false)
-const noteStudent = ref(null)
+const expandedNoteStudentId = ref(null)
 const noteDraft = ref('')
 const noteSaving = ref(false)
-const noteModalTitleId = 'driver-tp-note-modal-title'
+const actingStudentId = ref(null)
 
 // Ca của tuyến con mà tài xế đang xem (morning | afternoon | null cho single-slot).
 const shift = computed(() => {
@@ -421,32 +435,37 @@ async function complete() {
   }
 }
 
+function isStudentBusy(studentId) {
+  return actingStudentId.value === studentId
+}
+
 async function act(type, s) {
-  if (busy.value) return
+  if (actingStudentId.value != null) return
   if (type === 'board' && !canBoardStudent(s.final_status)) return
   if (type === 'alight' && s.final_status !== 'boarded') return
-  busy.value = true
+
+  const log = execution.value?.student_logs?.find((l) => l.student_id === s.student_id)
+  const prevStatus = log?.final_status
+
+  actingStudentId.value = s.student_id
   const ts = new Date().toISOString()
+  applyLocal(type, s)
   try {
     const execId = execution.value.id
     if (type === 'board') await driverBoard(execId, s.student_id, ts)
     else if (type === 'alight') await driverAlight(execId, s.student_id, ts)
     else if (type === 'absent') await driverAbsent(execId, s.student_id, { absence_type: 'no_notice', client_timestamp: ts })
     else if (type === 'undo-absent') await driverUndoAbsent(execId, s.student_id)
-    applyLocal(type, s)
     if (online.value) await refreshTotals()
-    if ((type === 'board' || type === 'absent') && route.query.from !== 'list') {
-      goBack()
-    }
   } catch (err) {
     if (online.value) {
+      if (log && prevStatus != null) log.final_status = prevStatus
       showAppErrorFromApi(err)
-      await load()
     } else {
       pendingCount.value++
     }
   } finally {
-    busy.value = false
+    actingStudentId.value = null
   }
 }
 
@@ -469,7 +488,11 @@ function canBoardStudent(status) {
 async function refreshTotals() {
   try {
     const fresh = await driverGetDay(route.params.dayId, shift.value)
-    if (fresh?.execution) execution.value = fresh.execution
+    const ex = fresh?.execution
+    if (!ex || !execution.value) return
+    execution.value.total_boarded = ex.total_boarded
+    execution.value.total_absent = ex.total_absent
+    execution.value.total_expected = ex.total_expected
   } catch { /* ignore */ }
 }
 
@@ -481,33 +504,34 @@ function goBack() {
   }
 }
 
-function openNoteModal(s) {
-  noteStudent.value = s
+function toggleNotePanel(s) {
+  if (expandedNoteStudentId.value === s.student_id) {
+    closeNotePanel()
+    return
+  }
+  expandedNoteStudentId.value = s.student_id
   noteDraft.value = s.driver_notes || ''
-  noteModalOpen.value = true
 }
 
-function closeNoteModal() {
-  noteModalOpen.value = false
-  noteStudent.value = null
+function closeNotePanel() {
+  expandedNoteStudentId.value = null
   noteDraft.value = ''
 }
 
-async function saveNote() {
-  if (!execution.value?.id || !noteStudent.value || noteSaving.value) return
+async function saveNote(s) {
+  if (!execution.value?.id || noteSaving.value) return
   noteSaving.value = true
   try {
     const payload = await driverUpdateStudentNotes(
       execution.value.id,
-      noteStudent.value.student_id,
+      s.student_id,
       noteDraft.value.trim() || null,
     )
-    const log = execution.value.student_logs.find((l) => l.student_id === noteStudent.value.student_id)
+    const log = execution.value.student_logs.find((l) => l.student_id === s.student_id)
     if (log) {
       log.driver_notes = payload.driver_notes ?? (noteDraft.value.trim() || null)
     }
-    showAppSuccess(t('driver_tp_attendance.note_saved'))
-    closeNoteModal()
+    closeNotePanel()
   } catch (err) {
     showAppErrorFromApi(err)
   } finally {
