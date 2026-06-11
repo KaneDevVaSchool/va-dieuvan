@@ -2003,6 +2003,8 @@
         "add_cost": "Add notes",
         "pagination_page": "Page",
         "pagination_records": "records",
+        "pagination_per_page_label": "Show",
+        "pagination_per_page_aria": "Rows per page",
         "section_filters": "Filters",
         "per_page_unit": "rows",
         "section_business_personnel": "Business travel notes by personnel",

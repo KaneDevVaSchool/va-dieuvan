@@ -647,16 +647,33 @@
       </div>
 
       <div class="flex flex-col gap-3 border-t border-slate-200/90 bg-slate-50/90 px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-slate-700 dark:bg-slate-800/50">
-        <span class="text-sm text-slate-600 dark:text-slate-400">
-          {{
-            t('costs_page.pagination_of', {
-              current: meta.current_page ?? 1,
-              last: meta.last_page ?? 1,
-            })
-          }}
-          <span class="text-slate-400"> · </span>
-          {{ meta.total ?? 0 }} {{ t('costs_page.pagination_records_suffix') }}
-        </span>
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-slate-600 dark:text-slate-400">
+          <span>
+            {{
+              t('costs_page.pagination_of', {
+                current: meta.current_page ?? 1,
+                last: meta.last_page ?? 1,
+              })
+            }}
+            <span class="text-slate-400"> · </span>
+            {{ meta.total ?? 0 }} {{ t('costs_page.pagination_records_suffix') }}
+          </span>
+          <label class="inline-flex items-center gap-2">
+            <span class="text-slate-500 dark:text-slate-400">{{ t('costs_page.pagination_per_page_label') }}</span>
+            <select
+              v-model.number="filters.per_page"
+              class="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm font-medium text-slate-800 outline-none ring-teal-500/30 focus:ring-2 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+              :aria-label="t('costs_page.pagination_per_page_aria')"
+              data-testid="costs-pagination-per-page"
+              @change="onPerPageChange"
+            >
+              <option v-for="opt in perPageFilterOptions" :key="opt.value" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+            <span class="text-slate-500 dark:text-slate-400">{{ t('costs_page.per_page_unit') }}</span>
+          </label>
+        </div>
         <div class="flex flex-wrap gap-2">
           <button
             type="button"
@@ -1299,7 +1316,8 @@ const auth = useAuthStore()
 /** @type {import('vue').Ref<'all_trips' | 'standalone' | 'business_personnel'>} */
 const activeTab = ref('all_trips')
 
-const DEFAULT_PER_PAGE = 25
+const COSTS_PER_PAGE_OPTIONS = [5, 10, 15, 20]
+const DEFAULT_PER_PAGE = 10
 
 const unitLabel = computed(() => t('costs_page.unit_label_const'))
 const LEGAL_ENTITY_PLACEHOLDER = '—'
@@ -1763,13 +1781,12 @@ const statusFilterOptions = computed(() => {
   ]
 })
 
-const perPageFilterOptions = computed(() => [
-  { value: DEFAULT_PER_PAGE, label: t('filter_bar.per_page') },
-  { value: 10, label: '10' },
-  { value: 20, label: '20' },
-  { value: 50, label: '50' },
-  { value: 100, label: '100' },
-])
+const perPageFilterOptions = computed(() =>
+  COSTS_PER_PAGE_OPTIONS.map((value) => ({
+    value,
+    label: String(value),
+  })),
+)
 
 const typeFilterOptions = computed(() => {
   const rows = [{ value: '', label: t('costs_page.filter_cost_type') }]
@@ -2218,6 +2235,9 @@ function onFilterDropdownChange(ev) {
 }
 
 function onPerPageChange() {
+  if (!COSTS_PER_PAGE_OPTIONS.includes(Number(filters.per_page))) {
+    filters.per_page = DEFAULT_PER_PAGE
+  }
   filters.page = 1
   reload()
 }

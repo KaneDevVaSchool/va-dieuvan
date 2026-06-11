@@ -3980,6 +3980,8 @@
         "add_cost": "Thêm ghi chú",
         "pagination_page": "Trang",
         "pagination_records": "bản ghi",
+        "pagination_per_page_label": "Hiển thị",
+        "pagination_per_page_aria": "Số dòng mỗi trang",
         "section_filters": "Bộ lọc",
         "per_page_unit": "dòng",
         "section_business_personnel": "Ghi chú công tác theo nhân sự",
