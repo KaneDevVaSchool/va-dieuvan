@@ -11,6 +11,11 @@
   .scrollbar-hidden::-webkit-scrollbar {
     display: none;
   }
+
+  /** Driver PWA: iOS Safari zooms focused fields when font-size < 16px — use on input/textarea/select */
+  .driver-field-ios {
+    @apply text-base sm:text-lg;
+  }
 }
 
 @layer base {

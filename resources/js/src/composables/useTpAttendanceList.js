@@ -1,14 +1,10 @@
 import { computed, reactive, ref, watch } from 'vue'
 
-export const ATTENDANCE_FILTER_VIS_IDS = [
-  'class',
-  'status',
-  'pickup',
-  'grade',
-  'boarded_time',
-  'per_page',
-  'sort',
-]
+export const ATTENDANCE_FILTER_VIS_IDS = ['boarded_time', 'notes']
+
+export function rowNotesSearchText(row) {
+  return `${row.reason_code || ''} ${row.absence_reason || ''} ${row.driver_notes || ''}`.trim().toLowerCase()
+}
 
 export const ATTENDANCE_COL_STORAGE_KEY = 'va-tp-attendance-cols-v2'
 
@@ -49,13 +45,9 @@ function loadColumnPrefs() {
 export function useTpAttendanceList(getItems) {
   const filters = reactive({
     q: '',
-    className: '',
-    status: '',
-    pickup: '',
-    grade: '',
+    noteQ: '',
     boardedFrom: '',
     boardedTo: '',
-    marked: '',
   })
 
   const sort = reactive({ key: 'student', dir: 'asc' })
@@ -121,14 +113,9 @@ export function useTpAttendanceList(getItems) {
           r.class_name?.toLowerCase().includes(q),
       )
     }
-    if (filters.className) rows = rows.filter((r) => r.class_name === filters.className)
-    if (filters.pickup) rows = rows.filter((r) => r.pickup_point === filters.pickup)
-    if (filters.grade) rows = rows.filter((r) => r.grade === filters.grade)
-    if (filters.status) rows = rows.filter((r) => r.display_status === filters.status)
-    if (filters.marked === 'marked') {
-      rows = rows.filter((r) => r.status === 'absent' || r.boarded_at)
-    } else if (filters.marked === 'not_marked') {
-      rows = rows.filter((r) => r.status === 'attending' && !r.boarded_at)
+    const noteQ = filters.noteQ.trim().toLowerCase()
+    if (noteQ) {
+      rows = rows.filter((r) => rowNotesSearchText(r).includes(noteQ))
     }
     if (filters.boardedFrom || filters.boardedTo) {
       const fromHm = filters.boardedFrom || null
@@ -161,19 +148,7 @@ export function useTpAttendanceList(getItems) {
   })
 
   watch(
-    () => [
-      filters.q,
-      filters.className,
-      filters.status,
-      filters.pickup,
-      filters.grade,
-      filters.boardedFrom,
-      filters.boardedTo,
-      filters.marked,
-      perPage.value,
-      sort.key,
-      sort.dir,
-    ],
+    () => [filters.q, filters.noteQ, filters.boardedFrom, filters.boardedTo, perPage.value, sort.key, sort.dir],
     () => {
       page.value = 1
     },
@@ -186,29 +161,16 @@ export function useTpAttendanceList(getItems) {
   const activeFilterCount = computed(() => {
     let n = 0
     if (filters.q.trim()) n++
-    if (filters.className) n++
-    if (filters.status) n++
-    if (filters.pickup) n++
-    if (filters.grade) n++
+    if (filters.noteQ.trim()) n++
     if (filters.boardedFrom || filters.boardedTo) n++
-    if (filters.marked) n++
-    if (perPage.value !== 10) n++
-    if (sort.key !== 'student' || sort.dir !== 'asc') n++
     return n
   })
 
   function resetFilters() {
     filters.q = ''
-    filters.className = ''
-    filters.status = ''
-    filters.pickup = ''
-    filters.grade = ''
+    filters.noteQ = ''
     filters.boardedFrom = ''
     filters.boardedTo = ''
-    filters.marked = ''
-    perPage.value = 10
-    sort.key = 'student'
-    sort.dir = 'asc'
   }
 
   function toggleSort(key) {

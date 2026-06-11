@@ -276,7 +276,7 @@
             <textarea
               v-model="declineReason"
               rows="4"
-              class="mt-2 w-full resize-y rounded-xl border border-white/10 bg-[#070f0d] px-3 py-2.5 text-sm text-white placeholder:text-slate-600 focus:border-[#7fdcc8]/50 focus:outline-none focus:ring-2 focus:ring-[#7fdcc8]/25"
+              class="driver-field-ios mt-2 w-full resize-y rounded-xl border border-white/10 bg-[#070f0d] px-3 py-2.5 text-white placeholder:text-slate-600 focus:border-[#7fdcc8]/50 focus:outline-none focus:ring-2 focus:ring-[#7fdcc8]/25"
               :placeholder="t('driver_home.pending_decline_reason_placeholder')"
               autocomplete="off"
             />

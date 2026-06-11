@@ -456,12 +456,6 @@ export function useRequestDetailPage() {
     },
   )
 
-  watch(docsTabNeedsFocus, (need, was) => {
-    if (need && was !== true && req.value && tabFromRouteQuery() !== 'docs') {
-      setActiveTab('docs')
-    }
-  })
-
   watch(
     () => route.query.focus,
     (focus) => {
@@ -514,7 +508,7 @@ export function useRequestDetailPage() {
       passengerDraft.value = Math.max(1, Math.min(999, Math.round(Number(actual) || 1)))
       passengerPatchErr.value = ''
       const tabQ = tabFromRouteQuery()
-      if (tabQ) activeTab.value = tabQ
+      activeTab.value = tabQ ?? 'form'
       if (route.query.tab === 'route' && !isStaffContext.value) {
         router.replace({ query: { ...route.query, tab: 'form' } })
       }

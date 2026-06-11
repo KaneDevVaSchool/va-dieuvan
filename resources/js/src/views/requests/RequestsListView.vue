@@ -703,9 +703,14 @@
               v-for="r in items"
               :key="r.id"
               class="transition"
-              :class="requestRowClass(r)"
+              :class="[requestRowClass(r), !isTrashTab ? 'cursor-pointer' : '']"
+              :tabindex="!isTrashTab ? 0 : undefined"
+              :data-testid="`requests-row-${r.id}`"
+              :aria-label="!isTrashTab ? t('requests_page.open_request_row', { id: r.id }) : undefined"
+              @click="!isTrashTab && openRequestDetail(r.id)"
+              @keydown.enter="!isTrashTab && openRequestDetail(r.id)"
             >
-              <td v-if="canBulkTrash" class="px-4 py-3.5 align-top" :class="isTrashTab ? 'text-slate-700' : ''">
+              <td v-if="canBulkTrash" class="px-4 py-3.5 align-top" :class="isTrashTab ? 'text-slate-700' : ''" @click.stop>
                 <input
                   v-if="isTrashTab || canDeleteRow(r)"
                   type="checkbox"
@@ -734,6 +739,7 @@
                     <RouterLink
                       :to="{ name: 'requestDetail', params: { id: String(r.id) } }"
                       class="font-mono text-base text-slate-900 underline decoration-slate-300 underline-offset-2 hover:text-va-800 hover:decoration-va-400"
+                      @click.stop
                     >
                       REQ-{{ r.id }}
                     </RouterLink>
@@ -802,7 +808,7 @@
               <td v-if="requestColOn('notes')" class="max-w-xs px-4 py-3.5 align-top text-sm leading-relaxed text-slate-600">
                 <p class="line-clamp-2">{{ requestNotesListCell(r) }}</p>
               </td>
-              <td class="px-4 py-3.5 align-top text-right" :class="isTrashTab ? 'text-slate-800' : ''">
+              <td class="px-4 py-3.5 align-top text-right" :class="isTrashTab ? 'text-slate-800' : ''" @click.stop>
                 <div class="inline-flex flex-wrap items-center justify-end gap-1">
                   <AppRowActionsMenu
                     align="end"
@@ -858,7 +864,17 @@
         </div>
 
         <ul class="divide-y divide-slate-100 md:hidden" role="list">
-          <li v-for="r in items" :key="`m-${r.id}`" class="px-4 py-4" :class="requestRowClass(r)">
+          <li
+            v-for="r in items"
+            :key="`m-${r.id}`"
+            class="px-4 py-4"
+            :class="[requestRowClass(r), !isTrashTab ? 'cursor-pointer' : '']"
+            :tabindex="!isTrashTab ? 0 : undefined"
+            :data-testid="`requests-row-mobile-${r.id}`"
+            :aria-label="!isTrashTab ? t('requests_page.open_request_row', { id: r.id }) : undefined"
+            @click="!isTrashTab && openRequestDetail(r.id)"
+            @keydown.enter="!isTrashTab && openRequestDetail(r.id)"
+          >
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
                 <div class="flex flex-wrap items-center gap-1.5 text-base font-semibold text-slate-900">
@@ -877,6 +893,7 @@
                   <RouterLink
                     :to="{ name: 'requestDetail', params: { id: String(r.id) } }"
                     class="font-mono underline decoration-slate-300 underline-offset-2 hover:text-va-800"
+                    @click.stop
                   >
                     REQ-{{ r.id }}
                   </RouterLink>
@@ -1275,6 +1292,10 @@ function canDeleteRow(r) {
 const isTrashTab = computed(() => activeTab.value === 'trash')
 
 /** Hàng gấp: viền trái + nền cảnh báo (cột Gấp có thể tắt). */
+function openRequestDetail(id) {
+  router.push({ name: 'requestDetail', params: { id: String(id) } })
+}
+
 function requestRowClass(r) {
   if (isTrashTab.value) {
     if (r.is_urgent) {

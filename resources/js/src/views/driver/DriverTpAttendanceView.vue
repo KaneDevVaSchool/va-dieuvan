@@ -253,7 +253,7 @@
                 v-model="noteDraft"
                 rows="2"
                 maxlength="500"
-                class="w-full resize-none rounded-xl border border-white/10 bg-driver-surface px-3 py-2 text-sm text-driver-ink placeholder:text-driver-muted/70 focus:border-driver-accent/50 focus:outline-none focus:ring-2 focus:ring-driver-accent/25 sm:text-base"
+                class="driver-field-ios w-full resize-none rounded-xl border border-white/10 bg-driver-surface px-3 py-2 text-driver-ink placeholder:text-driver-muted/70 focus:border-driver-accent/50 focus:outline-none focus:ring-2 focus:ring-driver-accent/25"
                 :placeholder="t('driver_tp_attendance.note_placeholder')"
                 data-testid="driver-tp-note-input"
               />

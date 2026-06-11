@@ -213,32 +213,16 @@
               </p>
               <ul class="mt-2 space-y-2 text-sm text-slate-700">
                 <li v-if="filters.q.trim()" class="flex justify-between gap-2">
-                  <span class="text-slate-500">Tìm kiếm</span>
+                  <span class="text-slate-500">{{ t('tp_attendance_page.search_placeholder') }}</span>
                   <span class="max-w-[11rem] truncate font-medium">{{ filters.q }}</span>
                 </li>
-                <li v-if="filters.className" class="flex justify-between gap-2">
-                  <span class="text-slate-500">{{ t('tp_attendance_page.filter_vis_class') }}</span>
-                  <span class="font-medium">{{ filters.className }}</span>
-                </li>
-                <li v-if="filters.status" class="flex justify-between gap-2">
-                  <span class="text-slate-500">{{ t('tp_attendance_page.filter_vis_status') }}</span>
-                  <span class="font-medium">{{ statusFilterLabel(filters.status) }}</span>
-                </li>
-                <li v-if="filters.pickup" class="flex justify-between gap-2">
-                  <span class="text-slate-500">{{ t('tp_attendance_page.filter_vis_pickup') }}</span>
-                  <span class="font-medium">{{ filters.pickup }}</span>
-                </li>
-                <li v-if="filters.grade" class="flex justify-between gap-2">
-                  <span class="text-slate-500">{{ t('tp_attendance_page.filter_vis_grade') }}</span>
-                  <span class="font-medium">{{ filters.grade }}</span>
+                <li v-if="filters.noteQ.trim()" class="flex justify-between gap-2">
+                  <span class="text-slate-500">{{ t('tp_attendance_page.filter_vis_notes') }}</span>
+                  <span class="max-w-[11rem] truncate font-medium">{{ filters.noteQ }}</span>
                 </li>
                 <li v-if="filters.boardedFrom || filters.boardedTo" class="flex justify-between gap-2">
                   <span class="text-slate-500">{{ t('tp_attendance_page.filter_vis_boarded_time') }}</span>
                   <span class="font-medium">{{ filters.boardedFrom || '…' }} – {{ filters.boardedTo || '…' }}</span>
-                </li>
-                <li v-if="filters.marked" class="flex justify-between gap-2">
-                  <span class="text-slate-500">{{ t('tp_attendance_page.notify_scope_not_marked') }}</span>
-                  <span class="font-medium">{{ t('tp_attendance_page.filter_on') }}</span>
                 </li>
               </ul>
               <div class="mt-4 border-t border-slate-100 pt-3">
@@ -309,44 +293,19 @@
             v-if="hasVisibleBarFilters"
             class="flex w-full flex-wrap items-center gap-x-2 gap-y-2 border-t border-slate-200/80 pt-2"
           >
-            <select
-              v-if="filterBarVisible.class"
-              v-model="filters.className"
-              class="h-9 rounded-lg border-0 bg-white/90 pl-2 pr-6 text-sm ring-1 ring-slate-200/80"
-              :class="filters.className ? 'text-slate-900' : 'text-slate-500'"
+            <div
+              v-if="filterBarVisible.notes"
+              class="inline-flex min-w-[200px] flex-1 basis-[200px] items-center"
             >
-              <option value="">{{ t('tp_attendance_page.filter_vis_class') }}</option>
-              <option v-for="c in classOptions" :key="c" :value="c">{{ c }}</option>
-            </select>
-            <select
-              v-if="filterBarVisible.status"
-              v-model="filters.status"
-              class="h-9 rounded-lg border-0 bg-white/90 pl-2 pr-6 text-sm ring-1 ring-slate-200/80"
-              :class="filters.status ? 'text-slate-900' : 'text-slate-500'"
-            >
-              <option value="">{{ t('tp_attendance_page.filter_vis_status') }}</option>
-              <option value="present">{{ t('tp_attendance_page.status_present') }}</option>
-              <option value="excused">{{ t('tp_attendance_page.status_excused') }}</option>
-              <option value="unexcused">{{ t('tp_attendance_page.status_unexcused') }}</option>
-            </select>
-            <select
-              v-if="filterBarVisible.pickup && pickupOptions.length"
-              v-model="filters.pickup"
-              class="h-9 rounded-lg border-0 bg-white/90 pl-2 pr-6 text-sm ring-1 ring-slate-200/80"
-              :class="filters.pickup ? 'text-slate-900' : 'text-slate-500'"
-            >
-              <option value="">{{ t('tp_attendance_page.filter_vis_pickup') }}</option>
-              <option v-for="p in pickupOptions" :key="p" :value="p">{{ p }}</option>
-            </select>
-            <select
-              v-if="filterBarVisible.grade && gradeOptions.length"
-              v-model="filters.grade"
-              class="h-9 rounded-lg border-0 bg-white/90 pl-2 pr-6 text-sm ring-1 ring-slate-200/80"
-              :class="filters.grade ? 'text-slate-900' : 'text-slate-500'"
-            >
-              <option value="">{{ t('tp_attendance_page.filter_vis_grade') }}</option>
-              <option v-for="g in gradeOptions" :key="g" :value="g">{{ g }}</option>
-            </select>
+              <input
+                v-model="filters.noteQ"
+                type="search"
+                :placeholder="t('tp_attendance_page.filter_notes_placeholder')"
+                class="h-9 w-full rounded-lg border-0 bg-white/90 px-3 text-sm ring-1 ring-slate-200/80 focus:ring-2 focus:ring-teal-500/30"
+                :aria-label="t('tp_attendance_page.filter_notes_placeholder')"
+                data-testid="tp-attendance-filter-notes"
+              />
+            </div>
             <div
               v-if="filterBarVisible.boarded_time"
               class="inline-flex min-w-0 flex-wrap items-center gap-2 rounded-xl border border-slate-200/80 bg-white/95 px-2.5 py-1.5 shadow-sm"
@@ -374,20 +333,6 @@
                 />
               </label>
             </div>
-            <select
-              v-if="filterBarVisible.sort"
-              v-model="sortPreset"
-              class="h-9 rounded-lg border-0 bg-white/90 pl-2 pr-6 text-sm ring-1 ring-slate-200/80 text-slate-900"
-            >
-              <option v-for="o in sortPresets" :key="o.value" :value="o.value">{{ o.label }}</option>
-            </select>
-            <select
-              v-if="filterBarVisible.per_page"
-              v-model.number="perPage"
-              class="h-9 rounded-lg border-0 bg-white/90 pl-2 pr-6 text-sm ring-1 ring-slate-200/80 text-slate-900"
-            >
-              <option v-for="n in perPageOptions" :key="n" :value="n">{{ n }}</option>
-            </select>
           </div>
         </AppFilterBar>
         </div>
@@ -658,6 +603,7 @@ const siblingDays = ref([])
 const filterBarDefaults = {
   ...Object.fromEntries(ATTENDANCE_FILTER_VIS_IDS.map((id) => [id, false])),
   boarded_time: true,
+  notes: true,
 }
 const { visible: filterBarVisible, resetVisibility: resetFilterBarVisibility, hasVisibleOnBar: hasVisibleBarFilters } =
   useFilterBarVisibility(ATTENDANCE_FILTER_VIS_IDS, filterBarDefaults)
@@ -718,53 +664,12 @@ const columnToggleOptions = [
 ]
 
 const filterBarVisibilityOptions = [
-  { id: 'class', labelKey: 'tp_attendance_page.filter_vis_class' },
-  { id: 'status', labelKey: 'tp_attendance_page.filter_vis_status' },
-  { id: 'pickup', labelKey: 'tp_attendance_page.filter_vis_pickup' },
-  { id: 'grade', labelKey: 'tp_attendance_page.filter_vis_grade' },
+  { id: 'notes', labelKey: 'tp_attendance_page.filter_vis_notes' },
   { id: 'boarded_time', labelKey: 'tp_attendance_page.filter_vis_boarded_time' },
-  { id: 'sort', labelKey: 'tp_attendance_page.filter_vis_sort' },
-  { id: 'per_page', labelKey: 'tp_attendance_page.filter_vis_per_page' },
 ]
-
-const sortPresets = computed(() => [
-  { value: 'student_asc', label: `${t('tp_attendance_page.col_student')} A→Z` },
-  { value: 'student_desc', label: `${t('tp_attendance_page.col_student')} Z→A` },
-  { value: 'status_asc', label: t('tp_attendance_page.col_status') },
-  { value: 'boarded_time_desc', label: t('tp_attendance_page.col_boarded_time') },
-])
-
-const sortPreset = computed({
-  get: () => `${sort.key}_${sort.dir}`,
-  set: (v) => {
-    const s = String(v)
-    const i = s.lastIndexOf('_')
-    sort.key = i > 0 ? s.slice(0, i) : 'student'
-    sort.dir = i > 0 ? s.slice(i + 1) : 'asc'
-  },
-})
 
 const isConfirmed = computed(() => data.value?.attendance_status === 'confirmed')
 const canReopen = computed(() => auth.user?.is_superadmin || auth.hasPermission('data.override_confirmed'))
-
-const classOptions = computed(() => {
-  const s = new Set((data.value?.items || []).map((i) => i.class_name).filter(Boolean))
-  return [...s].sort()
-})
-const pickupOptions = computed(() => {
-  const s = new Set((data.value?.items || []).map((i) => i.pickup_point).filter(Boolean))
-  return [...s].sort()
-})
-const gradeOptions = computed(() => {
-  const s = new Set((data.value?.items || []).map((i) => i.grade).filter(Boolean))
-  return [...s].sort()
-})
-
-function statusFilterLabel(v) {
-  if (v === 'present') return t('tp_attendance_page.status_present')
-  if (v === 'excused') return t('tp_attendance_page.status_excused')
-  return t('tp_attendance_page.status_unexcused')
-}
 
 function closeFilterMenu() {
   filterMenuRef.value?.close?.()
