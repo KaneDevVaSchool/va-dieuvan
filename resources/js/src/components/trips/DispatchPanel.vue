@@ -1,6 +1,6 @@
 <template>
     <section
-        class="overflow-hidden rounded-2xl bg-white shadow-sm shadow-slate-900/5 print:hidden dark:bg-slate-950/40 dark:shadow-black/25"
+        class="overflow-visible rounded-2xl bg-white shadow-sm shadow-slate-900/5 print:hidden dark:bg-slate-950/40 dark:shadow-black/25"
         :aria-label="t('trip_detail.coordination.title')"
     >
         <div class="space-y-3.5 p-3.5">
@@ -200,68 +200,6 @@
                 </div>
             </CollapsiblePanelSection>
 
-            <!-- Current assignment (summary cards) -->
-            <CollapsiblePanelSection
-                v-if="hasCurrentAssignmentList || vehicleConflictBanner"
-                :title="
-                    t('trip_detail.coordination.current_assignment_section')
-                "
-                :summary-collapsed="assignmentCollapsedSummary"
-                :persist-key="collapseStorageKey('assignment')"
-            >
-                <div class="space-y-3">
-                    <CurrentAssignmentList
-                        v-if="hasCurrentAssignmentList"
-                        :vehicles="assignmentVehicles"
-                        :drivers="assignmentDrivers"
-                        :allow-change="!coordinationActionsLocked"
-                        @edit-vehicles="$emit('vehicle-card-change')"
-                        @edit-drivers="$emit('driver-card-change')"
-                    />
-                    <div
-                        v-if="showAssignmentSupplementsPanel"
-                        class="rounded-2xl bg-emerald-50/85 px-3.5 py-3 shadow-sm shadow-emerald-900/10 dark:bg-emerald-950/35 dark:shadow-black/20"
-                        role="status"
-                        :aria-label="
-                            t(
-                                'trip_detail.coordination.supplement_section_title',
-                            )
-                        "
-                    >
-                        <div
-                            class="mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-emerald-800 dark:text-emerald-400"
-                        >
-                            {{
-                                t(
-                                    'trip_detail.coordination.supplement_section_title',
-                                )
-                            }}
-                        </div>
-                        <ul class="flex flex-wrap gap-1.5">
-                            <li
-                                v-for="item in supplementAssignmentsFlattened"
-                                :key="`${item.prefix}-${item.id ?? item.label}-${item.idx}`"
-                                class="inline-flex max-w-full items-center rounded-full bg-emerald-100/80 px-2.5 py-0.5 text-[11px] font-medium text-emerald-900 shadow-sm shadow-emerald-900/10 dark:bg-emerald-950/55 dark:text-emerald-100"
-                            >
-                                <span class="truncate"
-                                    ><span class="font-medium">{{
-                                        item.prefix
-                                    }}</span
-                                    >&nbsp;{{ item.line }}</span
-                                >
-                            </li>
-                        </ul>
-                    </div>
-                    <ConflictBanner
-                        class="block"
-                        :conflict="vehicleConflictBanner"
-                        :disabled="coordinationActionsLocked"
-                        @pick-again="$emit('conflict-pick-again')"
-                        @keep-anyway="$emit('conflict-keep')"
-                    />
-                </div>
-            </CollapsiblePanelSection>
-
             <div
                 v-if="scheduleAssignTabs && scheduleAssignTabs.length > 1"
                 class="space-y-2"
@@ -319,6 +257,68 @@
                     @create-vendor="$emit('create-vendor')"
                 />
             </div>
+
+            <ConflictBanner
+                v-if="vehicleConflictBanner"
+                class="block"
+                :conflict="vehicleConflictBanner"
+                :disabled="coordinationActionsLocked"
+                @pick-again="$emit('conflict-pick-again')"
+                @keep-anyway="$emit('conflict-keep')"
+            />
+
+            <!-- Chỉ đọc sau khi đã gán — tránh trùng với picker phía trên -->
+            <CollapsiblePanelSection
+                v-if="coordinationActionsLocked && (hasCurrentAssignmentList || showAssignmentSupplementsPanel)"
+                :title="
+                    t('trip_detail.coordination.current_assignment_section')
+                "
+                :summary-collapsed="assignmentCollapsedSummary"
+                :persist-key="collapseStorageKey('assignment')"
+            >
+                <div class="space-y-3">
+                    <CurrentAssignmentList
+                        v-if="hasCurrentAssignmentList"
+                        :vehicles="assignmentVehicles"
+                        :drivers="assignmentDrivers"
+                        :allow-change="false"
+                    />
+                    <div
+                        v-if="showAssignmentSupplementsPanel"
+                        class="rounded-2xl bg-emerald-50/85 px-3.5 py-3 shadow-sm shadow-emerald-900/10 dark:bg-emerald-950/35 dark:shadow-black/20"
+                        role="status"
+                        :aria-label="
+                            t(
+                                'trip_detail.coordination.supplement_section_title',
+                            )
+                        "
+                    >
+                        <div
+                            class="mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-emerald-800 dark:text-emerald-400"
+                        >
+                            {{
+                                t(
+                                    'trip_detail.coordination.supplement_section_title',
+                                )
+                            }}
+                        </div>
+                        <ul class="flex flex-wrap gap-1.5">
+                            <li
+                                v-for="item in supplementAssignmentsFlattened"
+                                :key="`${item.prefix}-${item.id ?? item.label}-${item.idx}`"
+                                class="inline-flex max-w-full items-center rounded-full bg-emerald-100/80 px-2.5 py-0.5 text-[11px] font-medium text-emerald-900 shadow-sm shadow-emerald-900/10 dark:bg-emerald-950/55 dark:text-emerald-100"
+                            >
+                                <span class="truncate"
+                                    ><span class="font-medium">{{
+                                        item.prefix
+                                    }}</span
+                                    >&nbsp;{{ item.line }}</span
+                                >
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </CollapsiblePanelSection>
 
             <div
                 v-if="assignMsg"

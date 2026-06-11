@@ -6,13 +6,13 @@
         >
             <div class="animate-pulse space-y-4">
                 <div class="h-10 max-w-md rounded-xl bg-slate-200/90" />
-                <div class="grid gap-6 xl:grid-cols-12">
-                    <div class="min-w-0 space-y-4 xl:col-span-7">
+                <div class="grid gap-6 xl:grid-cols-2">
+                    <div class="min-w-0 space-y-4">
                         <div class="h-64 rounded-2xl bg-slate-200/80" />
                         <div class="h-48 rounded-2xl bg-slate-200/70" />
                         <div class="h-56 rounded-2xl bg-slate-200/70" />
                     </div>
-                    <div class="min-w-0 space-y-4 xl:col-span-5">
+                    <div class="min-w-0 space-y-4">
                         <div class="h-72 rounded-2xl bg-slate-200/80" />
                         <div class="h-40 rounded-2xl bg-slate-200/70" />
                     </div>
@@ -114,9 +114,13 @@
                     {{ t("trip_detail.banner.request_pending") }}
                 </div>
 
-                <div class="grid gap-4 xl:grid-cols-12">
-                    <!-- Main column (7/12) -->
-                    <div class="min-w-0 space-y-4 xl:col-span-7">
+                <div class="grid gap-6 xl:grid-cols-2">
+                    <div class="min-w-0 space-y-4">
+                        <h2
+                            class="text-xs font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400"
+                        >
+                            {{ t("trip_detail.overview_column_title") }}
+                        </h2>
                         <TripInfoCard
                             :trip="trip"
                             :status-label-override="tripStatusLabelOverride"
@@ -149,8 +153,12 @@
                         />
                     </div>
 
-                    <!-- Sidebar / coordination (5/12) -->
-                    <div class="min-w-0 space-y-3 xl:col-span-5">
+                    <div class="min-w-0 space-y-3">
+                        <h2
+                            class="text-xs font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400"
+                        >
+                            {{ t("trip_detail.coordination_column_title") }}
+                        </h2>
                         <DispatchPanel
                             ref="dispatchPanelRef"
                             :can-assign="canAssign"

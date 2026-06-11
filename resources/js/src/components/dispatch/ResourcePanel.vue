@@ -2,6 +2,7 @@
   <div class="flex flex-col">
     <CollapsiblePanelSection
       v-if="resourcesPanelVisible"
+      :clip-overflow="false"
       :title="t('trip_detail.coordination.section_resources_title')"
       :summary-collapsed="unifiedCollapsedSummary"
       :default-expanded="true"
@@ -40,24 +41,55 @@
 
       <div class="space-y-2.5 pt-0.5">
         <div class="flex flex-col gap-2.5">
-        <InternalVehicleStrip
+        <InternalMultiPickSection
           v-if="!hideInternalVehicleSection"
           v-model="selected.internalVehicles"
           :options="internalVehicleOptions"
           :is-loading="isLoading"
           :disabled="disabled"
+          :icon="TruckIcon"
+          :title="t('trip_detail.coordination.resource_section_internal_title')"
+          :subtitle="t('trip_detail.coordination.internal_multi_pick_vehicle_sub')"
+          :pick-button-label="t('trip_detail.coordination.multi_pick_vehicles_btn')"
+          :search-placeholder="t('trip_detail.coordination.resource_section_internal_ph')"
+          :empty-hint="t('trip_detail.coordination.multi_pick_empty_vehicles')"
+          data-testid="dispatch-internal-vehicle-strip"
         />
 
-        <InternalDriverStrip
+        <InternalMultiPickSection
           v-if="!hideInternalDriverSection"
           v-model="selected.internalDrivers"
           :options="internalDriverOptions"
           :is-loading="isLoading"
           :disabled="disabled"
-          :trip-date="tripDate"
-          :workload-map="workloadMap"
-          @open-workload="showWorkloadPanel = true"
-        />
+          :icon="UserIcon"
+          :title="t('trip_detail.coordination.resource_section_driver_title')"
+          :subtitle="t('trip_detail.coordination.internal_multi_pick_driver_sub')"
+          :pick-button-label="t('trip_detail.coordination.multi_pick_drivers_btn')"
+          :search-placeholder="t('trip_detail.coordination.resource_section_driver_ph')"
+          :empty-hint="t('trip_detail.coordination.multi_pick_empty_drivers')"
+          :option-label-class-fn="driverOptionLabelClass"
+          data-testid="dispatch-internal-driver-strip"
+        >
+          <template #toolbar>
+            <button
+              type="button"
+              class="w-full rounded-xl bg-white px-2.5 py-1.5 text-left text-[11px] font-semibold text-[#8B1A1A] shadow-sm hover:bg-slate-50 disabled:opacity-45 dark:bg-slate-800/70 dark:text-[#e57373]"
+              :disabled="!tripDate || disabled"
+              data-testid="dispatch-open-workload-panel"
+              @click="showWorkloadPanel = true"
+            >
+              {{ t('trip_detail.coordination.workload_open_panel') }}
+            </button>
+          </template>
+          <template #option-extra="{ option }">
+            <DriverWorkloadBadge
+              v-if="driverWorkloadEntry(option.id)"
+              :workload="driverWorkloadEntry(option.id)"
+              :color-fn="loadColor"
+            />
+          </template>
+        </InternalMultiPickSection>
         </div>
 
         <template v-if="supplementBlockVisible">
@@ -122,7 +154,7 @@
     <Teleport to="body">
       <div
         v-if="showWorkloadPanel && !hideInternalDriverSection && !disabled"
-        class="fixed inset-0 z-[200] flex justify-end bg-black/30"
+        class="fixed inset-0 z-[310] flex justify-end bg-black/30"
         @click.self="showWorkloadPanel = false"
       >
         <div class="h-full w-[min(380px,100vw)] translate-x-0 bg-white transition-transform duration-200 ease-out dark:bg-slate-950">
@@ -146,11 +178,13 @@ import { useI18n } from 'vue-i18n'
 import {
   BuildingOfficeIcon,
   MapPinIcon,
+  TruckIcon,
+  UserIcon,
 } from '@heroicons/vue/24/outline'
 import CollapsiblePanelSection from './CollapsiblePanelSection.vue'
-import InternalDriverStrip from './InternalDriverStrip.vue'
-import InternalVehicleStrip from './InternalVehicleStrip.vue'
+import InternalMultiPickSection from './InternalMultiPickSection.vue'
 import SupplementTransportSection from './SupplementTransportSection.vue'
+import DriverWorkloadBadge from './DriverWorkloadBadge.vue'
 import DriverWorkloadPanel from './DriverWorkloadPanel.vue'
 import { useResourceSelector } from '../../composables/useResourceSelector'
 import { useDriverWorkload } from '../../composables/useDriverWorkload'
@@ -327,6 +361,17 @@ function emitResources() {
   if (j === lastPayloadJson.value) return
   lastPayloadJson.value = j
   emit('update:resources', p)
+}
+
+function driverOptionLabelClass(opt) {
+  const w = driverWorkloadEntry(opt.id)
+  return w?.load_level === 'high' ? 'text-rose-700/90 dark:text-rose-300' : ''
+}
+
+function driverWorkloadEntry(id) {
+  const n = Number(id)
+  if (!Number.isFinite(n)) return null
+  return workloadMap.value[String(n)] ?? null
 }
 
 const selectedInternalDriverId = computed(() => {

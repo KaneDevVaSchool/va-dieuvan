@@ -1,6 +1,7 @@
 <template>
     <section
-        class="overflow-hidden rounded-2xl bg-slate-100/55 shadow-sm shadow-slate-900/5 dark:bg-slate-900/40 dark:shadow-black/20"
+        class="rounded-2xl bg-slate-100/55 shadow-sm shadow-slate-900/5 dark:bg-slate-900/40 dark:shadow-black/20"
+        :class="clipOverflow ? 'overflow-hidden' : 'overflow-visible'"
         :aria-label="title"
     >
         <div
@@ -69,12 +70,15 @@ const props = withDefaults(
         summaryExpanded?: string;
         defaultExpanded?: boolean;
         persistKey?: string | null;
+        /** false: tránh cắt dropdown/modal con (panel nguồn lực) */
+        clipOverflow?: boolean;
     }>(),
     {
         summaryCollapsed: "",
         summaryExpanded: "",
         defaultExpanded: true,
         persistKey: null,
+        clipOverflow: true,
     },
 );
 
