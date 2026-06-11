@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Support\AvatarUrl;
 use App\Support\Roles;
 use App\Support\SuperAdminAccess;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -43,6 +45,13 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    protected function avatarUrl(): Attribute
+    {
+        return Attribute::get(
+            fn (?string $value) => AvatarUrl::forClient($value),
+        );
+    }
 
     public function isSuperAdmin(): bool
     {
