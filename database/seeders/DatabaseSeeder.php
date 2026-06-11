@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RbacSeeder::class,
+            BootstrapUsersSeeder::class,
             FeatureToggleSeeder::class,
             TpAbsenceReasonSeeder::class,
             ReferencePricingSeeder::class,

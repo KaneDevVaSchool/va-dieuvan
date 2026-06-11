@@ -47,6 +47,7 @@ Route::prefix('driver/tp-executions')->group(function () {
     Route::patch('/{tpTripExecution}/students/{student}/alight', [\App\Http\Controllers\Api\Driver\DriverTpStudentActionController::class, 'alight'])->middleware('throttle:120,1');
     Route::patch('/{tpTripExecution}/students/{student}/absent', [\App\Http\Controllers\Api\Driver\DriverTpStudentActionController::class, 'absent'])->middleware('throttle:60,1');
     Route::patch('/{tpTripExecution}/students/{student}/undo-absent', [\App\Http\Controllers\Api\Driver\DriverTpStudentActionController::class, 'undoAbsent'])->middleware('throttle:60,1');
+    Route::patch('/{tpTripExecution}/students/{student}/notes', [\App\Http\Controllers\Api\Driver\DriverTpStudentActionController::class, 'updateNotes'])->middleware('throttle:60,1');
 });
 
 Route::prefix('attachments')->controller(AttachmentController::class)->group(function () {

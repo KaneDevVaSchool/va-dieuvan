@@ -170,6 +170,7 @@ class TpProgramPresenter
                 'initial_status' => $log->initial_status,
                 'final_status' => $log->final_status,
                 'absence_type' => $log->absence_type,
+                'driver_notes' => $log->driver_notes,
             ])->values()->all(),
         ];
     }

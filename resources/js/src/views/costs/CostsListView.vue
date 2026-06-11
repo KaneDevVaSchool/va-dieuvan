@@ -482,8 +482,13 @@
               class="costs-data-row"
               :class="[
                 idx % 2 === 1 ? 'costs-data-row--alt' : '',
-                isWizardEstimateLine(c) ? 'costs-data-row--estimate' : '',
+                isWizardEstimateLine(c) ? 'costs-data-row--estimate' : 'costs-data-row--clickable',
               ]"
+              :role="isWizardEstimateLine(c) ? undefined : 'button'"
+              :tabindex="isWizardEstimateLine(c) ? undefined : 0"
+              @click="onCostRowActivate(c)"
+              @keydown.enter.prevent="onCostRowActivate(c)"
+              @keydown.space.prevent="onCostRowActivate(c)"
             >
               <td class="costs-td text-center tabular-nums text-slate-500 dark:text-slate-400">{{ rowIndex(idx) }}</td>
               <td v-if="colVisible.unit" class="costs-td text-slate-700 dark:text-slate-300">
@@ -525,15 +530,22 @@
               <td v-if="colVisible.owner" class="costs-td text-slate-700 dark:text-slate-300">
                 {{ c.confirmer?.name || '—' }}
               </td>
-              <td v-if="colVisible.receipt" class="costs-td">
-                <a
-                  v-if="c.receipt_url"
-                  :href="c.receipt_url"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="text-va-800 underline decoration-va-800/30 underline-offset-2 hover:text-va-900"
-                  >{{ t('costs_page.view_receipt') }}</a
+              <td v-if="colVisible.receipt" class="costs-td" @click.stop>
+                <button
+                  v-if="!isWizardEstimateLine(c)"
+                  type="button"
+                  class="inline-flex flex-col items-start gap-0.5 text-left text-sm font-semibold text-teal-800 underline decoration-teal-800/30 underline-offset-2 hover:text-teal-950 dark:text-teal-400 dark:hover:text-teal-200"
+                  data-testid="cost-row-evidence-btn"
+                  @click="openCostDetail(c)"
                 >
+                  <span>{{ t('costs_page.action_view_detail') }}</span>
+                  <span
+                    v-if="costEvidenceCount(c) > 0"
+                    class="text-[11px] font-medium text-slate-500 no-underline dark:text-slate-400"
+                  >
+                    {{ t('costs_page.detail_evidence_count', { count: costEvidenceCount(c) }) }}
+                  </span>
+                </button>
                 <span v-else class="text-slate-400">—</span>
               </td>
               <td v-if="colVisible.legal_entity" class="costs-td text-slate-500">{{ LEGAL_ENTITY_PLACEHOLDER }}</td>
@@ -543,7 +555,7 @@
                 }}</span>
                 <span v-else class="text-slate-400">—</span>
               </td>
-              <td v-if="colVisible.trip" class="costs-td">
+              <td v-if="colVisible.trip" class="costs-td" @click.stop>
                 <RouterLink
                   v-if="c.trip_id"
                   class="font-mono text-xs font-semibold text-teal-700 underline decoration-teal-700/30 underline-offset-2 hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-200 sm:text-sm"
@@ -566,7 +578,7 @@
                   "
                 >{{ isWizardEstimateLine(c) ? estimateKindLabel(c) : typeLabel(c.type) }}</span>
               </td>
-              <td v-if="canReconcileCosts && colVisible.actions" class="costs-td text-right">
+              <td v-if="canReconcileCosts && colVisible.actions" class="costs-td text-right" @click.stop>
                 <AppRowActionsMenu
                   v-if="!isWizardEstimateLine(c)"
                   align="end"
@@ -575,6 +587,16 @@
                   :trigger-sr-only="t('costs_page.col_actions')"
                   :disabled="decidingId != null || deletingCostId != null"
                 >
+                  <button
+                    type="button"
+                    role="menuitem"
+                    class="costs-menu-item text-teal-800 hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-teal-950/40"
+                    data-testid="cost-row-detail-menu"
+                    @click="openCostDetail(c)"
+                  >
+                    {{ t('costs_page.action_view_detail') }}
+                  </button>
+                  <div class="my-1 border-t border-slate-100 dark:border-slate-700" role="separator" />
                   <button
                     v-if="isCostPendingDecision(c)"
                     type="button"
@@ -1144,6 +1166,13 @@
         </div>
       </div>
     </Teleport>
+
+    <StaffCostDetailModal
+      :open="detailModalOpen"
+      :cost-id="detailCostId"
+      :type-label-fn="typeLabel"
+      @close="closeCostDetail"
+    />
   </div>
 </template>
 
@@ -1169,6 +1198,7 @@ import { listTrips } from '../../api/trips'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { formatTripCode, formatVnd, formatVndDigitsInput, labelTripType } from '../../util/labels'
 import AppRowActionsMenu from '../../components/ui/AppRowActionsMenu.vue'
+import StaffCostDetailModal from '../../components/costs/StaffCostDetailModal.vue'
 import { showAppErrorFromApi } from '../../composables/appMessage'
 import { useAuthStore } from '../../store'
 
@@ -1225,6 +1255,32 @@ function typeLabel(slug) {
   if (te(key)) return t(key)
   const hit = extraCostTypes.value.find((x) => x.slug === slug)
   return hit?.label ?? slug
+}
+
+const detailModalOpen = ref(false)
+/** @type {import('vue').Ref<number | null>} */
+const detailCostId = ref(null)
+
+function openCostDetail(c) {
+  if (!c?.id || isWizardEstimateLine(c)) return
+  detailCostId.value = Number(c.id)
+  detailModalOpen.value = true
+}
+
+function closeCostDetail() {
+  detailModalOpen.value = false
+  detailCostId.value = null
+}
+
+function onCostRowActivate(c) {
+  openCostDetail(c)
+}
+
+function costEvidenceCount(c) {
+  if (isWizardEstimateLine(c)) return 0
+  let n = Number(c.attachments_count) || 0
+  if (c.receipt_url) n += 1
+  return n
 }
 
 function isWizardEstimateLine(c) {
@@ -2264,11 +2320,11 @@ onActivated(() => {
 }
 
 .costs-sheet thead {
-  @apply bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800/80 dark:text-slate-400;
+  @apply bg-slate-100/90 text-sm font-bold text-slate-800 dark:bg-slate-800 dark:text-slate-100;
 }
 
 .costs-sheet .costs-th {
-  @apply border-b border-slate-200/90 px-3 py-2.5 align-top font-semibold dark:border-slate-700;
+  @apply border-b border-slate-300/90 px-3 py-3.5 align-top text-sm font-bold tracking-tight dark:border-slate-600 md:text-base;
 }
 
 .costs-sheet .costs-th--money {
@@ -2281,6 +2337,10 @@ onActivated(() => {
 
 .costs-data-row {
   @apply transition-colors hover:bg-teal-50/40 dark:hover:bg-teal-950/20;
+}
+
+.costs-data-row--clickable {
+  @apply cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-teal-500;
 }
 
 .costs-data-row--alt {

@@ -124,7 +124,7 @@ const staffChildRoutes = [
         name: "costs",
         component: () => import("../views/costs/CostsListView.vue"),
         meta: {
-            title: "Doanh thu",
+            title: "Ghi chú",
             subtitle: "Danh sách & nhập nhanh",
             featureKey: "module.operations",
         },

@@ -175,4 +175,60 @@ class TpAttendanceSubsystemTest extends TestCase
         $this->assertSame(0, $morning['summary']['present']);
         $this->assertSame(1, $afternoon['summary']['present']);
     }
+
+    public function test_boarded_at_is_scoped_to_attendance_shift(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-06-11 06:15:00'));
+
+        $driver = Driver::create(['full_name' => 'TX boarded']);
+        $result = app(CreateTransportProgramAction::class)->execute([
+            'name' => 'CT boarded ca',
+            'departure_time' => '06:30',
+            'return_time' => '17:00',
+            'start_date' => Carbon::today()->toDateString(),
+            'end_date' => Carbon::today()->addDays(2)->toDateString(),
+            'runs_on' => ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+            'default_driver_id' => $driver->id,
+            'settings' => [
+                'morning' => ['enabled' => true, 'departure' => '06:30', 'arrival' => '07:30'],
+                'afternoon' => ['enabled' => true, 'departure' => '17:00', 'arrival' => '18:00'],
+            ],
+        ], null);
+
+        $program = TpProgram::findOrFail($result['program']['id']);
+        $s1 = TpStudent::create(['code' => 'AD011', 'full_name' => 'HS boarded', 'status' => 'active', 'class_name' => '6A']);
+        app(ProgramEnrollmentService::class)->enrollBulk($program, [$s1->id], null);
+        $day = $program->days()->orderBy('scheduled_date')->first();
+
+        $morningExec = app(TripExecutionService::class)->start($day->fresh(), $driver, null, 'morning');
+        $morningLog = $morningExec->studentLogs()->where('student_id', $s1->id)->first();
+        app(StudentLogService::class)->board($morningLog, null);
+
+        $attendance = app(AttendanceService::class);
+        $morningPayload = $attendance->getAttendance($day->fresh(), 'morning');
+        $afternoonPayload = $attendance->getAttendance($day->fresh(), 'afternoon');
+
+        $morningItem = collect($morningPayload['items'])->firstWhere('student_id', $s1->id);
+        $afternoonItem = collect($afternoonPayload['items'])->firstWhere('student_id', $s1->id);
+
+        $this->assertNotEmpty($morningItem['boarded_at']);
+        $this->assertNull($afternoonItem['boarded_at']);
+
+        app(TripExecutionService::class)->complete($morningExec->fresh(), true, null);
+
+        Carbon::setTestNow(Carbon::parse('2026-06-11 17:05:00'));
+        $afternoonExec = app(TripExecutionService::class)->start($day->fresh(), $driver, null, 'afternoon');
+        $afternoonLog = $afternoonExec->studentLogs()->where('student_id', $s1->id)->first();
+        app(StudentLogService::class)->board($afternoonLog, null);
+
+        $morningAfter = $attendance->getAttendance($day->fresh(), 'morning');
+        $afternoonAfter = $attendance->getAttendance($day->fresh(), 'afternoon');
+        $morningItemAfter = collect($morningAfter['items'])->firstWhere('student_id', $s1->id);
+        $afternoonItemAfter = collect($afternoonAfter['items'])->firstWhere('student_id', $s1->id);
+
+        $this->assertStringContainsString('06:15', Carbon::parse($morningItemAfter['boarded_at'])->format('H:i'));
+        $this->assertStringContainsString('17:05', Carbon::parse($afternoonItemAfter['boarded_at'])->format('H:i'));
+
+        Carbon::setTestNow();
+    }
 }

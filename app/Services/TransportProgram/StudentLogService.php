@@ -93,6 +93,28 @@ class StudentLogService
         return $log->fresh();
     }
 
+    public function updateDriverNotes(TpTripStudentLog $log, ?string $notes, ?int $actorId): TpTripStudentLog
+    {
+        abort_unless($log->execution->status === 'in_progress', 422, 'Chỉ ghi chú khi chuyến đang chạy.');
+
+        $before = ['driver_notes' => $log->driver_notes];
+        $trimmed = $notes !== null ? trim($notes) : null;
+        $trimmed = $trimmed === '' ? null : $trimmed;
+
+        $log->update(['driver_notes' => $trimmed]);
+
+        $this->audit->log(
+            $actorId,
+            'log.driver_notes_updated',
+            $log,
+            $log->execution->program,
+            $before,
+            ['driver_notes' => $trimmed],
+        );
+
+        return $log->fresh();
+    }
+
     public function undoAbsent(TpTripStudentLog $log, ?int $actorId): TpTripStudentLog
     {
         abort_unless($log->final_status === TpTripStudentLog::FINAL_ABSENT, 422);

@@ -52,6 +52,12 @@
               :value="attendanceRow.absence_reason"
             />
           </div>
+          <div v-if="attendanceRow.driver_notes" class="sm:col-span-2">
+            <DetailItem
+              :label="t('tp_attendance_page.driver_note_label')"
+              :value="attendanceRow.driver_notes"
+            />
+          </div>
         </dl>
       </section>
 

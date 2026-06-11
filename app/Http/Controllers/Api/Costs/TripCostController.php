@@ -39,6 +39,7 @@ class TripCostController extends Controller
         $user = $request->user();
 
         $q = TripCost::query()
+            ->withCount('attachments')
             ->with([
                 'trip:id,status,depart_at,dispatcher_id,driver_id,transport_provider_id,vehicle_id,dispatch_request_id',
                 'trip.dispatchRequest:id,trip_type,origin,destination,requester_id',

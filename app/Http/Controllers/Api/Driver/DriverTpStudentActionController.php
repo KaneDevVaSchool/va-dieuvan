@@ -57,6 +57,21 @@ class DriverTpStudentActionController extends Controller
         return $this->ok($this->logPayload($result));
     }
 
+    public function updateNotes(Request $request, TpTripExecution $tpTripExecution, int $student): JsonResponse
+    {
+        $data = $request->validate([
+            'driver_notes' => ['nullable', 'string', 'max:500'],
+        ]);
+        $log = $this->resolveLog($request, $tpTripExecution, $student);
+        $result = $this->studentLogService->updateDriverNotes(
+            $log,
+            $data['driver_notes'] ?? null,
+            $request->user()?->id,
+        );
+
+        return $this->ok($this->logPayload($result));
+    }
+
     private function resolveLog(Request $request, TpTripExecution $execution, int $studentId): TpTripStudentLog
     {
         $this->assertCanActOnExecution($request->user(), $execution);
@@ -75,6 +90,7 @@ class DriverTpStudentActionController extends Controller
             'final_status' => $log->final_status,
             'absence_type' => $log->absence_type,
             'sync_status' => $log->sync_status,
+            'driver_notes' => $log->driver_notes,
         ];
     }
 }

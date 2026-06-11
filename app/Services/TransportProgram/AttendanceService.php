@@ -38,9 +38,10 @@ class AttendanceService
         $this->shiftResolver->applyAbsenceScope($absenceQuery, $storageShift);
         $absenceMap = $absenceQuery->get()->keyBy('student_id');
 
-        $boardedAtMap = $this->boardedAtMapForDay($day);
+        $boardedAtMap = $this->boardedAtMapForDay($day, $storageShift);
+        $driverNotesMap = $this->driverNotesMapForDay($day, $storageShift);
 
-        $items = $enrollments->map(function (TpEnrollment $e) use ($absenceMap, $boardedAtMap) {
+        $items = $enrollments->map(function (TpEnrollment $e) use ($absenceMap, $boardedAtMap, $driverNotesMap) {
             $absence = $absenceMap->get($e->student_id);
             $status = $absence ? 'absent' : 'attending';
             $category = $absence?->category;
@@ -61,6 +62,7 @@ class AttendanceService
                 'category' => $category,
                 'reason_code' => $absence?->reason_code,
                 'absence_reason' => $absence?->absence_reason,
+                'driver_notes' => $driverNotesMap[$e->student_id] ?? null,
             ];
         })->values()->all();
 
@@ -532,9 +534,11 @@ class AttendanceService
     /**
      * @return array<int, string|null> student_id => ISO8601 boarded_at
      */
-    private function boardedAtMapForDay(TpProgramDay $day): array
+    private function boardedAtMapForDay(TpProgramDay $day, string $storageShift = 'all'): array
     {
-        $execution = $day->execution()->first();
+        $execution = $storageShift === 'all'
+            ? $day->execution()->first()
+            : $day->executionForShift($storageShift);
         if (! $execution) {
             return [];
         }
@@ -543,6 +547,29 @@ class AttendanceService
         foreach ($execution->studentLogs()->get(['student_id', 'boarded_at', 'final_status']) as $log) {
             if ($log->final_status === TpTripStudentLog::FINAL_BOARDED && $log->boarded_at) {
                 $map[(int) $log->student_id] = $log->boarded_at->toIso8601String();
+            }
+        }
+
+        return $map;
+    }
+
+    /**
+     * @return array<int, string> student_id => driver_notes
+     */
+    private function driverNotesMapForDay(TpProgramDay $day, string $storageShift = 'all'): array
+    {
+        $execution = $storageShift === 'all'
+            ? $day->execution()->first()
+            : $day->executionForShift($storageShift);
+        if (! $execution) {
+            return [];
+        }
+
+        $map = [];
+        foreach ($execution->studentLogs()->get(['student_id', 'driver_notes']) as $log) {
+            $note = trim((string) ($log->driver_notes ?? ''));
+            if ($note !== '') {
+                $map[(int) $log->student_id] = $note;
             }
         }
 

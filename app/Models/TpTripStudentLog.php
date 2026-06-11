@@ -16,7 +16,7 @@ class TpTripStudentLog extends Model
         'execution_id', 'student_id', 'student_snapshot',
         'initial_status', 'boarded_at', 'boarded_by',
         'alighted_at', 'alighted_by', 'absent_at', 'absent_by',
-        'absence_type', 'absence_notes', 'final_status',
+        'absence_type', 'absence_notes', 'driver_notes', 'final_status',
         'client_timestamp', 'sync_status',
     ];
 

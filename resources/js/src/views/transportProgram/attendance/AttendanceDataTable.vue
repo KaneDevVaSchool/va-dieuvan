@@ -115,32 +115,44 @@
               {{ s.parent_phone || '—' }}
             </td>
             <td v-if="colOn('notes')" class="px-3 py-3" :style="colWidthStyle('notes')">
-              <div
-                v-if="s.status === 'absent'"
-                class="flex w-full min-w-[180px] max-w-[280px] flex-col gap-1.5"
-              >
-                <select
-                  v-if="reasons.length"
-                  :value="s.reason_code || ''"
-                  :disabled="readOnly || pendingRows.has(s.student_id)"
-                  class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700 focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400 disabled:cursor-not-allowed disabled:opacity-60"
-                  @change="$emit('reason-change', s, $event.target.value)"
+              <div class="flex w-full min-w-[180px] max-w-[280px] flex-col gap-1.5">
+                <div
+                  v-if="s.status === 'absent'"
+                  class="flex w-full flex-col gap-1.5"
                 >
-                  <option value="">{{ t('tp_attendance_page.pick_reason') }}</option>
-                  <option v-for="r in reasons" :key="r.code" :value="r.code">{{ r.label_vi }}</option>
-                </select>
-                <input
-                  type="text"
-                  :value="s.absence_reason || ''"
-                  :disabled="readOnly || pendingRows.has(s.student_id)"
-                  :placeholder="t('tp_attendance_page.notes_placeholder')"
-                  maxlength="500"
-                  class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400 disabled:cursor-not-allowed disabled:opacity-60"
-                  @blur="$emit('note-blur', s, $event.target.value)"
-                  @keydown.enter.prevent="$event.target?.blur?.()"
-                />
+                  <select
+                    v-if="reasons.length"
+                    :value="s.reason_code || ''"
+                    :disabled="readOnly || pendingRows.has(s.student_id)"
+                    class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700 focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400 disabled:cursor-not-allowed disabled:opacity-60"
+                    @change="$emit('reason-change', s, $event.target.value)"
+                  >
+                    <option value="">{{ t('tp_attendance_page.pick_reason') }}</option>
+                    <option v-for="r in reasons" :key="r.code" :value="r.code">{{ r.label_vi }}</option>
+                  </select>
+                  <input
+                    type="text"
+                    :value="s.absence_reason || ''"
+                    :disabled="readOnly || pendingRows.has(s.student_id)"
+                    :placeholder="t('tp_attendance_page.notes_placeholder')"
+                    maxlength="500"
+                    class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400 disabled:cursor-not-allowed disabled:opacity-60"
+                    @blur="$emit('note-blur', s, $event.target.value)"
+                    @keydown.enter.prevent="$event.target?.blur?.()"
+                  />
+                </div>
+                <p
+                  v-if="s.driver_notes"
+                  class="rounded-lg border border-amber-200/80 bg-amber-50/80 px-2.5 py-1.5 text-xs leading-snug text-amber-950"
+                >
+                  <span class="font-semibold">{{ t('tp_attendance_page.driver_note_label') }}:</span>
+                  {{ s.driver_notes }}
+                </p>
+                <span
+                  v-if="s.status !== 'absent' && !s.driver_notes"
+                  class="text-slate-300"
+                >—</span>
               </div>
-              <span v-else class="text-slate-300">—</span>
             </td>
             <td v-if="colOn('attendance_toggle')" class="px-3 py-3 text-center" :style="colWidthStyle('attendance_toggle')">
               <div class="flex justify-center">

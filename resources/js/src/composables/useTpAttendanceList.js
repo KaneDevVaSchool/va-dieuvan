@@ -30,7 +30,7 @@ const SORT_KEYS = {
   pickup_point: (r) => (r.pickup_point || '').toLowerCase(),
   boarded_time: (r) => r.boarded_at || '',
   status: (r) => r.display_status || '',
-  notes: (r) => `${r.reason_code || ''} ${r.absence_reason || ''}`.trim().toLowerCase(),
+  notes: (r) => `${r.reason_code || ''} ${r.absence_reason || ''} ${r.driver_notes || ''}`.trim().toLowerCase(),
   parent_phone: (r) => r.parent_phone || '',
 }
 

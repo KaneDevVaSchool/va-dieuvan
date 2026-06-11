@@ -1,5 +1,7 @@
 <template>
-  <div class="w-full min-w-0 space-y-4 pb-28">
+  <div
+    class="flex w-full min-w-0 flex-1 flex-col gap-4 min-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-4.5rem)] sm:min-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-5.5rem)]"
+  >
     <header
       class="min-w-0 rounded-2xl border border-slate-200/90 bg-white px-4 py-4 shadow-sm sm:px-5 sm:py-5"
     >
@@ -134,21 +136,24 @@
     </template>
 
     <template v-else-if="data">
-      <AttendanceStatsBar :summary="data.summary" />
+      <div class="flex min-h-0 flex-1 flex-col gap-4">
+        <AttendanceStatsBar :summary="data.summary" />
 
-      <div
-        v-if="data.attendance_status === 'confirmed'"
-        class="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3"
-      >
-        <div class="flex items-center gap-2 text-sm font-medium text-emerald-800">
-          <LockClosedIcon class="h-4 w-4 shrink-0" />
-          Điểm danh đã xác nhận. Dữ liệu ở chế độ chỉ đọc.
+        <div
+          v-if="data.attendance_status === 'confirmed'"
+          class="flex shrink-0 items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3"
+        >
+          <div class="flex items-center gap-2 text-sm font-medium text-emerald-800">
+            <LockClosedIcon class="h-4 w-4 shrink-0" />
+            Điểm danh đã xác nhận. Dữ liệu ở chế độ chỉ đọc.
+          </div>
+          <Button v-if="canReopen" variant="secondary" class="shrink-0 text-xs" :loading="saving" @click="onReopen">
+            Mở lại chỉnh sửa
+          </Button>
         </div>
-        <Button v-if="canReopen" variant="secondary" class="shrink-0 text-xs" :loading="saving" @click="onReopen">
-          Mở lại chỉnh sửa
-        </Button>
-      </div>
 
+        <div class="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div class="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-y-contain">
       <div class="sticky top-0 z-40 -mx-1 px-1 pt-1">
         <AppFilterBar>
           <div class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
@@ -450,51 +455,65 @@
           </button>
         </div>
       </div>
-    </template>
+          </div>
 
-    <div
-      v-if="data && !loading"
-      class="sticky bottom-0 z-30 pt-2 supports-[padding:max(0px)]:pb-[max(0.75rem,env(safe-area-inset-bottom))]"
-    >
-      <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-2xl shadow-slate-900/15 backdrop-blur-md">
-        <div
-          v-if="data.missing_reason_count > 0"
-          class="flex items-center gap-2 border-b border-amber-100 bg-amber-50 px-4 py-2.5 text-sm"
-        >
-          <ExclamationTriangleIcon class="h-4 w-4 shrink-0 text-amber-600" />
-          <span class="font-medium text-amber-900">
-            {{ data.missing_reason_count }} học sinh chưa có lý do vắng (chọn danh mục hoặc nhập ghi chú)
-          </span>
-        </div>
-        <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
-          <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600">
-            <span>
-              <span class="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" />
-              Có mặt: <strong class="text-slate-800">{{ data.summary.present }}</strong>
-            </span>
-            <span>
-              <span class="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-amber-400" />
-              Có phép: <strong class="text-slate-800">{{ data.summary.excused }}</strong>
-            </span>
-            <span>
-              <span class="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-rose-500" />
-              Không phép: <strong class="text-slate-800">{{ data.summary.unexcused }}</strong>
-            </span>
-          </div>
-          <div v-if="!isConfirmed" class="flex items-center gap-2">
-            <Button variant="secondary" :disabled="saving" :loading="savingDraft" @click="onSaveDraft">Lưu nháp</Button>
-            <Button :disabled="saving || data.missing_reason_count > 0" :loading="confirming" @click="onConfirm">
-              <LockClosedIcon class="h-4 w-4" />
-              Xác nhận điểm danh
-            </Button>
-          </div>
-          <div v-else class="text-sm font-medium text-emerald-700">
-            <CheckCircleIcon class="mr-1 inline h-4 w-4" />
-            Đã xác nhận lúc {{ formatTime(data.attendance_confirmed_at) }}
+          <div
+            class="shrink-0 z-30 -mx-3 border-t border-slate-200/90 bg-white/95 shadow-[0_-4px_12px_-4px_rgba(15,23,42,0.08)] backdrop-blur supports-[padding:max(0px)]:pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:-mx-4 md:-mx-6 lg:-mx-8"
+            data-testid="tp-attendance-footer"
+          >
+            <div
+              v-if="data.missing_reason_count > 0"
+              class="flex items-center gap-2 border-b border-amber-100 bg-amber-50 px-4 py-2.5 text-sm"
+            >
+              <ExclamationTriangleIcon class="h-4 w-4 shrink-0 text-amber-600" />
+              <span class="font-medium text-amber-900">
+                {{ data.missing_reason_count }} học sinh chưa có lý do vắng (chọn danh mục hoặc nhập ghi chú)
+              </span>
+            </div>
+            <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-3 py-3 sm:px-4 md:px-6 lg:px-8">
+              <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600">
+                <span>
+                  <span class="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                  Có mặt: <strong class="text-slate-800">{{ data.summary.present }}</strong>
+                </span>
+                <span>
+                  <span class="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-amber-400" />
+                  Có phép: <strong class="text-slate-800">{{ data.summary.excused }}</strong>
+                </span>
+                <span>
+                  <span class="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-rose-500" />
+                  Không phép: <strong class="text-slate-800">{{ data.summary.unexcused }}</strong>
+                </span>
+              </div>
+              <div v-if="!isConfirmed" class="flex items-center gap-2">
+                <Button
+                  variant="secondary"
+                  data-testid="tp-attendance-save-draft"
+                  :disabled="saving"
+                  :loading="savingDraft"
+                  @click="onSaveDraft"
+                >
+                  Lưu nháp
+                </Button>
+                <Button
+                  data-testid="tp-attendance-confirm"
+                  :disabled="saving || data.missing_reason_count > 0"
+                  :loading="confirming"
+                  @click="onConfirm"
+                >
+                  <LockClosedIcon class="h-4 w-4" />
+                  Xác nhận điểm danh
+                </Button>
+              </div>
+              <div v-else class="text-sm font-medium text-emerald-700">
+                <CheckCircleIcon class="mr-1 inline h-4 w-4" />
+                Đã xác nhận lúc {{ formatTime(data.attendance_confirmed_at) }}
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </template>
 
     <AttendanceParentNotifyPanel
       :open="notifyOpen"

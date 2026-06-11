@@ -331,7 +331,8 @@ async function load() {
 }
 
 function open(d) {
-  const query = d.multi_slot && d.shift ? { shift: d.shift } : {}
+  const query = { from: 'list' }
+  if (d.multi_slot && d.shift) query.shift = d.shift
   router.push({ name: 'driverTpAttendance', params: { dayId: d.day_id }, query })
 }
 

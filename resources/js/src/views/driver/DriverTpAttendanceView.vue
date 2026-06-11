@@ -5,15 +5,17 @@
       class="sticky top-0 z-[25] flex items-center gap-3 border-b border-white/5 bg-driver-bg/90 px-4 py-3 backdrop-blur-md [-webkit-backdrop-filter:blur(12px)]"
       style="padding-top: max(0.75rem, env(safe-area-inset-top))"
     >
-      <RouterLink
-        to="/driver/tp-days"
+      <button
+        type="button"
         class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-driver-accent/12 text-driver-accent transition active:scale-95"
-        aria-label="Quay lại"
+        :aria-label="t('trip_history_page.back')"
+        data-testid="driver-tp-attendance-back"
+        @click="goBack"
       >
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor" class="h-5 w-5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
         </svg>
-      </RouterLink>
+      </button>
 
       <div class="min-w-0 flex-1">
         <div class="flex items-center gap-2">
@@ -143,10 +145,25 @@
               <div class="min-w-0">
                 <div class="truncate text-base font-semibold">{{ s.full_name }}</div>
                 <div class="mt-0.5 text-sm text-driver-muted">{{ s.code }}</div>
+                <p v-if="s.driver_notes" class="mt-1 line-clamp-2 text-xs text-amber-200/90">
+                  {{ s.driver_notes }}
+                </p>
               </div>
-              <span class="shrink-0 rounded-lg px-3 py-1 text-sm font-semibold" :class="logClass(s.final_status)">
-                {{ logLabel(s.final_status) }}
-              </span>
+              <div class="flex shrink-0 flex-col items-end gap-1.5">
+                <span class="rounded-lg px-3 py-1 text-sm font-semibold" :class="logClass(s.final_status)">
+                  {{ logLabel(s.final_status) }}
+                </span>
+                <button
+                  type="button"
+                  class="rounded-lg px-2.5 py-1 text-xs font-semibold text-driver-muted ring-1 ring-white/10 transition active:scale-95"
+                  :class="s.driver_notes ? 'bg-amber-500/15 text-amber-200 ring-amber-400/25' : 'bg-white/[0.04] hover:text-driver-ink'"
+                  :aria-label="t('driver_tp_attendance.note_btn_aria', { name: s.full_name })"
+                  data-testid="driver-tp-student-note-open"
+                  @click="openNoteModal(s)"
+                >
+                  {{ s.driver_notes ? t('driver_tp_attendance.note_btn_edit') : t('driver_tp_attendance.note_btn') }}
+                </button>
+              </div>
             </div>
             <div class="mt-3 flex gap-2">
               <button
@@ -218,6 +235,9 @@
                 <div class="min-w-0">
                   <div class="truncate text-base font-medium">{{ s.full_name }}</div>
                   <div class="mt-0.5 text-sm text-driver-muted">{{ s.code }}</div>
+                  <p v-if="s.driver_notes" class="mt-1 line-clamp-2 text-xs text-amber-200/80">
+                    {{ s.driver_notes }}
+                  </p>
                 </div>
                 <span class="shrink-0 rounded-lg px-3 py-1 text-sm font-semibold" :class="logClass(s.final_status)">
                   {{ logLabel(s.final_status) }}
@@ -228,12 +248,64 @@
         </div>
       </template>
     </div>
+
+    <Teleport to="body">
+      <div
+        v-if="noteModalOpen"
+        class="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 p-4 backdrop-blur-[2px] sm:items-center"
+        data-testid="driver-tp-note-modal"
+        @click.self="closeNoteModal"
+      >
+        <div
+          class="w-full max-w-md rounded-2xl border border-white/10 bg-driver-card p-4 text-driver-ink shadow-xl ring-1 ring-white/[0.06] sm:p-5"
+          role="dialog"
+          aria-modal="true"
+          :aria-labelledby="noteModalTitleId"
+        >
+          <h2 :id="noteModalTitleId" class="text-lg font-bold">
+            {{ t('driver_tp_attendance.note_modal_title') }}
+          </h2>
+          <p v-if="noteStudent" class="mt-1 text-sm text-driver-muted">
+            {{ noteStudent.full_name }} · {{ noteStudent.code }}
+          </p>
+          <textarea
+            v-model="noteDraft"
+            rows="4"
+            maxlength="500"
+            class="mt-4 w-full resize-none rounded-xl border border-white/10 bg-driver-surface px-3 py-2.5 text-base text-driver-ink placeholder:text-driver-muted/70 focus:border-driver-accent/50 focus:outline-none focus:ring-2 focus:ring-driver-accent/25"
+            :placeholder="t('driver_tp_attendance.note_placeholder')"
+            data-testid="driver-tp-note-input"
+          />
+          <p class="mt-1 text-right text-xs tabular-nums text-driver-muted">{{ noteDraft.length }}/500</p>
+          <div class="mt-4 flex gap-2">
+            <button
+              type="button"
+              class="flex-1 rounded-xl bg-white/10 py-3 text-base font-semibold text-driver-ink active:scale-[0.99]"
+              data-testid="driver-tp-note-cancel"
+              @click="closeNoteModal"
+            >
+              {{ t('driver_tp_attendance.note_cancel') }}
+            </button>
+            <button
+              type="button"
+              class="flex-1 rounded-xl bg-driver-accent py-3 text-base font-bold text-driver-bg disabled:opacity-50 active:scale-[0.99]"
+              :disabled="noteSaving"
+              data-testid="driver-tp-note-save"
+              @click="saveNote"
+            >
+              {{ t('driver_tp_attendance.note_save') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
 import {
   driverGetDay,
   driverConfirmDay,
@@ -244,16 +316,24 @@ import {
   driverAlight,
   driverAbsent,
   driverUndoAbsent,
+  driverUpdateStudentNotes,
 } from '../../api/transportProgram'
 import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
 
+const { t } = useI18n()
 const route = useRoute()
+const router = useRouter()
 const loading = ref(false)
 const busy = ref(false)
 const day = ref(null)
 const execution = ref(null)
 const online = ref(typeof navigator !== 'undefined' ? navigator.onLine : true)
 const pendingCount = ref(0)
+const noteModalOpen = ref(false)
+const noteStudent = ref(null)
+const noteDraft = ref('')
+const noteSaving = ref(false)
+const noteModalTitleId = 'driver-tp-note-modal-title'
 
 // Ca của tuyến con mà tài xế đang xem (morning | afternoon | null cho single-slot).
 const shift = computed(() => {
@@ -351,6 +431,9 @@ async function act(type, s) {
     else if (type === 'absent') await driverAbsent(execId, s.student_id, { absence_type: 'no_notice', client_timestamp: ts })
     else if (type === 'undo-absent') await driverUndoAbsent(execId, s.student_id)
     if (online.value) await refreshTotals()
+    if ((type === 'board' || type === 'absent') && route.query.from !== 'list') {
+      goBack()
+    }
   } catch (err) {
     if (online.value) {
       showAppErrorFromApi(err)
@@ -370,9 +453,51 @@ function applyLocal(type, s) {
 
 async function refreshTotals() {
   try {
-    const fresh = await driverGetDay(route.params.dayId)
+    const fresh = await driverGetDay(route.params.dayId, shift.value)
     if (fresh?.execution) execution.value = fresh.execution
   } catch { /* ignore */ }
+}
+
+function goBack() {
+  if (typeof window !== 'undefined' && window.history.length > 1) {
+    router.back()
+  } else {
+    router.push({ name: 'driverTpDays' })
+  }
+}
+
+function openNoteModal(s) {
+  noteStudent.value = s
+  noteDraft.value = s.driver_notes || ''
+  noteModalOpen.value = true
+}
+
+function closeNoteModal() {
+  noteModalOpen.value = false
+  noteStudent.value = null
+  noteDraft.value = ''
+}
+
+async function saveNote() {
+  if (!execution.value?.id || !noteStudent.value || noteSaving.value) return
+  noteSaving.value = true
+  try {
+    const payload = await driverUpdateStudentNotes(
+      execution.value.id,
+      noteStudent.value.student_id,
+      noteDraft.value.trim() || null,
+    )
+    const log = execution.value.student_logs.find((l) => l.student_id === noteStudent.value.student_id)
+    if (log) {
+      log.driver_notes = payload.driver_notes ?? (noteDraft.value.trim() || null)
+    }
+    showAppSuccess(t('driver_tp_attendance.note_saved'))
+    closeNoteModal()
+  } catch (err) {
+    showAppErrorFromApi(err)
+  } finally {
+    noteSaving.value = false
+  }
 }
 
 function deviceId() {

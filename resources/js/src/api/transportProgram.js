@@ -424,6 +424,14 @@ export async function driverUndoAbsent(executionId, studentId) {
   return data.data
 }
 
+export async function driverUpdateStudentNotes(executionId, studentId, driverNotes) {
+  const { data } = await http.patch(
+    `/driver/tp-executions/${executionId}/students/${studentId}/notes`,
+    { driver_notes: driverNotes ?? null },
+  )
+  return data.data
+}
+
 export async function driverSync(executionId, actions) {
   const { data } = await http.post(`/driver/tp-executions/${executionId}/sync`, { actions })
   return data.data
