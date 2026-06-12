@@ -691,6 +691,9 @@ class TripController extends Controller
             'driver:id,full_name,phone,odometer_km,user_id',
             'transportProvider:id,name',
             'record',
+            'cargoShipment' => fn ($q) => $q->with([
+                'attachments' => fn ($a) => $a->where('kind', 'pod')->orderByDesc('id'),
+            ]),
             'dispatchRequest',
             'dispatchRequest.requester:id,name,phone,email,employee_code,avatar_url',
             'dispatchRequest.attachments' => fn ($q) => $q->orderByDesc('id')->limit(50),

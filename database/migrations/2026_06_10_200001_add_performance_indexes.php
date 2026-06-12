@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -73,11 +74,19 @@ return new class extends Migration
 
     private function indexExists(string $table, string $indexName): bool
     {
-        $indexes = \Illuminate\Support\Facades\DB::select(
+        if (DB::getDriverName() === 'sqlite') {
+            foreach (DB::select("PRAGMA index_list(`{$table}`)") as $row) {
+                if (($row->name ?? null) === $indexName) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        return count(DB::select(
             "SHOW INDEX FROM `{$table}` WHERE Key_name = ?",
             [$indexName]
-        );
-
-        return count($indexes) > 0;
+        )) > 0;
     }
 };

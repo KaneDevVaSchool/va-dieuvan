@@ -46,6 +46,16 @@
           :notes-preview="routeNotesPreview"
         />
 
+        <DriverCargoShipmentCard
+          v-if="paxKind === 'cargo' && cargoShipment"
+          :shipment="cargoShipment"
+          :busy="cargoBusy"
+          :error="cargoError"
+          :can-act="canActOnCargo"
+          @set-status="setCargoStatus"
+          @upload-pod="uploadCargoPod"
+        />
+
         <DriverTripPaxSection
           :pax-kind="paxKind"
           :pax-list="paxList"
@@ -144,6 +154,7 @@ import DriverTripCostsSection from '../../components/driver/trip-detail/DriverTr
 import DriverTripDetailHeader from '../../components/driver/trip-detail/DriverTripDetailHeader.vue'
 import DriverTripDetailModals from '../../components/driver/trip-detail/DriverTripDetailModals.vue'
 import DriverTripDetailSkeleton from '../../components/driver/trip-detail/DriverTripDetailSkeleton.vue'
+import DriverCargoShipmentCard from '../../components/driver/trip-detail/DriverCargoShipmentCard.vue'
 import DriverTripPaxSection from '../../components/driver/trip-detail/DriverTripPaxSection.vue'
 import DriverTripRouteSection from '../../components/driver/trip-detail/DriverTripRouteSection.vue'
 
@@ -190,6 +201,12 @@ const {
   warningBanner,
   rowState,
   paxKind,
+  cargoShipment,
+  canActOnCargo,
+  cargoBusy,
+  cargoError,
+  setCargoStatus,
+  uploadCargoPod,
   paxList,
   displayedPaxList,
   paxDisplayTotal,

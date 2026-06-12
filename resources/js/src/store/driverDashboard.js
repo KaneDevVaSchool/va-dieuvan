@@ -21,7 +21,7 @@ import {
   tpItemsToCalendarSlots,
   tpItemsToDriverTrips,
 } from '../composables/driverScheduleExpand'
-import { driverConfirmDay, driverListDays, driverStartTrip } from '../api/transportProgram'
+import { driverConfirmDay, driverListDays, driverReportBusyDay, driverStartTrip } from '../api/transportProgram'
 import {
   isTpTripVisibleInTodaySchedule,
   mergeDriverConfirmationBannerTrips,
@@ -465,6 +465,14 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
         .concat([next], this.tpListItems.slice(idx + 1))
     },
 
+    removeTpListItem(dayId, shift) {
+      this.tpListItems = this.tpListItems.filter((row) => {
+        if (Number(row.day_id) !== Number(dayId)) return true
+        if (row.multi_slot) return (row.shift || 'morning') !== (shift || 'morning')
+        return false
+      })
+    },
+
     scheduleSilentRefetch() {
       if (typeof window === 'undefined') return
       if (this.silentRefetchTimer != null) {
@@ -655,6 +663,22 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
         if (isOptimisticLockConflict(e)) void this.refreshTripsQuiet()
         if (backup) this.insertTrip(backup)
         else this.refreshTripsQuiet()
+        throw e
+      }
+    },
+
+    async reportBusyTpDayOptimistic(trip, reason) {
+      const tp = trip?._tp
+      if (!tp?.day_id) return
+      const { day_id: dayId, shift, multi_slot: multiSlot } = tp
+      const shiftArg = multiSlot ? shift || null : null
+      this.removeTpListItem(dayId, shift)
+      try {
+        await driverReportBusyDay(dayId, shiftArg, reason)
+        showAppSuccess(t('driver_home.toast_busy_ok'), t('driver_home.toast_action_title'))
+        this.scheduleSilentRefetch()
+      } catch (e) {
+        void this.refreshTripsQuiet()
         throw e
       }
     },

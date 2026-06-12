@@ -378,6 +378,15 @@ export async function driverUnconfirmDay(dayId, shift = null) {
   return data.data
 }
 
+/** Tài xế báo bận một ca: gỡ phân công + báo điều phối phân tài xế khác. */
+export async function driverReportBusyDay(dayId, shift = null, reason = '') {
+  const payload = {}
+  if (shift) payload.shift = shift
+  if (reason) payload.reason = reason
+  const { data } = await http.post(`/driver/tp-days/${dayId}/report-busy`, payload)
+  return data.data
+}
+
 export async function driverStartTrip(dayId, deviceId = null, shift = null) {
   const payload = {}
   if (deviceId) payload.device_id = deviceId

@@ -25,6 +25,7 @@ class DriverTripStartController extends Controller
     {
         $shift = $this->resolveShift($request);
         $driver = $this->assertCanStartDay($request->user(), $tpProgramDay, $shift);
+        $this->assertProgramActive($tpProgramDay);
         abort_unless(
             $tpProgramDay->slotConfirmedAt($shift),
             422,

@@ -81,6 +81,11 @@ class Trip extends Model
         return $this->hasOne(TripRecord::class);
     }
 
+    public function cargoShipment(): HasOne
+    {
+        return $this->hasOne(CargoShipment::class);
+    }
+
     public function costs(): HasMany
     {
         return $this->hasMany(TripCost::class);

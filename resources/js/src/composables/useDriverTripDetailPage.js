@@ -10,6 +10,8 @@ import {
   patchTripFromApi,
 } from '../util/tripLock'
 import { submitStandaloneTripCost, submitTripCost } from '../api/costs'
+import { driverUpdateCargoStatus } from '../api/cargo'
+import { driverUploadCargoPod } from '../api/attachments'
 import { isPassengerRowFilled, isBusinessRowFilled, isCargoRowFilled } from './dispatchWizardConstants'
 import { useDriverWebPushBoot } from './useDriverWebPushBoot'
 import { useDriverVisiblePoll } from './useDriverVisiblePoll'
@@ -59,6 +61,9 @@ export function useDriverTripDetailPage() {
 
   const expandedStudentIdx = ref(null)
   const isPaused = ref(false)
+
+  const cargoBusy = ref(false)
+  const cargoError = ref('')
 
   function costTypeLabel(type) {
     const k = `driver_trip_detail.cost_type_${String(type || 'other')}`
@@ -508,6 +513,43 @@ export function useDriverTripDetailPage() {
     return 'other'
   })
 
+  const cargoShipment = computed(() => trip.value?.cargo_shipment ?? null)
+
+  // Tài xế ghi nhận nhận/giao + ảnh khi chuyến chưa bị hủy.
+  const canActOnCargo = computed(
+    () => paxKind.value === 'cargo' && !!cargoShipment.value && trip.value?.status !== 'cancelled',
+  )
+
+  async function setCargoStatus(status) {
+    const sid = cargoShipment.value?.id
+    if (!sid || cargoBusy.value) return
+    cargoBusy.value = true
+    cargoError.value = ''
+    try {
+      const res = await driverUpdateCargoStatus(sid, { status })
+      if (res?.shipment && trip.value) trip.value.cargo_shipment = res.shipment
+    } catch {
+      cargoError.value = t('driver_trip_detail.cargo_action_error')
+    } finally {
+      cargoBusy.value = false
+    }
+  }
+
+  async function uploadCargoPod(file) {
+    const sid = cargoShipment.value?.id
+    if (!sid || !file || cargoBusy.value) return
+    cargoBusy.value = true
+    cargoError.value = ''
+    try {
+      await driverUploadCargoPod(sid, file)
+      await refresh()
+    } catch {
+      cargoError.value = t('driver_trip_detail.cargo_upload_error')
+    } finally {
+      cargoBusy.value = false
+    }
+  }
+
   function classFromNotes(notes) {
     const s = (notes || '').trim()
     if (!s) return ''
@@ -723,6 +765,8 @@ export function useDriverTripDetailPage() {
     costForm,
     expandedStudentIdx,
     isPaused,
+    cargoBusy,
+    cargoError,
     costTypes,
     tripId,
     dr,
@@ -751,6 +795,10 @@ export function useDriverTripDetailPage() {
     warningBanner,
     rowState,
     paxKind,
+    cargoShipment,
+    canActOnCargo,
+    setCargoStatus,
+    uploadCargoPod,
     paxList,
     displayedPaxList,
     statsStudentCount,

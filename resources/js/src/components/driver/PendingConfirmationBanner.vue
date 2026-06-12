@@ -216,8 +216,7 @@
             class="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end sm:pt-0.5"
           >
             <div
-              class="grid min-h-[48px] w-full gap-2 sm:flex sm:w-auto sm:gap-2"
-              :class="trip._tp ? 'grid-cols-1' : 'grid-cols-2'"
+              class="grid min-h-[48px] w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:gap-2"
             >
               <button
                 type="button"
@@ -228,13 +227,12 @@
                 {{ t('driver_home.btn_confirm') }}
               </button>
               <button
-                v-if="!trip._tp"
                 type="button"
                 class="inline-flex min-h-[48px] min-w-0 flex-1 items-center justify-center rounded-lg border border-rose-400/60 bg-rose-950/40 px-3 text-sm font-bold text-rose-200 transition hover:bg-rose-900/50 disabled:cursor-not-allowed disabled:opacity-45 sm:min-w-[7rem]"
                 :disabled="busyId != null"
                 @click="openDeclineModal(trip)"
               >
-                {{ t('driver_home.btn_decline') }}
+                {{ trip._tp ? t('driver_home.btn_busy') : t('driver_home.btn_decline') }}
               </button>
             </div>
           </div>
@@ -258,7 +256,7 @@
           @click.stop
         >
           <h2 id="decline-modal-title" class="text-lg font-bold text-white">
-            {{ t('driver_home.pending_decline_title') }}
+            {{ modalTitle }}
           </h2>
           <p v-if="declineTrip" class="mt-2 text-sm text-[#7fdcc8]/80">
             {{ declineTripSummary }}
@@ -266,12 +264,12 @@
 
           <template v-if="declineStep === 'reason'">
             <p class="mt-4 text-sm text-slate-400">
-              {{ t('driver_home.pending_decline_subtitle') }}
+              {{ modalSubtitle }}
             </p>
             <label
               class="mt-3 block text-xs font-semibold uppercase tracking-wide text-[#7fdcc8]/70"
             >
-              {{ t('driver_home.pending_decline_reason_label') }}
+              {{ modalReasonLabel }}
             </label>
             <textarea
               v-model="declineReason"

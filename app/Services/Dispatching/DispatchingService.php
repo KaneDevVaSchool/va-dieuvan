@@ -4,7 +4,9 @@ namespace App\Services\Dispatching;
 
 use App\Models\Driver;
 use App\Models\Trip;
+use App\Models\Vehicle;
 use App\Notifications\TripAssignedNotification;
+use App\Notifications\TripAssignedToRequesterNotification;
 use App\Notifications\TripDriverRemovedNotification;
 use App\Services\Auditing\AuditLogger;
 use App\Services\Trips\TripDriverNotifyService;
@@ -158,6 +160,7 @@ class DispatchingService
 
                 if ($allAssigned) {
                     $this->notifyAssignedDrivers($trip, $assignments, $defsByKey);
+                    $this->notifyRequesterAssigned($trip, $assignments, (int) ($payload['actor_id'] ?? 0));
                 }
             }
 
@@ -310,6 +313,110 @@ class DispatchingService
                 scheduleKey: $key !== '' ? $key : null,
             ));
         }
+    }
+
+    /**
+     * Thông báo cho người đề xuất phiếu sau khi gán xong xe + tài xế.
+     *
+     * @param  list<array<string, mixed>>  $assignments
+     */
+    private function notifyRequesterAssigned(Trip $trip, array $assignments, int $actorId): void
+    {
+        $trip->loadMissing(['dispatchRequest.requester']);
+        $dr = $trip->dispatchRequest;
+        $requester = $dr?->requester;
+        if ($requester === null) {
+            return;
+        }
+
+        // Tránh tự thông báo nếu người gán chính là người đề xuất.
+        if ($actorId > 0 && (int) $requester->getKey() === $actorId) {
+            return;
+        }
+
+        $labels = $this->resolveAssignmentLabels($assignments);
+        $tripType = is_string($dr->trip_type) && $dr->trip_type !== '' ? $dr->trip_type : 'unspecified';
+        $departAt = $trip->depart_at;
+
+        $requester->notify(new TripAssignedToRequesterNotification(
+            tripId: $trip->id,
+            dispatchRequestId: (int) $dr->getKey(),
+            tripType: $tripType,
+            origin: (string) ($dr->origin ?? ''),
+            destination: (string) ($dr->destination ?? ''),
+            departAt: $departAt instanceof Carbon
+                ? $departAt->toIso8601String()
+                : (string) ($departAt ?? ''),
+            driverLabel: $labels['drivers'],
+            vehicleLabel: $labels['vehicles'],
+            isUrgent: (bool) ($dr->is_urgent ?? false),
+        ));
+    }
+
+    /**
+     * Gộp tên tài xế + biển số xe (kể cả nguồn ngoài) từ các leg để hiển thị cho người đề xuất.
+     *
+     * @param  list<array<string, mixed>>  $assignments
+     * @return array{drivers: ?string, vehicles: ?string}
+     */
+    private function resolveAssignmentLabels(array $assignments): array
+    {
+        $driverIds = [];
+        $vehicleIds = [];
+        $externalDrivers = [];
+        $externalVehicles = [];
+        foreach ($assignments as $assign) {
+            if (! is_array($assign)) {
+                continue;
+            }
+            $did = (int) ($assign['driver_id'] ?? 0);
+            if ($did > 0) {
+                $driverIds[$did] = true;
+            }
+            $vid = (int) ($assign['vehicle_id'] ?? 0);
+            if ($vid > 0) {
+                $vehicleIds[$vid] = true;
+            }
+            $exd = trim((string) ($assign['external_driver_ref'] ?? ''));
+            if ($exd !== '') {
+                $externalDrivers[$exd] = true;
+            }
+            $exv = trim((string) ($assign['external_vehicle_ref'] ?? ''));
+            if ($exv !== '') {
+                $externalVehicles[$exv] = true;
+            }
+        }
+
+        $driverNames = [];
+        if ($driverIds !== []) {
+            foreach (Driver::query()->whereIn('id', array_keys($driverIds))->pluck('full_name') as $name) {
+                $n = trim((string) $name);
+                if ($n !== '') {
+                    $driverNames[] = $n;
+                }
+            }
+        }
+        foreach (array_keys($externalDrivers) as $ref) {
+            $driverNames[] = $ref;
+        }
+
+        $vehiclePlates = [];
+        if ($vehicleIds !== []) {
+            foreach (Vehicle::query()->whereIn('id', array_keys($vehicleIds))->pluck('license_plate') as $plate) {
+                $p = trim((string) $plate);
+                if ($p !== '') {
+                    $vehiclePlates[] = $p;
+                }
+            }
+        }
+        foreach (array_keys($externalVehicles) as $ref) {
+            $vehiclePlates[] = $ref;
+        }
+
+        return [
+            'drivers' => $driverNames !== [] ? implode(', ', $driverNames) : null,
+            'vehicles' => $vehiclePlates !== [] ? implode(', ', $vehiclePlates) : null,
+        ];
     }
 
     public function rescheduleDepartAt(Trip $trip, array $payload): Trip

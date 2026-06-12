@@ -3,9 +3,11 @@
 namespace App\Services\Notifications;
 
 use App\Models\DispatchRequest;
+use App\Models\TpProgramDay;
 use App\Models\User;
 use App\Notifications\NewDispatchRequestNotification;
 use App\Notifications\RecurringStudentCountSubmittedNotification;
+use App\Notifications\TpDriverReportedBusyNotification;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Role;
@@ -51,6 +53,34 @@ class DispatchStaffNotificationRecipients
                 (int) $dispatchRequest->id,
                 $summary !== '→' ? $summary : 'Yêu cầu #'.$dispatchRequest->id,
                 (bool) $dispatchRequest->is_urgent,
+            ),
+        );
+    }
+
+    public static function notifyTpDriverReportedBusy(
+        TpProgramDay $day,
+        ?string $shift,
+        string $driverName,
+        string $reason,
+    ): void {
+        $recipients = self::users();
+        if ($recipients->isEmpty()) {
+            return;
+        }
+
+        $program = $day->program;
+        $dateLabel = $day->scheduled_date ? $day->scheduled_date->format('d/m/Y') : '';
+
+        Notification::send(
+            $recipients,
+            new TpDriverReportedBusyNotification(
+                (int) $day->id,
+                (int) ($program?->id ?? 0),
+                (string) ($program?->name ?? ''),
+                $dateLabel,
+                $shift,
+                $driverName,
+                $reason,
             ),
         );
     }

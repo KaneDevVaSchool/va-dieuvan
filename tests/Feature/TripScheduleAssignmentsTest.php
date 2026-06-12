@@ -7,12 +7,14 @@ use App\Models\Driver;
 use App\Models\Trip;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Notifications\TripAssignedToRequesterNotification;
 use App\Services\Dispatching\DispatchingService;
 use App\Services\Dispatching\TripScheduleLegService;
 use App\Support\TripVisibility;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class TripScheduleAssignmentsTest extends TestCase
@@ -195,7 +197,14 @@ class TripScheduleAssignmentsTest extends TestCase
             'license_plate' => '51A-TEST',
             'type' => 'bus',
             'seat_count' => 16,
-            'status' => 'active',
+            'status' => 'ready',
+        ]);
+        // Xe riêng (rảnh) cho chuyến đích — cô lập kịch bản "tài xế không bị chặn".
+        $vehicleFree = Vehicle::query()->create([
+            'license_plate' => '51A-FREE',
+            'type' => 'bus',
+            'seat_count' => 16,
+            'status' => 'ready',
         ]);
 
         $driverMorning = Driver::query()->create([
@@ -310,7 +319,7 @@ class TripScheduleAssignmentsTest extends TestCase
                 [
                     'key' => 'business:0',
                     'driver_id' => $driverMorning->id,
-                    'vehicle_id' => $vehicle->id,
+                    'vehicle_id' => $vehicleFree->id,
                 ],
             ],
         ]);
@@ -326,7 +335,7 @@ class TripScheduleAssignmentsTest extends TestCase
             'license_plate' => '51A-NOTIME',
             'type' => 'bus',
             'seat_count' => 16,
-            'status' => 'active',
+            'status' => 'ready',
         ]);
         $driver = Driver::query()->create([
             'user_id' => User::factory()->create()->id,
@@ -379,5 +388,122 @@ class TripScheduleAssignmentsTest extends TestCase
 
         $this->assertSame('assigned', $updated->status);
         $this->assertSame($driver->id, (int) $updated->driver_id);
+    }
+
+    public function test_assign_notifies_requester_with_vehicle_and_driver(): void
+    {
+        Notification::fake();
+        $this->seed(RbacSeeder::class);
+
+        $vehicle = Vehicle::query()->create([
+            'license_plate' => '51B-51301',
+            'type' => 'bus',
+            'seat_count' => 16,
+            'status' => 'ready',
+        ]);
+        $driver = Driver::query()->create([
+            'user_id' => User::factory()->create()->id,
+            'full_name' => 'Tài Xế A',
+            'phone' => '0900000123',
+            'status' => 'active',
+        ]);
+
+        $requester = User::factory()->create(['is_active' => true]);
+
+        $dr = DispatchRequest::create([
+            'requester_id' => $requester->id,
+            'trip_type' => 'business',
+            'origin' => '982/8 Quang Trung',
+            'destination' => 'Cityland Center Hills',
+            'depart_at' => now()->addDay(),
+            'status' => 'approved',
+            'source_channel' => 'portal',
+            'is_urgent' => false,
+            'paper_status' => 'pending',
+            'wizard_snapshot' => [
+                'businessRows' => [
+                    ['pickup' => '982/8 Quang Trung', 'dropoff' => 'Cityland Center Hills', 'guests' => '1'],
+                ],
+            ],
+        ]);
+
+        $trip = Trip::create([
+            'dispatch_request_id' => $dr->id,
+            'status' => 'approved',
+            'depart_at' => now()->addDay(),
+            'lock_version' => 0,
+        ]);
+
+        app(DispatchingService::class)->assignResources($trip, [
+            'lock_version' => 0,
+            'schedule_assignments' => [
+                ['key' => 'business:0', 'driver_id' => $driver->id, 'vehicle_id' => $vehicle->id],
+            ],
+        ]);
+
+        Notification::assertSentTo(
+            $requester,
+            TripAssignedToRequesterNotification::class,
+            function (TripAssignedToRequesterNotification $n) use ($dr) {
+                return $n->dispatchRequestId === $dr->id
+                    && $n->vehicleLabel === '51B-51301'
+                    && $n->driverLabel === 'Tài Xế A';
+            },
+        );
+    }
+
+    public function test_assign_does_not_notify_requester_when_actor_is_requester(): void
+    {
+        Notification::fake();
+        $this->seed(RbacSeeder::class);
+
+        $vehicle = Vehicle::query()->create([
+            'license_plate' => '51B-99999',
+            'type' => 'bus',
+            'seat_count' => 16,
+            'status' => 'ready',
+        ]);
+        $driver = Driver::query()->create([
+            'user_id' => User::factory()->create()->id,
+            'full_name' => 'Self Driver',
+            'phone' => '0900000124',
+            'status' => 'active',
+        ]);
+
+        $requester = User::factory()->create(['is_active' => true]);
+
+        $dr = DispatchRequest::create([
+            'requester_id' => $requester->id,
+            'trip_type' => 'business',
+            'origin' => 'X',
+            'destination' => 'Y',
+            'depart_at' => now()->addDay(),
+            'status' => 'approved',
+            'source_channel' => 'portal',
+            'is_urgent' => false,
+            'paper_status' => 'pending',
+            'wizard_snapshot' => [
+                'businessRows' => [
+                    ['pickup' => 'X', 'dropoff' => 'Y', 'guests' => '1'],
+                ],
+            ],
+        ]);
+
+        $trip = Trip::create([
+            'dispatch_request_id' => $dr->id,
+            'status' => 'approved',
+            'depart_at' => now()->addDay(),
+            'lock_version' => 0,
+        ]);
+
+        app(DispatchingService::class)->assignResources($trip, [
+            'lock_version' => 0,
+            'actor_id' => $requester->id,
+            'schedule_assignments' => [
+                ['key' => 'business:0', 'driver_id' => $driver->id, 'vehicle_id' => $vehicle->id],
+            ],
+        ]);
+
+        Notification::assertNotSentTo($requester, TripAssignedToRequesterNotification::class);
     }
 }

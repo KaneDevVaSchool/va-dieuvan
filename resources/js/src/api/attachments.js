@@ -53,3 +53,16 @@ export async function uploadCargoPod(cargoShipmentId, file, onProgress) {
   })
   return data.data
 }
+
+/** Tài xế tải ảnh minh chứng (POD) cho chuyến mình được phân. */
+export async function driverUploadCargoPod(cargoShipmentId, file, onProgress) {
+  const fd = new FormData()
+  fd.append('file', file)
+  const { data } = await http.post(`/driver/cargo-shipments/${cargoShipmentId}/pod`, fd, {
+    onUploadProgress: (e) => {
+      if (!onProgress || !e.total) return
+      onProgress(e.loaded / e.total)
+    },
+  })
+  return data.data
+}

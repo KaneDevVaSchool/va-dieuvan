@@ -99,6 +99,12 @@ const KIND_CONFIG = {
     color: 'text-sky-600 dark:text-sky-400',
     badge: 'bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-200',
   },
+  assigned_to_requester: {
+    icon: TruckIcon,
+    bg: 'bg-teal-100 dark:bg-teal-950/60',
+    color: 'text-teal-600 dark:text-teal-400',
+    badge: 'bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-200',
+  },
   new_trip: {
     icon: PlusCircleIcon,
     bg: 'bg-emerald-100 dark:bg-emerald-950/60',

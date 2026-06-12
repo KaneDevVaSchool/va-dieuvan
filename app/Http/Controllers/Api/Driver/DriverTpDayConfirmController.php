@@ -6,10 +6,13 @@ use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Api\Driver\Concerns\ActsOnTpExecutions;
 use App\Http\Controllers\Controller;
 use App\Models\TpProgramDay;
+use App\Services\Notifications\DispatchStaffNotificationRecipients;
+use App\Services\TransportProgram\DriverAssignmentService;
 use App\Services\TransportProgram\TpAuditLogger;
 use App\Services\TransportProgram\TpProgramPresenter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Tài xế xác nhận sẽ chạy chuyến định kì (trước bước "Bắt đầu chuyến").
@@ -33,6 +36,7 @@ class DriverTpDayConfirmController extends Controller
         $shift = $this->resolveShift($request);
         $driver = $this->assertCanStartDay($request->user(), $tpProgramDay, $shift);
 
+        $this->assertProgramActive($tpProgramDay);
         abort_if($tpProgramDay->day_type === TpProgramDay::DAY_CANCELLED, 422, 'Ngày này đã bị hủy.');
         abort_if($tpProgramDay->shiftExecutionStarted($shift), 422, 'Ca này đã được bắt đầu.');
 
@@ -64,6 +68,43 @@ class DriverTpDayConfirmController extends Controller
         }
 
         return $this->ok($this->buildPayload($tpProgramDay->fresh(), $shift));
+    }
+
+    /**
+     * Tài xế báo bận một ca: gỡ phân công khỏi ca đó + thông báo điều phối để phân tài xế khác.
+     */
+    public function reportBusy(Request $request, TpProgramDay $tpProgramDay): JsonResponse
+    {
+        $shift = $this->resolveShift($request);
+        $driver = $this->assertCanStartDay($request->user(), $tpProgramDay, $shift);
+        $this->assertProgramActive($tpProgramDay);
+        abort_if($tpProgramDay->shiftExecutionStarted($shift), 422, 'Ca này đã được bắt đầu, không thể báo bận.');
+
+        $validated = $request->validate([
+            'reason' => ['nullable', 'string', 'max:500'],
+        ]);
+        $reason = trim((string) ($validated['reason'] ?? ''));
+
+        return DB::transaction(function () use ($request, $tpProgramDay, $shift, $driver, $reason) {
+            // Gỡ phân công tài xế khỏi ca này (override theo ngày/ca).
+            app(DriverAssignmentService::class)->clearOverride($tpProgramDay, $request->user()?->id, $shift);
+
+            $this->audit->log($request->user()?->id, 'day.report_busy', $tpProgramDay, $tpProgramDay->program, metadata: [
+                'shift' => $shift,
+                'driver_id' => $driver->id,
+                'reason' => $reason !== '' ? $reason : null,
+            ]);
+
+            // Báo điều phối/Admin để phân tài xế khác.
+            DispatchStaffNotificationRecipients::notifyTpDriverReportedBusy(
+                $tpProgramDay->fresh('program'),
+                $shift,
+                (string) ($driver->full_name ?? ''),
+                $reason,
+            );
+
+            return $this->ok($this->buildPayload($tpProgramDay->fresh(), $shift));
+        });
     }
 
     public function unconfirm(Request $request, TpProgramDay $tpProgramDay): JsonResponse

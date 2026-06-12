@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Driver;
 use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Api\Driver\Concerns\ActsOnTpExecutions;
 use App\Http\Controllers\Controller;
+use App\Models\TpProgram;
 use App\Models\TpProgramDay;
 use App\Services\TransportProgram\TpProgramScheduleSlots;
 use App\Services\TransportProgram\TpShiftDriverSupport;
@@ -36,6 +37,8 @@ class DriverTpDayListController extends Controller
         $days = TpProgramDay::query()
             ->with(['program', 'executions'])
             ->where('day_type', TpProgramDay::DAY_OPERATING)
+            // Ẩn ngày thuộc chương trình đã hủy/tạm dừng/nháp/hoàn thành khỏi luồng tài xế.
+            ->whereHas('program', fn ($q) => $q->where('status', TpProgram::STATUS_ACTIVE))
             ->whereDate('scheduled_date', '>=', $from)
             ->whereDate('scheduled_date', '<=', $to)
             ->get();

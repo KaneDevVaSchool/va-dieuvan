@@ -49,7 +49,10 @@ return new class extends Migration
             $table->index(['attachable_type', 'attachable_id', 'kind'], 'attachments_attachable_kind_idx');
         });
 
-        DB::statement('ALTER TABLE `attachments` MODIFY `file_binary` LONGBLOB NULL');
+        // Cú pháp MODIFY ... LONGBLOB chỉ áp dụng cho MySQL (SQLite/Postgres dùng cho test bỏ qua).
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE `attachments` MODIFY `file_binary` LONGBLOB NULL');
+        }
     }
 
     public function down(): void

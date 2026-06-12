@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Driver\Concerns;
 
 use App\Models\Driver;
+use App\Models\TpProgram;
 use App\Models\TpProgramDay;
 use App\Models\TpTripExecution;
 use App\Models\User;
@@ -45,6 +46,20 @@ trait ActsOnTpExecutions
         abort_unless($effective && (int) $effective->id === (int) $driver->id, 403, 'Bạn không được gán chuyến này.');
 
         return $driver;
+    }
+
+    /**
+     * Chặn xác nhận/bắt đầu chuyến khi chương trình đưa đón không còn hoạt động
+     * (đã hủy / tạm dừng / nháp / hoàn thành). Dùng cho confirm + start.
+     */
+    protected function assertProgramActive(TpProgramDay $day): void
+    {
+        $day->loadMissing('program');
+        abort_if(
+            $day->program && $day->program->status !== TpProgram::STATUS_ACTIVE,
+            422,
+            'Chương trình đưa đón không còn hoạt động.',
+        );
     }
 
     protected function assertCanActOnExecution(?User $user, TpTripExecution $execution): void

@@ -7,6 +7,7 @@
 
 use App\Http\Controllers\Api\Attachments\AttachmentController;
 use App\Http\Controllers\Api\Costs\TripCostController;
+use App\Http\Controllers\Api\Driver\DriverCargoController;
 use App\Http\Controllers\Api\Trips\TripOpsController;
 use Illuminate\Support\Facades\Route;
 
@@ -37,7 +38,14 @@ Route::prefix('trip-costs')->controller(TripCostController::class)->group(functi
 Route::prefix('driver/tp-days')->group(function () {
     Route::post('/{tpProgramDay}/confirm', [\App\Http\Controllers\Api\Driver\DriverTpDayConfirmController::class, 'confirm'])->middleware('throttle:60,1');
     Route::delete('/{tpProgramDay}/confirm', [\App\Http\Controllers\Api\Driver\DriverTpDayConfirmController::class, 'unconfirm'])->middleware('throttle:60,1');
+    Route::post('/{tpProgramDay}/report-busy', [\App\Http\Controllers\Api\Driver\DriverTpDayConfirmController::class, 'reportBusy'])->middleware('throttle:30,1');
     Route::post('/{tpProgramDay}/start', \App\Http\Controllers\Api\Driver\DriverTripStartController::class)->middleware('throttle:60,1');
+});
+
+// Hàng hoá: tài xế ghi nhận nhận/giao + ảnh minh chứng cho chuyến mình được phân.
+Route::prefix('driver/cargo-shipments')->controller(DriverCargoController::class)->group(function () {
+    Route::post('/{cargoShipment}/status', 'updateStatus')->middleware('throttle:60,1');
+    Route::post('/{cargoShipment}/pod', 'uploadPod')->middleware('throttle:20,1');
 });
 
 Route::prefix('driver/tp-executions')->group(function () {
