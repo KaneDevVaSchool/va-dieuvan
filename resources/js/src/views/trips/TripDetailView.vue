@@ -36,11 +36,20 @@
         </div>
 
         <template v-else-if="trip">
-            <StickyTripHeader
-                :trip="trip"
+            <TripHeroHeader
                 :display-code="tripDisplayCode"
-                :countdown-label="countdown"
+                :status="trip.status"
                 :status-label-override="tripStatusLabelOverride"
+                :countdown-label="countdown"
+                :origin="displayOriginLabel"
+                :destination="displayDestinationLabel"
+                :depart-summary="heroDepartSummary"
+                :trip-type="tripTypeLabel"
+                :passenger-line="heroPassengerLine"
+                :requester-name="requesterName"
+                :requester-unit="requesterSubtitle"
+                :requester-initials="requesterInitials"
+                :created-date="fmt(trip.created_at)"
                 :can-approve="canAssign"
                 :can-reject="canRejectTripFromHeader"
                 :refreshing="refreshing"
@@ -51,13 +60,6 @@
                 @reject="onRejectTrip"
             />
             <div class="w-full max-w-none space-y-4 px-2 pb-10 pt-3 sm:px-3 md:px-4 lg:px-5">
-                <p class="text-[11px] text-slate-500">
-                    {{
-                        t("trip_detail.created_at", {
-                            time: fmt(trip.created_at),
-                        })
-                    }}
-                </p>
                 <p
                     v-if="silentLoadError"
                     class="rounded-lg border border-amber-200 bg-amber-50/90 px-3 py-2 text-[11px] text-amber-900"
@@ -148,7 +150,7 @@
 
                 <!-- PRIMARY NAVIGATION — full-width sticky tabs -->
                 <div
-                    class="sticky top-14 z-30 -mx-2 border-b border-slate-200 bg-[#F8F9FA]/95 px-2 backdrop-blur sm:-mx-3 sm:px-3 md:-mx-4 md:px-4 lg:-mx-5 lg:px-5"
+                    class="sticky top-0 z-30 -mx-2 border-b border-slate-200 bg-[#F8F9FA]/95 px-2 backdrop-blur sm:-mx-3 sm:px-3 md:-mx-4 md:px-4 lg:-mx-5 lg:px-5"
                 >
                     <nav
                         class="flex gap-0.5 overflow-x-auto scrollbar-hidden"
@@ -742,7 +744,7 @@ import Select from "../../components/ui/Select.vue";
 import CostTracker from "../../components/trips/CostTracker.vue";
 import StatusActions from "../../components/trips/StatusActions.vue";
 import PassengerCheckIn from "../../components/trips/PassengerCheckIn.vue";
-import StickyTripHeader from "../../components/trips/StickyTripHeader.vue";
+import TripHeroHeader from "../../components/trips/TripHeroHeader.vue";
 import TripTimeline from "../../components/trips/TripTimeline.vue";
 import TripInfoCard from "../../components/trips/TripInfoCard.vue";
 import TripSchedulesPanel from "../../components/trips/TripSchedulesPanel.vue";
@@ -1421,6 +1423,21 @@ const displayDestinationLabel = computed(() => {
     const dropoff = routeInfoScheduleCard.value?.dropoff?.trim();
     if (dropoff) return dropoff;
     return destinationLabel.value;
+});
+
+/** Tóm tắt khởi hành cho header hero: ngày dài + khung giờ. */
+const heroDepartSummary = computed(() => {
+    const date = scheduleDateLong.value?.trim();
+    const time = scheduleTimeRange.value?.trim();
+    if (date && time) return `${date} · ${time}`;
+    return date || time || "";
+});
+
+/** Dòng hành khách cho header hero (vd. «8 khách»). */
+const heroPassengerLine = computed(() => {
+    const n = unifiedPassengerCount.value;
+    if (!n) return "";
+    return t("trip_detail.schedules.total_guests_value", { n });
 });
 
 watch(

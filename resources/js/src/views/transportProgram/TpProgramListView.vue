@@ -194,69 +194,91 @@
         </Button>
       </div>
 
-      <div v-else-if="view === 'grid'" class="grid grid-cols-1 gap-4 px-4 pb-5 sm:px-5">
+      <div
+        v-else-if="view === 'grid'"
+        class="grid grid-cols-1 gap-3 px-4 pb-4 sm:grid-cols-2 sm:px-5 xl:grid-cols-3"
+      >
         <article
           v-for="p in visibleItems"
           :key="p.id"
-          class="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:border-va-800/30 hover:shadow-md dark:border-slate-700 dark:bg-slate-900/40"
+          class="group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-va-800/30 hover:shadow-md dark:border-slate-700 dark:bg-slate-900/40"
           :data-testid="`tp-program-card-${p.id}`"
           @click="goWorkspace(p.id)"
         >
-          <div class="flex flex-col gap-4 p-5">
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div class="flex min-w-0 items-start gap-3">
-                <div class="grid h-12 w-12 shrink-0 place-items-center rounded-xl ring-1 ring-inset ring-black/5" :class="accent(p.status).iconBg">
-                  <TruckIcon class="h-7 w-7" :class="accent(p.status).iconText" />
+          <div class="flex min-h-0 flex-1 flex-col gap-2.5 p-3.5">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex min-w-0 items-start gap-2.5">
+                <div
+                  class="grid h-9 w-9 shrink-0 place-items-center rounded-lg ring-1 ring-inset ring-black/5"
+                  :class="accent(p.status).iconBg"
+                >
+                  <TruckIcon class="h-5 w-5" :class="accent(p.status).iconText" />
                 </div>
                 <div class="min-w-0">
-                  <h3 class="text-base font-semibold leading-snug text-slate-900 dark:text-white sm:text-lg">{{ p.name }}</h3>
-                  <p class="mt-0.5 text-xs font-medium uppercase tracking-wide text-slate-400">
+                  <h3 class="line-clamp-2 text-sm font-semibold leading-snug text-slate-900 dark:text-white">
+                    {{ p.name }}
+                  </h3>
+                  <p class="mt-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
                     {{ t('tp_programs_page.card_school_year', { year: schoolYear(p) }) }}
                   </p>
                 </div>
               </div>
-              <span :class="statusClass(p.status)" class="self-start">
-                <span class="h-1.5 w-1.5 rounded-full" :class="accent(p.status).dot"></span>
+              <span :class="statusClassCompact(p.status)" class="shrink-0">
+                <span class="h-1 w-1 rounded-full" :class="accent(p.status).dot"></span>
                 {{ statusLabel(p.status) }}
               </span>
             </div>
 
-            <div class="grid grid-cols-3 divide-x divide-slate-200/80 overflow-hidden rounded-xl border border-slate-200/80 bg-slate-50/50 dark:divide-slate-600 dark:border-slate-700 dark:bg-slate-800/30">
-              <div class="px-3 py-3 text-center sm:px-4">
-                <div class="font-display text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{{ p.enrolled_count ?? 0 }}</div>
-                <div class="mt-0.5 text-[11px] font-medium text-slate-500">{{ t('tp_programs_page.card_students') }}</div>
+            <div
+              class="grid grid-cols-3 divide-x divide-slate-200/80 overflow-hidden rounded-lg border border-slate-200/80 bg-slate-50/50 dark:divide-slate-600 dark:border-slate-700 dark:bg-slate-800/30"
+            >
+              <div class="px-1.5 py-2 text-center">
+                <div class="font-display text-lg font-bold tabular-nums leading-none text-slate-900 dark:text-white">
+                  {{ p.enrolled_count ?? 0 }}
+                </div>
+                <div class="mt-0.5 text-[10px] font-medium leading-tight text-slate-500">
+                  {{ t('tp_programs_page.card_students') }}
+                </div>
               </div>
-              <div class="px-3 py-3 text-center sm:px-4">
-                <div class="font-display text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{{ p.day_count ?? 0 }}</div>
-                <div class="mt-0.5 text-[11px] font-medium text-slate-500">{{ t('tp_programs_page.card_days') }}</div>
+              <div class="px-1.5 py-2 text-center">
+                <div class="font-display text-lg font-bold tabular-nums leading-none text-slate-900 dark:text-white">
+                  {{ p.day_count ?? 0 }}
+                </div>
+                <div class="mt-0.5 text-[10px] font-medium leading-tight text-slate-500">
+                  {{ t('tp_programs_page.card_days') }}
+                </div>
               </div>
-              <div class="px-3 py-3 text-center sm:px-4">
-                <div class="font-display text-2xl font-bold tabular-nums" :class="accent(p.status).iconText">{{ runsPerWeek(p) }}</div>
-                <div class="mt-0.5 text-[11px] font-medium text-slate-500">{{ t('tp_programs_page.card_sessions_per_week') }}</div>
+              <div class="px-1.5 py-2 text-center">
+                <div class="font-display text-lg font-bold tabular-nums leading-none" :class="accent(p.status).iconText">
+                  {{ runsPerWeek(p) }}
+                </div>
+                <div class="mt-0.5 text-[10px] font-medium leading-tight text-slate-500">
+                  {{ t('tp_programs_page.card_sessions_per_week') }}
+                </div>
               </div>
             </div>
 
-            <div class="rounded-xl border border-slate-200/80 bg-white p-4 dark:border-slate-700 dark:bg-slate-900/50">
-              <div class="flex gap-3">
-                <div class="flex w-5 shrink-0 flex-col items-center pt-1" aria-hidden="true">
-                  <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-500/15"></span>
-                  <span class="my-1 w-px flex-1 min-h-6 bg-gradient-to-b from-emerald-300/80 to-va-800/40 dark:from-emerald-600/50"></span>
-                  <span class="h-2.5 w-2.5 rounded-full bg-va-800 ring-4 ring-va-800/15"></span>
+            <div class="rounded-lg border border-slate-200/80 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-900/50">
+              <div class="flex gap-2">
+                <div class="flex w-3 shrink-0 flex-col items-center pt-0.5" aria-hidden="true">
+                  <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 ring-2 ring-emerald-500/15"></span>
+                  <span class="my-0.5 w-px min-h-4 flex-1 bg-gradient-to-b from-emerald-300/80 to-va-800/40 dark:from-emerald-600/50"></span>
+                  <span class="h-1.5 w-1.5 rounded-full bg-va-800 ring-2 ring-va-800/15"></span>
                 </div>
-                <div class="min-w-0 flex-1 space-y-4">
+                <div class="min-w-0 flex-1 space-y-2">
                   <div>
-                    <div class="text-[10px] font-semibold uppercase tracking-wide text-emerald-700/90 dark:text-emerald-400">
+                    <div class="text-[9px] font-semibold uppercase tracking-wide text-emerald-700/90 dark:text-emerald-400">
                       {{ t('tp_programs_page.card_origin') }}
                     </div>
-                    <p class="mt-1 text-sm font-medium leading-relaxed text-slate-800 dark:text-slate-100">
+                    <p class="mt-0.5 line-clamp-2 text-xs font-medium leading-snug text-slate-800 dark:text-slate-100">
                       {{ p.origin_name || t('tp_programs_page.card_route_empty') }}
                     </p>
                   </div>
                   <div>
-                    <div class="text-[10px] font-semibold uppercase tracking-wide text-va-800/90 dark:text-va-300">
+                    <div class="text-[9px] font-semibold uppercase tracking-wide text-va-800/90 dark:text-va-300">
                       {{ t('tp_programs_page.card_destination') }}
                     </div>
-                    <p class="mt-1 text-sm font-medium leading-relaxed text-slate-800 dark:text-slate-100">
+                    <p class="mt-0.5 line-clamp-2 text-xs font-medium leading-snug text-slate-800 dark:text-slate-100">
                       {{ p.destination_name || t('tp_programs_page.card_destination_default') }}
                     </p>
                   </div>
@@ -264,22 +286,24 @@
               </div>
             </div>
 
-            <div class="flex flex-wrap items-center gap-2">
+            <div class="flex flex-wrap items-center gap-1.5">
               <span
-                class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-800/50 dark:text-slate-200"
+                class="inline-flex max-w-full items-center gap-1 rounded-md border border-slate-200/80 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-800/50 dark:text-slate-200"
               >
-                <ClockIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-                <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{{ t('tp_programs_page.card_time') }}</span>
-                <span class="tabular-nums text-slate-800 dark:text-slate-100">{{ timeRange(p) }}</span>
+                <ClockIcon class="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+                <span class="shrink-0 text-[9px] font-semibold uppercase tracking-wide text-slate-400">
+                  {{ t('tp_programs_page.card_time') }}
+                </span>
+                <span class="truncate tabular-nums text-slate-800 dark:text-slate-100">{{ timeRange(p) }}</span>
               </span>
             </div>
 
-            <div>
-              <div class="mb-1.5 flex items-center justify-between text-xs">
+            <div class="mt-auto">
+              <div class="mb-1 flex items-center justify-between text-[10px]">
                 <span class="font-medium text-slate-500">{{ t('tp_programs_page.card_progress') }}</span>
                 <span class="font-semibold tabular-nums text-slate-700 dark:text-slate-200">{{ progress(p) }}%</span>
               </div>
-              <div class="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
+              <div class="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
                 <div
                   class="h-full rounded-full transition-all"
                   :class="accent(p.status).bar"
@@ -289,15 +313,20 @@
             </div>
           </div>
 
-          <div class="flex items-center justify-between border-t border-slate-100 px-5 py-3.5 dark:border-slate-700">
-            <div class="flex min-w-0 items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-              <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500 dark:bg-slate-800">
+          <div class="flex items-center justify-between gap-2 border-t border-slate-100 px-3.5 py-2 dark:border-slate-700">
+            <div class="flex min-w-0 items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
+              <span
+                class="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-slate-100 text-[10px] font-semibold text-slate-500 dark:bg-slate-800"
+              >
                 {{ initials(p.responsible_user_name) }}
               </span>
               <span class="truncate">{{ p.responsible_user_name || t('tp_programs_page.card_responsible') }}</span>
             </div>
-            <span class="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-va-800 group-hover:underline">
-              {{ t('tp_programs_page.card_view_detail') }} <ArrowRightIcon class="h-4 w-4" aria-hidden="true" />
+            <span
+              class="inline-flex shrink-0 items-center gap-0.5 text-xs font-medium text-va-800 group-hover:underline"
+            >
+              {{ t('tp_programs_page.card_view_detail') }}
+              <ArrowRightIcon class="h-3.5 w-3.5" aria-hidden="true" />
             </span>
           </div>
         </article>
@@ -651,6 +680,20 @@ function statusLabel(s) {
 }
 function statusClass(s) {
   const base = 'inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium '
+  return (
+    base +
+    ({
+      draft: 'bg-slate-100 text-slate-600',
+      active: 'bg-emerald-50 text-emerald-700',
+      paused: 'bg-amber-50 text-amber-700',
+      completed: 'bg-sky-50 text-sky-700',
+      cancelled: 'bg-rose-50 text-rose-700',
+    }[s] || 'bg-slate-100 text-slate-600')
+  )
+}
+
+function statusClassCompact(s) {
+  const base = 'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium leading-none '
   return (
     base +
     ({

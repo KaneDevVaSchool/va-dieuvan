@@ -120,61 +120,6 @@
           </div>
 
           <div class="ml-auto flex shrink-0 flex-wrap items-center gap-2">
-            <FilterVisibilityDropdown
-              :open="showGroupPanelDd"
-              :title="t('tp_student_page.group_strip_menu')"
-              @close="closeGroupPanel"
-            >
-              <template #trigger>
-                <DatagridToolbarActionButton
-                  icon="columns"
-                  :active="showGroupPanelDd"
-                  test-id="tp-student-toolbar-groups"
-                  @click="toggleGroupPanel"
-                >
-                  {{ t('tp_student_page.group_strip_menu') }}
-                </DatagridToolbarActionButton>
-              </template>
-              <li>
-                <button
-                  type="button"
-                  class="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
-                  data-testid="tp-student-group-expand-all"
-                  @click="expandAllGroups"
-                >
-                  {{ t('tp_student_page.group_strip_expand_all') }}
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  class="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
-                  data-testid="tp-student-group-collapse-all"
-                  @click="collapseAllGroups"
-                >
-                  {{ t('tp_student_page.group_strip_collapse_all') }}
-                </button>
-              </li>
-              <li class="my-1 border-t border-slate-100 dark:border-slate-700" aria-hidden="true" />
-              <li v-for="group in itemGroups" :key="'tp-stu-grp-dd-' + group.key">
-                <button
-                  type="button"
-                  class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
-                  :data-testid="`tp-student-group-dd-${group.key}`"
-                  @click="toggleGroup(group.key)"
-                >
-                  <ChevronRightIcon
-                    class="h-4 w-4 shrink-0 text-slate-400 transition"
-                    :class="{ 'rotate-90 text-va-800': isGroupOpen(group.key) }"
-                    aria-hidden="true"
-                  />
-                  <span class="min-w-0 flex-1 truncate">{{ groupTitle(group) }}</span>
-                  <span class="shrink-0 tabular-nums text-xs text-slate-400">
-                    {{ t('tp_student_page.group_count', { count: group.items.length }) }}
-                  </span>
-                </button>
-              </li>
-            </FilterVisibilityDropdown>
             <details ref="exportMenuRef" class="group relative">
               <summary class="list-none [&::-webkit-details-marker]:hidden">
                 <DatagridToolbarActionButton
@@ -244,48 +189,6 @@
       {{ t('tp_student_page.empty') }}
     </div>
     <div v-else class="overflow-x-auto overscroll-x-contain">
-      <div
-        class="flex flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain border-b border-slate-100 px-4 py-2.5 dark:border-slate-700 sm:px-5"
-        role="group"
-        :aria-label="t('tp_student_page.group_strip_aria')"
-      >
-        <button
-          v-for="group in itemGroups"
-          :key="'tp-stu-grp-strip-' + group.key"
-          type="button"
-          class="inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-va-700/30"
-          :class="
-            isGroupOpen(group.key)
-              ? 'border-va-800/35 bg-va-50 text-va-900 dark:border-va-600/50 dark:bg-va-950/40 dark:text-va-100'
-              : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300'
-          "
-          :aria-expanded="isGroupOpen(group.key)"
-          :aria-label="t('tp_student_page.group_toggle_aria', { name: groupTitle(group) })"
-          :data-testid="`tp-student-group-strip-${group.key}`"
-          @click="toggleGroup(group.key)"
-        >
-          <ChevronRightIcon
-            class="h-4 w-4 shrink-0 transition"
-            :class="isGroupOpen(group.key) ? 'rotate-90 text-va-800' : 'text-slate-400'"
-            aria-hidden="true"
-          />
-          <span class="max-w-[14rem] truncate">{{ groupTitle(group) }}</span>
-          <span
-            class="rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums"
-            :class="isGroupOpen(group.key) ? 'bg-va-800/10 text-va-800' : 'bg-slate-100 text-slate-500'"
-          >
-            {{ group.items.length }}
-          </span>
-          <span
-            v-if="group.program"
-            class="hidden text-[11px] font-normal sm:inline"
-            :class="programSubClass(group.program.status)"
-          >
-            · {{ programSubLabel(group.program) }}
-          </span>
-        </button>
-      </div>
-
       <table class="w-full min-w-[60rem] text-left text-sm">
         <thead class="border-b border-slate-200 bg-slate-50/80 text-[11px] uppercase tracking-wide text-slate-500">
           <tr>
@@ -310,84 +213,115 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100">
-          <tr v-if="!anyGroupOpen">
-            <td :colspan="tableColSpan" class="px-4 py-10 text-center text-sm text-slate-500">
-              {{ t('tp_student_page.group_collapsed_hint') }}
-            </td>
-          </tr>
-          <template v-for="group in itemGroups" :key="'grp-rows-' + group.key">
+          <template v-for="group in itemGroups" :key="'grp-block-' + group.key">
+            <tr
+              class="border-y border-slate-200/90 bg-gradient-to-r from-slate-50/95 via-slate-50/70 to-white dark:border-slate-600 dark:from-slate-800/60 dark:via-slate-800/40 dark:to-slate-900/20"
+              :data-testid="`tp-student-group-row-${group.key}`"
+            >
+              <td :colspan="tableColSpan" class="p-0">
+                <button
+                  type="button"
+                  class="flex w-full min-w-0 items-center gap-3 px-4 py-3 text-left transition hover:bg-va-50/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-va-700/25 dark:hover:bg-va-950/20 sm:px-5"
+                  :aria-expanded="isGroupOpen(group.key)"
+                  :aria-label="t('tp_student_page.group_toggle_aria', { name: groupTitle(group) })"
+                  :data-testid="`tp-student-group-toggle-${group.key}`"
+                  @click="toggleGroup(group.key)"
+                >
+                  <ChevronRightIcon
+                    class="h-4 w-4 shrink-0 text-va-800 transition"
+                    :class="{ 'rotate-90': isGroupOpen(group.key) }"
+                    aria-hidden="true"
+                  />
+                  <span class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-900 dark:text-white">
+                    {{ groupTitle(group) }}
+                  </span>
+                  <span
+                    v-if="group.program"
+                    class="hidden shrink-0 text-xs font-medium sm:inline"
+                    :class="programSubClass(group.program.status)"
+                  >
+                    {{ programSubLabel(group.program) }}
+                  </span>
+                  <span
+                    class="shrink-0 rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold tabular-nums text-slate-600 ring-1 ring-slate-200/80 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-600"
+                  >
+                    {{ t('tp_student_page.group_count', { count: group.items.length }) }}
+                  </span>
+                </button>
+              </td>
+            </tr>
             <template v-if="isGroupOpen(group.key)">
               <tr v-for="(s, gi) in group.items" :key="s.id" class="transition hover:bg-slate-50/70">
-            <td class="px-3 py-3">
-              <input type="checkbox" :value="s.id" v-model="selected" class="h-4 w-4 rounded border-slate-300 accent-va-800" />
-            </td>
-            <td class="px-3 py-3 text-xs font-medium text-slate-400">{{ rowNumber(group.startIndex + gi) }}</td>
+                <td class="px-3 py-3">
+                  <input type="checkbox" :value="s.id" v-model="selected" class="h-4 w-4 rounded border-slate-300 accent-va-800" />
+                </td>
+                <td class="px-3 py-3 text-xs font-medium text-slate-400">{{ rowNumber(group.startIndex + gi) }}</td>
 
-            <td class="px-3 py-3">
-              <div class="flex items-center gap-3">
-                <span
-                  class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
-                  :style="{ backgroundColor: avatarColor(s.full_name) }"
-                >{{ initials(s.full_name) }}</span>
-                <div class="min-w-0">
-                  <button
-                    type="button"
-                    class="max-w-full truncate rounded font-semibold text-left text-slate-900 hover:text-teal-700 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/40"
-                    :aria-label="t('tp_attendance_page.student_detail_open', { name: s.full_name })"
-                    @click="openStudentDetail(s)"
-                  >
-                    {{ s.full_name }}
-                  </button>
-                  <div class="truncate text-xs text-slate-400">{{ studentMeta(s) || t('tp_student_page.empty_not_available') }}</div>
-                </div>
-              </div>
-            </td>
+                <td class="px-3 py-3">
+                  <div class="flex items-center gap-3">
+                    <span
+                      class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
+                      :style="{ backgroundColor: avatarColor(s.full_name) }"
+                    >{{ initials(s.full_name) }}</span>
+                    <div class="min-w-0">
+                      <button
+                        type="button"
+                        class="max-w-full truncate rounded font-semibold text-left text-slate-900 hover:text-teal-700 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/40"
+                        :aria-label="t('tp_attendance_page.student_detail_open', { name: s.full_name })"
+                        @click="openStudentDetail(s)"
+                      >
+                        {{ s.full_name }}
+                      </button>
+                      <div class="truncate text-xs text-slate-400">{{ studentMeta(s) || t('tp_student_page.empty_not_available') }}</div>
+                    </div>
+                  </div>
+                </td>
 
-            <td v-if="colOn('code')" class="px-3 py-3 font-mono text-xs" :class="cellValueClass(s.code)">{{ fieldText(s.code, 'code') }}</td>
-            <td v-if="colOn('gender')" class="px-3 py-3" :class="cellValueClass(s.gender)">{{ fieldText(s.gender, 'gender', genderLabel(s.gender)) }}</td>
-            <td v-if="colOn('date_of_birth')" class="px-3 py-3 tabular-nums" :class="cellValueClass(s.date_of_birth)">{{ formatDob(s.date_of_birth) }}</td>
-            <td v-if="colOn('grade')" class="px-3 py-3 font-medium" :class="cellValueClass(s.grade)">{{ fieldText(s.grade, 'grade') }}</td>
-            <td v-if="colOn('class_name')" class="px-3 py-3 font-medium" :class="cellValueClass(s.class_name)">{{ fieldText(s.class_name, 'class') }}</td>
+                <td v-if="colOn('code')" class="px-3 py-3 font-mono text-xs" :class="cellValueClass(s.code)">{{ fieldText(s.code, 'code') }}</td>
+                <td v-if="colOn('gender')" class="px-3 py-3" :class="cellValueClass(s.gender)">{{ fieldText(s.gender, 'gender', genderLabel(s.gender)) }}</td>
+                <td v-if="colOn('date_of_birth')" class="px-3 py-3 tabular-nums" :class="cellValueClass(s.date_of_birth)">{{ formatDob(s.date_of_birth) }}</td>
+                <td v-if="colOn('grade')" class="px-3 py-3 font-medium" :class="cellValueClass(s.grade)">{{ fieldText(s.grade, 'grade') }}</td>
+                <td v-if="colOn('class_name')" class="px-3 py-3 font-medium" :class="cellValueClass(s.class_name)">{{ fieldText(s.class_name, 'class') }}</td>
 
-            <td v-if="colOn('parent_contact')" class="px-3 py-3">
-              <div class="font-medium" :class="cellValueClass(s.parent_name)">{{ fieldText(s.parent_name, 'parent_name') }}</div>
-              <a v-if="s.parent_phone" :href="`tel:${s.parent_phone}`" class="text-xs text-sky-600 hover:underline">{{ s.parent_phone }}</a>
-              <span v-else class="text-xs italic text-slate-400">{{ t('tp_student_page.empty_phone') }}</span>
-            </td>
-            <td v-if="colOn('father')" class="px-3 py-3">
-              <div :class="cellValueClass(s.father_name)">{{ fieldText(s.father_name, 'father_name') }}</div>
-              <a v-if="s.father_phone" :href="`tel:${s.father_phone}`" class="text-xs text-sky-600 hover:underline">{{ s.father_phone }}</a>
-              <span v-else class="text-xs italic text-slate-400">{{ t('tp_student_page.empty_phone') }}</span>
-            </td>
-            <td v-if="colOn('mother')" class="px-3 py-3">
-              <div :class="cellValueClass(s.mother_name)">{{ fieldText(s.mother_name, 'mother_name') }}</div>
-              <a v-if="s.mother_phone" :href="`tel:${s.mother_phone}`" class="text-xs text-sky-600 hover:underline">{{ s.mother_phone }}</a>
-              <span v-else class="text-xs italic text-slate-400">{{ t('tp_student_page.empty_phone') }}</span>
-            </td>
-            <td v-if="colOn('address')" class="max-w-[14rem] px-3 py-3">
-              <span class="line-clamp-2" :class="cellValueClass(s.address)">{{ fieldText(s.address, 'address') }}</span>
-            </td>
-            <td v-if="colOn('pickup_point')" class="max-w-[12rem] px-3 py-3">
-              <span class="line-clamp-2" :class="cellValueClass(s.pickup_point)">{{ fieldText(s.pickup_point, 'pickup') }}</span>
-            </td>
-            <td v-if="colOn('note')" class="max-w-[12rem] px-3 py-3 text-xs">
-              <span class="line-clamp-2" :class="cellValueClass(s.note)">{{ fieldText(s.note, 'note') }}</span>
-            </td>
+                <td v-if="colOn('parent_contact')" class="px-3 py-3">
+                  <div class="font-medium" :class="cellValueClass(s.parent_name)">{{ fieldText(s.parent_name, 'parent_name') }}</div>
+                  <a v-if="s.parent_phone" :href="`tel:${s.parent_phone}`" class="text-xs text-sky-600 hover:underline">{{ s.parent_phone }}</a>
+                  <span v-else class="text-xs italic text-slate-400">{{ t('tp_student_page.empty_phone') }}</span>
+                </td>
+                <td v-if="colOn('father')" class="px-3 py-3">
+                  <div :class="cellValueClass(s.father_name)">{{ fieldText(s.father_name, 'father_name') }}</div>
+                  <a v-if="s.father_phone" :href="`tel:${s.father_phone}`" class="text-xs text-sky-600 hover:underline">{{ s.father_phone }}</a>
+                  <span v-else class="text-xs italic text-slate-400">{{ t('tp_student_page.empty_phone') }}</span>
+                </td>
+                <td v-if="colOn('mother')" class="px-3 py-3">
+                  <div :class="cellValueClass(s.mother_name)">{{ fieldText(s.mother_name, 'mother_name') }}</div>
+                  <a v-if="s.mother_phone" :href="`tel:${s.mother_phone}`" class="text-xs text-sky-600 hover:underline">{{ s.mother_phone }}</a>
+                  <span v-else class="text-xs italic text-slate-400">{{ t('tp_student_page.empty_phone') }}</span>
+                </td>
+                <td v-if="colOn('address')" class="max-w-[14rem] px-3 py-3">
+                  <span class="line-clamp-2" :class="cellValueClass(s.address)">{{ fieldText(s.address, 'address') }}</span>
+                </td>
+                <td v-if="colOn('pickup_point')" class="max-w-[12rem] px-3 py-3">
+                  <span class="line-clamp-2" :class="cellValueClass(s.pickup_point)">{{ fieldText(s.pickup_point, 'pickup') }}</span>
+                </td>
+                <td v-if="colOn('note')" class="max-w-[12rem] px-3 py-3 text-xs">
+                  <span class="line-clamp-2" :class="cellValueClass(s.note)">{{ fieldText(s.note, 'note') }}</span>
+                </td>
 
-            <td v-if="colOn('transport_status')" class="px-3 py-3">
-              <span :class="transportBadgeClass(s.transport_status)">
-                <span class="h-1.5 w-1.5 rounded-full" :class="transportDotClass(s.transport_status)"></span>
-                {{ transportLabel(s.transport_status) }}
-              </span>
-            </td>
+                <td v-if="colOn('transport_status')" class="px-3 py-3">
+                  <span :class="transportBadgeClass(s.transport_status)">
+                    <span class="h-1.5 w-1.5 rounded-full" :class="transportDotClass(s.transport_status)"></span>
+                    {{ transportLabel(s.transport_status) }}
+                  </span>
+                </td>
 
-            <td class="px-3 py-3 text-right">
-              <AppRowActionsMenu :aria-label="t('tp_student_page.row_actions_aria', { name: s.full_name })">
-                <button class="menu-item" data-testid="tp-student-action-edit" @click="openEdit(s)"><PencilSquareIcon class="h-4 w-4" /> {{ t('tp_student_page.action_edit') }}</button>
-                <button class="menu-item" data-testid="tp-student-action-enroll" @click="goEnroll(s)"><AcademicCapIcon class="h-4 w-4" /> {{ t('tp_student_page.action_enroll') }}</button>
-                <button class="menu-item text-rose-600" data-testid="tp-student-action-delete" @click="remove(s)"><TrashIcon class="h-4 w-4" /> {{ t('tp_student_page.action_delete') }}</button>
-              </AppRowActionsMenu>
-            </td>
+                <td class="px-3 py-3 text-right">
+                  <AppRowActionsMenu :aria-label="t('tp_student_page.row_actions_aria', { name: s.full_name })">
+                    <button class="menu-item" data-testid="tp-student-action-edit" @click="openEdit(s)"><PencilSquareIcon class="h-4 w-4" /> {{ t('tp_student_page.action_edit') }}</button>
+                    <button class="menu-item" data-testid="tp-student-action-enroll" @click="goEnroll(s)"><AcademicCapIcon class="h-4 w-4" /> {{ t('tp_student_page.action_enroll') }}</button>
+                    <button class="menu-item text-rose-600" data-testid="tp-student-action-delete" @click="remove(s)"><TrashIcon class="h-4 w-4" /> {{ t('tp_student_page.action_delete') }}</button>
+                  </AppRowActionsMenu>
+                </td>
               </tr>
             </template>
           </template>
@@ -554,7 +488,6 @@ const { colOn, setColumn, columnToggleOptions } = useTpStudentListColumns()
 const filterControlVisible = reactive(loadFilterControlVisibility())
 const showFilterPanelDd = ref(false)
 const showColPanelDd = ref(false)
-const showGroupPanelDd = ref(false)
 const exportMenuRef = ref(null)
 const datagridRef = ref(null)
 useDetailsAutoClose(exportMenuRef)
@@ -624,8 +557,6 @@ const tableColSpan = computed(() => {
   return n
 })
 
-const anyGroupOpen = computed(() => itemGroups.value.some((g) => isGroupOpen(g.key)))
-
 watch(
   itemGroups,
   (groups) => {
@@ -642,16 +573,6 @@ function isGroupOpen(key) {
 
 function toggleGroup(key) {
   openGroups[key] = !isGroupOpen(key)
-}
-
-function expandAllGroups() {
-  for (const g of itemGroups.value) openGroups[g.key] = true
-  showGroupPanelDd.value = false
-}
-
-function collapseAllGroups() {
-  for (const g of itemGroups.value) openGroups[g.key] = false
-  showGroupPanelDd.value = false
 }
 
 function groupTitle(group) {
@@ -679,7 +600,6 @@ function onKpiQuickFilter({ transport_status }) {
 
 function toggleFilterPanel() {
   showColPanelDd.value = false
-  showGroupPanelDd.value = false
   showFilterPanelDd.value = !showFilterPanelDd.value
 }
 
@@ -689,22 +609,11 @@ function closeFilterPanel() {
 
 function toggleColPanel() {
   showFilterPanelDd.value = false
-  showGroupPanelDd.value = false
   showColPanelDd.value = !showColPanelDd.value
 }
 
 function closeColPanel() {
   showColPanelDd.value = false
-}
-
-function toggleGroupPanel() {
-  showFilterPanelDd.value = false
-  showColPanelDd.value = false
-  showGroupPanelDd.value = !showGroupPanelDd.value
-}
-
-function closeGroupPanel() {
-  showGroupPanelDd.value = false
 }
 
 function onToggleFilterControl(id, checked) {
