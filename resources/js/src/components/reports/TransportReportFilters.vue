@@ -82,37 +82,25 @@
         </select>
       </DatagridFilterField>
 
-      <template v-if="filterBarVisible.dates">
-        <DatagridFilterField class="sm:col-span-2 xl:col-span-2">
-          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <FilterDatePicker
-              v-model="rangeFrom"
-              :placeholder="t('dashboard_analytics.range_from')"
-              :max-date="rangeTo || null"
-              input-id="reports-filter-from"
-              @update:model-value="onDateFilterChange"
-            />
-            <FilterDatePicker
-              v-model="rangeTo"
-              :placeholder="t('dashboard_analytics.range_to')"
-              :min-date="rangeFrom || null"
-              input-id="reports-filter-to"
-              @update:model-value="onDateFilterChange"
-            />
-          </div>
-        </DatagridFilterField>
-        <div v-if="filterBarVisible.dates" class="col-span-full flex flex-wrap gap-1.5">
-          <button
-            v-for="chip in dateQuickChips"
-            :key="chip.kind"
-            type="button"
-            class="rounded-lg border border-slate-200/90 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:border-teal-300 hover:bg-teal-50/80 hover:text-teal-900 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-200"
-            @click="applyQuickDateRange(chip.kind)"
-          >
-            {{ chip.label }}
-          </button>
-        </div>
-      </template>
+      <DatagridFilterField v-if="filterBarVisible.dates">
+        <FilterDatePicker
+          v-model="rangeFrom"
+          :placeholder="t('dashboard_analytics.range_from')"
+          :max-date="rangeTo || null"
+          input-id="reports-filter-from"
+          @update:model-value="onDateFilterChange"
+        />
+      </DatagridFilterField>
+
+      <DatagridFilterField v-if="filterBarVisible.dates">
+        <FilterDatePicker
+          v-model="rangeTo"
+          :placeholder="t('dashboard_analytics.range_to')"
+          :min-date="rangeFrom || null"
+          input-id="reports-filter-to"
+          @update:model-value="onDateFilterChange"
+        />
+      </DatagridFilterField>
 
       <DatagridFilterField v-for="fd in visibleDimensionFilters" :key="fd.id">
         <select
@@ -167,8 +155,6 @@ const DIMENSION_VIS_LABEL_KEYS = {
 const {
   activeFilterCount,
   applyPreset,
-  applyQuickDateRange,
-  dateQuickChips,
   filterBarVisible,
   hasVisibleBarFilters,
   reportFilterBarVisIds,

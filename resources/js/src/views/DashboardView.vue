@@ -76,7 +76,7 @@
           </div>
 
           <div v-if="recentTripsBusy && !recentTrips.length" class="space-y-2" aria-busy="true">
-            <div v-for="s in 5" :key="'tskel-' + s" class="h-[4.25rem] animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800/80" />
+            <div v-for="s in 5" :key="'tskel-' + s" class="h-28 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800/80" />
           </div>
           <div v-else-if="filteredRecentTrips.length" class="space-y-2">
             <RouterLink
@@ -107,11 +107,14 @@
                         {{ t('dashboard_analytics.recent_col_route') }}
                       </span>
                     </div>
-                    <p class="mt-1 line-clamp-2 text-sm font-semibold leading-snug text-slate-900 group-hover:text-va-900 dark:text-slate-50 dark:group-hover:text-va-200">
-                      <span class="text-slate-800 dark:text-slate-100">{{ tr.dispatch_request?.origin ?? '—' }}</span>
-                      <span class="mx-1 text-va-700 dark:text-va-400">→</span>
-                      <span class="text-slate-800 dark:text-slate-100">{{ tr.dispatch_request?.destination ?? '—' }}</span>
-                    </p>
+                    <div class="mt-1 space-y-1 text-sm leading-snug">
+                      <p :class="routeLineClass(tr.dispatch_request?.origin)">
+                        {{ displayOrigin(tr.dispatch_request?.origin) }}
+                      </p>
+                      <p :class="routeLineClass(tr.dispatch_request?.destination)">
+                        {{ displayDestination(tr.dispatch_request?.destination) }}
+                      </p>
+                    </div>
                     <p class="mt-1 flex items-center gap-1.5 text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
                       <ClockIcon class="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden="true" />
                       <span>{{ t('dashboard_analytics.recent_col_when') }}: {{ formatDepartShort(tr.depart_at) }}</span>
@@ -158,18 +161,22 @@
           </div>
 
           <div v-if="recentRequestsBusy && !recentRequests.length" class="space-y-2" aria-busy="true">
-            <div v-for="s in 5" :key="'rskel-' + s" class="h-[4.25rem] animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800/80" />
+            <div v-for="s in 5" :key="'rskel-' + s" class="h-28 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800/80" />
           </div>
           <div v-else-if="filteredRecentRequests.length" class="space-y-2">
-            <div
+            <RouterLink
               v-for="rq in filteredRecentRequests"
               :key="rq.id"
+              :to="staffPath(`/requests/${rq.id}`)"
               :class="[
-                'flex gap-3 rounded-xl border p-3',
+                'group flex gap-3 rounded-xl border p-3 transition',
                 'border-slate-100 bg-gradient-to-br from-white to-violet-50/40 shadow-sm ring-1 ring-slate-900/[0.03]',
+                'hover:border-violet-200/90 hover:shadow-md hover:ring-violet-700/10',
                 'dark:border-slate-700/90 dark:from-slate-900 dark:to-violet-950/25 dark:ring-white/[0.04]',
-                recentRequestsBusy ? 'opacity-55' : '',
+                'dark:hover:border-violet-800/60',
+                recentRequestsBusy ? 'pointer-events-none opacity-55' : '',
               ]"
+              :data-testid="`dash-recent-request-${rq.id}`"
             >
               <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-100/95 text-violet-700 shadow-inner dark:bg-violet-950/50 dark:text-violet-300" aria-hidden="true">
                 <ClipboardDocumentListIcon class="h-5 w-5" />
@@ -186,11 +193,14 @@
                         {{ t('dashboard_analytics.recent_col_route') }}
                       </span>
                     </div>
-                    <p class="mt-1 line-clamp-2 text-sm font-semibold leading-snug text-slate-900 dark:text-slate-50">
-                      <span class="text-slate-800 dark:text-slate-100">{{ rq.origin ?? '—' }}</span>
-                      <span class="mx-1 text-violet-500 dark:text-violet-400">→</span>
-                      <span class="text-slate-800 dark:text-slate-100">{{ rq.destination ?? '—' }}</span>
-                    </p>
+                    <div class="mt-1 space-y-1 text-sm leading-snug">
+                      <p :class="routeLineClass(rq.origin, true)">
+                        {{ displayOrigin(rq.origin) }}
+                      </p>
+                      <p :class="routeLineClass(rq.destination, true)">
+                        {{ displayDestination(rq.destination) }}
+                      </p>
+                    </div>
                     <p class="mt-1 flex items-center gap-1.5 text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
                       <ClockIcon class="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden="true" />
                       <span>{{ t('dashboard_analytics.recent_col_when') }}: {{ formatDepartShort(rq.depart_at) }}</span>
@@ -201,7 +211,7 @@
                   </span>
                 </div>
               </div>
-            </div>
+            </RouterLink>
           </div>
           <p v-else-if="recentRequests.length" class="text-sm text-slate-500 dark:text-slate-400">
             {{ t('dashboard_analytics.recent_filtered_empty') }}
@@ -234,6 +244,7 @@ import { listRequests, normalizeRequestListParams } from '../api/requests'
 import { labelTripStatus, labelRequestStatus } from '../util/labels'
 import { formatDispatchRequestRefCode } from '../util/portalRequestFormat'
 import { formatListDateTime } from '../util/datetime'
+import { displayTextOrNull } from '../util/displayValue'
 import { buildStaffPrefixedPath as staffPath } from '../config/dispatchWebBase'
 
 const { t, locale } = useI18n()
@@ -360,10 +371,29 @@ function requestRefCode(rq) {
   return formatDispatchRequestRefCode(rq) || `#${rq?.id ?? ''}`
 }
 
+function displayOrigin(value) {
+  return displayTextOrNull(value) ?? t('trips_page.empty_origin')
+}
+
+function displayDestination(value) {
+  return displayTextOrNull(value) ?? t('trips_page.empty_destination')
+}
+
+function routeLineClass(value, requestCard = false) {
+  const empty = !displayTextOrNull(value)
+  if (empty) {
+    return 'text-[13px] font-normal italic text-slate-400 dark:text-slate-500'
+  }
+  const hover = requestCard
+    ? 'group-hover:text-violet-900 dark:group-hover:text-violet-200'
+    : 'group-hover:text-va-900 dark:group-hover:text-va-200'
+  return `text-sm font-semibold text-slate-800 dark:text-slate-100 ${hover}`
+}
+
 function formatDepartShort(s) {
-  if (s == null || s === '') return '—'
+  if (s == null || s === '') return t('trips_page.empty_depart_at')
   const out = formatListDateTime(s, dateLocaleKey())
-  return out || '—'
+  return out || t('trips_page.empty_depart_at')
 }
 
 function tripStatusPillClass(s) {

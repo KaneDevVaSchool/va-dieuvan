@@ -3881,6 +3881,8 @@
         "kpi_completion_sub": "Chuyến hoàn thành / tổng trong kỳ",
         "kpi_distance_title": "Quãng đường",
         "kpi_distance_sub": "Tổng km đã ghi nhận",
+        "kpi_empty_completion": "Chưa đủ dữ liệu",
+        "kpi_empty_provider": "Chưa có trong kỳ",
         "fleet_internal": "Xe nội bộ",
         "fleet_vendor_hire": "Thuê NCC",
         "fleet_taxi": "Taxi / thuê taxi",

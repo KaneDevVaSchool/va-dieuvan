@@ -392,17 +392,6 @@ function createSharedApi() {
     return Math.floor((b.getTime() - a.getTime()) / 86400000) + 1
   })
 
-  const dateQuickChips = computed(() =>
-    [
-      { kind: 'today', label: t('dashboard_analytics.date_range_quick_today') },
-      { kind: 'yesterday', label: t('dashboard_analytics.date_range_quick_yesterday') },
-      { kind: 'last7', label: t('dashboard_analytics.date_range_quick_last7') },
-      { kind: 'month', label: t('dashboard_analytics.date_range_quick_month') },
-    ]
-      .map((c) => (c && c.kind ? { ...c, label: safeLabel(c.label) } : null))
-      .filter(Boolean),
-  )
-
   function syncRangeForPreset(id) {
     const now = new Date()
     const end = ymd(now)
@@ -455,28 +444,6 @@ function createSharedApi() {
       rangeFrom.value = rangeTo.value
     }
     onManualDateChange()
-  }
-
-  function applyQuickDateRange(kind) {
-    if (kind === 'month') {
-      applyPreset('month')
-      return
-    }
-    const now = new Date()
-    if (kind === 'today') {
-      const d = ymd(now)
-      rangeFrom.value = d
-      rangeTo.value = d
-    } else if (kind === 'yesterday') {
-      const d = ymd(subDays(now, 1))
-      rangeFrom.value = d
-      rangeTo.value = d
-    } else if (kind === 'last7') {
-      rangeFrom.value = ymd(subDays(now, 6))
-      rangeTo.value = ymd(now)
-    }
-    preset.value = 'custom'
-    reloadSummary()
   }
 
   function formatMoney(v) {
@@ -541,7 +508,7 @@ function createSharedApi() {
     return list[0]
   })
 
-  const topProviderName = computed(() => topProvider.value?.provider ?? '—')
+  const topProviderName = computed(() => topProvider.value?.provider ?? '')
   const topProviderAmount = computed(() => topProvider.value?.total_amount ?? 0)
 
   const chartT = (key) => t(`dashboard_analytics.${key}`)
@@ -690,12 +657,10 @@ function createSharedApi() {
     rangeValid,
     rangeDisplayFormatted,
     rangeDaySpan,
-    dateQuickChips,
     applyPreset,
     resetFilters,
     onRangeFromChange,
     onRangeToChange,
-    applyQuickDateRange,
     formatMoney,
     totalTrips,
     chartBadgeTripsTotal,

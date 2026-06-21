@@ -4132,6 +4132,8 @@
         "kpi_completion_sub": "Completed / total trips",
         "kpi_distance_title": "Distance",
         "kpi_distance_sub": "Total km recorded",
+        "kpi_empty_completion": "Not enough data",
+        "kpi_empty_provider": "None in period",
         "fleet_internal": "Internal fleet",
         "fleet_vendor_hire": "Vendor hire",
         "fleet_taxi": "Taxi",

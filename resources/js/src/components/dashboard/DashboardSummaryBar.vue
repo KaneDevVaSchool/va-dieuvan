@@ -37,7 +37,7 @@ function formatMoneyCompact(v) {
 
 function formatDistanceKm(v) {
   const n = Number(v ?? 0)
-  if (!Number.isFinite(n) || n <= 0) return '—'
+  if (!Number.isFinite(n) || n <= 0) return t('trips_page.empty_distance')
   return `${intFmt.format(Math.round(n))} km`
 }
 
@@ -45,7 +45,7 @@ const cards = computed(() => {
   const m = props.metrics ?? {}
   const completionRate = m.completionRate
   const sla = Number(m.slaBreaches ?? 0)
-  const providerName = m.topProviderName && m.topProviderName !== '—' ? m.topProviderName : ''
+  const providerName = m.topProviderName && String(m.topProviderName).trim() !== '' ? m.topProviderName : ''
   return [
     {
       key: 'trips',
@@ -60,7 +60,7 @@ const cards = computed(() => {
       label: t('dashboard_analytics.kpi_completion_title'),
       tone: 'emerald',
       icon: CheckBadgeIcon,
-      display: completionRate != null ? `${completionRate}%` : '—',
+      display: completionRate != null ? `${completionRate}%` : t('dashboard_analytics.kpi_empty_completion'),
       sub: t('dashboard_analytics.kpi_completion_ratio', {
         done: formatInt(m.completedTrips),
         total: formatInt(m.totalTripsInRange),
@@ -87,7 +87,7 @@ const cards = computed(() => {
       label: t('dashboard_analytics.kpi_providers_title'),
       tone: 'violet',
       icon: BuildingStorefrontIcon,
-      display: m.topProviderAmount ? formatMoneyCompact(m.topProviderAmount) : '—',
+      display: m.topProviderAmount ? formatMoneyCompact(m.topProviderAmount) : t('dashboard_analytics.kpi_empty_provider'),
       sub: providerName || t('dashboard_analytics.kpi_providers_sub'),
     },
     {
