@@ -513,7 +513,7 @@
                       class="font-mono text-base text-slate-900 underline decoration-slate-300 underline-offset-2 hover:text-va-800 hover:decoration-va-400"
                       @click.stop
                     >
-                      REQ-{{ r.id }}
+                      {{ displayRequestCode(r) }}
                     </RouterLink>
                   </div>
                   <div class="mt-0.5 text-sm tabular-nums text-slate-500">{{ formatRequestDateTime(r.created_at) }}</div>
@@ -683,7 +683,7 @@
                         class="font-mono underline decoration-slate-300 underline-offset-2 hover:text-va-800"
                         @click.stop
                       >
-                        REQ-{{ r.id }}
+                        {{ displayRequestCode(r) }}
                       </RouterLink>
                     </div>
                     <p class="mt-1 text-sm font-semibold leading-snug text-slate-800">
@@ -908,7 +908,9 @@ import {
   labelTripType,
 } from '../../util/labels'
 import { isLegacyBm03NotesBlock } from '../../util/formatDispatchNotes'
+import { dispatchRequestDisplayPassengerCount } from '../../util/dispatchRequestPassengers'
 import { formatListDateTime } from '../../util/datetime'
+import { formatDispatchRequestRefCode } from '../../util/portalRequestFormat'
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -1336,7 +1338,7 @@ function requestRowsToCsvLines(rows) {
     headers.map(csvEscapeCell).join(','),
     ...rows.map((r) =>
       [
-        csvEscapeCell(`REQ-${r.id}`),
+        csvEscapeCell(displayRequestCode(r)),
         csvEscapeCell(displayRoute(r)),
         csvEscapeCell(labelRequestStatus(r.status)),
         csvEscapeCell(formatDepartDate(r.depart_at)),
@@ -1497,6 +1499,10 @@ const pageNumbers = computed(() => {
   for (let p = start; p <= end; p++) list.push(p)
   return list
 })
+
+function displayRequestCode(r) {
+  return formatDispatchRequestRefCode(r) || `REQ-${r?.id ?? ''}`
+}
 
 function formatInt(n) {
   return new Intl.NumberFormat('vi-VN').format(n ?? 0)

@@ -3,7 +3,7 @@
  * Singleton để giữ bộ lọc khi chuyển giữa / và /reports.
  */
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { useFilterBarVisibility } from './useFilterBarVisibility.js'
+import { useVisibleFilterControls } from './useVisibleFilterControls.js'
 import { getSummary } from '../api/reports'
 import { i18n } from '../i18n'
 import { labelTripStatus, labelTripType, labelRequestStatus } from '../util/labels'
@@ -23,9 +23,11 @@ import {
 
 const DIMENSION_FILTER_IDS = ['trip_type', 'channel', 'paper', 'urgent', 'trip_run', 'fleet']
 const REPORT_FILTER_BAR_VIS_IDS = ['period', 'dates', ...DIMENSION_FILTER_IDS]
-const REPORT_FILTER_BAR_VIS_DEFAULTS = Object.fromEntries(
-  REPORT_FILTER_BAR_VIS_IDS.map((id) => [id, false]),
-)
+const REPORT_FILTER_CONTROLS = REPORT_FILTER_BAR_VIS_IDS.map((key) => ({
+  key,
+  label: '',
+  default: false,
+}))
 
 const TRIP_RUN_STATUS_KEYS = [
   'pending',
@@ -92,10 +94,18 @@ function createSharedApi() {
   const filterFleetMode = ref('')
 
   const {
-    visible: filterBarVisible,
-    resetVisibility: resetFilterBarVisibility,
-    hasVisibleOnBar: hasVisibleBarFilters,
-  } = useFilterBarVisibility(REPORT_FILTER_BAR_VIS_IDS, REPORT_FILTER_BAR_VIS_DEFAULTS)
+    visibleFilters: filterBarVisible,
+    hasFilterRow: hasVisibleBarFilters,
+    showFilterPanelDd,
+    openFilterPanel,
+    closeFilterPanel,
+  } = useVisibleFilterControls(REPORT_FILTER_CONTROLS, 'va-dieuvan.reports.summary.visible-filters.v1')
+
+  function resetFilterBarVisibility() {
+    for (const c of REPORT_FILTER_CONTROLS) {
+      filterBarVisible[c.key] = false
+    }
+  }
 
   const loading = ref(false)
   const loadError = ref('')
@@ -659,6 +669,9 @@ function createSharedApi() {
     filterBarVisible,
     resetFilterBarVisibility,
     hasVisibleBarFilters,
+    showFilterPanelDd,
+    openFilterPanel,
+    closeFilterPanel,
     reportFilterBarVisIds: REPORT_FILTER_BAR_VIS_IDS,
     loading,
     loadError,

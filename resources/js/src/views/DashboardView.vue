@@ -26,56 +26,6 @@
         </RouterLink>
       </div>
 
-      <!-- Truy cập nhanh: mũi tên hai bên, ẩn thanh cuộn -->
-      <div>
-        <h2 class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-          {{ t('dashboard_analytics.quick_title') }}
-        </h2>
-        <div class="relative -mx-0.5 mt-2 flex items-stretch gap-1 sm:-mx-1 sm:gap-2">
-          <button
-            type="button"
-            class="flex h-auto min-h-[4.75rem] w-8 shrink-0 items-center justify-center rounded-xl border border-slate-200/90 bg-white/90 text-slate-600 shadow-sm transition hover:border-va-200/70 hover:bg-white hover:text-va-800 disabled:pointer-events-none disabled:opacity-25 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:border-va-800 dark:hover:text-va-300 sm:w-9"
-            :disabled="!quickCanScrollLeft"
-            :aria-label="t('dashboard_analytics.quick_scroll_prev')"
-            @click="scrollQuickLinks(-1)"
-          >
-            <ChevronLeftIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
-          </button>
-          <div
-            ref="quickScrollRef"
-            class="dash-quick-scroll min-h-[4.75rem] min-w-0 flex-1 overflow-x-auto overflow-y-hidden scroll-smooth"
-            @scroll.passive="updateQuickScrollState"
-          >
-            <div class="flex h-full flex-nowrap items-stretch gap-2 px-0.5 py-0.5 sm:gap-3">
-              <RouterLink
-                v-for="item in quickLinks"
-                :key="item.to"
-                :to="item.to"
-                :title="item.hint"
-                :class="[
-                  'flex w-[6.25rem] shrink-0 flex-col items-center justify-center gap-1.5 rounded-2xl border bg-gradient-to-b px-2.5 py-3 text-center shadow-sm ring-1 transition hover:-translate-y-0.5 hover:shadow-md sm:w-28 md:w-32',
-                  item.cardClass,
-                ]"
-              >
-                <component :is="item.icon" :class="['h-6 w-6 shrink-0 sm:h-7 sm:w-7', item.iconClass]" aria-hidden="true" />
-                <span class="w-full text-center line-clamp-2 text-[11px] font-medium leading-tight sm:text-xs" :class="item.labelClass">
-                  {{ item.title }}
-                </span>
-              </RouterLink>
-            </div>
-          </div>
-          <button
-            type="button"
-            class="flex h-auto min-h-[4.75rem] w-8 shrink-0 items-center justify-center rounded-xl border border-slate-200/90 bg-white/90 text-slate-600 shadow-sm transition hover:border-va-200/70 hover:bg-white hover:text-va-800 disabled:pointer-events-none disabled:opacity-25 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:border-va-800 dark:hover:text-va-300 sm:w-9"
-            :disabled="!quickCanScrollRight"
-            :aria-label="t('dashboard_analytics.quick_scroll_next')"
-            @click="scrollQuickLinks(1)"
-          >
-            <ChevronRightIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
-          </button>
-        </div>
-      </div>
-
       <TransportReportFilters />
     </div>
 
@@ -87,29 +37,10 @@
     <!-- Dải thống kê KPI -->
     <DashboardSummaryBar :metrics="dashboardMetrics" />
 
+    <DashboardQuickAccessStrip />
+
     <!-- Tuân thủ & bảo trì xe -->
-    <section aria-labelledby="dash-section-compliance">
-      <div class="rounded-xl border border-slate-200 bg-gradient-to-br from-white via-slate-50/40 to-va-50/25 p-3 shadow-sm ring-1 ring-slate-900/[0.03] dark:border-slate-800 dark:from-slate-900 dark:via-slate-900 dark:to-va-950/20 dark:ring-white/[0.04]">
-        <h2 id="dash-section-compliance" class="text-sm font-semibold text-slate-900 dark:text-white">
-          {{ t('dashboard_analytics.section_compliance') }}
-        </h2>
-        <div class="mt-2.5 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
-          <div
-            v-for="box in complianceBoxes"
-            :key="box.key"
-            class="rounded-lg border border-slate-100/90 bg-white/90 px-3 py-2.5 shadow-sm ring-1 ring-slate-900/[0.02] dark:border-slate-700 dark:bg-slate-950/50 dark:ring-white/[0.04]"
-            :class="box.cardTone"
-          >
-            <div class="text-xs font-semibold" :class="box.titleClass">{{ box.title }}</div>
-            <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] tabular-nums">
-              <span class="text-rose-600 dark:text-rose-400">{{ t('dashboard_analytics.compliance_overdue') }}: {{ box.overdue }}</span>
-              <span v-if="box.soon != null" class="text-amber-700 dark:text-amber-400">{{ t('dashboard_analytics.compliance_due_30d') }}: {{ box.soon }}</span>
-              <span v-if="box.stale != null" class="text-slate-600 dark:text-slate-400">{{ box.staleLabel }}: {{ box.stale }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+    <DashboardComplianceSummaryBar :boxes="complianceBoxes" />
 
     <!-- Hoạt động gần đây -->
     <section class="border-t border-slate-200/80 pt-5 dark:border-slate-800" aria-labelledby="dash-section-recent">
@@ -247,8 +178,8 @@
                 <div class="flex flex-wrap items-start justify-between gap-2">
                   <div class="min-w-0 flex-1">
                     <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                      <span class="font-mono text-[11px] font-semibold tabular-nums text-slate-400 dark:text-slate-500">
-                        #{{ rq.id }}
+                      <span class="font-mono text-[11px] font-semibold tabular-nums text-slate-600 dark:text-slate-300">
+                        {{ requestRefCode(rq) }}
                       </span>
                       <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
                         <ArrowsRightLeftIcon class="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
@@ -283,33 +214,29 @@
 </template>
 
 <script setup>
-import { computed, markRaw, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowsRightLeftIcon,
-  BanknotesIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   ClipboardDocumentListIcon,
   ClockIcon,
-  CubeIcon,
-  DocumentMagnifyingGlassIcon,
-  PlusCircleIcon,
-  TableCellsIcon,
   TruckIcon,
-  UserGroupIcon,
 } from '@heroicons/vue/24/outline'
 import TransportReportFilters from '../components/reports/TransportReportFilters.vue'
 import DashboardSummaryBar from '../components/dashboard/DashboardSummaryBar.vue'
+import DashboardQuickAccessStrip from '../components/dashboard/DashboardQuickAccessStrip.vue'
+import DashboardComplianceSummaryBar from '../components/dashboard/DashboardComplianceSummaryBar.vue'
 import DatagridToolbarSearch from '../components/shared/ui/DatagridToolbarSearch.vue'
 import { useTransportReportSummary } from '../composables/useTransportReportSummary'
 import { listTrips } from '../api/trips'
 import { listRequests, normalizeRequestListParams } from '../api/requests'
 import { labelTripStatus, labelRequestStatus } from '../util/labels'
+import { formatDispatchRequestRefCode } from '../util/portalRequestFormat'
+import { formatListDateTime } from '../util/datetime'
 import { buildStaffPrefixedPath as staffPath } from '../config/dispatchWebBase'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const {
   loading,
@@ -326,10 +253,6 @@ const {
   rangeValid,
   reloadSummary,
 } = useTransportReportSummary()
-
-const quickScrollRef = ref(null)
-const quickCanScrollLeft = ref(false)
-const quickCanScrollRight = ref(false)
 
 const RECENT_PAGE_SIZE = 5
 
@@ -351,108 +274,6 @@ const dashboardMetrics = computed(() => ({
   topProviderAmount: topProviderAmount.value,
   slaBreaches: summary.value?.cargo_sla_breaches ?? 0,
 }))
-
-function updateQuickScrollState() {
-  const el = quickScrollRef.value
-  if (!el) {
-    quickCanScrollLeft.value = false
-    quickCanScrollRight.value = false
-    return
-  }
-  const { scrollLeft, scrollWidth, clientWidth } = el
-  quickCanScrollLeft.value = scrollLeft > 2
-  quickCanScrollRight.value = scrollLeft + clientWidth < scrollWidth - 2
-}
-
-function scrollQuickLinks(direction) {
-  const el = quickScrollRef.value
-  if (!el) return
-  const step = Math.max(160, Math.floor(el.clientWidth * 0.82))
-  el.scrollBy({ left: direction * step, behavior: 'smooth' })
-}
-
-const quickLinks = computed(() => [
-  {
-    to: staffPath('/trips'),
-    title: t('dashboard_analytics.quick_trips'),
-    hint: t('dashboard_analytics.quick_trips_tooltip'),
-    icon: markRaw(TruckIcon),
-    cardClass:
-      'border-sky-200/90 from-sky-50/95 to-white ring-sky-900/[0.06] hover:border-sky-300 dark:border-sky-800/55 dark:from-sky-950/35 dark:to-slate-900/85 dark:ring-sky-900/25 dark:hover:border-sky-700',
-    iconClass: 'text-sky-600 dark:text-sky-400',
-    labelClass: 'text-slate-800 dark:text-slate-100',
-  },
-  {
-    to: staffPath('/dispatch-requests/new'),
-    title: t('dashboard_analytics.quick_new_request'),
-    hint: t('dashboard_analytics.quick_new_request_tooltip'),
-    icon: markRaw(PlusCircleIcon),
-    cardClass:
-      'border-emerald-200/90 from-emerald-50/95 to-white ring-emerald-900/[0.06] hover:border-emerald-300 dark:border-emerald-800/55 dark:from-emerald-950/35 dark:to-slate-900/85 dark:ring-emerald-900/25 dark:hover:border-emerald-700',
-    iconClass: 'text-emerald-600 dark:text-emerald-400',
-    labelClass: 'text-slate-800 dark:text-slate-100',
-  },
-  {
-    to: staffPath('/requests'),
-    title: t('dashboard_analytics.quick_requests'),
-    hint: t('dashboard_analytics.quick_requests_tooltip'),
-    icon: markRaw(ClipboardDocumentListIcon),
-    cardClass:
-      'border-violet-200/90 from-violet-50/95 to-white ring-violet-900/[0.06] hover:border-violet-300 dark:border-violet-800/55 dark:from-violet-950/35 dark:to-slate-900/85 dark:ring-violet-900/25 dark:hover:border-violet-700',
-    iconClass: 'text-violet-600 dark:text-violet-400',
-    labelClass: 'text-slate-800 dark:text-slate-100',
-  },
-  {
-    to: staffPath('/resources/list'),
-    title: t('dashboard_analytics.quick_resources'),
-    hint: t('dashboard_analytics.quick_resources_tooltip'),
-    icon: markRaw(UserGroupIcon),
-    cardClass:
-      'border-indigo-200/90 from-indigo-50/95 to-white ring-indigo-900/[0.06] hover:border-indigo-300 dark:border-indigo-800/55 dark:from-indigo-950/35 dark:to-slate-900/85 dark:ring-indigo-900/25 dark:hover:border-indigo-700',
-    iconClass: 'text-indigo-600 dark:text-indigo-400',
-    labelClass: 'text-slate-800 dark:text-slate-100',
-  },
-  {
-    to: staffPath('/cargo'),
-    title: t('dashboard_analytics.quick_cargo'),
-    hint: t('dashboard_analytics.quick_cargo_tooltip'),
-    icon: markRaw(CubeIcon),
-    cardClass:
-      'border-amber-200/90 from-amber-50/95 to-white ring-amber-900/[0.06] hover:border-amber-300 dark:border-amber-800/55 dark:from-amber-950/35 dark:to-slate-900/85 dark:ring-amber-900/25 dark:hover:border-amber-700',
-    iconClass: 'text-amber-600 dark:text-amber-400',
-    labelClass: 'text-slate-800 dark:text-slate-100',
-  },
-  {
-    to: staffPath('/costs'),
-    title: t('dashboard_analytics.quick_costs'),
-    hint: t('dashboard_analytics.quick_costs_tooltip'),
-    icon: markRaw(BanknotesIcon),
-    cardClass:
-      'border-rose-200/90 from-rose-50/95 to-white ring-rose-900/[0.06] hover:border-rose-300 dark:border-rose-800/55 dark:from-rose-950/35 dark:to-slate-900/85 dark:ring-rose-900/25 dark:hover:border-rose-700',
-    iconClass: 'text-rose-600 dark:text-rose-400',
-    labelClass: 'text-slate-800 dark:text-slate-100',
-  },
-  {
-    to: staffPath('/pricing'),
-    title: t('dashboard_analytics.quick_pricing'),
-    hint: t('dashboard_analytics.quick_pricing_tooltip'),
-    icon: markRaw(TableCellsIcon),
-    cardClass:
-      'border-cyan-200/90 from-cyan-50/95 to-white ring-cyan-900/[0.06] hover:border-cyan-300 dark:border-cyan-800/55 dark:from-cyan-950/35 dark:to-slate-900/85 dark:ring-cyan-900/25 dark:hover:border-cyan-700',
-    iconClass: 'text-cyan-600 dark:text-cyan-400',
-    labelClass: 'text-slate-800 dark:text-slate-100',
-  },
-  {
-    to: staffPath('/audit-logs'),
-    title: t('dashboard_analytics.quick_audit'),
-    hint: t('dashboard_analytics.quick_audit_tooltip'),
-    icon: markRaw(DocumentMagnifyingGlassIcon),
-    cardClass:
-      'border-slate-300/90 from-slate-100/90 to-white ring-slate-900/[0.05] hover:border-slate-400 dark:border-slate-600 dark:from-slate-800/50 dark:to-slate-900/85 dark:ring-slate-900/30 dark:hover:border-slate-500',
-    iconClass: 'text-slate-600 dark:text-slate-400',
-    labelClass: 'text-slate-800 dark:text-slate-100',
-  },
-])
 
 const tripListQuery = computed(() => {
   const o = { ...summaryFilters.value }
@@ -484,7 +305,7 @@ const filteredRecentRequests = computed(() => {
   const q = requestSearch.value.trim().toLowerCase()
   if (!q) return recentRequests.value
   return recentRequests.value.filter((rq) => {
-    const hay = `#${rq.id} ${rq.origin ?? ''} ${rq.destination ?? ''} ${labelRequestStatus(rq.status)}`.toLowerCase()
+    const hay = `${requestRefCode(rq)} ${rq.origin ?? ''} ${rq.destination ?? ''} ${labelRequestStatus(rq.status)}`.toLowerCase()
     return hay.includes(q)
   })
 })
@@ -499,8 +320,6 @@ const complianceBoxes = computed(() => {
     {
       key: 'insp',
       title: t('dashboard_analytics.compliance_inspection'),
-      cardTone: 'border-l-4 border-l-teal-500 bg-gradient-to-r from-teal-50/80 to-white dark:from-teal-950/35 dark:to-slate-950/50',
-      titleClass: 'text-teal-900 dark:text-teal-200',
       overdue: ins.overdue ?? 0,
       soon: ins.due_within_30_days ?? 0,
       stale: null,
@@ -509,8 +328,6 @@ const complianceBoxes = computed(() => {
     {
       key: 'insu',
       title: t('dashboard_analytics.compliance_insurance'),
-      cardTone: 'border-l-4 border-l-sky-500 bg-gradient-to-r from-sky-50/80 to-white dark:from-sky-950/35 dark:to-slate-950/50',
-      titleClass: 'text-sky-900 dark:text-sky-200',
       overdue: insu.overdue ?? 0,
       soon: insu.due_within_30_days ?? 0,
       stale: null,
@@ -519,8 +336,6 @@ const complianceBoxes = computed(() => {
     {
       key: 'road',
       title: t('dashboard_analytics.compliance_road_fee'),
-      cardTone: 'border-l-4 border-l-amber-500 bg-gradient-to-r from-amber-50/80 to-white dark:from-amber-950/30 dark:to-slate-950/50',
-      titleClass: 'text-amber-900 dark:text-amber-200',
       overdue: road.overdue ?? 0,
       soon: road.due_within_30_days ?? 0,
       stale: null,
@@ -529,8 +344,6 @@ const complianceBoxes = computed(() => {
     {
       key: 'maint',
       title: t('dashboard_analytics.compliance_maintenance'),
-      cardTone: 'border-l-4 border-l-violet-500 bg-gradient-to-r from-violet-50/80 to-white dark:from-violet-950/30 dark:to-slate-950/50',
-      titleClass: 'text-violet-900 dark:text-violet-200',
       overdue: 0,
       soon: null,
       stale: maint.no_recent_service_180d ?? 0,
@@ -539,9 +352,18 @@ const complianceBoxes = computed(() => {
   ]
 })
 
+function dateLocaleKey() {
+  return locale.value === 'en' ? 'en' : 'vi'
+}
+
+function requestRefCode(rq) {
+  return formatDispatchRequestRefCode(rq) || `#${rq?.id ?? ''}`
+}
+
 function formatDepartShort(s) {
   if (s == null || s === '') return '—'
-  return String(s).replace('T', ' ').slice(0, 16)
+  const out = formatListDateTime(s, dateLocaleKey())
+  return out || '—'
 }
 
 function tripStatusPillClass(s) {
@@ -618,27 +440,7 @@ watch(
   { deep: true },
 )
 
-function onDashboardResize() {
-  updateQuickScrollState()
-}
-
 onMounted(() => {
   reloadSummary()
-  window.addEventListener('resize', onDashboardResize)
-  nextTick(() => updateQuickScrollState())
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', onDashboardResize)
 })
 </script>
-
-<style scoped>
-.dash-quick-scroll {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.dash-quick-scroll::-webkit-scrollbar {
-  display: none;
-}
-</style>
