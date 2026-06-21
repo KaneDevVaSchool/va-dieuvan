@@ -346,7 +346,7 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div class="grid grid-cols-1 gap-3 xl:grid-cols-2">
             <ResourceRecordCard
               v-for="v in paginatedVehicles"
               :key="v.id"
@@ -437,7 +437,7 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div class="grid grid-cols-1 gap-3 xl:grid-cols-2">
             <ResourceRecordCard
               v-for="d in paginatedDrivers"
               :key="d.id"
@@ -534,7 +534,7 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div class="grid grid-cols-1 gap-3 xl:grid-cols-2">
             <ResourceRecordCard
               v-for="s in paginatedSuppliers"
               :key="s.id"

@@ -1,43 +1,7 @@
 <template>
   <div class="space-y-5">
-    <!-- KPI strip -->
-    <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-      <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-400">
-          <UsersIcon class="h-4 w-4 text-va-800" /> Học sinh đăng ký
-        </div>
-        <div class="mt-1.5 text-3xl font-bold text-slate-900">{{ program.enrolled_count ?? 0 }}</div>
-        <div class="mt-0.5 text-xs text-slate-500">trên {{ capacity || '—' }} chỗ tối đa</div>
-      </div>
-      <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-400">
-          <TruckIcon class="h-4 w-4 text-teal-600" /> Tỉ lệ lấp đầy
-        </div>
-        <div class="mt-1.5 text-3xl font-bold text-slate-900">{{ fillPct }}%</div>
-        <div class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-          <div class="h-full rounded-full bg-teal-500 transition-all" :style="{ width: Math.min(100, fillPct) + '%' }"></div>
-        </div>
-      </div>
-      <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-400">
-          <CalendarDaysIcon class="h-4 w-4 text-violet-600" /> Ngày vận hành
-        </div>
-        <div class="mt-1.5 text-3xl font-bold text-slate-900">{{ operatingCount }}</div>
-        <div class="mt-0.5 text-xs text-slate-500">/ {{ program.day_count ?? days.length }} tổng ngày</div>
-      </div>
-      <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-400">
-          <ChartBarIcon class="h-4 w-4 text-emerald-600" /> Tiến độ
-        </div>
-        <div class="mt-1.5 text-3xl font-bold text-slate-900">{{ progressPct }}%</div>
-        <div class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-          <div class="h-full rounded-full bg-emerald-500 transition-all" :style="{ width: progressPct + '%' }"></div>
-        </div>
-      </div>
-    </div>
-
-    <div v-if="loading" class="flex items-center justify-center rounded-2xl border border-slate-200 bg-white py-16 text-sm text-slate-500">
-      <ArrowPathIcon class="mr-2 h-5 w-5 animate-spin" /> Đang tải dữ liệu biểu đồ…
+    <div v-if="chartLoading" class="flex items-center justify-center rounded-2xl border border-slate-200 bg-white py-16 text-sm text-slate-500">
+      <ArrowPathIcon class="mr-2 h-5 w-5 animate-spin" /> {{ t('tp_program_detail.loading_charts') }}
     </div>
 
     <template v-else>
@@ -70,23 +34,27 @@
 
 <script setup>
 import { computed, h, onMounted, ref } from 'vue'
-import {
-  UsersIcon,
-  TruckIcon,
-  CalendarDaysIcon,
-  ChartBarIcon,
-  ArrowPathIcon,
-} from '@heroicons/vue/24/outline'
+import { useI18n } from 'vue-i18n'
+import { ArrowPathIcon } from '@heroicons/vue/24/outline'
 import DashboardEChart from '../../../components/dashboard/DashboardEChart.vue'
 import { emptyDashboardChartOption } from '../../../util/transportDashboardCharts'
 import { listProgramDays } from '../../../api/transportProgram'
 import { showAppErrorFromApi } from '../../../composables/appMessage'
 
-const props = defineProps({ program: { type: Object, required: true } })
+const props = defineProps({
+  program: { type: Object, required: true },
+  days: { type: Array, default: null },
+  daysLoading: { type: Boolean, default: false },
+})
 
-const loading = ref(false)
-const days = ref([])
+const { t } = useI18n()
+
+const localDays = ref([])
+const localLoading = ref(false)
 const selectedDayType = ref('')
+
+const daysList = computed(() => (props.days != null ? props.days : localDays.value))
+const chartLoading = computed(() => (props.days != null ? props.daysLoading : localLoading.value))
 
 const AXIS = { label: '#64748b', line: '#e2e8f0', split: '#f1f5f9' }
 
@@ -108,20 +76,6 @@ const fillPct = computed(() => {
   const cap = capacity.value
   if (!cap) return 0
   return Math.round(((props.program.enrolled_count ?? 0) / cap) * 100)
-})
-const operatingCount = computed(() => days.value.filter((d) => d.day_type === 'operating').length)
-
-const progressPct = computed(() => {
-  const p = props.program
-  if (p.status === 'completed') return 100
-  if (p.status === 'draft' || p.status === 'cancelled') return 0
-  if (!p.start_date || !p.end_date) return 0
-  const start = new Date(p.start_date).getTime()
-  const end = new Date(p.end_date).getTime()
-  const now = Date.now()
-  if (now <= start) return 0
-  if (now >= end) return 100
-  return Math.round(((now - start) / (end - start)) * 100)
 })
 
 function donut(data, emptyText) {
@@ -149,15 +103,15 @@ const dayTypeOption = computed(() => {
   const map = { operating: 'Vận hành', makeup: 'Học bù', cancelled: 'Đã hủy' }
   const colors = { operating: '#10b981', makeup: '#f59e0b', cancelled: '#ef4444' }
   const counts = {}
-  for (const d of days.value) counts[d.day_type] = (counts[d.day_type] || 0) + 1
+  for (const d of daysList.value) counts[d.day_type] = (counts[d.day_type] || 0) + 1
   const data = Object.entries(counts)
     .filter(([, v]) => v > 0)
     .map(([k, v]) => ({ value: v, name: map[k] || k, itemStyle: { color: colors[k] || '#6366f1' } }))
-  return donut(data, 'Chưa có ngày vận hành')
+  return donut(data, t('tp_program_detail.chart_empty_days'))
 })
 
 const executionOption = computed(() => {
-  const op = days.value.filter((d) => d.day_type === 'operating')
+  const op = daysList.value.filter((d) => d.day_type === 'operating')
   let done = 0
   let running = 0
   let pending = 0
@@ -171,13 +125,13 @@ const executionOption = computed(() => {
     { value: running, name: 'Đang chạy', itemStyle: { color: '#f59e0b' } },
     { value: pending, name: 'Chưa thực hiện', itemStyle: { color: '#cbd5e1' } },
   ].filter((d) => d.value > 0)
-  return donut(data, 'Chưa có ngày vận hành')
+  return donut(data, t('tp_program_detail.chart_empty_days'))
 })
 
 const seatOption = computed(() => {
   const cap = capacity.value
   const enrolled = props.program.enrolled_count ?? 0
-  if (!cap) return emptyDashboardChartOption('Chưa có dữ liệu sức chứa')
+  if (!cap) return emptyDashboardChartOption(t('tp_program_detail.chart_empty_capacity'))
   const free = Math.max(0, cap - enrolled)
   const data = [
     { value: enrolled, name: 'Đã đăng ký', itemStyle: { color: '#0ea5e9' } },
@@ -208,11 +162,11 @@ const seatOption = computed(() => {
 })
 
 const expectedOption = computed(() => {
-  const op = days.value
+  const op = daysList.value
     .filter((d) => d.day_type === 'operating')
     .slice()
     .sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date))
-  if (!op.length) return emptyDashboardChartOption('Chưa có ngày vận hành')
+  if (!op.length) return emptyDashboardChartOption(t('tp_program_detail.chart_empty_days'))
   const labels = op.map((d) => d.scheduled_date.slice(5))
   const vals = op.map((d) => Number(d.expected_count || 0))
   return {
@@ -247,8 +201,8 @@ const expectedOption = computed(() => {
 })
 
 const weekdayOption = computed(() => {
-  const op = days.value.filter((d) => d.day_type === 'operating')
-  if (!op.length) return emptyDashboardChartOption('Chưa có ngày vận hành')
+  const op = daysList.value.filter((d) => d.day_type === 'operating')
+  if (!op.length) return emptyDashboardChartOption(t('tp_program_detail.chart_empty_days'))
   const counts = [0, 0, 0, 0, 0, 0, 0]
   for (const d of op) {
     const wd = new Date(d.scheduled_date + 'T00:00:00').getDay()
@@ -287,16 +241,18 @@ function onDayTypeClick(p) {
   if (p?.name) selectedDayType.value = `${p.name}: ${p.value} ngày (${p.percent}%)`
 }
 
-async function load() {
-  loading.value = true
+async function loadLocalDays() {
+  localLoading.value = true
   try {
-    days.value = (await listProgramDays(props.program.id))?.items ?? []
+    localDays.value = (await listProgramDays(props.program.id))?.items ?? []
   } catch (err) {
     showAppErrorFromApi(err)
   } finally {
-    loading.value = false
+    localLoading.value = false
   }
 }
 
-onMounted(load)
+onMounted(() => {
+  if (props.days == null) loadLocalDays()
+})
 </script>

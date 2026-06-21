@@ -194,91 +194,106 @@
         </Button>
       </div>
 
-      <div v-else-if="view === 'grid'" class="grid gap-4 px-4 pb-5 sm:px-5 md:grid-cols-2 xl:grid-cols-3">
+      <div v-else-if="view === 'grid'" class="grid grid-cols-1 gap-4 px-4 pb-5 sm:px-5 xl:grid-cols-2">
         <article
           v-for="p in visibleItems"
           :key="p.id"
-          class="group flex min-h-[22rem] cursor-pointer flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-va-800/30 hover:shadow-md dark:border-slate-700 dark:bg-slate-900/40"
+          class="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-va-800/30 hover:shadow-md dark:border-slate-700 dark:bg-slate-900/40"
           :data-testid="`tp-program-card-${p.id}`"
           @click="goWorkspace(p.id)"
         >
-          <div class="flex items-start gap-3">
-            <div class="grid h-12 w-12 shrink-0 place-items-center rounded-xl" :class="accent(p.status).iconBg">
-              <TruckIcon class="h-7 w-7" :class="accent(p.status).iconText" />
-            </div>
-            <div class="min-w-0 flex-1">
-              <h3 class="truncate text-base font-semibold text-slate-900 dark:text-white">{{ p.name }}</h3>
-              <p class="mt-0.5 text-xs font-medium uppercase tracking-wide text-slate-400">
-                {{ t('tp_programs_page.card_school_year', { year: schoolYear(p) }) }}
-              </p>
-            </div>
-            <span :class="statusClass(p.status)">
-              <span class="h-1.5 w-1.5 rounded-full" :class="accent(p.status).dot"></span>
-              {{ statusLabel(p.status) }}
-            </span>
-          </div>
+          <div class="flex flex-1 flex-col gap-4 p-5 md:flex-row md:items-start md:gap-5">
+            <div class="min-w-0 md:max-w-[min(100%,19rem)] md:shrink-0">
+              <div class="flex items-start gap-3">
+                <div class="grid h-12 w-12 shrink-0 place-items-center rounded-xl" :class="accent(p.status).iconBg">
+                  <TruckIcon class="h-7 w-7" :class="accent(p.status).iconText" />
+                </div>
+                <div class="min-w-0 flex-1">
+                  <h3 class="truncate text-base font-semibold text-slate-900 dark:text-white">{{ p.name }}</h3>
+                  <p class="mt-0.5 text-xs font-medium uppercase tracking-wide text-slate-400">
+                    {{ t('tp_programs_page.card_school_year', { year: schoolYear(p) }) }}
+                  </p>
+                </div>
+                <span :class="statusClass(p.status)">
+                  <span class="h-1.5 w-1.5 rounded-full" :class="accent(p.status).dot"></span>
+                  {{ statusLabel(p.status) }}
+                </span>
+              </div>
 
-          <div class="mt-4 grid grid-cols-3 gap-2 rounded-xl bg-slate-50/70 py-3 text-center dark:bg-slate-800/40">
-            <div>
-              <div class="text-2xl font-bold text-slate-900 dark:text-white">{{ p.enrolled_count ?? 0 }}</div>
-              <div class="mt-0.5 text-xs text-slate-500">{{ t('tp_programs_page.card_students') }}</div>
-            </div>
-            <div class="border-x border-slate-200/70 dark:border-slate-600">
-              <div class="text-2xl font-bold text-slate-900 dark:text-white">{{ p.day_count ?? 0 }}</div>
-              <div class="mt-0.5 text-xs text-slate-500">{{ t('tp_programs_page.card_days') }}</div>
-            </div>
-            <div>
-              <div class="text-2xl font-bold" :class="accent(p.status).iconText">{{ runsPerWeek(p) }}</div>
-              <div class="mt-0.5 text-xs text-slate-500">{{ t('tp_programs_page.card_sessions_per_week') }}</div>
-            </div>
-          </div>
-
-          <div class="mt-4 flex-1 space-y-3 text-sm">
-            <div class="rounded-xl bg-slate-50/80 p-3.5 dark:bg-slate-800/40">
-              <div class="flex gap-3">
-                <MapPinIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-                <div class="min-w-0 flex-1 space-y-3">
-                  <div>
-                    <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                      {{ t('tp_programs_page.card_origin') }}
-                    </div>
-                    <p class="mt-1 font-medium leading-snug text-slate-800 dark:text-slate-100">
-                      {{ p.origin_name || '—' }}
-                    </p>
-                  </div>
-                  <div class="border-t border-slate-200/80 pt-3 dark:border-slate-600">
-                    <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                      {{ t('tp_programs_page.card_destination') }}
-                    </div>
-                    <p class="mt-1 font-medium leading-snug text-slate-800 dark:text-slate-100">
-                      {{ p.destination_name || t('tp_programs_page.card_destination_default') }}
-                    </p>
-                  </div>
+              <div class="mt-4 grid grid-cols-3 gap-2 rounded-xl bg-slate-50/70 py-3 text-center dark:bg-slate-800/40">
+                <div>
+                  <div class="text-2xl font-bold text-slate-900 dark:text-white">{{ p.enrolled_count ?? 0 }}</div>
+                  <div class="mt-0.5 text-xs text-slate-500">{{ t('tp_programs_page.card_students') }}</div>
+                </div>
+                <div class="border-x border-slate-200/70 dark:border-slate-600">
+                  <div class="text-2xl font-bold text-slate-900 dark:text-white">{{ p.day_count ?? 0 }}</div>
+                  <div class="mt-0.5 text-xs text-slate-500">{{ t('tp_programs_page.card_days') }}</div>
+                </div>
+                <div>
+                  <div class="text-2xl font-bold" :class="accent(p.status).iconText">{{ runsPerWeek(p) }}</div>
+                  <div class="mt-0.5 text-xs text-slate-500">{{ t('tp_programs_page.card_sessions_per_week') }}</div>
                 </div>
               </div>
             </div>
-            <div class="flex items-start gap-2 text-slate-500">
-              <ClockIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+
+            <div class="min-w-0 flex-1 space-y-3">
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div class="rounded-xl bg-slate-50/80 p-3 dark:bg-slate-800/40">
+                  <div class="flex gap-2">
+                    <MapPinIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                    <div class="min-w-0">
+                      <div class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                        {{ t('tp_programs_page.card_origin') }}
+                      </div>
+                      <p class="mt-1 text-sm font-medium leading-snug text-slate-800 dark:text-slate-100">
+                        {{ p.origin_name || t('tp_programs_page.card_route_empty') }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div class="rounded-xl bg-slate-50/80 p-3 dark:bg-slate-800/40">
+                  <div class="flex gap-2">
+                    <MapPinIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                    <div class="min-w-0">
+                      <div class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                        {{ t('tp_programs_page.card_destination') }}
+                      </div>
+                      <p class="mt-1 text-sm font-medium leading-snug text-slate-800 dark:text-slate-100">
+                        {{ p.destination_name || t('tp_programs_page.card_destination_default') }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div class="rounded-xl bg-slate-50/80 p-3 dark:bg-slate-800/40">
+                  <div class="flex gap-2">
+                    <ClockIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                    <div class="min-w-0">
+                      <div class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                        {{ t('tp_programs_page.card_time') }}
+                      </div>
+                      <p class="mt-1 text-sm font-medium text-slate-700 dark:text-slate-200">{{ timeRange(p) }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div>
-                <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                  {{ t('tp_programs_page.card_time') }}
+                <div class="mb-1.5 flex items-center justify-between text-xs">
+                  <span class="text-slate-500">{{ t('tp_programs_page.card_progress') }}</span>
+                  <span class="font-semibold text-slate-700 dark:text-slate-200">{{ progress(p) }}%</span>
                 </div>
-                <p class="mt-1 font-medium text-slate-700 dark:text-slate-200">{{ timeRange(p) }}</p>
+                <div class="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
+                  <div
+                    class="h-full rounded-full transition-all"
+                    :class="accent(p.status).bar"
+                    :style="{ width: progress(p) + '%' }"
+                  ></div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="mt-4">
-            <div class="mb-1.5 flex items-center justify-between text-xs">
-              <span class="text-slate-500">{{ t('tp_programs_page.card_progress') }}</span>
-              <span class="font-semibold text-slate-700 dark:text-slate-200">{{ progress(p) }}%</span>
-            </div>
-            <div class="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
-              <div class="h-full rounded-full transition-all" :class="accent(p.status).bar" :style="{ width: progress(p) + '%' }"></div>
-            </div>
-          </div>
-
-          <div class="mt-4 flex items-center justify-between border-t border-slate-100 pt-3.5 dark:border-slate-700">
+          <div class="flex items-center justify-between border-t border-slate-100 px-5 py-3.5 dark:border-slate-700">
             <div class="flex min-w-0 items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
               <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500 dark:bg-slate-800">
                 {{ initials(p.responsible_user_name) }}
@@ -319,14 +334,14 @@
               </td>
               <td class="px-4 py-3.5 text-slate-600 dark:text-slate-300">
                 <div class="text-[11px] uppercase text-slate-400">{{ t('tp_programs_page.card_origin') }}</div>
-                <div>{{ p.origin_name || '—' }}</div>
+                <div>{{ p.origin_name || t('tp_programs_page.card_route_empty') }}</div>
                 <div class="mt-1 text-[11px] uppercase text-slate-400">{{ t('tp_programs_page.card_destination') }}</div>
                 <div>{{ p.destination_name || t('tp_programs_page.card_destination_default') }}</div>
               </td>
               <td class="px-4 py-3.5 text-slate-600 dark:text-slate-300">{{ timeRange(p) }}</td>
               <td class="px-4 py-3.5 text-slate-600 dark:text-slate-300">{{ p.enrolled_count ?? 0 }}</td>
               <td class="px-4 py-3.5 text-slate-600 dark:text-slate-300">{{ p.day_count ?? 0 }}</td>
-              <td class="px-4 py-3.5 text-slate-600 dark:text-slate-300">{{ p.responsible_user_name || '—' }}</td>
+              <td class="px-4 py-3.5 text-slate-600 dark:text-slate-300">{{ p.responsible_user_name || t('tp_programs_page.card_responsible') }}</td>
               <td class="px-4 py-3.5">
                 <span :class="statusClass(p.status)">
                   <span class="h-1.5 w-1.5 rounded-full" :class="accent(p.status).dot"></span>
@@ -518,7 +533,7 @@ function timeRange(p) {
   const a = fmt(p.departure_time)
   const b = fmt(p.return_time)
   if (a && b) return `${a} – ${b}`
-  return a || '—'
+  return a || t('tp_programs_page.card_time_empty')
 }
 
 function progress(p) {

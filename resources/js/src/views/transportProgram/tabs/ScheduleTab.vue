@@ -172,7 +172,7 @@
                 <div class="text-xs text-slate-400">Tài xế hiệu lực</div>
                 <div class="mt-0.5 flex items-center gap-2">
                   <UserCircleIcon class="h-5 w-5 text-slate-400" />
-                  <span class="text-sm font-medium text-slate-800">{{ selected.effective_driver?.full_name || '— chưa gán —' }}</span>
+                  <span class="text-sm font-medium text-slate-800">{{ selected.effective_driver?.full_name || t('tp_program_detail.empty_driver') }}</span>
                 </div>
               </div>
 
@@ -208,6 +208,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -224,6 +225,7 @@ import { showAppErrorFromApi } from '../../../composables/appMessage'
 
 const props = defineProps({ program: { type: Object, required: true } })
 const router = useRouter()
+const { t } = useI18n()
 
 const loading = ref(false)
 const days = ref([])
@@ -297,7 +299,7 @@ function tripsFor(day) {
       cls: 'bg-amber-50 text-amber-700',
       iconWrap: 'bg-amber-100 text-amber-600',
       title: 'Chuyến sáng — Đưa đến trường',
-      time: dep ? `${dep}${arr ? ' → ' + arr : ''}` : '—',
+      time: dep ? `${dep}${arr ? ' → ' + arr : ''}` : t('tp_program_detail.empty_shift_time'),
     })
   }
   if (hasAfternoon) {
@@ -310,7 +312,7 @@ function tripsFor(day) {
       cls: 'bg-indigo-50 text-indigo-700',
       iconWrap: 'bg-indigo-100 text-indigo-600',
       title: 'Chuyến chiều — Đón về nhà',
-      time: dep ? `${dep}${arr ? ' → ' + arr : ''}` : '—',
+      time: dep ? `${dep}${arr ? ' → ' + arr : ''}` : t('tp_program_detail.empty_shift_time'),
     })
   }
   return out

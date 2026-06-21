@@ -1,28 +1,27 @@
 <template>
-  <div
-    class="mx-auto max-w-5xl space-y-6 rounded-xl border border-slate-200 bg-white p-4 text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 sm:p-6"
-  >
-    <div class="flex flex-wrap items-center gap-3">
-      <RouterLink
-        to="/resources/list?tab=vehicles"
-        class="inline-flex items-center gap-1 text-sm font-medium text-teal-700 hover:underline dark:text-teal-400"
-      >
-        ← {{ t('vehicle_detail.back') }}
-      </RouterLink>
-    </div>
-
+  <div class="w-full max-w-none space-y-6 pb-10 text-slate-900 dark:text-slate-100">
     <div v-if="loading" class="py-12 text-center text-sm text-slate-500">{{ t('resources.loading') }}</div>
     <div v-else-if="loadError" class="py-12 text-center text-sm text-rose-600">{{ loadError }}</div>
 
     <template v-else>
-      <header class="flex flex-wrap items-end justify-between gap-3 border-b border-slate-200 pb-4 dark:border-slate-700">
+      <!-- Content header -->
+      <div
+        class="flex flex-col gap-4 border-b border-slate-200/80 pb-6 dark:border-slate-700/80 sm:flex-row sm:items-start sm:justify-between"
+      >
         <div class="min-w-0">
-          <p class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          <RouterLink
+            to="/resources/list?tab=vehicles"
+            class="mb-2 inline-flex items-center gap-1 text-sm font-medium text-teal-700 hover:underline dark:text-teal-400"
+            data-testid="vehicle-detail-back"
+          >
+            ← {{ t('vehicle_detail.back') }}
+          </RouterLink>
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             {{ t('vehicle_detail.page_heading_hint') }}
           </p>
           <div class="mt-1 flex flex-wrap items-center gap-2">
-            <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-2xl">
-              {{ vehicle.license_plate || '—' }}
+            <h1 class="font-mono text-xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-2xl">
+              <EmptyValue :value="vehicle.license_plate" empty-key="vehicle_detail.empty_license_plate" />
             </h1>
             <span
               class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
@@ -31,10 +30,14 @@
               {{ labelVehicleStatus(vehicle.status) }}
             </span>
           </div>
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
+            <EmptyValue :value="vehicleTypeLabel" empty-key="resources.empty_type_capacity" />
+          </p>
+          <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-500">{{ t('vehicle_detail.page_subtitle') }}</p>
         </div>
-      </header>
+      </div>
 
-      <!-- Hồ sơ xe -->
+      <!-- Hồ sơ xe — 2 cột -->
       <section class="rounded-xl border border-slate-200/90 bg-white p-4 dark:border-slate-700 dark:bg-slate-900/50 sm:p-5">
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -45,57 +48,141 @@
             v-if="canManage"
             type="button"
             class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+            data-testid="vehicle-detail-toggle-profile-edit"
             @click="toggleProfileEdit"
           >
             {{ profileEdit ? t('vehicle_detail.cancel_edit') : t('vehicle_detail.edit') }}
           </button>
         </div>
 
-        <div v-if="!profileEdit" class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
-          <div>
-            <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ t('vehicle_detail.license_plate') }}</div>
-            <div class="mt-0.5 font-medium">{{ vehicle.license_plate || '—' }}</div>
+        <div v-if="!profileEdit" class="mt-4 flex flex-col gap-4 md:flex-row md:items-start md:gap-5 lg:gap-6">
+          <div class="flex min-w-0 gap-3 sm:gap-4 md:max-w-[min(100%,20rem)] md:shrink-0 lg:max-w-[22rem]">
+            <div
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-teal-100 text-teal-600 dark:bg-teal-950/40 dark:text-teal-400"
+              aria-hidden="true"
+            >
+              <component :is="vehicleIconComponent" class="h-6 w-6" />
+            </div>
+            <div class="min-w-0 flex-1 space-y-2.5">
+              <div
+                class="rounded-lg border border-slate-100 bg-slate-50/90 px-2.5 py-2 dark:border-slate-800 dark:bg-slate-800/50"
+                data-testid="vehicle-detail-compliance-pills"
+              >
+                <p class="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  {{ t('vehicle_detail.compliance_pills_heading') }}
+                </p>
+                <dl class="flex flex-wrap gap-x-3 gap-y-1.5">
+                  <div
+                    v-for="(pill, idx) in vehicleCompliancePills"
+                    :key="idx"
+                    class="inline-flex min-w-0 items-center gap-1.5"
+                  >
+                    <dt class="text-[11px] font-semibold text-slate-600 dark:text-slate-300">{{ pill.label }}</dt>
+                    <dd class="m-0">
+                      <span :class="pill.class">{{ pill.value }}</span>
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
           </div>
-          <div>
-            <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ t('vehicle_detail.type') }}</div>
-            <div class="mt-0.5">{{ vehicle.type || '—' }}</div>
-          </div>
-          <div>
-            <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ t('vehicle_detail.seat_count') }}</div>
-            <div class="mt-0.5">{{ vehicle.seat_count ?? '—' }}</div>
-          </div>
-          <div>
-            <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ t('resources.col_status') }}</div>
-            <div class="mt-0.5">{{ labelVehicleStatus(vehicle.status) }}</div>
-          </div>
-          <div>
-            <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ t('vehicle_detail.owner_name') }}</div>
-            <div class="mt-0.5">{{ vehicle.owner_name || '—' }}</div>
-          </div>
-          <div>
-            <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ t('vehicle_detail.caretaker_name') }}</div>
-            <div class="mt-0.5">{{ vehicle.caretaker_name || '—' }}</div>
-          </div>
-          <div>
-            <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ t('vehicle_detail.caretaker_phone') }}</div>
-            <div class="mt-0.5">{{ vehicle.caretaker_phone || '—' }}</div>
-          </div>
-          <div>
-            <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ t('vehicle_detail.default_driver') }}</div>
-            <div class="mt-0.5">{{ vehicle.default_driver?.full_name || '—' }}</div>
-          </div>
-          <div>
-            <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ t('vehicle_detail.inspection_expires') }}</div>
-            <div class="mt-0.5">{{ vehicle.inspection_expires_at || '—' }}</div>
-          </div>
-          <div>
-            <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ t('vehicle_detail.insurance_expires') }}</div>
-            <div class="mt-0.5">{{ vehicle.insurance_expires_at || '—' }}</div>
-          </div>
-          <div class="sm:col-span-2">
-            <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ t('resources.col_notes') }}</div>
-            <div class="mt-0.5 whitespace-pre-wrap">{{ vehicle.notes || '—' }}</div>
-          </div>
+
+          <dl
+            class="min-w-0 flex-1 grid grid-cols-2 gap-x-3 gap-y-2.5 rounded-xl border border-slate-100 bg-slate-50/80 p-3 sm:grid-cols-2 lg:grid-cols-3 dark:border-slate-800 dark:bg-slate-800/40"
+            data-testid="vehicle-detail-profile-fields"
+          >
+            <div class="min-w-0">
+              <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                {{ t('vehicle_detail.license_plate') }}
+              </dt>
+              <dd class="mt-0.5 text-sm font-medium font-mono text-slate-800 dark:text-slate-200">
+                <EmptyValue :value="vehicle.license_plate" empty-key="vehicle_detail.empty_license_plate" />
+              </dd>
+            </div>
+            <div class="min-w-0">
+              <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                {{ t('vehicle_detail.type') }}
+              </dt>
+              <dd class="mt-0.5 text-sm font-medium text-slate-800 dark:text-slate-200">
+                <EmptyValue :value="vehicle.type" empty-key="vehicle_detail.empty_type" />
+              </dd>
+            </div>
+            <div class="min-w-0">
+              <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                {{ t('vehicle_detail.seat_count') }}
+              </dt>
+              <dd class="mt-0.5 text-sm font-medium tabular-nums text-slate-800 dark:text-slate-200">
+                <EmptyValue
+                  :value="vehicle.seat_count != null ? String(vehicle.seat_count) : ''"
+                  empty-key="vehicle_detail.empty_seat_count"
+                />
+              </dd>
+            </div>
+            <div class="min-w-0">
+              <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                {{ t('resources.col_status') }}
+              </dt>
+              <dd class="mt-0.5 text-sm font-medium text-slate-800 dark:text-slate-200">
+                {{ labelVehicleStatus(vehicle.status) }}
+              </dd>
+            </div>
+            <div class="min-w-0">
+              <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                {{ t('vehicle_detail.owner_name') }}
+              </dt>
+              <dd class="mt-0.5 text-sm font-medium text-slate-800 dark:text-slate-200">
+                <EmptyValue :value="vehicle.owner_name" empty-key="resources.empty_owner" />
+              </dd>
+            </div>
+            <div class="min-w-0">
+              <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                {{ t('vehicle_detail.caretaker_name') }}
+              </dt>
+              <dd class="mt-0.5 text-sm font-medium text-slate-800 dark:text-slate-200">
+                <EmptyValue :value="vehicle.caretaker_name" empty-key="vehicle_detail.empty_caretaker" />
+              </dd>
+            </div>
+            <div class="min-w-0">
+              <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                {{ t('vehicle_detail.caretaker_phone') }}
+              </dt>
+              <dd class="mt-0.5 text-sm font-medium text-slate-800 dark:text-slate-200">
+                <EmptyValue :value="vehicle.caretaker_phone" empty-key="vehicle_detail.empty_caretaker_phone" />
+              </dd>
+            </div>
+            <div class="min-w-0">
+              <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                {{ t('vehicle_detail.default_driver') }}
+              </dt>
+              <dd class="mt-0.5 text-sm font-medium text-slate-800 dark:text-slate-200">
+                <EmptyValue :value="vehicle.default_driver?.full_name" empty-key="resources.unassigned" />
+              </dd>
+            </div>
+            <div class="min-w-0">
+              <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                {{ t('vehicle_detail.inspection_expires') }}
+              </dt>
+              <dd class="mt-0.5 text-sm font-medium text-slate-800 dark:text-slate-200">
+                <EmptyValue :value="vehicle.inspection_expires_at" empty-key="resources.empty_date" />
+              </dd>
+            </div>
+            <div class="min-w-0">
+              <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                {{ t('vehicle_detail.insurance_expires') }}
+              </dt>
+              <dd class="mt-0.5 text-sm font-medium text-slate-800 dark:text-slate-200">
+                <EmptyValue :value="vehicle.insurance_expires_at" empty-key="resources.empty_date" />
+              </dd>
+            </div>
+            <div class="min-w-0 col-span-2 lg:col-span-3">
+              <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                {{ t('resources.col_notes') }}
+              </dt>
+              <dd class="mt-0.5 whitespace-pre-wrap text-sm font-medium text-slate-800 dark:text-slate-200">
+                <EmptyValue :value="vehicle.notes" empty-key="vehicle_detail.empty_notes" />
+              </dd>
+            </div>
+          </dl>
         </div>
 
         <form v-else class="mt-4 grid gap-3 sm:grid-cols-2" @submit.prevent="saveVehicleProfile">
@@ -105,6 +192,7 @@
               v-model="profileForm.status"
               required
               class="mt-1 w-full rounded-lg border border-slate-200 py-2 pl-3 pr-8 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+              data-testid="vehicle-detail-profile-status"
             >
               <option value="ready">{{ t('resources.vehicle_status_ready') }}</option>
               <option value="in_use">{{ t('resources.vehicle_status_in_use') }}</option>
@@ -119,6 +207,7 @@
               v-model="profileForm.caretaker_name"
               type="text"
               class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+              data-testid="vehicle-detail-profile-caretaker-name"
             />
           </label>
           <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
@@ -127,6 +216,7 @@
               v-model="profileForm.caretaker_phone"
               type="text"
               class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+              data-testid="vehicle-detail-profile-caretaker-phone"
             />
           </label>
           <label class="sm:col-span-2 block text-xs font-medium text-slate-600 dark:text-slate-400">
@@ -135,6 +225,7 @@
               v-model="profileForm.notes"
               rows="4"
               class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+              data-testid="vehicle-detail-profile-notes"
             />
           </label>
           <div class="sm:col-span-2 flex flex-wrap gap-2 pt-1">
@@ -142,6 +233,7 @@
               type="submit"
               class="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
               :disabled="profileSaving"
+              data-testid="vehicle-detail-save-profile"
             >
               {{ profileSaving ? t('resources.loading') : t('vehicle_detail.save_profile') }}
             </button>
@@ -161,6 +253,7 @@
             v-if="canManage"
             type="button"
             class="rounded-lg bg-teal-600 px-3 py-2 text-xs font-medium text-white shadow-sm hover:bg-teal-500"
+            data-testid="vehicle-detail-compliance-add"
             @click="openDocModal(null)"
           >
             {{ t('vehicle_detail.compliance_quick_add') }}
@@ -202,14 +295,20 @@
               >
                 <td class="px-3 py-2 align-top">{{ docTypeLabel(doc.doc_type) }}</td>
                 <td class="max-w-[200px] px-3 py-2 align-top text-xs text-slate-600 dark:text-slate-400">
-                  <span class="line-clamp-2">{{ doc.title || '—' }}</span>
+                  <span class="line-clamp-2">
+                    <EmptyValue :value="doc.title" empty-key="driver_detail.empty_doc_title" />
+                  </span>
                 </td>
-                <td class="whitespace-nowrap px-3 py-2 align-top text-xs">{{ doc.expires_at || '—' }}</td>
+                <td class="whitespace-nowrap px-3 py-2 align-top text-xs">
+                  <EmptyValue :value="doc.expires_at" empty-key="driver_detail.empty_doc_expires" />
+                </td>
                 <td class="px-3 py-2 align-top">
                   <span :class="expiryPillClass(doc.expiry)">{{ expiryLabel(doc.expiry) }}</span>
                 </td>
                 <td class="max-w-[min(100%,280px)] px-3 py-2 align-top text-xs" @click.stop>
-                  <span v-if="!doc.attachments?.length" class="text-slate-400">—</span>
+                  <span v-if="!doc.attachments?.length">
+                    <EmptyValue value="" empty-key="vehicle_detail.empty_attachment" />
+                  </span>
                   <div v-else class="flex flex-col gap-2">
                     <a
                       v-for="(a, aIdx) in doc.attachments"
@@ -224,10 +323,20 @@
                   </div>
                 </td>
                 <td v-if="canManage" class="whitespace-nowrap px-3 py-2 align-top text-right text-xs" @click.stop>
-                  <button type="button" class="text-teal-700 hover:underline dark:text-teal-400" @click="openDocModal(doc)">
+                  <button
+                    type="button"
+                    class="text-teal-700 hover:underline dark:text-teal-400"
+                    data-testid="vehicle-detail-doc-edit"
+                    @click="openDocModal(doc)"
+                  >
                     {{ t('resources.action_edit') }}
                   </button>
-                  <button type="button" class="ml-2 text-rose-600 hover:underline" @click="confirmDelete(doc)">
+                  <button
+                    type="button"
+                    class="ml-2 text-rose-600 hover:underline"
+                    data-testid="vehicle-detail-doc-delete"
+                    @click="confirmDelete(doc)"
+                  >
                     {{ t('driver_detail.delete') }}
                   </button>
                 </td>
@@ -252,10 +361,12 @@
             class="rounded-lg border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-700 dark:bg-slate-800/40"
           >
             <div class="flex flex-wrap justify-between gap-2">
-              <span class="font-medium text-slate-800 dark:text-slate-200">{{ log.event }}</span>
+              <span class="font-medium text-slate-800 dark:text-slate-200">{{ formatAuditEvent(log.event) }}</span>
               <span class="text-slate-500">{{ formatDt(log.created_at) }}</span>
             </div>
-            <div class="mt-1 text-slate-600 dark:text-slate-400">{{ log.actor?.name || log.actor_id || '—' }}</div>
+            <div class="mt-1 text-slate-600 dark:text-slate-400">
+              <EmptyValue :value="log.actor?.name || log.actor_id" empty-key="driver_detail.empty_actor" />
+            </div>
           </li>
         </ul>
         <p v-if="!auditLogs.length" class="mt-2 text-sm text-slate-500">{{ t('resources.empty') }}</p>
@@ -294,6 +405,7 @@
                 required
                 :disabled="!canManage"
                 class="mt-1 w-full rounded-lg border border-slate-200 py-2 pl-3 pr-8 text-sm disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                data-testid="vehicle-detail-doc-type"
               >
                 <option v-for="opt in docTypeOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
@@ -307,6 +419,7 @@
                 class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                 :class="!canManage ? 'bg-slate-50 dark:bg-slate-800/80' : ''"
                 :placeholder="t('driver_detail.ph_doc_title')"
+                data-testid="vehicle-detail-doc-title"
               />
             </label>
             <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
@@ -318,6 +431,7 @@
                 class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                 :class="!canManage ? 'bg-slate-50 dark:bg-slate-800/80' : ''"
                 :placeholder="t('driver_detail.ph_doc_notes')"
+                data-testid="vehicle-detail-doc-notes"
               />
             </label>
             <div class="grid gap-3 sm:grid-cols-2">
@@ -347,6 +461,7 @@
               <input
                 type="file"
                 class="mt-1 w-full text-sm file:mr-3 file:rounded file:border-0 file:bg-teal-50 file:px-3 file:py-1.5 file:text-teal-800 dark:file:bg-teal-950 dark:file:text-teal-300"
+                data-testid="vehicle-detail-doc-file"
                 @change="onDocFile"
               />
             </label>
@@ -360,6 +475,7 @@
               <button
                 type="button"
                 class="flex-1 rounded-lg border border-slate-200 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                data-testid="vehicle-detail-doc-cancel"
                 @click="docModalOpen = false"
               >
                 {{ canManage ? t('app.cancel') : t('resources.close_panel') }}
@@ -369,6 +485,7 @@
                 type="submit"
                 class="flex-1 rounded-lg bg-teal-600 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
                 :disabled="docSaving"
+                data-testid="vehicle-detail-doc-save"
               >
                 {{ docSaving ? t('resources.loading') : t('driver_detail.save_doc') }}
               </button>
@@ -396,6 +513,8 @@ import {
 import { formatApiError } from '../../api/http'
 import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
 import { useAuthStore } from '../../store'
+import EmptyValue from '../../components/ui/EmptyValue.vue'
+import { vehicleIconKind, VEHICLE_ICON_COMPONENTS } from '../../util/vehicleIcon'
 
 const DOC_TYPES = [
   'registration',
@@ -408,7 +527,7 @@ const DOC_TYPES = [
   'other',
 ]
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 const route = useRoute()
 const auth = useAuthStore()
 
@@ -450,6 +569,64 @@ const docTypeOptions = computed(() =>
     label: t(`vehicle_compliance_doc_type.${value}`),
   })),
 )
+
+const vehicleIconComponent = computed(() => {
+  const kind = vehicleIconKind(vehicle.value)
+  return VEHICLE_ICON_COMPONENTS[kind] || VEHICLE_ICON_COMPONENTS.van
+})
+
+const vehicleTypeLabel = computed(() => {
+  const v = vehicle.value || {}
+  const parts = []
+  if (v.type) parts.push(v.type)
+  if (v.seat_count) parts.push(t('vehicle_detail.seat_suffix', { n: v.seat_count }))
+  if (v.payload_kg) parts.push(t('vehicle_detail.payload_suffix', { n: v.payload_kg }))
+  return parts.length ? parts.join(' · ') : ''
+})
+
+function docStateFromDate(iso) {
+  if (!iso) return { state: 'none', days: null, until: null }
+  const d = new Date(`${iso}T12:00:00`)
+  const ms = d.getTime() - Date.now()
+  const days = Math.ceil(ms / 86400000)
+  const until = iso
+  if (days < 0) return { state: 'exp', days, until }
+  if (days <= 30) return { state: 'soon', days, until }
+  return { state: 'ok', days: null, until }
+}
+
+function complianceStatusLabel(doc) {
+  if (doc.state === 'none') return t('resources.empty_date')
+  if (doc.state === 'ok') return t('resources.compliance_ok')
+  if (doc.state === 'soon') return t('resources.exp_in_days', { n: doc.days })
+  return t('resources.compliance_exp')
+}
+
+function compliancePillClass(doc) {
+  if (doc.state === 'none') {
+    return 'inline-flex rounded px-1.5 py-0.5 text-[10px] font-semibold bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
+  }
+  if (doc.state === 'ok') {
+    return 'inline-flex rounded px-1.5 py-0.5 text-[10px] font-semibold bg-emerald-100 text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-300'
+  }
+  if (doc.state === 'soon') {
+    return 'inline-flex rounded px-1.5 py-0.5 text-[10px] font-semibold bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-300'
+  }
+  return 'inline-flex rounded px-1.5 py-0.5 text-[10px] font-semibold bg-rose-100 text-rose-900 dark:bg-rose-950/60 dark:text-rose-300'
+}
+
+function compliancePill(label, doc) {
+  return { label, value: complianceStatusLabel(doc), class: compliancePillClass(doc) }
+}
+
+const vehicleCompliancePills = computed(() => {
+  const v = vehicle.value || {}
+  return [
+    compliancePill(t('resources.tag_ins'), docStateFromDate(v.insurance_expires_at)),
+    compliancePill(t('resources.tag_reg'), docStateFromDate(v.inspection_expires_at)),
+    compliancePill(t('resources.tag_road_fee'), docStateFromDate(v.road_fee_expires_at)),
+  ]
+})
 
 const complianceExpirySummary = computed(() => {
   let soon = 0
@@ -547,7 +724,7 @@ watch(
 
 function docTypeLabel(type) {
   const k = `vehicle_compliance_doc_type.${type}`
-  return t(k) !== k ? t(k) : type
+  return te(k) ? t(k) : type
 }
 
 function expiryPillClass(exp) {
@@ -577,11 +754,17 @@ function labelVehicleStatus(s) {
     maintenance: t('resources.vehicle_status_maintenance'),
     broken: t('resources.vehicle_status_broken'),
   }
-  return map[s] ?? s ?? '—'
+  return map[s] ?? s ?? t('resources.empty_not_available')
+}
+
+function formatAuditEvent(event) {
+  const key = `vehicle_detail.audit_event_${String(event || '').replace(/\./g, '_')}`
+  if (te(key)) return t(key)
+  return t('vehicle_detail.audit_event_unknown')
 }
 
 function formatDt(iso) {
-  if (!iso) return '—'
+  if (!iso) return t('vehicle_detail.empty_datetime')
   try {
     return new Date(iso).toLocaleString()
   } catch {

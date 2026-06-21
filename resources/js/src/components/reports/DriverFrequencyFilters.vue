@@ -57,6 +57,42 @@
             <XMarkIcon class="h-3 w-3 text-rose-500" aria-hidden="true" />
           </button>
 
+          <details v-if="canExport" ref="exportMenuRef" class="group relative">
+            <summary class="list-none [&::-webkit-details-marker]:hidden">
+              <DatagridToolbarActionButton
+                icon="export"
+                :disabled="!!exporting || loading"
+                test-id="driver-freq-filters-export"
+                @click.prevent
+              >
+                {{ t('driver_freq.toolbar_export') }}
+              </DatagridToolbarActionButton>
+            </summary>
+            <div
+              class="absolute right-0 top-[calc(100%+8px)] z-[110] min-w-[200px] rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-600 dark:bg-slate-900"
+              @click.stop
+            >
+              <button
+                type="button"
+                class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                data-testid="driver-freq-filters-export-xlsx"
+                :disabled="!!exporting || loading"
+                @click="$emit('export-xlsx')"
+              >
+                {{ t('driver_freq.btn_export_xlsx') }}
+              </button>
+              <button
+                type="button"
+                class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                data-testid="driver-freq-filters-export-pdf"
+                :disabled="!!exporting || loading"
+                @click="$emit('export-pdf')"
+              >
+                {{ t('driver_freq.btn_export_pdf') }}
+              </button>
+            </div>
+          </details>
+
           <button
             type="button"
             class="df-freq-refresh"
@@ -153,7 +189,7 @@ import { useI18n } from 'vue-i18n'
 import DatagridToolbarActionButton from '../shared/ui/DatagridToolbarActionButton.vue'
 import DatagridFilterField from '../shared/ui/DatagridFilterField.vue'
 import FilterVisibilityDropdown from '../shared/ui/FilterVisibilityDropdown.vue'
-import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
+import { useDetailsAutoClose, useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 
 defineProps({
   filters: { type: Object, required: true },
@@ -166,9 +202,13 @@ defineProps({
   hasVisibleBarFilters: { type: Boolean, default: false },
   showFilterPanel: { type: Boolean, default: false },
   loading: { type: Boolean, default: false },
+  canExport: { type: Boolean, default: false },
+  exporting: { type: String, default: null },
 })
 
 defineEmits([
+  'export-xlsx',
+  'export-pdf',
   'reload',
   'reset-filters',
   'patch-filter',
@@ -179,7 +219,9 @@ defineEmits([
 
 const { t } = useI18n()
 const rootRef = ref(null)
+const exportMenuRef = ref(null)
 useDetailsAutoCloseWithin(rootRef)
+useDetailsAutoClose(exportMenuRef)
 
 const FILTER_CONTROL_CLASS =
   'input h-10 w-full text-sm rounded-lg border border-slate-200 bg-white px-3 text-slate-900 shadow-sm focus:border-va-700 focus:outline-none focus:ring-2 focus:ring-va-700/15 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100'

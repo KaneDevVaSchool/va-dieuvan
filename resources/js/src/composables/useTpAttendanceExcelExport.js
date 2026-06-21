@@ -21,7 +21,7 @@ const COL_DEFS = [
     get: (r, t, reasons) => {
       const reason = reasons.find((x) => x.code === r.reason_code)
       const parts = [reason?.label_vi, r.absence_reason, r.driver_notes ? `${t('tp_attendance_page.driver_note_label')}: ${r.driver_notes}` : null].filter(Boolean)
-      return parts.join(' — ') || '—'
+      return parts.join(' — ') || t('tp_attendance_page.empty_notes')
     },
   },
 ]

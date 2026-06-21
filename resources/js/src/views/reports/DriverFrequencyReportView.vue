@@ -1,38 +1,16 @@
 ﻿<template>
   <div class="freq-dash space-y-5 pb-14">
 
-    <header class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div class="flex flex-col gap-4 border-b border-slate-200/80 pb-6 dark:border-slate-700/80">
       <div>
-        <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl">
+        <h1 class="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
           {{ t('driver_freq.hero_title') }}
         </h1>
-        <p class="mt-0.5 max-w-xl text-sm text-slate-500 dark:text-slate-400">
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
           {{ t('driver_freq.hero_sub') }}
         </p>
       </div>
-      <div v-if="canExport" class="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          :disabled="!!exporting || loading"
-          class="freq-btn freq-btn--xlsx"
-          @click="doExportXlsx"
-        >
-          <span v-if="exporting === 'xlsx'" class="freq-spinner freq-spinner--emerald" />
-          <TableCellsIcon v-else class="size-4 shrink-0" aria-hidden="true" />
-          {{ t('driver_freq.btn_export_xlsx') }}
-        </button>
-        <button
-          type="button"
-          :disabled="!!exporting || loading"
-          class="freq-btn freq-btn--pdf"
-          @click="doExportPdf"
-        >
-          <span v-if="exporting === 'pdf'" class="freq-spinner freq-spinner--rose" />
-          <DocumentTextIcon v-else class="size-4 shrink-0" aria-hidden="true" />
-          {{ t('driver_freq.btn_export_pdf') }}
-        </button>
-      </div>
-    </header>
+    </div>
 
     <DriverFrequencyFilters
       :filters="filters"
@@ -45,6 +23,10 @@
       :has-visible-bar-filters="hasVisibleBarFilters"
       :show-filter-panel="showFilterPanelDd"
       :loading="loading"
+      :can-export="canExport"
+      :exporting="exporting"
+      @export-xlsx="doExportXlsx"
+      @export-pdf="doExportPdf"
       @reload="fetchReport"
       @reset-filters="resetFilters"
       @patch-filter="onPatchFilter"
@@ -262,7 +244,6 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { DocumentTextIcon, TableCellsIcon } from '@heroicons/vue/24/outline'
 import DriverFrequencyFilters from '../../components/reports/DriverFrequencyFilters.vue'
 import DriverFrequencySummaryBar from '../../components/reports/DriverFrequencySummaryBar.vue'
 import DatagridToolbarSearch from '../../components/shared/ui/DatagridToolbarSearch.vue'
@@ -756,30 +737,6 @@ async function doExportPdf() {
   --freq-va: #9a0036;
   --freq-header: #3a3a5c;
   @apply text-slate-900 dark:text-slate-100;
-}
-
-.freq-btn {
-  @apply inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium shadow-sm transition disabled:opacity-50;
-}
-
-.freq-btn--xlsx {
-  @apply border-emerald-200 bg-emerald-50 text-emerald-900 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200;
-}
-
-.freq-btn--pdf {
-  @apply border-rose-200 bg-rose-50 text-rose-900 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200;
-}
-
-.freq-spinner {
-  @apply inline-block size-4 animate-spin rounded-full border-2;
-}
-
-.freq-spinner--emerald {
-  @apply border-emerald-300 border-t-emerald-700;
-}
-
-.freq-spinner--rose {
-  @apply border-rose-300 border-t-rose-700;
 }
 
 .freq-alert {

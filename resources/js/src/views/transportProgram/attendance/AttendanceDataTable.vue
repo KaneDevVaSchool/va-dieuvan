@@ -1,5 +1,5 @@
 <template>
-  <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+  <div data-testid="attendance-list">
     <div
       v-if="selectedCount > 0"
       class="flex flex-wrap items-center gap-2 border-b border-teal-100 bg-teal-50/80 px-3 py-2 text-sm"
@@ -100,19 +100,19 @@
                 v-if="s.class_name"
                 class="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700"
               >{{ s.class_name }}</span>
-              <span v-else class="text-slate-400">—</span>
+              <span v-else class="text-xs text-slate-400">{{ t('tp_attendance_page.empty_class') }}</span>
             </td>
             <td v-if="colOn('pickup_point')" class="px-3 py-3 text-slate-600" :style="colWidthStyle('pickup_point')">
-              {{ s.pickup_point || '—' }}
+              {{ s.pickup_point || t('tp_attendance_page.empty_pickup') }}
             </td>
             <td v-if="colOn('boarded_time')" class="px-3 py-3 tabular-nums text-slate-700" :style="colWidthStyle('boarded_time')">
-              {{ formatBoardedTime(s.boarded_at) }}
+              {{ formatBoardedTime(s.boarded_at) || t('tp_attendance_page.empty_boarded_time') }}
             </td>
             <td v-if="colOn('status')" class="px-3 py-3" :style="colWidthStyle('status')">
               <span :class="statusBadgeClass(s)">{{ statusLabel(s) }}</span>
             </td>
             <td v-if="colOn('parent_phone')" class="px-3 py-3 text-slate-600" :style="colWidthStyle('parent_phone')">
-              {{ s.parent_phone || '—' }}
+              {{ s.parent_phone || t('tp_attendance_page.empty_parent_phone') }}
             </td>
             <td v-if="colOn('notes')" class="px-3 py-3" :style="colWidthStyle('notes')">
               <div class="flex w-full min-w-[180px] max-w-[280px] flex-col gap-1.5">
@@ -150,8 +150,8 @@
                 </p>
                 <span
                   v-if="s.status !== 'absent' && !s.driver_notes"
-                  class="text-slate-300"
-                >—</span>
+                  class="text-xs text-slate-400"
+                >{{ t('tp_attendance_page.empty_notes') }}</span>
               </div>
             </td>
             <td v-if="colOn('attendance_toggle')" class="px-3 py-3 text-center" :style="colWidthStyle('attendance_toggle')">

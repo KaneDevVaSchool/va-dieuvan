@@ -71,7 +71,7 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="mx-auto max-w-4xl space-y-5 pb-12">
+  <div class="space-y-5 pb-12">
 
     <!-- ── Loading ────────────────────────────────────────────────────────── -->
     <div v-if="loading" class="space-y-4">
@@ -188,6 +188,7 @@ onMounted(load)
           <h3 class="px-1 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Nhóm quyền đang bật
           </h3>
+          <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
           <div
             v-for="group in activeGroups"
             :key="group.id"
@@ -230,6 +231,7 @@ onMounted(load)
                 <span class="text-sm text-slate-800 dark:text-slate-200">{{ cap.label }}</span>
               </div>
             </div>
+          </div>
           </div>
         </template>
 

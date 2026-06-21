@@ -1,40 +1,16 @@
 ﻿<template>
   <div class="tr-rev space-y-6 pb-14 text-slate-800 dark:text-slate-200">
 
-    <header class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-      <div class="tr-rev-hero">
-        <p class="tr-rev-hero__eyebrow">{{ t('nav.bar.section_reports') }}</p>
-        <h1 class="tr-rev-hero__title">
+    <div class="flex flex-col gap-4 border-b border-slate-200/80 pb-6 dark:border-slate-700/80">
+      <div>
+        <h1 class="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
           {{ t('cost_report.hero_title') }}
         </h1>
-        <p class="tr-rev-hero__sub">
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
           {{ t('cost_report.hero_sub') }}
         </p>
       </div>
-      <div class="flex flex-wrap items-center gap-2 sm:pt-1">
-        <button
-          type="button"
-          :disabled="exporting"
-          class="tr-rev-export tr-rev-export--sheet"
-          data-testid="cost-report-header-export-xlsx"
-          @click="doExportXlsx"
-        >
-          <span v-if="exporting === 'xlsx'" class="tr-rev-spinner tr-rev-spinner--teal" />
-          <TableCellsIcon v-else class="size-4 shrink-0" aria-hidden="true" />
-          {{ t('cost_report.btn_export_xlsx') }}
-        </button>
-        <button
-          type="button"
-          :disabled="exporting"
-          class="tr-rev-export tr-rev-export--doc"
-          @click="doExportPdf"
-        >
-          <span v-if="exporting === 'pdf'" class="tr-rev-spinner tr-rev-spinner--rose" />
-          <DocumentTextIcon v-else class="size-4 shrink-0" aria-hidden="true" />
-          {{ t('cost_report.btn_export_pdf') }}
-        </button>
-      </div>
-    </header>
+    </div>
 
     <CostReportFilters
       :filters="filters"
@@ -273,10 +249,6 @@
 <script setup>
 import { computed, onActivated, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import {
-  TableCellsIcon,
-  DocumentTextIcon,
-} from '@heroicons/vue/24/outline'
 import CostReportFilters from '../../components/reports/CostReportFilters.vue'
 import CostReportSummaryBar from '../../components/reports/CostReportSummaryBar.vue'
 import CostReportRecordCard from '../../components/reports/CostReportRecordCard.vue'
@@ -706,46 +678,6 @@ onActivated(() => {
 </script>
 
 <style scoped>
-.tr-rev-hero {
-  @apply border-l-[3px] border-teal-600/80 pl-4 dark:border-teal-500/70;
-}
-
-.tr-rev-hero__eyebrow {
-  @apply text-[11px] font-normal tracking-wide text-teal-800/80 dark:text-teal-300/90;
-}
-
-.tr-rev-hero__title {
-  @apply mt-0.5 text-xl font-normal tracking-tight text-slate-900 dark:text-slate-50 sm:text-2xl;
-}
-
-.tr-rev-hero__sub {
-  @apply mt-1 max-w-2xl text-sm font-normal leading-relaxed text-slate-500 dark:text-slate-400;
-}
-
-.tr-rev-export {
-  @apply inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-normal transition disabled:opacity-50;
-}
-
-.tr-rev-export--sheet {
-  @apply border-teal-200/90 bg-teal-50/60 text-teal-900 hover:bg-teal-100/80 dark:border-teal-800 dark:bg-teal-950/30 dark:text-teal-100 dark:hover:bg-teal-900/40;
-}
-
-.tr-rev-export--doc {
-  @apply border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800;
-}
-
-.tr-rev-spinner {
-  @apply inline-block size-4 animate-spin rounded-full border-2;
-}
-
-.tr-rev-spinner--teal {
-  @apply border-teal-200 border-t-teal-700;
-}
-
-.tr-rev-spinner--rose {
-  @apply border-rose-200 border-t-rose-600;
-}
-
 .tr-rev-refresh {
   @apply inline-flex h-9 shrink-0 items-center justify-center rounded-full bg-teal-800 px-4 text-sm font-normal text-white transition hover:bg-teal-900 focus:outline-none focus:ring-2 focus:ring-teal-600/30 disabled:opacity-50 dark:bg-teal-700 dark:hover:bg-teal-600;
 }

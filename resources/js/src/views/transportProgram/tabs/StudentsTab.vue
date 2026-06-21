@@ -61,7 +61,7 @@
             </td>
             <td class="px-4 py-3 font-mono text-sm text-slate-500">{{ s.code }}</td>
             <td class="px-4 py-3">
-              <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">{{ s.class_name || '—' }}</span>
+              <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">{{ s.class_name || t('tp_program_detail.empty_class') }}</span>
             </td>
             <td class="px-4 py-3 text-right">
               <button class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm font-medium text-rose-600 transition hover:bg-rose-50" @click="unenroll(s)">
@@ -78,6 +78,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { PlusIcon, TrashIcon, MagnifyingGlassIcon, ArrowPathIcon, UsersIcon } from '@heroicons/vue/24/outline'
 import Button from '../../../components/ui/Button.vue'
 import { listEnrollments, unenrollStudent } from '../../../api/transportProgram'
@@ -86,6 +87,7 @@ import { confirmAction } from '../../../composables/useConfirm'
 
 const props = defineProps({ program: { type: Object, required: true } })
 const router = useRouter()
+const { t } = useI18n()
 const loading = ref(false)
 const items = ref([])
 const search = ref('')

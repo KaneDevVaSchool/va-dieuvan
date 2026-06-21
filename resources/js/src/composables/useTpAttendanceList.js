@@ -48,6 +48,7 @@ export function useTpAttendanceList(getItems) {
     noteQ: '',
     boardedFrom: '',
     boardedTo: '',
+    displayStatus: '',
   })
 
   const sort = reactive({ key: 'student', dir: 'asc' })
@@ -122,6 +123,9 @@ export function useTpAttendanceList(getItems) {
       const toHm = filters.boardedTo || null
       rows = rows.filter((r) => matchesBoardedTimeRange(r, fromHm, toHm))
     }
+    if (filters.displayStatus) {
+      rows = rows.filter((r) => r.display_status === filters.displayStatus)
+    }
 
     const keyFn = SORT_KEYS[sort.key] || SORT_KEYS.student
     const dir = sort.dir === 'desc' ? -1 : 1
@@ -148,7 +152,7 @@ export function useTpAttendanceList(getItems) {
   })
 
   watch(
-    () => [filters.q, filters.noteQ, filters.boardedFrom, filters.boardedTo, perPage.value, sort.key, sort.dir],
+    () => [filters.q, filters.noteQ, filters.boardedFrom, filters.boardedTo, filters.displayStatus, perPage.value, sort.key, sort.dir],
     () => {
       page.value = 1
     },
@@ -163,6 +167,7 @@ export function useTpAttendanceList(getItems) {
     if (filters.q.trim()) n++
     if (filters.noteQ.trim()) n++
     if (filters.boardedFrom || filters.boardedTo) n++
+    if (filters.displayStatus) n++
     return n
   })
 
@@ -171,6 +176,7 @@ export function useTpAttendanceList(getItems) {
     filters.noteQ = ''
     filters.boardedFrom = ''
     filters.boardedTo = ''
+    filters.displayStatus = ''
   }
 
   function toggleSort(key) {
@@ -232,11 +238,42 @@ function matchesBoardedTimeRange(row, fromHm, toHm) {
   return true
 }
 
-export function formatBoardedTime(iso) {
-  if (!iso) return '—'
-  try {
-    return new Date(iso).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-  } catch {
-    return '—'
+/** @returns {string} dd/MM/yyyy */
+export function formatViDate(iso) {
+  if (!iso) return ''
+  const part = String(iso).slice(0, 10)
+  const [y, m, d] = part.split('-')
+  if (!y || !m || !d) return ''
+  return `${d}/${m}/${y}`
+}
+
+/** @returns {string} HH:mm */
+export function formatViTime(isoOrDatetime) {
+  if (!isoOrDatetime) return ''
+  const raw = String(isoOrDatetime)
+  if (/^\d{1,2}:\d{2}/.test(raw) && raw.length <= 8) {
+    return raw.slice(0, 5)
   }
+  try {
+    const d = new Date(isoOrDatetime)
+    if (Number.isNaN(d.getTime())) return ''
+    const h = String(d.getHours()).padStart(2, '0')
+    const m = String(d.getMinutes()).padStart(2, '0')
+    return `${h}:${m}`
+  } catch {
+    return ''
+  }
+}
+
+/** @returns {string} dd/MM/yyyy HH:mm */
+export function formatViDateTime(isoOrDatetime) {
+  if (!isoOrDatetime) return ''
+  const d = formatViDate(String(isoOrDatetime).slice(0, 10))
+  const t = formatViTime(isoOrDatetime)
+  if (d && t) return `${d} ${t}`
+  return d || t
+}
+
+export function formatBoardedTime(iso) {
+  return formatViTime(iso)
 }
