@@ -61,7 +61,15 @@
           v-if="!compactNav"
           class="mt-3 flex items-center gap-3 rounded-xl bg-white/10 px-3 py-2.5 md:mt-3"
         >
+          <img
+            v-if="userAvatarUrl"
+            :src="userAvatarUrl"
+            alt=""
+            class="h-10 w-10 shrink-0 rounded-full object-cover ring-2 ring-white/25"
+            decoding="async"
+          />
           <span
+            v-else
             class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20 text-xs font-bold uppercase text-white ring-2 ring-white/25"
           >
             {{ userInitials }}
@@ -72,7 +80,16 @@
           </div>
         </div>
         <div v-else class="mt-2 hidden justify-center md:flex">
+          <img
+            v-if="userAvatarUrl"
+            :src="userAvatarUrl"
+            alt=""
+            class="h-9 w-9 shrink-0 rounded-full object-cover ring-2 ring-white/25"
+            :title="auth.user?.name || ''"
+            decoding="async"
+          />
           <span
+            v-else
             class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20 text-[10px] font-bold uppercase text-white ring-2 ring-white/25"
             :title="auth.user?.name || ''"
           >
@@ -239,7 +256,15 @@
           </div>
         </RouterLink>
 
+        <img
+          v-if="userAvatarUrl"
+          :src="userAvatarUrl"
+          alt=""
+          class="h-9 w-9 shrink-0 rounded-full object-cover ring-2 ring-slate-200 dark:ring-slate-600"
+          decoding="async"
+        />
         <span
+          v-else
           class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[11px] font-bold uppercase text-slate-800 dark:bg-slate-700 dark:text-slate-100"
         >
           {{ userInitials }}
@@ -345,6 +370,8 @@ const deptDisplayName = computed(() => {
   if (cms && typeof cms.department_name === 'string' && cms.department_name) return cms.department_name
   return t('dept.dept_fallback')
 })
+
+const userAvatarUrl = computed(() => auth.user?.avatar_url?.trim() || '')
 
 const userInitials = computed(() => {
   const name = auth.user?.name?.trim()

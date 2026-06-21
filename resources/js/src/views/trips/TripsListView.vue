@@ -377,9 +377,14 @@
               {{ t('trips_page.col_driver') }} · {{ t('trips_page.col_vehicle') }}
             </p>
             <div v-if="trip.driver" class="mt-2 flex items-start gap-2">
-              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-800 dark:bg-teal-950 dark:text-teal-200">
-                {{ driverInitials(trip.driver.full_name) }}
-              </div>
+              <UserAvatar
+                :name="trip.driver.full_name || ''"
+                :email="trip.driver.email || ''"
+                :avatar-url="trip.driver.user?.avatar_url"
+                :title="trip.driver.full_name || ''"
+                size="md"
+                data-testid="trips-card-driver-avatar"
+              />
               <div class="min-w-0">
                 <p class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
                   {{ trip.driver.full_name }}
@@ -834,13 +839,6 @@ function statusPillClass(s) {
 function paymentLabel(ps) {
   const k = ps && ['unpaid', 'pending', 'paid'].includes(ps) ? ps : 'unpaid'
   return t(`trips_page.payment_${k}`)
-}
-
-function driverInitials(name) {
-  if (!name) return '?'
-  const p = String(name).trim().split(/\s+/)
-  if (p.length === 1) return p[0].slice(0, 2).toUpperCase()
-  return (p[0][0] + p[p.length - 1][0]).toUpperCase()
 }
 
 function passengerMetaSummary(trip) {

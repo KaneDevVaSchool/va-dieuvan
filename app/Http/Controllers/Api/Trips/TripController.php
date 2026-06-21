@@ -117,7 +117,8 @@ class TripController extends Controller
             ->with([
                 'dispatcher:id,name,email',
                 'vehicle:id,license_plate,status,type,seat_count',
-                'driver:id,full_name,phone',
+                'driver:id,full_name,phone,user_id',
+                'driver.user:id,avatar_url',
                 'transportProvider:id,name',
                 'record:id,trip_id,distance_km',
                 'dispatchRequest:'.$dispatchRequestSelect,
