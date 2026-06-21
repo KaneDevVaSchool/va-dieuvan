@@ -3994,6 +3994,16 @@
             "schedule": "Schedule",
             "revenue": "Est. Revenue"
         },
+        "kpi_stats_eyebrow": "STATISTICS",
+        "kpi_strip_aria": "Trip overview statistics",
+        "kpi_strip_overview": "Trip overview",
+        "kpi_strip_hint": "Aggregated from the request and current assignments",
+        "kpi_seats_sub_assigned": "From assigned vehicles",
+        "kpi_seats_sub_empty": "No vehicle assigned or seat count missing",
+        "kpi_vehicles_sub": "{n} vehicle(s) assigned",
+        "kpi_drivers_sub": "{n} driver(s) assigned",
+        "kpi_dispatch_unassigned": "Not assigned yet",
+        "kpi_schedule_sub": "Departure — arrival window",
         "sections": {
             "request_info": "Request Information",
             "schedule": "Schedule",

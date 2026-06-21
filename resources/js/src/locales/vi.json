@@ -3554,6 +3554,16 @@
             "schedule": "Lịch trình",
             "revenue": "Doanh thu dự kiến"
         },
+        "kpi_stats_eyebrow": "THỐNG KÊ",
+        "kpi_strip_aria": "Thống kê tổng quan chuyến đi",
+        "kpi_strip_overview": "Tổng quan chuyến",
+        "kpi_strip_hint": "Chỉ số tổng hợp từ yêu cầu và phân công hiện tại",
+        "kpi_seats_sub_assigned": "Theo xe đã gán",
+        "kpi_seats_sub_empty": "Chưa gán xe hoặc chưa khai báo ghế",
+        "kpi_vehicles_sub": "{n} xe trong phân công",
+        "kpi_drivers_sub": "{n} tài xế trong phân công",
+        "kpi_dispatch_unassigned": "Chưa phân công",
+        "kpi_schedule_sub": "Khung giờ khởi hành — đến nơi",
         "sections": {
             "request_info": "Thông tin yêu cầu",
             "schedule": "Lịch trình",

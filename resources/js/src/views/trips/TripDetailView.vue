@@ -67,29 +67,10 @@
                     {{ silentLoadError }}
                 </p>
 
-                <!-- SUMMARY BAR — compact KPI row -->
-                <section
-                    class="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6"
-                    :aria-label="t('trip_detail.overview.title')"
-                >
-                    <div
-                        v-for="kpi in summaryKpis"
-                        :key="kpi.key"
-                        class="rounded-lg border border-slate-200/80 bg-white px-3 py-2.5 shadow-sm"
-                    >
-                        <p
-                            class="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500"
-                        >
-                            {{ kpi.label }}
-                        </p>
-                        <p
-                            class="mt-1 truncate text-[15px] font-bold tabular-nums text-slate-900"
-                            :title="kpi.value"
-                        >
-                            {{ kpi.value }}
-                        </p>
-                    </div>
-                </section>
+                <TripDetailSummaryBar
+                    :summary="tripOverviewSummary"
+                    :schedule-leg-count="scheduleCount"
+                />
 
                 <!-- TIMELINE — compact horizontal -->
                 <TripTimeline
@@ -745,6 +726,7 @@ import CostTracker from "../../components/trips/CostTracker.vue";
 import StatusActions from "../../components/trips/StatusActions.vue";
 import PassengerCheckIn from "../../components/trips/PassengerCheckIn.vue";
 import TripHeroHeader from "../../components/trips/TripHeroHeader.vue";
+import TripDetailSummaryBar from "../../components/trips/TripDetailSummaryBar.vue";
 import TripTimeline from "../../components/trips/TripTimeline.vue";
 import TripInfoCard from "../../components/trips/TripInfoCard.vue";
 import TripSchedulesPanel from "../../components/trips/TripSchedulesPanel.vue";
@@ -3059,42 +3041,21 @@ const kpiAssigned = computed(() => {
     return { vehicleCount: vIds.size, driverCount: dIds.size, seats };
 });
 
-const summaryKpis = computed(() => {
+const tripOverviewSummary = computed(() => {
     const a = kpiAssigned.value;
-    const dash = "—";
     const range = scheduleTimeRange.value;
-    return [
-        {
-            key: "passengers",
-            label: t("trip_detail.summary.passengers"),
-            value: String(unifiedPassengerCount.value || 0),
-        },
-        {
-            key: "seats",
-            label: t("trip_detail.summary.seats"),
-            value: a.seats > 0 ? String(a.seats) : dash,
-        },
-        {
-            key: "vehicles",
-            label: t("trip_detail.summary.vehicles"),
-            value: String(a.vehicleCount),
-        },
-        {
-            key: "drivers",
-            label: t("trip_detail.summary.drivers"),
-            value: String(a.driverCount),
-        },
-        {
-            key: "schedule",
-            label: t("trip_detail.summary.schedule"),
-            value: range && !isEmptyDisplay(range) ? range : dash,
-        },
-        {
-            key: "revenue",
-            label: t("trip_detail.summary.revenue"),
-            value: estimatedCostLabel.value || dash,
-        },
-    ];
+    return {
+        passengers: unifiedPassengerCount.value || 0,
+        seats: a.seats,
+        vehicles: a.vehicleCount,
+        drivers: a.driverCount,
+        schedule:
+            range && !isEmptyDisplay(range) ? String(range) : "",
+        revenue:
+            estimatedCostLabel.value && !isEmptyDisplay(estimatedCostLabel.value)
+                ? String(estimatedCostLabel.value)
+                : "",
+    };
 });
 
 async function onAttachmentDrop(ev) {
