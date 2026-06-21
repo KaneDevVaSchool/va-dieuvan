@@ -72,8 +72,9 @@ registerRoute(
 )
 
 // Safe read-only API endpoints: stale-while-revalidate, 24 h
+// (Không cache reference-pricing — dữ liệu nghiệp vụ có thể seed/cập nhật sau deploy.)
 registerRoute(
-  /\/api\/(targets|config|lookup|reference-pricing)\b/,
+  /\/api\/(targets|config|lookup)\b/,
   new StaleWhileRevalidate({
     cacheName: 'api-lookup',
     plugins: [

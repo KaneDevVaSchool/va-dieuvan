@@ -4,7 +4,7 @@
       <li
         v-for="(step, idx) in steps"
         :key="`${step.key}-m`"
-        class="flex gap-2 pb-3 last:pb-0"
+        class="flex gap-3 pb-4 last:pb-0"
       >
         <div class="flex shrink-0 flex-col items-center">
           <span
@@ -23,12 +23,12 @@
           />
         </div>
         <div class="min-w-0 flex-1">
-          <p class="text-[11px] font-semibold leading-tight" :class="labelClass(step.state)">{{ step.label }}</p>
-          <p class="mt-0.5 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+          <p class="text-sm font-semibold leading-snug" :class="labelClass(step.state)">{{ step.label }}</p>
+          <p class="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
             <span class="text-slate-400">{{ plannedAbbrev }}:</span>
             <span class="tabular-nums text-slate-600 dark:text-slate-300">{{ step.planned }}</span>
           </p>
-          <p class="text-[10px] leading-snug">
+          <p class="text-xs leading-relaxed">
             <span class="text-slate-400">{{ actualAbbrev }}:</span>
             <span class="font-medium tabular-nums text-slate-800 dark:text-slate-200">{{ step.actual }}</span>
           </p>
@@ -51,14 +51,14 @@
               <CheckIcon v-if="step.state === 'done'" class="h-3 w-3" />
               <span v-else class="tabular-nums">{{ idx + 1 }}</span>
             </span>
-            <p class="mt-1 line-clamp-2 text-[10px] font-semibold leading-tight" :class="labelClass(step.state)">
+            <p class="mt-1.5 line-clamp-2 text-xs font-semibold leading-snug" :class="labelClass(step.state)">
               {{ step.label }}
             </p>
-            <p class="mt-0.5 line-clamp-2 text-[9px] leading-snug text-slate-500 dark:text-slate-400">
+            <p class="mt-1 line-clamp-2 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
               <span class="text-slate-400">{{ plannedAbbrev }}</span>
               {{ step.planned }}
             </p>
-            <p class="line-clamp-2 text-[9px] font-medium leading-snug tabular-nums text-slate-800 dark:text-slate-200">
+            <p class="line-clamp-2 text-[11px] font-medium leading-relaxed tabular-nums text-slate-800 dark:text-slate-200">
               <span class="font-normal text-slate-400">{{ actualAbbrev }}</span>
               {{ step.actual }}
             </p>

@@ -420,11 +420,21 @@
                       <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         {{ t('costs_page.col_submitter') }}
                       </dt>
-                      <dd
-                        class="mt-0.5 font-medium"
-                        :class="costSubmitterDisplayName(c) ? 'text-slate-800 dark:text-slate-200' : 'italic text-slate-400 dark:text-slate-500'"
-                      >
-                        {{ costSubmitterDisplayName(c) || t('costs_page.empty_not_available') }}
+                      <dd class="mt-0.5 flex items-center gap-2">
+                        <UserAvatar
+                          :name="costSubmitterRawName(c) || ''"
+                          :email="costSubmitterEmail(c)"
+                          :avatar-url="costSubmitterAvatarUrl(c)"
+                          :title="costSubmitterDisplayName(c) || ''"
+                          size="sm"
+                          data-testid="cost-card-submitter-avatar"
+                        />
+                        <span
+                          class="min-w-0 truncate font-medium"
+                          :class="costSubmitterDisplayName(c) ? 'text-slate-800 dark:text-slate-200' : 'italic text-slate-400 dark:text-slate-500'"
+                        >
+                          {{ costSubmitterDisplayName(c) || t('costs_page.empty_not_available') }}
+                        </span>
                       </dd>
                     </div>
                     <div v-if="colVisible.provider" class="min-w-0">
@@ -767,11 +777,21 @@
                       <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         {{ t('costs_page.col_submitter') }}
                       </dt>
-                      <dd
-                        class="mt-0.5 font-medium"
-                        :class="displayTextOrNull(row.requester_name) ? 'text-slate-800 dark:text-slate-200' : 'italic text-slate-400 dark:text-slate-500'"
-                      >
-                        {{ displayTextOrNull(row.requester_name) || t('costs_page.empty_not_available') }}
+                      <dd class="mt-0.5 flex items-center gap-2">
+                        <UserAvatar
+                          :name="row.requester_name || ''"
+                          :email="row.requester_email || ''"
+                          :avatar-url="row.requester_avatar_url"
+                          :title="row.requester_name || ''"
+                          size="sm"
+                          data-testid="bp-card-requester-avatar"
+                        />
+                        <span
+                          class="min-w-0 truncate font-medium"
+                          :class="displayTextOrNull(row.requester_name) ? 'text-slate-800 dark:text-slate-200' : 'italic text-slate-400 dark:text-slate-500'"
+                        >
+                          {{ displayTextOrNull(row.requester_name) || t('costs_page.empty_not_available') }}
+                        </span>
                       </dd>
                     </div>
                     <div class="min-w-0 sm:col-span-2 xl:col-span-1">
@@ -1489,6 +1509,7 @@ import DatagridFilterField from '../../components/shared/ui/DatagridFilterField.
 import FilterVisibilityDropdown from '../../components/shared/ui/FilterVisibilityDropdown.vue'
 import FilterDatePicker from '../../components/shared/ui/FilterDatePicker.vue'
 import CostsSummaryBar from '../../components/costs/CostsSummaryBar.vue'
+import UserAvatar from '../../components/branding/UserAvatar.vue'
 import {
   listTripCosts,
   listBusinessPersonnelCostLines,
@@ -1629,6 +1650,22 @@ function costSubmitterRawName(c) {
 
 function costSubmitterDisplayName(c) {
   return displayTextOrNull(costSubmitterRawName(c))
+}
+
+function costSubmitterEmail(c) {
+  const dr = dispatchRequestFromCost(c)
+  if (tripTypeFromCost(c) === 'business' && dr?.requester?.email) {
+    return dr.requester.email
+  }
+  return c.creator?.email ?? ''
+}
+
+function costSubmitterAvatarUrl(c) {
+  const dr = dispatchRequestFromCost(c)
+  if (tripTypeFromCost(c) === 'business' && dr?.requester?.avatar_url) {
+    return dr.requester.avatar_url
+  }
+  return c.creator?.avatar_url ?? ''
 }
 
 function costSubmitterLabel(c) {

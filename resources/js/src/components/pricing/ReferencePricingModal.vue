@@ -62,17 +62,14 @@ const passengerFares = ref([])
 const cargoFares = ref([])
 const notes = ref([])
 
-let loaded = false
-
 async function loadPricing() {
   loading.value = true
   error.value = ''
   try {
     const data = await getReferencePricing()
-    passengerFares.value = data?.passenger_fares ?? []
-    cargoFares.value = data?.cargo_fares ?? []
-    notes.value = data?.notes ?? []
-    loaded = true
+    passengerFares.value = data.passenger_fares
+    cargoFares.value = data.cargo_fares
+    notes.value = data.notes
   } catch (e) {
     error.value = e?.response?.data?.message ?? t('request_detail.reference_pricing_load_error')
   } finally {
@@ -83,7 +80,7 @@ async function loadPricing() {
 watch(
   () => props.open,
   (isOpen) => {
-    if (isOpen && !loaded) loadPricing()
+    if (isOpen) loadPricing()
   },
 )
 </script>

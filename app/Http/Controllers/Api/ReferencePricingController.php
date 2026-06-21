@@ -6,7 +6,6 @@ use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\ReferencePricing\ListReferencePricingRevisionsRequest;
 use App\Http\Requests\Api\ReferencePricing\SuggestReferencePricingRequest;
-use App\Services\ReferencePricing\PricingSuggestionService;
 use App\Http\Requests\Api\ReferencePricing\UpdateCargoFareRateRequest;
 use App\Http\Requests\Api\ReferencePricing\UpdatePassengerFareRateRequest;
 use App\Http\Requests\Api\ReferencePricing\UpdatePricingNoteRequest;
@@ -14,6 +13,7 @@ use App\Models\CargoFareRate;
 use App\Models\PassengerFareRate;
 use App\Models\PricingNote;
 use App\Models\ReferencePricingRevision;
+use App\Services\ReferencePricing\PricingSuggestionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
@@ -30,7 +30,7 @@ class ReferencePricingController extends Controller
             'passenger_fares' => PassengerFareRate::query()->orderBy('sort_order')->get(),
             'cargo_fares' => CargoFareRate::query()->orderBy('sort_order')->get(),
             'notes' => PricingNote::query()->orderBy('category')->orderBy('sort_order')->get(),
-        ]);
+        ])->header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
     }
 
     public function suggest(SuggestReferencePricingRequest $request, PricingSuggestionService $service): JsonResponse

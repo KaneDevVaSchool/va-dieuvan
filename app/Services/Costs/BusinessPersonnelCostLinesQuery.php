@@ -19,7 +19,7 @@ class BusinessPersonnelCostLinesQuery
         $q = Trip::query()
             ->with([
                 'dispatchRequest:id,trip_type,requester_id,wizard_snapshot,origin,destination',
-                'dispatchRequest.requester:id,name',
+                'dispatchRequest.requester:id,name,email,avatar_url',
             ])
             ->whereHas(
                 'dispatchRequest',
@@ -58,6 +58,8 @@ class BusinessPersonnelCostLinesQuery
                 continue;
             }
             $requesterName = $dr->requester?->name;
+            $requesterAvatarUrl = $dr->requester?->avatar_url;
+            $requesterEmail = $dr->requester?->email;
             $lineNo = 0;
             foreach ($rows as $row) {
                 if (! is_array($row) || ! $this->isBusinessRowFilled($row)) {
@@ -77,6 +79,8 @@ class BusinessPersonnelCostLinesQuery
                     'trip_id' => $trip->id,
                     'line_no' => $lineNo,
                     'requester_name' => $requesterName,
+                    'requester_avatar_url' => $requesterAvatarUrl,
+                    'requester_email' => $requesterEmail,
                     'personnel_label' => $personnel !== '' ? $personnel : null,
                     'guests' => trim((string) ($row['guests'] ?? '')),
                     'unit_price' => $unit,
@@ -122,6 +126,7 @@ class BusinessPersonnelCostLinesQuery
             return true;
         }
         $g = trim((string) ($row['guests'] ?? ''));
+
         return $g !== '' && $g !== '1';
     }
 

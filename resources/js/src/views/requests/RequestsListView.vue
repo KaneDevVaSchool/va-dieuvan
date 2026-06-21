@@ -432,6 +432,23 @@
             :class="requestCardClass(r)"
             :data-testid="`requests-row-${r.id}`"
           >
+            <div
+              v-if="!isTrashTab && requestNeedsCostUpdate(r)"
+              class="flex items-start gap-2.5 border-b border-amber-300/90 bg-amber-100 px-3 py-2.5 sm:px-5 dark:border-amber-800/60 dark:bg-amber-950/40"
+              role="alert"
+              :data-testid="`requests-card-needs-cost-update-${r.id}`"
+            >
+              <CurrencyDollarIcon class="mt-0.5 h-5 w-5 shrink-0 text-amber-800 dark:text-amber-200" aria-hidden="true" />
+              <div class="min-w-0 text-sm">
+                <p class="font-semibold text-amber-950 dark:text-amber-50">
+                  {{ t('requests_page.card_needs_cost_update_title') }}
+                </p>
+                <p class="mt-0.5 text-xs leading-relaxed text-amber-900/95 dark:text-amber-100/90">
+                  {{ costUpdateCardDetail(r) }}
+                </p>
+              </div>
+            </div>
+
             <!-- Header -->
             <div class="border-b border-slate-100 px-3 py-4 sm:px-5 dark:border-slate-800">
               <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -494,12 +511,12 @@
                         {{ t('requests_page.badge_recurring') }}
                       </span>
                       <span
-                        v-if="r.missing_extra_fee"
+                        v-if="requestNeedsCostUpdate(r)"
                         class="inline-flex items-center gap-0.5 rounded-md bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-900 dark:bg-amber-950/50 dark:text-amber-100"
-                        data-testid="requests-card-badge-missing-extra-fee"
+                        data-testid="requests-card-badge-needs-cost-update"
                       >
                         <CurrencyDollarIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                        {{ t('requests_page.badge_missing_extra_fee') }}
+                        {{ t('requests_page.badge_needs_cost_update') }}
                       </span>
                     </div>
                     <dl class="mt-3 grid grid-cols-1 gap-x-4 gap-y-2 text-sm sm:grid-cols-2 xl:grid-cols-3">
@@ -539,23 +556,6 @@
                     {{ labelTripStatus(r.trip.status) }}
                   </span>
                 </div>
-              </div>
-            </div>
-
-            <div
-              v-if="!isTrashTab && r.missing_extra_fee"
-              class="flex items-start gap-2.5 border-b border-amber-200/80 bg-amber-50/90 px-3 py-2.5 sm:px-5 dark:border-amber-900/40 dark:bg-amber-950/25"
-              role="status"
-              :data-testid="`requests-card-missing-extra-fee-${r.id}`"
-            >
-              <CurrencyDollarIcon class="mt-0.5 h-5 w-5 shrink-0 text-amber-700 dark:text-amber-300" aria-hidden="true" />
-              <div class="min-w-0 text-sm">
-                <p class="font-semibold text-amber-950 dark:text-amber-100">
-                  {{ t('requests_page.card_missing_extra_fee_title') }}
-                </p>
-                <p class="mt-0.5 text-xs leading-relaxed text-amber-900/90 dark:text-amber-200/90">
-                  {{ missingExtraFeeCardDetail(r) }}
-                </p>
               </div>
             </div>
 
@@ -1633,7 +1633,7 @@ function requestCardClass(r) {
     if (r.is_urgent) return 'border-amber-300 bg-amber-50/40 dark:border-amber-900/60'
     return 'border-slate-200/90 bg-slate-50/70 dark:border-slate-700'
   }
-  if (r.missing_extra_fee) {
+  if (requestNeedsCostUpdate(r)) {
     return 'border-l-4 border-l-amber-500 border-y-slate-200/90 border-r-slate-200/90 dark:border-y-slate-700 dark:border-r-slate-700'
   }
   if (r.is_urgent) {
@@ -1643,22 +1643,52 @@ function requestCardClass(r) {
 }
 
 /** @param {Record<string, unknown>} r */
-function missingExtraFeeCardDetail(r) {
-  const rows = Array.isArray(r.missing_extra_fee_rows) ? r.missing_extra_fee_rows : []
+function requestNeedsCostUpdate(r) {
+  if (r?.needs_cost_update === true) return true
+  return Boolean(r?.missing_extra_fee || r?.missing_unit_price)
+}
+
+/** @param {Record<string, unknown>} r */
+function costUpdateRowLabels(r, rowKey, countKey, namedKey, plainKey, countLabelKey) {
+  const rows = Array.isArray(r[rowKey]) ? r[rowKey] : []
   const labels = rows
     .map((row) => {
       const idx = row?.index
       const label = String(row?.label ?? '').trim()
       if (label) {
-        return t('requests_page.card_missing_extra_fee_row_named', { n: idx, route: label })
+        return t(namedKey, { n: idx, route: label })
       }
-      return t('requests_page.card_missing_extra_fee_row', { n: idx })
+      return t(plainKey, { n: idx })
     })
     .filter(Boolean)
-  if (labels.length) return labels.join(' · ')
-  const n = Number(r.missing_extra_fee_count ?? 0)
-  if (n > 0) return t('requests_page.card_missing_extra_fee_count', { n })
-  return t('requests_page.card_missing_extra_fee_title')
+  if (labels.length) return labels
+  const n = Number(r[countKey] ?? 0)
+  if (n > 0) return t(countLabelKey, { n })
+  return ''
+}
+
+/** @param {Record<string, unknown>} r */
+function costUpdateCardDetail(r) {
+  const parts = [
+    costUpdateRowLabels(
+      r,
+      'missing_unit_price_rows',
+      'missing_unit_price_count',
+      'requests_page.card_missing_unit_price_row_named',
+      'requests_page.card_missing_unit_price_row',
+      'requests_page.card_missing_unit_price_count',
+    ),
+    costUpdateRowLabels(
+      r,
+      'missing_extra_fee_rows',
+      'missing_extra_fee_count',
+      'requests_page.card_missing_extra_fee_row_named',
+      'requests_page.card_missing_extra_fee_row',
+      'requests_page.card_missing_extra_fee_count',
+    ),
+  ].filter(Boolean)
+  if (parts.length) return parts.join(' · ')
+  return t('requests_page.card_needs_cost_update_title')
 }
 
 function tripTimelineHint(r) {

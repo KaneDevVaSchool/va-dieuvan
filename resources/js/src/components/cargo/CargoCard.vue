@@ -15,6 +15,7 @@ import {
 import { labelCargoStatus } from '../../util/labels'
 import { formatListDateTime } from '../../util/datetime'
 import { formatDispatchRequestRefCode } from '../../util/portalRequestFormat'
+import UserAvatar from '../branding/UserAvatar.vue'
 
 const props = defineProps({
   shipment: { type: Object, required: true },
@@ -86,6 +87,12 @@ const dispatchRequestRefCode = computed(() => {
   const dr = dispatchRequestEntity(props.shipment)
   if (!dr) return ''
   return formatDispatchRequestRefCode(dr) || `REQ-${String(dr.id).padStart(3, '0')}`
+})
+
+const dispatchRequestRequester = computed(() => {
+  const s = props.shipment
+  const dr = s.dispatch_request ?? s.dispatchRequest ?? null
+  return dr?.requester ?? null
 })
 
 function driverInitials(name) {
@@ -177,7 +184,7 @@ const quantityDisplay = computed(() => {
     </div>
 
     <!-- Body: route, driver, ops -->
-    <div class="grid grid-cols-1 gap-4 px-3 py-4 sm:px-4 md:grid-cols-2 md:gap-5 xl:grid-cols-4">
+    <div class="grid grid-cols-1 gap-4 px-3 py-4 sm:px-4 md:grid-cols-2 md:gap-5 xl:grid-cols-5">
       <!-- Pickup -->
       <div class="min-w-0">
         <div class="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
@@ -213,6 +220,34 @@ const quantityDisplay = computed(() => {
           <p class="mt-0.5 text-sm font-semibold tabular-nums text-rose-800 dark:text-rose-300">
             {{ fmt(shipment.delivered_at || shipment.expected_delivery_at) }}
           </p>
+        </div>
+      </div>
+
+      <!-- Requester (dispatch) -->
+      <div class="min-w-0 rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/40">
+        <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          {{ t('cargo_page.card_requester') }}
+        </p>
+        <div class="mt-2 flex items-start gap-2">
+          <UserAvatar
+            :name="dispatchRequestRequester?.name || ''"
+            :email="dispatchRequestRequester?.email || ''"
+            :avatar-url="dispatchRequestRequester?.avatar_url"
+            :title="dispatchRequestRequester?.name || ''"
+            size="md"
+            data-testid="cargo-card-requester-avatar"
+          />
+          <div class="min-w-0">
+            <p class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+              {{ dispatchRequestRequester?.name || t('cargo_page.empty_requester') }}
+            </p>
+            <p
+              v-if="dispatchRequestRequester?.employee_code"
+              class="mt-0.5 truncate text-xs text-slate-600 dark:text-slate-400"
+            >
+              {{ dispatchRequestRequester.employee_code }}
+            </p>
+          </div>
         </div>
       </div>
 

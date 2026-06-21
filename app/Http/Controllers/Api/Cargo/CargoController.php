@@ -28,8 +28,11 @@ class CargoController extends Controller
         $q = CargoShipment::query()
             ->visibleOnStaffCargoIndex()
             ->with([
-                'trip:id,status,depart_at',
-                'dispatchRequest:id,status,created_at',
+                'trip:id,status,depart_at,driver_id,vehicle_id',
+                'trip.driver:id,full_name,phone',
+                'trip.vehicle:id,license_plate',
+                'dispatchRequest:id,status,created_at,requester_id',
+                'dispatchRequest.requester:id,name,email,employee_code,avatar_url',
                 'attachments' => fn ($q) => $q->where('kind', 'pod')->orderByDesc('id'),
             ])
             ->orderByDesc('id');

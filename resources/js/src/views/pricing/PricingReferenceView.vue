@@ -19,6 +19,22 @@
         {{ error }}
       </div>
       <div v-else class="space-y-10">
+        <div
+          v-if="!hasFareRows"
+          class="rounded-xl border border-amber-200/90 bg-amber-50/80 px-4 py-3 text-sm text-amber-950"
+          role="status"
+          data-testid="pricing-reference-empty"
+        >
+          Chưa có dòng giá hành khách hoặc hàng hóa trên hệ thống. Nếu bạn vừa nhập dữ liệu, hãy tải lại trang (Ctrl+F5) để bỏ bản cache cũ; liên hệ quản trị nếu vẫn trống.
+          <button
+            type="button"
+            class="ml-2 font-semibold text-amber-900 underline decoration-amber-600/40 underline-offset-2 hover:text-amber-950"
+            data-testid="pricing-reference-reload"
+            @click="reloadPricing"
+          >
+            Tải lại
+          </button>
+        </div>
         <!-- 1. Hành khách -->
         <section class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm ring-1 ring-slate-900/5">
           <div
@@ -709,6 +725,10 @@ const data = ref({
   notes: [],
 })
 
+const hasFareRows = computed(
+  () => (data.value.passenger_fares?.length ?? 0) > 0 || (data.value.cargo_fares?.length ?? 0) > 0,
+)
+
 const passengerMoneyFields = [
   { key: 'seat_7', label: 'Xe 7 chỗ' },
   { key: 'seat_15', label: 'Xe 15 chỗ' },
@@ -1216,7 +1236,7 @@ async function openHistory(type, id, label, currentRecord = null) {
   }
 }
 
-onMounted(async () => {
+async function reloadPricing() {
   loading.value = true
   error.value = ''
   try {
@@ -1226,5 +1246,9 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+}
+
+onMounted(() => {
+  reloadPricing()
 })
 </script>

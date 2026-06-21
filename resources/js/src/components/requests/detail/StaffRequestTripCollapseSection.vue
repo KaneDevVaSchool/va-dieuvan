@@ -5,7 +5,7 @@
     :data-testid="`staff-request-trip-section-${sectionKey}`"
   >
     <header
-      class="flex items-center gap-1.5 border-b border-slate-100 px-3 py-2 dark:border-slate-800"
+      class="flex items-center gap-2 border-b border-slate-100 px-4 py-3 dark:border-slate-800"
       :class="headerTintClass"
     >
       <button
@@ -22,7 +22,7 @@
           aria-hidden="true"
         />
       </button>
-      <h3 class="min-w-0 flex-1 truncate text-xs font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-200">
+      <h3 class="min-w-0 flex-1 truncate text-sm font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-200">
         {{ title }}
       </h3>
       <span
@@ -34,7 +34,7 @@
       </span>
       <slot name="header-actions" />
     </header>
-    <div v-show="!collapsible || open" class="px-3 py-3">
+    <div v-show="!collapsible || open" class="px-4 py-4">
       <slot />
     </div>
   </section>

@@ -105,7 +105,7 @@ class TripController extends Controller
         $user = $request->user();
         $forScheduleConflict = ! empty($data['schedule_conflict']);
 
-        $dispatchRequestSelect = 'id,status,trip_type,origin,destination,arrive_by,passenger_count,source_channel,paper_status,is_urgent,depart_at,notes';
+        $dispatchRequestSelect = 'id,requester_id,dispatch_request_template_id,status,trip_type,origin,destination,arrive_by,passenger_count,source_channel,paper_status,is_urgent,depart_at,notes';
         if ($forScheduleConflict) {
             $dispatchRequestSelect .= ',wizard_snapshot';
         }

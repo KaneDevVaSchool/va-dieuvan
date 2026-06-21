@@ -45,12 +45,12 @@ class TripCostController extends Controller
             ->with([
                 'trip:id,status,depart_at,dispatcher_id,driver_id,transport_provider_id,vehicle_id,dispatch_request_id',
                 'trip.dispatchRequest:id,trip_type,origin,destination,requester_id',
-                'trip.dispatchRequest.requester:id,name',
+                'trip.dispatchRequest.requester:id,name,email,avatar_url',
                 'trip.transportProvider:id,name,type',
                 'trip.vehicle:id,license_plate',
                 'vehicle:id,license_plate,type,seat_count',
-                'creator:id,name,email',
-                'confirmer:id,name,email',
+                'creator:id,name,email,avatar_url',
+                'confirmer:id,name,email,avatar_url',
             ])
             ->orderByDesc('id');
 

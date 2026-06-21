@@ -311,7 +311,7 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 gap-4 px-3 py-4 sm:px-4 md:grid-cols-2 md:gap-5 xl:grid-cols-4">
+        <div class="grid grid-cols-1 gap-4 px-3 py-4 sm:px-4 md:grid-cols-2 md:gap-5 xl:grid-cols-5">
           <div class="min-w-0">
             <div class="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
               <MapPinIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -344,6 +344,32 @@
               <p class="mt-0.5 text-sm font-semibold tabular-nums text-rose-800 dark:text-rose-300">
                 {{ fmtArriveBy(trip.arrive_by || trip.dispatch_request?.arrive_by) }}
               </p>
+            </div>
+          </div>
+          <div class="min-w-0 rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/40">
+            <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              {{ t('trips_page.col_requester') }}
+            </p>
+            <div class="mt-2 flex items-start gap-2">
+              <UserAvatar
+                :name="trip.dispatch_request?.requester?.name || ''"
+                :email="trip.dispatch_request?.requester?.email || ''"
+                :avatar-url="trip.dispatch_request?.requester?.avatar_url"
+                :title="trip.dispatch_request?.requester?.name || ''"
+                size="md"
+                data-testid="trips-card-requester-avatar"
+              />
+              <div class="min-w-0">
+                <p class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  {{ trip.dispatch_request?.requester?.name || t('trips_page.empty_requester') }}
+                </p>
+                <p
+                  v-if="trip.dispatch_request?.requester?.employee_code"
+                  class="mt-0.5 truncate text-xs text-slate-600 dark:text-slate-400"
+                >
+                  {{ trip.dispatch_request.requester.employee_code }}
+                </p>
+              </div>
             </div>
           </div>
           <div class="min-w-0 rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/40">
@@ -533,6 +559,7 @@ import {
   UserPlusIcon,
 } from '@heroicons/vue/24/outline'
 import TripsSummaryBar from '../../components/trips/TripsSummaryBar.vue'
+import UserAvatar from '../../components/branding/UserAvatar.vue'
 import DatagridToolbarSearch from '../../components/shared/ui/DatagridToolbarSearch.vue'
 import DatagridToolbarActionButton from '../../components/shared/ui/DatagridToolbarActionButton.vue'
 import DatagridFilterField from '../../components/shared/ui/DatagridFilterField.vue'

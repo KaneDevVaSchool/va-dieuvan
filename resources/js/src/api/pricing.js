@@ -1,8 +1,17 @@
 import { http } from './http'
 
+function normalizeReferencePricingPayload(envelope) {
+  const payload = envelope?.data ?? envelope
+  return {
+    passenger_fares: Array.isArray(payload?.passenger_fares) ? payload.passenger_fares : [],
+    cargo_fares: Array.isArray(payload?.cargo_fares) ? payload.cargo_fares : [],
+    notes: Array.isArray(payload?.notes) ? payload.notes : [],
+  }
+}
+
 export async function getReferencePricing() {
   const { data } = await http.get('/reference-pricing')
-  return data.data
+  return normalizeReferencePricingPayload(data)
 }
 
 /** @param {{ trip_type: string, origin?: string, destination?: string, passenger_count?: number }} params */
