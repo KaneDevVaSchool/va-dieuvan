@@ -6,7 +6,6 @@ export const NAV_SHORTCUT_PREFIX = 'g'
 
 export const NAV_SHORTCUT_ROUTES = {
   d: DISPATCH_WEB_BASE,
-  h: `${DISPATCH_WEB_BASE}/dispatcher`,
   r: `${DISPATCH_WEB_BASE}/requests`,
   t: `${DISPATCH_WEB_BASE}/trips`,
   o: `${DISPATCH_WEB_BASE}/costs`,

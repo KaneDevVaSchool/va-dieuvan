@@ -57,12 +57,6 @@
               <Button :loading="refreshing" type="button" class="w-full" @click="refresh">
                 Làm mới từ máy chủ
               </Button>
-              <RouterLink
-                class="inline-flex w-full items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
-                to="/dispatcher"
-              >
-                Bảng điều vận
-              </RouterLink>
             </div>
           </div>
         </div>

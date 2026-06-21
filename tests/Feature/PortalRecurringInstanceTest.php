@@ -73,6 +73,11 @@ class PortalRecurringInstanceTest extends TestCase
         $dr->refresh();
         $this->assertSame(22, (int) $dr->passenger_count);
 
+        // Chốt số học sinh yêu cầu phiếu point_to_point đã có trưởng đơn vị được gán.
+        $head = User::factory()->create(['is_active' => true]);
+        $head->assignRole('department_head');
+        $dr->update(['assigned_dept_head_id' => $head->id]);
+
         $this->postJson("/api/portal/dispatch-requests/{$dr->id}/submit-recurring")
             ->assertOk();
 

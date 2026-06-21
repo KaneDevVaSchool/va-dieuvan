@@ -4,7 +4,6 @@ export const DISPATCH_WEB_BASE = '/mng'
 /** Các đường dẫn SPA điều vận (trước đây ở gốc /) — dùng chuyển sang `/mng/...`. */
 const LEGACY_STAFF_PREFIXES = [
   '/',
-  '/dispatcher',
   '/profile',
   '/requests',
   '/dispatch-requests',

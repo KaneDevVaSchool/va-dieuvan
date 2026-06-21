@@ -459,7 +459,6 @@ import {
   CubeIcon,
   DocumentMagnifyingGlassIcon,
   PlusCircleIcon,
-  Square2StackIcon,
   TableCellsIcon,
   TruckIcon,
   UserGroupIcon,
@@ -526,16 +525,6 @@ function scrollQuickLinks(direction) {
 }
 
 const quickLinks = computed(() => [
-  {
-    to: staffPath('/dispatcher'),
-    title: t('dashboard_analytics.quick_dispatcher'),
-    hint: t('dashboard_analytics.quick_dispatcher_tooltip'),
-    icon: markRaw(Square2StackIcon),
-    cardClass:
-      'border-teal-200/90 from-teal-50/95 to-white ring-teal-900/[0.06] hover:border-teal-300 dark:border-teal-800/60 dark:from-teal-950/40 dark:to-slate-900/85 dark:ring-teal-900/25 dark:hover:border-teal-700',
-    iconClass: 'text-teal-600 dark:text-teal-400',
-    labelClass: 'text-slate-800 dark:text-slate-100',
-  },
   {
     to: staffPath('/trips'),
     title: t('dashboard_analytics.quick_trips'),

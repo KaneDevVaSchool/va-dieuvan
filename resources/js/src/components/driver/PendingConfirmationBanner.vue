@@ -282,10 +282,10 @@
 
           <template v-else>
             <p class="mt-4 text-sm font-semibold text-amber-200/95">
-              {{ t('driver_home.pending_decline_confirm_title') }}
+              {{ modalConfirmTitle }}
             </p>
             <p class="mt-1 text-sm text-slate-400">
-              {{ t('driver_home.pending_decline_confirm_hint') }}
+              {{ modalConfirmHint }}
             </p>
             <div class="mt-3 rounded-xl bg-[#070f0d] px-3 py-2.5 text-sm text-slate-200">
               {{ declineReason.trim() }}
@@ -325,7 +325,7 @@
               :disabled="busyId != null"
               @click="submitDeclineConfirmed"
             >
-              {{ t('driver_home.pending_decline_confirm_btn') }}
+              {{ modalConfirmBtn }}
             </button>
           </div>
         </div>
@@ -448,6 +448,27 @@ const declineTripSummary = computed(() => {
   return `#${tag} · ${time} · ${origin}`
 })
 
+// Chuyến đưa đón định kì (TP) dùng luồng "báo bận"; chuyến REQ dùng luồng "từ chối".
+const isBusyFlow = computed(() => declineTrip.value?._tp != null)
+const modalTitle = computed(() =>
+  isBusyFlow.value ? t('driver_home.busy_title') : t('driver_home.pending_decline_title'),
+)
+const modalSubtitle = computed(() =>
+  isBusyFlow.value ? t('driver_home.busy_subtitle') : t('driver_home.pending_decline_subtitle'),
+)
+const modalReasonLabel = computed(() =>
+  isBusyFlow.value ? t('driver_home.busy_reason_label') : t('driver_home.pending_decline_reason_label'),
+)
+const modalConfirmTitle = computed(() =>
+  isBusyFlow.value ? t('driver_home.busy_confirm_title') : t('driver_home.pending_decline_confirm_title'),
+)
+const modalConfirmHint = computed(() =>
+  isBusyFlow.value ? t('driver_home.busy_confirm_hint') : t('driver_home.pending_decline_confirm_hint'),
+)
+const modalConfirmBtn = computed(() =>
+  isBusyFlow.value ? t('driver_home.busy_confirm_btn') : t('driver_home.pending_decline_confirm_btn'),
+)
+
 function tripCodeDisplay(trip) {
   return trip?.trip_number || `#${trip?.id ?? ''}`
 }
@@ -506,7 +527,11 @@ async function submitDeclineConfirmed() {
   actionError.value = ''
   declineModalError.value = ''
   try {
-    await dash.declineTripOptimistic(trip, declineReason.value.trim())
+    if (trip._tp) {
+      await dash.reportBusyTpDayOptimistic(trip, declineReason.value.trim())
+    } else {
+      await dash.declineTripOptimistic(trip, declineReason.value.trim())
+    }
     closeDeclineModal()
   } catch (e) {
     declineModalError.value = formatApiError(e)

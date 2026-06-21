@@ -67,6 +67,11 @@ class ExtracurricularRecurringStaffListTest extends TestCase
         $ids = collect($hidden->json('data.items'))->pluck('id')->map(fn ($id) => (int) $id);
         $this->assertFalse($ids->contains($instanceId));
 
+        // Chốt số học sinh yêu cầu phiếu point_to_point đã có trưởng đơn vị được gán.
+        $head = User::factory()->create(['is_active' => true]);
+        $head->assignRole('department_head');
+        DispatchRequest::where('id', $instanceId)->update(['assigned_dept_head_id' => $head->id]);
+
         $this->actingAs($requester);
         $this->patchJson("/api/portal/dispatch-requests/{$instanceId}/recurring-instance", [
             'student_count_actual' => 15,

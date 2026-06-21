@@ -154,6 +154,11 @@ class PortalRecurringBm03GroupSyncTest extends TestCase
             'wizard_snapshot' => ['form' => ['point_purpose_kind' => 'extracurricular']],
         ]);
 
+        // Chốt số học sinh yêu cầu phiếu point_to_point đã có trưởng đơn vị được gán.
+        $head = User::factory()->create(['is_active' => true]);
+        $head->assignRole('department_head');
+        $dr->update(['assigned_dept_head_id' => $head->id]);
+
         $this->actingAs($requester);
 
         $this->postJson("/api/portal/dispatch-requests/{$dr->id}/submit-recurring")

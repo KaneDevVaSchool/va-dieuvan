@@ -513,6 +513,31 @@ export function useDriverTripDetailPage() {
     return 'other'
   })
 
+  // Trưởng đoàn cho chuyến Công tác: ưu tiên người phụ trách trong dòng BM03,
+  // sau đó tới người điều phối/phụ trách ở form (coordinator).
+  const tripLeader = computed(() => {
+    if (dr.value?.trip_type !== 'business') return null
+    const s = snap.value
+    if (!s) return null
+
+    const rows = [...(s.businessRows ?? []), ...(s.passengerRows ?? [])]
+    for (const r of rows) {
+      const name = String(r?.person_in_charge ?? '').trim()
+      if (name) {
+        const phone = String(r?.phone ?? '').replace(/\D/g, '') || null
+        return { name, phone }
+      }
+    }
+
+    const coordName = String(s.form?.coordinator_name ?? '').trim()
+    if (coordName) {
+      const phone = String(s.form?.coordinator_phone ?? '').replace(/\D/g, '') || null
+      return { name: coordName, phone }
+    }
+
+    return null
+  })
+
   const cargoShipment = computed(() => trip.value?.cargo_shipment ?? null)
 
   // Tài xế ghi nhận nhận/giao + ảnh khi chuyến chưa bị hủy.
@@ -795,6 +820,7 @@ export function useDriverTripDetailPage() {
     warningBanner,
     rowState,
     paxKind,
+    tripLeader,
     cargoShipment,
     canActOnCargo,
     setCargoStatus,

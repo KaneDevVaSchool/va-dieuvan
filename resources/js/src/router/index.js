@@ -55,13 +55,7 @@ const staffChildRoutes = [
     },
     {
         path: "dispatcher",
-        name: "dispatcherBoard",
-        component: () => import("../views/dispatcher/DispatcherBoardView.vue"),
-        meta: {
-            title: "Bảng điều vận",
-            subtitle: "Hàng đợi & lịch phân công",
-            featureKey: "module.overview",
-        },
+        redirect: { name: "dashboard" },
     },
     {
         path: "profile",

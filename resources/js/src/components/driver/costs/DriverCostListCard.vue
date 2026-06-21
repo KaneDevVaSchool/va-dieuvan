@@ -27,6 +27,15 @@
         </span>
       </div>
 
+      <p
+        v-if="flowLine.text"
+        class="mt-3 flex items-start gap-1.5 text-sm font-medium leading-snug sm:text-base"
+        :class="flowToneClass"
+      >
+        <component :is="flowIcon" class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+        <span class="min-w-0">{{ flowLine.text }}</span>
+      </p>
+
       <div class="mt-4 flex gap-4 sm:gap-5">
         <div
           class="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-driver-surface ring-1 ring-white/[0.05] sm:h-[4.25rem] sm:w-[4.25rem]"
@@ -118,6 +127,7 @@ import { RouterLink } from 'vue-router'
 import {
   BanknotesIcon,
   CalendarIcon,
+  CheckCircleIcon,
   ChevronRightIcon,
   ClockIcon,
   FireIcon,
@@ -125,6 +135,7 @@ import {
   MapPinIcon,
   TruckIcon,
   WrenchScrewdriverIcon,
+  XCircleIcon,
 } from '@heroicons/vue/24/outline'
 import {
   tripDestination,
@@ -203,6 +214,43 @@ function statusBadgeClass(st) {
   if (st === 'draft') return 'bg-white/[0.08] text-driver-muted ring-1 ring-white/10'
   return 'bg-white/[0.06] text-driver-ink ring-1 ring-white/10'
 }
+
+function fmtDecidedAt(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  const loc = localeTag.value === 'vi' ? 'vi-VN' : 'en-US'
+  return d.toLocaleString(loc, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })
+}
+
+// Dòng làm rõ luồng duyệt cho tài xế (Hình 5): đang chờ ai duyệt / đã duyệt / từ chối + lý do.
+const flowLine = computed(() => {
+  const st = props.cost?.status
+  if (st === 'confirmed') {
+    const who = String(props.cost?.confirmer?.name ?? '').trim()
+    const when = fmtDecidedAt(props.cost?.confirmed_at)
+    if (who && when) return { tone: 'ok', text: t('driver_costs.flow_approved_by_at', { name: who, time: when }) }
+    if (when) return { tone: 'ok', text: t('driver_costs.flow_approved_at', { time: when }) }
+    return { tone: 'ok', text: t('driver_costs.flow_approved') }
+  }
+  if (st === 'rejected') {
+    const reason = String(props.cost?.rejection_reason ?? '').trim()
+    return { tone: 'bad', text: reason ? t('driver_costs.flow_rejected_reason', { reason }) : t('driver_costs.flow_rejected') }
+  }
+  return { tone: 'pending', text: t('driver_costs.flow_pending') }
+})
+
+const flowIcon = computed(() => {
+  if (flowLine.value.tone === 'ok') return CheckCircleIcon
+  if (flowLine.value.tone === 'bad') return XCircleIcon
+  return ClockIcon
+})
+
+const flowToneClass = computed(() => {
+  if (flowLine.value.tone === 'ok') return 'text-emerald-300'
+  if (flowLine.value.tone === 'bad') return 'text-rose-300'
+  return 'text-amber-200'
+})
 
 const submittedLabel = computed(() => {
   const raw = props.cost?.created_at

@@ -32,6 +32,8 @@
       <DriverTripDetailSkeleton v-if="loading && !trip" />
 
       <div v-else-if="trip" class="driver-stagger space-y-3">
+        <DriverTripLeaderCard v-if="tripLeader" :leader="tripLeader" />
+
         <DriverTripRouteSection
           :origin-main="originMain"
           :origin-sub="originSub"
@@ -155,6 +157,7 @@ import DriverTripDetailHeader from '../../components/driver/trip-detail/DriverTr
 import DriverTripDetailModals from '../../components/driver/trip-detail/DriverTripDetailModals.vue'
 import DriverTripDetailSkeleton from '../../components/driver/trip-detail/DriverTripDetailSkeleton.vue'
 import DriverCargoShipmentCard from '../../components/driver/trip-detail/DriverCargoShipmentCard.vue'
+import DriverTripLeaderCard from '../../components/driver/trip-detail/DriverTripLeaderCard.vue'
 import DriverTripPaxSection from '../../components/driver/trip-detail/DriverTripPaxSection.vue'
 import DriverTripRouteSection from '../../components/driver/trip-detail/DriverTripRouteSection.vue'
 
@@ -201,6 +204,7 @@ const {
   warningBanner,
   rowState,
   paxKind,
+  tripLeader,
   cargoShipment,
   canActOnCargo,
   cargoBusy,

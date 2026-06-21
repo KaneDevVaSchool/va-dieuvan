@@ -6,6 +6,7 @@ use App\Actions\CreateTransportProgramAction;
 use App\Models\Driver;
 use App\Models\TpProgram;
 use App\Models\TpStudent;
+use App\Models\TpTripStudentLog;
 use App\Models\User;
 use App\Services\TransportProgram\AttendanceService;
 use App\Services\TransportProgram\ProgramEnrollmentService;
