@@ -108,7 +108,7 @@ function arriveTimeDisplay(seg) {
         <!-- Segment card -->
         <button
           type="button"
-          class="mb-1 w-full rounded-lg border bg-white px-3.5 py-3 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/40"
+          class="mb-1 w-full rounded-lg border bg-white px-3 py-2.5 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/40 sm:px-3.5 sm:py-3"
           :class="
             isActive(seg.key)
               ? 'border-blue-300 ring-1 ring-blue-200'
@@ -138,178 +138,166 @@ function arriveTimeDisplay(seg) {
             </span>
           </div>
 
-          <!-- Route: điểm đi / điểm đến -->
-          <div
-            class="mt-2.5 space-y-2.5 rounded-lg border border-slate-100 bg-slate-50/70 p-2.5"
-          >
-            <div class="min-w-0">
-              <p
-                class="text-[10px] font-bold uppercase tracking-wide text-emerald-800"
+          <!-- Body: 2 cột — tuyến | vận hành -->
+          <div class="mt-2 grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
+            <!-- Cột trái: điểm đi / điểm đến -->
+            <div
+              class="rounded-lg border border-slate-100 bg-slate-50/70 p-2 sm:p-2.5"
+            >
+              <div class="grid grid-cols-1 gap-2 min-[480px]:grid-cols-2 min-[480px]:gap-2.5">
+                <div class="min-w-0 min-[480px]:border-r min-[480px]:border-slate-200/80 min-[480px]:pr-2.5">
+                  <p
+                    class="text-[10px] font-bold uppercase tracking-wide text-emerald-800"
+                  >
+                    {{ t('trip_detail.route_journey.lbl_pickup') }}
+                  </p>
+                  <p class="mt-0.5 text-sm font-semibold leading-snug text-slate-900">
+                    {{ seg.origin || t('trip_detail.empty.place') }}
+                  </p>
+                  <p
+                    v-if="seg.startTime"
+                    class="mt-0.5 text-[11px] font-medium tabular-nums text-slate-600"
+                  >
+                    {{ seg.startTime }}
+                    <span
+                      v-if="seg.scheduleDateShort"
+                      class="text-slate-500"
+                    >
+                      · {{ seg.scheduleDateShort }}
+                    </span>
+                  </p>
+                </div>
+
+                <div class="min-w-0 min-[480px]:pl-0.5">
+                  <p
+                    class="text-[10px] font-bold uppercase tracking-wide text-indigo-800"
+                  >
+                    {{ t('trip_detail.route_journey.lbl_dropoff') }}
+                  </p>
+                  <p class="mt-0.5 text-sm font-semibold leading-snug text-slate-900">
+                    {{ seg.destination || t('trip_detail.empty.place') }}
+                  </p>
+                  <p
+                    v-if="seg.endTime || seg.arriveDateShort"
+                    class="mt-0.5 text-[11px] font-medium tabular-nums text-slate-600"
+                  >
+                    {{ seg.endTime || arriveTimeDisplay(seg) || t('trip_detail.empty.time') }}
+                  </p>
+                </div>
+              </div>
+
+              <div
+                v-if="seg.waypoint"
+                class="mt-2 border-t border-slate-200/80 pt-2"
               >
-                {{ t('trip_detail.route_journey.lbl_pickup') }}
-              </p>
-              <p class="mt-0.5 text-sm font-semibold leading-snug text-slate-900">
-                {{ seg.origin || t('trip_detail.empty.place') }}
-              </p>
-              <p
-                v-if="seg.startTime"
-                class="mt-0.5 text-xs font-medium tabular-nums text-slate-600"
+                <p
+                  class="text-[10px] font-bold uppercase tracking-wide text-amber-800"
+                >
+                  {{ t('trip_detail.route.stop_waypoint') }}
+                </p>
+                <p class="mt-0.5 text-xs font-medium text-slate-700">
+                  {{ seg.waypoint }}
+                </p>
+              </div>
+
+              <dl
+                v-if="seg.detailLines?.length"
+                class="mt-2 grid grid-cols-1 gap-1.5 border-t border-dashed border-slate-200/90 pt-2 min-[480px]:grid-cols-2 min-[480px]:gap-x-2"
               >
-                <span class="text-slate-500"
-                  >{{ t('trip_detail.route_journey.depart_time') }}:</span
+                <div
+                  v-for="line in seg.detailLines"
+                  :key="line.key"
+                  class="min-w-0"
                 >
-                {{ seg.startTime }}
-                <span
-                  v-if="seg.scheduleDateShort"
-                  class="ml-1 text-slate-500"
-                >
-                  · {{ seg.scheduleDateShort }}
-                </span>
-              </p>
+                  <dt class="text-[10px] font-semibold text-slate-500">
+                    {{ line.label }}
+                  </dt>
+                  <dd class="mt-0.5 text-[11px] font-medium leading-snug text-slate-800">
+                    {{ line.value }}
+                  </dd>
+                </div>
+              </dl>
             </div>
 
-            <div
-              v-if="seg.waypoint"
-              class="border-t border-slate-200/80 pt-2"
+            <!-- Cột phải: meta vận hành -->
+            <dl
+              class="grid grid-cols-2 gap-x-2.5 gap-y-2 rounded-lg border border-slate-100 bg-white px-2 py-2 sm:px-2.5 sm:py-2.5"
             >
-              <p
-                class="text-[10px] font-bold uppercase tracking-wide text-amber-800"
-              >
-                {{ t('trip_detail.route.stop_waypoint') }}
-              </p>
-              <p class="mt-0.5 text-xs font-medium text-slate-700">
-                {{ seg.waypoint }}
-              </p>
-            </div>
-
-            <div
-              class="min-w-0"
-              :class="seg.waypoint ? '' : 'border-t border-slate-200/80 pt-2'"
-            >
-              <p
-                class="text-[10px] font-bold uppercase tracking-wide text-indigo-800"
-              >
-                {{ t('trip_detail.route_journey.lbl_dropoff') }}
-              </p>
-              <p class="mt-0.5 text-sm font-semibold leading-snug text-slate-900">
-                {{ seg.destination || t('trip_detail.empty.place') }}
-              </p>
-              <p
-                v-if="seg.endTime || seg.arriveDateShort"
-                class="mt-0.5 text-xs font-medium tabular-nums text-slate-600"
-              >
-                <span class="text-slate-500"
-                  >{{ t('trip_detail.route_journey.arrive_time') }}:</span
+              <div v-if="seg.scheduleDateShort" class="col-span-2 sm:col-span-1">
+                <dt
+                  class="text-[10px] font-medium uppercase tracking-wide text-slate-400"
                 >
-                {{ arriveTimeDisplay(seg) || t('trip_detail.empty.time') }}
-              </p>
-            </div>
+                  {{ t('trip_detail.route_journey.schedule_date') }}
+                </dt>
+                <dd class="mt-0.5 text-xs font-medium text-slate-800">
+                  {{ seg.scheduleDateShort }}
+                </dd>
+              </div>
+              <div>
+                <dt
+                  class="text-[10px] font-medium uppercase tracking-wide text-slate-400"
+                >
+                  {{ t('trip_detail.route_journey.time') }}
+                </dt>
+                <dd class="mt-0.5 text-xs font-medium tabular-nums text-slate-800">
+                  {{ timeRange(seg) || t('trip_detail.empty.time') }}
+                </dd>
+              </div>
+              <div v-if="seg.durationLabel">
+                <dt
+                  class="text-[10px] font-medium uppercase tracking-wide text-slate-400"
+                >
+                  {{ t('trip_detail.overview.duration_label') }}
+                </dt>
+                <dd class="mt-0.5 text-xs font-medium tabular-nums text-slate-800">
+                  {{ seg.durationLabel }}
+                </dd>
+              </div>
+              <div>
+                <dt
+                  class="text-[10px] font-medium uppercase tracking-wide text-slate-400"
+                >
+                  {{ t('trip_detail.route_journey.passengers') }}
+                </dt>
+                <dd class="mt-0.5 text-xs font-medium tabular-nums text-slate-800">
+                  {{ seg.passengers != null ? seg.passengers : '—' }}
+                </dd>
+              </div>
+              <div>
+                <dt
+                  class="text-[10px] font-medium uppercase tracking-wide text-slate-400"
+                >
+                  {{ t('trip_detail.route_journey.vehicle') }}
+                </dt>
+                <dd class="mt-0.5 truncate text-xs font-medium text-slate-800">
+                  {{ seg.vehicle || t('trip_detail.empty.plate') }}
+                </dd>
+              </div>
+              <div>
+                <dt
+                  class="text-[10px] font-medium uppercase tracking-wide text-slate-400"
+                >
+                  {{ t('trip_detail.route_journey.driver') }}
+                </dt>
+                <dd class="mt-0.5 truncate text-xs font-medium text-slate-800">
+                  {{ seg.driver || t('trip_detail.empty.driver') }}
+                </dd>
+              </div>
+              <div
+                v-if="seg.transportProvider"
+                class="col-span-2"
+              >
+                <dt
+                  class="text-[10px] font-medium uppercase tracking-wide text-slate-400"
+                >
+                  {{ t('trip_detail.route_journey.transport_provider') }}
+                </dt>
+                <dd class="mt-0.5 text-xs font-medium text-slate-800">
+                  {{ seg.transportProvider }}
+                </dd>
+              </div>
+            </dl>
           </div>
-
-          <!-- Chi tiết từ wizard (đi/về gộp giờ + địa điểm) -->
-          <dl
-            v-if="seg.detailLines?.length"
-            class="mt-2.5 space-y-1.5 rounded-lg border border-dashed border-slate-200 bg-white px-2.5 py-2"
-          >
-            <dt
-              class="text-[10px] font-bold uppercase tracking-wide text-slate-400"
-            >
-              {{ t('trip_detail.route_journey.wizard_detail') }}
-            </dt>
-            <div
-              v-for="line in seg.detailLines"
-              :key="line.key"
-              class="flex flex-col gap-0.5 sm:flex-row sm:gap-2"
-            >
-              <dd
-                class="shrink-0 text-[11px] font-semibold text-slate-500 sm:w-28"
-              >
-                {{ line.label }}
-              </dd>
-              <dd class="min-w-0 text-xs font-medium text-slate-800">
-                {{ line.value }}
-              </dd>
-            </div>
-          </dl>
-
-          <!-- Meta grid -->
-          <dl
-            class="mt-3 grid grid-cols-2 gap-x-3 gap-y-2.5 border-t border-slate-100 pt-2.5 sm:grid-cols-3"
-          >
-            <div v-if="seg.scheduleDateShort" class="sm:col-span-1">
-              <dt
-                class="text-[10px] font-medium uppercase tracking-wide text-slate-400"
-              >
-                {{ t('trip_detail.route_journey.schedule_date') }}
-              </dt>
-              <dd class="mt-0.5 text-xs font-medium text-slate-800">
-                {{ seg.scheduleDateShort }}
-              </dd>
-            </div>
-            <div>
-              <dt
-                class="text-[10px] font-medium uppercase tracking-wide text-slate-400"
-              >
-                {{ t('trip_detail.route_journey.time') }}
-              </dt>
-              <dd class="mt-0.5 text-xs font-medium tabular-nums text-slate-800">
-                {{ timeRange(seg) || t('trip_detail.empty.time') }}
-              </dd>
-            </div>
-            <div v-if="seg.durationLabel">
-              <dt
-                class="text-[10px] font-medium uppercase tracking-wide text-slate-400"
-              >
-                {{ t('trip_detail.overview.duration_label') }}
-              </dt>
-              <dd class="mt-0.5 text-xs font-medium tabular-nums text-slate-800">
-                {{ seg.durationLabel }}
-              </dd>
-            </div>
-            <div>
-              <dt
-                class="text-[10px] font-medium uppercase tracking-wide text-slate-400"
-              >
-                {{ t('trip_detail.route_journey.passengers') }}
-              </dt>
-              <dd class="mt-0.5 text-xs font-medium tabular-nums text-slate-800">
-                {{ seg.passengers != null ? seg.passengers : '—' }}
-              </dd>
-            </div>
-            <div>
-              <dt
-                class="text-[10px] font-medium uppercase tracking-wide text-slate-400"
-              >
-                {{ t('trip_detail.route_journey.vehicle') }}
-              </dt>
-              <dd class="mt-0.5 truncate text-xs font-medium text-slate-800">
-                {{ seg.vehicle || t('trip_detail.empty.plate') }}
-              </dd>
-            </div>
-            <div>
-              <dt
-                class="text-[10px] font-medium uppercase tracking-wide text-slate-400"
-              >
-                {{ t('trip_detail.route_journey.driver') }}
-              </dt>
-              <dd class="mt-0.5 truncate text-xs font-medium text-slate-800">
-                {{ seg.driver || t('trip_detail.empty.driver') }}
-              </dd>
-            </div>
-            <div
-              v-if="seg.transportProvider"
-              class="col-span-2 sm:col-span-3"
-            >
-              <dt
-                class="text-[10px] font-medium uppercase tracking-wide text-slate-400"
-              >
-                {{ t('trip_detail.route_journey.transport_provider') }}
-              </dt>
-              <dd class="mt-0.5 text-xs font-medium text-slate-800">
-                {{ seg.transportProvider }}
-              </dd>
-            </div>
-          </dl>
         </button>
       </li>
     </ol>

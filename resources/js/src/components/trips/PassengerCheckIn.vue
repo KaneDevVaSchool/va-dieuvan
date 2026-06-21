@@ -23,37 +23,8 @@
             </span>
         </div>
 
-        <!-- 1. KPI OVERVIEW + 2. BOARDING PROGRESS -->
+        <!-- Tiến độ lên xe -->
         <template v-if="opsMode && rows.length">
-            <div
-                class="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6"
-                role="group"
-                :aria-label="t('trip_detail.passengers.kpi.aria')"
-            >
-                <button
-                    v-for="card in kpiCards"
-                    :key="card.key"
-                    type="button"
-                    class="rounded-xl border bg-white px-2.5 py-2 text-left transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:bg-slate-900/40 dark:hover:bg-slate-900/70"
-                    :class="
-                        card.key !== 'total' && statusFilter === card.filterKey
-                            ? 'border-blue-400 ring-1 ring-blue-200 dark:border-blue-600 dark:ring-blue-900/70'
-                            : 'border-slate-200/80 dark:border-slate-700/70'
-                    "
-                    @click="card.key === 'total' ? (statusFilter = 'all') : (statusFilter = card.filterKey)"
-                >
-                    <div
-                        class="text-lg font-bold tabular-nums leading-none"
-                        :class="card.accent"
-                    >
-                        {{ card.value }}
-                    </div>
-                    <div class="mt-1 truncate text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                        {{ card.label }}
-                    </div>
-                </button>
-            </div>
-
             <div class="mt-3">
                 <div class="mb-1 flex items-center justify-between text-[11px] font-medium text-slate-500 dark:text-slate-400">
                     <span>{{ t("trip_detail.passengers.progress_title") }}</span>
@@ -81,122 +52,156 @@
             </div>
         </template>
 
-        <!-- 3. QUICK FILTER CHIPS -->
-        <div
-            v-if="opsMode && rows.length"
-            class="mt-3 flex flex-wrap gap-1.5"
-            role="group"
-            :aria-label="t('trip_detail.passengers.filter_segment_aria')"
-        >
-            <button
-                v-for="opt in filterOptions"
-                :key="opt.key"
-                type="button"
-                class="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                :class="
-                    statusFilter === opt.key
-                        ? opt.activeClass
-                        : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800/90'
-                "
-                :aria-pressed="statusFilter === opt.key"
-                @click="statusFilter = opt.key"
-            >
-                <span v-if="opt.dot" class="h-1.5 w-1.5 rounded-full" :class="opt.dot" />
-                {{ opt.label }}
-                <span
-                    class="min-w-[1.25rem] rounded-md bg-black/5 px-1 text-center text-[10px] font-bold tabular-nums dark:bg-white/10"
-                >
-                    {{ opt.badge }}
-                </span>
-            </button>
-        </div>
-
-        <!-- 4. TOOLBAR -->
+        <!-- Toolbar datagrid -->
         <div
             v-if="rows.length || canEditList"
-            class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+            class="mt-3 overflow-visible"
         >
-            <div v-if="rows.length" class="relative w-full sm:w-64">
-                <MagnifyingGlassIcon
-                    class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-                    aria-hidden="true"
-                />
-                <input
-                    v-model="passengerSearch"
-                    type="text"
-                    autocomplete="off"
-                    class="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-8 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
-                    :placeholder="t('trip_detail.passengers.dt_search_ph')"
-                    :aria-label="t('trip_detail.passengers.search_aria')"
-                />
-                <button
-                    v-if="passengerSearch.trim()"
-                    type="button"
-                    class="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                    :aria-label="t('trip_detail.passengers.search_clear_aria')"
-                    @click="passengerSearch = ''"
-                >
-                    <XMarkIcon class="h-4 w-4" aria-hidden="true" />
-                </button>
-            </div>
-            <div v-else class="min-h-0 flex-1" />
-
-            <div class="flex flex-wrap items-center gap-2">
-                <!-- View mode switch -->
-                <div
-                    v-if="opsMode && rows.length"
-                    class="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-600 dark:bg-slate-900"
-                    role="group"
-                    :aria-label="t('trip_detail.passengers.view.aria')"
-                >
-                    <button
-                        v-for="vm in viewModes"
-                        :key="vm.key"
-                        type="button"
-                        class="rounded-md px-2.5 py-1 text-xs font-semibold transition"
-                        :class="
-                            viewMode === vm.key
-                                ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100'
-                                : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
-                        "
-                        :aria-pressed="viewMode === vm.key"
-                        @click="viewMode = vm.key"
+            <div class="border-b border-slate-100 pb-3 dark:border-slate-700">
+                <div class="flex w-full min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
+                    <div
+                        v-if="rows.length"
+                        class="min-w-0 w-full basis-full lg:min-w-[10rem] lg:flex-1 lg:basis-auto"
                     >
-                        {{ vm.label }}
-                    </button>
+                        <DatagridToolbarSearch
+                            v-model="passengerSearch"
+                            input-id="trip-passengers-search"
+                            :placeholder="t('trip_detail.passengers.dt_search_ph')"
+                            :aria-label="t('trip_detail.passengers.search_aria')"
+                            stretch
+                            inline-actions
+                            hide-label
+                            input-height="h-10"
+                        />
+                    </div>
+                    <div v-else class="min-h-0 w-full flex-1 lg:w-auto" />
+
+                    <div class="flex shrink-0 flex-wrap items-center gap-2">
+                        <FilterVisibilityDropdown
+                            v-if="opsMode && rows.length"
+                            :open="showFilterPanelDd"
+                            :title="t('trip_detail.passengers.filter_show_controls_title')"
+                            :hint="t('trip_detail.passengers.filter_show_controls_hint')"
+                            @close="closeFilterPanel"
+                        >
+                            <template #trigger>
+                                <DatagridToolbarActionButton
+                                    icon="filter"
+                                    :active="showFilterPanelDd"
+                                    test-id="trip-passengers-toolbar-filter"
+                                    @click="openFilterPanel"
+                                >
+                                    {{ t('trip_detail.passengers.toolbar_filter') }}
+                                </DatagridToolbarActionButton>
+                            </template>
+                            <li
+                                v-for="fd in filterControlDefs"
+                                :key="'trip-pax-vis-' + fd.key"
+                                class="flex items-start gap-2"
+                            >
+                                <input
+                                    :id="`trip-pax-filter-vis-${fd.key}`"
+                                    v-model="visibleFilters[fd.key]"
+                                    type="checkbox"
+                                    class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-va-800 focus:ring-va-700/30 dark:border-slate-600"
+                                    :data-testid="`trip-pax-filter-vis-${fd.key}`"
+                                />
+                                <label
+                                    :for="`trip-pax-filter-vis-${fd.key}`"
+                                    class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
+                                >
+                                    {{ fd.label }}
+                                </label>
+                            </li>
+                        </FilterVisibilityDropdown>
+
+                        <button
+                            v-if="canEditList"
+                            type="button"
+                            class="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-sky-200/80 bg-sky-50/80 px-3 text-sm font-semibold text-sky-800 shadow-sm transition hover:bg-sky-100 disabled:opacity-50 dark:border-sky-800/50 dark:bg-sky-950/40 dark:text-sky-200 dark:hover:bg-sky-950/70"
+                            :disabled="listBusy"
+                            data-testid="trip-passengers-add-row"
+                            @click="openAddModal"
+                        >
+                            <UserPlusIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                            {{ t('trip_detail.passengers.dt_add_row') }}
+                        </button>
+
+                        <DatagridToolbarActionButton
+                            v-if="rows.length"
+                            icon="export"
+                            test-id="trip-passengers-toolbar-export"
+                            @click="exportCsv"
+                        >
+                            {{ t('trip_detail.passengers.export_csv') }}
+                        </DatagridToolbarActionButton>
+                    </div>
+
+                    <div
+                        v-if="opsMode && rows.length"
+                        class="ml-auto flex h-10 shrink-0 items-center rounded-lg border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-600 dark:bg-slate-900"
+                        role="group"
+                        :aria-label="t('trip_detail.passengers.view.aria')"
+                    >
+                        <button
+                            v-for="vm in viewModes"
+                            :key="vm.key"
+                            type="button"
+                            class="rounded-md px-2.5 py-1.5 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-va-700/30"
+                            :class="
+                                viewMode === vm.key
+                                    ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100'
+                                    : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+                            "
+                            :aria-pressed="viewMode === vm.key"
+                            :data-testid="`trip-passengers-view-${vm.key}`"
+                            @click="viewMode = vm.key"
+                        >
+                            {{ vm.label }}
+                        </button>
+                    </div>
                 </div>
 
-                <select
-                    v-if="rows.length && viewMode === 'table'"
-                    v-model.number="pageSize"
-                    :aria-label="t('trip_detail.passengers.dt_page_size_aria')"
-                    class="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none focus:ring-2 focus:ring-sky-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                <div
+                    v-if="hasFilterRow && rows.length"
+                    class="mt-3 grid grid-cols-1 gap-3 border-t border-slate-100 pt-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 dark:border-slate-700"
                 >
-                    <option :value="5">5</option>
-                    <option :value="10">10</option>
-                    <option :value="15">15</option>
-                    <option :value="20">20</option>
-                </select>
-                <button
-                    v-if="canEditList"
-                    type="button"
-                    class="inline-flex items-center gap-1 rounded-lg border border-sky-200/80 bg-sky-50/80 px-3 py-1.5 text-xs font-semibold text-sky-800 transition hover:bg-sky-100 disabled:opacity-50 dark:border-sky-800/50 dark:bg-sky-950/40 dark:text-sky-200 dark:hover:bg-sky-950/70"
-                    :disabled="listBusy"
-                    @click="openAddModal"
-                >
-                    <UserPlusIcon class="h-4 w-4" aria-hidden="true" />
-                    {{ t("trip_detail.passengers.dt_add_row") }}
-                </button>
-                <button
-                    v-if="rows.length"
-                    type="button"
-                    class="inline-flex shrink-0 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                    :aria-label="t('trip_detail.passengers.export_csv_aria')"
-                    @click="exportCsv"
-                >
-                    <ArrowDownTrayIcon class="h-4 w-4 shrink-0" />
-                    {{ t("trip_detail.passengers.export_csv") }}
-                </button>
+                    <DatagridFilterField v-if="visibleFilters.status && opsMode">
+                        <select
+                            v-model="statusFilterSelect"
+                            :class="FILTER_CONTROL_CLASS"
+                            :aria-label="t('trip_detail.passengers.col_status')"
+                            data-testid="trip-passengers-filter-status"
+                        >
+                            <option value="">
+                                {{ t('trip_detail.passengers.col_status') }}
+                            </option>
+                            <option
+                                v-for="s in PASSENGER_STATUSES"
+                                :key="s.key"
+                                :value="s.key"
+                            >
+                                {{ t(`trip_detail.passengers.status.${s.i18n}`) }}
+                            </option>
+                        </select>
+                    </DatagridFilterField>
+
+                    <DatagridFilterField
+                        v-if="visibleFilters.page_size && viewMode === 'table'"
+                    >
+                        <select
+                            v-model.number="pageSize"
+                            :class="FILTER_CONTROL_CLASS"
+                            :aria-label="t('trip_detail.passengers.dt_page_size_aria')"
+                            data-testid="trip-passengers-filter-page-size"
+                        >
+                            <option :value="5">5</option>
+                            <option :value="10">10</option>
+                            <option :value="15">15</option>
+                            <option :value="20">20</option>
+                        </select>
+                    </DatagridFilterField>
+                </div>
             </div>
         </div>
 
@@ -879,12 +884,10 @@
 import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import {
-    ArrowDownTrayIcon,
     ArrowLeftOnRectangleIcon,
     ArrowRightOnRectangleIcon,
     CheckIcon,
     ChevronDownIcon,
-    MagnifyingGlassIcon,
     PencilSquareIcon,
     PhoneIcon,
     TrashIcon,
@@ -892,6 +895,11 @@ import {
     XMarkIcon,
 } from "@heroicons/vue/24/outline";
 import { ExclamationTriangleIcon } from "@heroicons/vue/24/solid";
+import DatagridToolbarSearch from "../shared/ui/DatagridToolbarSearch.vue";
+import DatagridToolbarActionButton from "../shared/ui/DatagridToolbarActionButton.vue";
+import DatagridFilterField from "../shared/ui/DatagridFilterField.vue";
+import FilterVisibilityDropdown from "../shared/ui/FilterVisibilityDropdown.vue";
+import { useVisibleFilterControls } from "../../composables/useVisibleFilterControls.js";
 import {
     emptyPassengerRow,
     emptyBusinessRow,
@@ -978,6 +986,27 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
+const FILTER_CONTROL_CLASS =
+    "input h-10 w-full rounded-lg border border-slate-200 bg-white text-sm text-slate-900 shadow-sm outline-none focus:border-va-700 focus:ring-2 focus:ring-va-700/15 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100";
+
+const PASSENGER_FILTER_CONTROLS = [
+    { key: "status", label: t("trip_detail.passengers.col_status"), default: false },
+    {
+        key: "page_size",
+        label: t("trip_detail.passengers.filter_page_size"),
+        default: false,
+    },
+];
+
+const {
+    visibleFilters,
+    hasFilterRow,
+    showFilterPanelDd,
+    openFilterPanel,
+    closeFilterPanel,
+    filterControlDefs,
+} = useVisibleFilterControls(PASSENGER_FILTER_CONTROLS, "trip-detail-passengers-filter.v1");
+
 /** Trung tâm điều hành (KPI/trạng thái/bulk/drawer) chỉ bật khi cho phép check-in. */
 const opsMode = computed(() => props.canCheckIn);
 
@@ -992,6 +1021,14 @@ const displayPassengerTotal = computed(() => {
 type StatusFilterKey = "all" | PassengerStatusKey;
 
 const statusFilter = ref<StatusFilterKey>("all");
+
+const statusFilterSelect = computed({
+    get: () => (statusFilter.value === "all" ? "" : statusFilter.value),
+    set: (v: string) => {
+        statusFilter.value = v === "" ? "all" : (v as PassengerStatusKey);
+    },
+});
+
 const passengerSearch = ref("");
 const page = ref(1);
 const pageSize = ref(10);
@@ -1103,90 +1140,10 @@ const statusCounts = computed(() => {
 const boardedCount = computed(
     () => statusCounts.value.onboard + statusCounts.value.dropped_off,
 );
-const waitingCount = computed(
-    () => statusCounts.value.pending + statusCounts.value.confirmed,
-);
 const boardedPct = computed(() => {
     const total = props.rows.length;
     if (!total) return 0;
     return Math.round((boardedCount.value / total) * 100);
-});
-
-const kpiCards = computed(() => {
-    const c = statusCounts.value;
-    return [
-        {
-            key: "total",
-            filterKey: "all" as StatusFilterKey,
-            value: displayPassengerTotal.value,
-            label: t("trip_detail.passengers.kpi.total"),
-            accent: "text-slate-900 dark:text-slate-100",
-        },
-        {
-            key: "waiting",
-            filterKey: "pending" as StatusFilterKey,
-            value: waitingCount.value,
-            label: t("trip_detail.passengers.kpi.waiting"),
-            accent: "text-slate-600 dark:text-slate-300",
-        },
-        {
-            key: "onboard",
-            filterKey: "onboard" as StatusFilterKey,
-            value: c.onboard,
-            label: t("trip_detail.passengers.kpi.onboard"),
-            accent: "text-emerald-600 dark:text-emerald-300",
-        },
-        {
-            key: "dropped_off",
-            filterKey: "dropped_off" as StatusFilterKey,
-            value: c.dropped_off,
-            label: t("trip_detail.passengers.kpi.dropped_off"),
-            accent: "text-teal-600 dark:text-teal-300",
-        },
-        {
-            key: "absent",
-            filterKey: "absent" as StatusFilterKey,
-            value: c.absent,
-            label: t("trip_detail.passengers.kpi.absent"),
-            accent: "text-amber-600 dark:text-amber-300",
-        },
-        {
-            key: "cancelled",
-            filterKey: "cancelled" as StatusFilterKey,
-            value: c.cancelled,
-            label: t("trip_detail.passengers.kpi.cancelled"),
-            accent: "text-rose-600 dark:text-rose-300",
-        },
-    ];
-});
-
-const filterOptions = computed(() => {
-    const c = statusCounts.value;
-    const opts: Array<{
-        key: StatusFilterKey;
-        label: string;
-        badge: number;
-        dot?: string;
-        activeClass: string;
-    }> = [
-        {
-            key: "all",
-            label: t("trip_detail.passengers.filter_all"),
-            badge: props.rows.length,
-            activeClass:
-                "border-blue-500 bg-blue-50 text-blue-800 ring-1 ring-blue-200 dark:border-blue-600 dark:bg-blue-950/55 dark:text-blue-200",
-        },
-    ];
-    for (const s of PASSENGER_STATUSES) {
-        opts.push({
-            key: s.key,
-            label: t(`trip_detail.passengers.status.${s.i18n}`),
-            badge: c[s.key],
-            dot: s.dot,
-            activeClass: s.chipActive,
-        });
-    }
-    return opts;
 });
 
 const viewModes = computed(() => [
