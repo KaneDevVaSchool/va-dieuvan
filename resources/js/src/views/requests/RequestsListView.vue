@@ -82,24 +82,38 @@
             <div class="relative" data-requests-export-panel>
               <DatagridToolbarActionButton
                 icon="export"
-                :disabled="exportingCsv || !(meta.total ?? 0)"
+                :disabled="exporting || !(meta.total ?? 0)"
                 :active="showExportMenu"
                 test-id="requests-toolbar-export"
                 @click="toggleExportMenu"
               >
-                {{ exportingCsv ? t('requests_page.export_csv_busy') : t('requests_page.toolbar_export') }}
+                {{ exporting ? t('requests_page.export_busy') : t('requests_page.toolbar_export') }}
               </DatagridToolbarActionButton>
               <div
                 v-if="showExportMenu"
-                class="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[200px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+                class="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[240px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
               >
+                <button
+                  type="button"
+                  class="flex w-full flex-col px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
+                  data-testid="requests-export-excel"
+                  @click="exportRequestsExcel(); showExportMenu = false"
+                >
+                  <span class="text-sm font-medium text-slate-800 dark:text-slate-100">
+                    {{ t('requests_page.export_excel') }}
+                  </span>
+                  <span class="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                    {{ t('requests_page.export_excel_hint') }}
+                  </span>
+                </button>
+                <div class="my-1 border-t border-slate-100 dark:border-slate-700" role="separator" />
                 <button
                   type="button"
                   class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
                   data-testid="requests-export-csv"
                   @click="exportRequestsCsv(); showExportMenu = false"
                 >
-                  CSV
+                  {{ t('requests_page.export_csv') }}
                 </button>
               </div>
             </div>
@@ -869,6 +883,7 @@ import { isLegacyBm03NotesBlock } from '../../util/formatDispatchNotes'
 import { dispatchRequestDisplayPassengerCount } from '../../util/dispatchRequestPassengers'
 import { formatListDateTime } from '../../util/datetime'
 import { formatDispatchRequestRefCode } from '../../util/portalRequestFormat'
+import { exportRequestsListExcel } from '../../composables/useRequestsListExcelExport'
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -878,7 +893,7 @@ const auth = useAuthStore()
 const extracurricularTableRef = ref(null)
 
 const loading = ref(false)
-const exportingCsv = ref(false)
+const exporting = ref(false)
 const items = ref([])
 const meta = ref({})
 const stats = ref({
@@ -1198,27 +1213,110 @@ function csvEscapeCell(val) {
   return s
 }
 
-function requestRowsToCsvLines(rows) {
-  const headers = [
-    t('requests_page.col_id'),
-    t('requests_page.col_trip'),
-    t('requests_page.col_timeline'),
-    t('requests_page.col_depart_at'),
-    t('requests_page.col_urgent'),
-    t('requests_page.col_type_channel'),
-  ]
+function requestExportHeaders() {
   return [
+    t('requests_page.col_id'),
+    t('requests_page.export_col_request_status'),
+    t('requests_page.export_col_trip_status'),
+    t('requests_page.filter_trip_type'),
+    t('requests_page.filter_channel'),
+    t('trips_page.col_origin'),
+    t('trips_page.col_destination'),
+    t('requests_page.col_depart_at'),
+    t('requests_page.col_arrive_by'),
+    t('requests_page.meta_created'),
+    t('requests_page.col_requester'),
+    t('requests_page.col_paper'),
+    t('requests_page.col_urgent'),
+    t('requests_page.col_sla'),
+    t('requests_page.col_notes'),
+    t('requests_page.badge_recurring'),
+    t('requests_page.export_col_passengers'),
+  ]
+}
+
+function slaExportText(r) {
+  const sla = slaCell(r)
+  if (sla.kind === 'neutral') return t('requests_page.empty_sla')
+  return sla.text || t('requests_page.empty_sla')
+}
+
+function requestToExportRowValues(r) {
+  return [
+    displayRequestCode(r),
+    labelRequestStatus(r.status),
+    r.trip?.status ? labelTripStatus(r.trip.status) : '',
+    labelTripType(r.trip_type) || t('requests_page.empty_trip_type'),
+    r.source_channel ? labelSourceChannel(r.source_channel) : t('requests_page.empty_channel'),
+    displayPlaceLabel(r.origin, 'empty_origin'),
+    displayPlaceLabel(r.destination, 'empty_destination'),
+    formatDepartDate(r.depart_at),
+    formatArriveByDate(r.arrive_by),
+    formatRequestDateTime(r.created_at),
+    r.requester?.name || t('requests_page.empty_requester'),
+    r.paper_status ? labelPaperStatus(r.paper_status) : t('requests_page.empty_paper'),
+    r.is_urgent ? t('requests_page.filter_priority_urgent') : t('requests_page.empty_priority_normal'),
+    slaExportText(r),
+    requestNotesListCell(r),
+    r.dispatch_request_template_id ? t('requests_page.badge_recurring') : '—',
+    passengerSummary(r),
+  ]
+}
+
+function buildExportFilterLines() {
+  const lines = []
+  const sq = searchInput.value.trim()
+  if (sq) lines.push(`${t('requests_page.filter_search_keyword')}: «${sq}»`)
+  if (filters.only_trashed) {
+    lines.push(`${t('requests_page.filter_tab')}: ${t('requests_page.tab_trash')}`)
+  } else if (filters.request_status) {
+    lines.push(`${t('requests_page.filter_request_status')}: ${labelRequestStatus(filters.request_status)}`)
+  } else if (filters.trip_status_filter) {
+    lines.push(`${t('requests_page.filter_trip_status')}: ${labelTripStatus(filters.trip_status_filter)}`)
+  } else {
+    lines.push(`${t('requests_page.filter_tab')}: ${t('requests_page.tab_all')}`)
+  }
+  if (filters.trip_type) {
+    lines.push(`${t('requests_page.filter_trip_type')}: ${labelTripType(filters.trip_type)}`)
+  }
+  if (filters.from || filters.to) {
+    const from = filters.from || '…'
+    const to = filters.to || '…'
+    lines.push(`${t('requests_page.filter_depart_range')}: ${from} → ${to}`)
+  }
+  if (filters.source_channel) {
+    lines.push(`${t('requests_page.filter_channel')}: ${labelSourceChannel(filters.source_channel)}`)
+  }
+  if (filters.paper_status) {
+    lines.push(`${t('requests_page.filter_paper')}: ${labelPaperStatus(filters.paper_status)}`)
+  }
+  if (filters.priority === 'urgent') {
+    lines.push(`${t('requests_page.filter_priority')}: ${t('requests_page.filter_priority_urgent')}`)
+  }
+  if (filters.sla_risk_only) lines.push(t('requests_page.sla_toggle'))
+  if (filters.recurring_only) lines.push(t('requests_page.recurring_toggle'))
+  if (filters.extracurricular_only) lines.push(t('requests_page.extracurricular_toggle'))
+  if (filters.student_count_submitted === true) {
+    lines.push(t('requests_page.student_count_submitted_chip'))
+  } else if (filters.student_count_submitted === false) {
+    lines.push(t('requests_page.student_count_pending_chip'))
+  }
+  if (filters.sort && filters.sort !== 'created_desc') {
+    lines.push(`${t('requests_page.sort_label')}: ${sortLabel(filters.sort)}`)
+  }
+  return lines
+}
+
+function requestRowsToCsvLines(rows) {
+  const headers = requestExportHeaders()
+  const filterNote = [
+    t('requests_page.export_filters_heading'),
+    ...buildExportFilterLines().map((l) => `- ${l}`),
+  ].join('\n')
+  return [
+    csvEscapeCell(filterNote),
     headers.map(csvEscapeCell).join(','),
-    ...rows.map((r) =>
-      [
-        csvEscapeCell(displayRequestCode(r)),
-        csvEscapeCell(displayRoute(r)),
-        csvEscapeCell(labelRequestStatus(r.status)),
-        csvEscapeCell(formatDepartDate(r.depart_at)),
-        r.is_urgent ? '1' : '',
-        csvEscapeCell(`${labelTripType(r.trip_type)} / ${labelSourceChannel(r.source_channel)}`),
-      ].join(','),
-    ),
+    ...rows.map((r) => requestToExportRowValues(r).map(csvEscapeCell).join(',')),
   ]
 }
 
@@ -1241,8 +1339,8 @@ async function fetchAllFilteredRequestRows() {
 }
 
 async function exportRequestsCsv() {
-  if (exportingCsv.value || !(meta.value.total ?? 0)) return
-  exportingCsv.value = true
+  if (exporting.value || !(meta.value.total ?? 0)) return
+  exporting.value = true
   try {
     const rows = await fetchAllFilteredRequestRows()
     if (!rows.length) return
@@ -1251,13 +1349,39 @@ async function exportRequestsCsv() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `requests-${new Date().toISOString().slice(0, 10)}.csv`
+    a.download = `${t('requests_page.export_filename_prefix')}-${new Date().toISOString().slice(0, 10)}.csv`
     a.click()
     URL.revokeObjectURL(url)
   } catch (e) {
-    showAppErrorFromApi(e, t('requests_page.export_csv_fail'))
+    showAppErrorFromApi(e, t('requests_page.export_fail'))
   } finally {
-    exportingCsv.value = false
+    exporting.value = false
+  }
+}
+
+async function exportRequestsExcel() {
+  if (exporting.value || !(meta.value.total ?? 0)) return
+  exporting.value = true
+  try {
+    const rows = await fetchAllFilteredRequestRows()
+    if (!rows.length) return
+    const headers = requestExportHeaders()
+    await exportRequestsListExcel({
+      t,
+      headers,
+      rows,
+      mapRow: requestToExportRowValues,
+      rowStyle: (r) => ({
+        urgent: !!r.is_urgent,
+        pending: r.status === 'pending' && !r.is_urgent,
+      }),
+      filterLines: buildExportFilterLines(),
+      totalCount: rows.length,
+    })
+  } catch (e) {
+    showAppErrorFromApi(e, t('requests_page.export_fail'))
+  } finally {
+    exporting.value = false
   }
 }
 

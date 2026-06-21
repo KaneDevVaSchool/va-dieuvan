@@ -480,7 +480,7 @@ import DatagridToolbarSearch from '../../components/shared/ui/DatagridToolbarSea
 import DatagridToolbarActionButton from '../../components/shared/ui/DatagridToolbarActionButton.vue'
 import DatagridFilterField from '../../components/shared/ui/DatagridFilterField.vue'
 import FilterVisibilityDropdown from '../../components/shared/ui/FilterVisibilityDropdown.vue'
-import AttendanceSummaryBar from './attendance/AttendanceSummaryBar.vue'
+import AttendanceSummaryBar from '../../components/transportProgram/attendance/AttendanceSummaryBar.vue'
 import AttendanceDataTable from './attendance/AttendanceDataTable.vue'
 import AttendanceParentNotifyPanel from './attendance/AttendanceParentNotifyPanel.vue'
 import TpStudentDetailModal from '../../components/transportProgram/TpStudentDetailModal.vue'
