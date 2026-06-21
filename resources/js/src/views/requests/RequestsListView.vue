@@ -4,376 +4,210 @@
     :class="!loading && items.length ? 'pb-[4.75rem] sm:pb-[4.25rem]' : ''"
   >
     <!-- Header -->
-    <div class="flex flex-col gap-4 border-b border-slate-200/80 pb-6 lg:flex-row lg:items-start lg:justify-between">
+    <div class="flex flex-col gap-4 border-b border-slate-200/80 pb-6 lg:flex-row lg:items-center lg:justify-between">
       <div>
         <h1 class="text-xl font-semibold tracking-tight text-slate-900">
           {{ t('requests_page.title') }}
         </h1>
+        <p class="mt-1 text-sm text-slate-500">{{ t('requests_page.subtitle') }}</p>
       </div>
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div class="relative min-w-[220px] flex-1 sm:max-w-xs">
-          <MagnifyingGlassIcon
-            class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-            aria-hidden="true"
-          />
-          <input
-            v-model="searchInput"
-            type="search"
-            :placeholder="t('requests_page.search_placeholder')"
-            class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
-            @input="onSearchInput"
-            @keydown.enter="applySearchNow"
-          />
-        </div>
-        <RouterLink
-          to="/dispatch-requests/new"
-          class="inline-flex items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-teal-700"
-        >
-          <PlusIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
-          {{ t('requests_page.create') }}
-        </RouterLink>
-      </div>
+      <RouterLink
+        to="/dispatch-requests/new"
+        class="inline-flex items-center justify-center gap-2 rounded-lg bg-va-800 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-va-900"
+        data-testid="requests-create-btn"
+      >
+        <PlusIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+        {{ t('requests_page.create') }}
+      </RouterLink>
     </div>
 
-    <!-- KPI: 4 thẻ gọn -->
-    <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
-      <div class="rounded-lg border border-slate-200/80 bg-white p-2.5 shadow-sm sm:p-3">
-        <div class="flex items-start justify-between gap-1.5">
-          <div class="min-w-0">
-            <p class="text-[10px] font-medium uppercase leading-tight tracking-wide text-slate-500">
-              {{ t('requests_page.kpi_total') }}
-            </p>
-            <p class="mt-1 text-xl font-semibold tabular-nums text-slate-900 sm:text-2xl">
-              {{ formatInt(stats.total) }}
-            </p>
-            <p v-if="stats.month_trend_pct != null" class="mt-0.5 text-[10px] text-teal-700 leading-snug">
-              {{ trendLabel(stats.month_trend_pct) }}
-            </p>
-            <p v-else class="mt-0.5 text-[10px] leading-snug text-slate-400">{{ t('requests_page.kpi_no_trend') }}</p>
-          </div>
-          <div class="shrink-0 rounded-md bg-slate-100 p-1.5 text-slate-600">
-            <RectangleStackIcon class="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
-          </div>
-        </div>
-      </div>
+    <RequestsSummaryBar
+      :stats="stats"
+      :active-tab="activeTab"
+      :sla-risk-only="filters.sla_risk_only"
+      @quick-filter="onKpiQuickFilter"
+    />
 
-      <div class="rounded-lg border border-slate-200/80 bg-white p-2.5 shadow-sm sm:p-3">
-        <div class="flex items-start justify-between gap-1.5">
-          <div class="min-w-0 flex-1">
-            <p class="text-[10px] font-medium uppercase leading-tight tracking-wide text-slate-500">
-              {{ t('requests_page.tab_pending') }}
-            </p>
-            <p class="mt-1 text-xl font-semibold tabular-nums text-slate-900 sm:text-2xl">
-              {{ formatInt(approvalPendingCount) }}
-            </p>
-            <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
-              <div
-                class="h-full rounded-full bg-amber-400 transition-all"
-                :style="{ width: pendingShareOfTotalPct + '%' }"
-              />
-            </div>
+    <div
+      ref="requestsDatagridRef"
+      class="overflow-visible rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40"
+    >
+      <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+        <div class="flex w-full min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
+          <div class="min-w-0 w-full basis-full lg:min-w-[10rem] lg:flex-1 lg:basis-auto">
+            <DatagridToolbarSearch
+              v-model="searchInput"
+              input-id="requests-list-search"
+              :placeholder="t('requests_page.search_placeholder')"
+              stretch
+              inline-actions
+              hide-label
+              input-height="h-10"
+              @enter="applySearchNow"
+            />
           </div>
-          <div class="shrink-0 rounded-md bg-amber-50 p-1.5 text-amber-700">
-            <ClockIcon class="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
-          </div>
-        </div>
-      </div>
 
-      <div class="rounded-lg border border-slate-200/80 bg-white p-2.5 shadow-sm sm:p-3">
-        <div class="flex items-start justify-between gap-1.5">
-          <div class="min-w-0 flex-1">
-            <p class="text-[10px] font-medium uppercase leading-tight tracking-wide text-slate-500">
-              {{ t('requests_page.tab_approved') }}
-            </p>
-            <p class="mt-1 text-xl font-semibold tabular-nums text-slate-900 sm:text-2xl">
-              {{ formatInt(approvalApprovedCount) }}
-            </p>
-            <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
-              <div
-                class="h-full rounded-full bg-teal-500 transition-all"
-                :style="{ width: approvedShareOfTotalPct + '%' }"
-              />
-            </div>
-          </div>
-          <div class="shrink-0 rounded-md bg-teal-50 p-1.5 text-teal-700">
-            <ClipboardDocumentCheckIcon class="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
-          </div>
-        </div>
-      </div>
-
-      <div class="rounded-lg border border-slate-200/80 bg-white p-2.5 shadow-sm sm:p-3">
-        <div class="flex items-start justify-between gap-1.5">
-          <div class="min-w-0">
-            <p class="text-[10px] font-medium uppercase leading-tight tracking-wide text-slate-500">
-              {{ t('requests_page.kpi_sla_risk') }}
-            </p>
-            <p class="mt-1 text-xl font-semibold tabular-nums text-slate-900 sm:text-2xl">
-              {{ formatInt(stats.sla_risk) }}
-            </p>
-            <span
-              v-if="stats.sla_risk > 0"
-              class="mt-1 inline-flex max-w-full items-center rounded-full bg-amber-50 px-1.5 py-0.5 text-[9px] font-medium text-amber-800 ring-1 ring-amber-200"
+          <div class="flex shrink-0 items-center gap-2">
+            <FilterVisibilityDropdown
+              :open="showFilterPanelDd"
+              :title="t('requests_page.filter_show_controls_title')"
+              :hint="t('requests_page.filter_show_controls_hint')"
+              @close="closeFilterPanel"
             >
-              {{ t('requests_page.kpi_action_required') }}
-            </span>
-            <span v-else class="mt-1 inline-flex text-[10px] text-emerald-700">{{ t('requests_page.kpi_sla_ok') }}</span>
-          </div>
-          <div class="shrink-0 rounded-md bg-amber-50 p-1.5 text-amber-700">
-            <ExclamationTriangleIcon class="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Filters: horizontal bar -->
-    <AppFilterBar>
-      <div ref="requestsFilterBarRef" class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
-        <details ref="columnPickerRef" class="group relative shrink-0">
-          <summary
-            class="flex cursor-pointer list-none items-center gap-1 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-200 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
-            :aria-label="t('requests_page.table_columns')"
-          >
-            <ViewColumnsIcon class="h-5 w-5 shrink-0 text-slate-600 dark:text-slate-400" aria-hidden="true" />
-            <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-          </summary>
-          <div
-            class="absolute left-0 top-[calc(100%+6px)] z-50 min-w-[240px] rounded-xl border border-slate-200/90 bg-white p-3 text-sm shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-950"
-            @click.stop
-          >
-            <ul class="max-h-[min(50vh,320px)] space-y-2 overflow-y-auto text-slate-700 dark:text-slate-300">
-              <li v-for="opt in requestColumnToggleOptions" :key="opt.id" class="flex items-center gap-2">
+              <template #trigger>
+                <DatagridToolbarActionButton
+                  icon="filter"
+                  :active="showFilterPanelDd"
+                  test-id="requests-toolbar-filter"
+                  @click="openFilterPanel(closeToolbarMenusExceptFilter)"
+                >
+                  {{ t('requests_page.toolbar_filter') }}
+                </DatagridToolbarActionButton>
+              </template>
+              <li v-for="fd in filterControlDefs" :key="'req-vis-' + fd.key" class="flex items-start gap-2">
                 <input
-                  :id="`req-col-${opt.id}`"
+                  :id="`requests-filter-vis-${fd.key}`"
+                  v-model="visibleFilters[fd.key]"
                   type="checkbox"
-                  class="rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
-                  :checked="requestColumnVisible[opt.id] !== false"
-                  @change="setRequestColumn(opt.id, $event.target.checked)"
-                />
-                <label :for="`req-col-${opt.id}`" class="cursor-pointer text-xs">{{ t(opt.labelKey) }}</label>
-              </li>
-            </ul>
-          </div>
-        </details>
-
-        <AppFilterFunnelMenu ref="filterMenuRef" :badge-count="activeFilterCount">
-          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            {{ t('requests_page.filter_menu_title') }}
-          </p>
-          <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
-            <li v-if="activeTab !== 'all'" class="flex justify-between gap-2">
-              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_tab') }}</span>
-              <span class="max-w-[11rem] truncate text-right font-medium">{{ activeTabSummaryLabel }}</span>
-            </li>
-            <li v-if="searchInput.trim()" class="flex justify-between gap-2">
-              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_search_keyword') }}</span>
-              <span class="max-w-[11rem] truncate text-right font-medium" :title="searchInput">{{ searchInput }}</span>
-            </li>
-            <li v-if="filters.trip_type" class="flex justify-between gap-2">
-              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_trip_type') }}</span>
-              <span class="font-medium">{{ labelTripType(filters.trip_type) }}</span>
-            </li>
-            <li v-if="filters.from || filters.to" class="flex justify-between gap-2">
-              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_depart_range') }}</span>
-              <span class="text-right font-medium">{{ filters.from || '…' }} → {{ filters.to || '…' }}</span>
-            </li>
-            <li v-if="filters.source_channel" class="flex justify-between gap-2">
-              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_channel') }}</span>
-              <span class="font-medium">{{ labelSourceChannel(filters.source_channel) }}</span>
-            </li>
-            <li v-if="filters.paper_status" class="flex justify-between gap-2">
-              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_paper') }}</span>
-              <span class="font-medium">{{ labelPaperStatus(filters.paper_status) }}</span>
-            </li>
-            <li v-if="filters.request_status" class="flex justify-between gap-2">
-              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_request_status') }}</span>
-              <span class="font-medium">{{ labelRequestStatus(filters.request_status) }}</span>
-            </li>
-            <li v-if="filters.trip_status_filter" class="flex justify-between gap-2">
-              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_trip_status') }}</span>
-              <span class="font-medium">{{ labelTripStatus(filters.trip_status_filter) }}</span>
-            </li>
-            <li v-if="filters.sort && filters.sort !== 'created_desc'" class="flex justify-between gap-2">
-              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.sort_label') }}</span>
-              <span class="font-medium">{{ sortLabel(filters.sort) }}</span>
-            </li>
-            <li v-if="filters.priority === 'urgent'" class="flex justify-between gap-2">
-              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_priority') }}</span>
-              <span class="font-medium">{{ t('requests_page.filter_priority_urgent') }}</span>
-            </li>
-            <li v-if="filters.sla_risk_only" class="flex justify-between gap-2">
-              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.sla_toggle') }}</span>
-              <span class="font-medium">{{ t('requests_page.filter_on') }}</span>
-            </li>
-            <li v-if="filters.recurring_only" class="flex justify-between gap-2">
-              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.recurring_toggle') }}</span>
-              <span class="font-medium">{{ t('requests_page.filter_on') }}</span>
-            </li>
-            <li v-if="filters.extracurricular_only" class="flex justify-between gap-2">
-              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.extracurricular_toggle') }}</span>
-              <span class="font-medium">{{ t('requests_page.filter_on') }}</span>
-            </li>
-            <li v-if="filters.student_count_submitted === true" class="flex justify-between gap-2">
-              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_vis_student_count') }}</span>
-              <span class="font-medium">{{ t('requests_page.student_count_submitted_chip') }}</span>
-            </li>
-            <li v-if="filters.student_count_submitted === false" class="flex justify-between gap-2">
-              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_vis_student_count') }}</span>
-              <span class="font-medium">{{ t('requests_page.student_count_pending_chip') }}</span>
-            </li>
-            <li v-if="filters.per_page !== 10" class="flex justify-between gap-2">
-              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_per_page') }}</span>
-              <span class="font-medium">{{ filters.per_page }}</span>
-            </li>
-            <li v-if="activeFilterCount === 0" class="text-slate-400 dark:text-slate-500">
-              {{ t('requests_page.filter_menu_empty') }}
-            </li>
-          </ul>
-          <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
-            <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
-              {{ t('requests_page.filter_show_controls_title') }}
-            </p>
-            <p class="mt-1 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
-              {{ t('requests_page.filter_show_controls_hint') }}
-            </p>
-            <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
-              <li v-for="opt in filterBarVisibilityOptions" :key="'vis-' + opt.id" class="flex items-start gap-2">
-                <input
-                  :id="`requests-filter-vis-${opt.id}`"
-                  v-model="filterBarVisible[opt.id]"
-                  type="checkbox"
-                  class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900"
+                  class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-va-800 focus:ring-va-700/30"
+                  :data-testid="`requests-filter-vis-${fd.key}`"
                 />
                 <label
-                  :for="`requests-filter-vis-${opt.id}`"
+                  :for="`requests-filter-vis-${fd.key}`"
                   class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
                 >
-                  {{ t(opt.labelKey) }}
+                  {{ fd.label }}
                 </label>
               </li>
-            </ul>
+            </FilterVisibilityDropdown>
+
+            <div class="relative" data-requests-columns-panel>
+              <DatagridToolbarActionButton
+                icon="columns"
+                :active="showColumnsMenu"
+                test-id="requests-toolbar-columns"
+                @click="toggleColumnsMenu"
+              >
+                {{ t('requests_page.toolbar_columns') }}
+              </DatagridToolbarActionButton>
+              <div
+                v-if="showColumnsMenu"
+                class="absolute left-0 top-[calc(100%+6px)] z-50 min-w-[240px] rounded-xl border border-slate-200/90 bg-white p-3 text-sm shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+                @click.stop
+              >
+                <ul class="max-h-[min(50vh,320px)] space-y-2 overflow-y-auto text-slate-700 dark:text-slate-300">
+                  <li v-for="opt in requestColumnToggleOptions" :key="opt.id" class="flex items-center gap-2">
+                    <input
+                      :id="`req-col-${opt.id}`"
+                      type="checkbox"
+                      class="rounded border-slate-300 text-va-800 focus:ring-va-700/30"
+                      :checked="requestColumnVisible[opt.id] !== false"
+                      @change="setRequestColumn(opt.id, $event.target.checked)"
+                    />
+                    <label :for="`req-col-${opt.id}`" class="cursor-pointer text-xs">{{ t(opt.labelKey) }}</label>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="relative" data-requests-export-panel>
+              <DatagridToolbarActionButton
+                icon="export"
+                :disabled="exportingCsv || !(meta.total ?? 0)"
+                :active="showExportMenu"
+                test-id="requests-toolbar-export"
+                @click="toggleExportMenu"
+              >
+                {{ exportingCsv ? t('requests_page.export_csv_busy') : t('requests_page.toolbar_export') }}
+              </DatagridToolbarActionButton>
+              <div
+                v-if="showExportMenu"
+                class="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[200px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+              >
+                <button
+                  type="button"
+                  class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                  data-testid="requests-export-csv"
+                  @click="exportRequestsCsv(); showExportMenu = false"
+                >
+                  CSV
+                </button>
+              </div>
+            </div>
           </div>
-          <button
-            type="button"
-            class="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
-            @click="resetFilters(); closeFilterMenu()"
-          >
-            {{ t('requests_page.filter_clear_all') }}
-          </button>
-        </AppFilterFunnelMenu>
 
-        <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
-
-        <button
-          type="button"
-          class="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
-          :title="t('requests_page.filter_clear')"
-          @click="resetFilters"
-        >
-          <span class="relative inline-flex">
-            <FunnelIcon class="h-5 w-5" />
-            <XMarkIcon
-              class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/40"
-            />
-          </span>
-        </button>
-
-        <div class="ml-auto flex shrink-0 items-center">
-          <button
-            type="button"
-            class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-200 dark:hover:bg-slate-800"
-            :disabled="exportingCsv || !(meta.total ?? 0)"
-            :title="t('requests_page.export_csv_aria')"
-            :aria-label="t('requests_page.export_csv_aria')"
-            @click="exportRequestsCsv"
-          >
-            <ArrowDownTrayIcon
-              class="h-4 w-4 shrink-0 text-slate-500 dark:text-slate-400"
-              :class="exportingCsv ? 'animate-pulse' : ''"
-              aria-hidden="true"
-            />
-            <span class="hidden sm:inline">{{
-              exportingCsv ? t('requests_page.export_csv_busy') : t('requests_page.export_csv')
-            }}</span>
-          </button>
+          <div class="ml-auto flex shrink-0 items-center">
+            <button
+              type="button"
+              class="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-slate-800 dark:hover:bg-slate-800"
+              :title="t('requests_page.filter_clear_all')"
+              data-testid="requests-reset-filters"
+              @click="resetFilters"
+            >
+              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
+              <XMarkIcon class="h-3 w-3 text-rose-500" aria-hidden="true" />
+            </button>
+          </div>
         </div>
       </div>
 
       <div
-        v-if="hasVisibleBarFilters"
-        class="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-2 border-t border-violet-100/80 pt-2 dark:border-violet-900/30 sm:gap-x-3"
+        v-if="hasFilterRow"
+        class="grid grid-cols-1 gap-3 border-t border-slate-100 px-5 py-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 dark:border-slate-700"
       >
+        <DatagridFilterField v-if="visibleFilters.trip_type">
           <select
-            v-if="filterBarVisible.trip_type"
             v-model="filters.trip_type"
-            class="h-9 max-w-[min(100%,11rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-            :class="
-              filters.trip_type
-                ? 'text-slate-900 dark:text-slate-100'
-                : 'text-slate-600 dark:text-slate-400'
-            "
+            :class="FILTER_CONTROL_CLASS"
             :aria-label="t('requests_page.filter_trip_type')"
+            data-testid="requests-filter-trip-type"
             @change="onFilterChange"
           >
             <option v-for="opt in tripTypeFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
               {{ opt.label }}
             </option>
           </select>
+        </DatagridFilterField>
 
-          <AppFilterDropdown
-            v-if="filterBarVisible.depart"
-            :panel-title="t('requests_page.filter_depart_range')"
-            :show-chip-label="false"
-            :label="t('requests_page.filter_depart_range')"
-            :summary-text="filterDepartSummary"
-            :active="!!(filters.from || filters.to)"
-            :aria-label="t('requests_page.filter_depart_range')"
-            full-width-summary
-            panel-class="w-[min(100vw-1.5rem,320px)] p-3 sm:w-max"
-          >
-            <div class="flex flex-col gap-3">
-              <div class="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  class="rounded-md bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
-                  @click="applyDepartRangePreset('week', $event)"
-                >
-                  {{ t('requests_page.filter_depart_this_week') }}
-                </button>
-                <button
-                  type="button"
-                  class="rounded-md bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
-                  @click="applyDepartRangePreset('month', $event)"
-                >
-                  {{ t('requests_page.filter_depart_this_month') }}
-                </button>
-              </div>
-              <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <input
-                v-model="filters.from"
-                type="date"
-                class="h-9 w-full rounded-md border-0 bg-white px-2 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 sm:w-auto dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-                @change="onFilterDropdownChange"
-              />
-              <span class="hidden text-slate-300 dark:text-slate-600 sm:inline">—</span>
-              <input
-                v-model="filters.to"
-                type="date"
-                class="h-9 w-full rounded-md border-0 bg-white px-2 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 sm:w-auto dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-                @change="onFilterDropdownChange"
-              />
-              </div>
-            </div>
-          </AppFilterDropdown>
+        <div v-if="visibleFilters.date_range" class="min-w-0 w-full sm:col-span-2 xl:col-span-2">
+          <div class="mb-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              class="rounded-md bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100"
+              @click="applyDepartRangePreset('week')"
+            >
+              {{ t('requests_page.filter_depart_this_week') }}
+            </button>
+            <button
+              type="button"
+              class="rounded-md bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100"
+              @click="applyDepartRangePreset('month')"
+            >
+              {{ t('requests_page.filter_depart_this_month') }}
+            </button>
+          </div>
+          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
+            <FilterDatePicker
+              v-model="filters.from"
+              :placeholder="t('requests_page.filter_depart_range')"
+              :max-date="filters.to || null"
+              input-id="requests-filter-from"
+              @update:model-value="onFilterChange"
+            />
+            <FilterDatePicker
+              v-model="filters.to"
+              :placeholder="t('requests_page.filter_depart_range')"
+              :min-date="filters.from || null"
+              input-id="requests-filter-to"
+              @update:model-value="onFilterChange"
+            />
+          </div>
+        </div>
 
+        <DatagridFilterField v-if="visibleFilters.channel">
           <select
-            v-if="filterBarVisible.channel"
             v-model="filters.source_channel"
-            class="h-9 max-w-[min(100%,10rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-            :class="
-              filters.source_channel
-                ? 'text-slate-900 dark:text-slate-100'
-                : 'text-slate-600 dark:text-slate-400'
-            "
+            :class="FILTER_CONTROL_CLASS"
             :aria-label="t('requests_page.filter_channel')"
             @change="onFilterChange"
           >
@@ -381,16 +215,12 @@
               {{ opt.label }}
             </option>
           </select>
+        </DatagridFilterField>
 
+        <DatagridFilterField v-if="visibleFilters.paper">
           <select
-            v-if="filterBarVisible.paper"
             v-model="filters.paper_status"
-            class="h-9 max-w-[min(100%,11rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-            :class="
-              filters.paper_status
-                ? 'text-slate-900 dark:text-slate-100'
-                : 'text-slate-600 dark:text-slate-400'
-            "
+            :class="FILTER_CONTROL_CLASS"
             :aria-label="t('requests_page.filter_paper')"
             @change="onFilterChange"
           >
@@ -398,16 +228,12 @@
               {{ opt.label }}
             </option>
           </select>
+        </DatagridFilterField>
 
+        <DatagridFilterField v-if="visibleFilters.priority">
           <select
-            v-if="filterBarVisible.priority"
             v-model="filters.priority"
-            class="h-9 max-w-[min(100%,11rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-            :class="
-              filters.priority
-                ? 'text-slate-900 dark:text-slate-100'
-                : 'text-slate-600 dark:text-slate-400'
-            "
+            :class="FILTER_CONTROL_CLASS"
             :aria-label="t('requests_page.filter_priority')"
             @change="onFilterChange"
           >
@@ -415,16 +241,12 @@
               {{ opt.label }}
             </option>
           </select>
+        </DatagridFilterField>
 
+        <DatagridFilterField v-if="visibleFilters.request_status">
           <select
-            v-if="filterBarVisible.request_status"
             v-model="filters.request_status"
-            class="h-9 max-w-[min(100%,12rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-            :class="
-              filters.request_status
-                ? 'text-slate-900 dark:text-slate-100'
-                : 'text-slate-600 dark:text-slate-400'
-            "
+            :class="FILTER_CONTROL_CLASS"
             :aria-label="t('requests_page.filter_request_status')"
             @change="onRequestStatusFilterChange"
           >
@@ -432,16 +254,12 @@
               {{ opt.label }}
             </option>
           </select>
+        </DatagridFilterField>
 
+        <DatagridFilterField v-if="visibleFilters.trip_status">
           <select
-            v-if="filterBarVisible.trip_status"
             v-model="filters.trip_status_filter"
-            class="h-9 max-w-[min(100%,12rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-            :class="
-              filters.trip_status_filter
-                ? 'text-slate-900 dark:text-slate-100'
-                : 'text-slate-600 dark:text-slate-400'
-            "
+            :class="FILTER_CONTROL_CLASS"
             :aria-label="t('requests_page.filter_trip_status')"
             @change="onTripStatusFilterChange"
           >
@@ -449,34 +267,24 @@
               {{ opt.label }}
             </option>
           </select>
+        </DatagridFilterField>
 
-          <button
-            v-if="filterBarVisible.sla_risk"
-            type="button"
-            role="switch"
-            :aria-checked="filters.sla_risk_only"
-            class="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1.5 text-xs font-semibold shadow-sm transition sm:text-sm"
-            :class="
-              filters.sla_risk_only
-                ? 'border-amber-300 bg-amber-50 text-amber-950 ring-1 ring-amber-400/25 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-100'
-                : 'border-slate-200/90 bg-white/80 text-slate-600 hover:border-slate-300 hover:bg-white dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:bg-slate-800'
-            "
-            :title="t('requests_page.sla_toggle')"
-            @click="toggleSla"
-          >
-            <ExclamationTriangleIcon class="h-4 w-4 shrink-0 opacity-80" aria-hidden="true" />
-            {{ t('requests_page.sla_filter_chip') }}
-          </button>
-
+        <DatagridFilterField v-if="visibleFilters.sla_risk">
           <select
-            v-if="filterBarVisible.sort"
+            :value="filters.sla_risk_only ? '1' : ''"
+            :class="FILTER_CONTROL_CLASS"
+            :aria-label="t('requests_page.filter_vis_sla_risk')"
+            @change="onSlaRiskSelect($event.target.value)"
+          >
+            <option value="">{{ t('requests_page.filter_vis_sla_risk') }}</option>
+            <option value="1">{{ t('requests_page.sla_filter_chip') }}</option>
+          </select>
+        </DatagridFilterField>
+
+        <DatagridFilterField v-if="visibleFilters.sort">
+          <select
             :value="filters.sort"
-            class="h-9 max-w-[min(100%,11rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-            :class="
-              filters.sort && filters.sort !== 'created_desc'
-                ? 'text-slate-900 dark:text-slate-100'
-                : 'text-slate-600 dark:text-slate-400'
-            "
+            :class="FILTER_CONTROL_CLASS"
             :aria-label="t('requests_page.sort_label')"
             @change="onSortChange($event.target.value)"
           >
@@ -484,12 +292,12 @@
               {{ opt.label }}
             </option>
           </select>
+        </DatagridFilterField>
 
+        <DatagridFilterField v-if="visibleFilters.per_page">
           <select
-            v-if="filterBarVisible.per_page"
             v-model.number="filters.per_page"
-            class="h-9 max-w-[min(100%,9rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-            :class="filters.per_page !== 10 ? 'text-slate-900 dark:text-slate-100' : 'text-slate-600 dark:text-slate-400'"
+            :class="FILTER_CONTROL_CLASS"
             :aria-label="t('requests_page.filter_per_page')"
             @change="onFilterChange"
           >
@@ -497,12 +305,12 @@
               {{ opt.label }}
             </option>
           </select>
+        </DatagridFilterField>
 
+        <DatagridFilterField v-if="visibleFilters.recurring">
           <select
-            v-if="filterBarVisible.recurring"
             :value="filters.recurring_only ? '1' : ''"
-            class="h-9 max-w-[min(100%,12rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-            :class="filters.recurring_only ? 'text-slate-900 dark:text-slate-100' : 'text-slate-600 dark:text-slate-400'"
+            :class="FILTER_CONTROL_CLASS"
             :aria-label="t('requests_page.filter_vis_recurring')"
             @change="onRecurringFilterSelect($event.target.value)"
           >
@@ -510,12 +318,12 @@
               {{ opt.label }}
             </option>
           </select>
+        </DatagridFilterField>
 
+        <DatagridFilterField v-if="visibleFilters.extracurricular">
           <select
-            v-if="filterBarVisible.extracurricular"
             :value="extracurricularFilterSelectValue"
-            class="h-9 max-w-[min(100%,12rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-            :class="filters.extracurricular_only ? 'text-slate-900 dark:text-slate-100' : 'text-slate-600 dark:text-slate-400'"
+            :class="FILTER_CONTROL_CLASS"
             :aria-label="t('requests_page.filter_vis_extracurricular')"
             @change="onExtracurricularFilterSelect($event.target.value)"
           >
@@ -523,16 +331,12 @@
               {{ opt.label }}
             </option>
           </select>
+        </DatagridFilterField>
 
+        <DatagridFilterField v-if="visibleFilters.student_count && filters.extracurricular_only">
           <select
-            v-if="filterBarVisible.student_count && filters.extracurricular_only"
             :value="studentCountFilterSelectValue"
-            class="h-9 max-w-[min(100%,12rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-            :class="
-              filters.student_count_submitted === true || filters.student_count_submitted === false
-                ? 'text-slate-900 dark:text-slate-100'
-                : 'text-slate-600 dark:text-slate-400'
-            "
+            :class="FILTER_CONTROL_CLASS"
             :aria-label="t('requests_page.filter_vis_student_count')"
             @change="onStudentCountFilterSelect($event.target.value)"
           >
@@ -540,8 +344,16 @@
               {{ opt.label }}
             </option>
           </select>
+        </DatagridFilterField>
+
+        <div v-if="activeFilterCount > 0" class="col-span-full flex justify-end">
+          <button type="button" class="text-xs font-medium text-va-800 hover:underline" @click="resetFilters">
+            {{ t('requests_page.filter_clear_all') }}
+          </button>
+        </div>
       </div>
-    </AppFilterBar>
+    </div>
+
 
     <!-- Status tabs -->
     <div class="-mx-1 overflow-x-auto pb-1">
@@ -603,20 +415,6 @@
               {{ t('requests_page.bulk_force_delete') }}
             </button>
           </template>
-        </div>
-        <div class="ml-auto flex flex-wrap items-center justify-end gap-2">
-          <label class="flex items-center gap-1.5 text-xs text-slate-600">
-            <span class="hidden sm:inline">{{ t('requests_page.sort_label') }}</span>
-            <select
-              :value="filters.sort"
-              class="h-9 max-w-[11rem] rounded-md border-0 bg-white px-2 text-xs font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-              @change="onSortChange($event.target.value)"
-            >
-              <option v-for="opt in sortSelectOptions" :key="opt.value" :value="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
-          </label>
         </div>
       </div>
 
@@ -1059,16 +857,11 @@ import {
   ArrowPathIcon,
   TrashIcon,
   CheckCircleIcon,
-  ChevronDownIcon,
-  ClockIcon,
   ExclamationTriangleIcon,
   FunnelIcon,
-  MagnifyingGlassIcon,
   MapPinIcon,
   PencilSquareIcon,
   PlusIcon,
-  RectangleStackIcon,
-  ClipboardDocumentCheckIcon,
   ViewColumnsIcon,
   XMarkIcon,
   AcademicCapIcon,
@@ -1077,9 +870,12 @@ import {
 import Button from '../../components/ui/Button.vue'
 import AppRowActionsMenu from '../../components/ui/AppRowActionsMenu.vue'
 import StatusBadge from '../../components/ui/StatusBadge.vue'
-import AppFilterBar from '../../components/filters/AppFilterBar.vue'
-import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
-import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vue'
+import RequestsSummaryBar from '../../components/requests/RequestsSummaryBar.vue'
+import DatagridToolbarSearch from '../../components/shared/ui/DatagridToolbarSearch.vue'
+import DatagridToolbarActionButton from '../../components/shared/ui/DatagridToolbarActionButton.vue'
+import DatagridFilterField from '../../components/shared/ui/DatagridFilterField.vue'
+import FilterVisibilityDropdown from '../../components/shared/ui/FilterVisibilityDropdown.vue'
+import FilterDatePicker from '../../components/shared/ui/FilterDatePicker.vue'
 import {
   bulkForceDeleteRequests,
   bulkRestoreRequests,
@@ -1088,9 +884,9 @@ import {
   listRequests,
 } from '../../api/requests'
 import ExtracurricularRequestsDataTable from '../../components/requests/ExtracurricularRequestsDataTable.vue'
-import { showAppError, showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
+import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
 import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
-import { useFilterBarVisibility } from '../../composables/useFilterBarVisibility.js'
+import { useVisibleFilterControls } from '../../composables/useVisibleFilterControls.js'
 import { useAuthStore } from '../../store'
 import {
   labelPaperStatus,
@@ -1128,7 +924,106 @@ const stats = ref({
 const activeTab = ref('all')
 const searchInput = ref('')
 let searchDebounce = null
-const filterMenuRef = ref(null)
+const FILTER_CONTROL_CLASS =
+  'h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm focus:border-va-700 focus:outline-none focus:ring-2 focus:ring-va-700/15 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100'
+
+const REQUEST_FILTER_CONTROLS = [
+  { key: 'trip_type', label: '', default: false },
+  { key: 'date_range', label: '', default: false },
+  { key: 'channel', label: '', default: false },
+  { key: 'paper', label: '', default: false },
+  { key: 'priority', label: '', default: false },
+  { key: 'request_status', label: '', default: false },
+  { key: 'trip_status', label: '', default: false },
+  { key: 'sla_risk', label: '', default: false },
+  { key: 'sort', label: '', default: false },
+  { key: 'per_page', label: '', default: false },
+  { key: 'recurring', label: '', default: false },
+  { key: 'extracurricular', label: '', default: false },
+  { key: 'student_count', label: '', default: false },
+]
+
+const {
+  visibleFilters,
+  hasFilterRow,
+  showFilterPanelDd,
+  openFilterPanel,
+  closeFilterPanel,
+} = useVisibleFilterControls(REQUEST_FILTER_CONTROLS, 'va-dieuvan.requests.visible-filters.v1')
+
+const FILTER_CONTROL_LABEL_KEYS = {
+  trip_type: 'requests_page.filter_vis_trip_type',
+  date_range: 'requests_page.filter_vis_depart',
+  channel: 'requests_page.filter_vis_channel',
+  paper: 'requests_page.filter_vis_paper',
+  priority: 'requests_page.filter_vis_priority',
+  request_status: 'requests_page.filter_vis_request_status',
+  trip_status: 'requests_page.filter_vis_trip_status',
+  sla_risk: 'requests_page.filter_vis_sla_risk',
+  sort: 'requests_page.filter_vis_sort',
+  per_page: 'requests_page.filter_vis_per_page',
+  recurring: 'requests_page.filter_vis_recurring',
+  extracurricular: 'requests_page.filter_vis_extracurricular',
+  student_count: 'requests_page.filter_vis_student_count',
+}
+
+const filterControlDefs = computed(() =>
+  REQUEST_FILTER_CONTROLS.map((fd) => ({
+    ...fd,
+    label: t(FILTER_CONTROL_LABEL_KEYS[fd.key] ?? fd.key),
+  })),
+)
+
+const showColumnsMenu = ref(false)
+const showExportMenu = ref(false)
+const requestsDatagridRef = ref(null)
+useDetailsAutoCloseWithin(requestsDatagridRef)
+
+function closeToolbarMenusExceptFilter() {
+  showColumnsMenu.value = false
+  showExportMenu.value = false
+}
+
+function toggleColumnsMenu() {
+  showExportMenu.value = false
+  closeFilterPanel()
+  showColumnsMenu.value = !showColumnsMenu.value
+}
+
+function toggleExportMenu() {
+  showColumnsMenu.value = false
+  closeFilterPanel()
+  showExportMenu.value = !showExportMenu.value
+}
+
+function onDatagridDocMouseDown(ev) {
+  const t = ev.target
+  if (!t || typeof t.closest !== 'function') return
+  if (t.closest('[data-requests-columns-panel]')) return
+  if (t.closest('[data-requests-export-panel]')) return
+  showColumnsMenu.value = false
+  showExportMenu.value = false
+}
+
+function onKpiQuickFilter({ tab, sla }) {
+  filters.sla_risk_only = !!sla
+  filters.request_status = ''
+  filters.trip_status_filter = ''
+  if (tab && tab !== activeTab.value) {
+    setTab(tab)
+  } else if (sla) {
+    filters.page = 1
+    syncRoutePageAfterReset()
+    reload()
+  } else if (tab === 'all' && activeTab.value !== 'all') {
+    setTab('all')
+  }
+}
+
+function onSlaRiskSelect(raw) {
+  filters.sla_risk_only = raw === '1'
+  onFilterChange()
+}
 const canBulkTrash = computed(
   () =>
     auth.hasPermission('trip.view_all') ||
@@ -1143,54 +1038,6 @@ const bulkSubmitting = ref(false)
 const bulkConfirmOpen = ref(false)
 /** @type {import('vue').Ref<'delete' | 'restore' | 'force_delete' | null>} */
 const bulkConfirmKind = ref(null)
-const columnPickerRef = ref(null)
-const requestsFilterBarRef = ref(null)
-useDetailsAutoCloseWithin(requestsFilterBarRef)
-
-const REQUEST_FILTER_BAR_VIS_IDS = [
-  'trip_type',
-  'depart',
-  'channel',
-  'paper',
-  'priority',
-  'request_status',
-  'trip_status',
-  'sla_risk',
-  'sort',
-  'per_page',
-  'recurring',
-  'extracurricular',
-  'student_count',
-]
-const REQUEST_FILTER_BAR_VIS_DEFAULTS = Object.fromEntries(
-  REQUEST_FILTER_BAR_VIS_IDS.map((id) => [id, false]),
-)
-
-const {
-  visible: filterBarVisible,
-  resetVisibility: resetFilterBarVisibility,
-  hasVisibleOnBar: hasVisibleBarFilters,
-} = useFilterBarVisibility(REQUEST_FILTER_BAR_VIS_IDS, REQUEST_FILTER_BAR_VIS_DEFAULTS)
-
-function onRequestsFilterBarEnter() {
-  resetFilterBarVisibility()
-}
-
-const filterBarVisibilityOptions = computed(() => [
-  { id: 'trip_type', labelKey: 'requests_page.filter_vis_trip_type' },
-  { id: 'depart', labelKey: 'requests_page.filter_vis_depart' },
-  { id: 'channel', labelKey: 'requests_page.filter_vis_channel' },
-  { id: 'paper', labelKey: 'requests_page.filter_vis_paper' },
-  { id: 'priority', labelKey: 'requests_page.filter_vis_priority' },
-  { id: 'request_status', labelKey: 'requests_page.filter_vis_request_status' },
-  { id: 'trip_status', labelKey: 'requests_page.filter_vis_trip_status' },
-  { id: 'sla_risk', labelKey: 'requests_page.filter_vis_sla_risk' },
-  { id: 'sort', labelKey: 'requests_page.filter_vis_sort' },
-  { id: 'per_page', labelKey: 'requests_page.filter_vis_per_page' },
-  { id: 'recurring', labelKey: 'requests_page.filter_vis_recurring' },
-  { id: 'extracurricular', labelKey: 'requests_page.filter_vis_extracurricular' },
-  { id: 'student_count', labelKey: 'requests_page.filter_vis_student_count' },
-])
 
 const REQUEST_TRIP_STATUS_FILTER_VALUES = [
   'pending',
@@ -1399,13 +1246,6 @@ const emptyStateShowReset = computed(
   () => !loading.value && !items.value.length && activeFilterCount.value > 0,
 )
 
-const sortSelectOptions = computed(() =>
-  REQUEST_SORT_VALUES.map((value) => ({
-    value,
-    label: sortLabel(value),
-  })),
-)
-
 const sortSelectOptionsWithLabel = computed(() => [
   { value: 'created_desc', label: t('requests_page.sort_label') },
   ...REQUEST_SORT_VALUES.filter((v) => v !== 'created_desc').map((value) => ({
@@ -1512,11 +1352,6 @@ async function exportRequestsCsv() {
   }
 }
 
-const filterDepartSummary = computed(() => {
-  if (!filters.from && !filters.to) return t('requests_page.filter_depart_range')
-  return `${filters.from || '…'} → ${filters.to || '…'}`
-})
-
 const tripTypeFilterOptions = computed(() => [
   { value: '', label: t('requests_page.filter_trip_type') },
   { value: 'door_to_door', label: labelTripType('door_to_door') },
@@ -1596,11 +1431,6 @@ const tabDefs = computed(() => [
   { id: 'trash', label: t('requests_page.tab_trash') },
 ])
 
-const activeTabSummaryLabel = computed(() => {
-  const d = tabDefs.value.find((x) => x.id === activeTab.value)
-  return d ? d.label : activeTab.value
-})
-
 function buildRouteQueryFromState() {
   const out = {}
   const id = activeTab.value
@@ -1621,21 +1451,6 @@ function buildRouteQueryFromState() {
 
   return out
 }
-
-const approvalPendingCount = computed(() => Number(stats.value.by_status?.pending ?? 0))
-const approvalApprovedCount = computed(() => Number(stats.value.by_status?.approved ?? 0))
-const pendingShareOfTotalPct = computed(() => {
-  const t = stats.value.total || 0
-  const p = approvalPendingCount.value
-  if (t <= 0) return 0
-  return Math.min(100, Math.round((p / t) * 100))
-})
-const approvedShareOfTotalPct = computed(() => {
-  const t = stats.value.total || 0
-  const a = approvalApprovedCount.value
-  if (t <= 0) return 0
-  return Math.min(100, Math.round((a / t) * 100))
-})
 
 const pageFrom = computed(() => {
   const cur = meta.value.current_page ?? 1
@@ -1665,12 +1480,6 @@ const pageNumbers = computed(() => {
 
 function formatInt(n) {
   return new Intl.NumberFormat('vi-VN').format(n ?? 0)
-}
-
-function trendLabel(pct) {
-  if (pct > 0) return t('requests_page.trend_up', { pct })
-  if (pct < 0) return t('requests_page.trend_down', { pct: Math.abs(pct) })
-  return t('requests_page.trend_flat')
 }
 
 function formatShortDate(v) {
@@ -1863,18 +1672,6 @@ function onStudentCountFilterSelect(raw) {
   reload()
 }
 
-function closeParentDetails(ev) {
-  const el = ev?.target
-  if (!el || typeof el.closest !== 'function') return
-  const d = el.closest('details')
-  if (d) d.open = false
-}
-
-function onFilterDropdownChange(ev) {
-  closeParentDetails(ev)
-  onFilterChange()
-}
-
 function isoDateLocal(d) {
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
@@ -1882,7 +1679,7 @@ function isoDateLocal(d) {
   return `${y}-${m}-${day}`
 }
 
-function applyDepartRangePreset(kind, ev) {
+function applyDepartRangePreset(kind) {
   const now = new Date()
   if (kind === 'week') {
     const day = now.getDay()
@@ -1899,12 +1696,7 @@ function applyDepartRangePreset(kind, ev) {
     filters.from = isoDateLocal(first)
     filters.to = isoDateLocal(last)
   }
-  closeParentDetails(ev)
   onFilterChange()
-}
-
-function closeFilterMenu() {
-  filterMenuRef.value?.close?.()
 }
 
 async function reload() {
@@ -2062,6 +1854,7 @@ function resetFilters() {
   filters.sla_risk_only = false
   filters.recurring_only = false
   filters.extracurricular_only = false
+  filters.student_count_submitted = undefined
   filters.per_page = 10
   filters.page = 1
   filters.sort = 'created_desc'
@@ -2113,8 +1906,15 @@ function onSearchInput() {
     const hadPage = !!route.query.page
     syncRoutePageAfterReset()
     if (!hadPage) reload()
-  }, 400)
+  }, 350)
 }
+
+watch(
+  searchInput,
+  () => {
+    onSearchInput()
+  },
+)
 
 watch(
   () => route.query,
@@ -2126,16 +1926,17 @@ watch(
 )
 
 onMounted(() => {
-  onRequestsFilterBarEnter()
+  document.addEventListener('mousedown', onDatagridDocMouseDown)
   applyRouteQuery()
   reload()
 })
 
 onActivated(() => {
-  onRequestsFilterBarEnter()
+  applyRouteQuery()
 })
 
 onUnmounted(() => {
+  document.removeEventListener('mousedown', onDatagridDocMouseDown)
   if (searchDebounce) clearTimeout(searchDebounce)
 })
 </script>

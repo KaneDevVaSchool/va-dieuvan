@@ -46,6 +46,8 @@
     },
     "dependencies": {
         "@heroicons/vue": "^2.2.0",
+        "@vuepic/vue-datepicker": "^14.0.0",
+        "date-fns": "^4.4.0",
         "echarts": "^6.0.0",
         "exceljs": "^4.4.0",
         "file-saver": "^2.0.5",
