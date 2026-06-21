@@ -49,6 +49,9 @@
                 :requester-name="requesterName"
                 :requester-unit="requesterSubtitle"
                 :requester-initials="requesterInitials"
+                :requester-avatar-url="requesterAvatarUrl"
+                :is-urgent="!!trip.dispatch_request?.is_urgent"
+                :meta-pills="heroMetaPills"
                 :created-date="fmt(trip.created_at)"
                 :can-approve="canAssign"
                 :can-reject="canRejectTripFromHeader"
@@ -176,7 +179,6 @@
                 <div v-show="activeTab === 'info'" class="space-y-4">
                     <TripInfoCard
                         :trip="trip"
-                        :passenger-count="unifiedPassengerCount"
                         :schedule-date-long="scheduleDateLong"
                         :schedule-depart-time="scheduleDepartTime"
                         :schedule-arrive-time="scheduleArriveTime"
@@ -184,14 +186,8 @@
                         :schedule-time-range="scheduleTimeRange"
                         :schedule-duration="scheduleDuration"
                         :schedule-mismatch-notes="scheduleMismatchNotes"
-                        :estimated-distance-label="estimatedDistanceLabel"
-                        :estimated-cost-label="estimatedCostLabel"
                         :schedule-card="routeInfoScheduleCard"
                         :schedule-leg-count="scheduleCount"
-                        :requester-initials="requesterInitials"
-                        :requester-name="requesterName"
-                        :requester-subtitle="requesterSubtitle"
-                        :trip-type-label="tripTypeLabel"
                         :sla-banner="slaBanner"
                         :step-pickup="stepPickup"
                         :step-dropoff="stepDropoff"
@@ -1539,6 +1535,50 @@ const heroPassengerLine = computed(() => {
     const n = unifiedPassengerCount.value;
     if (!n) return "";
     return t("trip_detail.schedules.total_guests_value", { n });
+});
+
+const requesterAvatarUrl = computed(
+    () => trip.value?.dispatch_request?.requester?.avatar_url?.trim() || "",
+);
+
+const heroMetaPills = computed(() => {
+    const pills = [];
+    const tr = trip.value;
+    const dr = tr?.dispatch_request;
+    if (tr?.dispatcher?.name) {
+        pills.push({
+            key: "dispatcher",
+            text: t("trip_detail.meta.dispatcher", {
+                name: tr.dispatcher.name,
+            }),
+            className: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200",
+        });
+    }
+    if (dr?.source_channel) {
+        pills.push({
+            key: "source",
+            text: t("trip_detail.meta.source", { ch: dr.source_channel }),
+            className:
+                "bg-indigo-50 text-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-200",
+        });
+    }
+    if (dr?.paper_status && dr.paper_status !== "pending") {
+        pills.push({
+            key: "paper",
+            text: t("trip_detail.meta.paper", { st: dr.paper_status }),
+            className:
+                "bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200",
+        });
+    }
+    if (tr?.payment_status === "paid") {
+        pills.push({
+            key: "paid",
+            text: t("trip_detail.meta.paid"),
+            className:
+                "bg-emerald-100 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200",
+        });
+    }
+    return pills;
 });
 
 watch(

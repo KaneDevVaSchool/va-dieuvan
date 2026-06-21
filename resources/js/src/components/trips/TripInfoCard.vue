@@ -21,7 +21,6 @@ type ScheduleCard = {
 
 const props = defineProps<{
     trip: Record<string, any>;
-    passengerCount: number;
     scheduleDateLong: string;
     scheduleDepartTime: string;
     scheduleArriveTime: string;
@@ -29,14 +28,8 @@ const props = defineProps<{
     scheduleTimeRange: string;
     scheduleDuration: string;
     scheduleMismatchNotes: string[];
-    estimatedDistanceLabel: string;
-    estimatedCostLabel: string;
     scheduleCard: ScheduleCard;
     scheduleLegCount: number;
-    requesterInitials: string;
-    requesterName: string;
-    requesterSubtitle: string;
-    tripTypeLabel: string;
     slaBanner: SlaBanner;
     stepPickup: Step;
     stepDropoff: Step;
@@ -120,112 +113,34 @@ const embeddedReturnDateShort = computed(() => {
     });
 });
 
-const showFinanceBlock = computed(
-    () =>
-        !!props.estimatedDistanceLabel?.trim() ||
-        !!props.estimatedCostLabel?.trim(),
-);
-
-const metaPills = computed(() => {
-    const pills: { key: string; text: string; className: string }[] = [];
-    const dr = props.trip.dispatch_request;
-    if (props.trip.dispatcher?.name) {
-        pills.push({
-            key: "dispatcher",
-            text: t("trip_detail.meta.dispatcher", {
-                name: props.trip.dispatcher.name,
-            }),
-            className: "bg-slate-100 text-slate-800",
-        });
-    }
-    if (dr?.source_channel) {
-        pills.push({
-            key: "source",
-            text: t("trip_detail.meta.source", { ch: dr.source_channel }),
-            className: "bg-indigo-50 text-indigo-900",
-        });
-    }
-    if (dr?.paper_status && dr.paper_status !== "pending") {
-        pills.push({
-            key: "paper",
-            text: t("trip_detail.meta.paper", { st: dr.paper_status }),
-            className: "bg-amber-50 text-amber-900",
-        });
-    }
-    if (props.trip.payment_status === "paid") {
-        pills.push({
-            key: "paid",
-            text: t("trip_detail.meta.paid"),
-            className: "bg-emerald-100 text-emerald-900",
-        });
-    }
-    return pills;
+const hasFallbackScheduleBody = computed(() => {
+    if (hasEmbeddedSchedule.value || hasMultipleSchedules.value) return false;
+    return !!(
+        props.scheduleDateLong?.trim() ||
+        props.scheduleDepartTime ||
+        props.scheduleArriveTime ||
+        pickupPlace.value ||
+        dropoffPlace.value
+    );
 });
+
+const showSection = computed(
+    () =>
+        !!props.slaBanner ||
+        hasEmbeddedSchedule.value ||
+        hasFallbackScheduleBody.value,
+);
 </script>
 
 <template>
     <section
+        v-if="showSection"
         class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-3.5 text-[13px] shadow-sm sm:p-4"
-        :aria-label="t('trip_detail.overview.title')"
+        :aria-label="t('trip_detail.sections.schedule')"
     >
-        <div class="flex min-w-0 items-center gap-3">
-                <div
-                    class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-sm font-bold text-slate-700 ring-2 ring-white dark:bg-slate-800 dark:text-slate-200"
-                >
-                    <img
-                        v-if="trip.dispatch_request?.requester?.avatar_url"
-                        :src="trip.dispatch_request.requester.avatar_url"
-                        alt=""
-                        class="h-full w-full object-cover"
-                    />
-                    <span v-else>{{ requesterInitials }}</span>
-                </div>
-                <div class="min-w-0">
-                    <div
-                        v-if="requesterName"
-                        class="truncate font-semibold text-slate-900"
-                    >
-                        {{ requesterName }}
-                    </div>
-                    <div
-                        v-if="requesterSubtitle"
-                        class="truncate text-[12px] text-slate-600"
-                    >
-                        {{ requesterSubtitle }}
-                    </div>
-                    <div class="mt-1 flex flex-wrap items-center gap-1.5">
-                        <span
-                            class="inline-flex items-center rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-medium text-violet-800 ring-1 ring-violet-100"
-                        >
-                            {{ tripTypeLabel }}
-                        </span>
-                        <span
-                            v-if="trip.dispatch_request?.is_urgent"
-                            class="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-medium text-rose-700 ring-1 ring-rose-100"
-                        >
-                            <span
-                                class="h-1.5 w-1.5 rounded-full bg-rose-500"
-                                aria-hidden="true"
-                            />
-                            {{ t("trip_detail.high_priority") }}
-                        </span>
-                        <span
-                            v-if="passengerCount > 0"
-                            class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-slate-800"
-                        >
-                            {{
-                                t("trip_detail.schedules.total_guests_value", {
-                                    n: passengerCount,
-                                })
-                            }}
-                        </span>
-                    </div>
-                </div>
-        </div>
-
         <div
             v-if="slaBanner"
-            class="mt-3 rounded-xl border px-3 py-2 text-[12px] font-medium"
+            class="rounded-xl border px-3 py-2 text-[12px] font-medium"
             :class="
                 slaBanner.kind === 'overdue'
                     ? 'border-rose-200 bg-rose-50 text-rose-900'
@@ -235,24 +150,11 @@ const metaPills = computed(() => {
             {{ slaBanner.text }}
         </div>
 
-        <div
-            v-if="metaPills.length"
-            class="mt-2.5 flex flex-wrap gap-1.5 print:hidden"
-        >
-            <span
-                v-for="pill in metaPills"
-                :key="pill.key"
-                class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium"
-                :class="pill.className"
-            >
-                {{ pill.text }}
-            </span>
-        </div>
-
         <!-- Một lịch: tuyến + khung giờ đầy đủ (từ wizard) -->
         <div
             v-if="hasEmbeddedSchedule"
-            class="mt-4 overflow-hidden rounded-xl border border-slate-200/80 bg-slate-50/50"
+            class="overflow-hidden rounded-xl border border-slate-200/80 bg-slate-50/50"
+            :class="slaBanner ? 'mt-3' : ''"
         >
             <div
                 class="flex flex-wrap items-center gap-2 border-b border-slate-200/60 bg-white px-3 py-2"
@@ -340,21 +242,11 @@ const metaPills = computed(() => {
             </ul>
         </div>
 
-        <p
-            v-else-if="hasMultipleSchedules"
-            class="mt-4 rounded-lg bg-slate-50 px-3 py-2 text-[12px] text-slate-600"
-        >
-            {{
-                t("trip_detail.overview.multi_schedule_hint", {
-                    n: scheduleLegCount,
-                })
-            }}
-        </p>
-
         <!-- Không có lịch wizard: giờ cấp chuyến + tuyến -->
         <div
-            v-else
-            class="mt-4 space-y-3 rounded-xl border border-slate-200/80 bg-slate-50/50 p-3"
+            v-else-if="hasFallbackScheduleBody"
+            class="space-y-3 rounded-xl border border-slate-200/80 bg-slate-50/50 p-3"
+            :class="slaBanner ? 'mt-3' : ''"
         >
             <div
                 v-if="scheduleDateLong"
@@ -441,36 +333,6 @@ const metaPills = computed(() => {
                     </p>
                 </div>
             </div>
-        </div>
-
-        <div
-            v-if="showFinanceBlock"
-            class="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1 rounded-lg border border-slate-100 bg-white px-3 py-2"
-        >
-            <span
-                class="w-full text-[10px] font-bold uppercase tracking-wide text-slate-500"
-            >
-                {{ t("trip_detail.overview.finance_section") }}
-            </span>
-            <p
-                v-if="estimatedDistanceLabel"
-                class="text-[12px] text-slate-700"
-            >
-                <span class="text-slate-500"
-                    >{{ t("trip_detail.overview.est_distance") }}:</span
-                >
-                <span class="ml-1 font-semibold tabular-nums text-slate-900">{{
-                    estimatedDistanceLabel
-                }}</span>
-            </p>
-            <p v-if="estimatedCostLabel" class="text-[12px] text-slate-700">
-                <span class="text-slate-500"
-                    >{{ t("trip_detail.overview.est_cost") }}:</span
-                >
-                <span class="ml-1 font-semibold tabular-nums text-slate-900">{{
-                    estimatedCostLabel
-                }}</span>
-            </p>
         </div>
     </section>
 </template>

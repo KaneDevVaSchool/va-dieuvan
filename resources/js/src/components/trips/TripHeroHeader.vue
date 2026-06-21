@@ -123,9 +123,18 @@
           <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
             {{ $t('trip_detail.header.lbl_trip_type') }}
           </p>
-          <p class="mt-0.5 text-sm font-semibold text-slate-900 dark:text-white">
-            {{ tripType || empty }}
-          </p>
+          <div class="mt-0.5 flex flex-wrap items-center gap-1.5">
+            <p class="text-sm font-semibold text-slate-900 dark:text-white">
+              {{ tripType || empty }}
+            </p>
+            <span
+              v-if="isUrgent"
+              class="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-700 ring-1 ring-rose-100 dark:bg-rose-950/50 dark:text-rose-200 dark:ring-rose-900/60"
+            >
+              <span class="h-1.5 w-1.5 rounded-full bg-rose-500" aria-hidden="true" />
+              {{ $t('trip_detail.high_priority') }}
+            </span>
+          </div>
         </div>
         <div v-if="passengerLine" class="col-span-2 mt-2 sm:col-span-1 sm:mt-0">
           <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
@@ -138,16 +147,27 @@
       </div>
 
       <!-- ── Row 4: Requester / Unit / Created ── -->
-      <div class="grid grid-cols-2 gap-x-4 py-3 sm:grid-cols-3">
+      <div
+        class="grid grid-cols-2 gap-x-4 border-b border-slate-100 py-3 dark:border-slate-800 sm:grid-cols-3"
+        :class="metaPills.length ? '' : 'border-b-0'"
+      >
         <div>
           <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
             {{ $t('trip_detail.header.lbl_requester') }}
           </p>
           <div class="mt-0.5 flex items-center gap-1.5">
             <div
-              class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-va-100 text-[9px] font-bold text-va-700 dark:bg-va-900/50 dark:text-va-300"
+              class="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-va-100 text-[9px] font-bold text-va-700 dark:bg-va-900/50 dark:text-va-300"
               aria-hidden="true"
-            >{{ requesterInitials }}</div>
+            >
+              <img
+                v-if="requesterAvatarUrl"
+                :src="requesterAvatarUrl"
+                alt=""
+                class="h-full w-full object-cover"
+              />
+              <span v-else>{{ requesterInitials }}</span>
+            </div>
             <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ requesterName || empty }}</p>
           </div>
         </div>
@@ -164,6 +184,21 @@
           <p class="mt-0.5 text-sm tabular-nums text-slate-700 dark:text-slate-300">{{ createdDate || empty }}</p>
         </div>
       </div>
+
+      <div
+        v-if="metaPills.length"
+        class="flex flex-wrap gap-1.5 py-2.5 print:hidden"
+        data-testid="trip-detail-header-meta"
+      >
+        <span
+          v-for="pill in metaPills"
+          :key="pill.key"
+          class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium"
+          :class="pill.className"
+        >
+          {{ pill.text }}
+        </span>
+      </div>
     </div>
   </header>
 </template>
@@ -179,6 +214,12 @@ import {
 import { useI18n } from 'vue-i18n'
 import { labelTripStatus } from '../../util/labels'
 
+export type TripHeroMetaPill = {
+  key: string
+  text: string
+  className: string
+}
+
 const props = defineProps<{
   displayCode?: string | null
   status?: string
@@ -192,6 +233,9 @@ const props = defineProps<{
   requesterName?: string
   requesterUnit?: string
   requesterInitials?: string
+  requesterAvatarUrl?: string | null
+  isUrgent?: boolean
+  metaPills?: TripHeroMetaPill[]
   createdDate?: string
   canApprove?: boolean
   canReject?: boolean
@@ -208,6 +252,8 @@ defineEmits<{
 
 const { t } = useI18n()
 const empty = computed(() => t('trip_detail.empty.not_available'))
+
+const metaPills = computed(() => props.metaPills ?? [])
 
 const countdownLabel = computed(() => props.countdownLabel?.trim() || '')
 
