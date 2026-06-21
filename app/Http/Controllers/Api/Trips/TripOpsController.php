@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Trips;
 use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Trips\AddTripEventRequest;
+use App\Http\Requests\Api\Trips\DeleteTripEventRequest;
 use App\Http\Requests\Api\Trips\UpdateTripStatusRequest;
 use App\Http\Requests\Api\Trips\UpsertTripRecordRequest;
 use App\Models\Driver;
@@ -159,6 +160,31 @@ class TripOpsController extends Controller
         );
 
         return $this->created($event);
+    }
+
+    public function deleteEvent(DeleteTripEventRequest $request, Trip $trip, TripEvent $tripEvent)
+    {
+        abort_unless(TripVisibility::userCanViewTrip($request->user(), $trip), 403);
+        abort_unless((int) $tripEvent->trip_id === (int) $trip->id, 404);
+        abort_unless($tripEvent->type === 'note', 422, 'Chỉ được xóa ghi chú điều vận.');
+
+        $user = $request->user();
+        $before = $tripEvent->toArray();
+
+        DB::transaction(function () use ($trip, $tripEvent, $user, $before) {
+            $tripEvent->delete();
+
+            app(AuditLogger::class)->log(
+                actorId: $user->id,
+                event: 'trip.event.delete',
+                auditable: $trip,
+                before: $before,
+                after: null,
+                metadata: ['event_id' => $before['id'] ?? null, 'type' => 'note'],
+            );
+        });
+
+        return $this->ok(['deleted' => true]);
     }
 
     public function upsertRecord(UpsertTripRecordRequest $request, Trip $trip)

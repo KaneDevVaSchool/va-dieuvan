@@ -113,6 +113,8 @@ const staffChildRoutes = [
             title: "Chi tiết chuyến",
             subtitle: "",
             featureKey: "module.operations",
+            /** Full-bleed trong #app-main-scroll — cuộn trên TripDetailView. */
+            mainFlush: true,
         },
     },
     {

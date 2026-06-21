@@ -68,6 +68,11 @@ export async function addTripEvent(tripId, payload) {
   return data.data
 }
 
+export async function deleteTripEvent(tripId, eventId) {
+  const { data } = await http.delete(`/trips/${tripId}/events/${eventId}`)
+  return data.data
+}
+
 export async function updateTripPassengerList(tripId, payload) {
   const { data } = await http.patch(`/trips/${tripId}/passenger-list`, payload)
   return data.data
@@ -92,5 +97,18 @@ export async function passengerUncheckIn(tripId, passengerKey, { lock_version } 
   const { data } = await http.delete(`/trips/${tripId}/passengers/${encodeURIComponent(passengerKey)}/checkin`, {
     params: lock_version != null ? { lock_version } : undefined,
   })
+  return data.data
+}
+
+export async function setPassengerStatus(tripId, passengerKey, payload) {
+  const { data } = await http.patch(
+    `/trips/${tripId}/passengers/${encodeURIComponent(passengerKey)}/status`,
+    payload,
+  )
+  return data.data
+}
+
+export async function bulkSetPassengerStatus(tripId, payload) {
+  const { data } = await http.patch(`/trips/${tripId}/passengers/status-bulk`, payload)
   return data.data
 }

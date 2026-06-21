@@ -72,6 +72,11 @@ Route::prefix('trips')->group(function () {
         Route::delete('/{trip}/passengers/{passenger}/checkin', 'passengerUncheckIn')
             ->middleware('throttle:60,1')
             ->where('passenger', '[a-zA-Z0-9_-]+');
+        Route::patch('/{trip}/passengers/status-bulk', 'passengerBulkSetStatus')
+            ->middleware('throttle:60,1');
+        Route::patch('/{trip}/passengers/{passenger}/status', 'passengerSetStatus')
+            ->middleware('throttle:120,1')
+            ->where('passenger', '[a-zA-Z0-9_-]+');
         Route::post('/{trip}/duplicate', 'duplicate')->middleware('throttle:10,1');
     });
 });

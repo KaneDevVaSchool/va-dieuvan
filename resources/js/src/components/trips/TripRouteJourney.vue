@@ -1,26 +1,21 @@
 <script setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import {
-  MapPinIcon,
-  ClockIcon,
-  UsersIcon,
-  TruckIcon,
-  UserIcon,
-  CalendarDaysIcon,
-} from '@heroicons/vue/24/outline'
 
 const props = defineProps({
   /**
    * @type {Array<{
-   *   key: string, seq: number, status: string, statusLabel: string, tone: string,
+   *   key: string, seq: number, heading?: string,
+   *   status: string, statusLabel: string, tone: string,
    *   origin: string, destination: string, waypoint: string,
-   *   startTime: string, endTime: string, passengers: number|null,
-   *   vehicle: string, driver: string,
+   *   scheduleDateShort?: string, arriveDateShort?: string,
+   *   startTime: string, endTime: string, durationLabel?: string,
+   *   detailLines?: Array<{ key: string, label: string, value: string }>,
+   *   passengers: number|null, vehicle: string, driver: string,
+   *   transportProvider?: string,
    * }>}
    */
   segments: { type: Array, default: () => [] },
-  summary: { type: Object, default: null },
   selectedKey: { type: String, default: '' },
 })
 
@@ -29,51 +24,6 @@ const emit = defineEmits(['select-segment'])
 const { t } = useI18n()
 
 const showPanel = computed(() => (props.segments?.length ?? 0) > 0)
-
-/** Chip tóm tắt hành trình (số chặng, khách, khởi hành, thời lượng, xe, tài xế). */
-const chips = computed(() => {
-  const s = props.summary
-  if (!s) return []
-  const out = [
-    {
-      key: 'segments',
-      icon: MapPinIcon,
-      text: t('trip_detail.route_journey.chip_segments', { n: s.segmentCount ?? 0 }),
-    },
-  ]
-  if (s.passengers > 0) {
-    out.push({
-      key: 'passengers',
-      icon: UsersIcon,
-      text: t('trip_detail.route_journey.chip_passengers', { n: s.passengers }),
-    })
-  }
-  if (s.departure) {
-    out.push({
-      key: 'departure',
-      icon: CalendarDaysIcon,
-      text: t('trip_detail.route_journey.chip_departure', { time: s.departure }),
-    })
-  }
-  if (s.duration) {
-    out.push({ key: 'duration', icon: ClockIcon, text: s.duration })
-  }
-  if (s.vehicleCount > 0) {
-    out.push({
-      key: 'vehicles',
-      icon: TruckIcon,
-      text: t('trip_detail.route_journey.chip_vehicles', { n: s.vehicleCount }),
-    })
-  }
-  if (s.driverCount > 0) {
-    out.push({
-      key: 'drivers',
-      icon: UserIcon,
-      text: t('trip_detail.route_journey.chip_drivers', { n: s.driverCount }),
-    })
-  }
-  return out
-})
 
 /** Lớp màu cho chấm trạng thái trên timeline. */
 function dotClass(tone) {
@@ -115,6 +65,13 @@ function timeRange(seg) {
   if (seg.startTime && seg.endTime) return `${seg.startTime} → ${seg.endTime}`
   return seg.startTime || seg.endTime || ''
 }
+
+function arriveTimeDisplay(seg) {
+  const time = seg.endTime || ''
+  const extra = seg.arriveDateShort?.trim()
+  if (time && extra) return `${time} (${extra})`
+  return time || extra || ''
+}
 </script>
 
 <template>
@@ -123,25 +80,12 @@ function timeRange(seg) {
     class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
     :aria-label="t('trip_detail.route_journey.title')"
   >
-    <!-- HEADER + SUMMARY CHIPS -->
-    <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-      <h2 class="text-sm font-semibold text-slate-900">
-        {{ t('trip_detail.route_journey.title') }}
-      </h2>
-    </div>
-    <div v-if="chips.length" class="mt-3 flex flex-wrap gap-2">
-      <span
-        v-for="chip in chips"
-        :key="chip.key"
-        class="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-700"
-      >
-        <component :is="chip.icon" class="size-3.5 text-slate-400" aria-hidden="true" />
-        {{ chip.text }}
-      </span>
-    </div>
+    <h2 class="text-sm font-semibold text-slate-900">
+      {{ t('trip_detail.route_journey.title') }}
+    </h2>
 
     <!-- VERTICAL JOURNEY TIMELINE -->
-    <ol class="mt-5 space-y-3">
+    <ol class="mt-4 space-y-3">
       <li
         v-for="(seg, i) in segments"
         :key="seg.key"
@@ -170,67 +114,162 @@ function timeRange(seg) {
               ? 'border-blue-300 ring-1 ring-blue-200'
               : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/60'
           "
+          :data-testid="`trip-route-journey-segment-${seg.seq}`"
           @click="emit('select-segment', seg.key)"
         >
           <!-- Row 1: segment no + status -->
-          <div class="flex items-center justify-between gap-2">
-            <span class="text-xs font-bold uppercase tracking-wide text-slate-500">
-              {{ t('trip_detail.route_journey.segment', { n: seg.seq }) }}
-            </span>
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <span class="text-xs font-bold uppercase tracking-wide text-slate-500">
+                {{ t('trip_detail.route_journey.segment', { n: seg.seq }) }}
+              </span>
+              <p
+                v-if="seg.heading"
+                class="mt-0.5 truncate text-[11px] font-medium text-slate-600"
+              >
+                {{ seg.heading }}
+              </p>
+            </div>
             <span
-              class="rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1"
+              class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1"
               :class="badgeClass(seg.tone)"
             >
               {{ seg.statusLabel }}
             </span>
           </div>
 
-          <!-- Row 2: origin → destination -->
-          <div class="mt-2 space-y-1.5">
-            <div class="flex items-start gap-2">
-              <span
-                class="mt-1.5 size-1.5 shrink-0 rounded-full bg-slate-400"
-                aria-hidden="true"
-              />
-              <span class="text-sm font-semibold text-slate-900">
+          <!-- Route: điểm đi / điểm đến -->
+          <div
+            class="mt-2.5 space-y-2.5 rounded-lg border border-slate-100 bg-slate-50/70 p-2.5"
+          >
+            <div class="min-w-0">
+              <p
+                class="text-[10px] font-bold uppercase tracking-wide text-emerald-800"
+              >
+                {{ t('trip_detail.route_journey.lbl_pickup') }}
+              </p>
+              <p class="mt-0.5 text-sm font-semibold leading-snug text-slate-900">
                 {{ seg.origin || t('trip_detail.empty.place') }}
-              </span>
+              </p>
+              <p
+                v-if="seg.startTime"
+                class="mt-0.5 text-xs font-medium tabular-nums text-slate-600"
+              >
+                <span class="text-slate-500"
+                  >{{ t('trip_detail.route_journey.depart_time') }}:</span
+                >
+                {{ seg.startTime }}
+                <span
+                  v-if="seg.scheduleDateShort"
+                  class="ml-1 text-slate-500"
+                >
+                  · {{ seg.scheduleDateShort }}
+                </span>
+              </p>
             </div>
+
             <div
               v-if="seg.waypoint"
-              class="flex items-start gap-2 pl-px text-slate-500"
+              class="border-t border-slate-200/80 pt-2"
             >
-              <span
-                class="ml-px mt-1.5 size-1 shrink-0 rounded-full bg-slate-300"
-                aria-hidden="true"
-              />
-              <span class="text-xs">{{ seg.waypoint }}</span>
+              <p
+                class="text-[10px] font-bold uppercase tracking-wide text-amber-800"
+              >
+                {{ t('trip_detail.route.stop_waypoint') }}
+              </p>
+              <p class="mt-0.5 text-xs font-medium text-slate-700">
+                {{ seg.waypoint }}
+              </p>
             </div>
-            <div class="flex items-start gap-2">
-              <MapPinIcon
-                class="mt-0.5 size-3.5 shrink-0 text-blue-500"
-                aria-hidden="true"
-              />
-              <span class="text-sm font-semibold text-slate-900">
+
+            <div
+              class="min-w-0"
+              :class="seg.waypoint ? '' : 'border-t border-slate-200/80 pt-2'"
+            >
+              <p
+                class="text-[10px] font-bold uppercase tracking-wide text-indigo-800"
+              >
+                {{ t('trip_detail.route_journey.lbl_dropoff') }}
+              </p>
+              <p class="mt-0.5 text-sm font-semibold leading-snug text-slate-900">
                 {{ seg.destination || t('trip_detail.empty.place') }}
-              </span>
+              </p>
+              <p
+                v-if="seg.endTime || seg.arriveDateShort"
+                class="mt-0.5 text-xs font-medium tabular-nums text-slate-600"
+              >
+                <span class="text-slate-500"
+                  >{{ t('trip_detail.route_journey.arrive_time') }}:</span
+                >
+                {{ arriveTimeDisplay(seg) || t('trip_detail.empty.time') }}
+              </p>
             </div>
           </div>
 
-          <!-- Row 3: meta grid -->
+          <!-- Chi tiết từ wizard (đi/về gộp giờ + địa điểm) -->
           <dl
-            class="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-slate-100 pt-2.5 sm:grid-cols-4"
+            v-if="seg.detailLines?.length"
+            class="mt-2.5 space-y-1.5 rounded-lg border border-dashed border-slate-200 bg-white px-2.5 py-2"
           >
+            <dt
+              class="text-[10px] font-bold uppercase tracking-wide text-slate-400"
+            >
+              {{ t('trip_detail.route_journey.wizard_detail') }}
+            </dt>
+            <div
+              v-for="line in seg.detailLines"
+              :key="line.key"
+              class="flex flex-col gap-0.5 sm:flex-row sm:gap-2"
+            >
+              <dd
+                class="shrink-0 text-[11px] font-semibold text-slate-500 sm:w-28"
+              >
+                {{ line.label }}
+              </dd>
+              <dd class="min-w-0 text-xs font-medium text-slate-800">
+                {{ line.value }}
+              </dd>
+            </div>
+          </dl>
+
+          <!-- Meta grid -->
+          <dl
+            class="mt-3 grid grid-cols-2 gap-x-3 gap-y-2.5 border-t border-slate-100 pt-2.5 sm:grid-cols-3"
+          >
+            <div v-if="seg.scheduleDateShort" class="sm:col-span-1">
+              <dt
+                class="text-[10px] font-medium uppercase tracking-wide text-slate-400"
+              >
+                {{ t('trip_detail.route_journey.schedule_date') }}
+              </dt>
+              <dd class="mt-0.5 text-xs font-medium text-slate-800">
+                {{ seg.scheduleDateShort }}
+              </dd>
+            </div>
             <div>
-              <dt class="text-[10px] font-medium uppercase tracking-wide text-slate-400">
+              <dt
+                class="text-[10px] font-medium uppercase tracking-wide text-slate-400"
+              >
                 {{ t('trip_detail.route_journey.time') }}
               </dt>
               <dd class="mt-0.5 text-xs font-medium tabular-nums text-slate-800">
                 {{ timeRange(seg) || t('trip_detail.empty.time') }}
               </dd>
             </div>
+            <div v-if="seg.durationLabel">
+              <dt
+                class="text-[10px] font-medium uppercase tracking-wide text-slate-400"
+              >
+                {{ t('trip_detail.overview.duration_label') }}
+              </dt>
+              <dd class="mt-0.5 text-xs font-medium tabular-nums text-slate-800">
+                {{ seg.durationLabel }}
+              </dd>
+            </div>
             <div>
-              <dt class="text-[10px] font-medium uppercase tracking-wide text-slate-400">
+              <dt
+                class="text-[10px] font-medium uppercase tracking-wide text-slate-400"
+              >
                 {{ t('trip_detail.route_journey.passengers') }}
               </dt>
               <dd class="mt-0.5 text-xs font-medium tabular-nums text-slate-800">
@@ -238,7 +277,9 @@ function timeRange(seg) {
               </dd>
             </div>
             <div>
-              <dt class="text-[10px] font-medium uppercase tracking-wide text-slate-400">
+              <dt
+                class="text-[10px] font-medium uppercase tracking-wide text-slate-400"
+              >
                 {{ t('trip_detail.route_journey.vehicle') }}
               </dt>
               <dd class="mt-0.5 truncate text-xs font-medium text-slate-800">
@@ -246,11 +287,26 @@ function timeRange(seg) {
               </dd>
             </div>
             <div>
-              <dt class="text-[10px] font-medium uppercase tracking-wide text-slate-400">
+              <dt
+                class="text-[10px] font-medium uppercase tracking-wide text-slate-400"
+              >
                 {{ t('trip_detail.route_journey.driver') }}
               </dt>
               <dd class="mt-0.5 truncate text-xs font-medium text-slate-800">
                 {{ seg.driver || t('trip_detail.empty.driver') }}
+              </dd>
+            </div>
+            <div
+              v-if="seg.transportProvider"
+              class="col-span-2 sm:col-span-3"
+            >
+              <dt
+                class="text-[10px] font-medium uppercase tracking-wide text-slate-400"
+              >
+                {{ t('trip_detail.route_journey.transport_provider') }}
+              </dt>
+              <dd class="mt-0.5 text-xs font-medium text-slate-800">
+                {{ seg.transportProvider }}
               </dd>
             </div>
           </dl>

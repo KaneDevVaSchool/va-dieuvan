@@ -1,10 +1,10 @@
 <template>
     <section
-        class="flex min-h-0 flex-col overflow-hidden rounded-2xl bg-white shadow-sm shadow-slate-900/5 print:hidden dark:bg-slate-950/40 dark:shadow-black/25"
+        class="flex flex-col rounded-2xl bg-white shadow-sm shadow-slate-900/5 print:hidden dark:bg-slate-950/40 dark:shadow-black/25"
         :aria-label="t('trip_detail.coordination.title')"
     >
         <div
-            class="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-y-contain scrollbar-hidden p-3"
+            class="space-y-3 p-3"
             data-testid="dispatch-panel-scroll"
         >
             <div

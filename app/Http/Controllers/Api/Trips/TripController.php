@@ -9,7 +9,9 @@ use App\Http\Requests\Api\Trips\DuplicateTripRequest;
 use App\Http\Requests\Api\Trips\ListTripsRequest;
 use App\Http\Requests\Api\Trips\RescheduleTripRequest;
 use App\Http\Requests\Api\Trips\ShowTripRequest;
+use App\Http\Requests\Api\Trips\TripPassengerBulkStatusRequest;
 use App\Http\Requests\Api\Trips\TripPassengerCheckInRequest;
+use App\Http\Requests\Api\Trips\TripPassengerSetStatusRequest;
 use App\Http\Requests\Api\Trips\TripPassengerUncheckRequest;
 use App\Http\Requests\Api\Trips\UpdateTripPassengerListRequest;
 use App\Models\DispatchRequest;
@@ -19,6 +21,7 @@ use App\Services\Dispatching\DispatchingService;
 use App\Services\Trips\TripNamedPassengerSyncService;
 use App\Support\DispatchWizardPassengerCount;
 use App\Support\FinancialDataLock;
+use App\Support\PassengerStatus;
 use App\Support\TripOptimisticLock;
 use App\Support\TripVisibility;
 use Illuminate\Database\Eloquent\Builder;
@@ -602,26 +605,13 @@ class TripController extends Controller
         $data = $request->validated();
         $key = $this->normalizePassengerCheckInKey($passenger);
 
-        $fresh = DB::transaction(function () use ($trip, $data, $key) {
-            $trip->refresh();
-            FinancialDataLock::assertTripNotPaid($trip);
-
-            $expectedVersion = (int) $data['lock_version'];
-            $map = is_array($trip->passenger_check_ins) ? $trip->passenger_check_ins : [];
-            $map[$key] = [
-                'checked_in_at' => Carbon::parse($data['checked_in_at'])->toIso8601String(),
-            ];
-
-            return TripOptimisticLock::update($trip, ['passenger_check_ins' => $map], $expectedVersion);
-        });
-
-        $this->loadTripRelations($fresh);
-
-        if ($fresh->relationLoaded('dispatchRequest') && $fresh->dispatchRequest) {
-            $fresh->dispatchRequest->makeVisible(['wizard_snapshot']);
-        }
-
-        return $this->ok($fresh);
+        return $this->applyPassengerStatus(
+            $request->user()->id,
+            $trip,
+            [$key => PassengerStatus::ONBOARD],
+            (int) $data['lock_version'],
+            $data['checked_in_at'] ?? null,
+        );
     }
 
     public function passengerUncheckIn(TripPassengerUncheckRequest $request, Trip $trip, string $passenger)
@@ -631,15 +621,87 @@ class TripController extends Controller
         $data = $request->validated();
         $key = $this->normalizePassengerCheckInKey($passenger);
 
-        $fresh = DB::transaction(function () use ($trip, $data, $key) {
+        return $this->applyPassengerStatus(
+            $request->user()->id,
+            $trip,
+            [$key => PassengerStatus::PENDING],
+            (int) $data['lock_version'],
+        );
+    }
+
+    /**
+     * Đặt trạng thái vận hành cho một hành khách (chờ xác nhận / đã xác nhận /
+     * đã lên xe / đã xuống xe / vắng mặt / huỷ).
+     */
+    public function passengerSetStatus(TripPassengerSetStatusRequest $request, Trip $trip, string $passenger)
+    {
+        abort_unless(TripVisibility::userCanViewTrip($request->user(), $trip), 403);
+
+        $data = $request->validated();
+        $key = $this->normalizePassengerCheckInKey($passenger);
+
+        return $this->applyPassengerStatus(
+            $request->user()->id,
+            $trip,
+            [$key => $data['status']],
+            (int) $data['lock_version'],
+            $data['at'] ?? null,
+        );
+    }
+
+    /**
+     * Đặt cùng một trạng thái cho nhiều hành khách (thao tác hàng loạt).
+     */
+    public function passengerBulkSetStatus(TripPassengerBulkStatusRequest $request, Trip $trip)
+    {
+        abort_unless(TripVisibility::userCanViewTrip($request->user(), $trip), 403);
+
+        $data = $request->validated();
+        $status = $data['status'];
+        $assignments = [];
+        foreach ($data['keys'] as $rawKey) {
+            $assignments[$this->normalizePassengerCheckInKey($rawKey)] = $status;
+        }
+
+        return $this->applyPassengerStatus(
+            $request->user()->id,
+            $trip,
+            $assignments,
+            (int) $data['lock_version'],
+            $data['at'] ?? null,
+        );
+    }
+
+    /**
+     * Áp một tập trạng thái hành khách vào cột JSON, có khoá tài chính,
+     * optimistic lock và nhật ký kiểm toán.
+     *
+     * @param  array<string, string>  $assignments  passengerKey => status
+     */
+    private function applyPassengerStatus(int $actorId, Trip $trip, array $assignments, int $expectedVersion, ?string $at = null)
+    {
+        $fresh = DB::transaction(function () use ($trip, $assignments, $expectedVersion, $at, $actorId) {
             $trip->refresh();
             FinancialDataLock::assertTripNotPaid($trip);
 
-            $expectedVersion = (int) $data['lock_version'];
-            $map = is_array($trip->passenger_check_ins) ? $trip->passenger_check_ins : [];
-            unset($map[$key]);
+            $before = is_array($trip->passenger_check_ins) ? $trip->passenger_check_ins : [];
+            $map = $before;
+            foreach ($assignments as $key => $status) {
+                $map = PassengerStatus::apply($map, $key, $status, $at);
+            }
 
-            return TripOptimisticLock::update($trip, ['passenger_check_ins' => $map], $expectedVersion);
+            $updated = TripOptimisticLock::update($trip, ['passenger_check_ins' => $map], $expectedVersion);
+
+            app(AuditLogger::class)->log(
+                actorId: $actorId,
+                event: 'trip.passenger_status',
+                auditable: $updated,
+                before: ['passenger_check_ins' => $before],
+                after: ['passenger_check_ins' => $map],
+                metadata: ['keys' => array_keys($assignments)],
+            );
+
+            return $updated;
         });
 
         $this->loadTripRelations($fresh);
@@ -707,7 +769,9 @@ class TripController extends Controller
             'dispatchRequest',
             'dispatchRequest.requester:id,name,phone,email,employee_code,avatar_url',
             'dispatchRequest.attachments' => fn ($q) => $q->orderByDesc('id')->limit(50),
-            'costs' => fn ($q) => $q->orderByDesc('id')->limit(50),
+            'costs' => fn ($q) => $q->orderByDesc('id')->limit(50)
+                ->withCount('attachments')
+                ->with(['creator:id,name,email,avatar_url', 'confirmer:id,name,email,avatar_url']),
             'events' => fn ($q) => $q->orderByDesc('id')->limit(50)->with('creator:id,name'),
             'tripPassengers' => fn ($q) => $q->orderBy('id'),
         ]);

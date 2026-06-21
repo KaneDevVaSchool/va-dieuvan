@@ -1,10 +1,10 @@
 <template>
     <div
-        class="min-h-screen w-full min-w-0 bg-[#F8F9FA] text-[13px] leading-snug -mx-3 sm:-mx-4 md:-mx-6 lg:-mx-8"
+        class="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-y-auto overscroll-y-contain bg-[#F8F9FA] text-[13px] leading-snug dark:bg-slate-950"
     >
         <div
             v-if="loading && !trip"
-            class="w-full max-w-none space-y-6 px-2 py-8 sm:px-3 md:px-4 lg:px-5"
+            class="w-full max-w-none space-y-6 px-4 py-8 sm:px-6 lg:px-8"
         >
             <div class="animate-pulse space-y-4">
                 <div class="h-10 max-w-md rounded-xl bg-slate-200/90" />
@@ -43,6 +43,7 @@
                 :countdown-label="countdown"
                 :origin="displayOriginLabel"
                 :destination="displayDestinationLabel"
+                :route-legs="heroRouteLegs"
                 :depart-summary="heroDepartSummary"
                 :trip-type="tripTypeLabel"
                 :passenger-line="heroPassengerLine"
@@ -62,7 +63,7 @@
                 @approve="onApproveTransfer"
                 @reject="onRejectTrip"
             />
-            <div class="w-full max-w-none space-y-4 px-2 pb-10 pt-3 sm:px-3 md:px-4 lg:px-5">
+            <div class="w-full min-w-0 max-w-none space-y-4 px-4 pb-10 pt-3 sm:px-6 lg:px-8">
                 <p
                     v-if="silentLoadError"
                     class="rounded-lg border border-amber-200 bg-amber-50/90 px-3 py-2 text-[11px] text-amber-900"
@@ -134,7 +135,7 @@
 
                 <!-- PRIMARY NAVIGATION — full-width tabs -->
                 <div
-                    class="-mx-2 border-b border-slate-200 bg-[#F8F9FA] px-2 sm:-mx-3 sm:px-3 md:-mx-4 md:px-4 lg:-mx-5 lg:px-5"
+                    class="-mx-4 border-b border-slate-200 bg-[#F8F9FA] px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 dark:border-slate-800 dark:bg-slate-950"
                 >
                     <nav
                         class="flex gap-0.5 overflow-x-auto scrollbar-hidden"
@@ -197,7 +198,6 @@
                     <TripRouteJourney
                         v-if="scheduleCount > 1"
                         :segments="routeJourneyView.segments"
-                        :summary="routeJourneyView.summary"
                         :selected-key="selectedScheduleKey || activeAssignLegKey"
                         @select-segment="onSchedulePanelKeyChange"
                     />
@@ -258,11 +258,29 @@
                         class="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-950/40"
                         :aria-label="t('trip_detail.sections.notes')"
                     >
-                        <h2
-                            class="text-[11px] font-bold uppercase tracking-wide text-slate-500"
+                        <div class="flex items-center justify-between gap-2">
+                            <h2
+                                class="text-[11px] font-bold uppercase tracking-wide text-slate-500"
+                            >
+                                {{ t("trip_detail.sections.notes") }}
+                            </h2>
+                            <button
+                                v-if="canAddTripNote"
+                                type="button"
+                                class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-dashed border-slate-300 text-slate-600 transition hover:border-brand/50 hover:bg-brand/5 hover:text-brand dark:border-slate-600 dark:text-slate-300 dark:hover:border-brand/60"
+                                :aria-label="t('trip_detail.notes.add_action')"
+                                data-testid="trip-detail-notes-add"
+                                @click="openNoteModal"
+                            >
+                                <PlusIcon class="h-4 w-4" aria-hidden="true" />
+                            </button>
+                        </div>
+                        <p
+                            v-if="noteListMsg"
+                            class="mt-2 text-xs text-rose-600 dark:text-rose-400"
                         >
-                            {{ t("trip_detail.sections.notes") }}
-                        </h2>
+                            {{ noteListMsg }}
+                        </p>
                         <div class="mt-3 space-y-2">
                             <div
                                 v-if="tripRequestNotesFromUser"
@@ -285,24 +303,48 @@
                                 class="rounded-lg border border-slate-100 bg-slate-50/50 p-2.5 dark:border-slate-700/80 dark:bg-slate-900/40"
                             >
                                 <div
-                                    class="flex items-baseline justify-between gap-2"
+                                    class="flex items-start justify-between gap-2"
                                 >
-                                    <div
-                                        class="text-xs font-medium text-slate-700 dark:text-slate-300"
+                                    <div class="min-w-0 flex-1">
+                                        <div
+                                            class="flex flex-wrap items-baseline justify-between gap-2"
+                                        >
+                                            <div
+                                                class="text-xs font-medium text-slate-700 dark:text-slate-300"
+                                            >
+                                                {{
+                                                    n.creator?.name ??
+                                                    t("trip_detail.timeline.system")
+                                                }}
+                                            </div>
+                                            <div
+                                                class="shrink-0 text-xs text-slate-400"
+                                            >
+                                                {{ fmt(n.created_at) }}
+                                            </div>
+                                        </div>
+                                        <div
+                                            class="mt-1 whitespace-pre-wrap text-sm text-slate-800 dark:text-slate-200"
+                                        >
+                                            {{ n.message }}
+                                        </div>
+                                    </div>
+                                    <button
+                                        v-if="canAddTripNote"
+                                        type="button"
+                                        class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50 dark:hover:bg-rose-950/50 dark:hover:text-rose-400"
+                                        :aria-label="
+                                            t('trip_detail.notes.delete_action')
+                                        "
+                                        :disabled="deletingNoteId === n.id"
+                                        :data-testid="`trip-detail-note-delete-${n.id}`"
+                                        @click="removeNote(n)"
                                     >
-                                        {{
-                                            n.creator?.name ??
-                                            t("trip_detail.timeline.system")
-                                        }}
-                                    </div>
-                                    <div class="text-xs text-slate-400">
-                                        {{ fmt(n.created_at) }}
-                                    </div>
-                                </div>
-                                <div
-                                    class="mt-1 whitespace-pre-wrap text-sm text-slate-800 dark:text-slate-200"
-                                >
-                                    {{ n.message }}
+                                        <TrashIcon
+                                            class="h-4 w-4"
+                                            aria-hidden="true"
+                                        />
+                                    </button>
                                 </div>
                             </div>
                             <div
@@ -312,38 +354,6 @@
                                 class="text-xs text-slate-500 dark:text-slate-400"
                             >
                                 {{ t("trip_detail.notes.empty") }}
-                            </div>
-                            <div class="pt-1">
-                                <div
-                                    class="text-xs font-semibold text-slate-500 dark:text-slate-400"
-                                >
-                                    {{ t("trip_detail.notes.add_title") }}
-                                </div>
-                                <textarea
-                                    v-model="newNote"
-                                    rows="2"
-                                    class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm outline-none ring-blue-200 focus:ring dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                                    :placeholder="
-                                        t('trip_detail.notes.placeholder')
-                                    "
-                                />
-                                <div
-                                    class="mt-1.5 flex flex-wrap items-center gap-2"
-                                >
-                                    <Button
-                                        :loading="noting"
-                                        :disabled="!newNote.trim()"
-                                        @click="addNote"
-                                        >{{
-                                            t("trip_detail.notes.add_action")
-                                        }}</Button
-                                    >
-                                    <span
-                                        v-if="noteMsg"
-                                        class="text-sm text-slate-600 dark:text-slate-400"
-                                        >{{ noteMsg }}</span
-                                    >
-                                </div>
                             </div>
                         </div>
                     </section>
@@ -538,11 +548,13 @@
 
                 <!-- TAB 5 · EXPENSES -->
                 <div v-show="activeTab === 'expenses'">
-                    <CostTracker
+                    <TripCostControlCenter
                         :trip-id="trip.id"
                         :costs="trip.costs ?? []"
                         :can-submit="canSubmitQuickCost"
-                        :show-costs-link="auth.canAccessDispatchWebApp()"
+                        :can-reconcile="canReconcileCost"
+                        :revenue="tripExpectedRevenue"
+                        :budget="tripCostBudget"
                         @updated="load({ silent: true })"
                     />
                 </div>
@@ -617,6 +629,46 @@
             </div>
 
             <Teleport to="body">
+                <Modal
+                    :open="noteModalOpen"
+                    :title="t('trip_detail.notes.modal_title')"
+                    @close="closeNoteModal"
+                >
+                    <div data-testid="trip-detail-note-modal">
+                        <textarea
+                            v-model="newNote"
+                            rows="4"
+                            class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm outline-none ring-blue-200 focus:ring dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                            :placeholder="
+                                t('trip_detail.notes.placeholder')
+                            "
+                        />
+                        <p
+                            v-if="noteMsg"
+                            class="mt-2 text-sm text-rose-600 dark:text-rose-400"
+                        >
+                            {{ noteMsg }}
+                        </p>
+                        <div class="mt-4 flex justify-end gap-2">
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                data-testid="trip-detail-note-modal-cancel"
+                                @click="closeNoteModal"
+                            >
+                                {{ t("trip_detail.coordination.provider_modal_cancel") }}
+                            </Button>
+                            <Button
+                                :loading="noting"
+                                :disabled="!newNote.trim()"
+                                data-testid="trip-detail-note-modal-submit"
+                                @click="addNote"
+                            >
+                                {{ t("trip_detail.notes.add_action") }}
+                            </Button>
+                        </div>
+                    </div>
+                </Modal>
                 <div
                     v-if="providerModalOpen"
                     class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
@@ -711,12 +763,15 @@ import {
     ArrowDownTrayIcon,
     ArrowUpTrayIcon,
     DocumentIcon,
+    PlusIcon,
     TrashIcon,
 } from "@heroicons/vue/24/outline";
 import Button from "../../components/ui/Button.vue";
+import Modal from "../../components/ui/Modal.vue";
 import Input from "../../components/ui/Input.vue";
 import Select from "../../components/ui/Select.vue";
-import CostTracker from "../../components/trips/CostTracker.vue";
+import TripCostControlCenter from "../../components/trips/TripCostControlCenter.vue";
+import { useRequestCostEstimate } from "../../composables/useRequestCostEstimate";
 import StatusActions from "../../components/trips/StatusActions.vue";
 import PassengerCheckIn from "../../components/trips/PassengerCheckIn.vue";
 import TripHeroHeader from "../../components/trips/TripHeroHeader.vue";
@@ -729,6 +784,7 @@ import { useDispatchScheduleCards } from "../../composables/useDispatchScheduleC
 import {
     addTripEvent,
     assignTrip,
+    deleteTripEvent,
     getTrip,
     listTrips,
     rescheduleTrip,
@@ -973,6 +1029,13 @@ const attachMsgIsError = ref(false);
 const newNote = ref("");
 const noting = ref(false);
 const noteMsg = ref("");
+const noteModalOpen = ref(false);
+const deletingNoteId = ref(null);
+const noteListMsg = ref("");
+
+const canAddTripNote = computed(() =>
+    auth.hasPermission("trip.event.create"),
+);
 
 const assign = ref({ lock_version: 0, vehicle_id: null, driver_id: null });
 
@@ -1005,6 +1068,25 @@ const canSubmitQuickCost = computed(() => {
         auth.hasPermission("trip.update_status")
     );
 });
+/** Quyền duyệt/từ chối/xoá chi phí (Financial Control Center). */
+const canReconcileCost = computed(() => auth.hasPermission("trip.cost.reconcile"));
+
+const dispatchRequestRef = computed(() => trip.value?.dispatch_request ?? null);
+const { costEstimate: tripCostEstimate } = useRequestCostEstimate(dispatchRequestRef);
+
+/** Doanh thu dự kiến = giá dịch vụ điều vận (service_price). */
+const tripExpectedRevenue = computed(() => {
+    const p = trip.value?.dispatch_request?.service_price;
+    const n = Number(p);
+    return Number.isFinite(n) && n > 0 ? n : 0;
+});
+
+/** Dự toán chi phí = tổng dự toán từ wizard_snapshot. */
+const tripCostBudget = computed(() => {
+    const est = tripCostEstimate.value;
+    return est && Number(est.total) > 0 ? Number(est.total) : 0;
+});
+
 const canRescheduleTrip = computed(() => {
     if (!canAssign.value || !trip.value) return false;
     if ((trip.value.payment_status ?? "unpaid") === "paid") return false;
@@ -1422,6 +1504,23 @@ function resolveLegDriver(assignment) {
     return ext;
 }
 
+function resolveLegProvider(assignment) {
+    if (!assignment) return "";
+    const name = assignment.transport_provider?.name;
+    if (typeof name === "string" && name.trim()) return name.trim();
+    return "";
+}
+
+function fmtDateShortFromIso(v) {
+    if (!v) return "";
+    const l = locale.value === "en" ? "en-US" : "vi-VN";
+    return new Date(v).toLocaleDateString(l, {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+    });
+}
+
 function journeyDurationLabel(startMs, endMs) {
     if (startMs == null || endMs == null || endMs <= startMs) return "";
     const mins = Math.round((endMs - startMs) / 60000);
@@ -1444,21 +1543,50 @@ const routeJourneyView = computed(() => {
             (ln) => ln.lineKey === "guests_per_leg",
         );
         const guestsN = parseInt(String(guestsLine?.value ?? "").trim(), 10);
+        const departMs = card.depart_at
+            ? new Date(card.depart_at).getTime()
+            : null;
+        const arriveMs = card.arrive_by
+            ? new Date(card.arrive_by).getTime()
+            : null;
+        const arriveDateShort =
+            card.depart_at &&
+            card.arrive_by &&
+            new Date(card.depart_at).toDateString() !==
+                new Date(card.arrive_by).toDateString()
+                ? fmtDateShortFromIso(card.arrive_by)
+                : "";
+        const detailLines = (card.lines ?? [])
+            .filter((ln) => String(ln.value ?? "").trim())
+            .filter((ln) => ln.lineKey !== "guests_per_leg")
+            .map((ln, idx) => ({
+                key: ln.lineKey || `line-${idx}`,
+                label: ln.label,
+                value: String(ln.value).trim(),
+            }));
         return {
             key: card.key,
             seq: card.labelSeq,
+            heading: card.heading || "",
             status,
             statusLabel: labelTripStatus(status),
             tone: legStatusTone(status),
             origin: card.pickup || "",
             destination: card.dropoff || "",
             waypoint: card.waypoint || "",
+            scheduleDateShort: card.depart_at
+                ? fmtDateShortFromIso(card.depart_at)
+                : "",
+            arriveDateShort,
             startTime: card.depart_at ? fmtTime(card.depart_at) : "",
             endTime: card.arrive_by ? fmtTime(card.arrive_by) : "",
+            durationLabel: journeyDurationLabel(departMs, arriveMs),
+            detailLines,
             passengers:
                 Number.isFinite(guestsN) && guestsN > 0 ? guestsN : null,
             vehicle: resolveLegVehicle(assignment),
             driver: resolveLegDriver(assignment),
+            transportProvider: resolveLegProvider(assignment),
         };
     });
 
@@ -1522,8 +1650,93 @@ const displayDestinationLabel = computed(() => {
     return destinationLabel.value;
 });
 
+/** Các chặng lịch trình cho header (khi > 1 lịch). */
+const heroRouteLegs = computed(() => {
+    if (scheduleCount.value <= 1) return [];
+    const segments = routeJourneyView.value.segments;
+    const fallbackO = originLabel.value;
+    const fallbackD = destinationLabel.value;
+
+    const fromSegments =
+        segments.length > 1
+            ? segments.map((seg) => {
+                  const start = seg.startTime?.trim() ?? "";
+                  const end = seg.endTime?.trim() ?? "";
+                  const timeRange =
+                      start && end
+                          ? `${start} → ${end}`
+                          : start || end || "";
+                  return {
+                      key: seg.key,
+                      seq: seg.seq,
+                      origin: seg.origin?.trim() || fallbackO,
+                      destination: seg.destination?.trim() || fallbackD,
+                      timeRange,
+                  };
+              })
+            : [];
+
+    if (fromSegments.length > 1) return fromSegments;
+
+    const cards = scheduleCardsForPanel.value;
+    if (cards.length <= 1) return [];
+
+    return cards.map((card, index) => {
+        const start = card.depart_at ? fmtTime(card.depart_at) : "";
+        const end = card.arrive_by ? fmtTime(card.arrive_by) : "";
+        const timeRange =
+            start && end ? `${start} → ${end}` : start || end || "";
+        return {
+            key: card.key,
+            seq: card.labelSeq ?? index + 1,
+            origin: card.pickup?.trim() || fallbackO,
+            destination: card.dropoff?.trim() || fallbackD,
+            timeRange,
+        };
+    });
+});
+
+function fmtDateLongFromIso(v) {
+    if (!v) return "";
+    const l = locale.value === "en" ? "en-US" : "vi-VN";
+    return new Date(v).toLocaleDateString(l, {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+    });
+}
+
 /** Tóm tắt khởi hành cho header hero: ngày dài + khung giờ. */
 const heroDepartSummary = computed(() => {
+    if (scheduleCount.value > 1) {
+        const summary = routeJourneyView.value.summary;
+        const cards = scheduleCards.value;
+        let firstIso = null;
+        let minMs = Infinity;
+        for (const c of cards) {
+            if (!c.depart_at) continue;
+            const ms = new Date(c.depart_at).getTime();
+            if (Number.isFinite(ms) && ms < minMs) {
+                minMs = ms;
+                firstIso = c.depart_at;
+            }
+        }
+        const date = firstIso
+            ? fmtDateLongFromIso(firstIso)
+            : scheduleDateLong.value?.trim();
+        const dep = summary?.departure?.trim() ?? "";
+        const dur = summary?.duration?.trim() ?? "";
+        const parts = [];
+        if (date) parts.push(date);
+        if (dep) {
+            parts.push(
+                t("trip_detail.route_journey.chip_departure", { time: dep }),
+            );
+        }
+        if (dur) parts.push(dur);
+        return parts.join(" · ") || "";
+    }
     const date = scheduleDateLong.value?.trim();
     const time = scheduleTimeRange.value?.trim();
     if (date && time) return `${date} · ${time}`;
@@ -3133,13 +3346,48 @@ async function addNote() {
             message: newNote.value.trim(),
         });
         newNote.value = "";
-        noteMsg.value = t("trip_detail.messages.ok");
+        noteModalOpen.value = false;
         await load({ silent: true });
     } catch (e) {
         noteMsg.value =
             e?.response?.data?.message ?? t("trip_detail.messages.error");
     } finally {
         noting.value = false;
+    }
+}
+
+function openNoteModal() {
+    noteMsg.value = "";
+    newNote.value = "";
+    noteModalOpen.value = true;
+}
+
+function closeNoteModal() {
+    if (noting.value) return;
+    noteModalOpen.value = false;
+    noteMsg.value = "";
+    newNote.value = "";
+}
+
+async function removeNote(n) {
+    if (!canAddTripNote.value || !n?.id) return;
+    const ok = await confirmAction({
+        title: t("trip_detail.notes.delete_confirm_title"),
+        message: t("trip_detail.notes.delete_confirm_body"),
+        confirmLabel: t("trip_detail.notes.delete_action"),
+        danger: true,
+    });
+    if (!ok) return;
+    noteListMsg.value = "";
+    deletingNoteId.value = n.id;
+    try {
+        await deleteTripEvent(route.params.id, n.id);
+        await load({ silent: true });
+    } catch (e) {
+        noteListMsg.value =
+            e?.response?.data?.message ?? t("trip_detail.messages.error");
+    } finally {
+        deletingNoteId.value = null;
     }
 }
 

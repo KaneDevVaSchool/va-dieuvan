@@ -86,8 +86,11 @@
         </span>
       </div>
 
-      <!-- ── Row 2: Route ── -->
-      <div class="grid grid-cols-[1fr_auto_1fr] items-stretch border-b border-slate-100 dark:border-slate-800">
+      <!-- ── Row 2: Route (single leg) ── -->
+      <div
+        v-if="!showMultiRoute"
+        class="grid grid-cols-[1fr_auto_1fr] items-stretch border-b border-slate-100 dark:border-slate-800"
+      >
         <div class="py-3 pr-4">
           <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
             {{ $t('trip_detail.header.lbl_origin') }}
@@ -107,6 +110,46 @@
             {{ destination || empty }}
           </p>
         </div>
+      </div>
+
+      <!-- ── Row 2: Multi-leg route ── -->
+      <div
+        v-else
+        class="border-b border-slate-100 py-3 dark:border-slate-800"
+        data-testid="trip-detail-header-route-legs"
+      >
+        <div class="mb-2.5 flex flex-wrap items-center gap-2">
+          <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            {{ $t('trip_detail.route_journey.title') }}
+          </p>
+          <span
+            class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold tabular-nums text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+          >
+            {{ $t('trip_detail.route_journey.chip_segments', { n: routeLegs.length }) }}
+          </span>
+        </div>
+        <ol class="space-y-2">
+          <li
+            v-for="leg in routeLegs"
+            :key="leg.key"
+            class="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5 text-[13px] leading-snug"
+          >
+            <span class="shrink-0 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+              {{ $t('trip_detail.route_journey.segment', { n: leg.seq }) }}
+            </span>
+            <span
+              v-if="leg.timeRange"
+              class="shrink-0 tabular-nums text-[11px] font-medium text-slate-500 dark:text-slate-400"
+            >
+              {{ leg.timeRange }}
+            </span>
+            <span class="inline-flex min-w-0 flex-wrap items-center gap-1.5">
+              <span class="font-semibold text-slate-900 dark:text-white">{{ leg.origin || empty }}</span>
+              <ArrowRightIcon class="h-3 w-3 shrink-0 text-slate-300 dark:text-slate-600" aria-hidden="true" />
+              <span class="font-semibold text-slate-900 dark:text-white">{{ leg.destination || empty }}</span>
+            </span>
+          </li>
+        </ol>
       </div>
 
       <!-- ── Row 3: Depart / Trip type / Passengers ── -->
@@ -214,6 +257,14 @@ import {
 import { useI18n } from 'vue-i18n'
 import { labelTripStatus } from '../../util/labels'
 
+export type TripHeroRouteLeg = {
+  key: string
+  seq: number
+  origin: string
+  destination: string
+  timeRange?: string
+}
+
 export type TripHeroMetaPill = {
   key: string
   text: string
@@ -227,6 +278,7 @@ const props = defineProps<{
   countdownLabel?: string | null
   origin?: string
   destination?: string
+  routeLegs?: TripHeroRouteLeg[]
   departSummary?: string
   tripType?: string
   passengerLine?: string
@@ -254,6 +306,10 @@ const { t } = useI18n()
 const empty = computed(() => t('trip_detail.empty.not_available'))
 
 const metaPills = computed(() => props.metaPills ?? [])
+
+const routeLegs = computed(() => props.routeLegs ?? [])
+
+const showMultiRoute = computed(() => routeLegs.value.length > 1)
 
 const countdownLabel = computed(() => props.countdownLabel?.trim() || '')
 
