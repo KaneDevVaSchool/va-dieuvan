@@ -1,290 +1,369 @@
 <template>
-  <div class="space-y-5 pb-10">
-    <!-- Header -->
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+  <div class="space-y-6 pb-10">
+    <div class="flex flex-col gap-3 border-b border-slate-200/80 pb-6 lg:flex-row lg:items-end lg:justify-between">
       <div>
-        <h1 class="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-          Chương trình Đưa đón
+        <h1 class="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">
+          {{ t('tp_programs_page.hero_title') }}
         </h1>
-        <p class="mt-1.5 text-base text-slate-500">Quản lý tất cả chương trình vận chuyển học sinh</p>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ t('tp_programs_page.hero_subtitle') }}</p>
       </div>
-      <div class="flex items-center gap-2">
-        <button
-          type="button"
-          class="inline-flex items-center gap-2 rounded-xl bg-va-800 px-5 py-3 text-base font-semibold text-white shadow-sm shadow-va-800/20 transition hover:bg-va-900"
-          @click="goCreate"
-        >
-          <PlusIcon class="h-5 w-5" /> Tạo Chương trình
-        </button>
-      </div>
-    </div>
-
-    <!-- Stat tiles -->
-    <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-      <div
-        v-for="tile in statTiles"
-        :key="tile.key"
-        class="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+      <Button
+        class="inline-flex shrink-0 items-center gap-2"
+        data-testid="tp-programs-create"
+        @click="goCreate"
       >
-        <span class="grid h-12 w-12 shrink-0 place-items-center rounded-xl" :class="tile.iconBg">
-          <component :is="tile.icon" class="h-6 w-6" :class="tile.iconText" />
-        </span>
-        <div class="min-w-0">
-          <div class="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">{{ tile.value }}</div>
-          <div class="mt-0.5 text-sm font-medium" :class="tile.hintClass">{{ tile.hint }}</div>
-        </div>
-      </div>
+        <PlusIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+        {{ t('tp_programs_page.cta_create') }}
+      </Button>
     </div>
 
-    <!-- Filter / toolbar -->
-    <div class="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
-      <AppFilterBar>
-        <div ref="tpProgramFilterBarRef" class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
-          <AppFilterFunnelMenu ref="filterMenuRef" :badge-count="activeFilterCount">
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Bộ lọc đang áp dụng</p>
-            <ul class="mt-2 space-y-2 text-sm text-slate-700">
-              <li v-if="filters.search" class="flex justify-between gap-2">
-                <span class="text-slate-500">Tìm kiếm</span>
-                <span class="max-w-[10rem] truncate font-medium">{{ filters.search }}</span>
+    <TpProgramSummaryBar
+      :stats="kpiStats"
+      :loading="loading"
+      :active-status="filters.status"
+      @quick-filter="onKpiQuickFilter"
+    />
+
+    <div
+      ref="tpProgramsDatagridRef"
+      class="overflow-visible rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40"
+    >
+      <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+        <div class="flex w-full min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
+          <div class="min-w-0 w-full basis-full lg:min-w-[10rem] lg:flex-1 lg:basis-auto">
+            <DatagridToolbarSearch
+              v-model="filters.search"
+              input-id="tp-programs-list-search"
+              :placeholder="t('tp_programs_page.search_placeholder')"
+              stretch
+              inline-actions
+              hide-label
+              input-height="h-10"
+              data-testid="tp-programs-toolbar-search"
+            />
+          </div>
+
+          <div class="flex shrink-0 items-center gap-2">
+            <FilterVisibilityDropdown
+              :open="showFilterPanelDd"
+              :title="t('tp_programs_page.filter_show_controls_title')"
+              :hint="t('tp_programs_page.filter_show_controls_hint')"
+              @close="closeFilterPanel"
+            >
+              <template #trigger>
+                <DatagridToolbarActionButton
+                  icon="filter"
+                  :active="showFilterPanelDd"
+                  test-id="tp-programs-toolbar-filter"
+                  @click="openFilterPanel"
+                >
+                  {{ t('tp_programs_page.toolbar_filter') }}
+                </DatagridToolbarActionButton>
+              </template>
+              <li v-for="fd in filterControlDefs" :key="'tp-prog-vis-' + fd.key" class="flex items-start gap-2">
+                <input
+                  :id="`tp-prog-filter-vis-${fd.key}`"
+                  v-model="visibleFilters[fd.key]"
+                  type="checkbox"
+                  class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-va-800 focus:ring-va-700/30 dark:border-slate-600"
+                  :data-testid="`tp-prog-filter-vis-${fd.key}`"
+                />
+                <label
+                  :for="`tp-prog-filter-vis-${fd.key}`"
+                  class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
+                >
+                  {{ fd.label }}
+                </label>
               </li>
-              <li v-if="filters.status" class="flex justify-between gap-2">
-                <span class="text-slate-500">Trạng thái</span>
-                <span class="font-medium">{{ statusLabel(filters.status) }}</span>
-              </li>
-              <li v-if="filters.schoolYear" class="flex justify-between gap-2">
-                <span class="text-slate-500">Năm học</span>
-                <span class="font-medium">{{ filters.schoolYear }}</span>
-              </li>
-              <li v-if="filters.route" class="flex justify-between gap-2">
-                <span class="text-slate-500">Tuyến</span>
-                <span class="max-w-[10rem] truncate font-medium">{{ filters.route }}</span>
-              </li>
-              <li v-if="activeFilterCount === 0" class="text-slate-400">Chưa có điều kiện lọc</li>
-            </ul>
-            <div class="mt-3 border-t border-slate-100 pt-3">
-              <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700">Hiển thị bộ lọc trên thanh</p>
-              <ul class="mt-2 space-y-2">
-                <li v-for="opt in filterBarVisibilityOptions" :key="opt.id" class="flex items-start gap-2">
-                  <input :id="'tp-prog-vis-' + opt.id" v-model="filterBarVisible[opt.id]" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-slate-300 text-teal-600" />
-                  <label :for="'tp-prog-vis-' + opt.id" class="cursor-pointer text-sm text-slate-700">{{ opt.label }}</label>
-                </li>
-              </ul>
-            </div>
-            <button type="button" class="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" @click="clearFilters(); closeFilterMenu()">
-              Xóa tất cả bộ lọc
-            </button>
-          </AppFilterFunnelMenu>
-          <div class="hidden h-6 w-px bg-slate-200 sm:block" aria-hidden="true" />
+            </FilterVisibilityDropdown>
+          </div>
+
           <button
             type="button"
-            class="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
-            aria-label="Xóa lọc"
-            @click="clearFilters"
+            class="inline-flex h-10 shrink-0 items-center gap-1 rounded-lg px-2 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-slate-800 dark:hover:bg-slate-800"
+            :title="t('tp_programs_page.filter_clear_all')"
+            data-testid="tp-programs-reset-filters"
+            @click="resetFilters"
           >
-            <span class="relative inline-flex">
-              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-              <XMarkIcon
-                class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/40"
-                aria-hidden="true"
-              />
-            </span>
+            <FunnelIcon class="h-5 w-5" aria-hidden="true" />
+            <XMarkIcon class="h-3 w-3 text-rose-500" aria-hidden="true" />
           </button>
-          <div class="ml-auto flex items-center gap-1 rounded-xl border border-slate-200 p-1">
-            <button type="button" class="grid h-9 w-9 place-items-center rounded-lg transition" :class="view === 'grid' ? 'bg-va-800 text-white' : 'text-slate-400 hover:text-slate-600'" aria-label="Xem dạng lưới" @click="view = 'grid'">
+
+          <div
+            class="ml-auto flex shrink-0 items-center gap-1 rounded-lg border border-slate-200 p-1 dark:border-slate-600"
+            role="group"
+            :aria-label="t('tp_programs_page.view_grid')"
+          >
+            <button
+              type="button"
+              class="grid h-10 w-10 place-items-center rounded-lg transition"
+              :class="view === 'grid' ? 'bg-va-800 text-white' : 'text-slate-400 hover:text-slate-600'"
+              :aria-label="t('tp_programs_page.view_grid')"
+              :aria-pressed="view === 'grid'"
+              data-testid="tp-programs-view-grid"
+              @click="view = 'grid'"
+            >
               <Squares2X2Icon class="h-5 w-5" />
             </button>
-            <button type="button" class="grid h-9 w-9 place-items-center rounded-lg transition" :class="view === 'list' ? 'bg-va-800 text-white' : 'text-slate-400 hover:text-slate-600'" aria-label="Xem dạng danh sách" @click="view = 'list'">
+            <button
+              type="button"
+              class="grid h-10 w-10 place-items-center rounded-lg transition"
+              :class="view === 'list' ? 'bg-va-800 text-white' : 'text-slate-400 hover:text-slate-600'"
+              :aria-label="t('tp_programs_page.view_list')"
+              :aria-pressed="view === 'list'"
+              data-testid="tp-programs-view-list"
+              @click="view = 'list'"
+            >
               <ListBulletIcon class="h-5 w-5" />
             </button>
           </div>
         </div>
-        <div v-if="hasVisibleBarFilters" class="mt-2 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-2">
-          <div v-if="filterBarVisible.search" class="relative min-w-[14rem] flex-1">
-            <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input v-model="filters.search" type="search" placeholder="Tìm kiếm…" aria-label="Tìm kiếm chương trình" class="h-9 w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-teal-500/20" />
-          </div>
-          <select v-if="filterBarVisible.status" v-model="filters.status" aria-label="Trạng thái" class="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm" :class="filters.status ? 'text-slate-900' : 'text-slate-500'">
-            <option value="">Trạng thái</option>
-            <option value="draft">Nháp</option>
-            <option value="active">Hoạt động</option>
-            <option value="paused">Tạm dừng</option>
-            <option value="completed">Hoàn thành</option>
-            <option value="cancelled">Đã hủy</option>
+      </div>
+
+      <div
+        v-if="hasFilterRow"
+        class="grid grid-cols-1 gap-3 border-t border-slate-100 px-5 py-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 dark:border-slate-700"
+      >
+        <DatagridFilterField v-if="visibleFilters.status">
+          <select
+            v-model="filters.status"
+            :class="FILTER_CONTROL_CLASS"
+            :aria-label="t('tp_programs_page.filter_status')"
+            data-testid="tp-programs-filter-status"
+            @change="load"
+          >
+            <option value="">{{ t('tp_programs_page.filter_status') }}</option>
+            <option v-for="opt in statusFilterOptions" :key="opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
           </select>
-          <select v-if="filterBarVisible.schoolYear" v-model="filters.schoolYear" aria-label="Năm học" class="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm" :class="filters.schoolYear ? 'text-slate-900' : 'text-slate-500'">
-            <option value="">Năm học</option>
+        </DatagridFilterField>
+
+        <DatagridFilterField v-if="visibleFilters.schoolYear">
+          <select
+            v-model="filters.schoolYear"
+            :class="FILTER_CONTROL_CLASS"
+            :aria-label="t('tp_programs_page.filter_school_year')"
+            data-testid="tp-programs-filter-school-year"
+          >
+            <option value="">{{ t('tp_programs_page.filter_school_year') }}</option>
             <option v-for="y in schoolYearOptions" :key="y" :value="y">{{ y }}</option>
           </select>
-          <select v-if="filterBarVisible.route" v-model="filters.route" aria-label="Tuyến" class="h-9 max-w-[12rem] rounded-lg border border-slate-200 bg-white px-3 text-sm" :class="filters.route ? 'text-slate-900' : 'text-slate-500'">
-            <option value="">Tuyến</option>
+        </DatagridFilterField>
+
+        <DatagridFilterField v-if="visibleFilters.route">
+          <select
+            v-model="filters.route"
+            :class="FILTER_CONTROL_CLASS"
+            :aria-label="t('tp_programs_page.filter_route')"
+            data-testid="tp-programs-filter-route"
+          >
+            <option value="">{{ t('tp_programs_page.filter_route') }}</option>
             <option v-for="r in routeOptions" :key="r" :value="r">{{ r }}</option>
           </select>
-        </div>
-      </AppFilterBar>
+        </DatagridFilterField>
+      </div>
 
-      <div class="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-4 py-3 sm:px-5 dark:border-slate-700">
         <p class="text-sm text-slate-500">{{ listSummaryText }}</p>
         <label class="flex items-center gap-2 text-sm text-slate-500">
-          Sắp xếp:
+          {{ t('tp_programs_page.sort_label') }}:
           <select
             v-model="sort"
-            aria-label="Sắp xếp"
-            class="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-700 outline-none ring-va-800/20 focus:ring"
+            :aria-label="t('tp_programs_page.sort_label')"
+            class="h-10 rounded-lg border border-slate-200 bg-white px-2.5 text-sm text-slate-700 outline-none ring-va-800/20 focus:ring dark:border-slate-600 dark:bg-slate-950"
+            data-testid="tp-programs-sort"
           >
-            <option value="newest">Mới nhất</option>
-            <option value="oldest">Cũ nhất</option>
-            <option value="name">Tên A → Z</option>
-            <option value="students">Học sinh nhiều nhất</option>
+            <option value="newest">{{ t('tp_programs_page.sort_newest') }}</option>
+            <option value="oldest">{{ t('tp_programs_page.sort_oldest') }}</option>
+            <option value="name">{{ t('tp_programs_page.sort_name') }}</option>
+            <option value="students">{{ t('tp_programs_page.sort_students') }}</option>
           </select>
         </label>
       </div>
-    </div>
 
-    <!-- States -->
-    <div v-if="loading" class="flex items-center justify-center rounded-2xl border border-slate-200 bg-white py-16 text-base text-slate-500">
-      <ArrowPathIcon class="mr-2 h-6 w-6 animate-spin" /> Đang tải…
-    </div>
-    <div v-else-if="!visibleItems.length" class="flex flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white py-16 text-center">
-      <AcademicCapIcon class="mb-3 h-14 w-14 text-slate-300" />
-      <p class="text-base font-medium text-slate-600">Không có chương trình phù hợp</p>
-      <Button class="mt-4" @click="goCreate">Tạo chương trình đầu tiên</Button>
-    </div>
+      <div v-if="loading" class="flex items-center justify-center py-16 text-base text-slate-500">
+        <ArrowPathIcon class="mr-2 h-6 w-6 animate-spin" aria-hidden="true" />
+        {{ t('tp_programs_page.loading') }}
+      </div>
+      <div v-else-if="!visibleItems.length" class="flex flex-col items-center justify-center py-16 text-center">
+        <AcademicCapIcon class="mb-3 h-14 w-14 text-slate-300" aria-hidden="true" />
+        <p class="text-base font-medium text-slate-600">{{ t('tp_programs_page.empty_title') }}</p>
+        <Button class="mt-4" data-testid="tp-programs-empty-cta" @click="goCreate">
+          {{ t('tp_programs_page.empty_cta') }}
+        </Button>
+      </div>
 
-    <!-- Card grid -->
-    <div v-else-if="view === 'grid'" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      <article
-        v-for="p in visibleItems"
-        :key="p.id"
-        class="group cursor-pointer rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-va-800/30 hover:shadow-md"
-        @click="goWorkspace(p.id)"
-      >
-        <div class="flex items-start gap-3">
-          <div class="grid h-12 w-12 shrink-0 place-items-center rounded-xl" :class="accent(p.status).iconBg">
-            <TruckIcon class="h-7 w-7" :class="accent(p.status).iconText" />
-          </div>
-          <div class="min-w-0 flex-1">
-            <h3 class="truncate text-base font-semibold text-slate-900">{{ p.name }}</h3>
-            <p class="mt-0.5 text-xs font-medium uppercase tracking-wide text-slate-400">
-              Năm học {{ schoolYear(p) }}
-            </p>
-          </div>
-          <span :class="statusClass(p.status)">
-            <span class="h-1.5 w-1.5 rounded-full" :class="accent(p.status).dot"></span>
-            {{ statusLabel(p.status) }}
-          </span>
-        </div>
-
-        <div class="mt-4 grid grid-cols-3 gap-2 rounded-xl bg-slate-50/70 py-3 text-center">
-          <div>
-            <div class="text-2xl font-bold text-slate-900">{{ p.enrolled_count ?? 0 }}</div>
-            <div class="mt-0.5 text-xs text-slate-500">Học sinh</div>
-          </div>
-          <div class="border-x border-slate-200/70">
-            <div class="text-2xl font-bold text-slate-900">{{ p.day_count ?? 0 }}</div>
-            <div class="mt-0.5 text-xs text-slate-500">Số ngày</div>
-          </div>
-          <div>
-            <div class="text-2xl font-bold" :class="accent(p.status).iconText">{{ runsPerWeek(p) }}</div>
-            <div class="mt-0.5 text-xs text-slate-500">Buổi/tuần</div>
-          </div>
-        </div>
-
-        <div class="mt-4 space-y-2 text-sm text-slate-500">
-          <div class="flex items-center gap-2">
-            <MapPinIcon class="h-4 w-4 shrink-0 text-slate-400" />
-            <span class="truncate">{{ p.origin_name || '—' }} → {{ p.destination_name || 'Trường' }}</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <ClockIcon class="h-4 w-4 shrink-0 text-slate-400" />
-            <span>{{ timeRange(p) }}</span>
-          </div>
-        </div>
-
-        <div class="mt-4">
-          <div class="mb-1.5 flex items-center justify-between text-xs">
-            <span class="text-slate-500">Tiến độ chương trình</span>
-            <span class="font-semibold text-slate-700">{{ progress(p) }}%</span>
-          </div>
-          <div class="h-2 w-full overflow-hidden rounded-full bg-slate-100">
-            <div class="h-full rounded-full transition-all" :class="accent(p.status).bar" :style="{ width: progress(p) + '%' }"></div>
-          </div>
-        </div>
-
-        <div class="mt-4 flex items-center justify-between border-t border-slate-100 pt-3.5">
-          <div class="flex items-center gap-2 text-sm text-slate-600">
-            <span class="grid h-7 w-7 place-items-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500">
-              {{ initials(p.responsible_user_name) }}
+      <div v-else-if="view === 'grid'" class="grid gap-4 px-4 pb-5 sm:px-5 md:grid-cols-2 xl:grid-cols-3">
+        <article
+          v-for="p in visibleItems"
+          :key="p.id"
+          class="group flex min-h-[22rem] cursor-pointer flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-va-800/30 hover:shadow-md dark:border-slate-700 dark:bg-slate-900/40"
+          :data-testid="`tp-program-card-${p.id}`"
+          @click="goWorkspace(p.id)"
+        >
+          <div class="flex items-start gap-3">
+            <div class="grid h-12 w-12 shrink-0 place-items-center rounded-xl" :class="accent(p.status).iconBg">
+              <TruckIcon class="h-7 w-7" :class="accent(p.status).iconText" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <h3 class="truncate text-base font-semibold text-slate-900 dark:text-white">{{ p.name }}</h3>
+              <p class="mt-0.5 text-xs font-medium uppercase tracking-wide text-slate-400">
+                {{ t('tp_programs_page.card_school_year', { year: schoolYear(p) }) }}
+              </p>
+            </div>
+            <span :class="statusClass(p.status)">
+              <span class="h-1.5 w-1.5 rounded-full" :class="accent(p.status).dot"></span>
+              {{ statusLabel(p.status) }}
             </span>
-            <span class="truncate">{{ p.responsible_user_name || 'Chưa phân công' }}</span>
           </div>
-          <span class="inline-flex items-center gap-1 text-sm font-medium text-va-800 group-hover:underline">
-            Xem chi tiết <ArrowRightIcon class="h-4 w-4" />
-          </span>
-        </div>
-      </article>
-    </div>
 
-    <!-- List view -->
-    <div v-else class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <table class="w-full min-w-[56rem] text-left text-base">
-        <thead class="bg-slate-50 text-sm uppercase tracking-wide text-slate-500">
-          <tr>
-            <th class="px-4 py-3.5 font-medium">Chương trình</th>
-            <th class="px-4 py-3.5 font-medium">Tuyến</th>
-            <th class="px-4 py-3.5 font-medium">Giờ</th>
-            <th class="px-4 py-3.5 font-medium">Học sinh</th>
-            <th class="px-4 py-3.5 font-medium">Số ngày</th>
-            <th class="px-4 py-3.5 font-medium">Phụ trách</th>
-            <th class="px-4 py-3.5 font-medium">Trạng thái</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100">
-          <tr
-            v-for="p in pagedListItems"
-            :key="p.id"
-            class="cursor-pointer hover:bg-slate-50/60"
-            @click="goWorkspace(p.id)"
-          >
-            <td class="px-4 py-3.5">
-              <div class="font-medium text-slate-900">{{ p.name }}</div>
-              <div class="font-mono text-xs text-slate-400">{{ p.code }}</div>
-            </td>
-            <td class="px-4 py-3.5 text-slate-600">{{ p.origin_name || '—' }} → {{ p.destination_name || 'Trường' }}</td>
-            <td class="px-4 py-3.5 text-slate-600">{{ timeRange(p) }}</td>
-            <td class="px-4 py-3.5 text-slate-600">{{ p.enrolled_count ?? 0 }}</td>
-            <td class="px-4 py-3.5 text-slate-600">{{ p.day_count ?? 0 }}</td>
-            <td class="px-4 py-3.5 text-slate-600">{{ p.responsible_user_name || '—' }}</td>
-            <td class="px-4 py-3.5">
-              <span :class="statusClass(p.status)">
-                <span class="h-1.5 w-1.5 rounded-full" :class="accent(p.status).dot"></span>
-                {{ statusLabel(p.status) }}
+          <div class="mt-4 grid grid-cols-3 gap-2 rounded-xl bg-slate-50/70 py-3 text-center dark:bg-slate-800/40">
+            <div>
+              <div class="text-2xl font-bold text-slate-900 dark:text-white">{{ p.enrolled_count ?? 0 }}</div>
+              <div class="mt-0.5 text-xs text-slate-500">{{ t('tp_programs_page.card_students') }}</div>
+            </div>
+            <div class="border-x border-slate-200/70 dark:border-slate-600">
+              <div class="text-2xl font-bold text-slate-900 dark:text-white">{{ p.day_count ?? 0 }}</div>
+              <div class="mt-0.5 text-xs text-slate-500">{{ t('tp_programs_page.card_days') }}</div>
+            </div>
+            <div>
+              <div class="text-2xl font-bold" :class="accent(p.status).iconText">{{ runsPerWeek(p) }}</div>
+              <div class="mt-0.5 text-xs text-slate-500">{{ t('tp_programs_page.card_sessions_per_week') }}</div>
+            </div>
+          </div>
+
+          <div class="mt-4 flex-1 space-y-3 text-sm">
+            <div class="rounded-xl bg-slate-50/80 p-3.5 dark:bg-slate-800/40">
+              <div class="flex gap-3">
+                <MapPinIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                <div class="min-w-0 flex-1 space-y-3">
+                  <div>
+                    <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                      {{ t('tp_programs_page.card_origin') }}
+                    </div>
+                    <p class="mt-1 font-medium leading-snug text-slate-800 dark:text-slate-100">
+                      {{ p.origin_name || '—' }}
+                    </p>
+                  </div>
+                  <div class="border-t border-slate-200/80 pt-3 dark:border-slate-600">
+                    <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                      {{ t('tp_programs_page.card_destination') }}
+                    </div>
+                    <p class="mt-1 font-medium leading-snug text-slate-800 dark:text-slate-100">
+                      {{ p.destination_name || t('tp_programs_page.card_destination_default') }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-start gap-2 text-slate-500">
+              <ClockIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+              <div>
+                <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                  {{ t('tp_programs_page.card_time') }}
+                </div>
+                <p class="mt-1 font-medium text-slate-700 dark:text-slate-200">{{ timeRange(p) }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <div class="mb-1.5 flex items-center justify-between text-xs">
+              <span class="text-slate-500">{{ t('tp_programs_page.card_progress') }}</span>
+              <span class="font-semibold text-slate-700 dark:text-slate-200">{{ progress(p) }}%</span>
+            </div>
+            <div class="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
+              <div class="h-full rounded-full transition-all" :class="accent(p.status).bar" :style="{ width: progress(p) + '%' }"></div>
+            </div>
+          </div>
+
+          <div class="mt-4 flex items-center justify-between border-t border-slate-100 pt-3.5 dark:border-slate-700">
+            <div class="flex min-w-0 items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+              <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500 dark:bg-slate-800">
+                {{ initials(p.responsible_user_name) }}
               </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+              <span class="truncate">{{ p.responsible_user_name || t('tp_programs_page.card_responsible') }}</span>
+            </div>
+            <span class="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-va-800 group-hover:underline">
+              {{ t('tp_programs_page.card_view_detail') }} <ArrowRightIcon class="h-4 w-4" aria-hidden="true" />
+            </span>
+          </div>
+        </article>
+      </div>
 
-      <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-4 py-3 text-sm">
-        <div class="flex flex-wrap items-center gap-3 text-slate-500">
-          <span v-if="listTotal > 0">
-            {{ listRangeText }}
-          </span>
-          <label class="inline-flex items-center gap-2">
-            <span class="text-slate-500">Hiển thị</span>
-            <select
-              v-model.number="listPerPage"
-              aria-label="Số dòng mỗi trang"
-              class="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-700 outline-none ring-va-800/20 focus:ring"
+      <div v-else class="overflow-x-auto border-t border-slate-100 dark:border-slate-700">
+        <table class="w-full min-w-[56rem] text-left text-base">
+          <thead class="bg-slate-50 text-sm uppercase tracking-wide text-slate-500 dark:bg-slate-800/60">
+            <tr>
+              <th class="px-4 py-3.5 font-medium">{{ t('tp_programs_page.col_program') }}</th>
+              <th class="px-4 py-3.5 font-medium">{{ t('tp_programs_page.col_route') }}</th>
+              <th class="px-4 py-3.5 font-medium">{{ t('tp_programs_page.col_time') }}</th>
+              <th class="px-4 py-3.5 font-medium">{{ t('tp_programs_page.col_students') }}</th>
+              <th class="px-4 py-3.5 font-medium">{{ t('tp_programs_page.col_days') }}</th>
+              <th class="px-4 py-3.5 font-medium">{{ t('tp_programs_page.col_responsible') }}</th>
+              <th class="px-4 py-3.5 font-medium">{{ t('tp_programs_page.col_status') }}</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+            <tr
+              v-for="p in pagedListItems"
+              :key="p.id"
+              class="cursor-pointer hover:bg-slate-50/60 dark:hover:bg-slate-800/40"
+              :data-testid="`tp-program-row-${p.id}`"
+              @click="goWorkspace(p.id)"
             >
-              <option v-for="n in LIST_PER_PAGE_OPTIONS" :key="n" :value="n">{{ n }}</option>
-            </select>
-            <span class="text-slate-500">dòng</span>
-          </label>
-        </div>
-        <div v-if="listLastPage > 1" class="flex items-center gap-2">
-          <span class="text-xs text-slate-500">Trang {{ listPage }} / {{ listLastPage }}</span>
-          <Button variant="secondary" :disabled="listPage <= 1" @click="changeListPage(listPage - 1)">Trước</Button>
-          <Button variant="secondary" :disabled="listPage >= listLastPage" @click="changeListPage(listPage + 1)">Sau</Button>
+              <td class="px-4 py-3.5">
+                <div class="font-medium text-slate-900 dark:text-white">{{ p.name }}</div>
+                <div class="font-mono text-xs text-slate-400">{{ p.code }}</div>
+              </td>
+              <td class="px-4 py-3.5 text-slate-600 dark:text-slate-300">
+                <div class="text-[11px] uppercase text-slate-400">{{ t('tp_programs_page.card_origin') }}</div>
+                <div>{{ p.origin_name || '—' }}</div>
+                <div class="mt-1 text-[11px] uppercase text-slate-400">{{ t('tp_programs_page.card_destination') }}</div>
+                <div>{{ p.destination_name || t('tp_programs_page.card_destination_default') }}</div>
+              </td>
+              <td class="px-4 py-3.5 text-slate-600 dark:text-slate-300">{{ timeRange(p) }}</td>
+              <td class="px-4 py-3.5 text-slate-600 dark:text-slate-300">{{ p.enrolled_count ?? 0 }}</td>
+              <td class="px-4 py-3.5 text-slate-600 dark:text-slate-300">{{ p.day_count ?? 0 }}</td>
+              <td class="px-4 py-3.5 text-slate-600 dark:text-slate-300">{{ p.responsible_user_name || '—' }}</td>
+              <td class="px-4 py-3.5">
+                <span :class="statusClass(p.status)">
+                  <span class="h-1.5 w-1.5 rounded-full" :class="accent(p.status).dot"></span>
+                  {{ statusLabel(p.status) }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-4 py-3 text-sm dark:border-slate-700">
+          <div class="flex flex-wrap items-center gap-3 text-slate-500">
+            <span v-if="listTotal > 0">{{ listRangeText }}</span>
+            <label class="inline-flex items-center gap-2">
+              <span>{{ t('tp_programs_page.per_page_label') }}</span>
+              <select
+                v-model.number="listPerPage"
+                :aria-label="t('tp_programs_page.per_page_label')"
+                class="h-10 rounded-lg border border-slate-200 bg-white px-2.5 text-sm text-slate-700 outline-none ring-va-800/20 focus:ring dark:border-slate-600 dark:bg-slate-950"
+                data-testid="tp-programs-per-page"
+              >
+                <option v-for="n in LIST_PER_PAGE_OPTIONS" :key="n" :value="n">{{ n }}</option>
+              </select>
+              <span>{{ t('tp_programs_page.per_page_suffix') }}</span>
+            </label>
+          </div>
+          <div v-if="listLastPage > 1" class="flex items-center gap-2">
+            <span class="text-xs text-slate-500">
+              {{ t('tp_programs_page.page_of', { page: listPage, last: listLastPage }) }}
+            </span>
+            <Button variant="secondary" :disabled="listPage <= 1" data-testid="tp-programs-page-prev" @click="changeListPage(listPage - 1)">
+              {{ t('tp_programs_page.page_prev') }}
+            </Button>
+            <Button variant="secondary" :disabled="listPage >= listLastPage" data-testid="tp-programs-page-next" @click="changeListPage(listPage + 1)">
+              {{ t('tp_programs_page.page_next') }}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -294,10 +373,10 @@
 <script setup>
 import { computed, onActivated, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   PlusIcon,
   FunnelIcon,
-  MagnifyingGlassIcon,
   Squares2X2Icon,
   ListBulletIcon,
   ArrowPathIcon,
@@ -307,61 +386,67 @@ import {
   TruckIcon,
   XMarkIcon,
   ArrowRightIcon,
-  RectangleStackIcon,
-  BoltIcon,
-  CheckBadgeIcon,
-  CalendarDaysIcon,
 } from '@heroicons/vue/24/outline'
 import Button from '../../components/ui/Button.vue'
-import AppFilterBar from '../../components/filters/AppFilterBar.vue'
-import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vue'
-import { useFilterBarVisibility } from '../../composables/useFilterBarVisibility.js'
+import TpProgramSummaryBar from '../../components/transportProgram/TpProgramSummaryBar.vue'
+import DatagridToolbarSearch from '../../components/shared/ui/DatagridToolbarSearch.vue'
+import DatagridToolbarActionButton from '../../components/shared/ui/DatagridToolbarActionButton.vue'
+import DatagridFilterField from '../../components/shared/ui/DatagridFilterField.vue'
+import FilterVisibilityDropdown from '../../components/shared/ui/FilterVisibilityDropdown.vue'
+import { useVisibleFilterControls } from '../../composables/useVisibleFilterControls.js'
 import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 import { listPrograms } from '../../api/transportProgram'
 import { showAppErrorFromApi } from '../../composables/appMessage'
 
+const { t } = useI18n()
 const router = useRouter()
 const loading = ref(false)
 const items = ref([])
+const kpiStats = ref({ total: 0, by_status: {}, operating_days: 0 })
 const view = ref('grid')
 const sort = ref('newest')
 const filters = reactive({ search: '', status: '', schoolYear: '', route: '' })
 
-const TP_PROG_FILTER_VIS_IDS = ['search', 'status', 'schoolYear', 'route']
-const TP_PROG_FILTER_VIS_DEFAULTS = Object.fromEntries(TP_PROG_FILTER_VIS_IDS.map((id) => [id, false]))
-const {
-  visible: filterBarVisible,
-  resetVisibility: resetFilterBarVisibility,
-  hasVisibleOnBar: hasVisibleBarFilters,
-} = useFilterBarVisibility(TP_PROG_FILTER_VIS_IDS, TP_PROG_FILTER_VIS_DEFAULTS)
+const FILTER_CONTROL_CLASS =
+  'h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm focus:border-va-700 focus:outline-none focus:ring-2 focus:ring-va-700/15 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100'
 
-const filterMenuRef = ref(null)
-const tpProgramFilterBarRef = ref(null)
-useDetailsAutoCloseWithin(tpProgramFilterBarRef)
-
-const filterBarVisibilityOptions = [
-  { id: 'search', label: 'Tìm kiếm' },
-  { id: 'status', label: 'Trạng thái' },
-  { id: 'schoolYear', label: 'Năm học' },
-  { id: 'route', label: 'Tuyến' },
+const TP_PROG_FILTER_CONTROLS = [
+  { key: 'status', label: '', default: false },
+  { key: 'schoolYear', label: '', default: false },
+  { key: 'route', label: '', default: false },
 ]
 
-const activeFilterCount = computed(() => {
-  let n = 0
-  if (filters.search?.trim()) n++
-  if (filters.status) n++
-  if (filters.schoolYear) n++
-  if (filters.route) n++
-  return n
-})
+const {
+  visibleFilters,
+  hasFilterRow,
+  showFilterPanelDd,
+  openFilterPanel,
+  closeFilterPanel,
+} = useVisibleFilterControls(TP_PROG_FILTER_CONTROLS, 'va-dieuvan.tp-programs.visible-filters.v1')
 
-function onTpProgramFilterBarEnter() {
-  resetFilterBarVisibility()
+const FILTER_CONTROL_LABEL_KEYS = {
+  status: 'tp_programs_page.filter_status',
+  schoolYear: 'tp_programs_page.filter_school_year',
+  route: 'tp_programs_page.filter_route',
 }
 
-function closeFilterMenu() {
-  filterMenuRef.value?.close?.()
-}
+const filterControlDefs = computed(() =>
+  TP_PROG_FILTER_CONTROLS.map((fd) => ({
+    key: fd.key,
+    label: t(FILTER_CONTROL_LABEL_KEYS[fd.key] ?? fd.key),
+  })),
+)
+
+const statusFilterOptions = computed(() => [
+  { value: 'draft', label: t('tp_programs_page.status_draft') },
+  { value: 'active', label: t('tp_programs_page.status_active') },
+  { value: 'paused', label: t('tp_programs_page.status_paused') },
+  { value: 'completed', label: t('tp_programs_page.status_completed') },
+  { value: 'cancelled', label: t('tp_programs_page.status_cancelled') },
+])
+
+const tpProgramsDatagridRef = ref(null)
+useDetailsAutoCloseWithin(tpProgramsDatagridRef)
 
 const LIST_PER_PAGE_OPTIONS = [5, 10, 15, 20]
 const listPage = ref(1)
@@ -373,10 +458,17 @@ async function load() {
   try {
     const res = await listPrograms({
       status: filters.status || undefined,
-      search: filters.search || undefined,
+      search: filters.search?.trim() || undefined,
       per_page: 60,
     })
     items.value = res?.items ?? []
+    if (res?.summary) {
+      kpiStats.value = {
+        total: res.summary.total ?? 0,
+        by_status: res.summary.by_status ?? {},
+        operating_days: res.summary.operating_days ?? 0,
+      }
+    }
   } catch (err) {
     showAppErrorFromApi(err)
   } finally {
@@ -385,10 +477,30 @@ async function load() {
 }
 
 watch(() => filters.status, load)
-watch(() => filters.search, () => {
-  clearTimeout(searchTimer)
-  searchTimer = setTimeout(load, 300)
-})
+watch(
+  () => filters.search,
+  () => {
+    clearTimeout(searchTimer)
+    searchTimer = setTimeout(load, 350)
+  },
+)
+
+function onKpiQuickFilter(payload) {
+  if (payload.kind === 'reset') {
+    filters.status = ''
+  } else if (payload.kind === 'status') {
+    filters.status = payload.value === filters.status ? '' : payload.value
+  }
+  load()
+}
+
+function resetFilters() {
+  filters.search = ''
+  filters.status = ''
+  filters.schoolYear = ''
+  filters.route = ''
+  load()
+}
 
 function schoolYear(p) {
   const s = p.start_date ? new Date(p.start_date).getFullYear() : null
@@ -402,7 +514,7 @@ function runsPerWeek(p) {
 }
 
 function timeRange(p) {
-  const fmt = (t) => (t ? String(t).slice(0, 5) : null)
+  const fmt = (time) => (time ? String(time).slice(0, 5) : null)
   const a = fmt(p.departure_time)
   const b = fmt(p.return_time)
   if (a && b) return `${a} – ${b}`
@@ -441,10 +553,6 @@ const routeOptions = computed(() => {
   const set = new Set(items.value.map((p) => p.destination_name).filter(Boolean))
   return [...set].sort()
 })
-
-const hasActiveFilters = computed(
-  () => !!(filters.search || filters.status || filters.schoolYear || filters.route),
-)
 
 const visibleItems = computed(() => {
   let rows = items.value.filter((p) => {
@@ -485,7 +593,13 @@ const listRangeEnd = computed(() =>
 )
 
 const listRangeText = computed(() =>
-  listTotal.value ? `${listRangeStart.value}–${listRangeEnd.value} / ${listTotal.value} chương trình` : '',
+  listTotal.value
+    ? t('tp_programs_page.list_range', {
+        from: listRangeStart.value,
+        to: listRangeEnd.value,
+        total: listTotal.value,
+      })
+    : '',
 )
 
 const listSummaryText = computed(() => {
@@ -493,7 +607,7 @@ const listSummaryText = computed(() => {
   if (view.value === 'list' && n > 0) {
     return listRangeText.value
   }
-  return `Hiển thị ${n} chương trình`
+  return t('tp_programs_page.list_summary', { n })
 })
 
 function changeListPage(p) {
@@ -508,60 +622,6 @@ watch(listLastPage, (last) => {
   if (listPage.value > last) listPage.value = last
 })
 
-const statTiles = computed(() => {
-  const all = items.value
-  const total = all.length
-  const active = all.filter((p) => p.status === 'active').length
-  const completed = all.filter((p) => p.status === 'completed').length
-  const operatingDays = all.reduce((sum, p) => sum + (p.day_count ?? 0), 0)
-  const activePct = total ? Math.round((active / total) * 100) : 0
-  return [
-    {
-      key: 'total',
-      value: total,
-      hint: 'chương trình',
-      hintClass: 'text-slate-500',
-      icon: RectangleStackIcon,
-      iconBg: 'bg-slate-100',
-      iconText: 'text-slate-600',
-    },
-    {
-      key: 'active',
-      value: active,
-      hint: `${activePct}% đang hoạt động`,
-      hintClass: 'text-emerald-600',
-      icon: BoltIcon,
-      iconBg: 'bg-emerald-50',
-      iconText: 'text-emerald-600',
-    },
-    {
-      key: 'completed',
-      value: completed,
-      hint: 'đã hoàn thành',
-      hintClass: 'text-sky-600',
-      icon: CheckBadgeIcon,
-      iconBg: 'bg-sky-50',
-      iconText: 'text-sky-600',
-    },
-    {
-      key: 'days',
-      value: operatingDays,
-      hint: 'ngày vận hành',
-      hintClass: 'text-violet-600',
-      icon: CalendarDaysIcon,
-      iconBg: 'bg-violet-50',
-      iconText: 'text-violet-600',
-    },
-  ]
-})
-
-function clearFilters() {
-  filters.search = ''
-  filters.status = ''
-  filters.schoolYear = ''
-  filters.route = ''
-}
-
 function goCreate() {
   router.push({ name: 'tpProgramCreate' })
 }
@@ -570,40 +630,40 @@ function goWorkspace(id) {
 }
 
 function statusLabel(s) {
-  return {
-    draft: 'Nháp',
-    active: 'Hoạt động',
-    paused: 'Tạm dừng',
-    completed: 'Hoàn thành',
-    cancelled: 'Đã hủy',
-  }[s] || s
+  const key = {
+    draft: 'status_draft',
+    active: 'status_active',
+    paused: 'status_paused',
+    completed: 'status_completed',
+    cancelled: 'status_cancelled',
+  }[s]
+  return key ? t(`tp_programs_page.${key}`) : s
 }
 function statusClass(s) {
   const base = 'inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium '
-  return base + ({
-    draft: 'bg-slate-100 text-slate-600',
-    active: 'bg-emerald-50 text-emerald-700',
-    paused: 'bg-amber-50 text-amber-700',
-    completed: 'bg-sky-50 text-sky-700',
-    cancelled: 'bg-rose-50 text-rose-700',
-  }[s] || 'bg-slate-100 text-slate-600')
+  return (
+    base +
+    ({
+      draft: 'bg-slate-100 text-slate-600',
+      active: 'bg-emerald-50 text-emerald-700',
+      paused: 'bg-amber-50 text-amber-700',
+      completed: 'bg-sky-50 text-sky-700',
+      cancelled: 'bg-rose-50 text-rose-700',
+    }[s] || 'bg-slate-100 text-slate-600')
+  )
 }
 function accent(s) {
-  return {
-    draft: { iconBg: 'bg-slate-100', iconText: 'text-slate-500', dot: 'bg-slate-400', bar: 'bg-slate-400' },
-    active: { iconBg: 'bg-emerald-50', iconText: 'text-emerald-600', dot: 'bg-emerald-500', bar: 'bg-emerald-500' },
-    paused: { iconBg: 'bg-amber-50', iconText: 'text-amber-600', dot: 'bg-amber-500', bar: 'bg-amber-500' },
-    completed: { iconBg: 'bg-sky-50', iconText: 'text-sky-600', dot: 'bg-sky-500', bar: 'bg-sky-500' },
-    cancelled: { iconBg: 'bg-rose-50', iconText: 'text-rose-600', dot: 'bg-rose-500', bar: 'bg-rose-500' },
-  }[s] || { iconBg: 'bg-slate-100', iconText: 'text-slate-500', dot: 'bg-slate-400', bar: 'bg-slate-400' }
+  return (
+    {
+      draft: { iconBg: 'bg-slate-100', iconText: 'text-slate-500', dot: 'bg-slate-400', bar: 'bg-slate-400' },
+      active: { iconBg: 'bg-emerald-50', iconText: 'text-emerald-600', dot: 'bg-emerald-500', bar: 'bg-emerald-500' },
+      paused: { iconBg: 'bg-amber-50', iconText: 'text-amber-600', dot: 'bg-amber-500', bar: 'bg-amber-500' },
+      completed: { iconBg: 'bg-sky-50', iconText: 'text-sky-600', dot: 'bg-sky-500', bar: 'bg-sky-500' },
+      cancelled: { iconBg: 'bg-rose-50', iconText: 'text-rose-600', dot: 'bg-rose-500', bar: 'bg-rose-500' },
+    }[s] || { iconBg: 'bg-slate-100', iconText: 'text-slate-500', dot: 'bg-slate-400', bar: 'bg-slate-400' }
+  )
 }
 
-onMounted(() => {
-  onTpProgramFilterBarEnter()
-  load()
-})
-
-onActivated(() => {
-  onTpProgramFilterBarEnter()
-})
+onMounted(load)
+onActivated(load)
 </script>

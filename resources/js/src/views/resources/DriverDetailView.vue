@@ -1,6 +1,6 @@
 <template>
   <div
-    class="mx-auto max-w-5xl space-y-6 rounded-xl border border-slate-200 bg-white p-4 text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 sm:p-6"
+    class="w-full max-w-none space-y-6 rounded-xl border border-slate-200 bg-white p-4 text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 sm:p-6 lg:px-8"
   >
     <div class="flex flex-wrap items-center gap-3">
       <RouterLink
@@ -51,30 +51,40 @@
           </div>
         </div>
 
-        <div v-if="!profileEdit" class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+        <div v-if="!profileEdit" class="mt-4 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
           <div>
             <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ t('resources.col_driver_name') }}</div>
             <div class="mt-0.5 font-medium">{{ driver.full_name }}</div>
           </div>
           <div>
             <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ t('resources.col_phone') }}</div>
-            <div class="mt-0.5">{{ driver.phone || '—' }}</div>
+            <div class="mt-0.5">
+              <EmptyValue :value="driver.phone" empty-key="driver_detail.empty_phone" />
+            </div>
           </div>
           <div>
             <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ t('resources.col_user_email') }}</div>
-            <div class="mt-0.5 break-all">{{ driverEmail || '—' }}</div>
+            <div class="mt-0.5 break-all">
+              <EmptyValue :value="driverEmail" empty-key="driver_detail.empty_email" />
+            </div>
           </div>
           <div>
             <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ t('resources.col_employee_code') }}</div>
-            <div class="mt-0.5 font-mono text-xs">{{ driver.user?.employee_code || '—' }}</div>
+            <div class="mt-0.5 font-mono text-xs">
+              <EmptyValue :value="driver.user?.employee_code" empty-key="driver_detail.empty_employee_code" />
+            </div>
           </div>
           <div>
             <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ t('driver_detail.national_id') }}</div>
-            <div class="mt-0.5">{{ driver.national_id || '—' }}</div>
+            <div class="mt-0.5">
+              <EmptyValue :value="driver.national_id" empty-key="driver_detail.empty_national_id" />
+            </div>
           </div>
           <div>
             <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ t('resources.col_license') }}</div>
-            <div class="mt-0.5">{{ licenseLine }}</div>
+            <div class="mt-0.5">
+              <EmptyValue :value="licenseLine" empty-key="driver_detail.empty_license" />
+            </div>
           </div>
           <div>
             <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ t('driver_detail.employment') }}</div>
@@ -215,9 +225,13 @@
               >
                 <td class="px-3 py-2 align-top">{{ docTypeLabel(doc.doc_type) }}</td>
                 <td class="max-w-[200px] px-3 py-2 align-top text-xs text-slate-600 dark:text-slate-400">
-                  <span class="line-clamp-2">{{ doc.title || '—' }}</span>
+                  <span class="line-clamp-2">
+                    <EmptyValue :value="doc.title" empty-key="driver_detail.empty_doc_title" />
+                  </span>
                 </td>
-                <td class="whitespace-nowrap px-3 py-2 align-top text-xs">{{ doc.expires_at || '—' }}</td>
+                <td class="whitespace-nowrap px-3 py-2 align-top text-xs">
+                  <EmptyValue :value="doc.expires_at" empty-key="driver_detail.empty_doc_expires" />
+                </td>
                 <td class="px-3 py-2 align-top">
                   <span :class="expiryPillClass(doc.expiry)">{{ expiryLabel(doc.expiry) }}</span>
                 </td>
@@ -306,7 +320,9 @@
               <span class="font-medium text-slate-800 dark:text-slate-200">{{ log.event }}</span>
               <span class="text-slate-500">{{ formatDt(log.created_at) }}</span>
             </div>
-            <div class="mt-1 text-slate-600 dark:text-slate-400">{{ log.actor?.name || log.actor_id || '—' }}</div>
+            <div class="mt-1 text-slate-600 dark:text-slate-400">
+              <EmptyValue :value="log.actor?.name || log.actor_id" empty-key="driver_detail.empty_actor" />
+            </div>
           </li>
         </ul>
         <p v-if="!auditLogs.length" class="mt-2 text-sm text-slate-500">{{ t('resources.empty') }}</p>
@@ -484,6 +500,7 @@ import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ArrowDownTrayIcon, EyeIcon } from '@heroicons/vue/24/outline'
 import PdfFileIcon from '../../components/icons/PdfFileIcon.vue'
+import EmptyValue from '../../components/ui/EmptyValue.vue'
 import {
   createDriverComplianceDocument,
   deleteDriverComplianceDocument,
@@ -580,9 +597,9 @@ const DOC_TYPES = [
 
 const licenseLine = computed(() => {
   const d = driver.value
-  if (!d) return '—'
+  if (!d) return ''
   const parts = [d.license_class, d.license_expires_at].filter(Boolean)
-  return parts.length ? parts.join(' — ') : '—'
+  return parts.length ? parts.join(' — ') : ''
 })
 
 const driverEmail = computed(() => {

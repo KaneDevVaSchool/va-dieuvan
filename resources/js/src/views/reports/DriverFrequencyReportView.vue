@@ -34,136 +34,24 @@
       </div>
     </header>
 
-    <AppFilterBar>
-      <div ref="freqFilterBarRef" class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
-        <AppFilterFunnelMenu ref="filterMenuRef" :badge-count="activeFilterCount">
-          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            {{ t('driver_freq.filter_menu_title') }}
-          </p>
-          <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
-            <li class="flex justify-between gap-2">
-              <span class="text-slate-500">{{ t('driver_freq.filter_year') }}</span>
-              <span class="font-medium tabular-nums">{{ filters.year }}</span>
-            </li>
-            <li v-if="filters.quarter" class="flex justify-between gap-2">
-              <span class="text-slate-500">{{ t('driver_freq.filter_quarter') }}</span>
-              <span class="font-medium">{{ filters.quarter.toUpperCase() }}</span>
-            </li>
-            <li v-if="filters.driverId" class="flex justify-between gap-2">
-              <span class="text-slate-500">{{ t('driver_freq.filter_driver') }}</span>
-              <span class="max-w-[10rem] truncate font-medium">{{ driverFilterSummary }}</span>
-            </li>
-            <li v-if="filters.vehiclePlate" class="flex justify-between gap-2">
-              <span class="text-slate-500">{{ t('driver_freq.filter_vehicle') }}</span>
-              <span class="font-medium">{{ filters.vehiclePlate }}</span>
-            </li>
-            <li v-if="filters.tripType" class="flex justify-between gap-2">
-              <span class="text-slate-500">{{ t('driver_freq.filter_trip_type') }}</span>
-              <span class="font-medium">{{ tripTypeFilterSummary }}</span>
-            </li>
-            <li v-if="activeFilterCount === 0" class="text-slate-400">{{ t('filter_bar.empty') }}</li>
-          </ul>
-          <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
-            <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
-              {{ t('trips_page.filter_show_controls_title') }}
-            </p>
-            <p class="mt-1 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
-              {{ t('trips_page.filter_show_controls_hint') }}
-            </p>
-            <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
-              <li v-for="opt in filterBarVisibilityOptions" :key="'df-vis-' + opt.id" class="flex items-start gap-2">
-                <input
-                  :id="'driver-freq-filter-vis-' + opt.id"
-                  v-model="filterBarVisible[opt.id]"
-                  type="checkbox"
-                  class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900"
-                />
-                <label :for="'driver-freq-filter-vis-' + opt.id" class="cursor-pointer text-sm text-slate-700 dark:text-slate-300">
-                  {{ t(opt.labelKey) }}
-                </label>
-              </li>
-            </ul>
-          </div>
-          <button
-            type="button"
-            class="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
-            @click="resetFilters(); closeFilterMenu()"
-          >
-            {{ t('driver_freq.clear_filters') }}
-          </button>
-        </AppFilterFunnelMenu>
-        <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
-        <button
-          type="button"
-          class="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
-          :title="t('filter_bar.clear_icon')"
-          :aria-label="t('filter_bar.clear_icon')"
-          @click="resetFilters"
-        >
-          <span class="relative inline-flex">
-            <FunnelIcon class="h-5 w-5" />
-            <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/40" />
-          </span>
-        </button>
-      </div>
-      <div
-        v-if="hasVisibleBarFilters"
-        class="mt-2 flex min-w-0 flex-wrap items-center gap-2 border-t border-violet-100/80 pt-2 dark:border-violet-900/30"
-      >
-        <select
-          v-if="filterBarVisible.year"
-          v-model.number="filters.year"
-          class="freq-select"
-          :aria-label="t('driver_freq.filter_year')"
-          @change="onFilterChange"
-        >
-          <option v-for="y in YEAR_OPTIONS" :key="y" :value="y">{{ y }}</option>
-        </select>
-        <select
-          v-if="filterBarVisible.quarter"
-          v-model="filters.quarter"
-          class="freq-select"
-          :aria-label="t('driver_freq.filter_quarter')"
-          @change="onFilterChange"
-        >
-          <option value="">{{ t('driver_freq.filter_quarter') }}</option>
-          <option value="q1">{{ t('driver_freq.filter_quarter_q1') }}</option>
-          <option value="q2">{{ t('driver_freq.filter_quarter_q2') }}</option>
-          <option value="q3">{{ t('driver_freq.filter_quarter_q3') }}</option>
-          <option value="q4">{{ t('driver_freq.filter_quarter_q4') }}</option>
-        </select>
-        <select
-          v-if="filterBarVisible.driverId"
-          v-model="filters.driverId"
-          class="freq-select freq-select--wide"
-          :aria-label="t('driver_freq.filter_driver')"
-          @change="onFilterChange"
-        >
-          <option value="">{{ t('driver_freq.filter_driver') }}</option>
-          <option v-for="d in filterOptions.drivers" :key="d.id" :value="d.id">{{ d.name }}</option>
-        </select>
-        <select
-          v-if="filterBarVisible.vehiclePlate"
-          v-model="filters.vehiclePlate"
-          class="freq-select"
-          :aria-label="t('driver_freq.filter_vehicle')"
-          @change="onFilterChange"
-        >
-          <option value="">{{ t('driver_freq.filter_vehicle') }}</option>
-          <option v-for="v in filterOptions.vehicles" :key="v.id" :value="v.plate">{{ v.plate }}</option>
-        </select>
-        <select
-          v-if="filterBarVisible.tripType"
-          v-model="filters.tripType"
-          class="freq-select freq-select--wide"
-          :aria-label="t('driver_freq.filter_trip_type')"
-          @change="onFilterChange"
-        >
-          <option value="">{{ t('driver_freq.filter_trip_type') }}</option>
-          <option v-for="tt in TRIP_TYPES" :key="tt.value" :value="tt.value">{{ tt.label }}</option>
-        </select>
-      </div>
-    </AppFilterBar>
+    <DriverFrequencyFilters
+      :filters="filters"
+      :filter-control-visible="filterControlVisible"
+      :filter-control-defs="filterControlDefs"
+      :year-options="YEAR_OPTIONS"
+      :driver-options="filterOptions.drivers"
+      :vehicle-options="filterOptions.vehicles"
+      :trip-type-options="tripTypeOptions"
+      :has-visible-bar-filters="hasVisibleBarFilters"
+      :show-filter-panel="showFilterPanelDd"
+      :loading="loading"
+      @reload="fetchReport"
+      @reset-filters="resetFilters"
+      @patch-filter="onPatchFilter"
+      @toggle-filter-panel="toggleFilterPanel"
+      @close-filter-panel="closeFilterPanel"
+      @toggle-filter-control="onToggleFilterControl"
+    />
 
     <div
       v-if="loadError"
@@ -173,36 +61,12 @@
       {{ t('driver_freq.load_error') }}
     </div>
 
-    <!-- ============================================================
-         KPI CARDS
-         ============================================================ -->
-    <p v-if="loading" class="freq-loading">{{ t('driver_freq.loading') }}</p>
-    <div v-else class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-      <article class="freq-kpi freq-kpi--va">
-        <p class="freq-kpi__label">{{ t('driver_freq.kpi_total_trips') }}</p>
-        <p class="freq-kpi__value">{{ kpi.totalTrips.toLocaleString('vi-VN') }}</p>
-        <p class="freq-kpi__hint">{{ t('driver_freq.kpi_total_trips_sub', { year: filters.year }) }}</p>
-        <span v-if="yearDeltaLabel" class="freq-kpi__badge" :class="yearDeltaClass">{{ yearDeltaLabel }}</span>
-      </article>
-      <article class="freq-kpi freq-kpi--sky">
-        <p class="freq-kpi__label">{{ t('driver_freq.kpi_active_drivers') }}</p>
-        <p class="freq-kpi__value freq-kpi__value--sky">{{ kpi.activeDrivers }}</p>
-        <p class="freq-kpi__hint">{{ t('driver_freq.kpi_active_drivers_avg', { avg: kpi.avgTripsPerDriver }) }}</p>
-        <span class="freq-kpi__foot freq-kpi__foot--sky">{{ t('driver_freq.kpi_active_drivers_above', { n: kpi.driversAboveThreshold }) }}</span>
-      </article>
-      <article class="freq-kpi freq-kpi--amber">
-        <p class="freq-kpi__label">{{ t('driver_freq.kpi_active_vehicles') }}</p>
-        <p class="freq-kpi__value freq-kpi__value--amber">{{ kpi.activeVehicles }}</p>
-        <p class="freq-kpi__hint">{{ t('driver_freq.kpi_active_vehicles_avg', { avg: kpi.avgTripsPerVehicle }) }}</p>
-        <span class="freq-kpi__foot freq-kpi__foot--amber">{{ t('driver_freq.kpi_active_vehicles_below', { n: kpi.vehiclesBelowThreshold }) }}</span>
-      </article>
-      <article class="freq-kpi freq-kpi--emerald">
-        <p class="freq-kpi__label">{{ t('driver_freq.kpi_total_hours') }}</p>
-        <p class="freq-kpi__value">{{ kpi.totalHours.toLocaleString('vi-VN') }}<span class="text-lg font-semibold">h</span></p>
-        <p class="freq-kpi__hint">{{ t('driver_freq.kpi_total_hours_avg', { avg: kpi.avgHoursPerDriver }) }}</p>
-        <span class="freq-kpi__foot freq-kpi__foot--emerald">{{ t('driver_freq.kpi_total_hours_ontime', { pct: kpi.overallOnTime }) }}</span>
-      </article>
-    </div>
+    <DriverFrequencySummaryBar
+      :kpi="kpi"
+      :loading="loading"
+      :year="filters.year"
+      :year-delta-label="yearDeltaLabel"
+    />
 
     <!-- ============================================================
          ROW 1: Two bar charts
@@ -233,9 +97,64 @@
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-5">
 
       <!-- Ranking table -->
-      <div class="freq-panel lg:col-span-3">
-        <div class="freq-panel__head">
-          <h2 class="freq-panel__title">{{ t('driver_freq.section_ranking') }}</h2>
+      <div ref="rankingToolbarRef" class="freq-panel lg:col-span-3">
+        <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+          <div class="mb-2 flex flex-wrap items-center gap-2">
+            <h2 class="text-sm font-semibold text-slate-800 dark:text-slate-100">
+              {{ t('driver_freq.section_ranking') }}
+              <span v-if="filteredDrivers.length" class="ml-1 text-xs font-normal text-slate-400">({{ filteredDrivers.length }})</span>
+            </h2>
+          </div>
+          <div class="flex w-full min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
+            <div class="min-w-0 w-full basis-full lg:min-w-[10rem] lg:flex-1 lg:basis-auto">
+              <DatagridToolbarSearch
+                v-model="searchQ"
+                input-id="driver-freq-ranking-search"
+                :placeholder="t('driver_freq.search_placeholder')"
+                stretch
+                inline-actions
+                hide-label
+                input-height="h-10"
+              />
+            </div>
+            <div v-if="canExport" class="ml-auto flex shrink-0 items-center gap-2">
+              <details ref="exportMenuRef" class="group relative">
+                <summary class="list-none [&::-webkit-details-marker]:hidden">
+                  <DatagridToolbarActionButton
+                    icon="export"
+                    :disabled="!!exporting || loading"
+                    test-id="driver-freq-toolbar-export"
+                    @click.prevent
+                  >
+                    {{ t('driver_freq.toolbar_export') }}
+                  </DatagridToolbarActionButton>
+                </summary>
+                <div
+                  class="absolute right-0 top-[calc(100%+8px)] z-[110] min-w-[200px] rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-600 dark:bg-slate-900"
+                  @click.stop
+                >
+                  <button
+                    type="button"
+                    class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                    data-testid="driver-freq-export-xlsx"
+                    :disabled="!!exporting || loading"
+                    @click="doExportXlsx"
+                  >
+                    {{ t('driver_freq.btn_export_xlsx') }}
+                  </button>
+                  <button
+                    type="button"
+                    class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                    data-testid="driver-freq-export-pdf"
+                    :disabled="!!exporting || loading"
+                    @click="doExportPdf"
+                  >
+                    {{ t('driver_freq.btn_export_pdf') }}
+                  </button>
+                </div>
+              </details>
+            </div>
+          </div>
         </div>
         <div class="overflow-x-auto overscroll-x-contain">
           <table class="freq-sheet w-full min-w-[640px]">
@@ -341,13 +260,14 @@
 </template>
 
 <script setup>
-import { computed, onActivated, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { DocumentTextIcon, FunnelIcon, TableCellsIcon, XMarkIcon } from '@heroicons/vue/24/outline'
-import AppFilterBar from '../../components/filters/AppFilterBar.vue'
-import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vue'
-import { useFilterBarVisibility } from '../../composables/useFilterBarVisibility.js'
-import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
+import { DocumentTextIcon, TableCellsIcon } from '@heroicons/vue/24/outline'
+import DriverFrequencyFilters from '../../components/reports/DriverFrequencyFilters.vue'
+import DriverFrequencySummaryBar from '../../components/reports/DriverFrequencySummaryBar.vue'
+import DatagridToolbarSearch from '../../components/shared/ui/DatagridToolbarSearch.vue'
+import DatagridToolbarActionButton from '../../components/shared/ui/DatagridToolbarActionButton.vue'
+import { useDetailsAutoClose, useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 import DashboardEChart from '../../components/dashboard/DashboardEChart.vue'
 import {
   downloadDriverFrequencyPdf,
@@ -376,12 +296,30 @@ const EMPTY_KPI = {
 
 const YEAR_OPTIONS = [new Date().getFullYear(), new Date().getFullYear() - 1, new Date().getFullYear() - 2]
 
-const TRIP_TYPES = [
-  { value: 'point_to_point', label: 'Điểm đến điểm' },
-  { value: 'business', label: 'Công tác' },
-  { value: 'door_to_door', label: 'Đưa đón' },
-  { value: 'cargo', label: 'Hàng hóa' },
-]
+const TRIP_TYPE_SLUGS = ['point_to_point', 'business', 'door_to_door', 'cargo']
+
+const FILTER_CONTROL_IDS = ['year', 'quarter', 'driverId', 'vehiclePlate', 'tripType']
+const DF_FILTER_VIS_KEY = 'driver-freq-report-filter-vis.v2'
+
+function loadFilterControlVisibility() {
+  const defaults = {
+    year: true,
+    quarter: false,
+    driverId: false,
+    vehiclePlate: false,
+    tripType: false,
+  }
+  try {
+    const raw = localStorage.getItem(DF_FILTER_VIS_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      return { ...defaults, ...parsed }
+    }
+  } catch {
+    /* ignore */
+  }
+  return { ...defaults }
+}
 
 const DRIVER_BAR_COLORS = [
   '#7a0029', '#9b0036', '#b5103d', '#c03058',
@@ -411,43 +349,33 @@ const filters = reactive({
   tripType: '',
 })
 
-const FREQ_FILTER_BAR_VIS_IDS = ['year', 'quarter', 'driverId', 'vehiclePlate', 'tripType']
-const FREQ_FILTER_BAR_VIS_DEFAULTS = Object.fromEntries(FREQ_FILTER_BAR_VIS_IDS.map((id) => [id, false]))
-const {
-  visible: filterBarVisible,
-  resetVisibility: resetFilterBarVisibility,
-  hasVisibleOnBar: hasVisibleBarFilters,
-} = useFilterBarVisibility(FREQ_FILTER_BAR_VIS_IDS, FREQ_FILTER_BAR_VIS_DEFAULTS)
+const filterControlVisible = reactive(loadFilterControlVisibility())
+const showFilterPanelDd = ref(false)
+const searchQ = ref('')
+const exportMenuRef = ref(null)
+const rankingToolbarRef = ref(null)
+useDetailsAutoClose(exportMenuRef)
+useDetailsAutoCloseWithin(rankingToolbarRef)
 
-const filterMenuRef = ref(null)
-const freqFilterBarRef = ref(null)
-useDetailsAutoCloseWithin(freqFilterBarRef)
+const filterControlDefs = computed(() => [
+  { id: 'year', label: t('driver_freq.filter_vis_year') },
+  { id: 'quarter', label: t('driver_freq.filter_vis_quarter') },
+  { id: 'driverId', label: t('driver_freq.filter_vis_driverId') },
+  { id: 'vehiclePlate', label: t('driver_freq.filter_vis_vehiclePlate') },
+  { id: 'tripType', label: t('driver_freq.filter_vis_tripType') },
+])
 
-const filterBarVisibilityOptions = computed(() =>
-  FREQ_FILTER_BAR_VIS_IDS.map((id) => ({
-    id,
-    labelKey: `driver_freq.filter_vis_${id}`,
+const tripTypeOptions = computed(() => [
+  { value: '', label: t('driver_freq.filter_trip_type') },
+  ...TRIP_TYPE_SLUGS.map((value) => ({
+    value,
+    label: t(`notify.trip_type_${value}`),
   })),
+])
+
+const hasVisibleBarFilters = computed(() =>
+  FILTER_CONTROL_IDS.some((id) => filterControlVisible[id] === true),
 )
-
-const driverFilterSummary = computed(() => {
-  const id = filters.driverId
-  if (!id) return ''
-  return filterOptions.value.drivers?.find((d) => String(d.id) === String(id))?.name ?? String(id)
-})
-
-const tripTypeFilterSummary = computed(() => {
-  const hit = TRIP_TYPES.find((tt) => tt.value === filters.tripType)
-  return hit?.label ?? filters.tripType
-})
-
-function onDriverFreqFilterBarEnter() {
-  resetFilterBarVisibility()
-}
-
-function closeFilterMenu() {
-  filterMenuRef.value?.close?.()
-}
 
 const selectedDriverCode = ref('')
 const reportData = ref(null)
@@ -462,10 +390,18 @@ const monthlyData = computed(() => reportData.value?.monthly ?? Array(12).fill(0
 const vehiclesList = computed(() => reportData.value?.vehicles ?? [])
 
 const filteredDrivers = computed(() => {
+  let list = driversList.value
   if (filters.driverId) {
-    return driversList.value.filter((d) => String(d.id) === String(filters.driverId))
+    list = list.filter((d) => String(d.id) === String(filters.driverId))
   }
-  return driversList.value
+  const q = searchQ.value.trim().toLowerCase()
+  if (q) {
+    list = list.filter((d) => {
+      const hay = [d.name, d.code, d.employeeCode].filter(Boolean).join(' ').toLowerCase()
+      return hay.includes(q)
+    })
+  }
+  return list
 })
 
 const kpi = computed(() => reportData.value?.kpi ?? EMPTY_KPI)
@@ -480,27 +416,35 @@ const yearDeltaLabel = computed(() => {
   return t('driver_freq.kpi_total_trips_vs', { pct: `${sign}${pct}`, prev })
 })
 
-const yearDeltaClass = computed(() => {
-  const pct = yearComparison.value.trips_delta_pct
-  if (pct === null || pct === undefined) return 'freq-kpi__badge--muted'
-  if (pct >= 0) return 'freq-kpi__badge--up'
-  return 'freq-kpi__badge--down'
-})
+function onPatchFilter(patch) {
+  Object.assign(filters, patch)
+  onFilterChange()
+}
 
-const activeFilterCount = computed(() => {
-  let n = 0
-  if (filters.quarter) n++
-  if (filters.driverId) n++
-  if (filters.vehiclePlate) n++
-  if (filters.tripType) n++
-  return n
-})
+function toggleFilterPanel() {
+  showFilterPanelDd.value = !showFilterPanelDd.value
+}
+
+function closeFilterPanel() {
+  showFilterPanelDd.value = false
+}
+
+function onToggleFilterControl(id, checked) {
+  filterControlVisible[id] = checked
+  try {
+    localStorage.setItem(DF_FILTER_VIS_KEY, JSON.stringify({ ...filterControlVisible }))
+  } catch {
+    /* ignore */
+  }
+}
 
 function resetFilters() {
   filters.quarter = ''
   filters.driverId = ''
   filters.vehiclePlate = ''
   filters.tripType = ''
+  searchQ.value = ''
+  showFilterPanelDd.value = false
   onFilterChange()
 }
 
@@ -559,13 +503,9 @@ function scheduleFetchReport() {
 }
 
 onMounted(() => {
-  onDriverFreqFilterBarEnter()
   fetchReport()
 })
 
-onActivated(() => {
-  onDriverFreqFilterBarEnter()
-})
 watch(() => ({ ...filters }), scheduleFetchReport, { deep: true })
 
 const chartDriverTrips = computed(() => {
@@ -842,68 +782,9 @@ async function doExportPdf() {
   @apply border-rose-300 border-t-rose-700;
 }
 
-.freq-select {
-  @apply h-9 min-w-[5.5rem] cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-teal-300 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200;
-}
-
-.freq-select--wide {
-  @apply min-w-[8.5rem] max-w-[14rem];
-}
-
-.freq-clear-filters {
-  @apply ml-auto rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-white hover:text-slate-900 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200;
-}
-
 .freq-alert {
   @apply rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-100;
 }
-
-.freq-loading {
-  @apply text-sm text-slate-500 dark:text-slate-400;
-}
-
-.freq-kpi {
-  @apply flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50;
-}
-
-.freq-kpi__label {
-  @apply text-xs font-medium text-slate-500 dark:text-slate-400;
-}
-
-.freq-kpi__value {
-  @apply mt-1.5 text-2xl font-bold tabular-nums text-slate-900 dark:text-white;
-}
-
-.freq-kpi__value--sky { @apply text-sky-700 dark:text-sky-400; }
-.freq-kpi__value--amber { @apply text-amber-700 dark:text-amber-400; }
-
-.freq-kpi__hint {
-  @apply text-xs text-slate-500 dark:text-slate-400;
-}
-
-.freq-kpi__badge {
-  @apply mt-1.5 inline-flex w-fit rounded-full px-2 py-0.5 text-[11px] font-semibold;
-}
-
-.freq-kpi__badge--up {
-  @apply bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300;
-}
-
-.freq-kpi__badge--down {
-  @apply bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300;
-}
-
-.freq-kpi__badge--muted {
-  @apply bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300;
-}
-
-.freq-kpi__foot {
-  @apply mt-1 text-[11px] font-medium;
-}
-
-.freq-kpi__foot--sky { @apply text-sky-600 dark:text-sky-400; }
-.freq-kpi__foot--amber { @apply text-amber-600 dark:text-amber-400; }
-.freq-kpi__foot--emerald { @apply text-emerald-600 dark:text-emerald-400; }
 
 .freq-chart-card {
   @apply overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50;
@@ -915,14 +796,6 @@ async function doExportPdf() {
 
 .freq-panel {
   @apply overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/50;
-}
-
-.freq-panel__head {
-  @apply border-b border-slate-100 px-4 py-3 dark:border-slate-700;
-}
-
-.freq-panel__title {
-  @apply text-sm font-semibold text-slate-900 dark:text-slate-100;
 }
 
 .freq-sheet {

@@ -589,13 +589,23 @@ function createSharedApi() {
     }),
   )
 
-  const optProviders = computed(() =>
-    providersHorizontalBarOption({
-      rows: summary.value?.confirmed_costs_by_provider,
+  const optProviders = computed(() => {
+    const raw = summary.value?.confirmed_costs_by_provider ?? []
+    const rows = Array.isArray(raw)
+      ? raw.map((r) => ({
+          ...r,
+          provider:
+            r?.provider === 'INTERNAL'
+              ? t('cost_report.provider_internal')
+              : (r?.provider ?? ''),
+        }))
+      : raw
+    return providersHorizontalBarOption({
+      rows,
       formatMoney,
       emptyText: emptyChartLabel.value,
-    }),
-  )
+    })
+  })
 
   const optRequesters = computed(() =>
     topRequestersBarOption({

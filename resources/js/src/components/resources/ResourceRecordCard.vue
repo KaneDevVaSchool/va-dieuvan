@@ -1,6 +1,8 @@
 <script setup>
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
+import EmptyValue from '../ui/EmptyValue.vue'
+import { isEmptyDisplay } from '../../util/displayValue'
 
 const props = defineProps({
   /** Heroicon component for the leading icon box (ignored when avatar shown). */
@@ -22,7 +24,7 @@ const props = defineProps({
   statusClass: { type: String, default: '' },
   /** Small pills shown next to the status badge: [{ label, class }]. */
   pills: { type: Array, default: () => [] },
-  /** Detail fields rendered in the dl grid: [{ label, value, mono }]. */
+  /** Detail fields: [{ label, value, mono?, emptyKey? }]. */
   fields: { type: Array, default: () => [] },
   /** Show a selection checkbox in the header. */
   selectable: { type: Boolean, default: false },
@@ -40,6 +42,8 @@ const TONE_MAP = {
   rose: 'bg-rose-100 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300',
 }
 const iconWrapClass = computed(() => TONE_MAP[props.tone] || TONE_MAP.teal)
+
+const showSubtitle = computed(() => !isEmptyDisplay(props.subtitle))
 </script>
 
 <template>
@@ -103,26 +107,35 @@ const iconWrapClass = computed(() => TONE_MAP[props.tone] || TONE_MAP.teal)
             <span v-for="(p, i) in pills" :key="i" :class="p.class">{{ p.label }}</span>
           </div>
 
-          <p v-if="subtitle" class="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">{{ subtitle }}</p>
-
-          <dl
-            v-if="fields.length"
-            class="mt-3 grid grid-cols-1 gap-x-4 gap-y-2 text-sm sm:grid-cols-2 xl:grid-cols-3"
-          >
-            <div v-for="(f, i) in fields" :key="i" class="min-w-0">
-              <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {{ f.label }}
-              </dt>
-              <dd
-                class="mt-0.5 truncate font-medium text-slate-800 dark:text-slate-200"
-                :class="f.mono ? 'font-mono tabular-nums' : ''"
-              >
-                {{ f.value }}
-              </dd>
-            </div>
-          </dl>
+          <p v-if="showSubtitle" class="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">
+            {{ subtitle }}
+          </p>
         </div>
       </div>
+
+      <dl
+        v-if="fields.length"
+        class="mt-3 rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-1 dark:border-slate-800 dark:bg-slate-800/40"
+      >
+        <div
+          v-for="(f, i) in fields"
+          :key="i"
+          class="grid grid-cols-[minmax(0,11rem)_minmax(0,1fr)] items-baseline gap-x-3 gap-y-0 border-b border-slate-100 py-2 text-sm last:border-b-0 dark:border-slate-700/80"
+        >
+          <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            {{ f.label }}
+          </dt>
+          <dd
+            class="min-w-0 text-right font-medium text-slate-800 dark:text-slate-200 sm:text-left"
+            :class="f.mono ? 'font-mono tabular-nums' : ''"
+          >
+            <EmptyValue
+              :value="f.value"
+              :empty-key="f.emptyKey || 'resources.empty_not_available'"
+            />
+          </dd>
+        </div>
+      </dl>
     </div>
 
     <div

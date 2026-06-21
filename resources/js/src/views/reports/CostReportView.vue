@@ -16,6 +16,7 @@
           type="button"
           :disabled="exporting"
           class="tr-rev-export tr-rev-export--sheet"
+          data-testid="cost-report-header-export-xlsx"
           @click="doExportXlsx"
         >
           <span v-if="exporting === 'xlsx'" class="tr-rev-spinner tr-rev-spinner--teal" />
@@ -35,214 +36,30 @@
       </div>
     </header>
 
-    <AppFilterBar>
-      <div ref="filterBarRef" class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+    <CostReportFilters
+      :filters="filters"
+      :filter-control-visible="filterControlVisible"
+      :filter-control-defs="filterControlDefs"
+      :trip-type-options="tripTypeOptions"
+      :status-options="statusOptions"
+      :fleet-options="fleetOptions"
+      :has-visible-bar-filters="hasVisibleBarFilters"
+      :show-filter-panel="showFilterPanelDd"
+      :loading="loading"
+      @reload="reload"
+      @reset-filters="resetFilters"
+      @patch-filter="onPatchFilter"
+      @toggle-filter-panel="toggleFilterPanel"
+      @close-filter-panel="closeFilterPanel"
+      @toggle-filter-control="onToggleFilterControl"
+    />
 
-        <details ref="funnelRef" class="group relative">
-          <summary
-            class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
-          >
-            <span class="relative inline-flex">
-              <FunnelIcon class="h-5 w-5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
-              <span
-                v-if="activeFilterCount > 0"
-                class="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-teal-500 px-1 text-[10px] font-normal leading-none text-white"
-              >{{ activeFilterCount }}</span>
-            </span>
-            <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-          </summary>
-          <div class="absolute left-0 top-[calc(100%+8px)] z-[100] min-w-[260px] overflow-hidden rounded-2xl border border-violet-200/50 bg-white shadow-xl shadow-violet-500/10 ring-1 ring-slate-900/5 dark:border-violet-800/40 dark:bg-slate-900 dark:shadow-black/30">
-            <p class="border-b border-violet-100/80 bg-gradient-to-r from-violet-50/60 to-transparent px-3 py-2 text-xs font-normal text-violet-700 dark:border-violet-900/40 dark:from-violet-950/50 dark:text-violet-300">
-              {{ t('dashboard_analytics.filter_applied_title') }}
-            </p>
-            <div class="p-3 pt-2">
-              <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
-                <li v-if="filters.trip_type" class="flex justify-between gap-2">
-                  <span class="text-slate-500 dark:text-slate-400">{{ t('cost_report.filter_trip_type') }}</span>
-                  <span class="font-medium">{{ labelTripType(filters.trip_type) }}</span>
-                </li>
-                <li v-if="filters.status" class="flex justify-between gap-2">
-                  <span class="text-slate-500 dark:text-slate-400">{{ t('filter_bar.status') }}</span>
-                  <span class="font-medium">{{ statusLabel(filters.status) }}</span>
-                </li>
-                <li v-if="filters.fleet_mode" class="flex justify-between gap-2">
-                  <span class="text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.filter_fleet') }}</span>
-                  <span class="font-medium">{{ fleetModeLabel(filters.fleet_mode) }}</span>
-                </li>
-                <li v-if="filters.from || filters.to" class="flex justify-between gap-2">
-                  <span class="text-slate-500 dark:text-slate-400">{{ t('cost_report.filter_date') }}</span>
-                  <span class="font-medium">{{ filters.from || '…' }} → {{ filters.to || '…' }}</span>
-                </li>
-                <li v-if="activeFilterCount === 0" class="text-slate-400 dark:text-slate-500">{{ t('filter_bar.empty') }}</li>
-              </ul>
-              <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
-                <p class="text-[11px] font-normal text-violet-700 dark:text-violet-300">
-                  {{ t('trips_page.filter_show_controls_title') }}
-                </p>
-                <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
-                  <li v-for="fd in filterControlDefs" :key="'cost-report-vis-' + fd.id" class="flex items-start gap-2">
-                    <input
-                      :id="'cost-report-filter-vis-' + fd.id"
-                      v-model="filterControlVisible[fd.id]"
-                      type="checkbox"
-                      class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:focus:ring-offset-slate-900"
-                    />
-                    <label
-                      :for="'cost-report-filter-vis-' + fd.id"
-                      class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
-                    >
-                      {{ fd.label }}
-                    </label>
-                  </li>
-                </ul>
-              </div>
-              <button
-                type="button"
-                class="mt-3 w-full rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
-                @click="resetFilters"
-              >{{ t('dashboard_analytics.filter_clear_all') }}</button>
-            </div>
-          </div>
-        </details>
-
-        <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
-
-        <div class="ml-auto flex shrink-0 items-center gap-1 pl-2 sm:gap-2 sm:pl-3">
-          <button
-            type="button"
-            class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
-            :title="t('filter_bar.clear_icon')"
-            @click="resetFilters"
-          >
-            <span class="relative inline-flex">
-              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-              <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/40" />
-            </span>
-          </button>
-          <button
-            type="button"
-            class="tr-rev-refresh"
-            :disabled="loading"
-            @click="reload"
-          >
-            <span v-if="loading" class="inline-block size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-            <template v-else>{{ t('cost_report.btn_refresh') }}</template>
-          </button>
-        </div>
-      </div>
-
-        <div
-          v-if="hasVisibleBarFilters"
-          class="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-2 border-t border-violet-100/80 pt-2 dark:border-violet-900/30 sm:gap-x-3"
-        >
-          <AppFilterDropdown
-            v-if="filterControlVisible.date"
-            root-class="shrink-0"
-            show-chip-label
-            :label="t('cost_report.filter_date')"
-            :summary-text="filterDateSummary"
-            full-width-summary
-            panel-class="w-[min(100vw-1.5rem,320px)] p-3 sm:w-max"
-          >
-            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <input v-model="filters.from" type="date" class="cr-input h-9 w-full text-sm sm:w-auto" @change="onFilterChange" />
-              <span class="hidden text-slate-300 sm:inline dark:text-slate-600">—</span>
-              <input v-model="filters.to" type="date" class="cr-input h-9 w-full text-sm sm:w-auto" @change="onFilterChange" />
-            </div>
-          </AppFilterDropdown>
-
-          <AppFilterDropdown
-            v-if="filterControlVisible.trip_type"
-            root-class="shrink-0"
-            show-chip-label
-            :label="t('cost_report.filter_trip_type')"
-            :summary-text="filters.trip_type ? labelTripType(filters.trip_type) : t('filter_bar.all')"
-            panel-class="min-w-[200px] py-1"
-          >
-            <ul class="space-y-0.5 px-1 py-1">
-              <li v-for="opt in tripTypeOptions" :key="opt.value || '_all'">
-                <button type="button" class="cr-filter-btn" :class="filters.trip_type === opt.value ? 'cr-filter-btn--active' : ''" @click="applyFilter($event, { trip_type: opt.value })">
-                  {{ opt.label }}
-                </button>
-              </li>
-            </ul>
-          </AppFilterDropdown>
-
-          <AppFilterDropdown
-            v-if="filterControlVisible.status"
-            root-class="shrink-0"
-            show-chip-label
-            :label="t('filter_bar.status')"
-            :summary-text="filters.status ? statusLabel(filters.status) : t('filter_bar.all')"
-            panel-class="min-w-[200px] py-1"
-          >
-            <ul class="space-y-0.5 px-1 py-1">
-              <li v-for="opt in statusOptions" :key="opt.value || '_all'">
-                <button type="button" class="cr-filter-btn" :class="filters.status === opt.value ? 'cr-filter-btn--active' : ''" @click="applyFilter($event, { status: opt.value })">
-                  {{ opt.label }}
-                </button>
-              </li>
-            </ul>
-          </AppFilterDropdown>
-
-          <AppFilterDropdown
-            v-if="filterControlVisible.fleet_mode"
-            root-class="shrink-0"
-            show-chip-label
-            :label="t('dashboard_analytics.filter_fleet')"
-            :summary-text="filters.fleet_mode ? fleetModeLabel(filters.fleet_mode) : t('filter_bar.all')"
-            panel-class="min-w-[200px] py-1"
-          >
-            <ul class="space-y-0.5 px-1 py-1">
-              <li v-for="opt in fleetOptions" :key="opt.value || '_all'">
-                <button type="button" class="cr-filter-btn" :class="filters.fleet_mode === opt.value ? 'cr-filter-btn--active' : ''" @click="applyFilter($event, { fleet_mode: opt.value })">
-                  {{ opt.label }}
-                </button>
-              </li>
-            </ul>
-          </AppFilterDropdown>
-        </div>
-    </AppFilterBar>
-
-    <section aria-labelledby="cr-kpi" class="tr-rev-block">
-      <h2 id="cr-kpi" class="tr-rev-block__label">
-        {{ t('cost_report.section_kpi') }}
-      </h2>
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <article class="tr-rev-kpi tr-rev-kpi--va">
-          <p class="tr-rev-kpi__label">{{ t('cost_report.kpi_total_amount') }}</p>
-          <p class="tr-rev-kpi__value">
-            <template v-if="stats">{{ formatVnd(stats.total_amount) }}</template>
-            <template v-else-if="loading"><span class="tr-rev-skel tr-rev-skel--wide" /></template>
-            <template v-else>—</template>
-          </p>
-        </article>
-        <article class="tr-rev-kpi tr-rev-kpi--sky">
-          <p class="tr-rev-kpi__label">{{ t('cost_report.kpi_count') }}</p>
-          <p class="tr-rev-kpi__value tr-rev-kpi__value--sm">
-            <template v-if="stats">{{ stats.count.toLocaleString('vi-VN') }}</template>
-            <template v-else-if="loading"><span class="tr-rev-skel" /></template>
-            <template v-else>—</template>
-          </p>
-        </article>
-        <article class="tr-rev-kpi tr-rev-kpi--amber">
-          <p class="tr-rev-kpi__label">{{ t('cost_report.kpi_top_category') }}</p>
-          <p class="tr-rev-kpi__text">
-            <template v-if="stats && topCategory">{{ topCategory }}</template>
-            <template v-else-if="loading"><span class="tr-rev-skel" /></template>
-            <template v-else>—</template>
-          </p>
-        </article>
-        <article class="tr-rev-kpi tr-rev-kpi--emerald">
-          <p class="tr-rev-kpi__label">{{ t('cost_report.kpi_top_provider') }}</p>
-          <p class="tr-rev-kpi__text">
-            <template v-if="stats && topProvider">{{ topProvider }}</template>
-            <template v-else-if="loading"><span class="tr-rev-skel" /></template>
-            <template v-else>—</template>
-          </p>
-        </article>
-      </div>
-    </section>
+    <CostReportSummaryBar
+      :stats="stats"
+      :loading="loading"
+      :top-category="topCategory"
+      :top-provider="topProvider"
+    />
 
     <section
       v-if="stats && !loading"
@@ -290,132 +107,136 @@
     </section>
 
     <section aria-labelledby="cr-table-title" class="tr-rev-block tr-rev-block--divider">
-      <div class="tr-rev-table-panel">
-        <div ref="detailTableToolbarRef" class="tr-rev-table-panel__head">
-          <h2 id="cr-table-title" class="tr-rev-table-panel__title">
-            {{ t('cost_report.table_title') }}
-            <span v-if="rows.length" class="tr-rev-table-panel__count">({{ rows.length }})</span>
-          </h2>
-          <div class="flex flex-wrap items-center gap-2">
-            <label class="inline-flex shrink-0 items-center gap-1.5">
-              <span class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('filter_bar.per_page') }}:</span>
-              <select
-                v-model.number="detailPerPage"
-                class="h-9 rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-                :aria-label="t('filter_bar.per_page')"
-                @change="onDetailPerPageChange"
-              >
-                <option :value="5">5</option>
-                <option :value="10">10</option>
-                <option :value="15">15</option>
-                <option :value="20">20</option>
-              </select>
-              <span class="hidden whitespace-nowrap text-xs text-slate-500 sm:inline dark:text-slate-400" aria-hidden="true">{{ t('cost_report.per_page_unit') }}</span>
-            </label>
-            <details ref="columnPickerRef" class="group relative shrink-0">
-              <summary
-                class="flex cursor-pointer list-none items-center rounded-lg border border-slate-200/90 bg-white px-2 py-1.5 text-slate-700 shadow-sm transition hover:border-teal-200/70 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
+      <div
+        ref="detailTableToolbarRef"
+        class="overflow-visible rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40"
+      >
+        <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+          <div class="mb-2 flex flex-wrap items-center gap-2">
+            <h2 id="cr-table-title" class="text-sm font-semibold text-slate-800 dark:text-slate-100">
+              {{ t('cost_report.table_title') }}
+              <span v-if="filteredRows.length" class="ml-1 text-xs font-normal text-slate-400">({{ filteredRows.length }})</span>
+            </h2>
+          </div>
+          <div class="flex w-full min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
+            <div class="min-w-0 w-full basis-full lg:min-w-[10rem] lg:flex-1 lg:basis-auto">
+              <DatagridToolbarSearch
+                v-model="searchQ"
+                input-id="cost-report-list-search"
+                :placeholder="t('cost_report.search_placeholder')"
+                stretch
+                inline-actions
+                hide-label
+                input-height="h-10"
+              />
+            </div>
+            <div class="flex shrink-0 items-center gap-2">
+              <FilterVisibilityDropdown
+                :open="showColPanelDd"
                 :title="t('cost_report.column_visibility_title')"
-                :aria-label="t('cost_report.column_visibility_title')"
+                @close="closeColPanel"
               >
-                <ViewColumnsIcon class="h-5 w-5 shrink-0 text-slate-600 dark:text-slate-400" aria-hidden="true" />
-              </summary>
-              <div
-                class="absolute right-0 top-[calc(100%+8px)] z-[110] min-w-[240px] rounded-2xl border border-violet-200/50 bg-white p-3 shadow-xl ring-1 ring-slate-900/5 dark:border-violet-800/40 dark:bg-slate-900 dark:shadow-black/30 dark:ring-slate-950/50"
-                @click.stop
-              >
-                <p class="text-[11px] font-normal text-violet-700 dark:text-violet-300">
-                  {{ t('cost_report.column_visibility_title') }}
-                </p>
-                <ul class="mt-2 max-h-[min(50vh,320px)] space-y-2 overflow-y-auto pr-0.5">
-                  <li v-for="cd in colControlDefs" :key="'cost-report-col-vis-' + cd.id" class="flex items-start gap-2">
-                    <input
-                      :id="'cost-report-col-vis-' + cd.id"
-                      v-model="colVisible[cd.id]"
-                      type="checkbox"
-                      class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:focus:ring-offset-slate-900"
-                    />
-                    <label
-                      :for="'cost-report-col-vis-' + cd.id"
-                      class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
-                    >
-                      {{ cd.label }}
-                    </label>
-                  </li>
-                </ul>
-              </div>
-            </details>
+                <template #trigger>
+                  <DatagridToolbarActionButton
+                    icon="columns"
+                    :active="showColPanelDd"
+                    test-id="cost-report-toolbar-columns"
+                    @click="toggleColPanel"
+                  >
+                    {{ t('cost_report.toolbar_columns') }}
+                  </DatagridToolbarActionButton>
+                </template>
+                <li v-for="cd in colControlDefs" :key="'cost-report-col-vis-' + cd.id" class="flex items-start gap-2">
+                  <input
+                    :id="'cost-report-col-vis-' + cd.id"
+                    v-model="colVisible[cd.id]"
+                    type="checkbox"
+                    class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-va-800 focus:ring-va-700/30 dark:border-slate-600"
+                    :data-testid="`cost-report-col-vis-${cd.id}`"
+                  />
+                  <label
+                    :for="'cost-report-col-vis-' + cd.id"
+                    class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
+                  >
+                    {{ cd.label }}
+                  </label>
+                </li>
+              </FilterVisibilityDropdown>
+            </div>
+            <div class="ml-auto flex shrink-0 flex-wrap items-center gap-2">
+              <details ref="exportMenuRef" class="group relative">
+                <summary class="list-none [&::-webkit-details-marker]:hidden">
+                  <DatagridToolbarActionButton
+                    icon="export"
+                    :disabled="!!exporting"
+                    test-id="cost-report-toolbar-export"
+                    @click.prevent
+                  >
+                    {{ t('cost_report.toolbar_export') }}
+                  </DatagridToolbarActionButton>
+                </summary>
+                <div
+                  class="absolute right-0 top-[calc(100%+8px)] z-[110] min-w-[200px] rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-600 dark:bg-slate-900"
+                  @click.stop
+                >
+                  <button
+                    type="button"
+                    class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                    data-testid="cost-report-export-xlsx"
+                    :disabled="!!exporting"
+                    @click="doExportXlsx"
+                  >
+                    {{ t('cost_report.btn_export_xlsx') }}
+                  </button>
+                  <button
+                    type="button"
+                    class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                    data-testid="cost-report-export-pdf"
+                    :disabled="!!exporting"
+                    @click="doExportPdf"
+                  >
+                    {{ t('cost_report.btn_export_pdf') }}
+                  </button>
+                </div>
+              </details>
+              <label class="inline-flex shrink-0 items-center gap-1.5">
+                <span class="sr-only">{{ t('filter_bar.per_page') }}</span>
+                <select
+                  v-model.number="detailPerPage"
+                  class="input h-10 w-full min-w-[4.5rem] rounded-lg border border-slate-200 bg-white px-2 text-sm dark:border-slate-600 dark:bg-slate-950"
+                  :aria-label="t('filter_bar.per_page')"
+                  data-testid="cost-report-per-page"
+                  @change="onDetailPerPageChange"
+                >
+                  <option :value="5">5</option>
+                  <option :value="10">10</option>
+                  <option :value="15">15</option>
+                  <option :value="20">20</option>
+                </select>
+              </label>
+            </div>
           </div>
         </div>
 
-        <div class="overflow-x-auto overscroll-x-contain">
-          <table class="cr-sheet min-w-[1100px] w-full">
-            <thead>
-              <tr>
-                <th class="cr-th w-10 text-center">{{ t('cost_report.col_no') }}</th>
-                <th v-if="colVisible.unit" class="cr-th min-w-[7rem]">{{ t('cost_report.col_unit') }}</th>
-                <th v-if="colVisible.category" class="cr-th min-w-[7rem]">{{ t('cost_report.col_category') }}</th>
-                <th v-if="colVisible.submitter" class="cr-th min-w-[9rem]">{{ t('cost_report.col_submitter') }}</th>
-                <th v-if="colVisible.description" class="cr-th min-w-[16rem]">{{ t('cost_report.col_description') }}</th>
-                <th v-if="colVisible.fleet_source" class="cr-th min-w-[10rem]">{{ t('cost_report.col_fleet_source') }}</th>
-                <th v-if="colVisible.provider" class="cr-th min-w-[9rem]">{{ t('cost_report.col_provider') }}</th>
-                <th v-if="colVisible.unit_price" class="cr-th cr-th--money min-w-[7rem] text-right">{{ t('cost_report.col_unit_price') }}</th>
-                <th v-if="colVisible.extra_fee" class="cr-th cr-th--money min-w-[7rem] text-right">{{ t('cost_report.col_extra_fee') }}</th>
-                <th v-if="colVisible.payment" class="cr-th cr-th--money min-w-[8rem] text-right">{{ t('cost_report.col_payment') }}</th>
-                <th v-if="colVisible.status" class="cr-th min-w-[8rem]">{{ t('filter_bar.status') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="(row, idx) in paginatedRows"
-                :key="row.id"
-                class="cr-data-row"
-                :class="[idx % 2 === 1 ? 'cr-data-row--alt' : '', row.source === 'estimate' ? 'cr-data-row--estimate' : '']"
-              >
-                <td class="cr-td text-center tabular-nums text-slate-500">{{ detailRowNo(idx) }}</td>
-                <td v-if="colVisible.unit" class="cr-td"><span class="cr-pill">{{ row.unit || '—' }}</span></td>
-                <td v-if="colVisible.category" class="cr-td">
-                  <span v-if="row.category" class="cr-pill" :class="TRIP_TYPE_PILL_CLASSES[row.category] ?? ''">
-                    {{ labelTripType(row.category) }}
-                  </span>
-                  <span v-else class="text-slate-400">—</span>
-                </td>
-                <td v-if="colVisible.submitter" class="cr-td">{{ row.submitter || '—' }}</td>
-                <td v-if="colVisible.description" class="cr-td max-w-[22rem]">
-                  <span class="line-clamp-2">{{ row.description || '—' }}</span>
-                  <span
-                    v-if="row.source === 'estimate'"
-                    class="tr-rev-badge-estimate"
-                  >{{ t('cost_report.badge_estimate') }}</span>
-                </td>
-                <td v-if="colVisible.fleet_source" class="cr-td whitespace-nowrap"><span class="cr-pill">{{ row.fleet_source || '—' }}</span></td>
-                <td v-if="colVisible.provider" class="cr-td">{{ row.provider || '—' }}</td>
-                <td v-if="colVisible.unit_price" class="cr-td cr-td--money">
-                  {{ row.unit_price != null && row.unit_price > 0 ? formatVnd(row.unit_price) : '—' }}
-                </td>
-                <td v-if="colVisible.extra_fee" class="cr-td cr-td--money">
-                  {{ row.extra_fee != null && row.extra_fee > 0 ? formatVnd(row.extra_fee) : '—' }}
-                </td>
-                <td v-if="colVisible.payment" class="cr-td cr-td--money cr-td--revenue">{{ formatVnd(row.amount) }}</td>
-                <td v-if="colVisible.status" class="cr-td">
-                  <span class="cr-pill" :class="STATUS_PILL_CLASSES[row.status] ?? 'bg-slate-100 text-slate-700'">
-                    {{ row.status_label || statusLabel(row.status) || '—' }}
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-
-          <div v-if="loading" class="flex items-center justify-center gap-2 px-4 py-12 text-sm text-slate-500">
-            <span class="inline-block size-5 animate-spin rounded-full border-2 border-slate-200 border-t-va-700" aria-hidden="true" />
-            {{ t('cost_report.loading') }}
-          </div>
-          <div v-else-if="!loading && !rows.length" class="px-4 py-12 text-center text-sm text-slate-500 dark:text-slate-400">
-            {{ t('cost_report.empty_table') }}
-          </div>
+        <div v-if="loading" class="flex items-center justify-center gap-2 px-4 py-12 text-sm text-slate-500">
+          <span class="inline-block size-5 animate-spin rounded-full border-2 border-slate-200 border-t-va-700" aria-hidden="true" />
+          {{ t('cost_report.loading') }}
+        </div>
+        <div v-else-if="!filteredRows.length" class="px-4 py-12 text-center text-sm text-slate-500 dark:text-slate-400">
+          {{ t('cost_report.empty_table') }}
+        </div>
+        <div v-else class="space-y-3 px-3 py-4 sm:px-4 md:space-y-4">
+          <CostReportRecordCard
+            v-for="(row, idx) in paginatedRows"
+            :key="row.id"
+            :row="row"
+            :row-no="detailRowNo(idx)"
+            :col-visible="colVisible"
+            :status-label-fn="statusLabel"
+          />
         </div>
 
-        <div v-if="rows.length" class="tr-rev-table-foot">
+        <div v-if="filteredRows.length" class="tr-rev-table-foot">
           <span class="text-sm text-slate-600 dark:text-slate-400">
             {{
               t('cost_report.pagination_of', {
@@ -424,7 +245,7 @@
               })
             }}
             <span class="text-slate-400"> · </span>
-            {{ rows.length }} {{ t('cost_report.pagination_records_suffix') }}
+            {{ filteredRows.length }} {{ t('cost_report.pagination_records_suffix') }}
           </span>
           <div class="flex flex-wrap items-center gap-4">
             <span class="text-sm text-slate-500 dark:text-slate-400">
@@ -436,6 +257,7 @@
                 type="button"
                 class="tr-rev-page-btn"
                 :disabled="loading || detailPage <= 1"
+                data-testid="cost-report-prev-page"
                 @click="detailPageStep(-1)"
               >
                 {{ t('cost_report.prev') }}
@@ -444,6 +266,7 @@
                 type="button"
                 class="tr-rev-page-btn"
                 :disabled="loading || detailPage >= detailLastPage"
+                data-testid="cost-report-next-page"
                 @click="detailPageStep(1)"
               >
                 {{ t('cost_report.next') }}
@@ -464,17 +287,18 @@
 import { computed, onActivated, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
-  FunnelIcon,
-  ChevronDownIcon,
-  XMarkIcon,
-  ViewColumnsIcon,
   TableCellsIcon,
   DocumentTextIcon,
 } from '@heroicons/vue/24/outline'
-import AppFilterBar from '../../components/filters/AppFilterBar.vue'
-import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
+import CostReportFilters from '../../components/reports/CostReportFilters.vue'
+import CostReportSummaryBar from '../../components/reports/CostReportSummaryBar.vue'
+import CostReportRecordCard from '../../components/reports/CostReportRecordCard.vue'
+import DatagridToolbarSearch from '../../components/shared/ui/DatagridToolbarSearch.vue'
+import DatagridToolbarActionButton from '../../components/shared/ui/DatagridToolbarActionButton.vue'
+import FilterVisibilityDropdown from '../../components/shared/ui/FilterVisibilityDropdown.vue'
 import DashboardEChart from '../../components/dashboard/DashboardEChart.vue'
 import { useDetailsAutoClose, useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
+import { labelReportProvider } from '../../composables/useCostReportPresentation'
 import { getTripCostReport, downloadTripCostXlsx, downloadTripCostPdf } from '../../api/reports'
 import { formatVnd, labelTripType } from '../../util/labels'
 import { showAppErrorFromApi } from '../../composables/appMessage'
@@ -485,25 +309,11 @@ const TRIP_TYPE_SLUGS = ['point_to_point', 'cargo', 'business', 'door_to_door']
 const FLEET_MODES = ['internal', 'vendor_hire', 'taxi', 'unspecified']
 const STATUS_FILTER_KEYS = ['draft', 'submitted', 'confirmed', 'rejected', 'estimate']
 
-const TRIP_TYPE_PILL_CLASSES = {
-  point_to_point: 'bg-sky-100/80 text-sky-800',
-  cargo: 'bg-amber-100/80 text-amber-800',
-  business: 'bg-violet-100/80 text-violet-800',
-  door_to_door: 'bg-teal-100/80 text-teal-800',
-}
-
-const STATUS_PILL_CLASSES = {
-  confirmed: 'bg-emerald-100 text-emerald-800',
-  rejected: 'bg-rose-100 text-rose-800',
-  submitted: 'bg-blue-100 text-blue-800',
-  estimate: 'bg-violet-100/90 text-violet-900',
-  draft: 'bg-slate-100 text-slate-700',
-}
-
 const CHART_PALETTE = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899', '#f97316']
 
 const COST_REPORT_COL_VISIBILITY_KEY = 'va.cost_report.col_visibility_v1'
 const COST_REPORT_DETAIL_PER_PAGE_KEY = 'va.cost_report.detail_per_page_v1'
+const COST_REPORT_FILTER_VIS_KEY = 'va.cost_report.filter_visibility.v2'
 
 const FILTER_CONTROL_IDS = ['date', 'trip_type', 'status', 'fleet_mode']
 const COL_IDS = [
@@ -523,6 +333,21 @@ const DEFAULT_DETAIL_PER_PAGE = 10
 
 function defaultFilterControlVisibility() {
   return Object.fromEntries(FILTER_CONTROL_IDS.map((id) => [id, false]))
+}
+
+function loadFilterControlVisibility() {
+  try {
+    const raw = localStorage.getItem(COST_REPORT_FILTER_VIS_KEY)
+    if (!raw) return defaultFilterControlVisibility()
+    const o = JSON.parse(raw)
+    const base = defaultFilterControlVisibility()
+    for (const id of FILTER_CONTROL_IDS) {
+      if (typeof o[id] === 'boolean') base[id] = o[id]
+    }
+    return base
+  } catch {
+    return defaultFilterControlVisibility()
+  }
 }
 
 function defaultColVisibility() {
@@ -577,19 +402,19 @@ const filters = reactive({
   fleet_mode: '',
 })
 
-const filterControlVisible = reactive(defaultFilterControlVisibility())
+const filterControlVisible = reactive(loadFilterControlVisibility())
 const colVisible = reactive(defaultColVisibility())
+
+const searchQ = ref('')
+const showFilterPanelDd = ref(false)
+const showColPanelDd = ref(false)
 
 const detailPage = ref(1)
 const detailPerPage = ref(DEFAULT_DETAIL_PER_PAGE)
 
-const funnelRef = ref(null)
-const filterBarRef = ref(null)
-const columnPickerRef = ref(null)
+const exportMenuRef = ref(null)
 const detailTableToolbarRef = ref(null)
-useDetailsAutoClose(funnelRef)
-useDetailsAutoClose(columnPickerRef)
-useDetailsAutoCloseWithin(filterBarRef)
+useDetailsAutoClose(exportMenuRef)
 useDetailsAutoCloseWithin(detailTableToolbarRef)
 
 const filterControlDefs = computed(() => [
@@ -616,28 +441,40 @@ const fleetOptions = computed(() => [
   ...FLEET_MODES.map((value) => ({ value, label: fleetModeLabel(value) })),
 ])
 
-const filterDateSummary = computed(() => {
-  if (!filters.from && !filters.to) return t('filter_bar.all')
-  return `${filters.from || '…'} → ${filters.to || '…'}`
+
+const filteredRows = computed(() => {
+  const q = searchQ.value.trim().toLowerCase()
+  const list = rows.value
+  if (!q) return list
+  return list.filter((row) => {
+    const hay = [
+      row.description,
+      row.submitter,
+      row.provider,
+      row.fleet_source,
+      row.unit,
+      labelTripType(row.category),
+      statusLabel(row.status),
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+    return hay.includes(q)
+  })
 })
 
-const activeFilterCount = computed(() => {
-  let n = 0
-  if (filters.from || filters.to) n++
-  if (filters.trip_type) n++
-  if (filters.status) n++
-  if (filters.fleet_mode) n++
-  return n
-})
+const hasVisibleBarFilters = computed(() =>
+  FILTER_CONTROL_IDS.some((id) => filterControlVisible[id] === true),
+)
 
 const detailLastPage = computed(() => {
-  const total = rows.value.length
+  const total = filteredRows.value.length
   if (!total) return 1
   return Math.max(1, Math.ceil(total / detailPerPage.value))
 })
 
 const paginatedRows = computed(() => {
-  const list = rows.value
+  const list = filteredRows.value
   if (!list.length) return []
   const page = Math.min(detailPage.value, detailLastPage.value)
   const start = (page - 1) * detailPerPage.value
@@ -660,7 +497,8 @@ const topProvider = computed(() => {
   const list = stats.value?.by_provider ?? []
   if (!list.length) return null
   const sorted = [...list].sort((a, b) => b.amount - a.amount)
-  return sorted[0]?.label ?? null
+  const raw = sorted[0]?.label ?? null
+  return raw ? labelReportProvider(raw, t, te) : null
 })
 
 const totalAmount = computed(() => stats.value?.total_amount ?? 0)
@@ -722,7 +560,13 @@ const showTrendChart = computed(() => (stats.value?.by_month?.length ?? 0) > 1)
 
 const chartByCategory = computed(() => pieOption(stats.value?.by_category ?? []))
 const chartByStatus = computed(() => pieOption(stats.value?.by_status ?? []))
-const chartByProvider = computed(() => barHorizontalOption(stats.value?.by_provider ?? []))
+const chartByProvider = computed(() => {
+  const list = (stats.value?.by_provider ?? []).map((d) => ({
+    ...d,
+    label: labelReportProvider(d.label, t, te),
+  }))
+  return barHorizontalOption(list)
+})
 const chartByMonth = computed(() => lineOption(stats.value?.by_month ?? []))
 
 function buildApiParams() {
@@ -749,15 +593,36 @@ async function reload() {
   }
 }
 
-function applyFilter(ev, patch) {
+function onPatchFilter(patch) {
   Object.assign(filters, patch)
-  const el = ev?.currentTarget
-  if (el && typeof el.closest === 'function') {
-    const d = el.closest('details')
-    if (d) d.open = false
+  onFilterChange()
+}
+
+function toggleFilterPanel() {
+  showColPanelDd.value = false
+  showFilterPanelDd.value = !showFilterPanelDd.value
+}
+
+function closeFilterPanel() {
+  showFilterPanelDd.value = false
+}
+
+function toggleColPanel() {
+  showFilterPanelDd.value = false
+  showColPanelDd.value = !showColPanelDd.value
+}
+
+function closeColPanel() {
+  showColPanelDd.value = false
+}
+
+function onToggleFilterControl(id, checked) {
+  filterControlVisible[id] = checked
+  try {
+    localStorage.setItem(COST_REPORT_FILTER_VIS_KEY, JSON.stringify({ ...filterControlVisible }))
+  } catch {
+    /* ignore */
   }
-  detailPage.value = 1
-  reload()
 }
 
 function onFilterChange() {
@@ -771,7 +636,8 @@ function resetFilters() {
   filters.trip_type = ''
   filters.status = ''
   filters.fleet_mode = ''
-  if (funnelRef.value) funnelRef.value.open = false
+  searchQ.value = ''
+  showFilterPanelDd.value = false
   detailPage.value = 1
   reload()
 }
@@ -790,14 +656,6 @@ function onDetailPerPageChange() {
     /* ignore */
   }
 }
-
-function resetFilterBarVisibility() {
-  Object.assign(filterControlVisible, defaultFilterControlVisibility())
-}
-
-const hasVisibleBarFilters = computed(() =>
-  FILTER_CONTROL_IDS.some((id) => filterControlVisible[id] === true),
-)
 
 function loadColVisibility() {
   try {
@@ -823,6 +681,10 @@ function loadDetailPerPage() {
     /* ignore */
   }
 }
+
+watch(searchQ, () => {
+  detailPage.value = 1
+})
 
 watch(
   colVisible,
@@ -866,19 +728,14 @@ async function doExportPdf() {
   }
 }
 
-function onCostReportFilterBarEnter() {
-  resetFilterBarVisibility()
-}
-
 onMounted(() => {
-  onCostReportFilterBarEnter()
   loadColVisibility()
   loadDetailPerPage()
   reload()
 })
 
 onActivated(() => {
-  onCostReportFilterBarEnter()
+  /* filter visibility persisted in localStorage */
 })
 </script>
 

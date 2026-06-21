@@ -46,6 +46,7 @@ class TpProgramController extends Controller
                 'last_page' => $items->lastPage(),
                 'total' => $items->total(),
             ],
+            'summary' => $this->presenter->listSummary(),
         ]);
     }
 

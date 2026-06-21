@@ -1,201 +1,194 @@
 <template>
   <div class="space-y-4 md:space-y-5">
-    <!-- Header -->
     <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
       <div>
-        <h1 class="text-xl font-bold tracking-tight text-slate-900 md:text-2xl">Danh sách Học sinh</h1>
-        <p class="mt-1 text-sm text-slate-500">Quản lý toàn bộ học sinh trong hệ thống đưa đón</p>
+        <h1 class="text-xl font-bold tracking-tight text-slate-900 md:text-2xl">{{ t('tp_student_page.title') }}</h1>
+        <p class="mt-1 text-sm text-slate-500">{{ t('tp_student_page.subtitle') }}</p>
       </div>
 
-      <div class="flex flex-col items-stretch gap-3 sm:items-end">
-        <div class="flex flex-wrap gap-2">
-          <Button variant="secondary" :disabled="exporting" @click="exportList">
-            <ArrowPathIcon v-if="exporting" class="h-4 w-4 animate-spin" />
-            <ArrowDownTrayIcon v-else class="h-4 w-4" />
-            {{ exporting ? 'Đang xuất…' : 'Xuất danh sách' }}
-          </Button>
-          <Button variant="secondary" @click="goImport">
-            <ArrowUpTrayIcon class="h-4 w-4" /> Import học sinh
-          </Button>
-          <Button @click="openCreate"><PlusIcon class="h-4 w-4" /> Thêm học sinh</Button>
-        </div>
-
-        <div class="flex flex-wrap gap-2">
-          <span class="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600">
-            <UsersIcon class="h-4 w-4 text-slate-400" />
-            <span class="font-bold text-slate-900">{{ stats.total }}</span> Tổng học sinh
-          </span>
-          <span class="inline-flex items-center gap-1.5 rounded-lg bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-700">
-            <TruckIcon class="h-4 w-4 text-sky-500" />
-            <span class="font-bold">{{ stats.transporting }}</span> Đang đưa đón
-          </span>
-          <span class="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700">
-            <ClockIcon class="h-4 w-4 text-amber-500" />
-            <span class="font-bold">{{ stats.pending }}</span> Chờ duyệt
-          </span>
-          <span class="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-500">
-            <UserMinusIcon class="h-4 w-4 text-slate-400" />
-            <span class="font-bold text-slate-700">{{ stats.unregistered }}</span> Chưa đăng ký
-          </span>
-        </div>
+      <div class="flex flex-wrap gap-2">
+        <Button variant="secondary" data-testid="tp-student-import" @click="goImport">
+          <ArrowUpTrayIcon class="h-4 w-4" /> {{ t('tp_student_page.btn_import') }}
+        </Button>
+        <Button data-testid="tp-student-add" @click="openCreate">
+          <PlusIcon class="h-4 w-4" /> {{ t('tp_student_page.btn_add') }}
+        </Button>
       </div>
     </div>
 
-    <AppFilterBar>
-      <div ref="tpStudentFilterBarRef" class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
-        <AppFilterFunnelMenu ref="filterMenuRef" :badge-count="activeFilterCount">
-          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Bộ lọc đang áp dụng</p>
-          <ul class="mt-2 space-y-2 text-sm text-slate-700">
-            <li v-if="filters.search" class="flex justify-between gap-2"><span class="text-slate-500">Tìm kiếm</span><span class="truncate font-medium">{{ filters.search }}</span></li>
-            <li v-if="filters.class_name" class="flex justify-between gap-2"><span class="text-slate-500">Lớp</span><span class="font-medium">{{ filters.class_name }}</span></li>
-            <li v-if="filters.transport_status" class="flex justify-between gap-2"><span class="text-slate-500">Trạng thái</span><span class="font-medium">{{ transportStatusLabel(filters.transport_status) }}</span></li>
-            <li v-if="filters.program_id" class="flex justify-between gap-2"><span class="text-slate-500">Chương trình</span><span class="truncate font-medium">{{ programFilterLabel }}</span></li>
-            <li v-if="filters.grade" class="flex justify-between gap-2"><span class="text-slate-500">Khối</span><span class="font-medium">{{ filters.grade }}</span></li>
-            <li v-if="filters.student_status" class="flex justify-between gap-2"><span class="text-slate-500">Hồ sơ HS</span><span class="font-medium">{{ studentStatusLabel(filters.student_status) }}</span></li>
-            <li v-if="filters.gender" class="flex justify-between gap-2"><span class="text-slate-500">Giới tính</span><span class="font-medium">{{ genderLabel(filters.gender) }}</span></li>
-            <li v-if="filters.pickup_point" class="flex justify-between gap-2"><span class="text-slate-500">Điểm đón</span><span class="truncate font-medium">{{ filters.pickup_point }}</span></li>
-            <li v-if="filters.parent_phone" class="flex justify-between gap-2"><span class="text-slate-500">SĐT PH</span><span class="font-medium">{{ filters.parent_phone }}</span></li>
-            <li v-if="filters.address_contains" class="flex justify-between gap-2"><span class="text-slate-500">Địa chỉ</span><span class="truncate font-medium">{{ filters.address_contains }}</span></li>
-            <li v-if="filters.per_page !== DEFAULT_PER_PAGE" class="flex justify-between gap-2"><span class="text-slate-500">Số dòng/trang</span><span class="font-medium">{{ filters.per_page }}</span></li>
-            <li v-if="activeFilterCount === 0" class="text-slate-400">Chưa có điều kiện lọc</li>
-          </ul>
-          <div class="mt-3 border-t border-slate-100 pt-3">
-            <p class="text-[11px] font-semibold uppercase text-violet-700">Hiển thị bộ lọc trên thanh</p>
-            <ul class="mt-2 space-y-2">
-              <li v-for="opt in filterBarVisibilityOptions" :key="opt.id" class="flex gap-2">
-                <input :id="'tp-stu-vis-' + opt.id" v-model="filterBarVisible[opt.id]" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" />
-                <label :for="'tp-stu-vis-' + opt.id" class="text-sm text-slate-700">{{ opt.label }}</label>
-              </li>
-            </ul>
+    <TpStudentSummaryBar
+      :stats="stats"
+      :loading="loading"
+      :transport-status="filters.transport_status"
+      @quick-filter="onKpiQuickFilter"
+    />
+
+    <div
+      ref="datagridRef"
+      class="overflow-visible rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40"
+    >
+      <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+        <div class="flex w-full min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
+          <div class="min-w-0 w-full basis-full lg:min-w-[10rem] lg:flex-1 lg:basis-auto">
+            <DatagridToolbarSearch
+              v-model="filters.search"
+              input-id="tp-student-list-search"
+              :placeholder="t('tp_student_page.search_placeholder')"
+              stretch
+              inline-actions
+              hide-label
+              input-height="h-10"
+              data-testid="tp-student-toolbar-search"
+            />
           </div>
-          <button type="button" class="mt-3 w-full rounded-lg border py-2 text-sm" @click="clearFilters(); closeFilterMenu()">Xóa tất cả bộ lọc</button>
-        </AppFilterFunnelMenu>
-        <div class="hidden h-6 w-px bg-slate-200 sm:block" />
-        <button type="button" class="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 hover:bg-slate-100" @click="clearFilters">
-          <span class="relative inline-flex">
-            <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-            <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100" aria-hidden="true" />
-          </span>
-        </button>
-        <details ref="columnPickerRef" class="group relative shrink-0">
-          <summary
-            class="flex cursor-pointer list-none items-center gap-1 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
-            aria-label="Chọn cột hiển thị"
-          >
-            <ViewColumnsIcon class="h-5 w-5 shrink-0 text-slate-600" />
-            <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" />
-          </summary>
-          <div
-            class="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[220px] rounded-xl border border-slate-200/90 bg-white p-3 text-sm shadow-lg ring-1 ring-slate-900/5"
-            @click.stop
-          >
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Cột hiển thị</p>
-            <ul class="mt-2 max-h-[min(50vh,280px)] space-y-2 overflow-y-auto">
-              <li v-for="opt in columnToggleOptions" :key="opt.id" class="flex items-center gap-2">
+
+          <div class="flex shrink-0 flex-wrap items-center gap-2">
+            <FilterVisibilityDropdown
+              :open="showFilterPanelDd"
+              :title="t('trips_page.filter_show_controls_title')"
+              :hint="t('trips_page.filter_show_controls_hint')"
+              @close="closeFilterPanel"
+            >
+              <template #trigger>
+                <DatagridToolbarActionButton
+                  icon="filter"
+                  :active="showFilterPanelDd"
+                  test-id="tp-student-toolbar-filter"
+                  @click="toggleFilterPanel"
+                >
+                  {{ t('tp_student_page.toolbar_filter') }}
+                </DatagridToolbarActionButton>
+              </template>
+              <li v-for="fd in filterControlDefs" :key="'tp-stu-vis-' + fd.id" class="flex items-start gap-2">
+                <input
+                  :id="'tp-student-filter-vis-' + fd.id"
+                  :checked="filterControlVisible[fd.id]"
+                  type="checkbox"
+                  class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-va-800 focus:ring-va-700/30 dark:border-slate-600"
+                  :data-testid="`tp-student-filter-vis-${fd.id}`"
+                  @change="onToggleFilterControl(fd.id, $event.target.checked)"
+                />
+                <label
+                  :for="'tp-student-filter-vis-' + fd.id"
+                  class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
+                >
+                  {{ fd.label }}
+                </label>
+              </li>
+            </FilterVisibilityDropdown>
+
+            <FilterVisibilityDropdown
+              :open="showColPanelDd"
+              :title="t('tp_student_page.column_visibility_title')"
+              @close="closeColPanel"
+            >
+              <template #trigger>
+                <DatagridToolbarActionButton
+                  icon="columns"
+                  :active="showColPanelDd"
+                  test-id="tp-student-toolbar-columns"
+                  @click="toggleColPanel"
+                >
+                  {{ t('tp_student_page.toolbar_columns') }}
+                </DatagridToolbarActionButton>
+              </template>
+              <li v-for="opt in columnToggleOptions" :key="'tp-stu-col-' + opt.id" class="flex items-start gap-2">
                 <input
                   :id="`tp-stu-col-${opt.id}`"
                   type="checkbox"
-                  class="rounded border-slate-300 text-teal-600"
+                  class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-va-800 focus:ring-va-700/30 dark:border-slate-600"
                   :checked="colOn(opt.id)"
+                  :data-testid="`tp-student-col-vis-${opt.id}`"
                   @change="setColumn(opt.id, $event.target.checked)"
                 />
-                <label :for="`tp-stu-col-${opt.id}`" class="cursor-pointer text-xs text-slate-700">{{ opt.label }}</label>
+                <label :for="`tp-stu-col-${opt.id}`" class="cursor-pointer text-sm text-slate-700 dark:text-slate-300">
+                  {{ opt.label }}
+                </label>
               </li>
-            </ul>
+            </FilterVisibilityDropdown>
+
+            <button
+              type="button"
+              class="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-slate-800 dark:hover:bg-slate-800"
+              :title="t('tp_student_page.filter_clear_all')"
+              data-testid="tp-student-reset-filters"
+              @click="clearFilters"
+            >
+              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
+              <XMarkIcon class="h-3 w-3 text-rose-500" aria-hidden="true" />
+            </button>
           </div>
-        </details>
-        <div class="relative min-w-0 flex-1 basis-[10rem] sm:min-w-[12rem] sm:max-w-md">
-          <MagnifyingGlassIcon class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-          <input
-            v-model="filters.search"
-            type="search"
-            placeholder="Tên, mã, SĐT, điểm đón, PH…"
-            aria-label="Tìm học sinh"
-            class="h-9 w-full rounded-md border-0 bg-white/90 py-0 pl-9 pr-3 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
-          />
+
+          <div class="ml-auto flex shrink-0 flex-wrap items-center gap-2">
+            <details ref="exportMenuRef" class="group relative">
+              <summary class="list-none [&::-webkit-details-marker]:hidden">
+                <DatagridToolbarActionButton
+                  icon="export"
+                  :disabled="exporting"
+                  test-id="tp-student-toolbar-export"
+                  @click.prevent
+                >
+                  {{ t('tp_student_page.toolbar_export') }}
+                </DatagridToolbarActionButton>
+              </summary>
+              <div
+                class="absolute right-0 top-[calc(100%+8px)] z-[110] min-w-[200px] rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-600 dark:bg-slate-900"
+                @click.stop
+              >
+                <button
+                  type="button"
+                  class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                  data-testid="tp-student-export-xlsx"
+                  :disabled="exporting"
+                  @click="exportList"
+                >
+                  {{ exporting ? t('tp_student_page.btn_export_busy') : t('tp_student_page.btn_export') }}
+                </button>
+              </div>
+            </details>
+
+            <label class="inline-flex shrink-0 items-center gap-1.5">
+              <span class="sr-only">{{ t('tp_student_page.per_page') }}</span>
+              <select
+                v-model.number="filters.per_page"
+                class="input h-10 min-w-[4.5rem] rounded-lg border border-slate-200 bg-white px-2 text-sm dark:border-slate-600 dark:bg-slate-950"
+                :aria-label="t('tp_student_page.per_page')"
+                data-testid="tp-student-per-page"
+              >
+                <option :value="15">15</option>
+                <option :value="25">25</option>
+                <option :value="50">50</option>
+                <option :value="100">100</option>
+              </select>
+            </label>
+          </div>
         </div>
-        <span class="ml-auto text-xs text-slate-500">
-          <template v-if="paginationTotal">
-            <span class="font-semibold text-slate-700">{{ pageFrom }}–{{ pageTo }}</span>
-            / {{ formatInt(paginationTotal) }} kết quả
-          </template>
-          <template v-else>0 kết quả</template>
+
+        <p v-if="paginationTotal" class="mt-2 text-xs text-slate-500">
+          {{ t('tp_student_page.results_count', { from: pageFrom, to: pageTo, total: formatInt(paginationTotal) }) }}
           <span class="mx-1 text-slate-300">·</span>
-          Tổng hệ thống {{ formatInt(stats.total) }}
-        </span>
+          {{ t('tp_student_page.results_system_total', { total: formatInt(stats.total) }) }}
+        </p>
       </div>
-      <div v-if="hasVisibleBarFilters" class="mt-2 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-2">
-        <select v-if="filterBarVisible.class_name" v-model="filters.class_name" class="filter-select" :class="filters.class_name ? 'text-slate-900' : 'text-slate-500'">
-          <option value="">Lớp</option>
-          <option v-for="c in filterOptions.classes" :key="c" :value="c">{{ c }}</option>
-        </select>
-        <select v-if="filterBarVisible.transport_status" v-model="filters.transport_status" class="filter-select" :class="filters.transport_status ? 'text-slate-900' : 'text-slate-500'">
-          <option value="">Trạng thái vận chuyển</option>
-          <option value="transporting">Đang đưa đón</option>
-          <option value="pending">Chờ duyệt</option>
-          <option value="paused">Tạm dừng</option>
-          <option value="unregistered">Chưa đăng ký</option>
-        </select>
-        <select v-if="filterBarVisible.program_id" v-model="filters.program_id" class="filter-select" :class="filters.program_id ? 'text-slate-900' : 'text-slate-500'">
-          <option value="">Chương trình</option>
-          <option v-for="p in filterOptions.programs" :key="p.id" :value="p.id">{{ p.name }}</option>
-        </select>
-        <select v-if="filterBarVisible.grade" v-model="filters.grade" class="filter-select" :class="filters.grade ? 'text-slate-900' : 'text-slate-500'">
-          <option value="">Khối</option>
-          <option v-for="g in filterOptions.grades" :key="g" :value="g">{{ g }}</option>
-        </select>
-        <select v-if="filterBarVisible.student_status" v-model="filters.student_status" class="filter-select" :class="filters.student_status ? 'text-slate-900' : 'text-slate-500'">
-          <option value="">Hồ sơ HS</option>
-          <option value="active">Đang theo học</option>
-          <option value="inactive">Ngưng học</option>
-          <option value="transferred">Chuyển trường</option>
-          <option value="graduated">Đã tốt nghiệp</option>
-        </select>
-        <select v-if="filterBarVisible.gender" v-model="filters.gender" class="filter-select" :class="filters.gender ? 'text-slate-900' : 'text-slate-500'">
-          <option value="">Giới tính</option>
-          <option v-for="g in filterOptions.genders || []" :key="g.value" :value="g.value">{{ g.label }}</option>
-        </select>
-        <select
-          v-if="filterBarVisible.pickup_point && (filterOptions.pickup_points || []).length"
-          v-model="filters.pickup_point"
-          class="filter-select max-w-[14rem]"
-          :class="filters.pickup_point ? 'text-slate-900' : 'text-slate-500'"
-        >
-          <option value="">Điểm đón</option>
-          <option v-for="p in filterOptions.pickup_points" :key="p" :value="p">{{ p }}</option>
-        </select>
-        <input
-          v-if="filterBarVisible.parent_phone"
-          v-model="filters.parent_phone"
-          type="search"
-          placeholder="SĐT phụ huynh"
-          class="h-9 min-w-[9rem] rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-va-500 focus:outline-none focus:ring-2 focus:ring-va-500/20"
-        />
-        <input
-          v-if="filterBarVisible.address_contains"
-          v-model="filters.address_contains"
-          type="search"
-          placeholder="Địa chỉ chứa…"
-          class="h-9 min-w-[9rem] max-w-xs flex-1 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-va-500 focus:outline-none focus:ring-2 focus:ring-va-500/20"
-        />
-        <select v-if="filterBarVisible.per_page" v-model.number="filters.per_page" class="filter-select" :class="filters.per_page !== DEFAULT_PER_PAGE ? 'text-slate-900' : 'text-slate-500'">
-          <option :value="DEFAULT_PER_PAGE">Số dòng/trang</option>
-          <option :value="15">15</option>
-          <option :value="25">25</option>
-          <option :value="50">50</option>
-          <option :value="100">100</option>
-        </select>
-      </div>
-    </AppFilterBar>
+
+      <TpStudentListFilters
+        :filters="filters"
+        :filter-control-visible="filterControlVisible"
+        :filter-options="filterOptions"
+        :has-visible-bar-filters="hasVisibleBarFilters"
+        :transport-status-options="transportStatusOptions"
+        :student-status-options="studentStatusOptions"
+        @patch-filter="onPatchFilter"
+      />
 
     <!-- Table -->
-    <div v-if="loading" class="flex items-center justify-center rounded-xl border border-slate-200 bg-white py-16 text-sm text-slate-500">
-      <ArrowPathIcon class="mr-2 h-5 w-5 animate-spin" /> Đang tải…
+    <div v-if="loading" class="flex items-center justify-center px-4 py-16 text-sm text-slate-500">
+      <ArrowPathIcon class="mr-2 h-5 w-5 animate-spin" aria-hidden="true" /> {{ t('tp_student_page.loading') }}
     </div>
-    <div v-else-if="!items.length" class="rounded-xl border border-slate-200 bg-white py-16 text-center text-sm text-slate-500">
-      Không có học sinh phù hợp.
+    <div v-else-if="!items.length" class="px-4 py-16 text-center text-sm text-slate-500">
+      {{ t('tp_student_page.empty') }}
     </div>
-    <div v-else class="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+    <div v-else class="overflow-x-auto overscroll-x-contain">
       <table class="w-full min-w-[60rem] text-left text-sm">
         <thead class="border-b border-slate-200 bg-slate-50/80 text-[11px] uppercase tracking-wide text-slate-500">
           <tr>
@@ -203,21 +196,21 @@
               <input type="checkbox" :checked="allSelected" class="h-4 w-4 rounded border-slate-300 accent-va-800" @change="toggleAll" />
             </th>
             <th class="w-12 px-3 py-3 font-semibold">#</th>
-            <th class="px-3 py-3 font-semibold">Học sinh</th>
-            <th v-if="colOn('code')" class="px-3 py-3 font-semibold">Mã HS</th>
-            <th v-if="colOn('gender')" class="px-3 py-3 font-semibold">Giới tính</th>
-            <th v-if="colOn('date_of_birth')" class="px-3 py-3 font-semibold">Ngày sinh</th>
-            <th v-if="colOn('grade')" class="px-3 py-3 font-semibold">Khối</th>
-            <th v-if="colOn('class_name')" class="px-3 py-3 font-semibold">Lớp</th>
-            <th v-if="colOn('program')" class="px-3 py-3 font-semibold">Chương trình</th>
-            <th v-if="colOn('parent_contact')" class="px-3 py-3 font-semibold">Liên hệ chính</th>
-            <th v-if="colOn('father')" class="px-3 py-3 font-semibold">Cha</th>
-            <th v-if="colOn('mother')" class="px-3 py-3 font-semibold">Mẹ</th>
-            <th v-if="colOn('address')" class="px-3 py-3 font-semibold">Địa chỉ</th>
-            <th v-if="colOn('pickup_point')" class="px-3 py-3 font-semibold">Điểm đón</th>
-            <th v-if="colOn('note')" class="px-3 py-3 font-semibold">Ghi chú</th>
-            <th v-if="colOn('transport_status')" class="px-3 py-3 font-semibold">Trạng thái</th>
-            <th class="w-16 px-3 py-3 text-right font-semibold">Hành động</th>
+            <th class="px-3 py-3 font-semibold">{{ t('tp_student_page.col_student') }}</th>
+            <th v-if="colOn('code')" class="px-3 py-3 font-semibold">{{ t('tp_student_page.col_code') }}</th>
+            <th v-if="colOn('gender')" class="px-3 py-3 font-semibold">{{ t('tp_student_page.col_gender') }}</th>
+            <th v-if="colOn('date_of_birth')" class="px-3 py-3 font-semibold">{{ t('tp_student_page.col_dob') }}</th>
+            <th v-if="colOn('grade')" class="px-3 py-3 font-semibold">{{ t('tp_student_page.col_grade') }}</th>
+            <th v-if="colOn('class_name')" class="px-3 py-3 font-semibold">{{ t('tp_student_page.col_class') }}</th>
+            <th v-if="colOn('program')" class="px-3 py-3 font-semibold">{{ t('tp_student_page.col_program') }}</th>
+            <th v-if="colOn('parent_contact')" class="px-3 py-3 font-semibold">{{ t('tp_student_page.col_parent') }}</th>
+            <th v-if="colOn('father')" class="px-3 py-3 font-semibold">{{ t('tp_student_page.col_father') }}</th>
+            <th v-if="colOn('mother')" class="px-3 py-3 font-semibold">{{ t('tp_student_page.col_mother') }}</th>
+            <th v-if="colOn('address')" class="px-3 py-3 font-semibold">{{ t('tp_student_page.col_address') }}</th>
+            <th v-if="colOn('pickup_point')" class="px-3 py-3 font-semibold">{{ t('tp_student_page.col_pickup') }}</th>
+            <th v-if="colOn('note')" class="px-3 py-3 font-semibold">{{ t('tp_student_page.col_note') }}</th>
+            <th v-if="colOn('transport_status')" class="px-3 py-3 font-semibold">{{ t('tp_student_page.col_transport_status') }}</th>
+            <th class="w-16 px-3 py-3 text-right font-semibold">{{ t('tp_student_page.col_actions') }}</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100">
@@ -263,7 +256,7 @@
                   </span>
                 </div>
               </template>
-              <span v-else class="text-xs italic text-slate-400">Chưa gán chương trình</span>
+              <span v-else class="text-xs italic text-slate-400">{{ t('tp_student_page.no_program') }}</span>
             </td>
 
             <td v-if="colOn('parent_contact')" class="px-3 py-3">
@@ -296,10 +289,10 @@
             </td>
 
             <td class="px-3 py-3 text-right">
-              <AppRowActionsMenu :aria-label="`Hành động cho ${s.full_name}`">
-                <button class="menu-item" @click="openEdit(s)"><PencilSquareIcon class="h-4 w-4" /> Chỉnh sửa</button>
-                <button class="menu-item" @click="goEnroll(s)"><AcademicCapIcon class="h-4 w-4" /> Đăng ký tuyến</button>
-                <button class="menu-item text-rose-600" @click="remove(s)"><TrashIcon class="h-4 w-4" /> Xóa</button>
+              <AppRowActionsMenu :aria-label="t('tp_student_page.row_actions_aria', { name: s.full_name })">
+                <button class="menu-item" data-testid="tp-student-action-edit" @click="openEdit(s)"><PencilSquareIcon class="h-4 w-4" /> {{ t('tp_student_page.action_edit') }}</button>
+                <button class="menu-item" data-testid="tp-student-action-enroll" @click="goEnroll(s)"><AcademicCapIcon class="h-4 w-4" /> {{ t('tp_student_page.action_enroll') }}</button>
+                <button class="menu-item text-rose-600" data-testid="tp-student-action-delete" @click="remove(s)"><TrashIcon class="h-4 w-4" /> {{ t('tp_student_page.action_delete') }}</button>
               </AppRowActionsMenu>
             </td>
           </tr>
@@ -310,33 +303,21 @@
 
     <nav
       v-if="!loading && paginationTotal > 0"
-      class="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between"
-      aria-label="Phân trang danh sách học sinh"
+      class="flex flex-col gap-3 border-t border-slate-100 px-4 py-3 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between sm:px-5"
+      :aria-label="t('tp_student_page.pagination_aria')"
     >
       <p class="text-sm text-slate-600">
-        Hiển thị
-        <span class="font-semibold text-slate-900">{{ pageFrom }}–{{ pageTo }}</span>
-        trong
-        <span class="font-semibold text-slate-900">{{ formatInt(paginationTotal) }}</span>
-        học sinh
-        <span class="text-slate-400">(trang {{ meta.current_page }}/{{ meta.last_page }})</span>
+        {{ t('tp_student_page.pagination_showing', {
+          from: pageFrom,
+          to: pageTo,
+          total: formatInt(paginationTotal),
+          page: meta.current_page,
+          last: meta.last_page,
+        }) }}
       </p>
       <div class="flex flex-wrap items-center gap-2">
-        <label class="mr-1 flex items-center gap-2 text-sm text-slate-600">
-          <span class="whitespace-nowrap text-xs font-medium text-slate-500">Dòng/trang</span>
-          <select
-            v-model.number="filters.per_page"
-            class="h-9 cursor-pointer rounded-lg border border-slate-200 bg-white px-2 pr-7 text-sm font-medium text-slate-800 focus:border-va-500 focus:outline-none focus:ring-2 focus:ring-va-500/20"
-            aria-label="Số dòng mỗi trang"
-          >
-            <option :value="15">15</option>
-            <option :value="25">25</option>
-            <option :value="50">50</option>
-            <option :value="100">100</option>
-          </select>
-        </label>
-        <Button variant="secondary" :disabled="meta.current_page <= 1" @click="changePage(meta.current_page - 1)">
-          Trước
+        <Button variant="secondary" data-testid="tp-student-page-prev" :disabled="meta.current_page <= 1" @click="changePage(meta.current_page - 1)">
+          {{ t('tp_student_page.pagination_prev') }}
         </Button>
         <div class="flex items-center gap-1">
           <button
@@ -350,16 +331,18 @@
                 : 'text-slate-600 hover:bg-slate-100'
             "
             :aria-current="p === meta.current_page ? 'page' : undefined"
+            :data-testid="`tp-student-page-${p}`"
             @click="changePage(p)"
           >
             {{ p }}
           </button>
         </div>
-        <Button variant="secondary" :disabled="meta.current_page >= meta.last_page" @click="changePage(meta.current_page + 1)">
-          Sau
+        <Button variant="secondary" data-testid="tp-student-page-next" :disabled="meta.current_page >= meta.last_page" @click="changePage(meta.current_page + 1)">
+          {{ t('tp_student_page.pagination_next') }}
         </Button>
       </div>
     </nav>
+    </div>
 
     <TpStudentFormModal v-if="showForm" :student="editing" @close="showForm = false" @saved="onSaved" />
 
@@ -372,19 +355,20 @@
 </template>
 
 <script setup>
-import { computed, onActivated, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
-  PlusIcon, ArrowPathIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, MagnifyingGlassIcon,
-  XMarkIcon, FunnelIcon, UsersIcon, TruckIcon, ClockIcon, UserMinusIcon, PencilSquareIcon,
+  PlusIcon, ArrowPathIcon, ArrowUpTrayIcon,
+  XMarkIcon, FunnelIcon, PencilSquareIcon,
   TrashIcon, AcademicCapIcon, CalendarDaysIcon, PauseCircleIcon, ExclamationCircleIcon,
-  ViewColumnsIcon, ChevronDownIcon,
 } from '@heroicons/vue/24/outline'
 import Button from '../../components/ui/Button.vue'
-import AppFilterBar from '../../components/filters/AppFilterBar.vue'
-import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vue'
-import { useFilterBarVisibility } from '../../composables/useFilterBarVisibility.js'
+import DatagridToolbarSearch from '../../components/shared/ui/DatagridToolbarSearch.vue'
+import DatagridToolbarActionButton from '../../components/shared/ui/DatagridToolbarActionButton.vue'
+import FilterVisibilityDropdown from '../../components/shared/ui/FilterVisibilityDropdown.vue'
+import TpStudentSummaryBar from '../../components/transportProgram/TpStudentSummaryBar.vue'
+import TpStudentListFilters from '../../components/transportProgram/TpStudentListFilters.vue'
 import { useDetailsAutoClose, useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 import { useTpStudentListColumns } from '../../composables/useTpStudentListColumns.js'
 import AppRowActionsMenu from '../../components/ui/AppRowActionsMenu.vue'
@@ -434,7 +418,7 @@ const filters = reactive({
 })
 let timer = null
 
-const TP_STU_FILTER_VIS_IDS = [
+const TP_FILTER_CONTROL_IDS = [
   'class_name',
   'transport_status',
   'program_id',
@@ -444,86 +428,115 @@ const TP_STU_FILTER_VIS_IDS = [
   'pickup_point',
   'parent_phone',
   'address_contains',
-  'per_page',
 ]
-const TP_STU_FILTER_VIS_DEFAULTS = {
-  ...Object.fromEntries(TP_STU_FILTER_VIS_IDS.map((id) => [id, false])),
-  gender: true,
-  pickup_point: true,
-  per_page: true,
-}
-const { colOn, setColumn, columnToggleOptions } = useTpStudentListColumns()
-const {
-  visible: filterBarVisible,
-  resetVisibility: resetFilterBarVisibility,
-  hasVisibleOnBar: hasVisibleBarFilters,
-} = useFilterBarVisibility(TP_STU_FILTER_VIS_IDS, TP_STU_FILTER_VIS_DEFAULTS)
+const TP_FILTER_VIS_KEY = 'tp-student-list-filter-vis.v1'
 
-const filterMenuRef = ref(null)
-const columnPickerRef = ref(null)
-const tpStudentFilterBarRef = ref(null)
-useDetailsAutoClose(columnPickerRef)
-useDetailsAutoCloseWithin(tpStudentFilterBarRef)
-
-const filterBarVisibilityOptions = [
-  { id: 'class_name', label: 'Lớp' },
-  { id: 'transport_status', label: 'Trạng thái vận chuyển' },
-  { id: 'program_id', label: 'Chương trình' },
-  { id: 'grade', label: 'Khối' },
-  { id: 'student_status', label: 'Hồ sơ học sinh' },
-  { id: 'gender', label: 'Giới tính' },
-  { id: 'pickup_point', label: 'Điểm đón' },
-  { id: 'parent_phone', label: 'SĐT phụ huynh' },
-  { id: 'address_contains', label: 'Địa chỉ' },
-  { id: 'per_page', label: 'Số dòng/trang' },
-]
-
-const activeFilterCount = computed(() => {
-  let n = 0
-  if (filters.search?.trim()) n++
-  if (filters.class_name) n++
-  if (filters.transport_status) n++
-  if (filters.program_id) n++
-  if (filters.grade) n++
-  if (filters.student_status) n++
-  if (filters.gender) n++
-  if (filters.pickup_point) n++
-  if (filters.parent_phone?.trim()) n++
-  if (filters.address_contains?.trim()) n++
-  if (filters.per_page !== DEFAULT_PER_PAGE) n++
-  return n
-})
-
-function studentStatusLabel(s) {
-  const map = {
-    active: 'Đang theo học',
-    inactive: 'Ngưng học',
-    transferred: 'Chuyển trường',
-    graduated: 'Đã tốt nghiệp',
+function loadFilterControlVisibility() {
+  const defaults = {
+    class_name: false,
+    transport_status: false,
+    program_id: false,
+    grade: false,
+    student_status: false,
+    gender: true,
+    pickup_point: true,
+    parent_phone: false,
+    address_contains: false,
   }
-  return map[s] ?? s
+  try {
+    const raw = localStorage.getItem(TP_FILTER_VIS_KEY)
+    if (raw) {
+      return { ...defaults, ...JSON.parse(raw) }
+    }
+  } catch {
+    /* ignore */
+  }
+  return { ...defaults }
 }
 
-const programFilterLabel = computed(() => {
-  const id = filters.program_id
-  if (!id) return ''
-  return filterOptions.programs.find((p) => String(p.id) === String(id))?.name ?? String(id)
-})
+const { colOn, setColumn, columnToggleOptions } = useTpStudentListColumns()
+const filterControlVisible = reactive(loadFilterControlVisibility())
+const showFilterPanelDd = ref(false)
+const showColPanelDd = ref(false)
+const exportMenuRef = ref(null)
+const datagridRef = ref(null)
+useDetailsAutoClose(exportMenuRef)
+useDetailsAutoCloseWithin(datagridRef)
 
-function transportStatusLabel(s) {
-  const map = { transporting: 'Đang đưa đón', pending: 'Chờ duyệt', paused: 'Tạm dừng', unregistered: 'Chưa đăng ký' }
-  return map[s] ?? s
+const filterControlDefs = computed(() => [
+  { id: 'class_name', label: t('tp_student_page.filter_vis_class_name') },
+  { id: 'transport_status', label: t('tp_student_page.filter_vis_transport_status') },
+  { id: 'program_id', label: t('tp_student_page.filter_vis_program_id') },
+  { id: 'grade', label: t('tp_student_page.filter_vis_grade') },
+  { id: 'student_status', label: t('tp_student_page.filter_vis_student_status') },
+  { id: 'gender', label: t('tp_student_page.filter_vis_gender') },
+  { id: 'pickup_point', label: t('tp_student_page.filter_vis_pickup_point') },
+  { id: 'parent_phone', label: t('tp_student_page.filter_vis_parent_phone') },
+  { id: 'address_contains', label: t('tp_student_page.filter_vis_address_contains') },
+])
+
+const transportStatusOptions = computed(() => [
+  { value: 'transporting', label: t('tp_student_page.transport_transporting') },
+  { value: 'pending', label: t('tp_student_page.transport_pending') },
+  { value: 'paused', label: t('tp_student_page.transport_paused') },
+  { value: 'unregistered', label: t('tp_student_page.transport_unregistered') },
+])
+
+const studentStatusOptions = computed(() => [
+  { value: 'active', label: t('tp_student_page.student_status_active') },
+  { value: 'inactive', label: t('tp_student_page.student_status_inactive') },
+  { value: 'transferred', label: t('tp_student_page.student_status_transferred') },
+  { value: 'graduated', label: t('tp_student_page.student_status_graduated') },
+])
+
+const hasVisibleBarFilters = computed(() =>
+  TP_FILTER_CONTROL_IDS.some((id) => filterControlVisible[id] === true),
+)
+
+function onPatchFilter(patch) {
+  Object.assign(filters, patch)
+  if ('parent_phone' in patch || 'address_contains' in patch) {
+    clearTimeout(timer)
+    filters.page = 1
+    timer = setTimeout(load, 300)
+    return
+  }
+  filters.page = 1
+  load()
 }
 
-function onTpStudentFilterBarEnter() {
-  resetFilterBarVisibility()
+function onKpiQuickFilter({ transport_status }) {
+  filters.transport_status = transport_status ?? ''
+  filters.page = 1
+  load()
 }
 
-function closeFilterMenu() {
-  filterMenuRef.value?.close?.()
+function toggleFilterPanel() {
+  showColPanelDd.value = false
+  showFilterPanelDd.value = !showFilterPanelDd.value
 }
 
-const hasActiveFilters = computed(() => activeFilterCount.value > 0)
+function closeFilterPanel() {
+  showFilterPanelDd.value = false
+}
+
+function toggleColPanel() {
+  showFilterPanelDd.value = false
+  showColPanelDd.value = !showColPanelDd.value
+}
+
+function closeColPanel() {
+  showColPanelDd.value = false
+}
+
+function onToggleFilterControl(id, checked) {
+  filterControlVisible[id] = checked
+  try {
+    localStorage.setItem(TP_FILTER_VIS_KEY, JSON.stringify({ ...filterControlVisible }))
+  } catch {
+    /* ignore */
+  }
+}
 const allSelected = computed(() => items.value.length > 0 && selected.value.length === items.value.length)
 
 const paginationTotal = computed(() => meta.total ?? 0)
@@ -647,6 +660,7 @@ function clearFilters() {
   filters.address_contains = ''
   filters.per_page = DEFAULT_PER_PAGE
   filters.page = 1
+  showFilterPanelDd.value = false
   load()
 }
 function toggleAll(e) {
@@ -695,7 +709,7 @@ async function exportList() {
       parent_phone: filters.parent_phone?.trim() || undefined,
       address_contains: filters.address_contains?.trim() || undefined,
     })
-    showAppSuccess('Đã tải xuống danh sách học sinh (.xlsx).')
+    showAppSuccess(t('tp_student_page.export_success'))
   } catch (err) {
     showAppErrorFromApi(err)
   } finally {
@@ -704,11 +718,16 @@ async function exportList() {
 }
 
 async function remove(s) {
-  const ok = await confirmAction({ title: 'Xóa học sinh', message: `Xóa ${s.full_name}?`, danger: true, confirmLabel: 'Xóa' })
+  const ok = await confirmAction({
+    title: t('tp_student_page.delete_title'),
+    message: t('tp_student_page.delete_message', { name: s.full_name }),
+    danger: true,
+    confirmLabel: t('tp_student_page.delete_confirm'),
+  })
   if (!ok) return
   try {
     await deleteStudent(s.id)
-    showAppSuccess('Đã xóa.')
+    showAppSuccess(t('tp_student_page.delete_success'))
     load()
   } catch (err) {
     showAppErrorFromApi(err)
@@ -761,9 +780,14 @@ function programSubIcon(status) {
   return { paused: PauseCircleIcon, draft: ExclamationCircleIcon }[status] || CalendarDaysIcon
 }
 
-const TRANSPORT_LABELS = { transporting: 'Đang đưa đón', pending: 'Chờ duyệt', paused: 'Tạm dừng', unregistered: 'Chưa đăng ký' }
 function transportLabel(s) {
-  return TRANSPORT_LABELS[s] || s
+  const key = {
+    transporting: 'tp_student_page.transport_transporting',
+    pending: 'tp_student_page.transport_pending',
+    paused: 'tp_student_page.transport_paused',
+    unregistered: 'tp_student_page.transport_unregistered',
+  }[s]
+  return key ? t(key) : s
 }
 function transportBadgeClass(s) {
   const base = 'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium '
@@ -784,19 +808,11 @@ function transportDotClass(s) {
 }
 
 onMounted(() => {
-  onTpStudentFilterBarEnter()
   load()
-})
-
-onActivated(() => {
-  onTpStudentFilterBarEnter()
 })
 </script>
 
 <style scoped>
-.filter-select {
-  @apply h-9 cursor-pointer rounded-lg border border-slate-200 bg-white px-3 pr-8 text-sm font-medium text-slate-700 focus:border-va-500 focus:outline-none focus:ring-2 focus:ring-va-500/20;
-}
 .menu-item {
   @apply flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50;
 }

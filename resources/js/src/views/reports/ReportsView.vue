@@ -31,46 +31,15 @@
       {{ t('reports_page.loading') }}
     </div>
 
-    <section v-if="summary" class="space-y-2 print:break-inside-avoid" aria-labelledby="rep-kpi">
-      <h2 id="rep-kpi" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-600">
-        {{ t('reports_page.section_kpi') }}
-      </h2>
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <div class="text-xs font-medium text-slate-600">
-            {{ t('reports_page.kpi_on_time') }}
-          </div>
-          <div class="mt-1 text-2xl font-bold tabular-nums text-slate-900">
-            <template v-if="completionRate != null">{{ completionRate }}%</template>
-            <template v-else>—</template>
-          </div>
-        </div>
-        <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <div class="text-xs font-medium text-slate-600">
-            {{ t('reports_page.kpi_sla_breaches') }}
-          </div>
-          <div class="mt-1 text-2xl font-bold tabular-nums text-slate-900">
-            {{ summary?.cargo_sla_breaches ?? 0 }}
-          </div>
-        </div>
-        <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <div class="text-xs font-medium text-slate-600">
-            {{ t('reports_page.kpi_avg_cost') }}
-          </div>
-          <div class="mt-1 text-xl font-bold tabular-nums text-slate-900">
-            {{ avgCostPerTripDisplay }}
-          </div>
-        </div>
-        <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <div class="text-xs font-medium text-slate-600">
-            {{ t('reports_page.kpi_trips') }}
-          </div>
-          <div class="mt-1 text-2xl font-bold tabular-nums text-slate-900">
-            {{ totalTrips }}
-          </div>
-        </div>
-      </div>
-    </section>
+    <ReportsSummaryBar
+      v-if="summary || loading"
+      class="print:break-inside-avoid print:hidden"
+      :completion-rate="completionRate"
+      :sla-breaches="summary?.cargo_sla_breaches ?? 0"
+      :avg-cost-display="avgCostPerTripDisplay"
+      :total-trips="totalTrips"
+      :loading="loading"
+    />
 
     <section class="space-y-3 border-t border-slate-200 pt-6 md:pt-7 print:border-slate-300" aria-labelledby="rep-section-charts-ops">
       <h2 id="rep-section-charts-ops" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-600">
@@ -211,27 +180,26 @@
     </section>
 
     <Card v-if="summary" :title="t('reports_page.card_providers')">
+      <p class="mb-3 text-xs text-slate-500 dark:text-slate-400">
+        {{ t('reports_page.providers_hint') }}
+      </p>
       <div v-if="!providerRows.length" class="text-sm text-slate-500">
         {{ t('reports_page.no_data') }}
       </div>
-      <div v-else class="overflow-x-auto">
-        <table class="w-full border-collapse text-sm">
-          <thead>
-            <tr class="border-b border-slate-200 text-left text-slate-600">
-              <th class="py-2 pr-4 font-medium">{{ t('reports_page.col_provider') }}</th>
-              <th class="py-2 font-medium tabular-nums">{{ t('reports_page.col_total') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(row, i) in providerRows" :key="i" class="border-b border-slate-100">
-              <td class="py-2 pr-4 text-slate-800">{{ row.provider }}</td>
-              <td class="py-2 tabular-nums font-medium text-slate-900">
-                {{ formatMoney(row.total_amount) }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ul v-else class="space-y-2">
+        <li
+          v-for="(row, i) in providerRows"
+          :key="i"
+          class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200/90 bg-slate-50/50 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800/40"
+        >
+          <span class="text-sm font-medium text-slate-800 dark:text-slate-100">
+            {{ providerDisplayName(row.provider) }}
+          </span>
+          <span class="tabular-nums text-sm font-semibold text-teal-900 dark:text-teal-200">
+            {{ formatMoney(row.total_amount) }}
+          </span>
+        </li>
+      </ul>
     </Card>
   </div>
 </template>
@@ -240,11 +208,17 @@
 import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Card from '../../components/ui/Card.vue'
+import ReportsSummaryBar from '../../components/reports/ReportsSummaryBar.vue'
 import TransportReportFilters from '../../components/reports/TransportReportFilters.vue'
+import { labelReportProvider } from '../../composables/useCostReportPresentation'
 import DashboardEChart from '../../components/dashboard/DashboardEChart.vue'
 import DashboardChartSection from '../../components/dashboard/DashboardChartSection.vue'
 import { useTransportReportSummary } from '../../composables/useTransportReportSummary'
-const { t } = useI18n()
+const { t, te } = useI18n()
+
+function providerDisplayName(raw) {
+  return labelReportProvider(raw, t, te)
+}
 
 const {
   loading,

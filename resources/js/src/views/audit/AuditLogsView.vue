@@ -229,8 +229,12 @@
                 <div class="min-w-0">
                   <p class="text-sm leading-snug text-slate-800 dark:text-slate-200">
                     <span class="font-semibold">{{ actorDisplayName(log) }}</span>
-                    <span class="text-slate-600 dark:text-slate-400"> {{ actionVerb(log.event) }}</span>
-                    <span v-if="subjectText(log)" class="font-medium text-slate-700 dark:text-slate-300"> {{ subjectText(log) }}</span>
+                    <span class="px-1 text-slate-300 dark:text-slate-600" aria-hidden="true">·</span>
+                    <span class="text-slate-600 dark:text-slate-400">{{ actionVerb(log.event) }}</span>
+                    <template v-if="subjectText(log)">
+                      <span class="px-1 text-slate-300 dark:text-slate-600" aria-hidden="true">·</span>
+                      <span class="font-medium text-slate-700 dark:text-slate-300">{{ subjectText(log) }}</span>
+                    </template>
                   </p>
                   <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
                     <span class="text-xs text-slate-400 dark:text-slate-500">{{ timeAgo(log.created_at) }}</span>
@@ -247,10 +251,13 @@
 
                 <div class="shrink-0 text-right">
                   <span
-                    class="inline-block max-w-[8.5rem] truncate rounded-lg px-2 py-0.5 text-[11px] font-medium sm:max-w-none"
-                    :class="eventTagClass(log.event)"
+                    class="inline-flex max-w-[10rem] items-center gap-1.5 truncate rounded-2xl px-3 py-1.5 text-[11px] font-semibold sm:max-w-none sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
+                    :class="eventBadgeClass(log.event)"
                     :title="eventLabel(log.event)"
-                  >{{ eventLabel(log.event) }}</span>
+                  >
+                    <component :is="eventIcon(log.event)" class="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" aria-hidden="true" />
+                    <span class="truncate">{{ eventLabel(log.event) }}</span>
+                  </span>
                   <ChevronRightIcon class="mx-auto mt-1 h-3.5 w-3.5 text-slate-300 transition group-hover:text-slate-400 dark:text-slate-600" aria-hidden="true" />
                 </div>
               </button>
@@ -331,7 +338,8 @@ const {
   actorDisplayName,
   isSystemActor,
   eventAvatarClass,
-  eventTagClass,
+  eventBadgeClass,
+  eventIcon,
   actorInitials,
 } = useAuditLogPresentation()
 

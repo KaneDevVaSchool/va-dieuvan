@@ -11,6 +11,25 @@ use App\Models\Vehicle;
 
 class TpProgramPresenter
 {
+    /**
+     * @return array{total: int, by_status: array<string, int>, operating_days: int}
+     */
+    public function listSummary(): array
+    {
+        $byStatus = TpProgram::query()
+            ->selectRaw('status, COUNT(*) as aggregate')
+            ->groupBy('status')
+            ->pluck('aggregate', 'status')
+            ->map(fn ($c) => (int) $c)
+            ->all();
+
+        return [
+            'total' => (int) array_sum($byStatus),
+            'by_status' => $byStatus,
+            'operating_days' => (int) TpProgramDay::query()->count(),
+        ];
+    }
+
     public function programSummary(TpProgram $program): array
     {
         $program->loadCount(['days', 'enrollments' => fn ($q) => $q->whereNull('unenrolled_at')]);

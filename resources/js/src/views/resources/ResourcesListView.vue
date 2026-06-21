@@ -1649,16 +1649,19 @@
         @click.self="providerModalOpen = false"
       >
         <div
-          class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
+          class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
           @click.stop
         >
           <div
-            class="flex shrink-0 items-start justify-between gap-3 border-b border-slate-200/90 bg-gradient-to-r from-slate-50 via-white to-indigo-50/30 px-5 py-4 dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/20"
+            class="flex shrink-0 items-start justify-between gap-4 border-b border-slate-200/90 bg-gradient-to-r from-slate-50 via-white to-indigo-50/30 px-5 py-4 dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/20"
           >
             <div class="min-w-0">
               <h2 id="provider-modal-title" class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
                 {{ providerForm.id ? t('resources.provider_form_title_edit') : t('resources.provider_form_title_add') }}
               </h2>
+              <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                {{ t('resources.provider_form_subtitle') }}
+              </p>
             </div>
             <button
               type="button"
@@ -1809,6 +1812,7 @@
                 type="submit"
                 class="min-h-[44px] flex-[2] rounded-xl bg-teal-600 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-500 disabled:opacity-50 sm:min-h-0 sm:flex-initial sm:px-10"
                 :disabled="providerSaving"
+                data-testid="provider-form-submit"
               >
                 {{ providerSaving ? t('resources.loading') : t('resources.provider_form_save') }}
               </button>
@@ -2815,7 +2819,7 @@ const driverPerPage = ref(10)
 const driverPerPageOptions = [5, 10, 15, 20]
 
 function fmtVehicleTableDate(iso) {
-  if (!iso) return '—'
+  if (!iso) return null
   return String(iso)
 }
 
@@ -2991,8 +2995,8 @@ function enrichVehicle(raw) {
   if (raw.type) parts.push(raw.type)
   if (raw.seat_count) parts.push(`${raw.seat_count} chỗ`)
   if (raw.payload_kg) parts.push(`${raw.payload_kg} kg`)
-  const typeLabel = parts.length ? parts.join(' · ') : '—'
-  let capacityLabel = '—'
+  const typeLabel = parts.length ? parts.join(' · ') : ''
+  let capacityLabel = ''
   if (raw.seat_count) capacityLabel = `${raw.seat_count} chỗ`
   else if (raw.payload_kg) capacityLabel = `${raw.payload_kg} kg tải`
 
@@ -3005,7 +3009,7 @@ function enrichVehicle(raw) {
     license_plate: raw.license_plate,
     owner_name: raw.owner_name ?? '',
     frame_engine_number: raw.frame_engine_number ?? '',
-    model: raw.type || '—',
+    model: raw.type || '',
     type: raw.type ?? '',
     year_manufactured: raw.year_manufactured ?? null,
     purchased_at: raw.purchased_at ?? '',
@@ -3051,7 +3055,7 @@ function enrichDriver(raw) {
     name: raw.full_name,
     email: raw.email ?? raw.user?.email ?? '',
     employeeCode: raw.user?.employee_code ?? '',
-    license: lic || '—',
+    license: lic || '',
     license_class: raw.license_class ?? '',
     license_expires_at: raw.license_expires_at ?? '',
     licenseExpiry: docStateFromDate(raw.license_expires_at),
@@ -3066,9 +3070,9 @@ function enrichDriver(raw) {
 
 function enrichProvider(raw) {
   const typeLabel = raw.type === 'taxi' ? t('resources.provider_form_type_taxi') : t('resources.provider_form_type_vendor')
-  const contact = [raw.contact_name, raw.contact_phone].filter(Boolean).join(' · ') || '—'
+  const contact = [raw.contact_name, raw.contact_phone].filter(Boolean).join(' · ') || ''
   const servicesList = Array.isArray(raw.services) ? raw.services.filter((x) => x && String(x.name || '').trim()) : []
-  const serviceSummary = servicesList.length ? servicesList.map((s) => s.name).join(' · ') : '—'
+  const serviceSummary = servicesList.length ? servicesList.map((s) => s.name).join(' · ') : ''
   const contract = contractStateFromDate(raw.contract_expires_at)
   return {
     id: raw.id,
@@ -3216,12 +3220,36 @@ function vehicleCardPills(v) {
 
 function vehicleCardFields(v) {
   return [
-    { label: t('resources.col_type_capacity'), value: v.typeLabel },
-    { label: t('resources.col_driver'), value: v.driverName || t('resources.unassigned') },
-    { label: t('resources.col_owner'), value: v.owner_name || '—' },
-    { label: t('resources.col_insurance_exp'), value: fmtVehicleTableDate(v.insurance_expires_at) },
-    { label: t('resources.col_inspection_exp'), value: fmtVehicleTableDate(v.inspection_expires_at) },
-    { label: t('resources.col_year_mfg'), value: v.year_manufactured ?? '—' },
+    {
+      label: t('resources.col_type_capacity'),
+      value: v.typeLabel,
+      emptyKey: 'resources.empty_type_capacity',
+    },
+    {
+      label: t('resources.col_driver'),
+      value: v.driverName || '',
+      emptyKey: 'resources.unassigned',
+    },
+    {
+      label: t('resources.col_owner'),
+      value: v.owner_name || '',
+      emptyKey: 'resources.empty_owner',
+    },
+    {
+      label: t('resources.col_insurance_exp'),
+      value: fmtVehicleTableDate(v.insurance_expires_at),
+      emptyKey: 'resources.empty_date',
+    },
+    {
+      label: t('resources.col_inspection_exp'),
+      value: fmtVehicleTableDate(v.inspection_expires_at),
+      emptyKey: 'resources.empty_date',
+    },
+    {
+      label: t('resources.col_year_mfg'),
+      value: v.year_manufactured ?? '',
+      emptyKey: 'resources.empty_year',
+    },
   ]
 }
 
@@ -3232,11 +3260,15 @@ function driverCardPills(d) {
 
 function driverCardFields(d) {
   return [
-    { label: t('resources.col_user_email'), value: d.email || '—' },
-    { label: t('resources.col_employee_code'), value: d.employeeCode || '—', mono: true },
-    { label: t('driver_detail.license_class'), value: d.license_class || '—' },
-    { label: t('resources.col_phone'), value: d.phone || '—' },
-    { label: t('driver_detail.availability'), value: labelDriverAvailability(d.availability_status) },
+    { label: t('resources.col_user_email'), value: d.email || '', emptyKey: 'resources.empty_email' },
+    { label: t('resources.col_employee_code'), value: d.employeeCode || '', emptyKey: 'resources.empty_employee_code', mono: true },
+    { label: t('driver_detail.license_class'), value: d.license_class || '', emptyKey: 'resources.empty_license_class' },
+    { label: t('resources.col_phone'), value: d.phone || '', emptyKey: 'resources.empty_phone' },
+    {
+      label: t('driver_detail.availability'),
+      value: labelDriverAvailability(d.availability_status),
+      emptyKey: 'resources.empty_availability',
+    },
   ]
 }
 
@@ -3246,9 +3278,9 @@ function supplierCardPills(s) {
 
 function supplierCardFields(s) {
   return [
-    { label: t('resources.col_solutions_services'), value: s.serviceSummary },
-    { label: t('resources.col_contact'), value: s.contact || '—' },
-    { label: t('resources.col_contract'), value: s.contract_number || '—' },
+    { label: t('resources.col_solutions_services'), value: s.serviceSummary, emptyKey: 'resources.empty_service' },
+    { label: t('resources.col_contact'), value: s.contact || '', emptyKey: 'resources.empty_contact' },
+    { label: t('resources.col_contract'), value: s.contract_number || '', emptyKey: 'resources.empty_contract_no' },
   ]
 }
 
@@ -3357,7 +3389,7 @@ function labelDriverAvailability(s) {
   if (s === 'available') return t('driver_detail.avail_available')
   if (s === 'busy') return t('driver_detail.avail_busy')
   if (s === 'offline') return t('driver_detail.avail_offline')
-  return '—'
+  return ''
 }
 
 function driverRowInitials(name) {
