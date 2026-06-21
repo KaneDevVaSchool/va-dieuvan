@@ -10,6 +10,7 @@ use App\Http\Requests\Api\Requests\BulkSoftDeleteDispatchRequestsRequest;
 use App\Http\Requests\Api\Requests\ListRequestsRequest;
 use App\Models\DispatchRequest;
 use App\Models\User;
+use App\Support\DispatchRequestExtraFeeListHint;
 use App\Support\DispatchWizardPassengerCount;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -39,7 +40,7 @@ class RequestController extends Controller
         }
 
         $q->with([
-            'requester:id,name,email,employee_code',
+            'requester:id,name,email,employee_code,avatar_url',
             'approver:id,name,email,employee_code',
             'trip',
         ]);
@@ -63,8 +64,9 @@ class RequestController extends Controller
                 if (ctype_digit($term)) {
                     $inner->orWhere('id', (int) $term);
                 }
-                if (preg_match('/^REQ-?(\d+)$/i', $term, $m)) {
-                    $inner->orWhere('id', (int) $m[1]);
+                $refId = DispatchRequestMailPresenter::parseReferenceCodeSearchId($term);
+                if ($refId !== null) {
+                    $inner->orWhere('id', $refId);
                 }
                 $lower = mb_strtolower($term, 'UTF-8');
                 if ($lower === 'cargo' || $lower === 'hàng hóa' || $lower === 'hang hoa') {
@@ -141,7 +143,7 @@ class RequestController extends Controller
                 $dr->passenger_count,
             ) ?: null;
 
-            return $row;
+            return array_merge($row, DispatchRequestExtraFeeListHint::forRequest($dr));
         }, $results->items());
 
         return $this->ok([

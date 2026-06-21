@@ -17,6 +17,31 @@ final class DispatchRequestMailPresenter
         return sprintf('REQ-%s%s-%s', $d->format('Y'), $d->format('m'), str_pad((string) $dr->id, 3, '0', STR_PAD_LEFT));
     }
 
+    /**
+     * Resolve dispatch_request.id from a list-search term (full ref code or legacy REQ-{id}).
+     */
+    public static function parseReferenceCodeSearchId(string $term): ?int
+    {
+        $term = trim($term);
+        if ($term === '') {
+            return null;
+        }
+
+        if (preg_match('/^REQ-(\d{6})-(\d+)$/i', $term, $m)) {
+            $id = (int) $m[2];
+
+            return $id > 0 ? $id : null;
+        }
+
+        if (preg_match('/^REQ-?(\d+)$/i', $term, $m)) {
+            $id = (int) $m[1];
+
+            return $id > 0 ? $id : null;
+        }
+
+        return null;
+    }
+
     public static function tripTypeLabelVi(string $t): string
     {
         return match ($t) {

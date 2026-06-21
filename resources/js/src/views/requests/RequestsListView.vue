@@ -493,6 +493,14 @@
                         <ArrowPathIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                         {{ t('requests_page.badge_recurring') }}
                       </span>
+                      <span
+                        v-if="r.missing_extra_fee"
+                        class="inline-flex items-center gap-0.5 rounded-md bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-900 dark:bg-amber-950/50 dark:text-amber-100"
+                        data-testid="requests-card-badge-missing-extra-fee"
+                      >
+                        <CurrencyDollarIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                        {{ t('requests_page.badge_missing_extra_fee') }}
+                      </span>
                     </div>
                     <dl class="mt-3 grid grid-cols-1 gap-x-4 gap-y-2 text-sm sm:grid-cols-2 xl:grid-cols-3">
                       <div class="min-w-0">
@@ -531,6 +539,23 @@
                     {{ labelTripStatus(r.trip.status) }}
                   </span>
                 </div>
+              </div>
+            </div>
+
+            <div
+              v-if="!isTrashTab && r.missing_extra_fee"
+              class="flex items-start gap-2.5 border-b border-amber-200/80 bg-amber-50/90 px-3 py-2.5 sm:px-5 dark:border-amber-900/40 dark:bg-amber-950/25"
+              role="status"
+              :data-testid="`requests-card-missing-extra-fee-${r.id}`"
+            >
+              <CurrencyDollarIcon class="mt-0.5 h-5 w-5 shrink-0 text-amber-700 dark:text-amber-300" aria-hidden="true" />
+              <div class="min-w-0 text-sm">
+                <p class="font-semibold text-amber-950 dark:text-amber-100">
+                  {{ t('requests_page.card_missing_extra_fee_title') }}
+                </p>
+                <p class="mt-0.5 text-xs leading-relaxed text-amber-900/90 dark:text-amber-200/90">
+                  {{ missingExtraFeeCardDetail(r) }}
+                </p>
               </div>
             </div>
 
@@ -575,9 +600,14 @@
                   {{ t('requests_page.col_requester') }}
                 </p>
                 <div class="mt-2 flex items-start gap-2">
-                  <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-800 dark:bg-teal-950 dark:text-teal-200">
-                    {{ requesterInitials(r.requester?.name) }}
-                  </div>
+                  <UserAvatar
+                    :name="r.requester?.name || ''"
+                    :email="r.requester?.email || ''"
+                    :avatar-url="r.requester?.avatar_url"
+                    :title="r.requester?.name || ''"
+                    size="md"
+                    data-testid="requests-card-requester-avatar"
+                  />
                   <div class="min-w-0">
                     <p class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
                       {{ r.requester?.name || t('requests_page.empty_requester') }}
@@ -850,10 +880,12 @@ import {
   UserPlusIcon,
   XMarkIcon,
   CubeIcon,
+  CurrencyDollarIcon,
 } from '@heroicons/vue/24/outline'
 import Button from '../../components/ui/Button.vue'
 import AppRowActionsMenu from '../../components/ui/AppRowActionsMenu.vue'
 import StatusBadge from '../../components/ui/StatusBadge.vue'
+import UserAvatar from '../../components/branding/UserAvatar.vue'
 import RequestsSummaryBar from '../../components/requests/RequestsSummaryBar.vue'
 import DatagridToolbarSearch from '../../components/shared/ui/DatagridToolbarSearch.vue'
 import DatagridToolbarActionButton from '../../components/shared/ui/DatagridToolbarActionButton.vue'
@@ -1578,13 +1610,6 @@ function requestTypeBadgeClass(tt) {
   return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200'
 }
 
-function requesterInitials(name) {
-  if (!name) return '?'
-  const p = String(name).trim().split(/\s+/)
-  if (p.length === 1) return p[0].slice(0, 2).toUpperCase()
-  return (p[0][0] + p[p.length - 1][0]).toUpperCase()
-}
-
 function passengerSummary(r) {
   const n = dispatchRequestDisplayPassengerCount(r)
   if (n > 0) return t('requests_page.passengers', { n })
@@ -1608,10 +1633,32 @@ function requestCardClass(r) {
     if (r.is_urgent) return 'border-amber-300 bg-amber-50/40 dark:border-amber-900/60'
     return 'border-slate-200/90 bg-slate-50/70 dark:border-slate-700'
   }
+  if (r.missing_extra_fee) {
+    return 'border-l-4 border-l-amber-500 border-y-slate-200/90 border-r-slate-200/90 dark:border-y-slate-700 dark:border-r-slate-700'
+  }
   if (r.is_urgent) {
     return 'border-l-4 border-l-amber-500 border-y-slate-200/90 border-r-slate-200/90 dark:border-y-slate-700 dark:border-r-slate-700'
   }
   return 'border-slate-200/90 dark:border-slate-700'
+}
+
+/** @param {Record<string, unknown>} r */
+function missingExtraFeeCardDetail(r) {
+  const rows = Array.isArray(r.missing_extra_fee_rows) ? r.missing_extra_fee_rows : []
+  const labels = rows
+    .map((row) => {
+      const idx = row?.index
+      const label = String(row?.label ?? '').trim()
+      if (label) {
+        return t('requests_page.card_missing_extra_fee_row_named', { n: idx, route: label })
+      }
+      return t('requests_page.card_missing_extra_fee_row', { n: idx })
+    })
+    .filter(Boolean)
+  if (labels.length) return labels.join(' · ')
+  const n = Number(r.missing_extra_fee_count ?? 0)
+  if (n > 0) return t('requests_page.card_missing_extra_fee_count', { n })
+  return t('requests_page.card_missing_extra_fee_title')
 }
 
 function tripTimelineHint(r) {
@@ -1936,13 +1983,20 @@ function applyRouteQuery() {
   filters.page = Number.isFinite(pg) && pg >= 1 ? pg : 1
 }
 
+function syncSearchQueryToRoute() {
+  const q = { ...route.query }
+  delete q.page
+  const sq = searchInput.value.trim()
+  if (sq) q.q = sq
+  else delete q.q
+  router.replace({ query: q })
+}
+
 function onSearchInput() {
   if (searchDebounce) clearTimeout(searchDebounce)
   searchDebounce = setTimeout(() => {
     filters.page = 1
-    const hadPage = !!route.query.page
-    syncRoutePageAfterReset()
-    if (!hadPage) reload()
+    syncSearchQueryToRoute()
   }, 350)
 }
 
