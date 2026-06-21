@@ -3648,6 +3648,20 @@
             "total_guests": "Tổng số khách",
             "total_guests_value": "{n} khách"
         },
+        "route_journey": {
+            "title": "Hành trình tuyến",
+            "segment": "Chặng {n}",
+            "time": "Thời gian",
+            "passengers": "Số khách",
+            "vehicle": "Xe",
+            "driver": "Tài xế",
+            "duration": "{h}g {m}p",
+            "chip_segments": "{n} chặng",
+            "chip_passengers": "{n} khách",
+            "chip_departure": "Khởi hành {time}",
+            "chip_vehicles": "{n} xe",
+            "chip_drivers": "{n} tài xế"
+        },
         "route": {
             "section_title": "Chi tiết tuyến đường",
             "no_stops": "Chưa có điểm dừng chi tiết.",

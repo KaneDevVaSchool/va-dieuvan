@@ -4088,6 +4088,20 @@
             "total_guests": "Total guests",
             "total_guests_value": "{n} guests"
         },
+        "route_journey": {
+            "title": "Route Journey",
+            "segment": "Segment {n}",
+            "time": "Time",
+            "passengers": "Passengers",
+            "vehicle": "Vehicle",
+            "driver": "Driver",
+            "duration": "{h}h {m}m",
+            "chip_segments": "{n} segments",
+            "chip_passengers": "{n} passengers",
+            "chip_departure": "{time} departure",
+            "chip_vehicles": "{n} vehicles",
+            "chip_drivers": "{n} drivers"
+        },
         "route": {
             "section_title": "Route details",
             "no_stops": "No detailed stops yet.",

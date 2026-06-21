@@ -129,9 +129,9 @@
                     {{ t("trip_detail.banner.request_pending") }}
                 </div>
 
-                <!-- PRIMARY NAVIGATION — full-width sticky tabs -->
+                <!-- PRIMARY NAVIGATION — full-width tabs -->
                 <div
-                    class="sticky top-0 z-30 -mx-2 border-b border-slate-200 bg-[#F8F9FA]/95 px-2 backdrop-blur sm:-mx-3 sm:px-3 md:-mx-4 md:px-4 lg:-mx-5 lg:px-5"
+                    class="-mx-2 border-b border-slate-200 bg-[#F8F9FA] px-2 sm:-mx-3 sm:px-3 md:-mx-4 md:px-4 lg:-mx-5 lg:px-5"
                 >
                     <nav
                         class="flex gap-0.5 overflow-x-auto scrollbar-hidden"
@@ -198,14 +198,12 @@
                         :origin-label="displayOriginLabel"
                         :destination-label="displayDestinationLabel"
                     />
-                    <TripSchedulesPanel
+                    <TripRouteJourney
                         v-if="scheduleCount > 1"
-                        :cards="scheduleCardsForPanel"
-                        :schedule-legs="scheduleLegs"
-                        :selected-key="selectedScheduleKey"
-                        :total-guests="unifiedPassengerCount"
-                        :trip-type="tripTypeForSnap"
-                        @update:selected-key="onSchedulePanelKeyChange"
+                        :segments="routeJourneyView.segments"
+                        :summary="routeJourneyView.summary"
+                        :selected-key="selectedScheduleKey || activeAssignLegKey"
+                        @select-segment="onSchedulePanelKeyChange"
                     />
                 </div>
 
@@ -729,7 +727,7 @@ import TripHeroHeader from "../../components/trips/TripHeroHeader.vue";
 import TripDetailSummaryBar from "../../components/trips/TripDetailSummaryBar.vue";
 import TripTimeline from "../../components/trips/TripTimeline.vue";
 import TripInfoCard from "../../components/trips/TripInfoCard.vue";
-import TripSchedulesPanel from "../../components/trips/TripSchedulesPanel.vue";
+import TripRouteJourney from "../../components/trips/TripRouteJourney.vue";
 import DispatchPanel from "../../components/trips/DispatchPanel.vue";
 import { useDispatchScheduleCards } from "../../composables/useDispatchScheduleCards";
 import {
@@ -1372,6 +1370,127 @@ const scheduleCardsForPanel = computed(() => {
             return ln;
         }),
     }));
+});
+
+/** Tone trạng thái chặng cho timeline Route Journey. */
+function legStatusTone(status) {
+    switch (status) {
+        case "completed":
+            return "completed";
+        case "in_progress":
+            return "in_progress";
+        case "cancelled":
+            return "cancelled";
+        case "incident":
+            return "incident";
+        default:
+            return "pending";
+    }
+}
+
+const vehicleLookup = computed(() => {
+    const m = new Map();
+    for (const v of vehicles.value) m.set(Number(v.id), v);
+    if (trip.value?.vehicle?.id != null) {
+        m.set(Number(trip.value.vehicle.id), trip.value.vehicle);
+    }
+    return m;
+});
+
+const driverLookup = computed(() => {
+    const m = new Map();
+    for (const d of driversList.value) m.set(Number(d.id), d);
+    if (trip.value?.driver?.id != null) {
+        m.set(Number(trip.value.driver.id), trip.value.driver);
+    }
+    return m;
+});
+
+function resolveLegVehicle(assignment) {
+    if (!assignment) return "";
+    if (assignment.vehicle_id != null) {
+        const v = vehicleLookup.value.get(Number(assignment.vehicle_id));
+        return v?.license_plate || `#${assignment.vehicle_id}`;
+    }
+    const ext = String(assignment.external_vehicle_ref ?? "").trim();
+    return ext;
+}
+
+function resolveLegDriver(assignment) {
+    if (!assignment) return "";
+    if (assignment.driver_id != null) {
+        const d = driverLookup.value.get(Number(assignment.driver_id));
+        return d?.full_name || `#${assignment.driver_id}`;
+    }
+    const ext = String(assignment.external_driver_ref ?? "").trim();
+    return ext;
+}
+
+function journeyDurationLabel(startMs, endMs) {
+    if (startMs == null || endMs == null || endMs <= startMs) return "";
+    const mins = Math.round((endMs - startMs) / 60000);
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return t("trip_detail.route_journey.duration", { h, m });
+}
+
+/** Dữ liệu cho timeline Route Journey (chặng + chip tóm tắt). */
+const routeJourneyView = computed(() => {
+    const cards = scheduleCardsForPanel.value;
+    if (!cards.length) return { segments: [], summary: null };
+    const legByKey = new Map(scheduleLegs.value.map((l) => [l.key, l]));
+
+    const segments = cards.map((card) => {
+        const leg = legByKey.get(card.key) ?? null;
+        const status = leg?.status ?? trip.value?.status ?? "pending";
+        const assignment = leg?.assignment ?? null;
+        const guestsLine = card.lines.find(
+            (ln) => ln.lineKey === "guests_per_leg",
+        );
+        const guestsN = parseInt(String(guestsLine?.value ?? "").trim(), 10);
+        return {
+            key: card.key,
+            seq: card.labelSeq,
+            status,
+            statusLabel: labelTripStatus(status),
+            tone: legStatusTone(status),
+            origin: card.pickup || "",
+            destination: card.dropoff || "",
+            waypoint: card.waypoint || "",
+            startTime: card.depart_at ? fmtTime(card.depart_at) : "",
+            endTime: card.arrive_by ? fmtTime(card.arrive_by) : "",
+            passengers:
+                Number.isFinite(guestsN) && guestsN > 0 ? guestsN : null,
+            vehicle: resolveLegVehicle(assignment),
+            driver: resolveLegDriver(assignment),
+        };
+    });
+
+    const departMs = cards
+        .map((c) => (c.depart_at ? new Date(c.depart_at).getTime() : null))
+        .filter((v) => v != null && !Number.isNaN(v));
+    const arriveMs = cards
+        .map((c) => (c.arrive_by ? new Date(c.arrive_by).getTime() : null))
+        .filter((v) => v != null && !Number.isNaN(v));
+    const firstDepart = departMs.length ? Math.min(...departMs) : null;
+    const lastArrive = arriveMs.length ? Math.max(...arriveMs) : null;
+
+    const vehicleSet = new Set(
+        segments.map((s) => s.vehicle).filter(Boolean),
+    );
+    const driverSet = new Set(segments.map((s) => s.driver).filter(Boolean));
+
+    return {
+        segments,
+        summary: {
+            segmentCount: cards.length,
+            passengers: unifiedPassengerCount.value,
+            departure: firstDepart != null ? fmtTime(firstDepart) : "",
+            duration: journeyDurationLabel(firstDepart, lastArrive),
+            vehicleCount: vehicleSet.size,
+            driverCount: driverSet.size,
+        },
+    };
 });
 
 const legResourcesByKey = ref({});
