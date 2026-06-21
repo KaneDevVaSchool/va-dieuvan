@@ -1,16 +1,19 @@
 import { computed, reactive, ref, watch } from 'vue'
 
 /**
- * Datagrid filter row visibility (persisted). See .cursor/skills/datagrid-toolbar
+ * Datagrid filter row visibility (optional localStorage). See .cursor/skills/datagrid-toolbar
  * @param {Array<{ key: string, label: string, default?: boolean }>} controls
  * @param {string} storageKey
+ * @param {{ persist?: boolean }} [options]
  */
-export function useVisibleFilterControls(controls, storageKey) {
+export function useVisibleFilterControls(controls, storageKey, options = {}) {
+  const persist = options.persist !== false
   const defaults = Object.fromEntries(
     controls.map((c) => [c.key, c.default !== undefined ? c.default : false]),
   )
 
   function load() {
+    if (!persist) return { ...defaults }
     try {
       const raw = localStorage.getItem(storageKey)
       if (!raw) return { ...defaults }
@@ -24,6 +27,7 @@ export function useVisibleFilterControls(controls, storageKey) {
   const visibleFilters = reactive(load())
 
   function persistVisibleFilters() {
+    if (!persist) return
     try {
       localStorage.setItem(storageKey, JSON.stringify({ ...visibleFilters }))
     } catch {
@@ -31,7 +35,9 @@ export function useVisibleFilterControls(controls, storageKey) {
     }
   }
 
-  watch(visibleFilters, persistVisibleFilters, { deep: true })
+  if (persist) {
+    watch(visibleFilters, persistVisibleFilters, { deep: true })
+  }
 
   const hasFilterRow = computed(() => controls.some((c) => visibleFilters[c.key] === true))
 

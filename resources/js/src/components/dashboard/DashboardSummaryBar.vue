@@ -41,11 +41,25 @@ function formatDistanceKm(v) {
   return `${intFmt.format(Math.round(n))} km`
 }
 
+function translateFleetModeSlug(raw) {
+  const k = String(raw ?? '').trim()
+  const map = {
+    internal: t('dashboard_analytics.fleet_internal'),
+    vendor_hire: t('dashboard_analytics.fleet_vendor_hire'),
+    taxi: t('dashboard_analytics.fleet_taxi'),
+    unspecified: t('dashboard_analytics.fleet_unspecified'),
+  }
+  return map[k] ?? raw
+}
+
 const cards = computed(() => {
   const m = props.metrics ?? {}
   const completionRate = m.completionRate
   const sla = Number(m.slaBreaches ?? 0)
-  const providerName = m.topProviderName && String(m.topProviderName).trim() !== '' ? m.topProviderName : ''
+  const rawProvider = m.topProviderName && String(m.topProviderName).trim() !== '' ? m.topProviderName : ''
+  const providerName = rawProvider ? translateFleetModeSlug(rawProvider) : ''
+  const distanceKm = Number(m.distanceKm ?? 0)
+  const hasDistance = Number.isFinite(distanceKm) && distanceKm > 0
   return [
     {
       key: 'trips',
@@ -80,6 +94,7 @@ const cards = computed(() => {
       tone: 'sky',
       icon: MapPinIcon,
       display: formatDistanceKm(m.distanceKm),
+      displayClass: hasDistance ? '' : 'text-xs font-medium leading-snug',
       sub: t('dashboard_analytics.kpi_distance_sub'),
     },
     {

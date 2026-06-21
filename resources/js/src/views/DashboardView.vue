@@ -107,12 +107,14 @@
                         {{ t('dashboard_analytics.recent_col_route') }}
                       </span>
                     </div>
-                    <div class="mt-1 space-y-1 text-sm leading-snug">
-                      <p :class="routeLineClass(tr.dispatch_request?.origin)">
-                        {{ displayOrigin(tr.dispatch_request?.origin) }}
+                    <div class="mt-1 space-y-1 leading-snug">
+                      <p class="text-sm">
+                        <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">{{ t('requests_page.col_origin') }}:</span>
+                        <span :class="routeValueClass(tr.dispatch_request?.origin)">{{ displayOrigin(tr.dispatch_request?.origin) }}</span>
                       </p>
-                      <p :class="routeLineClass(tr.dispatch_request?.destination)">
-                        {{ displayDestination(tr.dispatch_request?.destination) }}
+                      <p class="text-sm">
+                        <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">{{ t('requests_page.col_destination') }}:</span>
+                        <span :class="routeValueClass(tr.dispatch_request?.destination)">{{ displayDestination(tr.dispatch_request?.destination) }}</span>
                       </p>
                     </div>
                     <p class="mt-1 flex items-center gap-1.5 text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
@@ -193,12 +195,14 @@
                         {{ t('dashboard_analytics.recent_col_route') }}
                       </span>
                     </div>
-                    <div class="mt-1 space-y-1 text-sm leading-snug">
-                      <p :class="routeLineClass(rq.origin, true)">
-                        {{ displayOrigin(rq.origin) }}
+                    <div class="mt-1 space-y-1 leading-snug">
+                      <p class="text-sm">
+                        <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">{{ t('requests_page.col_origin') }}:</span>
+                        <span :class="routeValueClass(rq.origin, true)">{{ displayOrigin(rq.origin) }}</span>
                       </p>
-                      <p :class="routeLineClass(rq.destination, true)">
-                        {{ displayDestination(rq.destination) }}
+                      <p class="text-sm">
+                        <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">{{ t('requests_page.col_destination') }}:</span>
+                        <span :class="routeValueClass(rq.destination, true)">{{ displayDestination(rq.destination) }}</span>
                       </p>
                     </div>
                     <p class="mt-1 flex items-center gap-1.5 text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
@@ -379,15 +383,15 @@ function displayDestination(value) {
   return displayTextOrNull(value) ?? t('trips_page.empty_destination')
 }
 
-function routeLineClass(value, requestCard = false) {
+function routeValueClass(value, requestCard = false) {
   const empty = !displayTextOrNull(value)
   if (empty) {
-    return 'text-[13px] font-normal italic text-slate-400 dark:text-slate-500'
+    return 'ml-1 text-[13px] font-normal italic text-slate-400 dark:text-slate-500'
   }
   const hover = requestCard
     ? 'group-hover:text-violet-900 dark:group-hover:text-violet-200'
     : 'group-hover:text-va-900 dark:group-hover:text-va-200'
-  return `text-sm font-semibold text-slate-800 dark:text-slate-100 ${hover}`
+  return `ml-1 font-semibold text-slate-800 dark:text-slate-100 ${hover}`
 }
 
 function formatDepartShort(s) {

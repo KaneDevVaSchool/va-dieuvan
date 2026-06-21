@@ -98,7 +98,7 @@ function valueClass(card) {
         <div class="relative flex items-start justify-between gap-2">
           <div class="min-w-0 flex-1">
             <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ card.label }}</p>
-            <p class="mt-1 font-semibold text-2xl tabular-nums" :class="valueClass(card)">
+            <p class="mt-1 tabular-nums font-semibold" :class="[card.displayClass || 'text-2xl', valueClass(card)]">
               {{ card.display }}
             </p>
             <p v-if="card.sub" class="mt-0.5 text-[11px] leading-snug text-slate-500">{{ card.sub }}</p>

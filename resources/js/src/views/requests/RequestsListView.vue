@@ -79,35 +79,6 @@
               </li>
             </FilterVisibilityDropdown>
 
-            <div class="relative" data-requests-columns-panel>
-              <DatagridToolbarActionButton
-                icon="columns"
-                :active="showColumnsMenu"
-                test-id="requests-toolbar-columns"
-                @click="toggleColumnsMenu"
-              >
-                {{ t('requests_page.toolbar_columns') }}
-              </DatagridToolbarActionButton>
-              <div
-                v-if="showColumnsMenu"
-                class="absolute left-0 top-[calc(100%+6px)] z-50 min-w-[240px] rounded-xl border border-slate-200/90 bg-white p-3 text-sm shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
-                @click.stop
-              >
-                <ul class="max-h-[min(50vh,320px)] space-y-2 overflow-y-auto text-slate-700 dark:text-slate-300">
-                  <li v-for="opt in requestColumnToggleOptions" :key="opt.id" class="flex items-center gap-2">
-                    <input
-                      :id="`req-col-${opt.id}`"
-                      type="checkbox"
-                      class="rounded border-slate-300 text-va-800 focus:ring-va-700/30"
-                      :checked="requestColumnVisible[opt.id] !== false"
-                      @change="setRequestColumn(opt.id, $event.target.checked)"
-                    />
-                    <label :for="`req-col-${opt.id}`" class="cursor-pointer text-xs">{{ t(opt.labelKey) }}</label>
-                  </li>
-                </ul>
-              </div>
-            </div>
-
             <div class="relative" data-requests-export-panel>
               <DatagridToolbarActionButton
                 icon="export"
@@ -422,300 +393,278 @@
           @clone="onExtracurricularClone"
         />
         <template v-else>
-        <div class="hidden overflow-x-auto md:block">
-        <table class="min-w-full divide-y divide-slate-200 text-left text-base">
-          <thead class="bg-slate-50/80">
-            <tr>
-              <th v-if="canBulkTrash" class="w-11 px-4 py-3.5">
-                <input
-                  type="checkbox"
-                  class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
-                  :checked="allSelectableOnPageChecked"
-                  :disabled="!selectableIdsOnPage.length"
-                  :aria-label="t('requests_page.col_select')"
-                  @change="onToggleHeaderCheckbox"
-                />
-              </th>
-              <th class="px-4 py-3.5 text-sm font-semibold uppercase tracking-wide text-slate-600">{{ t('requests_page.col_id') }}</th>
-              <th class="px-4 py-3.5 text-sm font-semibold uppercase tracking-wide text-slate-600">{{ t('requests_page.col_trip') }}</th>
-              <th v-if="requestColOn('type_channel')" class="px-4 py-3.5 text-sm font-semibold uppercase tracking-wide text-slate-600">
-                {{ t('requests_page.col_type_channel') }}
-              </th>
-              <th v-if="requestColOn('timeline')" class="px-4 py-3.5 text-sm font-semibold uppercase tracking-wide text-slate-600">
-                {{ t('requests_page.col_timeline') }}
-              </th>
-              <th v-if="requestColOn('sla')" class="px-4 py-3.5 text-sm font-semibold uppercase tracking-wide text-slate-600">
-                {{ t('requests_page.col_sla') }}
-              </th>
-              <th v-if="requestColOn('depart_at')" class="px-4 py-3.5 text-sm font-semibold uppercase tracking-wide text-slate-600">
-                {{ t('requests_page.col_depart_at') }}
-              </th>
-              <th v-if="requestColOn('arrive_by')" class="px-4 py-3.5 text-sm font-semibold uppercase tracking-wide text-slate-600">
-                {{ t('requests_page.col_arrive_by') }}
-              </th>
-              <th v-if="requestColOn('paper')" class="px-4 py-3.5 text-sm font-semibold uppercase tracking-wide text-slate-600">
-                {{ t('requests_page.col_paper') }}
-              </th>
-              <th v-if="requestColOn('requester')" class="px-4 py-3.5 text-sm font-semibold uppercase tracking-wide text-slate-600">
-                {{ t('requests_page.col_requester') }}
-              </th>
-              <th v-if="requestColOn('urgent')" class="px-4 py-3.5 text-sm font-semibold uppercase tracking-wide text-slate-600">
-                {{ t('requests_page.col_urgent') }}
-              </th>
-              <th v-if="requestColOn('notes')" class="min-w-[8rem] px-4 py-3.5 text-sm font-semibold uppercase tracking-wide text-slate-600">
-                {{ t('requests_page.col_notes') }}
-              </th>
-              <th class="min-w-[7.5rem] px-4 py-3.5 text-right text-sm font-semibold uppercase tracking-wide text-slate-600">
-                {{ t('requests_page.col_actions') }}
-              </th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100">
-            <tr
-              v-for="r in items"
-              :key="r.id"
-              class="transition"
-              :class="[requestRowClass(r), !isTrashTab ? 'cursor-pointer' : '']"
-              :tabindex="!isTrashTab ? 0 : undefined"
-              :data-testid="`requests-row-${r.id}`"
-              :aria-label="!isTrashTab ? t('requests_page.open_request_row', { id: r.id }) : undefined"
-              @click="!isTrashTab && openRequestDetail(r.id)"
-              @keydown.enter="!isTrashTab && openRequestDetail(r.id)"
-            >
-              <td v-if="canBulkTrash" class="px-4 py-3.5 align-top" :class="isTrashTab ? 'text-slate-700' : ''" @click.stop>
-                <input
-                  v-if="isTrashTab || canDeleteRow(r)"
-                  type="checkbox"
-                  class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
-                  :checked="selectedIds.includes(r.id)"
-                  @change="toggleRowSelected(r.id, $event.target.checked)"
-                />
-              </td>
-              <td class="px-4 py-3.5 align-top">
-                <div class="max-w-fit">
+        <div class="space-y-3 p-3 sm:p-4 md:space-y-4">
+          <div
+            v-if="canBulkTrash && selectableIdsOnPage.length"
+            class="flex items-center gap-2 px-1"
+          >
+            <input
+              id="requests-cards-select-all"
+              type="checkbox"
+              class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+              :checked="allSelectableOnPageChecked"
+              :aria-label="t('requests_page.col_select')"
+              @change="onToggleHeaderCheckbox"
+            />
+            <label for="requests-cards-select-all" class="cursor-pointer text-sm text-slate-600 dark:text-slate-400">
+              {{ t('requests_page.col_select') }}
+            </label>
+          </div>
+
+          <article
+            v-for="r in items"
+            :key="r.id"
+            class="overflow-hidden rounded-2xl border bg-white shadow-sm transition dark:bg-slate-900/50"
+            :class="requestCardClass(r)"
+            :data-testid="`requests-row-${r.id}`"
+          >
+            <!-- Header -->
+            <div class="border-b border-slate-100 px-3 py-4 sm:px-5 dark:border-slate-800">
+              <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div class="flex min-w-0 gap-3 sm:gap-4">
                   <div
-                    class="flex items-center gap-1.5 text-base font-semibold text-slate-900"
+                    v-if="canBulkTrash && (isTrashTab || canDeleteRow(r))"
+                    class="pt-1.5"
+                    @click.stop
                   >
-                    <span
-                      v-if="r.dispatch_request_template_id"
-                      class="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-indigo-50 px-2 py-0.5 text-sm font-bold uppercase text-indigo-900 ring-1 ring-indigo-600/20 dark:bg-indigo-950/60 dark:text-indigo-200 dark:ring-indigo-500/30"
-                    >
-                      <ArrowPathIcon class="h-4 w-4 shrink-0 text-indigo-700 dark:text-indigo-300" aria-hidden="true" />
-                      {{ t('requests_page.badge_recurring') }}
-                    </span>
-                    <ExclamationTriangleIcon
-                      v-if="r.is_urgent"
-                      class="h-5 w-5 shrink-0 text-amber-600"
+                    <input
+                      type="checkbox"
+                      class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                      :checked="selectedIds.includes(r.id)"
+                      :aria-label="t('requests_page.col_select')"
+                      @change="toggleRowSelected(r.id, $event.target.checked)"
+                    />
+                  </div>
+                  <div
+                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12"
+                    :class="requestTypeIconWrap(r.trip_type)"
+                  >
+                    <component
+                      :is="requestTypeIcon(r.trip_type)"
+                      class="h-6 w-6"
+                      :class="requestTypeIconColor(r.trip_type)"
                       aria-hidden="true"
                     />
-                    <RouterLink
-                      :to="{ name: 'requestDetail', params: { id: String(r.id) } }"
-                      class="font-mono text-base text-slate-900 underline decoration-slate-300 underline-offset-2 hover:text-va-800 hover:decoration-va-400"
-                      @click.stop
-                    >
-                      {{ displayRequestCode(r) }}
-                    </RouterLink>
                   </div>
-                  <div class="mt-0.5 text-sm tabular-nums text-slate-500">{{ formatRequestDateTime(r.created_at) }}</div>
-                </div>
-              </td>
-              <td class="max-w-xs px-4 py-3.5 align-top">
-                <div class="flex gap-2.5">
-                  <component :is="tripTypeIcon(r.trip_type)" class="mt-0.5 h-6 w-6 shrink-0 text-teal-600" />
-                  <div class="min-w-0">
-                    <div class="truncate text-base font-semibold leading-snug text-slate-900">
-                      {{ displayRoute(r) }}
-                    </div>
-                    <div class="mt-0.5 text-sm text-slate-500">
-                      <span v-if="dispatchRequestDisplayPassengerCount(r)">{{ t('requests_page.passengers', { n: dispatchRequestDisplayPassengerCount(r) }) }}</span>
-                      <span v-else-if="r.trip_type === 'cargo'">{{ t('requests_page.cargo') }}</span>
-                      <span v-else>{{ t('requests_page.no_passenger_info') }}</span>
-                    </div>
-                  </div>
-                </div>
-              </td>
-              <td v-if="requestColOn('type_channel')" class="px-4 py-3.5 align-top">
-                <div class="font-medium text-slate-900">{{ labelTripType(r.trip_type) || t('requests_page.empty_trip_type') }}</div>
-                <div class="mt-0.5 text-sm text-slate-500">
-                  {{ r.source_channel ? labelSourceChannel(r.source_channel) : t('requests_page.empty_channel') }}
-                </div>
-              </td>
-              <td v-if="requestColOn('timeline')" class="px-4 py-3.5 align-top">
-                <StatusBadge :status="r.status" />
-                <div class="mt-1.5 text-sm text-slate-500">{{ tripTimelineHint(r) }}</div>
-              </td>
-              <td v-if="requestColOn('sla')" class="px-4 py-3.5 align-top text-sm">
-                <span v-if="slaCell(r).kind === 'ok'" class="inline-flex items-center gap-1.5 font-medium text-emerald-700">
-                  <CheckCircleIcon class="h-5 w-5" />
-                  {{ t('requests_page.sla_on_track') }}
-                </span>
-                <span v-else-if="slaCell(r).kind === 'warn'" class="inline-flex items-center gap-1.5 font-medium text-amber-800">
-                  <ExclamationTriangleIcon class="h-5 w-5 shrink-0" />
-                  {{ slaCell(r).text }}
-                </span>
-                <span v-else class="text-sm text-slate-500">{{ t('requests_page.empty_sla') }}</span>
-              </td>
-              <td v-if="requestColOn('depart_at')" class="whitespace-nowrap px-4 py-3.5 align-top text-sm font-medium tabular-nums text-slate-700">
-                {{ formatDepartDate(r.depart_at) }}
-              </td>
-              <td v-if="requestColOn('arrive_by')" class="whitespace-nowrap px-4 py-3.5 align-top text-sm font-medium tabular-nums text-slate-700">
-                {{ formatArriveByDate(r.arrive_by) }}
-              </td>
-              <td v-if="requestColOn('paper')" class="max-w-[10rem] px-4 py-3.5 align-top text-sm">
-                <div class="font-medium text-slate-800">
-                  {{ r.paper_status ? labelPaperStatus(r.paper_status) : t('requests_page.empty_paper') }}
-                </div>
-                <div v-if="r.paper_reference" class="mt-0.5 truncate text-slate-500" :title="r.paper_reference">
-                  {{ r.paper_reference }}
-                </div>
-              </td>
-              <td v-if="requestColOn('requester')" class="max-w-[10rem] px-4 py-3.5 align-top text-sm font-medium text-slate-700">
-                <span class="truncate">{{ r.requester?.name || t('requests_page.empty_requester') }}</span>
-              </td>
-              <td v-if="requestColOn('urgent')" class="px-4 py-3.5 align-top">
-                <span
-                  v-if="r.is_urgent"
-                  class="inline-flex rounded-md bg-rose-100 px-2.5 py-1 text-xs font-semibold text-rose-800"
-                >
-                  {{ t('requests_page.filter_priority_urgent') }}
-                </span>
-                <span v-else class="text-sm text-slate-500">{{ t('requests_page.empty_priority_normal') }}</span>
-              </td>
-              <td v-if="requestColOn('notes')" class="max-w-xs px-4 py-3.5 align-top text-sm leading-relaxed text-slate-600">
-                <p class="line-clamp-2">{{ requestNotesListCell(r) }}</p>
-              </td>
-              <td class="px-4 py-3.5 align-top text-right" :class="isTrashTab ? 'text-slate-800' : ''" @click.stop>
-                <div class="inline-flex flex-wrap items-center justify-end gap-1">
-                  <AppRowActionsMenu
-                    align="end"
-                    :aria-label="t('requests_page.col_actions')"
-                    :trigger-sr-only="t('requests_page.col_actions')"
-                    root-class="text-right"
-                  >
-                    <RouterLink
-                      v-if="!isTrashTab"
-                      role="menuitem"
-                      :to="{ name: 'requestDetail', params: { id: String(r.id) } }"
-                      class="flex w-full items-center gap-2 px-3 py-2 text-left text-slate-700 transition hover:bg-slate-50"
-                    >
-                      {{ t('requests_page.view') }}
-                    </RouterLink>
-                    <template v-if="isTrashTab && canBulkTrash">
-                      <button
-                        type="button"
-                        role="menuitem"
-                        class="flex w-full items-center gap-2 px-3 py-2 text-left text-slate-700 transition hover:bg-teal-50 hover:text-teal-900"
-                        @click="openBulkConfirm('restore', [r.id])"
-                      >
-                        <ArrowPathIcon class="h-4 w-4 shrink-0 text-teal-600" aria-hidden="true" />
-                        {{ t('requests_page.bulk_restore') }}
-                      </button>
-                      <button
-                        type="button"
-                        role="menuitem"
-                        class="flex w-full items-center gap-2 px-3 py-2 text-left text-red-800 transition hover:bg-red-50"
-                        @click="openBulkConfirm('force_delete', [r.id])"
-                      >
-                        <ExclamationTriangleIcon class="h-4 w-4 shrink-0 text-red-600" aria-hidden="true" />
-                        {{ t('requests_page.bulk_force_delete') }}
-                      </button>
-                      <div class="my-1 border-t border-slate-100" role="separator" />
-                    </template>
-                    <button
-                      v-if="!isTrashTab && r.status === 'draft'"
-                      type="button"
-                      role="menuitem"
-                      class="flex w-full items-center gap-2 px-3 py-2 text-left text-slate-700 transition hover:bg-slate-50"
-                      @click="openDraftEditor(r.id)"
-                    >
-                      <PencilSquareIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
-                      {{ t('requests_page.edit') }}
-                    </button>
-                  </AppRowActionsMenu>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        </div>
-
-        <ul class="divide-y divide-slate-100 md:hidden" role="list">
-          <li
-            v-for="r in items"
-            :key="`m-${r.id}`"
-            class="px-4 py-4"
-            :class="[requestRowClass(r), !isTrashTab ? 'cursor-pointer' : '']"
-            :tabindex="!isTrashTab ? 0 : undefined"
-            :data-testid="`requests-row-mobile-${r.id}`"
-            :aria-label="!isTrashTab ? t('requests_page.open_request_row', { id: r.id }) : undefined"
-            @click="!isTrashTab && openRequestDetail(r.id)"
-            @keydown.enter="!isTrashTab && openRequestDetail(r.id)"
-          >
-            <div class="flex items-start gap-3">
-              <div v-if="canBulkTrash" class="pt-1" @click.stop>
-                <input
-                  v-if="isTrashTab || canDeleteRow(r)"
-                  type="checkbox"
-                  class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
-                  :checked="selectedIds.includes(r.id)"
-                  :aria-label="t('requests_page.col_select')"
-                  @change="toggleRowSelected(r.id, $event.target.checked)"
-                />
-              </div>
-              <div class="min-w-0 flex-1">
-                <div class="flex items-start justify-between gap-3">
-                  <div class="min-w-0">
-                    <div class="flex flex-wrap items-center gap-1.5 text-base font-semibold text-slate-900">
-                      <span
-                        v-if="r.dispatch_request_template_id"
-                        class="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-indigo-50 px-2 py-0.5 text-sm font-bold uppercase text-indigo-900 ring-1 ring-indigo-600/20 dark:bg-indigo-950/60 dark:text-indigo-200 dark:ring-indigo-500/30"
-                      >
-                        <ArrowPathIcon class="h-4 w-4 shrink-0 text-indigo-700 dark:text-indigo-300" aria-hidden="true" />
-                        {{ t('requests_page.badge_recurring') }}
-                      </span>
-                      <ExclamationTriangleIcon
-                        v-if="r.is_urgent"
-                        class="h-5 w-5 shrink-0 text-amber-600"
-                        aria-hidden="true"
-                      />
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-2">
                       <RouterLink
                         :to="{ name: 'requestDetail', params: { id: String(r.id) } }"
-                        class="font-mono underline decoration-slate-300 underline-offset-2 hover:text-va-800"
-                        @click.stop
+                        class="font-mono text-lg font-bold tracking-tight text-slate-900 underline decoration-slate-300 underline-offset-2 hover:text-va-800 hover:decoration-va-400 dark:text-slate-100"
+                        :data-testid="`requests-card-link-${r.id}`"
                       >
                         {{ displayRequestCode(r) }}
                       </RouterLink>
+                      <span
+                        class="rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                        :class="requestTypeBadgeClass(r.trip_type)"
+                      >
+                        {{ labelTripType(r.trip_type) || t('requests_page.empty_trip_type') }}
+                      </span>
+                      <span
+                        v-if="r.is_urgent"
+                        class="rounded-md bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-800 dark:bg-rose-950/60 dark:text-rose-200"
+                      >
+                        {{ t('requests_page.filter_priority_urgent') }}
+                      </span>
+                      <span
+                        v-if="r.dispatch_request_template_id"
+                        class="inline-flex items-center gap-0.5 rounded-md bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-100"
+                      >
+                        <ArrowPathIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                        {{ t('requests_page.badge_recurring') }}
+                      </span>
                     </div>
-                    <p class="mt-1 text-sm font-semibold leading-snug text-slate-800">
-                      {{ displayRoute(r) }}
-                    </p>
+                    <dl class="mt-3 grid grid-cols-1 gap-x-4 gap-y-2 text-sm sm:grid-cols-2 xl:grid-cols-3">
+                      <div class="min-w-0">
+                        <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                          {{ t('requests_page.meta_created') }}
+                        </dt>
+                        <dd class="mt-0.5 font-medium tabular-nums text-slate-800 dark:text-slate-200">
+                          {{ formatRequestDateTime(r.created_at) }}
+                        </dd>
+                      </div>
+                      <div class="min-w-0">
+                        <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                          {{ t('requests_page.mobile_meta_channel') }}
+                        </dt>
+                        <dd class="mt-0.5 font-medium text-slate-800 dark:text-slate-200">
+                          {{ r.source_channel ? labelSourceChannel(r.source_channel) : t('requests_page.empty_channel') }}
+                        </dd>
+                      </div>
+                      <div class="min-w-0">
+                        <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                          {{ t('requests_page.col_paper') }}
+                        </dt>
+                        <dd class="mt-0.5 font-medium text-slate-800 dark:text-slate-200">
+                          {{ r.paper_status ? labelPaperStatus(r.paper_status) : t('requests_page.empty_paper') }}
+                        </dd>
+                      </div>
+                    </dl>
                   </div>
-                  <StatusBadge class="shrink-0" :status="r.status" />
                 </div>
-                <dl class="mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-                  <div>
-                    <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t('requests_page.meta_created') }}</dt>
-                    <dd class="mt-0.5 tabular-nums text-slate-700">{{ formatRequestDateTime(r.created_at) }}</dd>
-                  </div>
-                  <div>
-                    <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t('requests_page.mobile_meta_type') }}</dt>
-                    <dd class="mt-0.5 font-medium text-slate-800">{{ labelTripType(r.trip_type) || t('requests_page.empty_trip_type') }}</dd>
-                  </div>
-                  <div>
-                    <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t('requests_page.mobile_meta_channel') }}</dt>
-                    <dd class="mt-0.5 text-slate-700">
-                      {{ r.source_channel ? labelSourceChannel(r.source_channel) : t('requests_page.empty_channel') }}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t('requests_page.mobile_meta_depart') }}</dt>
-                    <dd class="mt-0.5 tabular-nums text-slate-700">{{ formatDepartDate(r.depart_at) }}</dd>
-                  </div>
-                </dl>
+                <div class="flex shrink-0 flex-wrap items-center gap-2 lg:justify-end">
+                  <StatusBadge :status="r.status" />
+                  <span
+                    v-if="r.trip?.status"
+                    class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                  >
+                    {{ labelTripStatus(r.trip.status) }}
+                  </span>
+                </div>
               </div>
             </div>
-          </li>
-        </ul>
+
+            <!-- Body grid: origin · destination · requester · sla -->
+            <div class="grid grid-cols-1 gap-4 px-3 py-4 sm:px-4 md:grid-cols-2 md:gap-5 xl:grid-cols-4">
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                  <MapPinIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                  {{ t('trips_page.col_origin') }}
+                </div>
+                <p class="mt-1 text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100 sm:text-base">
+                  {{ displayPlaceLabel(r.origin, 'empty_origin') }}
+                </p>
+                <div class="mt-2">
+                  <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    {{ t('requests_page.col_depart_at') }}
+                  </p>
+                  <p class="mt-0.5 text-sm font-semibold tabular-nums text-teal-800 dark:text-teal-300">
+                    {{ formatDepartDate(r.depart_at) }}
+                  </p>
+                </div>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-rose-700 dark:text-rose-400">
+                  <MapPinIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                  {{ t('trips_page.col_destination') }}
+                </div>
+                <p class="mt-1 text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100 sm:text-base">
+                  {{ displayPlaceLabel(r.destination, 'empty_destination') }}
+                </p>
+                <div class="mt-2">
+                  <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    {{ t('requests_page.col_arrive_by') }}
+                  </p>
+                  <p class="mt-0.5 text-sm font-semibold tabular-nums text-rose-800 dark:text-rose-300">
+                    {{ formatArriveByDate(r.arrive_by) }}
+                  </p>
+                </div>
+              </div>
+              <div class="min-w-0 rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/40">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  {{ t('requests_page.col_requester') }}
+                </p>
+                <div class="mt-2 flex items-start gap-2">
+                  <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-800 dark:bg-teal-950 dark:text-teal-200">
+                    {{ requesterInitials(r.requester?.name) }}
+                  </div>
+                  <div class="min-w-0">
+                    <p class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      {{ r.requester?.name || t('requests_page.empty_requester') }}
+                    </p>
+                    <p v-if="r.paper_reference" class="mt-1 truncate text-xs text-slate-600 dark:text-slate-400" :title="r.paper_reference">
+                      {{ r.paper_reference }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="min-w-0 rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/40">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  {{ t('requests_page.col_sla') }}
+                </p>
+                <div class="mt-2 text-sm">
+                  <span v-if="slaCell(r).kind === 'ok'" class="inline-flex items-center gap-1.5 font-medium text-emerald-700 dark:text-emerald-400">
+                    <CheckCircleIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+                    {{ t('requests_page.sla_on_track') }}
+                  </span>
+                  <span v-else-if="slaCell(r).kind === 'warn'" class="inline-flex items-center gap-1.5 font-medium text-amber-800 dark:text-amber-300">
+                    <ExclamationTriangleIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+                    {{ slaCell(r).text }}
+                  </span>
+                  <span v-else class="text-slate-500 dark:text-slate-400">{{ tripTimelineHint(r) }}</span>
+                </div>
+                <p
+                  v-if="requestNotesListCell(r) !== t('requests_page.empty_notes')"
+                  class="mt-3 line-clamp-3 border-t border-slate-200/80 pt-2 text-xs leading-relaxed text-slate-600 dark:border-slate-700 dark:text-slate-400"
+                  :title="requestNotesListCell(r)"
+                >
+                  <span class="font-semibold text-slate-700 dark:text-slate-300">{{ t('requests_page.col_notes') }}:</span>
+                  {{ requestNotesListCell(r) }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Footer: meta + actions -->
+            <div class="flex flex-col gap-3 border-t border-slate-100 px-3 py-3 dark:border-slate-800 sm:px-4 sm:py-3.5 md:flex-row md:items-center md:justify-between">
+              <div class="flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-600 dark:text-slate-400 sm:text-sm">
+                <span class="inline-flex items-center gap-1.5">
+                  <UserPlusIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                  {{ passengerSummary(r) }}
+                </span>
+                <span class="inline-flex items-center gap-1.5">
+                  <ArrowsRightLeftIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                  {{ labelTripType(r.trip_type) || t('requests_page.empty_trip_type') }}
+                </span>
+                <span class="inline-flex items-center gap-1.5">
+                  <ClockIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                  {{ tripTimelineHint(r) }}
+                </span>
+              </div>
+              <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
+                <template v-if="isTrashTab">
+                  <button
+                    v-if="canBulkTrash"
+                    type="button"
+                    class="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-teal-200 bg-teal-50 px-3 py-2.5 text-sm font-medium text-teal-900 hover:bg-teal-100 sm:min-h-0 dark:border-teal-900 dark:bg-teal-950/60 dark:text-teal-100"
+                    @click="openBulkConfirm('restore', [r.id])"
+                  >
+                    <ArrowPathIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                    {{ t('requests_page.bulk_restore') }}
+                  </button>
+                  <button
+                    v-if="canBulkTrash"
+                    type="button"
+                    class="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-white px-3 py-2.5 text-sm font-medium text-red-800 shadow-sm hover:bg-red-50 sm:min-h-0 dark:border-red-900 dark:bg-slate-900 dark:text-red-300"
+                    @click="openBulkConfirm('force_delete', [r.id])"
+                  >
+                    <ExclamationTriangleIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                    {{ t('requests_page.bulk_force_delete') }}
+                  </button>
+                </template>
+                <template v-else>
+                  <RouterLink
+                    :to="{ name: 'requestDetail', params: { id: String(r.id) } }"
+                    class="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 sm:min-h-0 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+                  >
+                    <EyeIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                    {{ t('requests_page.view') }}
+                  </RouterLink>
+                  <a
+                    v-if="requestMapsHref(r)"
+                    :href="requestMapsHref(r)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-teal-200 bg-teal-50 px-3 py-2.5 text-sm font-medium text-teal-900 hover:bg-teal-100 sm:min-h-0 dark:border-teal-900 dark:bg-teal-950/60 dark:text-teal-100"
+                  >
+                    <ArrowTopRightOnSquareIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                    {{ t('trips_page.action_track') }}
+                  </a>
+                  <button
+                    v-if="r.status === 'draft'"
+                    type="button"
+                    class="col-span-2 inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-va-800 px-3 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-va-900 sm:col-span-1 sm:min-h-0"
+                    @click="openDraftEditor(r.id)"
+                  >
+                    <PencilSquareIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                    {{ t('requests_page.edit') }}
+                  </button>
+                </template>
+              </div>
+            </div>
+          </article>
+        </div>
+
         </template>
       </div>
       </div>
@@ -865,18 +814,22 @@ import { computed, onActivated, onMounted, onUnmounted, reactive, ref, watch } f
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
-  ArrowDownTrayIcon,
   ArrowPathIcon,
+  ArrowsRightLeftIcon,
+  ArrowTopRightOnSquareIcon,
   TrashIcon,
+  BriefcaseIcon,
   CheckCircleIcon,
+  ClockIcon,
   ExclamationTriangleIcon,
+  EyeIcon,
   FunnelIcon,
   MapPinIcon,
   PencilSquareIcon,
   PlusIcon,
-  ViewColumnsIcon,
+  TruckIcon,
+  UserPlusIcon,
   XMarkIcon,
-  AcademicCapIcon,
   CubeIcon,
 } from '@heroicons/vue/24/outline'
 import Button from '../../components/ui/Button.vue'
@@ -989,24 +942,15 @@ const filterControlDefs = computed(() =>
   })),
 )
 
-const showColumnsMenu = ref(false)
 const showExportMenu = ref(false)
 const requestsDatagridRef = ref(null)
 useDetailsAutoCloseWithin(requestsDatagridRef)
 
 function closeToolbarMenusExceptFilter() {
-  showColumnsMenu.value = false
   showExportMenu.value = false
-}
-
-function toggleColumnsMenu() {
-  showExportMenu.value = false
-  closeFilterPanel()
-  showColumnsMenu.value = !showColumnsMenu.value
 }
 
 function toggleExportMenu() {
-  showColumnsMenu.value = false
   closeFilterPanel()
   showExportMenu.value = !showExportMenu.value
 }
@@ -1014,9 +958,7 @@ function toggleExportMenu() {
 function onDatagridDocMouseDown(ev) {
   const t = ev.target
   if (!t || typeof t.closest !== 'function') return
-  if (t.closest('[data-requests-columns-panel]')) return
   if (t.closest('[data-requests-export-panel]')) return
-  showColumnsMenu.value = false
   showExportMenu.value = false
 }
 
@@ -1103,47 +1045,6 @@ const REQUEST_STATUS_FILTER_VALUES = [
   'cancelled',
 ]
 
-const REQUEST_COL_STORAGE_KEY = 'va-requests-cols-v1'
-const REQUEST_COL_DEFAULTS = {
-  type_channel: true,
-  timeline: true,
-  sla: true,
-  depart_at: false,
-  paper: false,
-  requester: false,
-  notes: false,
-  urgent: false,
-  arrive_by: false,
-}
-
-function loadRequestColumnPrefs() {
-  try {
-    const raw = localStorage.getItem(REQUEST_COL_STORAGE_KEY)
-    if (!raw) return { ...REQUEST_COL_DEFAULTS }
-    return { ...REQUEST_COL_DEFAULTS, ...JSON.parse(raw) }
-  } catch {
-    return { ...REQUEST_COL_DEFAULTS }
-  }
-}
-
-const requestColumnVisible = ref(loadRequestColumnPrefs())
-watch(
-  requestColumnVisible,
-  (v) => {
-    try {
-      localStorage.setItem(REQUEST_COL_STORAGE_KEY, JSON.stringify(v))
-    } catch {
-      /* ignore */
-    }
-  },
-  { deep: true },
-)
-
-function requestColOn(id) {
-  if (id === 'id' || id === 'trip' || id === 'actions') return true
-  return requestColumnVisible.value[id] !== false
-}
-
 /** Chỉ hiển thị ghi chú do người dùng nhập; bản cũ lưu BM.03 trong `notes` thì để trống (xem chi tiết). */
 function requestNotesListCell(r) {
   const n = String(r?.notes ?? '').trim()
@@ -1151,22 +1052,6 @@ function requestNotesListCell(r) {
   if (isLegacyBm03NotesBlock(n)) return t('requests_page.empty_notes')
   return n
 }
-
-function setRequestColumn(id, checked) {
-  requestColumnVisible.value = { ...requestColumnVisible.value, [id]: checked }
-}
-
-const requestColumnToggleOptions = computed(() => [
-  { id: 'type_channel', labelKey: 'requests_page.col_type_channel' },
-  { id: 'timeline', labelKey: 'requests_page.col_timeline' },
-  { id: 'sla', labelKey: 'requests_page.col_sla' },
-  { id: 'depart_at', labelKey: 'requests_page.col_depart_at' },
-  { id: 'arrive_by', labelKey: 'requests_page.col_arrive_by' },
-  { id: 'paper', labelKey: 'requests_page.col_paper' },
-  { id: 'requester', labelKey: 'requests_page.col_requester' },
-  { id: 'urgent', labelKey: 'requests_page.col_urgent' },
-  { id: 'notes', labelKey: 'requests_page.col_notes' },
-])
 
 function canDeleteRow(r) {
   const u = auth.user
@@ -1180,23 +1065,6 @@ function canDeleteRow(r) {
   return false
 }
 
-
-function openRequestDetail(id) {
-  router.push({ name: 'requestDetail', params: { id: String(id) } })
-}
-
-function requestRowClass(r) {
-  if (isTrashTab.value) {
-    if (r.is_urgent) {
-      return 'border-l-4 border-l-amber-500 bg-amber-50/60 text-slate-700'
-    }
-    return 'border-l-2 border-l-slate-300 bg-slate-50/90 text-slate-500'
-  }
-  if (r.is_urgent) {
-    return 'border-l-4 border-l-amber-500 bg-amber-50/60 hover:bg-amber-50/90'
-  }
-  return 'hover:bg-slate-50/80'
-}
 
 const selectableIdsOnPage = computed(() => {
   if (!canBulkTrash.value) return []
@@ -1530,6 +1398,11 @@ function formatArriveByDate(v) {
   return out || t('requests_page.empty_arrive_by')
 }
 
+function displayPlaceLabel(value, emptyKey = 'empty_route') {
+  const s = value != null ? String(value).trim() : ''
+  return s || t(`requests_page.${emptyKey}`)
+}
+
 function displayRoute(r) {
   const o = String(r?.origin ?? '').trim()
   const d = String(r?.destination ?? '').trim()
@@ -1543,10 +1416,73 @@ function formatShortDate(v) {
   return formatRequestDateTime(v)
 }
 
-function tripTypeIcon(type) {
-  if (type === 'cargo') return CubeIcon
-  if (type === 'business') return AcademicCapIcon
+// ── Card visuals (mirror trips list cards) ────────────────────────────
+function requestTypeIcon(tt) {
+  if (tt === 'door_to_door') return TruckIcon
+  if (tt === 'point_to_point') return MapPinIcon
+  if (tt === 'business') return BriefcaseIcon
+  if (tt === 'cargo') return CubeIcon
   return MapPinIcon
+}
+
+function requestTypeIconColor(tt) {
+  if (tt === 'door_to_door') return 'text-sky-600 dark:text-sky-400'
+  if (tt === 'point_to_point') return 'text-emerald-600 dark:text-emerald-400'
+  if (tt === 'business') return 'text-amber-600 dark:text-amber-400'
+  if (tt === 'cargo') return 'text-orange-600 dark:text-orange-400'
+  return 'text-slate-600 dark:text-slate-400'
+}
+
+function requestTypeIconWrap(tt) {
+  if (tt === 'door_to_door') return 'bg-sky-100 dark:bg-sky-950/40'
+  if (tt === 'point_to_point') return 'bg-emerald-100 dark:bg-emerald-950/40'
+  if (tt === 'business') return 'bg-amber-100 dark:bg-amber-950/40'
+  if (tt === 'cargo') return 'bg-orange-100 dark:bg-orange-950/40'
+  return 'bg-slate-100 dark:bg-slate-800/60'
+}
+
+function requestTypeBadgeClass(tt) {
+  if (tt === 'door_to_door') return 'bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-200'
+  if (tt === 'point_to_point') return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200'
+  if (tt === 'business') return 'bg-amber-100 text-amber-900 dark:bg-amber-950/50 dark:text-amber-100'
+  if (tt === 'cargo') return 'bg-orange-100 text-orange-900 dark:bg-orange-950/50 dark:text-orange-100'
+  return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200'
+}
+
+function requesterInitials(name) {
+  if (!name) return '?'
+  const p = String(name).trim().split(/\s+/)
+  if (p.length === 1) return p[0].slice(0, 2).toUpperCase()
+  return (p[0][0] + p[p.length - 1][0]).toUpperCase()
+}
+
+function passengerSummary(r) {
+  const n = dispatchRequestDisplayPassengerCount(r)
+  if (n > 0) return t('requests_page.passengers', { n })
+  if (r.trip_type === 'cargo') return t('requests_page.cargo')
+  return t('requests_page.no_passenger_info')
+}
+
+function requestMapsHref(r) {
+  const o = String(r?.origin ?? '').trim()
+  const d = String(r?.destination ?? '').trim()
+  if (!o || !d) return ''
+  const u = new URL('https://www.google.com/maps/dir/')
+  u.searchParams.set('api', '1')
+  u.searchParams.set('origin', o)
+  u.searchParams.set('destination', d)
+  return u.toString()
+}
+
+function requestCardClass(r) {
+  if (isTrashTab.value) {
+    if (r.is_urgent) return 'border-amber-300 bg-amber-50/40 dark:border-amber-900/60'
+    return 'border-slate-200/90 bg-slate-50/70 dark:border-slate-700'
+  }
+  if (r.is_urgent) {
+    return 'border-l-4 border-l-amber-500 border-y-slate-200/90 border-r-slate-200/90 dark:border-y-slate-700 dark:border-r-slate-700'
+  }
+  return 'border-slate-200/90 dark:border-slate-700'
 }
 
 function tripTimelineHint(r) {

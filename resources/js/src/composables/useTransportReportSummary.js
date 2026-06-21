@@ -99,7 +99,9 @@ function createSharedApi() {
     showFilterPanelDd,
     openFilterPanel,
     closeFilterPanel,
-  } = useVisibleFilterControls(REPORT_FILTER_CONTROLS, 'va-dieuvan.reports.summary.visible-filters.v1')
+  } = useVisibleFilterControls(REPORT_FILTER_CONTROLS, 'va-dieuvan.reports.summary.visible-filters.v1', {
+    persist: false,
+  })
 
   function resetFilterBarVisibility() {
     for (const c of REPORT_FILTER_CONTROLS) {
@@ -157,16 +159,17 @@ function createSharedApi() {
 
   const summaryFilters = computed(() => {
     const o = {}
-    if (rangeFrom.value && rangeTo.value) {
+    const dateFilterActive = filterBarVisible.period === true || filterBarVisible.dates === true
+    if (dateFilterActive && preset.value !== 'all' && rangeFrom.value && rangeTo.value) {
       o.from = rangeFrom.value
       o.to = rangeTo.value
     }
-    if (filterTripType.value) o.trip_type = filterTripType.value
-    if (filterSourceChannel.value) o.source_channel = filterSourceChannel.value
-    if (filterPaperStatus.value) o.paper_status = filterPaperStatus.value
-    if (filterIsUrgent.value) o.is_urgent = 1
-    if (filterTripRunStatus.value) o.trip_status = filterTripRunStatus.value
-    if (filterFleetMode.value) o.fleet_mode = filterFleetMode.value
+    if (filterBarVisible.trip_type && filterTripType.value) o.trip_type = filterTripType.value
+    if (filterBarVisible.channel && filterSourceChannel.value) o.source_channel = filterSourceChannel.value
+    if (filterBarVisible.paper && filterPaperStatus.value) o.paper_status = filterPaperStatus.value
+    if (filterBarVisible.urgent && filterIsUrgent.value) o.is_urgent = 1
+    if (filterBarVisible.trip_run && filterTripRunStatus.value) o.trip_status = filterTripRunStatus.value
+    if (filterBarVisible.fleet && filterFleetMode.value) o.fleet_mode = filterFleetMode.value
     return o
   })
 
