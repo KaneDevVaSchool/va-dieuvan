@@ -207,6 +207,19 @@
                   <!-- ════ Tab: Tổng quan ════ -->
                   <div v-show="activeTab === 'form'" class="space-y-0">
 
+                    <!-- Workflow progress — first in overview -->
+                    <div
+                      class="overflow-hidden border-b border-slate-200 bg-white px-4 py-4 dark:border-slate-800 dark:bg-slate-900 sm:px-5"
+                      data-testid="staff-request-overview-timeline"
+                    >
+                      <PortalStatusTimeline
+                        :title="t('portal.timeline_heading')"
+                        :steps="timelineSteps"
+                        variant="staff"
+                        embedded
+                      />
+                    </div>
+
                     <!-- Dispatch + cost summary (driver, vehicle, cost) — only when trip exists -->
                     <div v-if="req.trip" class="overflow-hidden border-y border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
                       <div class="flex items-center justify-between gap-2 border-b border-slate-100 px-4 py-2.5 dark:border-slate-800">
@@ -423,14 +436,6 @@
                           <span class="min-w-0">{{ n }}</span>
                         </li>
                       </ul>
-                    </div>
-
-                    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white px-4 py-4 dark:border-slate-800 dark:bg-slate-900 sm:px-5">
-                      <PortalStatusTimeline
-                        :title="t('portal.timeline_heading')"
-                        :steps="timelineSteps"
-                        variant="staff"
-                      />
                     </div>
                   </div>
 

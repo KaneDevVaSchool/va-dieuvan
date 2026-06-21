@@ -1,11 +1,17 @@
 <template>
   <section
-    class="overflow-hidden rounded-2xl border p-4 sm:p-5"
+    class="overflow-hidden"
     :class="
-      variant === 'staff'
-        ? 'border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900'
-        : 'border-slate-200 bg-white'
+      embedded
+        ? 'p-0'
+        : [
+            'rounded-2xl border p-4 sm:p-5',
+            variant === 'staff'
+              ? 'border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900'
+              : 'border-slate-200 bg-white',
+          ]
     "
+    :data-testid="embedded ? 'portal-status-timeline-embedded' : 'portal-status-timeline'"
   >
     <div
       v-if="title"
@@ -121,6 +127,8 @@ defineProps({
   steps: { type: Array, required: true },
   /** `staff` — dark shell on /mng request detail */
   variant: { type: String, default: 'portal' },
+  /** Flat layout inside tab panels (no outer card chrome) */
+  embedded: { type: Boolean, default: false },
 })
 
 const { t } = useI18n()
