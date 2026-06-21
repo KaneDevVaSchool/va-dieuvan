@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { ChevronDownIcon } from '@heroicons/vue/24/outline'
 import EmptyValue from '../ui/EmptyValue.vue'
 import { isEmptyDisplay } from '../../util/displayValue'
+import { labelTripStatus } from '../../util/labels'
 
 const props = defineProps({
   cards: { type: Array, default: () => [] },

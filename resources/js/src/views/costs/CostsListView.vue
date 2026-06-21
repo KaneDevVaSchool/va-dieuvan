@@ -741,9 +741,6 @@
                         {{ formatTripCode(row.trip_id) }}
                       </RouterLink>
                     </div>
-                    <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                      {{ t('costs_page.cost_type_estimate_e2') }}
-                    </span>
                     <span class="rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-semibold text-violet-900 dark:bg-violet-950/50 dark:text-violet-100">
                       {{ labelTripType('business') }}
                     </span>
@@ -783,9 +780,9 @@
                       </dt>
                       <dd
                         class="mt-0.5 font-medium"
-                        :class="bpRoutePrimary(row) ? 'text-slate-800 dark:text-slate-200' : 'italic text-slate-400 dark:text-slate-500'"
+                        :class="bpRouteDisplay(row) ? 'text-slate-800 dark:text-slate-200' : 'italic text-slate-400 dark:text-slate-500'"
                       >
-                        {{ bpRoutePrimary(row) || t('costs_page.empty_route') }}
+                        <span :class="bpRoutePrimary(row) ? '' : 'line-clamp-2'">{{ bpRouteDisplay(row) || t('costs_page.empty_route') }}</span>
                       </dd>
                     </div>
                   </dl>
@@ -795,54 +792,135 @@
                 <span class="text-xl font-bold tabular-nums text-slate-900 dark:text-slate-100 sm:text-2xl">
                   {{ formatVnd(row.amount_total) }}
                 </span>
-                <span class="cv-status-badge cv-status-badge--default">
-                  {{ t('costs_page.bp_estimate_badge') }}
-                </span>
               </div>
             </div>
           </div>
 
-          <div class="px-3 py-4 sm:px-5">
-            <p
-              v-if="displayTextOrNull(row.personnel_label)"
-              class="text-sm leading-relaxed text-slate-700 dark:text-slate-300"
-              :title="row.personnel_label"
-            >
-              {{ row.personnel_label }}
-            </p>
+          <div class="border-t border-slate-100 bg-slate-50/50 px-3 py-4 sm:px-5 dark:border-slate-800 dark:bg-slate-950/20">
+            <template v-if="displayTextOrNull(row.personnel_label)">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <h3 class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  {{ t('costs_page.col_personnel') }}
+                </h3>
+                <span
+                  v-if="bpShowGuestsBadge(row)"
+                  class="inline-flex items-center rounded-full bg-white px-2.5 py-0.5 text-xs font-medium tabular-nums text-slate-700 ring-1 ring-slate-200/90 dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-700"
+                >
+                  {{ t('costs_page.bp_guests_label') }}: {{ row.guests }}
+                </span>
+              </div>
+              <p
+                v-if="bpNarrativeContent(row).headline"
+                class="mt-2 text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100"
+              >
+                {{ bpNarrativeContent(row).headline }}
+              </p>
+              <p
+                class="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-700 dark:text-slate-300"
+                :class="bpNarrativeNeedsCollapse(row) && !isBpNarrativeExpanded(row) ? 'line-clamp-6' : ''"
+              >
+                {{ bpNarrativeContent(row).body }}
+              </p>
+              <button
+                v-if="bpNarrativeNeedsCollapse(row)"
+                type="button"
+                class="mt-2 text-xs font-medium text-va-800 underline decoration-va-300 underline-offset-2 hover:decoration-va-600 dark:text-va-300"
+                :data-testid="`bp-card-toggle-${row.trip_id}-${row.line_no}`"
+                @click="toggleBpNarrativeExpanded(row)"
+              >
+                {{ isBpNarrativeExpanded(row) ? t('costs_page.bp_show_less') : t('costs_page.bp_show_more') }}
+              </button>
+              <div
+                v-if="bpWaypointShort(row)"
+                class="mt-3 flex gap-2.5 rounded-xl border border-slate-200/80 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900/60"
+              >
+                <MapPinIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                <div class="min-w-0">
+                  <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    {{ t('costs_page.bp_waypoint_label') }}
+                  </p>
+                  <p class="mt-0.5 text-sm leading-snug text-slate-700 dark:text-slate-300">
+                    {{ bpWaypointShort(row) }}
+                  </p>
+                </div>
+              </div>
+            </template>
             <p v-else class="text-sm italic text-slate-400 dark:text-slate-500">
               {{ t('costs_page.empty_description') }}
             </p>
-            <p v-if="row.guests && String(row.guests).trim() !== '1'" class="mt-2 text-xs text-slate-500 dark:text-slate-400">
-              {{ t('costs_page.bp_guests_label') }}: {{ row.guests }}
-            </p>
           </div>
 
-          <div class="flex flex-col gap-3 border-t border-slate-100 px-3 py-3 dark:border-slate-800 sm:px-5 sm:py-3.5 md:flex-row md:items-center md:justify-between">
-            <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-slate-400 sm:text-sm">
-              <span class="inline-flex items-center gap-1.5">
-                <BanknotesIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-                {{
-                  t('costs_page.note_estimate_breakdown', {
-                    unit: formatVnd(row.unit_price),
-                    extra: formatVnd(row.extra_fee),
-                  })
-                }}
-              </span>
-              <span v-if="displayTextOrNull(row.waypoint)" class="inline-flex items-center gap-1.5">
-                <MapPinIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-                {{ row.waypoint }}
-              </span>
-            </div>
-            <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
-              <RouterLink
-                :to="{ name: 'tripDetail', params: { id: row.trip_id } }"
-                class="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 sm:min-h-0 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
-                :data-testid="`bp-card-detail-${row.trip_id}-${row.line_no}`"
-              >
-                <EyeIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-                {{ t('costs_page.action_view_detail') }}
-              </RouterLink>
+          <div class="border-t border-slate-100 bg-white px-3 py-4 dark:border-slate-800 dark:bg-slate-900/30 sm:px-5">
+            <p class="text-xs font-semibold text-slate-800 dark:text-slate-100">
+              {{ t('costs_page.bp_footer_pricing_heading') }}
+            </p>
+            <div class="mt-3 flex flex-col gap-3 lg:flex-row lg:items-stretch lg:justify-between">
+              <dl class="grid min-w-0 flex-1 grid-cols-1 gap-2 sm:grid-cols-3">
+                <div
+                  class="flex gap-3 rounded-xl border border-slate-200/90 bg-slate-50/90 px-3 py-3 dark:border-slate-700 dark:bg-slate-900/50"
+                >
+                  <div
+                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white ring-1 ring-slate-200/90 dark:bg-slate-800 dark:ring-slate-600"
+                    aria-hidden="true"
+                  >
+                    <BanknotesIcon class="h-5 w-5 text-va-800 dark:text-va-300" />
+                  </div>
+                  <div class="min-w-0">
+                    <dt class="text-xs font-medium text-slate-600 dark:text-slate-400">
+                      {{ t('costs_page.col_unit_price') }}
+                    </dt>
+                    <dd class="mt-0.5 text-base font-bold tabular-nums text-slate-900 dark:text-slate-100">
+                      {{ formatVnd(row.unit_price) }}
+                    </dd>
+                  </div>
+                </div>
+                <div
+                  class="flex gap-3 rounded-xl border border-slate-200/90 bg-slate-50/90 px-3 py-3 dark:border-slate-700 dark:bg-slate-900/50"
+                >
+                  <div
+                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white ring-1 ring-slate-200/90 dark:bg-slate-800 dark:ring-slate-600"
+                    aria-hidden="true"
+                  >
+                    <BanknotesIcon class="h-5 w-5 text-sky-700 dark:text-sky-300" />
+                  </div>
+                  <div class="min-w-0">
+                    <dt class="text-xs font-medium text-slate-600 dark:text-slate-400">
+                      {{ t('costs_page.col_extra_fee') }}
+                    </dt>
+                    <dd class="mt-0.5 text-base font-bold tabular-nums text-slate-900 dark:text-slate-100">
+                      {{ formatVnd(row.extra_fee) }}
+                    </dd>
+                  </div>
+                </div>
+                <div
+                  class="flex gap-3 rounded-xl border border-violet-200/90 bg-violet-50/50 px-3 py-3 dark:border-violet-900/50 dark:bg-violet-950/25"
+                >
+                  <div
+                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white ring-1 ring-violet-200/90 dark:bg-slate-800 dark:ring-violet-800/60"
+                    aria-hidden="true"
+                  >
+                    <BanknotesIcon class="h-5 w-5 text-violet-800 dark:text-violet-300" />
+                  </div>
+                  <div class="min-w-0">
+                    <dt class="text-xs font-medium text-violet-900/90 dark:text-violet-200/90">
+                      {{ t('costs_page.bp_label_line_total') }}
+                    </dt>
+                    <dd class="mt-0.5 text-base font-bold tabular-nums text-violet-950 dark:text-violet-100">
+                      {{ formatVnd(row.amount_total) }}
+                    </dd>
+                  </div>
+                </div>
+              </dl>
+              <div class="flex shrink-0 items-end sm:justify-end">
+                <RouterLink
+                  :to="{ name: 'tripDetail', params: { id: row.trip_id } }"
+                  class="inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 sm:min-h-0 sm:w-auto dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+                  :data-testid="`bp-card-detail-${row.trip_id}-${row.line_no}`"
+                >
+                  <EyeIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                  {{ t('costs_page.action_view_detail') }}
+                </RouterLink>
+              </div>
             </div>
           </div>
         </article>
@@ -2013,6 +2091,98 @@ function bpRowKey(row) {
 
 function bpDepartDisplay(row) {
   return formatDateDMYDisplay(row.depart_at || row.trip_depart_at)
+}
+
+const bpNarrativeExpandedKeys = ref(new Set())
+
+function isBpNarrativeExpanded(row) {
+  return bpNarrativeExpandedKeys.value.has(bpRowKey(row))
+}
+
+function toggleBpNarrativeExpanded(row) {
+  const key = bpRowKey(row)
+  const next = new Set(bpNarrativeExpandedKeys.value)
+  if (next.has(key)) next.delete(key)
+  else next.add(key)
+  bpNarrativeExpandedKeys.value = next
+}
+
+function bpNormalizeSpaces(raw) {
+  return String(raw ?? '').replace(/\s+/g, ' ').trim()
+}
+
+function formatBpNarrative(raw) {
+  const s = bpNormalizeSpaces(raw)
+  if (!s) return ''
+  return s
+    .replace(/\s+(?=Ngày\s+\d)/gi, '\n\n')
+    .replace(/\s+(\d{1,2}g\d{2}:)/gi, '\n$1')
+}
+
+function bpNarrativeHeadline(raw) {
+  const s = bpNormalizeSpaces(raw)
+  if (!s) return null
+  const daySplit = s.match(/^(.{8,120}?)(?=\s+Ngày\s+\d)/i)
+  if (daySplit) return daySplit[1].trim()
+  if (s.length <= 72) return s
+  return `${s.slice(0, 69)}…`
+}
+
+function bpNarrativeContent(row) {
+  const formatted = formatBpNarrative(row.personnel_label)
+  const parts = formatted.split('\n\n').map((p) => p.trim()).filter(Boolean)
+  if (parts.length > 1) {
+    return { headline: parts[0], body: parts.slice(1).join('\n\n') }
+  }
+  const headline = bpNarrativeHeadline(row.personnel_label)
+  const norm = bpNormalizeSpaces(row.personnel_label)
+  if (headline && norm.length > headline.length + 24) {
+    const bodyFromNorm = norm.slice(headline.length).trim()
+    return {
+      headline,
+      body: bodyFromNorm ? formatBpNarrative(bodyFromNorm) : formatted,
+    }
+  }
+  return { headline: null, body: formatted }
+}
+
+function bpNarrativeNeedsCollapse(row) {
+  const { body } = bpNarrativeContent(row)
+  return body.length > 280 || body.split('\n').length > 6
+}
+
+function bpTextsEqual(a, b) {
+  return bpNormalizeSpaces(a).toLowerCase() === bpNormalizeSpaces(b).toLowerCase()
+}
+
+function bpWaypointShort(row) {
+  const wp = displayTextOrNull(row.waypoint)
+  if (!wp || bpIsPlaceholderWaypoint(wp)) return null
+  const personnel = displayTextOrNull(row.personnel_label)
+  if (personnel && bpTextsEqual(wp, personnel)) return null
+  if (bpNormalizeSpaces(wp).length > 100) return null
+  return wp
+}
+
+function bpIsPlaceholderWaypoint(value) {
+  const s = bpNormalizeSpaces(value).toLowerCase()
+  return (
+    s === 'không có' ||
+    s === 'khong co' ||
+    s === 'n/a' ||
+    s === 'na' ||
+    s === 'none' ||
+    s === 'null'
+  )
+}
+
+function bpShowGuestsBadge(row) {
+  const g = String(row.guests ?? '').trim()
+  return Boolean(g && g !== '1')
+}
+
+function bpRouteDisplay(row) {
+  return bpRoutePrimary(row) || bpNarrativeHeadline(row.personnel_label)
 }
 
 const filteredTripsForPicker = computed(() => {

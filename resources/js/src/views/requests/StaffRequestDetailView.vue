@@ -1,5 +1,5 @@
 <template>
-  <div class="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
+  <div class="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-slate-50 dark:bg-slate-950" style="zoom: 0.9">
     <div
       v-if="loading"
       class="flex flex-1 items-center justify-center px-4 py-16 text-base text-slate-500 dark:text-slate-400"
@@ -8,7 +8,7 @@
     </div>
 
     <template v-else-if="req">
-      <!-- ═══════════ Header ═══════════ -->
+      <!-- ═══════════ Content Header (2-col) ═══════════ -->
       <header
         class="sticky top-0 z-40 shrink-0 shadow-sm backdrop-blur-md supports-[top:env(safe-area-inset-top)]:top-[env(safe-area-inset-top)]"
         :class="
@@ -18,105 +18,182 @@
         "
         :aria-label="showUrgentBadge ? t('dispatch_wizard.create.form_priority_frame_aria') : undefined"
       >
-        <div class="mx-auto flex w-full max-w-none items-start gap-3 px-4 py-3 sm:px-6 lg:px-8">
-          <RouterLink
-            :to="backTo"
-            class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition"
-            :class="
-              showUrgentBadge
-                ? 'border-rose-200/80 text-rose-600 hover:bg-rose-100 hover:text-rose-800 dark:border-rose-800 dark:text-rose-400 dark:hover:bg-rose-900/50 dark:hover:text-rose-200'
-                : 'border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'
-            "
-            :aria-label="backAriaLabel"
-          >
-            <ArrowLeftIcon class="h-5 w-5" aria-hidden="true" />
-          </RouterLink>
+        <div class="mx-auto w-full max-w-none px-4 pt-3 pb-0 sm:px-6 lg:px-8">
 
-          <div class="min-w-0 flex-1">
-            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-              {{ t('request_detail.ops_header_eyebrow') }}
-            </p>
-            <h1 class="mt-0.5 truncate font-mono text-xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-2xl">
-              {{ requestRefCode }}
-            </h1>
+          <!-- Top row: back + ref/status + PDF -->
+          <div class="flex min-w-0 items-start gap-3">
+            <RouterLink
+              :to="backTo"
+              class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition"
+              :class="
+                showUrgentBadge
+                  ? 'border-rose-200/80 text-rose-600 hover:bg-rose-100 dark:border-rose-800 dark:text-rose-400 dark:hover:bg-rose-900/50'
+                  : 'border-slate-200 text-slate-500 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800'
+              "
+              :aria-label="backAriaLabel"
+            >
+              <ArrowLeftIcon class="h-4 w-4" aria-hidden="true" />
+            </RouterLink>
 
-            <div class="mt-2.5 flex flex-wrap items-center gap-2">
-              <div class="inline-flex items-center gap-2 rounded-lg border border-slate-200/80 bg-slate-50/80 px-2.5 py-1 dark:border-slate-700 dark:bg-slate-800/60">
-                <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">{{ t('request_detail.lbl_status_short') }}</span>
-                <StatusBadge :status="req.status" />
+            <div class="min-w-0 flex-1">
+              <!-- Ref + status badges + PDF export -->
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex min-w-0 flex-wrap items-center gap-2">
+                  <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                    {{ t('request_detail.ops_header_eyebrow') }}
+                  </p>
+                  <span class="text-slate-300 dark:text-slate-700" aria-hidden="true">·</span>
+                  <h1 class="font-mono text-lg font-bold tracking-tight text-slate-900 dark:text-white">
+                    {{ requestRefCode }}
+                  </h1>
+                  <StatusBadge :status="req.status" />
+                  <span
+                    v-if="showUrgentBadge"
+                    class="inline-flex items-center gap-1 rounded-md border border-rose-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-rose-700 dark:border-rose-800 dark:bg-rose-900/80 dark:text-rose-200"
+                  >
+                    <BoltIcon class="h-3 w-3 shrink-0" aria-hidden="true" />
+                    {{ t('requests_page.filter_priority_urgent') }}
+                  </span>
+                  <span
+                    v-if="showRecurringBadge"
+                    class="inline-flex items-center gap-1 rounded-md border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-700 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-indigo-200"
+                  >
+                    <ArrowPathIcon class="h-3 w-3 shrink-0" aria-hidden="true" />
+                    {{ t('request_detail.badge_recurring') }}
+                  </span>
+                </div>
+                <!-- PDF button -->
+                <button
+                  type="button"
+                  class="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-sm font-semibold transition"
+                  :class="
+                    pdfExportDisabled
+                      ? 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-600'
+                      : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
+                  "
+                  :disabled="pdfBusy || pdfExportDisabled"
+                  :title="pdfExportDisabled ? t('request_detail.pdf_locked_tooltip') : t('request_detail.export_pdf')"
+                  @click="downloadRequestPdf"
+                >
+                  <ArrowDownTrayIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  <span class="hidden sm:inline">{{ pdfBusy ? t('request_detail.pdf_export_loading') : t('request_detail.export_pdf') }}</span>
+                </button>
               </div>
-              <div class="inline-flex items-center gap-2 rounded-lg border border-slate-200/80 bg-white px-2.5 py-1 dark:border-slate-700 dark:bg-slate-900">
-                <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">{{ t('request_detail.lbl_trip_type_short') }}</span>
-                <span class="text-xs font-semibold text-slate-800 dark:text-slate-200">{{ labelTripType(req.trip_type) }}</span>
-              </div>
-              <div
-                v-if="showUrgentBadge"
-                class="inline-flex items-center gap-1.5 rounded-lg border border-rose-300 bg-white px-2.5 py-1 shadow-sm dark:border-rose-700 dark:bg-rose-900/80"
-              >
-                <span class="text-[10px] font-bold uppercase tracking-wide text-rose-500 dark:text-rose-400">{{ t('request_detail.ops_header_priority') }}</span>
-                <span class="inline-flex items-center gap-1 text-xs font-semibold text-rose-800 dark:text-rose-200">
-                  <BoltIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                  {{ t('requests_page.filter_priority_urgent') }}
-                </span>
-              </div>
-              <div
-                v-if="showRecurringBadge"
-                class="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200/80 bg-indigo-50 px-2.5 py-1 dark:border-indigo-900/50 dark:bg-indigo-950/40"
-              >
-                <span class="text-[10px] font-bold uppercase tracking-wide text-indigo-500 dark:text-indigo-400">{{ t('request_detail.ops_header_recurring_lbl') }}</span>
-                <span class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-800 dark:text-indigo-200">
-                  <ArrowPathIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                  {{ t('request_detail.badge_recurring') }}
-                </span>
+
+              <!-- 2-col content grid: route chips ↔ requester card -->
+              <div class="mt-2.5 grid grid-cols-1 items-start gap-3 md:grid-cols-[1fr_auto]">
+                <!-- Left col: origin → destination + time/type chips -->
+                <div class="flex flex-wrap items-center gap-2">
+                  <div class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200/80 bg-emerald-50/80 px-2.5 py-1.5 dark:border-emerald-900/50 dark:bg-emerald-950/30">
+                    <MapPinIcon class="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                    <span class="max-w-[18rem] truncate text-sm font-medium text-emerald-900 dark:text-emerald-100">{{ req.origin || '—' }}</span>
+                  </div>
+                  <ArrowRightIcon class="h-4 w-4 shrink-0 text-slate-300 dark:text-slate-600" aria-hidden="true" />
+                  <div class="inline-flex items-center gap-1.5 rounded-lg border border-rose-200/80 bg-rose-50/80 px-2.5 py-1.5 dark:border-rose-900/50 dark:bg-rose-950/30">
+                    <MapPinIcon class="h-3.5 w-3.5 shrink-0 text-rose-600 dark:text-rose-400" aria-hidden="true" />
+                    <span class="max-w-[18rem] truncate text-sm font-medium text-rose-900 dark:text-rose-100">{{ req.destination || '—' }}</span>
+                  </div>
+                  <div
+                    v-if="journeyDepartLine"
+                    class="inline-flex items-center gap-1.5 rounded-lg border border-va-200/80 bg-va-50/70 px-2.5 py-1.5 dark:border-va-800/50 dark:bg-va-950/30"
+                  >
+                    <ClockIcon class="h-3.5 w-3.5 shrink-0 text-va-600 dark:text-va-400" aria-hidden="true" />
+                    <span class="text-sm font-semibold tabular-nums text-va-900 dark:text-va-100">{{ journeyDepartLine }}</span>
+                  </div>
+                  <div class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white px-2.5 py-1.5 dark:border-slate-700 dark:bg-slate-800/60">
+                    <TruckIcon class="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500" aria-hidden="true" />
+                    <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ labelTripType(req.trip_type) }}</span>
+                  </div>
+                  <div
+                    v-if="passengerOrCargoLine && passengerOrCargoLine !== '—'"
+                    class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white px-2.5 py-1.5 dark:border-slate-700 dark:bg-slate-800/60"
+                  >
+                    <UserGroupIcon class="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500" aria-hidden="true" />
+                    <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ passengerOrCargoLine }}</span>
+                  </div>
+                </div>
+
+                <!-- Right col: requester info + created/trip meta -->
+                <div class="flex shrink-0 items-center gap-3.5 rounded-xl border border-slate-200/70 bg-slate-50/70 px-3.5 py-2 dark:border-slate-800 dark:bg-slate-800/40">
+                  <!-- Avatar + name/unit -->
+                  <div class="flex items-center gap-2.5">
+                    <img
+                      v-if="req.requester?.avatar_url"
+                      :src="req.requester.avatar_url"
+                      alt=""
+                      class="h-9 w-9 shrink-0 rounded-full object-cover ring-2 ring-white dark:ring-slate-700"
+                    />
+                    <div
+                      v-else
+                      class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-va-50 text-sm font-bold text-va-800 dark:bg-va-950/50 dark:text-va-300"
+                    >{{ requesterInitials }}</div>
+                    <div class="min-w-0">
+                      <p class="text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100">{{ req.requester?.name ?? '—' }}</p>
+                      <p v-if="requesterAsideSubtitle" class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ requesterAsideSubtitle }}</p>
+                    </div>
+                  </div>
+                  <!-- Divider + meta fields -->
+                  <div class="border-l border-slate-200 pl-3.5 dark:border-slate-700">
+                    <dl class="flex flex-col gap-1 text-xs">
+                      <div class="flex items-baseline gap-1.5">
+                        <dt class="shrink-0 font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">{{ t('request_detail.ops_lbl_created_at') }}</dt>
+                        <dd class="truncate tabular-nums text-slate-700 dark:text-slate-300">{{ fmt(req.created_at) }}</dd>
+                      </div>
+                      <div v-if="req.trip" class="flex items-baseline gap-1.5">
+                        <dt class="shrink-0 font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">{{ t('request_detail.ops_linked_trip') }}</dt>
+                        <dd>
+                          <RouterLink
+                            :to="`/trips/${req.trip.id}`"
+                            class="font-mono font-semibold text-va-800 underline decoration-va-300 underline-offset-2 hover:decoration-va-600 dark:text-va-300 dark:decoration-va-700"
+                          >{{ linkedTripCode }}</RouterLink>
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+                </div>
               </div>
             </div>
-
-            <dl class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-slate-400">
-              <div class="inline-flex min-w-0 items-baseline gap-1.5">
-                <dt class="shrink-0 font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">{{ t('request_detail.ops_lbl_created_at') }}</dt>
-                <dd class="truncate font-medium tabular-nums text-slate-700 dark:text-slate-300">{{ fmt(req.created_at) }}</dd>
-              </div>
-              <div v-if="req.trip" class="inline-flex min-w-0 items-baseline gap-1.5">
-                <dt class="shrink-0 font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">{{ t('request_detail.ops_linked_trip') }}</dt>
-                <dd>
-                  <RouterLink
-                    :to="`/trips/${req.trip.id}`"
-                    class="font-mono font-semibold text-va-800 underline decoration-va-300 underline-offset-2 hover:decoration-va-600 dark:text-va-300 dark:decoration-va-700"
-                  >{{ linkedTripCode }}</RouterLink>
-                </dd>
-              </div>
-              <div v-if="journeyDepartLine" class="inline-flex min-w-0 items-baseline gap-1.5">
-                <dt class="shrink-0 font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">{{ t('request_detail.ops_lbl_depart_time') }}</dt>
-                <dd class="truncate font-medium tabular-nums text-slate-700 dark:text-slate-300">{{ journeyDepartLine }}</dd>
-              </div>
-            </dl>
           </div>
 
-          <button
-            type="button"
-            class="mt-0.5 inline-flex h-10 shrink-0 items-center gap-2 rounded-lg border px-3.5 text-sm font-semibold transition"
-            :class="
-              pdfExportDisabled
-                ? showUrgentBadge
-                  ? 'cursor-not-allowed border-rose-200/80 bg-rose-100/50 text-rose-400 dark:border-rose-900/50 dark:bg-rose-900/40 dark:text-rose-600'
-                  : 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-600'
-                : showUrgentBadge
-                  ? 'border-rose-200 bg-white text-rose-800 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-900/60 dark:text-rose-200 dark:hover:bg-rose-900/80'
-                  : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
-            "
-            :disabled="pdfBusy || pdfExportDisabled"
-            :title="pdfExportDisabled ? t('request_detail.pdf_locked_tooltip') : t('request_detail.export_pdf')"
-            @click="downloadRequestPdf"
+          <!-- Tab strip (bottom of header) -->
+          <nav
+            class="mt-3 flex gap-0 overflow-x-auto"
+            role="tablist"
+            :aria-label="t('request_detail.tablist_aria')"
           >
-            <ArrowDownTrayIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-            <span class="hidden sm:inline">{{ pdfBusy ? t('request_detail.pdf_export_loading') : t('request_detail.export_pdf') }}</span>
-          </button>
+            <button
+              v-for="tab in workspaceTabs"
+              :key="tab.id"
+              type="button"
+              role="tab"
+              :aria-selected="activeTab === tab.id"
+              class="relative -mb-px shrink-0 border-b-2 px-4 py-2.5 text-sm font-semibold transition"
+              :class="
+                activeTab === tab.id
+                  ? 'border-va-700 text-va-800 dark:border-va-400 dark:text-va-300'
+                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+              "
+              @click="setActiveTab(tab.id)"
+            >
+              {{ tab.label }}
+              <span
+                v-if="tab.badge"
+                class="ml-1.5 inline-flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white"
+              >{{ tab.badge }}</span>
+              <span
+                v-else-if="tab.dot"
+                class="ml-1 inline-block h-2 w-2 rounded-full align-middle"
+                :class="tab.dotTone === 'amber' ? 'bg-amber-500' : 'bg-teal-500'"
+                aria-hidden="true"
+              />
+            </button>
+          </nav>
         </div>
       </header>
 
-      <!-- ═══════════ Body ═══════════ -->
+      <!-- ═══════════ Body (1-col) ═══════════ -->
       <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
-        <div class="mx-auto w-full max-w-none space-y-4 px-4 py-5 pb-16 sm:px-6 lg:px-8">
+        <div class="mx-auto w-full max-w-none space-y-4 px-4 py-4 pb-16 sm:px-6 lg:px-8">
           <!-- Alerts -->
           <div
             v-if="req.status === 'rejected'"
@@ -167,43 +244,102 @@
             <span class="min-w-0 flex-1 whitespace-pre-line">{{ costAlertText }}</span>
           </div>
 
-          <!-- Grid -->
-          <div class="grid gap-4 lg:grid-cols-12 lg:items-start">
-            <!-- ─── MAIN ─── -->
-            <div class="space-y-4 lg:col-span-8">
-              <div :class="cardClass">
-                <nav
-                  class="flex gap-1 overflow-x-auto border-b border-slate-100 px-2 pt-2 dark:border-slate-800"
-                  role="tablist"
-                >
-                  <button
-                    v-for="tab in workspaceTabs"
-                    :key="tab.id"
-                    type="button"
-                    role="tab"
-                    :aria-selected="activeTab === tab.id"
-                    class="relative -mb-px shrink-0 border-b-2 px-4 py-3 text-base font-semibold transition"
-                    :class="
-                      activeTab === tab.id
-                        ? 'border-va-700 text-va-800 dark:border-va-400 dark:text-va-300'
-                        : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
-                    "
-                    @click="setActiveTab(tab.id)"
-                  >
-                    {{ tab.label }}
-                    <span
-                      v-if="tab.badge"
-                      class="ml-1.5 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] font-bold text-white"
-                    >{{ tab.badge }}</span>
-                    <span
-                      v-else-if="tab.dot"
-                      class="ml-1 inline-block h-2 w-2 rounded-full align-middle"
-                      :class="tab.dotTone === 'amber' ? 'bg-amber-500' : 'bg-teal-500'"
-                      aria-hidden="true"
-                    />
-                  </button>
-                </nav>
+          <!-- ─── Inline action center (shown when there are actions) ─── -->
+          <div
+            v-if="hasAnyAction"
+            class="overflow-hidden rounded-2xl border border-amber-200/80 bg-amber-50/60 shadow-sm dark:border-amber-900/40 dark:bg-amber-950/20"
+          >
+            <div class="flex items-center gap-2.5 border-b border-amber-100 px-5 py-3 dark:border-amber-900/30">
+              <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400">
+                <BoltIcon class="h-4 w-4" aria-hidden="true" />
+              </span>
+              <h2 class="text-sm font-bold uppercase tracking-wide text-amber-900 dark:text-amber-200">
+                {{ t('request_detail.ops_action_center') }}
+              </h2>
+            </div>
+            <div class="flex flex-wrap items-start gap-3 p-4 sm:p-5">
+              <!-- D2D approve/reject -->
+              <div v-if="showD2dDecisionSection" class="flex shrink-0 flex-col gap-2">
+                <button type="button" class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60" :disabled="d2dActing" @click="onD2dApproveClick">
+                  <CheckBadgeIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                  {{ t('request_detail.d2d_approve_confirm_btn') }}
+                </button>
+                <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 disabled:opacity-60 dark:border-rose-800/60 dark:text-rose-300 dark:hover:bg-rose-950/40" :disabled="d2dActing" @click="openD2dReject">
+                  {{ t('request_detail.d2d_reject_confirm_btn') }}
+                </button>
+                <p v-if="d2dMsg && !d2dRejectOpen" class="text-sm text-rose-600 dark:text-rose-400">{{ d2dMsg }}</p>
+              </div>
 
+              <!-- Fill price -->
+              <div
+                v-if="showFillPriceSection"
+                class="shrink-0 space-y-3 rounded-xl border border-sky-200/80 bg-sky-50/60 px-3.5 py-3.5 dark:border-sky-900/50 dark:bg-sky-950/25"
+              >
+                <div class="flex items-start gap-2.5">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-600 text-white">
+                    <CurrencyDollarIcon class="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-sm font-bold text-slate-900 dark:text-slate-100">{{ t('request_detail.fill_price_title') }}</p>
+                    <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                      {{ fillPriceAutoApproves ? t('request_detail.todo_fill_price_auto') : t('request_detail.todo_fill_price') }}
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between gap-2 rounded-lg border border-sky-200/60 bg-white/80 px-3 py-2.5 dark:border-sky-900/40 dark:bg-slate-900/60">
+                  <span class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('request_detail.fill_price_total') }}</span>
+                  <span class="text-lg font-bold tabular-nums" :class="fillPriceSummary.total > 0 ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-slate-500'">{{ fillPriceSummary.totalFmt }}</span>
+                </div>
+                <div v-if="!fillPriceAutoApproves">
+                  <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ t('request_detail.assign_dept_head_preset_label') }}</p>
+                  <div v-if="fillPriceSummary.deptHeadPresetLocked" class="mt-1.5 rounded-lg border border-sky-200/60 bg-white/80 px-3 py-2 dark:border-sky-900/40 dark:bg-slate-900/60">
+                    <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ fillPriceSummary.deptHeadDisplayLine }}</p>
+                    <p v-if="fillPriceSummary.deptHeadLoadErr" class="mt-1 text-xs text-rose-600 dark:text-rose-400">{{ fillPriceSummary.deptHeadLoadErr }}</p>
+                  </div>
+                  <div v-else class="mt-1.5 rounded-lg border border-amber-200/80 bg-amber-50/80 px-3 py-2 dark:border-amber-900/40 dark:bg-amber-950/20" role="alert">
+                    <p class="text-xs font-semibold text-amber-900 dark:text-amber-100">{{ t('request_detail.assign_dept_head_missing_staff_title') }}</p>
+                  </div>
+                </div>
+                <Button class="w-full !bg-sky-600 hover:!bg-sky-700" :loading="fillPriceActing" :disabled="!fillPriceSummary.canSubmitFillPrice" @click="onFillPriceSubmitFromSidebar">
+                  {{ fillPriceAutoApproves ? t('request_detail.fill_price_submit_approve') : t('request_detail.fill_price_submit_preset_dept') }}
+                </Button>
+                <Button type="button" variant="secondary" class="w-full" data-testid="fill-price-sidebar-open-reference-pricing" :disabled="fillPriceActing" @click="referencePricingModalOpen = true">
+                  {{ t('request_detail.reference_pricing_link') }}
+                </Button>
+                <p v-if="fillPriceMsg" class="text-xs text-slate-500 dark:text-slate-400">{{ fillPriceMsg }}</p>
+              </div>
+
+              <!-- Reset / clone -->
+              <button
+                v-if="showResetCloneBtn"
+                type="button"
+                class="inline-flex shrink-0 items-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                :disabled="resetCloneBusy"
+                @click="onResetCloneRequest"
+              >
+                <ArrowPathIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                {{ resetCloneBusy ? t('request_detail.reset_clone_busy') : t('request_detail.reset_clone') }}
+              </button>
+
+              <!-- Workflow todos -->
+              <div v-if="workflowTodoItems.length" class="shrink-0 space-y-1.5">
+                <p class="text-xs font-bold uppercase tracking-wide text-amber-700 dark:text-amber-400">{{ t('request_detail.aside_todos_heading') }}</p>
+                <button
+                  v-for="item in workflowTodoItems"
+                  :key="item.key"
+                  type="button"
+                  class="flex w-full items-center justify-between gap-2 rounded-lg border border-amber-200/70 bg-white/80 px-3.5 py-2.5 text-left text-sm font-semibold text-amber-900 transition hover:bg-white dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200 dark:hover:bg-amber-950/40"
+                  @click="onWorkflowNavigate({ tab: mapTodoTab(item.tab), focus: item.focus })"
+                >
+                  <span class="min-w-0 truncate">{{ item.label }}</span>
+                  <ArrowRightIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ─── 1-col tab panels ─── -->
+          <div :class="cardClass">
                 <div class="p-4 sm:p-6">
                   <!-- ===== Tab: Tổng quan ===== -->
                   <div v-show="activeTab === 'form'" class="space-y-5">
@@ -732,293 +868,102 @@
                       </div>
                     </template>
                   </div>
+
+                  <!-- ===== Tab: Thông tin phiếu ===== -->
+                  <div v-show="activeTab === 'info'" class="space-y-5">
+                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      <!-- Requester card -->
+                      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                        <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3 dark:border-slate-800">
+                          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                            <ClipboardDocumentIcon class="h-4 w-4" aria-hidden="true" />
+                          </span>
+                          <h2 class="text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">{{ t('request_detail.ops_requester_heading') }}</h2>
+                        </div>
+                        <div class="mt-4 flex items-start gap-2.5">
+                          <img v-if="req.requester?.avatar_url" :src="req.requester.avatar_url" alt="" class="h-10 w-10 shrink-0 rounded-full object-cover ring-2 ring-white dark:ring-slate-700" />
+                          <div v-else class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-va-50 text-sm font-bold text-va-800 dark:bg-va-950/50 dark:text-va-300">{{ requesterInitials }}</div>
+                          <div class="min-w-0">
+                            <p class="text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100">{{ req.requester?.name ?? friendlyEmpty }}</p>
+                            <p v-if="requesterAsideSubtitle" class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ requesterAsideSubtitle }}</p>
+                          </div>
+                        </div>
+                        <dl v-if="requesterAsideFields.length" class="mt-4 grid gap-2">
+                          <FieldRow v-for="row in requesterAsideFields" :key="row.key" boxed :label="row.label" :value="row.value" />
+                        </dl>
+                      </div>
+
+                      <!-- Ticket details card -->
+                      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                        <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3 dark:border-slate-800">
+                          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-600 dark:bg-violet-950/40 dark:text-violet-400">
+                            <DocumentTextIcon class="h-4 w-4" aria-hidden="true" />
+                          </span>
+                          <h2 class="text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">{{ t('request_detail.ops_ticket_detail_heading') }}</h2>
+                        </div>
+                        <dl class="mt-4 grid gap-2">
+                          <FieldRow boxed :label="t('request_detail.ops_lbl_request_code')" :value="requestRefCode" highlight />
+                          <FieldRow boxed :label="t('request_detail.lbl_trip_type_short')" :value="labelTripType(req.trip_type)" />
+                          <FieldRow v-if="passengerOrCargoLine && passengerOrCargoLine !== '—'" boxed :label="metaLoadLabel" :value="passengerOrCargoLine" />
+                          <FieldRow boxed :label="t('request_detail.ops_lbl_created_at')" :value="fmt(req.created_at)" />
+                          <FieldRow v-if="req.approver?.name" boxed :label="t('request_detail.ops_lbl_approver')" :value="req.approver.name" />
+                          <FieldRow v-if="req.status === 'approved'" boxed :label="t('request_detail.ops_lbl_paper_status')" :value="paperStatusText" :highlight="req.paper_status === 'pending'" />
+                        </dl>
+                      </div>
+
+                      <!-- Cost estimate card -->
+                      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                        <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3 dark:border-slate-800">
+                          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-600 dark:bg-teal-950/40 dark:text-teal-400">
+                            <CurrencyDollarIcon class="h-4 w-4" aria-hidden="true" />
+                          </span>
+                          <h2 class="text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">{{ t('request_detail.ops_aside_tab_cost') }}</h2>
+                        </div>
+                        <template v-if="costEstimate">
+                          <div class="mt-4 space-y-3">
+                            <div class="rounded-xl border border-slate-100 bg-slate-50/70 px-3.5 py-2.5 dark:border-slate-800 dark:bg-slate-800/40">
+                              <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ t('request_detail.lbl_est_distance') }}</p>
+                              <p class="mt-1 text-sm" :class="costEstimate.distanceLabel ? 'font-semibold text-slate-800 dark:text-slate-200' : 'italic text-slate-400 dark:text-slate-500'">{{ costEstimate.distanceLabel || friendlyEmpty }}</p>
+                            </div>
+                            <div v-if="req.service_price != null" class="rounded-xl border border-slate-100 bg-white px-3.5 py-2.5 dark:border-slate-800 dark:bg-slate-900">
+                              <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ t('request_detail.lbl_dispatcher_unit_price') }}</p>
+                              <p class="mt-1 text-lg font-bold tabular-nums tracking-tight text-slate-900 dark:text-slate-100">{{ asideServicePriceDisplay }}</p>
+                              <p v-if="asideServicePriceWords" class="mt-1.5 text-xs italic leading-relaxed text-slate-500 dark:text-slate-400"><span class="font-semibold not-italic text-slate-400 dark:text-slate-500">{{ t('request_detail.ops_lbl_amount_in_words') }}:</span> {{ asideServicePriceWords }}</p>
+                            </div>
+                            <div class="overflow-hidden rounded-xl border border-teal-200/80 bg-gradient-to-br from-teal-50 to-emerald-50/80 px-4 py-3.5 ring-1 ring-inset ring-teal-100 dark:border-teal-900/50 dark:from-teal-950/40 dark:to-emerald-950/20 dark:ring-teal-900/40">
+                              <p class="text-[10px] font-bold uppercase tracking-wider text-teal-600/90 dark:text-teal-400/90">{{ t('request_detail.total_per_declaration') }}</p>
+                              <p class="mt-1 text-2xl font-bold tabular-nums tracking-tight text-teal-700 dark:text-teal-300">{{ asideDeclaredTotalDisplay }}</p>
+                              <p v-if="asideDeclaredTotalWords" class="mt-2 text-xs italic leading-relaxed text-teal-700/80 dark:text-teal-300/80"><span class="font-semibold not-italic text-teal-600/90 dark:text-teal-400/90">{{ t('request_detail.ops_lbl_amount_in_words') }}:</span> {{ asideDeclaredTotalWords }}</p>
+                            </div>
+                          </div>
+                        </template>
+                        <p v-else class="mt-4 rounded-xl border border-dashed border-slate-200 px-3 py-8 text-center text-sm text-slate-400 dark:border-slate-700 dark:text-slate-500">{{ friendlyEmpty }}</p>
+                      </div>
+                    </div>
+
+                    <!-- Linked trip -->
+                    <div v-if="req.trip" class="rounded-2xl border border-va-200/80 bg-va-50/40 p-5 dark:border-va-800/50 dark:bg-va-950/20">
+                      <RouterLink
+                        :to="`/trips/${req.trip.id}`"
+                        class="flex items-center gap-3 rounded-xl border border-va-200 bg-va-50/60 px-4 py-3.5 transition hover:bg-va-50 dark:border-va-800/50 dark:bg-va-950/30 dark:hover:bg-va-950/50"
+                      >
+                        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-va-100 text-va-700 dark:bg-va-900/50 dark:text-va-300">
+                          <TruckIcon class="h-5 w-5" aria-hidden="true" />
+                        </span>
+                        <span class="min-w-0 flex-1">
+                          <span class="block text-[10px] font-bold uppercase tracking-wider text-va-600 dark:text-va-400">{{ t('request_detail.ops_linked_trip') }}</span>
+                          <span class="mt-0.5 block font-mono text-lg font-bold tracking-tight text-va-900 dark:text-va-100">{{ linkedTripCode }}</span>
+                          <span v-if="req.origin || req.destination" class="mt-0.5 block text-xs leading-snug text-va-700/80 dark:text-va-300/80">{{ req.origin || '—' }} → {{ req.destination || '—' }}</span>
+                          <span class="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-va-700 dark:text-va-300">
+                            {{ t('request_detail.ops_open_trip_detail') }}
+                            <ArrowTopRightOnSquareIcon class="h-3.5 w-3.5" aria-hidden="true" />
+                          </span>
+                        </span>
+                      </RouterLink>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <!-- ─── SIDEBAR ─── -->
-            <aside class="space-y-4 lg:col-span-4">
-              <section :class="cardClass + ' p-5'">
-                <h2 :class="sectionTitleClass">{{ t('request_detail.ops_action_center') }}</h2>
-                <div class="mt-4 space-y-2.5">
-                  <div v-if="showD2dDecisionSection" class="space-y-2">
-                    <button type="button" class="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60" :disabled="d2dActing" @click="onD2dApproveClick">
-                      <CheckBadgeIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
-                      {{ t('request_detail.d2d_approve_confirm_btn') }}
-                    </button>
-                    <button type="button" class="flex w-full items-center justify-center gap-2 rounded-lg border border-rose-200 px-4 py-3 text-base font-semibold text-rose-700 transition hover:bg-rose-50 disabled:opacity-60 dark:border-rose-800/60 dark:text-rose-300 dark:hover:bg-rose-950/40" :disabled="d2dActing" @click="openD2dReject">
-                      {{ t('request_detail.d2d_reject_confirm_btn') }}
-                    </button>
-                    <p v-if="d2dMsg && !d2dRejectOpen" class="text-sm text-rose-600 dark:text-rose-400">{{ d2dMsg }}</p>
-                  </div>
-
-                  <div
-                    v-if="showFillPriceSection"
-                    class="space-y-3 rounded-xl border border-sky-200/80 bg-sky-50/60 px-3.5 py-3.5 dark:border-sky-900/50 dark:bg-sky-950/25"
-                  >
-                    <div class="flex items-start gap-2.5">
-                      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-600 text-white">
-                        <CurrencyDollarIcon class="h-5 w-5" aria-hidden="true" />
-                      </span>
-                      <div class="min-w-0 flex-1">
-                        <p class="text-sm font-bold text-slate-900 dark:text-slate-100">{{ t('request_detail.fill_price_title') }}</p>
-                        <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                          {{ fillPriceAutoApproves ? t('request_detail.todo_fill_price_auto') : t('request_detail.todo_fill_price') }}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div class="flex items-center justify-between gap-2 rounded-lg border border-sky-200/60 bg-white/80 px-3 py-2.5 dark:border-sky-900/40 dark:bg-slate-900/60">
-                      <span class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                        {{ t('request_detail.fill_price_total') }}
-                      </span>
-                      <span
-                        class="text-lg font-bold tabular-nums"
-                        :class="fillPriceSummary.total > 0 ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-slate-500'"
-                      >{{ fillPriceSummary.totalFmt }}</span>
-                    </div>
-
-                    <div v-if="!fillPriceAutoApproves">
-                      <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                        {{ t('request_detail.assign_dept_head_preset_label') }}
-                      </p>
-                      <div
-                        v-if="fillPriceSummary.deptHeadPresetLocked"
-                        class="mt-1.5 rounded-lg border border-sky-200/60 bg-white/80 px-3 py-2 dark:border-sky-900/40 dark:bg-slate-900/60"
-                      >
-                        <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ fillPriceSummary.deptHeadDisplayLine }}</p>
-                        <p v-if="fillPriceSummary.deptHeadLoadErr" class="mt-1 text-xs text-rose-600 dark:text-rose-400">{{ fillPriceSummary.deptHeadLoadErr }}</p>
-                      </div>
-                      <div
-                        v-else
-                        class="mt-1.5 rounded-lg border border-amber-200/80 bg-amber-50/80 px-3 py-2 dark:border-amber-900/40 dark:bg-amber-950/20"
-                        role="alert"
-                      >
-                        <p class="text-xs font-semibold text-amber-900 dark:text-amber-100">{{ t('request_detail.assign_dept_head_missing_staff_title') }}</p>
-                      </div>
-                    </div>
-
-                    <Button
-                      class="w-full !bg-sky-600 hover:!bg-sky-700"
-                      :loading="fillPriceActing"
-                      :disabled="!fillPriceSummary.canSubmitFillPrice"
-                      @click="onFillPriceSubmitFromSidebar"
-                    >
-                      {{
-                        fillPriceAutoApproves
-                          ? t('request_detail.fill_price_submit_approve')
-                          : t('request_detail.fill_price_submit_preset_dept')
-                      }}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      class="w-full"
-                      data-testid="fill-price-sidebar-open-reference-pricing"
-                      :disabled="fillPriceActing"
-                      @click="referencePricingModalOpen = true"
-                    >
-                      {{ t('request_detail.reference_pricing_link') }}
-                    </Button>
-                    <p v-if="fillPriceMsg" class="text-xs text-slate-500 dark:text-slate-400">{{ fillPriceMsg }}</p>
-                  </div>
-
-                  <button
-                    v-if="showResetCloneBtn"
-                    type="button"
-                    class="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
-                    :disabled="resetCloneBusy"
-                    @click="onResetCloneRequest"
-                  >
-                    <ArrowPathIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
-                    {{ resetCloneBusy ? t('request_detail.reset_clone_busy') : t('request_detail.reset_clone') }}
-                  </button>
-
-                  <div v-if="workflowTodoItems.length" class="space-y-1.5 pt-1">
-                    <p class="text-xs font-bold uppercase tracking-wide text-amber-600 dark:text-amber-400">{{ t('request_detail.aside_todos_heading') }}</p>
-                    <button
-                      v-for="item in workflowTodoItems"
-                      :key="item.key"
-                      type="button"
-                      class="flex w-full items-center justify-between gap-2 rounded-lg border border-amber-200/70 bg-amber-50/50 px-3.5 py-2.5 text-left text-sm font-semibold text-amber-900 transition hover:bg-amber-50 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200 dark:hover:bg-amber-950/40"
-                      @click="onWorkflowNavigate({ tab: mapTodoTab(item.tab), focus: item.focus })"
-                    >
-                      <span class="min-w-0 truncate">{{ item.label }}</span>
-                      <ArrowRightIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-                    </button>
-                  </div>
-
-                  <p v-if="!hasAnyAction" class="rounded-lg border border-dashed border-slate-200 px-3 py-6 text-center text-sm text-slate-400 dark:border-slate-700 dark:text-slate-500">{{ t('request_detail.ops_no_actions') }}</p>
-                </div>
-              </section>
-
-              <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <div class="flex items-center gap-2.5 border-b border-slate-100 px-5 py-3.5 dark:border-slate-800">
-                  <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                    <ClipboardDocumentIcon class="h-4 w-4" aria-hidden="true" />
-                  </span>
-                  <h2 class="text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">
-                    {{ t('request_detail.ops_aside_panel_heading') }}
-                  </h2>
-                </div>
-
-                <nav
-                  class="flex gap-0.5 overflow-x-auto border-b border-slate-100 px-2 pt-1 dark:border-slate-800"
-                  role="tablist"
-                  :aria-label="t('request_detail.ops_aside_panel_heading')"
-                >
-                  <button
-                    v-for="tab in asidePanelTabs"
-                    :key="tab.id"
-                    type="button"
-                    role="tab"
-                    :aria-selected="asidePanelTab === tab.id"
-                    class="relative -mb-px shrink-0 border-b-2 px-3 py-2.5 text-xs font-semibold transition sm:text-sm"
-                    :class="
-                      asidePanelTab === tab.id
-                        ? 'border-va-700 text-va-800 dark:border-va-400 dark:text-va-300'
-                        : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
-                    "
-                    @click="asidePanelTab = tab.id"
-                  >
-                    {{ tab.label }}
-                  </button>
-                </nav>
-
-                <div class="p-4">
-                  <!-- Tab: Thông tin phiếu -->
-                  <div v-show="asidePanelTab === 'info'" class="space-y-3">
-                    <div class="rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
-                      <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                        {{ t('request_detail.ops_requester_heading') }}
-                      </p>
-                      <div class="mt-3 flex items-start gap-2.5">
-                        <img
-                          v-if="req.requester?.avatar_url"
-                          :src="req.requester.avatar_url"
-                          alt=""
-                          class="h-10 w-10 shrink-0 rounded-full object-cover ring-2 ring-white dark:ring-slate-700"
-                        />
-                        <div
-                          v-else
-                          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-va-50 text-sm font-bold text-va-800 dark:bg-va-950/50 dark:text-va-300"
-                        >{{ requesterInitials }}</div>
-                        <div class="min-w-0">
-                          <p class="text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100">{{ req.requester?.name ?? friendlyEmpty }}</p>
-                          <p v-if="requesterAsideSubtitle" class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ requesterAsideSubtitle }}</p>
-                        </div>
-                      </div>
-                      <dl v-if="requesterAsideFields.length" class="mt-3 grid gap-2">
-                        <FieldRow v-for="row in requesterAsideFields" :key="row.key" boxed :label="row.label" :value="row.value" />
-                      </dl>
-                    </div>
-
-                    <div class="rounded-xl border border-slate-100 bg-white p-3.5 dark:border-slate-800 dark:bg-slate-900">
-                      <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                        {{ t('request_detail.ops_ticket_detail_heading') }}
-                      </p>
-                      <dl class="mt-3 grid gap-2">
-                        <FieldRow boxed :label="t('request_detail.ops_lbl_request_code')" :value="requestRefCode" highlight />
-                        <FieldRow boxed :label="t('request_detail.lbl_trip_type_short')" :value="labelTripType(req.trip_type)" />
-                        <FieldRow
-                          v-if="passengerOrCargoLine && passengerOrCargoLine !== '—'"
-                          boxed
-                          :label="metaLoadLabel"
-                          :value="passengerOrCargoLine"
-                        />
-                        <FieldRow boxed :label="t('request_detail.ops_lbl_created_at')" :value="fmt(req.created_at)" />
-                        <FieldRow v-if="req.approver?.name" boxed :label="t('request_detail.ops_lbl_approver')" :value="req.approver.name" />
-                        <FieldRow
-                          v-if="req.status === 'approved'"
-                          boxed
-                          :label="t('request_detail.ops_lbl_paper_status')"
-                          :value="paperStatusText"
-                          :highlight="req.paper_status === 'pending'"
-                        />
-                      </dl>
-                    </div>
-                  </div>
-
-                  <!-- Tab: Dự toán chi phí -->
-                  <div v-show="asidePanelTab === 'cost'" class="space-y-3">
-                    <template v-if="costEstimate">
-                      <div class="rounded-xl border border-slate-100 bg-slate-50/70 px-3.5 py-2.5 dark:border-slate-800 dark:bg-slate-800/40">
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                          {{ t('request_detail.lbl_est_distance') }}
-                        </p>
-                        <p
-                          class="mt-1 text-sm"
-                          :class="costEstimate.distanceLabel ? 'font-semibold text-slate-800 dark:text-slate-200' : 'italic text-slate-400 dark:text-slate-500'"
-                        >
-                          {{ costEstimate.distanceLabel || friendlyEmpty }}
-                        </p>
-                      </div>
-
-                      <div
-                        v-if="req.service_price != null"
-                        class="rounded-xl border border-slate-100 bg-white px-3.5 py-2.5 dark:border-slate-800 dark:bg-slate-900"
-                      >
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                          {{ t('request_detail.lbl_dispatcher_unit_price') }}
-                        </p>
-                        <p class="mt-1 text-lg font-bold tabular-nums tracking-tight text-slate-900 dark:text-slate-100">
-                          {{ asideServicePriceDisplay }}
-                        </p>
-                        <p v-if="asideServicePriceWords" class="mt-1.5 text-xs italic leading-relaxed text-slate-500 dark:text-slate-400">
-                          <span class="font-semibold not-italic text-slate-400 dark:text-slate-500">{{ t('request_detail.ops_lbl_amount_in_words') }}:</span>
-                          {{ asideServicePriceWords }}
-                        </p>
-                      </div>
-
-                      <div class="overflow-hidden rounded-xl border border-teal-200/80 bg-gradient-to-br from-teal-50 to-emerald-50/80 px-4 py-3.5 ring-1 ring-inset ring-teal-100 dark:border-teal-900/50 dark:from-teal-950/40 dark:to-emerald-950/20 dark:ring-teal-900/40">
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-teal-600/90 dark:text-teal-400/90">
-                          {{ t('request_detail.total_per_declaration') }}
-                        </p>
-                        <p class="mt-1 text-2xl font-bold tabular-nums tracking-tight text-teal-700 dark:text-teal-300">
-                          {{ asideDeclaredTotalDisplay }}
-                        </p>
-                        <p v-if="asideDeclaredTotalWords" class="mt-2 text-xs italic leading-relaxed text-teal-700/80 dark:text-teal-300/80">
-                          <span class="font-semibold not-italic text-teal-600/90 dark:text-teal-400/90">{{ t('request_detail.ops_lbl_amount_in_words') }}:</span>
-                          {{ asideDeclaredTotalWords }}
-                        </p>
-                      </div>
-                    </template>
-                    <p v-else class="rounded-xl border border-dashed border-slate-200 px-3 py-8 text-center text-sm text-slate-400 dark:border-slate-700 dark:text-slate-500">
-                      {{ friendlyEmpty }}
-                    </p>
-                  </div>
-
-                  <!-- Tab: Chuyến liên kết -->
-                  <div v-show="asidePanelTab === 'trip'">
-                    <RouterLink
-                      v-if="req.trip"
-                      :to="`/trips/${req.trip.id}`"
-                      class="flex items-center gap-3 rounded-xl border border-va-200 bg-va-50/60 px-4 py-3.5 transition hover:bg-va-50 dark:border-va-800/50 dark:bg-va-950/30 dark:hover:bg-va-950/50"
-                    >
-                      <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-va-100 text-va-700 dark:bg-va-900/50 dark:text-va-300">
-                        <TruckIcon class="h-5 w-5" aria-hidden="true" />
-                      </span>
-                      <span class="min-w-0 flex-1">
-                        <span class="block text-[10px] font-bold uppercase tracking-wider text-va-600 dark:text-va-400">{{ t('request_detail.ops_linked_trip') }}</span>
-                        <span class="mt-0.5 block font-mono text-lg font-bold tracking-tight text-va-900 dark:text-va-100">{{ linkedTripCode }}</span>
-                        <span
-                          v-if="req.origin || req.destination"
-                          class="mt-0.5 block text-xs leading-snug text-va-700/80 dark:text-va-300/80"
-                        >{{ req.origin || '—' }} → {{ req.destination || '—' }}</span>
-                        <span class="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-va-700 dark:text-va-300">
-                          {{ t('request_detail.ops_open_trip_detail') }}
-                          <ArrowTopRightOnSquareIcon class="h-3.5 w-3.5" aria-hidden="true" />
-                        </span>
-                      </span>
-                    </RouterLink>
-                    <p v-else class="rounded-xl border border-dashed border-slate-200 px-3 py-8 text-center text-sm text-slate-400 dark:border-slate-700 dark:text-slate-500">
-                      {{ t('request_detail.ops_no_linked_trip') }}
-                    </p>
-                  </div>
-                </div>
-              </section>
-            </aside>
-          </div>
         </div>
       </div>
 
@@ -1524,6 +1469,7 @@ const workspaceTabs = computed(() => {
     out.push({ id: 'students', label: t('request_detail.tab_students'), badge: stItem?.badge })
   }
   out.push({ id: 'activity', label: t('request_detail.audit_timeline_heading') })
+  out.push({ id: 'info', label: t('request_detail.ops_aside_panel_heading') })
   return out
 })
 

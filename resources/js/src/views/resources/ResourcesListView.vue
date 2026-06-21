@@ -1,5 +1,5 @@
 ﻿<template>
-  <div class="space-y-6">
+  <div class="w-full min-w-0 space-y-6" style="zoom: 0.9">
     <!-- Page header -->
     <div class="flex flex-col gap-3 border-b border-slate-200/80 pb-6 lg:flex-row lg:items-end lg:justify-between">
       <div>

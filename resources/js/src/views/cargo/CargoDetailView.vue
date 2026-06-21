@@ -51,10 +51,6 @@
             <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl md:text-2xl">
               {{ t('cargo_detail.hero_title', { code: displayCode }) }}
             </h1>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              <span class="font-medium text-slate-800 dark:text-slate-200">{{ routeSummary }}</span>
-              <span v-if="departHint" class="text-slate-500"> · {{ departHint }}</span>
-            </p>
           </div>
           <div class="flex flex-wrap items-center gap-2 print:hidden">
             <RouterLink
@@ -114,7 +110,7 @@
                 {{ t('cargo_detail.hero_qty') }}
               </p>
               <p class="mt-0.5 text-lg font-bold tabular-nums text-slate-900 dark:text-white sm:text-xl">
-                {{ shipment.quantity ?? '—' }}
+                {{ shipment.quantity ?? emptyText('not_available') }}
               </p>
             </div>
             <div class="rounded-xl border border-slate-100 bg-slate-50/90 px-3 py-2 text-center dark:border-slate-700 dark:bg-slate-800/50 sm:px-4">
@@ -219,7 +215,7 @@
                         {{ t('cargo_detail.route_pending') }}
                       </span>
                     </div>
-                    <p class="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{{ shipment.pickup_address || '—' }}</p>
+                    <p class="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{{ shipment.pickup_address || emptyText('address') }}</p>
                     <p v-if="shipment.sender_name" class="text-xs text-slate-600 dark:text-slate-400">{{ shipment.sender_name }}</p>
                     <p v-if="shipment.picked_up_at" class="mt-1 text-xs tabular-nums text-slate-500">{{ fmt(shipment.picked_up_at) }}</p>
                   </div>
@@ -256,7 +252,7 @@
                         {{ t('cargo_detail.route_awaiting') }}
                       </span>
                     </div>
-                    <p class="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{{ shipment.delivery_address || '—' }}</p>
+                    <p class="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{{ shipment.delivery_address || emptyText('address') }}</p>
                     <p v-if="shipment.receiver_name" class="text-xs text-slate-600 dark:text-slate-400">{{ shipment.receiver_name }}</p>
                     <p v-if="shipment.delivered_at" class="mt-1 text-xs tabular-nums text-slate-500">{{ fmt(shipment.delivered_at) }}</p>
                   </div>
@@ -710,6 +706,7 @@ import {
   collectBusyVehicleIds,
   tripPlannedEndMs,
 } from '../../util/tripScheduleConflict'
+import { confirmAction } from '../../composables/useConfirm'
 
 const route = useRoute()
 const { t, te, locale } = useI18n()
@@ -763,20 +760,6 @@ const displayCode = computed(() => shipment.value?.tracking_code || '#' + shipme
 const requestId = computed(() => shipment.value?.dispatch_request_id ?? shipment.value?.dispatch_request?.id ?? null)
 const tripLite = computed(() => shipment.value?.trip ?? null)
 
-const routeSummary = computed(() => {
-  const s = shipment.value
-  if (!s) return ''
-  const a = s.pickup_address || s.dispatch_request?.origin || '—'
-  const b = s.delivery_address || s.dispatch_request?.destination || '—'
-  return `${a} → ${b}`
-})
-
-const departHint = computed(() => {
-  const d = tripLite.value?.depart_at || shipment.value?.dispatch_request?.depart_at
-  if (!d) return ''
-  return t('cargo_detail.depart_prefix') + ' ' + fmt(d)
-})
-
 const mapsHref = computed(() => {
   const s = shipment.value
   if (!s) return ''
@@ -809,9 +792,9 @@ const embedMapSrc = computed(() => {
 
 const weightLabel = computed(() => {
   const g = shipment.value?.weight_grams
-  if (g == null || g === '') return '—'
+  if (g == null || g === '') return emptyText('not_available')
   const kg = Number(g) / 1000
-  if (!Number.isFinite(kg)) return '—'
+  if (!Number.isFinite(kg)) return emptyText('not_available')
   return kg < 1 ? `${g} g` : `${kg.toLocaleString(locale.value === 'en' ? 'en-US' : 'vi-VN', { maximumFractionDigits: 2 })} kg`
 })
 
@@ -913,11 +896,11 @@ const assignBusyVehicleIds = computed(() =>
 function assignScheduleTimeRange(tr) {
   const a = tr?.depart_at
   const b = tr?.arrive_by ?? tr?.dispatch_request?.arrive_by
-  if (!a) return '—'
+  if (!a) return emptyText('time')
   const l = locale.value === 'en' ? 'en-GB' : 'vi-VN'
   const tStr = (iso) => (iso ? new Date(iso).toLocaleTimeString(l, { hour: '2-digit', minute: '2-digit' }) : '')
   if (!b) return tStr(a)
-  return `${tStr(a)} – ${tStr(b)}`
+  return t('cargo_detail.schedule_time_range', { start: tStr(a), end: tStr(b) })
 }
 
 const assignScheduleHint = computed(() => {
@@ -926,7 +909,8 @@ const assignScheduleHint = computed(() => {
   const l = locale.value === 'en' ? 'en-GB' : 'vi-VN'
   const d = new Date(tr.depart_at).toLocaleDateString(l, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
   const r = assignScheduleTimeRange(tr)
-  if (!r || r === '—') return d
+  const emptyTime = emptyText('time')
+  if (!r || r === emptyTime) return d
   return t('trip_detail.coordination.schedule_window_hint', { date: d, range: r })
 })
 
@@ -962,7 +946,9 @@ function isAssignVehicleBusy(id) {
 
 function assignDriverOptionLabel(d) {
   const base = `${d.full_name}${d.phone ? ` · ${d.phone}` : ''}`
-  return isAssignDriverBusy(d.id) ? `${base} — ${t('trip_detail.coordination.option_busy_suffix')}` : base
+  return isAssignDriverBusy(d.id)
+    ? `${base} · ${t('trip_detail.coordination.option_busy_suffix')}`
+    : base
 }
 
 function assignDriverOptionTitle(id) {
@@ -970,8 +956,10 @@ function assignDriverOptionTitle(id) {
 }
 
 function assignVehicleOptionLabel(v) {
-  const base = `${v.license_plate} · ${v.type ?? '—'}${v.seat_count ? ` (${v.seat_count})` : ''}`
-  return isAssignVehicleBusy(v.id) ? `${base} — ${t('trip_detail.coordination.option_busy_suffix')}` : base
+  const base = `${v.license_plate} · ${v.type ?? emptyText('not_available')}${v.seat_count ? ` (${v.seat_count})` : ''}`
+  return isAssignVehicleBusy(v.id)
+    ? `${base} · ${t('trip_detail.coordination.option_busy_suffix')}`
+    : base
 }
 
 function assignVehicleOptionTitle(id) {
@@ -982,7 +970,7 @@ function assignProviderTypeLabel(type) {
   const t0 = String(type ?? '').toLowerCase()
   if (t0 === 'taxi') return t('resources.provider_form_type_taxi')
   if (t0 === 'vendor') return t('resources.provider_form_type_vendor')
-  return type ?? '—'
+  return type ?? emptyText('not_available')
 }
 
 const sortedAssignDrivers = computed(() => {
@@ -1302,7 +1290,15 @@ function quickStatusLabel(status) {
 async function applyQuickStatus(status, danger) {
   if (!shipment.value) return
   if (danger) {
-    const ok = window.confirm(t('cargo_detail.quick_confirm_danger'))
+    const messageKey =
+      status === 'cancelled' ? 'cargo_detail.quick_confirm_cancelled' : 'cargo_detail.quick_confirm_failed'
+    const ok = await confirmAction({
+      title: t('cargo_detail.quick_confirm_title'),
+      message: te(messageKey) ? t(messageKey) : t('cargo_detail.quick_confirm_danger'),
+      confirmLabel: quickStatusLabel(status),
+      cancelLabel: t('common.cancel'),
+      danger: true,
+    })
     if (!ok) return
   }
   statusError.value = ''
@@ -1330,6 +1326,11 @@ async function applyQuickStatus(status, danger) {
   }
 }
 
+function emptyText(kind = 'not_available') {
+  const key = `trip_detail.empty.${kind}`
+  return te(key) ? t(key) : t('trip_detail.empty.not_available')
+}
+
 function fmt(v) {
   return v ? new Date(v).toLocaleString(locale.value === 'en' ? 'en-GB' : 'vi-VN') : ''
 }
@@ -1342,7 +1343,7 @@ function driverInitials(name) {
 }
 
 function formatBytes(n) {
-  if (n == null || n <= 0) return '—'
+  if (n == null || n <= 0) return emptyText('not_available')
   if (n < 1024) return `${n} B`
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`
   return `${(n / (1024 * 1024)).toFixed(1)} MB`
@@ -1350,7 +1351,7 @@ function formatBytes(n) {
 
 function formatMoney(amount, currency) {
   const a = Number(amount)
-  if (!Number.isFinite(a)) return '—'
+  if (!Number.isFinite(a)) return emptyText('not_available')
   const cur = (currency || 'VND').toUpperCase()
   try {
     return new Intl.NumberFormat(locale.value === 'en' ? 'en-US' : 'vi-VN', {

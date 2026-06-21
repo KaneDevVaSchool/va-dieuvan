@@ -56,10 +56,14 @@ async function load() {
     const detail = await admin.getRole(roleId.value)
     role.value = detail
 
-    // Load users with this role
-    const userList = await admin.listUsers({ assignment: String(roleId.value), per_page: '100' })
-      .catch(() => [])
-    members.value = Array.isArray(userList) ? userList : (userList?.data ?? [])
+    const roleName = role.value?.name
+    const userList =
+      roleName != null && roleName !== ''
+        ? await admin
+            .listUsers({ roles: [roleName], per_page: '100' })
+            .catch(() => ({ items: [] }))
+        : { items: [] }
+    members.value = Array.isArray(userList) ? userList : (userList?.items ?? [])
   } catch (e) {
     showAppError(formatApiError(e))
   } finally {
