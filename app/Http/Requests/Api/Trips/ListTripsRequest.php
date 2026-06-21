@@ -23,7 +23,7 @@ class ListTripsRequest extends ApiFormRequest
                 $merge['is_urgent'] = null;
             }
         }
-        foreach (['status', 'trip_type', 'source_channel', 'paper_status', 'fleet_mode', 'exclude_trip_type'] as $key) {
+        foreach (['status', 'run_bucket', 'trip_type', 'source_channel', 'paper_status', 'fleet_mode', 'exclude_trip_type'] as $key) {
             if ($this->has($key) && $this->input($key) === '') {
                 $merge[$key] = null;
             }
@@ -41,6 +41,7 @@ class ListTripsRequest extends ApiFormRequest
     {
         return [
             'status' => ['nullable', 'string', 'max:50'],
+            'run_bucket' => ['nullable', Rule::in(['awaiting_dispatch', 'in_progress', 'completed', 'incident'])],
             'trip_type' => ['nullable', Rule::in(['door_to_door', 'point_to_point', 'business', 'cargo'])],
             'exclude_trip_type' => ['nullable', Rule::in(['door_to_door', 'point_to_point', 'business', 'cargo'])],
             'source_channel' => ['nullable', Rule::in(['portal', 'zalo', 'paper'])],

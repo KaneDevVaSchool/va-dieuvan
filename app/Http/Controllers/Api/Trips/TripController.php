@@ -40,7 +40,17 @@ class TripController extends Controller
      */
     protected function applyTripListFilters(Builder $q, array $data): void
     {
-        $q->when(isset($data['status']), fn (Builder $b) => $b->where('trips.status', $data['status']));
+        if (! empty($data['run_bucket'])) {
+            match ($data['run_bucket']) {
+                'awaiting_dispatch' => $q->whereIn('trips.status', ['pending', 'approved', 'assigned', 'driver_confirmed']),
+                'in_progress' => $q->where('trips.status', 'in_progress'),
+                'completed' => $q->where('trips.status', 'completed'),
+                'incident' => $q->where('trips.status', 'incident'),
+                default => null,
+            };
+        } else {
+            $q->when(isset($data['status']), fn (Builder $b) => $b->where('trips.status', $data['status']));
+        }
         $q->when(isset($data['from']), fn (Builder $b) => $b->where('trips.depart_at', '>=', Carbon::parse($data['from'])->startOfDay()));
         $q->when(isset($data['to']), fn (Builder $b) => $b->where('trips.depart_at', '<=', Carbon::parse($data['to'])->endOfDay()));
 
@@ -148,7 +158,7 @@ class TripController extends Controller
         $user = $request->user();
 
         $agg = $data;
-        unset($agg['trip_type'], $agg['page'], $agg['per_page']);
+        unset($agg['trip_type'], $agg['run_bucket'], $agg['page'], $agg['per_page']);
 
         $base = $this->newTripListBuilder($user);
         $this->applyTripListFilters($base, $agg);

@@ -1,383 +1,211 @@
 <template>
-  <div class="space-y-4 md:space-y-5">
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+  <div class="space-y-6">
+    <div class="flex flex-col gap-3 border-b border-slate-200/80 pb-6 lg:flex-row lg:items-end lg:justify-between">
       <div>
-        <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl md:text-2xl">
+        <h1 class="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">
           {{ pageTitle }}
         </h1>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ t('trips_page.hero_subtitle') }}</p>
       </div>
     </div>
 
-    <!-- KPI: 2 hàng × 4 card (loại chuyến / trạng thái vận hành) — không gồm hàng hóa -->
-    <div class="space-y-3 sm:space-y-4">
-      <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
-        <div
-          v-for="box in kpiBoxesRow1"
-          :key="box.key"
-          class="rounded-2xl border border-slate-200/90 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/50 sm:p-4"
-        >
-          <div class="flex min-w-0 items-center gap-3">
-            <div
-              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-              :class="box.iconWrap"
-            >
-              <component :is="box.icon" class="h-5 w-5" :class="box.iconClass" aria-hidden="true" />
-            </div>
-            <div class="min-w-0 flex-1">
-              <div class="text-xl font-bold tabular-nums text-slate-900 dark:text-white sm:text-2xl">
-                {{ statsLoading ? '…' : box.value }}
-              </div>
-              <div class="mt-0.5 text-xs font-medium leading-snug text-slate-600 dark:text-slate-400">
-                {{ box.label }}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
-        <div
-          v-for="box in kpiBoxesRow2"
-          :key="box.key"
-          class="rounded-2xl border border-slate-200/90 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/50 sm:p-4"
-        >
-          <div class="flex min-w-0 items-center gap-3">
-            <div
-              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-              :class="box.iconWrap"
-            >
-              <component :is="box.icon" class="h-5 w-5" :class="box.iconClass" aria-hidden="true" />
-            </div>
-            <div class="min-w-0 flex-1">
-              <div class="text-xl font-bold tabular-nums text-slate-900 dark:text-white sm:text-2xl">
-                {{ statsLoading ? '…' : box.value }}
-              </div>
-              <div class="mt-0.5 text-xs font-medium leading-snug text-slate-600 dark:text-slate-400">
-                {{ box.label }}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <TripsSummaryBar
+      :stats="stats"
+      :loading="statsLoading"
+      :trip-type="filters.trip_type"
+      :run-bucket="filters.run_bucket"
+      @quick-filter="onKpiQuickFilter"
+    />
 
-    <!-- Filters: wrapper z-index so dropdowns stack above the search card (sibling below in DOM) -->
-    <div class="relative z-40">
-      <AppFilterBar>
-        <div ref="tripsFilterBarRef" class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
-          <AppFilterFunnelMenu ref="filterMenuRef" :badge-count="activeFilterCount">
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              {{ t('trips_page.filter_menu_title') }}
-            </p>
-            <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
-              <li v-if="preset !== 'all'" class="flex justify-between gap-2">
-                <span class="text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.filter_period_label') }}</span>
-                <span class="max-w-[11rem] truncate text-right font-medium">{{ currentPresetLabel }}</span>
+    <div
+      ref="tripsDatagridRef"
+      class="overflow-visible rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40"
+    >
+      <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+        <div class="flex w-full min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
+          <div class="min-w-0 w-full basis-full lg:min-w-[10rem] lg:flex-1 lg:basis-auto">
+            <DatagridToolbarSearch
+              v-model="searchInput"
+              input-id="trips-list-search"
+              :placeholder="t('trips_page.search_placeholder')"
+              stretch
+              inline-actions
+              hide-label
+              input-height="h-10"
+              @enter="flushSearch"
+            />
+          </div>
+
+          <div class="flex shrink-0 items-center gap-2">
+            <FilterVisibilityDropdown
+              :open="showFilterPanelDd"
+              :title="t('trips_page.filter_show_controls_title')"
+              :hint="t('trips_page.filter_show_controls_hint')"
+              @close="closeFilterPanel"
+            >
+              <template #trigger>
+                <DatagridToolbarActionButton
+                  icon="filter"
+                  :active="showFilterPanelDd"
+                  test-id="trips-toolbar-filter"
+                  @click="openFilterPanel"
+                >
+                  {{ t('trips_page.toolbar_filter') }}
+                </DatagridToolbarActionButton>
+              </template>
+              <li v-for="fd in filterControlDefs" :key="'trips-vis-' + fd.key" class="flex items-start gap-2">
+                <input
+                  :id="`trips-filter-vis-${fd.key}`"
+                  v-model="visibleFilters[fd.key]"
+                  type="checkbox"
+                  class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-va-800 focus:ring-va-700/30 dark:border-slate-600"
+                  :data-testid="`trips-filter-vis-${fd.key}`"
+                />
+                <label
+                  :for="`trips-filter-vis-${fd.key}`"
+                  class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
+                >
+                  {{ fd.label }}
+                </label>
               </li>
-              <li v-if="hasDateRangeFilter" class="flex justify-between gap-2 tabular-nums">
-                <span class="text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.filter_dates_label') }}</span>
-                <span class="text-right font-medium">
-                  {{ rangeDisplayFormatted }}
-                  <span
-                    v-if="rangeValid && rangeDaySpan > 0"
-                    class="ml-1 text-xs text-violet-700 dark:text-violet-300"
-                  >
-                    ({{ t('dashboard_analytics.date_range_span', { n: rangeDaySpan }) }})
-                  </span>
-                </span>
-              </li>
-              <li v-for="(row, i) in activeFilterLines" :key="i" class="flex justify-between gap-2">
-                <span class="text-slate-500 dark:text-slate-400">{{ row.label }}</span>
-                <span class="max-w-[11rem] truncate text-right font-medium">{{ row.value }}</span>
-              </li>
-              <li v-if="filters.trip_type" class="flex justify-between gap-2">
-                <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_trip_type') }}</span>
-                <span class="font-medium">{{ labelTripType(filters.trip_type) }}</span>
-              </li>
-              <li v-if="filters.q" class="flex justify-between gap-2">
-                <span class="text-slate-500 dark:text-slate-400">{{ t('filter_bar.search') }}</span>
-                <span class="max-w-[11rem] truncate text-right font-medium" :title="filters.q">{{ filters.q }}</span>
-              </li>
-              <li v-if="filters.per_page !== 20" class="flex justify-between gap-2">
-                <span class="text-slate-500 dark:text-slate-400">{{ t('filter_bar.per_page') }}</span>
-                <span class="font-medium">{{ filters.per_page }}</span>
-              </li>
-              <li v-if="activeFilterCount === 0" class="text-slate-400 dark:text-slate-500">
-                {{ t('trips_page.filter_menu_empty') }}
-              </li>
-            </ul>
-            <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
-              <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
-                {{ t('trips_page.filter_show_controls_title') }}
-              </p>
-              <p class="mt-1 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
-                {{ t('trips_page.filter_show_controls_hint') }}
-              </p>
-              <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
-                <li v-for="opt in filterBarVisibilityOptions" :key="'vis-' + opt.id" class="flex items-start gap-2">
-                  <input
-                    :id="`trips-filter-vis-${opt.id}`"
-                    v-model="filterBarVisible[opt.id]"
-                    type="checkbox"
-                    class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900"
-                  />
-                  <label
-                    :for="`trips-filter-vis-${opt.id}`"
-                    class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
-                  >
-                    {{ t(opt.labelKey) }}
-                  </label>
-                </li>
-              </ul>
-            </div>
+            </FilterVisibilityDropdown>
+          </div>
+
+          <div class="ml-auto flex shrink-0 items-center">
             <button
               type="button"
-              class="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
-              @click="resetFilters(); closeFilterMenu()"
+              class="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-slate-800 dark:hover:bg-slate-800"
+              :title="t('trips_page.filter_clear_all')"
+              data-testid="trips-reset-filters"
+              @click="resetFilters"
             >
-              {{ t('trips_page.filter_clear_all') }}
+              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
+              <XMarkIcon class="h-3 w-3 text-rose-500" aria-hidden="true" />
             </button>
-          </AppFilterFunnelMenu>
-
-          <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
-
-          <button
-            type="button"
-            class="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
-            :title="t('trips_page.filter_clear')"
-            @click="resetFilters"
-          >
-            <span class="relative inline-flex">
-              <FunnelIcon class="h-5 w-5" />
-              <XMarkIcon
-                class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/40"
-              />
-            </span>
-          </button>
+          </div>
         </div>
+      </div>
 
-        <div
-          v-if="hasVisibleBarFilters"
-          class="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-2 border-t border-violet-100/80 pt-2 dark:border-violet-900/30 sm:gap-x-3"
-        >
+      <div
+        v-if="hasFilterRow"
+        class="grid grid-cols-1 gap-3 border-t border-slate-100 px-5 py-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 dark:border-slate-700"
+      >
+        <DatagridFilterField v-if="visibleFilters.trip_type">
           <select
-            v-if="filterBarVisible.period"
-            :value="preset"
-            class="h-9 max-w-[min(100%,12rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-            :class="preset === 'all' ? 'text-slate-600 dark:text-slate-400' : 'text-slate-900 dark:text-slate-100'"
-            :aria-label="t('dashboard_analytics.filter_period_label')"
-            @change="onPresetSelectChange($event.target.value)"
+            v-model="filters.trip_type"
+            :class="FILTER_CONTROL_CLASS"
+            :aria-label="t('requests_page.filter_trip_type')"
+            data-testid="trips-filter-trip-type"
+            @change="onTripTypeFilterChange"
           >
-            <option v-for="p in presetDefs" :key="p.id" :value="p.id">{{ p.label }}</option>
-          </select>
-
-          <AppFilterDropdown
-            v-if="filterBarVisible.dates"
-            :panel-title="t('dashboard_analytics.date_range_title')"
-            :show-chip-label="false"
-            :summary-text="filterDateSummary"
-            :active="hasDateRangeFilter"
-            :aria-label="t('dashboard_analytics.filter_dates_label')"
-            full-width-summary
-            panel-class="fixed inset-x-3 top-20 z-[200] max-h-[min(75vh,28rem)] w-auto overflow-y-auto overflow-x-hidden p-0 sm:absolute sm:inset-x-auto sm:left-0 sm:right-auto sm:top-[calc(100%+8px)] sm:z-[100] sm:max-h-[min(70vh,32rem)] sm:w-[20.5rem]"
-          >
-            <div
-              class="overflow-hidden rounded-2xl border border-violet-200/60 bg-gradient-to-b from-white via-white to-slate-50/95 shadow-2xl shadow-violet-500/20 ring-1 ring-slate-900/5 dark:border-violet-800/45 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 dark:shadow-black/50 dark:ring-slate-950/50 sm:shadow-xl sm:ring-0"
-            >
-              <div class="border-b border-violet-100/90 bg-gradient-to-r from-violet-50/80 to-indigo-50/40 px-3 py-2.5 dark:border-violet-900/40 dark:from-violet-950/40 dark:to-indigo-950/20">
-                <div class="flex items-start gap-2">
-                  <CalendarDaysIcon class="mt-0.5 h-5 w-5 shrink-0 text-violet-600 dark:text-violet-400" aria-hidden="true" />
-                  <div>
-                    <p class="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
-                      {{ t('dashboard_analytics.date_range_title') }}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div class="p-3">
-                <div class="flex flex-wrap gap-1.5">
-                  <button
-                    type="button"
-                    class="rounded-lg border border-slate-200/90 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:border-teal-300 hover:bg-teal-50/80 hover:text-teal-900 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:border-teal-700 dark:hover:bg-teal-950/40 dark:hover:text-teal-100"
-                    @click="onApplyPresetAllTime($event)"
-                  >
-                    {{ t('dashboard_analytics.preset_all_time') }}
-                  </button>
-                  <button
-                    v-for="chip in dateQuickChips"
-                    :key="chip.kind"
-                    type="button"
-                    class="rounded-lg border border-slate-200/90 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:border-teal-300 hover:bg-teal-50/80 hover:text-teal-900 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:border-teal-700 dark:hover:bg-teal-950/40 dark:hover:text-teal-100"
-                    @click="onApplyQuickDateRange(chip.kind, $event)"
-                  >
-                    {{ chip.label }}
-                  </button>
-                </div>
-                <div class="mt-3 space-y-3">
-                  <div class="rounded-xl border border-slate-200/80 bg-white/90 p-2.5 shadow-inner dark:border-slate-600 dark:bg-slate-950/50 dark:shadow-none">
-                    <label class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" for="trips-range-from">
-                      {{ t('dashboard_analytics.range_from') }}
-                    </label>
-                    <input
-                      id="trips-range-from"
-                      v-model="rangeFrom"
-                      type="date"
-                      :max="rangeTo || undefined"
-                      class="mt-1.5 h-10 w-full rounded-lg border border-slate-200/90 bg-slate-50/80 px-3 text-sm font-medium tabular-nums text-slate-900 shadow-sm focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/25 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-                      @change="onRangeFromChange"
-                    />
-                  </div>
-                  <div class="flex items-center justify-center gap-2 px-1">
-                    <span class="h-px flex-1 bg-gradient-to-r from-transparent via-violet-200 to-transparent dark:via-violet-800/60" />
-                    <span class="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-violet-800 dark:bg-violet-950/80 dark:text-violet-200">
-                      {{ rangeValid ? t('dashboard_analytics.date_range_span', { n: rangeDaySpan }) : '—' }}
-                    </span>
-                    <span class="h-px flex-1 bg-gradient-to-r from-transparent via-violet-200 to-transparent dark:via-violet-800/60" />
-                  </div>
-                  <div class="rounded-xl border border-slate-200/80 bg-white/90 p-2.5 shadow-inner dark:border-slate-600 dark:bg-slate-950/50 dark:shadow-none">
-                    <label class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" for="trips-range-to">
-                      {{ t('dashboard_analytics.range_to') }}
-                    </label>
-                    <input
-                      id="trips-range-to"
-                      v-model="rangeTo"
-                      type="date"
-                      :min="rangeFrom || undefined"
-                      class="mt-1.5 h-10 w-full rounded-lg border border-slate-200/90 bg-slate-50/80 px-3 text-sm font-medium tabular-nums text-slate-900 shadow-sm focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/25 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-                      @change="onRangeToChange"
-                    />
-                  </div>
-                </div>
-                <button
-                  v-if="preset === 'custom'"
-                  type="button"
-                  class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-teal-600 to-teal-500 px-3 py-2.5 text-sm font-semibold text-white shadow-md shadow-teal-600/25 transition hover:from-teal-700 hover:to-teal-600 disabled:opacity-50 dark:shadow-teal-900/30"
-                  :disabled="loading || statsLoading || !rangeValid"
-                  @click="applyCustomRange"
-                >
-                  {{ t('dashboard_analytics.apply_range') }}
-                </button>
-                <p v-if="!rangeValid" class="mt-2 text-center text-xs text-rose-600 dark:text-rose-400">
-                  {{ t('dashboard_analytics.range_invalid') }}
-                </p>
-              </div>
-            </div>
-          </AppFilterDropdown>
-
-          <select
-            v-for="fd in visibleDimensionFilters"
-            :key="fd.id"
-            :value="dimensionSelectValue(fd)"
-            class="h-9 max-w-[min(100%,12rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-            :class="dimensionSelectActive(fd) ? 'text-slate-900 dark:text-slate-100' : 'text-slate-600 dark:text-slate-400'"
-            :aria-label="fd.label"
-            @change="onDimensionSelect(fd, $event.target.value)"
-          >
-            <option v-for="opt in fd.options" :key="String(opt.value) + opt.label" :value="opt.value">
+            <option v-for="opt in tripTypeFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
               {{ opt.label }}
             </option>
           </select>
+        </DatagridFilterField>
 
-          <div
-            v-if="filterBarVisible.search"
-            class="relative min-w-[12rem] flex-1 sm:max-w-xs"
-          >
-            <MagnifyingGlassIcon
-              class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-              aria-hidden="true"
-            />
-            <input
-              v-model="searchInput"
-              type="search"
-              autocomplete="off"
-              class="h-9 w-full rounded-md border-0 bg-white/90 py-2 pl-8 pr-2 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-              :placeholder="t('trips_page.search_placeholder')"
-              :aria-label="t('trips_page.filter_vis_search')"
-              @keydown.enter.prevent="flushSearch"
-            />
-          </div>
+        <DatagridFilterField v-if="visibleFilters.date_range">
+          <FilterDatePicker
+            v-model="filters.from"
+            :placeholder="t('dashboard_analytics.range_from')"
+            :max-date="filters.to || null"
+            input-id="trips-filter-from"
+            @update:model-value="onFilterChange"
+          />
+        </DatagridFilterField>
 
+        <DatagridFilterField v-if="visibleFilters.date_range">
+          <FilterDatePicker
+            v-model="filters.to"
+            :placeholder="t('dashboard_analytics.range_to')"
+            :min-date="filters.from || null"
+            input-id="trips-filter-to"
+            @update:model-value="onFilterChange"
+          />
+        </DatagridFilterField>
+
+        <DatagridFilterField v-if="visibleFilters.run">
           <select
-            v-if="filterBarVisible.per_page"
+            :value="filters.run_bucket"
+            :class="FILTER_CONTROL_CLASS"
+            :aria-label="t('dashboard_analytics.filter_trip_run_status')"
+            data-testid="trips-filter-run"
+            @change="onRunBucketSelect($event.target.value)"
+          >
+            <option v-for="opt in runBucketFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+        </DatagridFilterField>
+
+        <DatagridFilterField v-if="visibleFilters.channel">
+          <select
+            v-model="filters.source_channel"
+            :class="FILTER_CONTROL_CLASS"
+            :aria-label="t('dashboard_analytics.filter_channel')"
+            data-testid="trips-filter-channel"
+            @change="onFilterChange"
+          >
+            <option v-for="opt in channelFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+        </DatagridFilterField>
+
+        <DatagridFilterField v-if="visibleFilters.paper">
+          <select
+            v-model="filters.paper_status"
+            :class="FILTER_CONTROL_CLASS"
+            :aria-label="t('dashboard_analytics.filter_paper')"
+            data-testid="trips-filter-paper"
+            @change="onFilterChange"
+          >
+            <option v-for="opt in paperFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+        </DatagridFilterField>
+
+        <DatagridFilterField v-if="visibleFilters.fleet">
+          <select
+            v-model="filters.fleet_mode"
+            :class="FILTER_CONTROL_CLASS"
+            :aria-label="t('dashboard_analytics.filter_fleet')"
+            data-testid="trips-filter-fleet"
+            @change="onFilterChange"
+          >
+            <option v-for="opt in fleetFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+        </DatagridFilterField>
+
+        <DatagridFilterField v-if="visibleFilters.urgent">
+          <select
+            :value="filters.is_urgent ? '1' : ''"
+            :class="FILTER_CONTROL_CLASS"
+            :aria-label="t('dashboard_analytics.filter_urgent')"
+            data-testid="trips-filter-urgent"
+            @change="onUrgentSelect($event.target.value)"
+          >
+            <option value="">{{ t('dashboard_analytics.filter_urgent') }}</option>
+            <option value="1">{{ t('dashboard_analytics.filter_urgent_only') }}</option>
+          </select>
+        </DatagridFilterField>
+
+        <DatagridFilterField v-if="visibleFilters.per_page">
+          <select
             v-model.number="filters.per_page"
-            class="h-9 max-w-[min(100%,9rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-            :class="filters.per_page !== 20 ? 'text-slate-900 dark:text-slate-100' : 'text-slate-600 dark:text-slate-400'"
+            :class="FILTER_CONTROL_CLASS"
             :aria-label="t('filter_bar.per_page')"
+            data-testid="trips-filter-per-page"
             @change="onFilterChange"
           >
             <option v-for="opt in perPageFilterOptions" :key="opt.value" :value="opt.value">
               {{ opt.label }}
             </option>
           </select>
-        </div>
-      </AppFilterBar>
-    </div>
-
-    <!-- Tabs (dạng tab bar) + tìm kiếm — z-0 để popover filter vẫn trên -->
-    <div class="relative z-0 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
-      <div class="border-b border-slate-200/90 dark:border-slate-700">
-        <nav
-          class="flex flex-nowrap gap-0 overflow-x-auto overscroll-x-contain scroll-smooth [-ms-overflow-style:none] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 dark:[&::-webkit-scrollbar-thumb]:bg-slate-600"
-          role="tablist"
-          :aria-label="t('trips_page.tabs_aria_label')"
-        >
-          <button
-            v-for="tab in typeTabs"
-            :key="tab.value === '' ? 'all' : tab.value"
-            type="button"
-            role="tab"
-            :aria-selected="filters.trip_type === tab.value"
-            class="relative flex min-h-[48px] shrink-0 items-center gap-2 border-b-2 px-3 py-2.5 text-left text-sm font-medium transition sm:min-h-[52px] sm:gap-2.5 sm:px-5 sm:py-3 sm:text-base"
-            :class="
-              filters.trip_type === tab.value
-                ? 'border-teal-600 text-teal-800 dark:border-teal-400 dark:text-teal-200'
-                : 'border-transparent text-slate-600 hover:border-slate-300 hover:text-slate-900 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:text-slate-100'
-            "
-            @click="setTripTypeTab(tab.value)"
-          >
-            <span class="whitespace-nowrap">{{ tab.label }}</span>
-            <span
-              class="text-sm font-semibold tabular-nums opacity-90 sm:text-base"
-              :class="filters.trip_type === tab.value ? 'text-teal-600 dark:text-teal-300' : 'text-slate-500 dark:text-slate-500'"
-            >
-              {{ tab.count }}
-            </span>
-          </button>
-        </nav>
-      </div>
-      <div
-        v-if="!filterBarVisible.search || !filterBarVisible.per_page"
-        class="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:gap-4 sm:p-4"
-      >
-        <div v-if="!filterBarVisible.search" class="relative min-w-0 flex-1 md:min-w-[12rem]">
-          <MagnifyingGlassIcon
-            class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
-            aria-hidden="true"
-          />
-          <input
-            v-model="searchInput"
-            type="search"
-            autocomplete="off"
-            class="h-11 w-full min-h-[44px] rounded-xl border border-slate-200 bg-slate-50/80 pl-10 pr-3 text-base text-slate-900 shadow-inner focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 sm:h-10 sm:min-h-0 sm:text-sm dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
-            :placeholder="t('trips_page.search_placeholder')"
-            @keydown.enter.prevent="flushSearch"
-          />
-        </div>
-        <label
-          v-if="!filterBarVisible.per_page"
-          class="flex min-h-[44px] shrink-0 items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-sm text-slate-600 sm:min-h-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 dark:border-slate-600 dark:bg-slate-800/50 dark:text-slate-400 sm:dark:bg-transparent"
-        >
-          <span class="whitespace-nowrap sm:text-sm">{{ t('filter_bar.per_page') }}</span>
-          <select
-            v-model.number="filters.per_page"
-            class="h-10 min-h-[44px] rounded-lg border border-slate-200 bg-white px-2 text-base font-medium sm:min-h-0 sm:h-9 sm:text-sm dark:border-slate-600 dark:bg-slate-900"
-            @change="onFilterChange"
-          >
-            <option :value="10">10</option>
-            <option :value="20">20</option>
-            <option :value="50">50</option>
-            <option :value="100">100</option>
-          </select>
-        </label>
+        </DatagridFilterField>
       </div>
     </div>
 
@@ -672,38 +500,34 @@
 </template>
 
 <script setup>
-import { computed, onActivated, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowTopRightOnSquareIcon,
   ArrowsRightLeftIcon,
-  BoltIcon,
-  BriefcaseIcon,
-  CalendarDaysIcon,
-  CheckCircleIcon,
-  ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ClockIcon,
-  ExclamationTriangleIcon,
   EyeIcon,
   FunnelIcon,
   XMarkIcon,
-  MagnifyingGlassIcon,
+  BriefcaseIcon,
   MapPinIcon,
   PhoneIcon,
   QueueListIcon,
   TruckIcon,
   UserPlusIcon,
 } from '@heroicons/vue/24/outline'
-import AppFilterBar from '../../components/filters/AppFilterBar.vue'
-import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
-import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vue'
+import TripsSummaryBar from '../../components/trips/TripsSummaryBar.vue'
+import DatagridToolbarSearch from '../../components/shared/ui/DatagridToolbarSearch.vue'
+import DatagridToolbarActionButton from '../../components/shared/ui/DatagridToolbarActionButton.vue'
+import DatagridFilterField from '../../components/shared/ui/DatagridFilterField.vue'
+import FilterVisibilityDropdown from '../../components/shared/ui/FilterVisibilityDropdown.vue'
+import FilterDatePicker from '../../components/shared/ui/FilterDatePicker.vue'
 import { getTripStats, listTrips } from '../../api/trips'
 import {
   labelPaperStatus,
-  labelRequestStatus,
   labelSourceChannel,
   labelTripStatus,
   labelTripType,
@@ -711,7 +535,7 @@ import {
 import { dispatchRequestEffectivePassengerCount } from '../../util/dispatchRequestPassengers'
 import { tripStatusAdminPillClass } from '../../constants/tripStatus'
 import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
-import { useFilterBarVisibility } from '../../composables/useFilterBarVisibility.js'
+import { useVisibleFilterControls } from '../../composables/useVisibleFilterControls.js'
 import { useVisiblePoll } from '../../composables/useDriverVisiblePoll'
 import { useAuthStore } from '../../store'
 import { buildStaffPrefixedPath as staffPath } from '../../config/dispatchWebBase'
@@ -739,45 +563,48 @@ const stats = ref({
 
 const searchInput = ref('')
 const searchDebounce = ref(null)
-const filterMenuRef = ref(null)
-const tripsFilterBarRef = ref(null)
-useDetailsAutoCloseWithin(tripsFilterBarRef)
+const tripsDatagridRef = ref(null)
+useDetailsAutoCloseWithin(tripsDatagridRef)
 
-const TRIPS_FILTER_BAR_VIS_IDS = [
-  'period',
-  'dates',
-  'run',
-  'channel',
-  'paper',
-  'fleet',
-  'urgent',
-  'per_page',
-  'search',
+const FILTER_CONTROL_CLASS =
+  'h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm focus:border-va-700 focus:outline-none focus:ring-2 focus:ring-va-700/15 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100'
+
+const TRIPS_FILTER_CONTROLS = [
+  { key: 'trip_type', label: '', default: false },
+  { key: 'date_range', label: '', default: false },
+  { key: 'run', label: '', default: false },
+  { key: 'channel', label: '', default: false },
+  { key: 'paper', label: '', default: false },
+  { key: 'fleet', label: '', default: false },
+  { key: 'urgent', label: '', default: false },
+  { key: 'per_page', label: '', default: false },
 ]
-const TRIPS_FILTER_BAR_VIS_DEFAULTS = Object.fromEntries(
-  TRIPS_FILTER_BAR_VIS_IDS.map((id) => [id, false]),
-)
 
 const {
-  visible: filterBarVisible,
-  resetVisibility: resetFilterBarVisibility,
-  hasVisibleOnBar: hasVisibleBarFilters,
-} = useFilterBarVisibility(TRIPS_FILTER_BAR_VIS_IDS, TRIPS_FILTER_BAR_VIS_DEFAULTS)
+  visibleFilters,
+  hasFilterRow,
+  showFilterPanelDd,
+  openFilterPanel,
+  closeFilterPanel,
+} = useVisibleFilterControls(TRIPS_FILTER_CONTROLS, 'va-dieuvan.trips.visible-filters.v1')
 
-const filterBarVisibilityOptions = computed(() =>
-  TRIPS_FILTER_BAR_VIS_IDS.map((id) => ({
-    id,
-    labelKey: `trips_page.filter_vis_${id}`,
+const FILTER_CONTROL_LABEL_KEYS = {
+  trip_type: 'requests_page.filter_trip_type',
+  date_range: 'trips_page.filter_vis_dates',
+  run: 'dashboard_analytics.filter_trip_run_status',
+  channel: 'dashboard_analytics.filter_channel',
+  paper: 'dashboard_analytics.filter_paper',
+  fleet: 'dashboard_analytics.filter_fleet',
+  urgent: 'dashboard_analytics.filter_urgent',
+  per_page: 'filter_bar.per_page',
+}
+
+const filterControlDefs = computed(() =>
+  TRIPS_FILTER_CONTROLS.map((fd) => ({
+    key: fd.key,
+    label: t(FILTER_CONTROL_LABEL_KEYS[fd.key] ?? fd.key),
   })),
 )
-
-function onTripsFilterBarEnter() {
-  resetFilterBarVisibility()
-}
-
-function closeFilterMenu() {
-  filterMenuRef.value?.close?.()
-}
 
 const perPageFilterOptions = computed(() => [
   { value: 10, label: '10' },
@@ -786,19 +613,9 @@ const perPageFilterOptions = computed(() => [
   { value: 100, label: '100' },
 ])
 
-const TRIP_STATUS_VALUES = [
-  'pending',
-  'approved',
-  'assigned',
-  'driver_confirmed',
-  'in_progress',
-  'completed',
-  'cancelled',
-  'incident',
-]
-
 const filters = reactive({
   trip_type: '',
+  run_bucket: '',
   status: '',
   source_channel: '',
   paper_status: '',
@@ -811,420 +628,84 @@ const filters = reactive({
   per_page: 20,
 })
 
-function ymd(d) {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
-}
-
-function subDays(d, n) {
-  const x = new Date(d)
-  x.setDate(x.getDate() - n)
-  return x
-}
-
-function startOfQuarter(d) {
-  const m = d.getMonth()
-  const q0 = Math.floor(m / 3) * 3
-  return new Date(d.getFullYear(), q0, 1)
-}
-
-const rangeFrom = ref('')
-const rangeTo = ref('')
-const preset = ref('all')
-
-const presetDefs = computed(() => [
-  { id: 'all', label: t('dashboard_analytics.preset_all_time') },
-  { id: 'month', label: t('dashboard_analytics.preset_month') },
-  { id: 'last30', label: t('dashboard_analytics.preset_last30') },
-  { id: 'last7', label: t('dashboard_analytics.preset_last7') },
-  { id: 'quarter', label: t('dashboard_analytics.preset_quarter') },
-  { id: 'custom', label: t('dashboard_analytics.preset_custom') },
-])
-
-const currentPresetLabel = computed(() => presetDefs.value.find((p) => p.id === preset.value)?.label ?? '')
-
 const rangeValid = computed(() => {
-  const from = rangeFrom.value
-  const to = rangeTo.value
+  const from = filters.from
+  const to = filters.to
   if (!from && !to) return true
   if (!from || !to) return false
   return from <= to
 })
 
-const hasDateRangeFilter = computed(() => !!(filters.from || filters.to))
-
-const rangeDaySpan = computed(() => {
-  if (!rangeFrom.value || !rangeTo.value || rangeFrom.value > rangeTo.value) return 0
-  const a = new Date(`${rangeFrom.value}T12:00:00`)
-  const b = new Date(`${rangeTo.value}T12:00:00`)
-  return Math.floor((b.getTime() - a.getTime()) / 86400000) + 1
-})
-
-function formatDisplayDate(iso) {
-  if (!iso) return '…'
-  const [y, m, d] = iso.split('-')
-  if (!y || !m || !d) return iso
-  return `${d}/${m}/${y}`
-}
-
-const rangeDisplayFormatted = computed(
-  () => `${formatDisplayDate(rangeFrom.value)} — ${formatDisplayDate(rangeTo.value)}`,
-)
-
-const rangeChipSummary = computed(() =>
-  hasDateRangeFilter.value ? rangeDisplayFormatted.value : t('dashboard_analytics.filter_all'),
-)
-
-const filterDateSummary = computed(() =>
-  hasDateRangeFilter.value ? rangeDisplayFormatted.value : t('dashboard_analytics.filter_dates_label'),
-)
-
-const dateQuickChips = computed(() => [
-  { kind: 'today', label: t('dashboard_analytics.date_range_quick_today') },
-  { kind: 'yesterday', label: t('dashboard_analytics.date_range_quick_yesterday') },
-  { kind: 'last7', label: t('dashboard_analytics.date_range_quick_last7') },
-  { kind: 'month', label: t('dashboard_analytics.date_range_quick_month') },
+const tripTypeFilterOptions = computed(() => [
+  { value: '', label: t('requests_page.filter_trip_type') },
+  { value: 'door_to_door', label: t('trips_page.tab_d2d') },
+  { value: 'point_to_point', label: t('trips_page.tab_p2p') },
+  { value: 'business', label: t('trips_page.tab_business') },
 ])
 
-function syncRangeForPreset(id) {
-  if (id === 'all') {
-    rangeFrom.value = ''
-    rangeTo.value = ''
-    return
-  }
-  const now = new Date()
-  const end = ymd(now)
-  if (id === 'month') {
-    rangeFrom.value = ymd(new Date(now.getFullYear(), now.getMonth(), 1))
-    rangeTo.value = end
-  } else if (id === 'last30') {
-    rangeFrom.value = ymd(subDays(now, 29))
-    rangeTo.value = end
-  } else if (id === 'last7') {
-    rangeFrom.value = ymd(subDays(now, 6))
-    rangeTo.value = end
-  } else if (id === 'quarter') {
-    rangeFrom.value = ymd(startOfQuarter(now))
-    rangeTo.value = end
-  }
-}
-
-function closeParentDetails(ev) {
-  const el = ev?.currentTarget
-  if (!el || typeof el.closest !== 'function') return
-  const d = el.closest('details')
-  if (d) d.open = false
-}
-
-function onPresetSelectChange(id) {
-  applyPreset(id)
-}
-
-function onApplyPresetAllTime(ev) {
-  applyPreset('all')
-  closeParentDetails(ev)
-}
-
-function onApplyQuickDateRange(kind, ev) {
-  applyQuickDateRange(kind)
-  closeParentDetails(ev)
-}
-
-function dimensionSelectValue(fd) {
-  if (fd.id === 'urgent') return filters.is_urgent ? '1' : ''
-  if (fd.id === 'run') return filters.status
-  if (fd.id === 'channel') return filters.source_channel
-  if (fd.id === 'paper') return filters.paper_status
-  if (fd.id === 'fleet') return filters.fleet_mode
-  return ''
-}
-
-function onDimensionSelect(fd, raw) {
-  const value = raw === '' || raw == null ? '' : String(raw)
-  fd.pick(value)
-}
-
-function applyPreset(id) {
-  preset.value = id
-  if (id === 'all' || id !== 'custom') {
-    syncRangeForPreset(id)
-    syncFiltersFromRange()
-    onFilterChange()
-  }
-}
-
-function applyQuickDateRange(kind) {
-  const now = new Date()
-  const end = ymd(now)
-  if (kind === 'today') {
-    rangeFrom.value = end
-    rangeTo.value = end
-  } else if (kind === 'yesterday') {
-    const y = ymd(subDays(now, 1))
-    rangeFrom.value = y
-    rangeTo.value = y
-  } else if (kind === 'last7') {
-    rangeFrom.value = ymd(subDays(now, 6))
-    rangeTo.value = end
-  } else if (kind === 'month') {
-    rangeFrom.value = ymd(new Date(now.getFullYear(), now.getMonth(), 1))
-    rangeTo.value = end
-  }
-  preset.value = 'custom'
-  syncFiltersFromRange()
-  onFilterChange()
-}
-
-function onRangeFromChange() {
-  if (rangeFrom.value && rangeTo.value && rangeFrom.value > rangeTo.value) {
-    rangeTo.value = rangeFrom.value
-  }
-  preset.value = 'custom'
-  syncFiltersFromRange()
-  onFilterChange()
-}
-
-function onRangeToChange() {
-  if (rangeFrom.value && rangeTo.value && rangeFrom.value > rangeTo.value) {
-    rangeFrom.value = rangeTo.value
-  }
-  preset.value = 'custom'
-  syncFiltersFromRange()
-  onFilterChange()
-}
-
-function applyCustomRange() {
-  syncFiltersFromRange()
-  onFilterChange()
-}
-
-function syncFiltersFromRange() {
-  filters.from = rangeFrom.value
-  filters.to = rangeTo.value
-}
-
-const runStatusOptions = computed(() => [
+const runBucketFilterOptions = computed(() => [
   { value: '', label: t('dashboard_analytics.filter_trip_run_status') },
-  ...TRIP_STATUS_VALUES.map((s) => ({ value: s, label: labelTripStatus(s) })),
+  { value: 'awaiting_dispatch', label: t('trips_page.kpi_awaiting_dispatch') },
+  { value: 'in_progress', label: t('trips_page.kpi_running') },
+  { value: 'completed', label: t('trips_page.kpi_completed') },
+  { value: 'incident', label: t('trips_page.kpi_issues') },
 ])
 
-const dimensionFilters = computed(() => {
-  const channelOpts = [
-    { value: '', label: t('dashboard_analytics.filter_channel') },
-    { value: 'portal', label: t('labels.source_channel.portal') },
-    { value: 'zalo', label: t('labels.source_channel.zalo') },
-    { value: 'paper', label: t('labels.source_channel.paper') },
-  ]
-  const paperOpts = [
-    { value: '', label: t('dashboard_analytics.filter_paper') },
-    { value: 'pending', label: t('labels.paper_status.pending') },
-    { value: 'received', label: t('labels.paper_status.received') },
-    { value: 'digitally_signed', label: t('labels.paper_status.digitally_signed') },
-  ]
-  const fleetOpts = [
-    { value: '', label: t('dashboard_analytics.filter_fleet') },
-    { value: 'internal', label: t('dashboard_analytics.fleet_internal') },
-    { value: 'vendor_hire', label: t('dashboard_analytics.fleet_vendor_hire') },
-    { value: 'taxi', label: t('dashboard_analytics.fleet_taxi') },
-    { value: 'unspecified', label: t('dashboard_analytics.fleet_unspecified') },
-  ]
-  return [
-    {
-      id: 'run',
-      label: t('dashboard_analytics.filter_trip_run_status'),
-      options: runStatusOptions.value,
-      isSelected: (v) => (v === '' ? !filters.status : filters.status === v),
-      pick: (v) => {
-        filters.status = v || ''
-        onFilterChange()
-      },
-    },
-    {
-      id: 'channel',
-      label: t('dashboard_analytics.filter_channel'),
-      options: channelOpts,
-      isSelected: (v) => (v === '' ? !filters.source_channel : filters.source_channel === v),
-      pick: (v) => {
-        filters.source_channel = v || ''
-        onFilterChange()
-      },
-    },
-    {
-      id: 'paper',
-      label: t('dashboard_analytics.filter_paper'),
-      options: paperOpts,
-      isSelected: (v) => (v === '' ? !filters.paper_status : filters.paper_status === v),
-      pick: (v) => {
-        filters.paper_status = v || ''
-        onFilterChange()
-      },
-    },
-    {
-      id: 'fleet',
-      label: t('dashboard_analytics.filter_fleet'),
-      options: fleetOpts,
-      isSelected: (v) => (v === '' ? !filters.fleet_mode : filters.fleet_mode === v),
-      pick: (v) => {
-        filters.fleet_mode = v || ''
-        onFilterChange()
-      },
-    },
-    {
-      id: 'urgent',
-      label: t('dashboard_analytics.filter_urgent'),
-      options: [
-        { value: '', label: t('dashboard_analytics.filter_urgent') },
-        { value: '1', label: t('dashboard_analytics.filter_urgent_only') },
-      ],
-      isSelected: (v) => (v === '' ? !filters.is_urgent : v === '1' && filters.is_urgent),
-      pick: (v) => {
-        filters.is_urgent = v === '1'
-        onFilterChange()
-      },
-    },
-  ]
-})
+const channelFilterOptions = computed(() => [
+  { value: '', label: t('dashboard_analytics.filter_channel') },
+  { value: 'portal', label: t('labels.source_channel.portal') },
+  { value: 'zalo', label: t('labels.source_channel.zalo') },
+  { value: 'paper', label: t('labels.source_channel.paper') },
+])
 
-const visibleDimensionFilters = computed(() =>
-  dimensionFilters.value.filter((fd) => filterBarVisible[fd.id] !== false),
-)
+const paperFilterOptions = computed(() => [
+  { value: '', label: t('dashboard_analytics.filter_paper') },
+  { value: 'pending', label: t('labels.paper_status.pending') },
+  { value: 'received', label: t('labels.paper_status.received') },
+  { value: 'digitally_signed', label: t('labels.paper_status.digitally_signed') },
+])
 
-function dimensionSelectActive(fd) {
-  const v = dimensionSelectValue(fd)
-  return v !== '' && v != null
+const fleetFilterOptions = computed(() => [
+  { value: '', label: t('dashboard_analytics.filter_fleet') },
+  { value: 'internal', label: t('dashboard_analytics.fleet_internal') },
+  { value: 'vendor_hire', label: t('dashboard_analytics.fleet_vendor_hire') },
+  { value: 'taxi', label: t('dashboard_analytics.fleet_taxi') },
+  { value: 'unspecified', label: t('dashboard_analytics.fleet_unspecified') },
+])
+
+function onKpiQuickFilter(payload) {
+  const { kind, value } = payload
+  if (kind === 'reset') {
+    filters.trip_type = ''
+    filters.run_bucket = ''
+    filters.status = ''
+  } else if (kind === 'trip_type') {
+    filters.run_bucket = ''
+    filters.status = ''
+    filters.trip_type = filters.trip_type === value ? '' : value
+  } else if (kind === 'run') {
+    filters.trip_type = ''
+    filters.status = ''
+    filters.run_bucket = filters.run_bucket === value ? '' : value
+  }
+  onFilterChange()
 }
 
-const activeFilterLines = computed(() => {
-  const rows = []
-  if (filters.status) {
-    rows.push({ label: t('dashboard_analytics.filter_trip_run_status'), value: labelTripStatus(filters.status) })
-  }
-  if (filters.source_channel) {
-    rows.push({ label: t('dashboard_analytics.filter_channel'), value: t(`labels.source_channel.${filters.source_channel}`) })
-  }
-  if (filters.paper_status) {
-    rows.push({ label: t('dashboard_analytics.filter_paper'), value: t(`labels.paper_status.${filters.paper_status}`) })
-  }
-  if (filters.fleet_mode) {
-    const map = {
-      internal: t('dashboard_analytics.fleet_internal'),
-      vendor_hire: t('dashboard_analytics.fleet_vendor_hire'),
-      taxi: t('dashboard_analytics.fleet_taxi'),
-      unspecified: t('dashboard_analytics.fleet_unspecified'),
-    }
-    rows.push({ label: t('dashboard_analytics.filter_fleet'), value: map[filters.fleet_mode] ?? filters.fleet_mode })
-  }
-  if (filters.is_urgent) {
-    rows.push({ label: t('dashboard_analytics.filter_urgent'), value: t('dashboard_analytics.filter_urgent_only') })
-  }
-  return rows
-})
+function onTripTypeFilterChange() {
+  filters.run_bucket = ''
+  onFilterChange()
+}
 
-const activeFilterCount = computed(() => {
-  let n = 0
-  if (hasDateRangeFilter.value) n++
-  if (preset.value !== 'all' && preset.value !== 'custom') n++
-  if (filters.status) n++
-  if (filters.source_channel) n++
-  if (filters.paper_status) n++
-  if (filters.fleet_mode) n++
-  if (filters.is_urgent) n++
-  if (filters.trip_type) n++
-  if (filters.q) n++
-  if (filters.per_page !== 20) n++
-  return n
-})
+function onRunBucketSelect(raw) {
+  filters.run_bucket = raw || ''
+  filters.status = ''
+  onFilterChange()
+}
 
-const byType = computed(() => stats.value.by_trip_type ?? {})
-
-const typeTabs = computed(() => {
-  const bt = byType.value
-  const total = stats.value.total ?? 0
-  return [
-    { value: '', label: t('trips_page.tab_all'), count: total },
-    { value: 'door_to_door', label: t('trips_page.tab_d2d'), count: bt.door_to_door ?? 0 },
-    { value: 'point_to_point', label: t('trips_page.tab_p2p'), count: bt.point_to_point ?? 0 },
-    { value: 'business', label: t('trips_page.tab_business'), count: bt.business ?? 0 },
-  ]
-})
-
-const kpiBoxesRow1 = computed(() => {
-  const bt = byType.value
-  return [
-    {
-      key: 'total',
-      label: t('trips_page.kpi_total'),
-      value: stats.value.total ?? 0,
-      icon: QueueListIcon,
-      iconWrap: 'bg-slate-100 dark:bg-slate-800',
-      iconClass: 'text-slate-600 dark:text-slate-300',
-    },
-    {
-      key: 'd2d',
-      label: t('trips_page.kpi_d2d'),
-      value: bt.door_to_door ?? 0,
-      icon: TruckIcon,
-      iconWrap: 'bg-sky-100 dark:bg-sky-950/50',
-      iconClass: 'text-sky-600 dark:text-sky-400',
-    },
-    {
-      key: 'p2p',
-      label: t('trips_page.kpi_p2p'),
-      value: bt.point_to_point ?? 0,
-      icon: MapPinIcon,
-      iconWrap: 'bg-emerald-100 dark:bg-emerald-950/50',
-      iconClass: 'text-emerald-600 dark:text-emerald-400',
-    },
-    {
-      key: 'biz',
-      label: t('trips_page.kpi_business'),
-      value: bt.business ?? 0,
-      icon: BriefcaseIcon,
-      iconWrap: 'bg-amber-100 dark:bg-amber-950/50',
-      iconClass: 'text-amber-600 dark:text-amber-400',
-    },
-  ]
-})
-
-const kpiBoxesRow2 = computed(() => {
-  const br = stats.value.by_run ?? {}
-  return [
-    {
-      key: 'awaiting',
-      label: t('trips_page.kpi_awaiting_dispatch'),
-      value: br.awaiting_dispatch ?? 0,
-      icon: ClockIcon,
-      iconWrap: 'bg-violet-100 dark:bg-violet-950/50',
-      iconClass: 'text-violet-600 dark:text-violet-400',
-    },
-    {
-      key: 'running',
-      label: t('trips_page.kpi_running'),
-      value: br.in_progress ?? 0,
-      icon: BoltIcon,
-      iconWrap: 'bg-teal-100 dark:bg-teal-950/50',
-      iconClass: 'text-teal-600 dark:text-teal-400',
-    },
-    {
-      key: 'done',
-      label: t('trips_page.kpi_completed'),
-      value: br.completed ?? 0,
-      icon: CheckCircleIcon,
-      iconWrap: 'bg-emerald-100 dark:bg-emerald-950/50',
-      iconClass: 'text-emerald-600 dark:text-emerald-400',
-    },
-    {
-      key: 'issue',
-      label: t('trips_page.kpi_issues'),
-      value: br.incident ?? stats.value.incident ?? 0,
-      icon: ExclamationTriangleIcon,
-      iconWrap: 'bg-rose-100 dark:bg-rose-950/50',
-      iconClass: 'text-rose-600 dark:text-rose-400',
-    },
-  ]
-})
+function onUrgentSelect(raw) {
+  filters.is_urgent = raw === '1'
+  onFilterChange()
+}
 
 const canAssignTrip = computed(() => auth.hasPermission('trip.assign'))
 
@@ -1370,22 +851,22 @@ function needsAssign(trip) {
   return !trip.driver_id && !['completed', 'cancelled'].includes(trip.status)
 }
 
-function setTripTypeTab(v) {
-  filters.trip_type = v
-  onFilterChange()
-}
-
 function applyStatusFromRoute() {
   const s = route.query.status
-  filters.status = typeof s === 'string' && s ? s : ''
+  if (typeof s === 'string' && s) {
+    filters.status = s
+    filters.run_bucket = ''
+  } else if (!route.query.status) {
+    filters.status = ''
+  }
 }
 
 function listParams() {
-  syncFiltersFromRange()
   const p = {
     exclude_trip_type: 'cargo',
     trip_type: filters.trip_type || undefined,
-    status: filters.status || undefined,
+    run_bucket: filters.run_bucket || undefined,
+    status: filters.run_bucket ? undefined : filters.status || undefined,
     source_channel: filters.source_channel || undefined,
     paper_status: filters.paper_status || undefined,
     fleet_mode: filters.fleet_mode || undefined,
@@ -1405,6 +886,7 @@ function listParams() {
 function statsParams() {
   const p = listParams()
   delete p.trip_type
+  delete p.run_bucket
   delete p.page
   delete p.per_page
   return p
@@ -1447,20 +929,20 @@ function onFilterChange() {
 
 function resetFilters() {
   filters.status = ''
+  filters.run_bucket = ''
   filters.source_channel = ''
   filters.paper_status = ''
   filters.is_urgent = false
   filters.fleet_mode = ''
   filters.trip_type = ''
+  filters.from = ''
+  filters.to = ''
   filters.q = ''
   searchInput.value = ''
   filters.per_page = 20
   filters.page = 1
-  preset.value = 'all'
-  syncRangeForPreset('all')
-  syncFiltersFromRange()
+  closeFilterPanel()
   applyStatusFromRoute()
-  closeFilterMenu()
   reloadStats()
   reload()
 }
@@ -1485,7 +967,7 @@ watch(searchInput, () => {
       filters.q = next
       onFilterChange()
     }
-  }, 320)
+  }, 350)
 })
 
 const { start: startTripsListPoll } = useVisiblePoll(
@@ -1507,16 +989,9 @@ watch(
 )
 
 onMounted(() => {
-  onTripsFilterBarEnter()
-  syncRangeForPreset('all')
-  syncFiltersFromRange()
   applyStatusFromRoute()
   reloadStats()
   reload()
   startTripsListPoll()
-})
-
-onActivated(() => {
-  onTripsFilterBarEnter()
 })
 </script>

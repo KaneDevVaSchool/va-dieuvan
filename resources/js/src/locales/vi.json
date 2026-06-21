@@ -2112,7 +2112,16 @@
         "filter_vis_fleet": "Nguồn xe",
         "filter_vis_urgent": "Ưu tiên gấp",
         "filter_vis_per_page": "Số dòng/trang",
-        "filter_vis_search": "Tìm trong danh sách"
+        "filter_vis_search": "Tìm trong danh sách",
+        "toolbar_filter": "Lọc",
+        "kpi_stats_eyebrow": "THỐNG KÊ",
+        "kpi_strip_aria": "Thống kê chuyến đi",
+        "kpi_strip_overview": "Tổng quan loại chuyến & vận hành",
+        "kpi_strip_hint": "Thẻ viền nét đứt — bấm lọc nhanh",
+        "kpi_total_sub": "Trong phạm vi bộ lọc hiện tại",
+        "kpi_share_of_total": "{pct}% tổng chuyến",
+        "kpi_action_required": "Cần xử lý",
+        "kpi_ops_ok": "Không có sự cố"
     },
     "reports_page": {
         "hero_title": "Báo cáo & phân tích",

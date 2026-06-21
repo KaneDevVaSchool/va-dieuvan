@@ -2362,7 +2362,16 @@
         "filter_vis_fleet": "Fleet source",
         "filter_vis_urgent": "Urgent only",
         "filter_vis_per_page": "Rows per page",
-        "filter_vis_search": "In-list search"
+        "filter_vis_search": "In-list search",
+        "toolbar_filter": "Filter",
+        "kpi_stats_eyebrow": "STATISTICS",
+        "kpi_strip_aria": "Trip statistics",
+        "kpi_strip_overview": "Trip type & operations overview",
+        "kpi_strip_hint": "Dashed cards — click to quick-filter the list",
+        "kpi_total_sub": "Within current filters",
+        "kpi_share_of_total": "{pct}% of total trips",
+        "kpi_action_required": "Action required",
+        "kpi_ops_ok": "No incidents"
     },
     "reports_page": {
         "hero_title": "Reporting & analytics",
