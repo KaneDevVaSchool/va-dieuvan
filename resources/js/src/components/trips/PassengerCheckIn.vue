@@ -89,7 +89,7 @@
                                     icon="filter"
                                     :active="showFilterPanelDd"
                                     test-id="trip-passengers-toolbar-filter"
-                                    @click="openFilterPanel"
+                                    @click="openFilterPanel()"
                                 >
                                     {{ t('trip_detail.passengers.toolbar_filter') }}
                                 </DatagridToolbarActionButton>
@@ -271,6 +271,9 @@
                         <th scope="col" class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-300">
                             {{ t("trip_detail.passengers.col_name") }}
                         </th>
+                        <th v-if="hasLegs" scope="col" class="min-w-[9rem] px-3 py-2.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-300">
+                            {{ t("trip_detail.passengers.col_leg") }}
+                        </th>
                         <th scope="col" class="min-w-[9rem] max-w-[220px] px-3 py-2.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-300">
                             {{ t("trip_detail.passengers.col_contact") }}
                         </th>
@@ -364,6 +367,31 @@
                                         <div class="truncate text-[11px] text-slate-400">{{ item.row.roleLabel }}</div>
                                     </div>
                                 </div>
+                            </td>
+
+                            <!-- Chặng -->
+                            <td v-if="hasLegs" class="min-w-[9rem] px-3 py-2.5 align-top">
+                                <select
+                                    v-if="editingKey === item.row.passengerKey && editDraft && item.row.editMeta?.kind === 'named_tp'"
+                                    v-model="editDraft.leg_key"
+                                    class="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                                    :aria-label="t('trip_detail.passengers.col_leg')"
+                                    @click.stop
+                                >
+                                    <option value="">{{ t("trip_detail.passengers.leg_unassigned") }}</option>
+                                    <option v-for="opt in legOptions" :key="opt.key" :value="opt.key">
+                                        {{ opt.label }}
+                                    </option>
+                                </select>
+                                <span
+                                    v-else-if="item.row.legLabel"
+                                    class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                                >
+                                    {{ item.row.legLabel }}
+                                </span>
+                                <span v-else class="text-[11px] italic text-slate-400 dark:text-slate-500">
+                                    {{ t("trip_detail.passengers.leg_unassigned") }}
+                                </span>
                             </td>
 
                             <!-- Contact -->
@@ -661,6 +689,13 @@
                         <section>
                             <h4 class="mb-2 text-[11px] font-bold uppercase tracking-wide text-slate-400">{{ t("trip_detail.passengers.drawer.section_travel") }}</h4>
                             <dl class="space-y-2 text-sm">
+                                <div v-if="hasLegs" class="flex items-start justify-between gap-3">
+                                    <dt class="shrink-0 text-slate-500 dark:text-slate-400">{{ t("trip_detail.passengers.col_leg") }}</dt>
+                                    <dd class="min-w-0 text-right text-slate-700 dark:text-slate-200">
+                                        <span v-if="drawerRow.legLabel">{{ drawerRow.legLabel }}</span>
+                                        <span v-else class="italic text-slate-400 dark:text-slate-500">{{ t("trip_detail.passengers.leg_unassigned") }}</span>
+                                    </dd>
+                                </div>
                                 <div class="flex items-start justify-between gap-3">
                                     <dt class="shrink-0 text-slate-500 dark:text-slate-400">{{ t("trip_detail.passengers.col_pickup") }}</dt>
                                     <dd class="min-w-0 text-right text-slate-700 dark:text-slate-200">
@@ -941,6 +976,8 @@ export type PassengerRow = {
     contact: string;
     notes: string;
     pickupAddress?: string;
+    legKey?: string;
+    legLabel?: string;
     flagWheelchair?: boolean;
     flagAllergy?: boolean;
     editMeta?: PassengerEditMeta | null;
@@ -952,6 +989,8 @@ const props = defineProps<{
     tripId: number;
     trip: Record<string, unknown> | null;
     rows: PassengerRow[];
+    /** Các chặng để gán hành khách (chỉ chuyến nhiều chặng). */
+    legs?: { key: string; label: string }[];
     /** Số khách thống nhất (yêu cầu / lịch trình). */
     requestPassengerCount?: number;
     canCheckIn: boolean;
@@ -1010,6 +1049,11 @@ const {
 /** Trung tâm điều hành (KPI/trạng thái/bulk/drawer) chỉ bật khi cho phép check-in. */
 const opsMode = computed(() => props.canCheckIn);
 
+/** Có danh sách chặng để gán/hiển thị (chuyến nhiều chặng). */
+const legOptions = computed(() => props.legs ?? []);
+const hasLegs = computed(() => legOptions.value.length > 0);
+const NO_LEG_KEY = "__no_leg__";
+
 const requestPassengerCount = computed(() => props.requestPassengerCount ?? 0);
 
 const displayPassengerTotal = computed(() => {
@@ -1032,7 +1076,7 @@ const statusFilterSelect = computed({
 const passengerSearch = ref("");
 const page = ref(1);
 const pageSize = ref(10);
-const viewMode = ref<"table" | "status" | "pickup">("table");
+const viewMode = ref<"table" | "status" | "pickup" | "leg">("table");
 const drawerKey = ref<string | null>(null);
 
 const busyKey = ref<string | null>(null);
@@ -1146,11 +1190,18 @@ const boardedPct = computed(() => {
     return Math.round((boardedCount.value / total) * 100);
 });
 
-const viewModes = computed(() => [
-    { key: "table" as const, label: t("trip_detail.passengers.view.table") },
-    { key: "status" as const, label: t("trip_detail.passengers.view.status") },
-    { key: "pickup" as const, label: t("trip_detail.passengers.view.pickup") },
-]);
+type ViewModeKey = "table" | "status" | "pickup" | "leg";
+const viewModes = computed(() => {
+    const modes: { key: ViewModeKey; label: string }[] = [
+        { key: "table", label: t("trip_detail.passengers.view.table") },
+        { key: "status", label: t("trip_detail.passengers.view.status") },
+        { key: "pickup", label: t("trip_detail.passengers.view.pickup") },
+    ];
+    if (hasLegs.value) {
+        modes.push({ key: "leg", label: t("trip_detail.passengers.view.leg") });
+    }
+    return modes;
+});
 
 const bulkStatusActions = computed(() =>
     (["onboard", "dropped_off", "absent"] as PassengerStatusKey[]).map((status) => {
@@ -1176,7 +1227,7 @@ const filteredRows = computed(() => {
     const q = passengerSearch.value.trim().toLowerCase();
     if (!q) return base;
     return base.filter((row) =>
-        [row.name, row.contact, row.notes, row.pickupAddress]
+        [row.name, row.contact, row.notes, row.pickupAddress, row.legLabel]
             .join(" ")
             .toLowerCase()
             .includes(q),
@@ -1225,6 +1276,16 @@ const renderItems = computed((): RenderItem[] => {
             const s = statusOf(row.passengerKey);
             ensure(s, t(`trip_detail.passengers.status.${s}`)).rows.push(row);
         }
+    } else if (viewMode.value === "leg") {
+        for (const opt of legOptions.value) ensure(opt.key, opt.label);
+        for (const row of filteredRows.value) {
+            const key = (row.legKey ?? "").trim();
+            if (key) {
+                ensure(key, row.legLabel || key).rows.push(row);
+            } else {
+                ensure(NO_LEG_KEY, t("trip_detail.passengers.leg_unassigned")).rows.push(row);
+            }
+        }
     } else {
         for (const row of filteredRows.value) {
             const raw = (row.pickupAddress ?? "").trim();
@@ -1244,6 +1305,7 @@ const renderItems = computed((): RenderItem[] => {
 
 const tableColSpan = computed(() => {
     let n = 3; // name, contact, notes
+    if (hasLegs.value) n += 1; // chặng
     if (opsMode.value) n += 4; // select, pickup, status, board-time
     if (showActionsCol.value) n += 1;
     return n;
@@ -1531,6 +1593,7 @@ function exportCsv(): void {
     if (!list.length) return;
     const head = [
         t("trip_detail.passengers.col_name"),
+        ...(hasLegs.value ? [t("trip_detail.passengers.col_leg")] : []),
         t("trip_detail.passengers.col_contact"),
         t("trip_detail.passengers.col_notes"),
         t("trip_detail.passengers.csv_pickup"),
@@ -1543,6 +1606,7 @@ function exportCsv(): void {
         lines.push(
             [
                 csvEscapeCell(row.name),
+                ...(hasLegs.value ? [csvEscapeCell(row.legLabel ?? "")] : []),
                 csvEscapeCell(row.contact),
                 csvEscapeCell(row.notes),
                 csvEscapeCell(row.pickupAddress ?? ""),

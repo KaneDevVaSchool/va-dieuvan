@@ -15,6 +15,10 @@ const props = defineProps({
   title: { type: String, required: true },
   hint: { type: String, default: '' },
   activeCardKey: { type: String, default: '' },
+  /** Mặc định cỡ số KPI (card.displayClass ghi đè). */
+  valueDisplayClass: { type: String, default: 'text-2xl' },
+  /** Thẻ gọn — số nhỏ hơn, icon nhỏ, chiều cao thấp (vd. 6 cột tài chính). */
+  compact: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['card-action'])
@@ -80,8 +84,9 @@ function valueClass(card) {
         v-for="card in cards"
         :key="card.key"
         :type="isInteractive(card) ? 'button' : undefined"
-        class="kpi-card group relative min-h-[6.75rem] w-full"
+        class="kpi-card group relative w-full"
         :class="[
+          compact ? 'min-h-[5rem]' : 'min-h-[6.75rem]',
           toneClass[card.tone] || toneClass.brand,
           isInteractive(card) ? 'kpi-card--interactive' : 'kpi-card--static',
           isActive(card) ? 'kpi-card--active' : '',
@@ -98,7 +103,15 @@ function valueClass(card) {
         <div class="relative flex items-start justify-between gap-2">
           <div class="min-w-0 flex-1">
             <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ card.label }}</p>
-            <p class="mt-1 tabular-nums font-semibold" :class="[card.displayClass || 'text-2xl', valueClass(card)]">
+            <p
+              class="mt-1 tabular-nums font-semibold"
+              :class="[
+                compact
+                  ? 'truncate text-xs leading-snug sm:text-sm'
+                  : card.displayClass || valueDisplayClass,
+                valueClass(card),
+              ]"
+            >
               {{ card.display }}
             </p>
             <p v-if="card.sub" class="mt-0.5 text-[11px] leading-snug text-slate-500">{{ card.sub }}</p>
@@ -117,10 +130,13 @@ function valueClass(card) {
           </div>
           <div
             v-if="card.icon"
-            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ring-1"
-            :class="iconToneClass[card.tone] || iconToneClass.brand"
+            class="flex shrink-0 items-center justify-center rounded-lg ring-1"
+            :class="[
+              compact ? 'h-8 w-8' : 'h-10 w-10',
+              iconToneClass[card.tone] || iconToneClass.brand,
+            ]"
           >
-            <component :is="card.icon" class="h-5 w-5" aria-hidden="true" />
+            <component :is="card.icon" :class="compact ? 'h-4 w-4' : 'h-5 w-5'" aria-hidden="true" />
           </div>
         </div>
 

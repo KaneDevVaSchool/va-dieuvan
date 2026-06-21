@@ -3833,7 +3833,8 @@
                 "aria": "Đổi cách hiển thị danh sách",
                 "table": "Bảng",
                 "status": "Theo trạng thái",
-                "pickup": "Theo điểm đón"
+                "pickup": "Theo điểm đón",
+                "leg": "Theo chặng"
             },
             "drawer": {
                 "close": "Đóng",
@@ -3848,6 +3849,9 @@
             "col_status": "Trạng thái",
             "col_pickup": "Điểm đón",
             "col_board_time": "Giờ lên xe",
+            "col_leg": "Chặng",
+            "leg_seq": "Chặng {n}",
+            "leg_unassigned": "Chưa gán chặng",
             "group_no_pickup": "Chưa có điểm đón",
             "action_set_status": "Đổi trạng thái",
             "action_onboard": "Đánh dấu đã lên xe",

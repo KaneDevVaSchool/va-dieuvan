@@ -4382,7 +4382,8 @@
                 "aria": "Change list layout",
                 "table": "Table",
                 "status": "By status",
-                "pickup": "By pickup"
+                "pickup": "By pickup",
+                "leg": "By leg"
             },
             "drawer": {
                 "close": "Close",
@@ -4397,6 +4398,9 @@
             "col_status": "Status",
             "col_pickup": "Pickup",
             "col_board_time": "Boarded",
+            "col_leg": "Leg",
+            "leg_seq": "Leg {n}",
+            "leg_unassigned": "No leg assigned",
             "group_no_pickup": "No pickup point",
             "action_set_status": "Change status",
             "action_onboard": "Mark boarded",

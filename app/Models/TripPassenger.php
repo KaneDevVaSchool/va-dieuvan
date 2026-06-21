@@ -9,6 +9,7 @@ class TripPassenger extends Model
 {
     protected $fillable = [
         'trip_id',
+        'leg_key',
         'name',
         'phone',
         'note',

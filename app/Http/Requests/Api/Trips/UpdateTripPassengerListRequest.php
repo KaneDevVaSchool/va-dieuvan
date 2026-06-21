@@ -3,6 +3,8 @@
 namespace App\Http\Requests\Api\Trips;
 
 use App\Http\Requests\Api\ApiFormRequest;
+use App\Models\Trip;
+use App\Services\Dispatching\TripScheduleLegService;
 use Illuminate\Contracts\Validation\Validator;
 
 class UpdateTripPassengerListRequest extends ApiFormRequest
@@ -21,6 +23,7 @@ class UpdateTripPassengerListRequest extends ApiFormRequest
                 'passengers.*.name' => ['required', 'string', 'max:255'],
                 'passengers.*.phone' => ['nullable', 'string', 'max:20'],
                 'passengers.*.note' => ['nullable', 'string', 'max:2000'],
+                'passengers.*.leg_key' => ['nullable', 'string', 'max:64'],
                 'lock_version' => ['required', 'integer', 'min:0'],
             ];
         }
@@ -56,6 +59,47 @@ class UpdateTripPassengerListRequest extends ApiFormRequest
             if (count($list) !== $n) {
                 $v->errors()->add('passengers', 'Danh sách hành khách phải có đủ số phần tử bằng passenger_count.');
             }
+
+            $this->validateLegKeys($v, $list);
         });
+    }
+
+    /**
+     * Mỗi hành khách có thể gán vào một chặng (leg_key) hợp lệ của chuyến.
+     *
+     * @param  array<int, mixed>  $list
+     */
+    private function validateLegKeys(Validator $v, array $list): void
+    {
+        $sent = [];
+        foreach ($list as $i => $row) {
+            $key = is_array($row) ? trim((string) ($row['leg_key'] ?? '')) : '';
+            if ($key !== '') {
+                $sent[$i] = $key;
+            }
+        }
+
+        if ($sent === []) {
+            return;
+        }
+
+        $trip = $this->route('trip');
+        if (! $trip instanceof Trip) {
+            return;
+        }
+
+        $validKeys = [];
+        foreach (app(TripScheduleLegService::class)->resolveScheduleLegsForTrip($trip) as $leg) {
+            $k = (string) ($leg['key'] ?? '');
+            if ($k !== '') {
+                $validKeys[$k] = true;
+            }
+        }
+
+        foreach ($sent as $i => $key) {
+            if (! isset($validKeys[$key])) {
+                $v->errors()->add("passengers.$i.leg_key", 'Chặng được gán không hợp lệ.');
+            }
+        }
     }
 }

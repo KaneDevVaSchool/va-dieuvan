@@ -44,7 +44,7 @@ export function useVisibleFilterControls(controls, storageKey, options = {}) {
   const showFilterPanelDd = ref(false)
 
   function openFilterPanel(closeOthers) {
-    closeOthers?.()
+    if (typeof closeOthers === 'function') closeOthers()
     showFilterPanelDd.value = !showFilterPanelDd.value
   }
 

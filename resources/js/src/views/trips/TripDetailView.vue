@@ -494,6 +494,7 @@
                         :trip-id="trip.id"
                         :trip="trip"
                         :rows="passengerRowsDisplay"
+                        :legs="passengerLegOptions"
                         :request-passenger-count="unifiedPassengerCount"
                         :can-check-in="canPassengerCheckIn"
                         :can-edit-list="canEditPassengerList"
@@ -1280,6 +1281,7 @@ async function saveNamedPassengerSlot(rowIndex, draft, options = {}) {
                 ),
                 phone: String(draft.phone ?? "").trim() || null,
                 note: String(draft.notes ?? "").trim() || null,
+                leg_key: String(draft.leg_key ?? "").trim() || null,
             };
         }
         const existing = tplist[i];
@@ -1287,6 +1289,7 @@ async function saveNamedPassengerSlot(rowIndex, draft, options = {}) {
             name: resolveNamedPassengerApiName(existing?.name, i),
             phone: String(existing?.phone ?? "").trim() || null,
             note: String(existing?.note ?? "").trim() || null,
+            leg_key: String(existing?.leg_key ?? "").trim() || null,
         };
     });
     try {
@@ -1972,6 +1975,34 @@ function passengerListRowEditable(tripType, metaKind) {
     return metaKind === "passenger";
 }
 
+/** Nhãn chặng cho dropdown gán khách (vd "Chặng 1: A → B"). */
+function legOptionLabel(card) {
+    const seq = card?.labelSeq ?? 0;
+    const route = [card?.pickup, card?.dropoff]
+        .map((s) => String(s ?? "").trim())
+        .filter(Boolean)
+        .join(" → ");
+    const base = t("trip_detail.passengers.leg_seq", { n: seq });
+    return route ? `${base}: ${route}` : base;
+}
+
+/** Danh sách chặng để gán hành khách (chỉ chuyến đưa đón/điểm-điểm nhiều chặng). */
+const passengerLegOptions = computed(() => {
+    const tt = String(trip.value?.dispatch_request?.trip_type ?? "");
+    if (tt !== "door_to_door" && tt !== "point_to_point") return [];
+    const cards = scheduleCards.value;
+    if (!Array.isArray(cards) || cards.length <= 1) return [];
+    return cards
+        .filter((c) => c?.key)
+        .map((card) => ({ key: String(card.key), label: legOptionLabel(card) }));
+});
+
+const passengerLegLabelByKey = computed(() => {
+    const m = new Map();
+    for (const opt of passengerLegOptions.value) m.set(opt.key, opt.label);
+    return m;
+});
+
 const passengerRowsDisplay = computed(() => {
     const dr = trip.value?.dispatch_request;
     const s = snap.value;
@@ -1992,12 +2023,14 @@ const passengerRowsDisplay = computed(() => {
                 : kind === "staff"
                   ? t("trip_detail.passengers.role_staff")
                   : t("trip_detail.passengers.role_guest");
+        const legMap = passengerLegLabelByKey.value;
         const built = [];
         for (let i = 0; i < targetN; i++) {
             const tp = Array.isArray(tplist) ? tplist[i] : undefined;
             const name = String(tp?.name ?? "").trim();
             const phone = String(tp?.phone ?? "").trim();
             const note = String(tp?.note ?? "").trim();
+            const legKey = String(tp?.leg_key ?? "").trim();
             built.push({
                 passengerKey: `tp_slot_${i}`,
                 name: passengerDisplayName(name, i, t),
@@ -2006,6 +2039,8 @@ const passengerRowsDisplay = computed(() => {
                 contact: phone,
                 notes: note,
                 pickupAddress: "",
+                legKey,
+                legLabel: legMap.get(legKey) ?? "",
                 flagWheelchair: /xe lăn|wheelchair/i.test(note),
                 flagAllergy: /dị ứng|allergy|đậu phộng|peanut/i.test(note),
                 editMeta: canEditPassengerList.value
@@ -2013,7 +2048,7 @@ const passengerRowsDisplay = computed(() => {
                     : null,
                 editable: canEditPassengerList.value,
                 editFields: canEditPassengerList.value
-                    ? { person_in_charge: name, phone, notes: note }
+                    ? { person_in_charge: name, phone, notes: note, leg_key: legKey }
                     : null,
             });
         }

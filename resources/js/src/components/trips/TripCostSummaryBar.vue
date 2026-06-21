@@ -82,7 +82,6 @@ const cards = computed(() => {
       tone: variance > 0 ? ('rose' as const) : variance < 0 ? ('emerald' as const) : ('slate' as const),
       icon: ScaleIcon,
       display: props.budget > 0 ? fmtMoneySigned(variance) : '—',
-      displayClass: 'text-xl',
       sub:
         vPct == null
           ? undefined
@@ -96,7 +95,6 @@ const cards = computed(() => {
       tone: props.profit < 0 ? ('rose' as const) : ('emerald' as const),
       icon: ArrowTrendingUpIcon,
       display: props.revenue > 0 ? fmtMoney(props.profit) : '—',
-      displayClass: 'text-xl',
       sub:
         props.profitMargin != null && props.revenue > 0
           ? t('cost_center.margin_pct', { pct: Math.round(props.profitMargin) })
@@ -124,6 +122,7 @@ function onCardAction(card: { filter?: { status: string } }) {
 <template>
   <KpiSummaryStrip
     class="!mb-4"
+    compact
     :cards="cards"
     grid-class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6"
     :aria-label="t('cost_center.kpi_strip_aria')"

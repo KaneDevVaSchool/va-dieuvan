@@ -147,7 +147,7 @@
                   icon="filter"
                   :active="showFilterPanelDd"
                   test-id="trip-cost-toolbar-filter"
-                  @click="openFilterPanel"
+                  @click="openFilterPanel()"
                 >
                   {{ t('cost_center.toolbar_filter') }}
                 </DatagridToolbarActionButton>
