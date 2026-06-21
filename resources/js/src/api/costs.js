@@ -64,6 +64,25 @@ export async function deleteTripCost(id) {
   return data.data
 }
 
+// ── Operational notes (tab Ghi chú vận hành) ─────────────────────
+
+export async function listCostNotes(params = {}) {
+  const { data } = await http.get('/trip-cost-notes', { params })
+  return data.data
+}
+
+export async function addCostNote(payload, { idempotencyKey } = {}) {
+  const headers = {}
+  if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey
+  const { data } = await http.post('/trip-cost-notes', payload, { headers })
+  return data.data
+}
+
+export async function deleteCostNote(id) {
+  const { data } = await http.delete(`/trip-cost-notes/${id}`)
+  return data.data
+}
+
 export async function uploadTripCostReceipt(tripId, tripCostId, file, { idempotencyKey } = {}) {
   const headers = {}
   if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey

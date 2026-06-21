@@ -30,7 +30,7 @@ class CargoController extends Controller
             ->visibleOnStaffCargoIndex()
             ->with([
                 'trip:id,status,depart_at',
-                'dispatchRequest:id,status',
+                'dispatchRequest:id,status,created_at',
                 'attachments' => fn ($q) => $q->where('kind', 'pod')->orderByDesc('id'),
             ])
             ->orderByDesc('id');
@@ -84,7 +84,7 @@ class CargoController extends Controller
             'trip.driver:id,full_name,phone',
             'trip.vehicle:id,license_plate,status',
             'trip.transportProvider:id,name',
-            'dispatchRequest:id,status,trip_type,origin,destination,depart_at,arrive_by,notes,requester_id',
+            'dispatchRequest:id,status,trip_type,origin,destination,depart_at,arrive_by,notes,requester_id,created_at',
             'attachments' => fn ($q) => $q->orderByDesc('id'),
         ]);
 

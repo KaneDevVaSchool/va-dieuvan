@@ -14,6 +14,7 @@ import {
 } from '@heroicons/vue/24/outline'
 import { labelCargoStatus } from '../../util/labels'
 import { formatListDateTime } from '../../util/datetime'
+import { formatDispatchRequestRefCode } from '../../util/portalRequestFormat'
 
 const props = defineProps({
   shipment: { type: Object, required: true },
@@ -75,6 +76,18 @@ function dispatchRequestId(s) {
   return s.dispatch_request_id ?? s.dispatch_request?.id ?? null
 }
 
+function dispatchRequestEntity(s) {
+  const id = dispatchRequestId(s)
+  if (id == null) return null
+  return s.dispatch_request ?? s.dispatchRequest ?? { id }
+}
+
+const dispatchRequestRefCode = computed(() => {
+  const dr = dispatchRequestEntity(props.shipment)
+  if (!dr) return ''
+  return formatDispatchRequestRefCode(dr) || `REQ-${String(dr.id).padStart(3, '0')}`
+})
+
 function driverInitials(name) {
   if (!name) return '?'
   const p = String(name).trim().split(/\s+/)
@@ -111,21 +124,16 @@ const quantityDisplay = computed(() => {
             <CubeIcon class="h-6 w-6" :class="iconColorClass" aria-hidden="true" />
           </div>
           <div class="min-w-0 flex-1">
-            <div class="flex flex-wrap items-center gap-2">
-              <RouterLink
-                :to="`/cargo/${shipment.id}`"
-                class="font-mono text-lg font-bold tracking-tight text-slate-900 underline decoration-slate-300 underline-offset-2 hover:text-va-800 hover:decoration-va-400 dark:text-slate-100"
-                :data-testid="`cargo-card-link-${shipment.id}`"
-              >
-                {{ trackingCode }}
-              </RouterLink>
-              <span
-                v-if="shipment.sla_due_at"
-                class="rounded-md bg-violet-50 px-2 py-0.5 text-[11px] font-semibold text-violet-900 dark:bg-violet-950/50 dark:text-violet-100"
-              >
-                SLA: {{ fmt(shipment.sla_due_at) }}
-              </span>
-            </div>
+            <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              {{ t('cargo_page.card_code') }}
+            </p>
+            <RouterLink
+              :to="`/cargo/${shipment.id}`"
+              class="mt-0.5 inline-block font-mono text-lg font-bold tracking-tight text-slate-900 underline decoration-slate-300 underline-offset-2 hover:text-va-800 hover:decoration-va-400 dark:text-slate-100"
+              :data-testid="`cargo-card-link-${shipment.id}`"
+            >
+              {{ trackingCode }}
+            </RouterLink>
             <dl class="mt-3 grid grid-cols-1 gap-x-4 gap-y-2 text-sm sm:grid-cols-2 xl:grid-cols-3">
               <div class="min-w-0">
                 <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -258,7 +266,7 @@ const quantityDisplay = computed(() => {
               :to="`/requests/${dispatchRequestId(shipment)}`"
               class="ml-1 font-medium text-violet-700 hover:underline dark:text-violet-400"
             >
-              #{{ dispatchRequestId(shipment) }}
+              {{ dispatchRequestRefCode }}
             </RouterLink>
           </li>
           <li v-if="shipment.notes && String(shipment.notes).trim()">

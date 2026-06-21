@@ -46,6 +46,17 @@
         {{ t('costs_page.tab_business_personnel') }}
         <span v-if="activeTab === 'business_personnel' && bpMeta.total > 0" class="cv-tab-badge">{{ bpMeta.total }}</span>
       </button>
+      <button
+        role="tab"
+        :aria-selected="activeTab === 'notes'"
+        class="cv-tab"
+        :class="activeTab === 'notes' ? 'cv-tab--active' : ''"
+        data-testid="tab-notes"
+        @click="activeTab = 'notes'"
+      >
+        {{ t('costs_page.tab_notes') }}
+        <span v-if="activeTab === 'notes' && notesMeta.total > 0" class="cv-tab-badge">{{ notesMeta.total }}</span>
+      </button>
     </div>
 
     <!-- ══════════════════════════════════════════════════════════
@@ -565,7 +576,7 @@
     <!-- ══════════════════════════════════════════════════════════
          TAB: business_personnel
     ═══════════════════════════════════════════════════════════════ -->
-    <section v-else aria-labelledby="costs-section-business-personnel">
+    <section v-else-if="activeTab === 'business_personnel'" aria-labelledby="costs-section-business-personnel">
 
       <!-- Filter bar (always visible) -->
       <div class="cv-filter-strip mt-4">
@@ -725,6 +736,198 @@
             {{ t('costs_page.business_personnel_empty') }}
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         TAB: notes (Ghi chú vận hành)
+    ═══════════════════════════════════════════════════════════════ -->
+    <section v-if="activeTab === 'notes'" aria-labelledby="costs-section-notes-title">
+
+      <div class="overflow-visible rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
+
+        <!-- ── Toolbar ─────────────────────────────────────────── -->
+        <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+          <div class="flex w-full min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
+            <!-- Search -->
+            <div class="min-w-0 w-full basis-full lg:min-w-[10rem] lg:flex-1 lg:basis-auto">
+              <label :for="'notes-search-input'" class="sr-only">{{ t('costs_page.notes_search_placeholder') }}</label>
+              <div class="relative flex items-center">
+                <svg class="pointer-events-none absolute left-3 h-4 w-4 shrink-0 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                </svg>
+                <input
+                  id="notes-search-input"
+                  v-model="notesSearchQ"
+                  type="search"
+                  autocomplete="off"
+                  class="h-10 w-full rounded-lg border border-slate-200 bg-white py-0 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500/25 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500"
+                  :placeholder="t('costs_page.notes_search_placeholder')"
+                  data-testid="notes-search"
+                />
+              </div>
+            </div>
+
+            <!-- Right actions -->
+            <div class="ml-auto flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                class="inline-flex h-10 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                :disabled="notesLoading"
+                data-testid="notes-refresh"
+                @click="reloadNotes"
+              >
+                <svg class="h-4 w-4" :class="notesLoading ? 'animate-spin' : ''" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+                {{ t('costs_page.notes_refresh') }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Notes list ─────────────────────────────────────── -->
+        <div class="divide-y divide-slate-100 dark:divide-slate-700/80">
+
+          <!-- Loading skeleton -->
+          <div v-if="notesLoading && !notesList.length" class="flex items-center justify-center gap-2 px-5 py-12 text-sm text-slate-500 dark:text-slate-400">
+            <span class="inline-block size-5 animate-spin rounded-full border-2 border-slate-200 border-t-teal-600 dark:border-slate-700 dark:border-t-teal-400" aria-hidden="true" />
+            {{ t('costs_page.notes_loading') }}
+          </div>
+
+          <!-- Empty state -->
+          <div
+            v-else-if="!notesLoading && !notesFiltered.length"
+            class="flex flex-col items-center justify-center gap-3 px-5 py-14 text-center"
+          >
+            <span class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400 dark:bg-slate-800">
+              <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+              </svg>
+            </span>
+            <div>
+              <p class="text-sm font-medium text-slate-700 dark:text-slate-300">
+                {{ notesSearchQ ? t('costs_page.notes_empty_search') : t('costs_page.notes_empty') }}
+              </p>
+              <p v-if="!notesSearchQ" class="mt-1 text-xs text-slate-400 dark:text-slate-500">{{ t('costs_page.notes_empty_hint') }}</p>
+            </div>
+          </div>
+
+          <!-- Note rows -->
+          <template v-else>
+            <div
+              v-for="note in notesFiltered"
+              :key="note.id"
+              class="group flex items-start gap-3 px-5 py-4 transition hover:bg-slate-50/60 dark:hover:bg-slate-800/40"
+              :data-testid="`note-row-${note.id}`"
+            >
+              <!-- Avatar -->
+              <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold uppercase text-teal-800 dark:bg-teal-950/60 dark:text-teal-300 select-none" aria-hidden="true">
+                {{ (note.creator?.name ?? note.user?.name ?? '?').slice(0, 1) }}
+              </div>
+
+              <!-- Content -->
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                  <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                    {{ note.creator?.name ?? note.user?.name ?? t('costs_page.notes_unknown_author') }}
+                  </span>
+                  <span class="text-xs tabular-nums text-slate-400 dark:text-slate-500">
+                    {{ formatNoteTime(note.created_at) }}
+                  </span>
+                </div>
+                <p class="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-slate-700 dark:text-slate-300">{{ note.body ?? note.message }}</p>
+              </div>
+
+              <!-- Delete action -->
+              <button
+                v-if="canAddCostNote"
+                type="button"
+                class="shrink-0 rounded-lg p-1.5 text-slate-300 opacity-0 transition hover:bg-rose-50 hover:text-rose-600 group-hover:opacity-100 focus-visible:opacity-100 dark:text-slate-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400"
+                :class="deletingNoteId === note.id ? 'opacity-100 cursor-not-allowed' : ''"
+                :disabled="deletingNoteId != null"
+                :aria-label="t('costs_page.notes_delete_aria')"
+                :data-testid="`note-delete-${note.id}`"
+                @click="deleteCostNoteItem(note.id)"
+              >
+                <span v-if="deletingNoteId === note.id" class="inline-block size-4 animate-spin rounded-full border-2 border-rose-300 border-t-rose-600" aria-hidden="true" />
+                <XMarkIcon v-else class="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+          </template>
+        </div>
+
+        <!-- ── Pagination ──────────────────────────────────────── -->
+        <div
+          v-if="(notesMeta.last_page ?? 1) > 1"
+          class="flex items-center justify-between border-t border-slate-100 px-5 py-3 dark:border-slate-700"
+        >
+          <span class="text-xs text-slate-500 dark:text-slate-400">
+            {{ t('costs_page.pagination_page') }} {{ notesMeta.current_page }} / {{ notesMeta.last_page }}
+            · {{ notesMeta.total }} {{ t('costs_page.notes_count_suffix') }}
+          </span>
+          <div class="flex items-center gap-1.5">
+            <button
+              type="button"
+              class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+              :disabled="notesLoading || (notesMeta.current_page ?? 1) <= 1"
+              data-testid="notes-prev"
+              @click="notePageChange(-1)"
+            >
+              {{ t('costs_page.prev') }}
+            </button>
+            <button
+              type="button"
+              class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+              :disabled="notesLoading || (notesMeta.current_page ?? 1) >= (notesMeta.last_page ?? 1)"
+              data-testid="notes-next"
+              @click="notePageChange(1)"
+            >
+              {{ t('costs_page.next') }}
+            </button>
+          </div>
+        </div>
+
+        <!-- ── Add note form ──────────────────────────────────── -->
+        <div
+          v-if="canAddCostNote"
+          class="border-t border-slate-100 bg-slate-50/60 px-5 py-4 dark:border-slate-700 dark:bg-slate-800/30"
+        >
+          <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            {{ t('costs_page.notes_add_section_label') }}
+          </p>
+          <textarea
+            v-model="newCostNote"
+            rows="3"
+            class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500/25 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+            :placeholder="t('costs_page.notes_add_placeholder')"
+            data-testid="notes-new-input"
+            @keydown.ctrl.enter.prevent="submitCostNote"
+            @keydown.meta.enter.prevent="submitCostNote"
+          />
+          <div class="mt-2.5 flex flex-wrap items-center justify-between gap-2">
+            <p
+              v-if="costNoteMsg"
+              class="text-sm"
+              :class="costNoteMsgIsError ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-700 dark:text-emerald-400'"
+            >
+              {{ costNoteMsg }}
+            </p>
+            <p v-else class="text-xs text-slate-400 dark:text-slate-500">{{ t('costs_page.notes_add_hint') }}</p>
+            <button
+              type="button"
+              class="inline-flex items-center gap-1.5 rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-teal-600/40"
+              :disabled="addingCostNote || !newCostNote.trim()"
+              data-testid="notes-add-btn"
+              @click="submitCostNote"
+            >
+              <span v-if="addingCostNote" class="inline-block size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden="true" />
+              <PlusCircleIcon v-else class="h-4 w-4 shrink-0" aria-hidden="true" />
+              {{ t('costs_page.notes_add_action') }}
+            </button>
+          </div>
+        </div>
+
       </div>
     </section>
 
@@ -1098,6 +1301,9 @@ import {
   submitStandaloneTripCost,
   decideTripCost,
   deleteTripCost,
+  listCostNotes,
+  addCostNote,
+  deleteCostNote,
 } from '../../api/costs'
 import { listTrips } from '../../api/trips'
 import { newIdempotencyKey } from '../../util/idempotency'
@@ -1113,7 +1319,7 @@ const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 
-/** @type {import('vue').Ref<'all_trips' | 'standalone' | 'business_personnel'>} */
+/** @type {import('vue').Ref<'all_trips' | 'standalone' | 'business_personnel' | 'notes'>} */
 const activeTab = ref('all_trips')
 
 const COSTS_PER_PAGE_OPTIONS = [5, 10, 15, 20]
@@ -1394,6 +1600,19 @@ const bpFilters = reactive({
 
 const searchQ = ref('')
 
+// ── Notes tab state ───────────────────────────────────────────────
+const notesLoading = ref(false)
+const notesList = ref([])
+const notesMeta = ref({ total: 0, current_page: 1, last_page: 1 })
+const notesPage = ref(1)
+const notesSearchQ = ref('')
+const newCostNote = ref('')
+const addingCostNote = ref(false)
+const costNoteMsg = ref('')
+const costNoteMsgIsError = ref(false)
+/** @type {import('vue').Ref<number | null>} */
+const deletingNoteId = ref(null)
+
 // Dropdown refs for auto-close (business-personnel trip picker)
 const bpFilterTripDropdownRef = ref(null)
 useDetailsAutoClose(bpFilterTripDropdownRef)
@@ -1541,6 +1760,10 @@ const showAddCostButton = computed(() => {
   if (activeTab.value === 'standalone') return canSubmitStandaloneCost.value
   return canSubmitTripCost.value
 })
+
+const canAddCostNote = computed(() =>
+  auth.hasAnyPermission(['trip.record.create', 'trip.cost.reconcile', 'trip.cost.notes.create']),
+)
 
 const costAmountDisplay = computed(() => formatVndDigitsInput(costAmountDigits.value))
 
@@ -2073,6 +2296,83 @@ async function submitCost() {
   }
 }
 
+// ── Notes tab helpers ─────────────────────────────────────────────
+const notesFiltered = computed(() => {
+  const q = notesSearchQ.value.trim().toLowerCase()
+  if (!q) return notesList.value
+  return notesList.value.filter((n) => {
+    const body = String(n.body ?? n.message ?? '').toLowerCase()
+    const author = String(n.creator?.name ?? n.user?.name ?? '').toLowerCase()
+    return body.includes(q) || author.includes(q)
+  })
+})
+
+async function reloadNotes() {
+  notesLoading.value = true
+  try {
+    const res = await listCostNotes({ page: notesPage.value, per_page: 20 })
+    notesList.value = res.items ?? (Array.isArray(res) ? res : [])
+    notesMeta.value = res.meta ?? { total: notesList.value.length, current_page: 1, last_page: 1 }
+  } catch {
+    notesList.value = []
+  } finally {
+    notesLoading.value = false
+  }
+}
+
+async function submitCostNote() {
+  costNoteMsg.value = ''
+  costNoteMsgIsError.value = false
+  const body = newCostNote.value.trim()
+  if (!body) return
+  addingCostNote.value = true
+  try {
+    await addCostNote({ body }, { idempotencyKey: newIdempotencyKey() })
+    newCostNote.value = ''
+    costNoteMsg.value = t('costs_page.notes_add_ok')
+    await reloadNotes()
+  } catch (e) {
+    costNoteMsgIsError.value = true
+    costNoteMsg.value = e?.response?.data?.message ?? t('costs_page.notes_add_err')
+  } finally {
+    addingCostNote.value = false
+  }
+}
+
+async function deleteCostNoteItem(id) {
+  if (!id || deletingNoteId.value != null) return
+  deletingNoteId.value = id
+  try {
+    await deleteCostNote(id)
+    await reloadNotes()
+  } catch (e) {
+    showAppErrorFromApi(e, t('costs_page.notes_delete_err'))
+  } finally {
+    deletingNoteId.value = null
+  }
+}
+
+function notePageChange(delta) {
+  const target = (notesMeta.value.current_page ?? 1) + delta
+  notesPage.value = target
+  reloadNotes()
+}
+
+function formatNoteTime(iso) {
+  if (!iso) return ''
+  try {
+    return new Intl.DateTimeFormat(locale.value === 'vi' ? 'vi-VN' : 'en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(iso))
+  } catch {
+    return iso
+  }
+}
+
 // ── Watchers ─────────────────────────────────────────────────────
 watch(
   () => route.query.status,
@@ -2086,6 +2386,11 @@ watch(
 watch(activeTab, (tab) => {
   if (tab === 'business_personnel') {
     reloadBp()
+    return
+  }
+  if (tab === 'notes') {
+    notesPage.value = 1
+    reloadNotes()
     return
   }
   if (tab === 'standalone' || tab === 'all_trips') {
