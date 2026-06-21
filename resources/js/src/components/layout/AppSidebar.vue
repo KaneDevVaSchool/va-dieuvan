@@ -213,9 +213,9 @@
     <!-- Chuông thông báo: dọc theo sidebar, trên block tài khoản -->
     <div
       class="shrink-0 border-t border-white/15 py-1.5 md:py-2"
-      :class="ui.sidebarCollapsed ? 'flex justify-center px-1 md:px-1.5' : 'flex items-center px-2 md:px-3'"
+      :class="ui.sidebarCollapsed ? 'flex justify-center px-1 md:px-1.5' : 'flex w-full items-center px-2 md:px-3'"
     >
-      <NotificationBell tone="brand" />
+      <NotificationBell tone="brand" :show-label="!ui.sidebarCollapsed" />
     </div>
 
     <SidebarAccountBlock layout="vertical" brand :compact="ui.sidebarCollapsed" />

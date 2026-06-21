@@ -50,18 +50,46 @@
                 @approve="onApproveTransfer"
                 @reject="onRejectTrip"
             />
-            <p class="w-full max-w-none px-2 pt-1 text-[11px] text-slate-500 sm:px-3 md:px-4 lg:px-5">
-                {{
-                    t("trip_detail.created_at", { time: fmt(trip.created_at) })
-                }}
-            </p>
-            <p
-                v-if="silentLoadError"
-                class="w-full max-w-none px-2 pt-2 text-[11px] text-amber-900 sm:px-3 md:px-4 lg:px-5"
-            >
-                {{ silentLoadError }}
-            </p>
-            <div class="w-full max-w-none space-y-4 px-2 pb-8 pt-2 sm:px-3 md:px-4 lg:px-5">
+            <div class="w-full max-w-none space-y-4 px-2 pb-10 pt-3 sm:px-3 md:px-4 lg:px-5">
+                <p class="text-[11px] text-slate-500">
+                    {{
+                        t("trip_detail.created_at", {
+                            time: fmt(trip.created_at),
+                        })
+                    }}
+                </p>
+                <p
+                    v-if="silentLoadError"
+                    class="rounded-lg border border-amber-200 bg-amber-50/90 px-3 py-2 text-[11px] text-amber-900"
+                >
+                    {{ silentLoadError }}
+                </p>
+
+                <!-- SUMMARY BAR — compact KPI row -->
+                <section
+                    class="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6"
+                    :aria-label="t('trip_detail.overview.title')"
+                >
+                    <div
+                        v-for="kpi in summaryKpis"
+                        :key="kpi.key"
+                        class="rounded-lg border border-slate-200/80 bg-white px-3 py-2.5 shadow-sm"
+                    >
+                        <p
+                            class="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500"
+                        >
+                            {{ kpi.label }}
+                        </p>
+                        <p
+                            class="mt-1 truncate text-[15px] font-bold tabular-nums text-slate-900"
+                            :title="kpi.value"
+                        >
+                            {{ kpi.value }}
+                        </p>
+                    </div>
+                </section>
+
+                <!-- TIMELINE — compact horizontal -->
                 <TripTimeline
                     class="w-full min-w-0"
                     :current-status="timelineWorkflowStatus"
@@ -118,417 +146,400 @@
                     {{ t("trip_detail.banner.request_pending") }}
                 </div>
 
+                <!-- PRIMARY NAVIGATION — full-width sticky tabs -->
                 <div
-                    class="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-start lg:gap-6 xl:gap-8"
+                    class="sticky top-14 z-30 -mx-2 border-b border-slate-200 bg-[#F8F9FA]/95 px-2 backdrop-blur sm:-mx-3 sm:px-3 md:-mx-4 md:px-4 lg:-mx-5 lg:px-5"
                 >
-                    <div
-                        class="flex min-w-0 w-full flex-col gap-3 lg:col-span-4 xl:col-span-4"
+                    <nav
+                        class="flex gap-0.5 overflow-x-auto scrollbar-hidden"
+                        role="tablist"
+                        :aria-label="t('trip_detail.tabs.aria')"
                     >
-                        <TripInfoCard
-                            :trip="trip"
-                            :passenger-count="unifiedPassengerCount"
-                            :schedule-date-long="scheduleDateLong"
-                            :schedule-depart-time="scheduleDepartTime"
-                            :schedule-arrive-time="scheduleArriveTime"
-                            :schedule-arrive-date-short="scheduleArriveDateShort"
-                            :schedule-time-range="scheduleTimeRange"
-                            :schedule-duration="scheduleDuration"
-                            :schedule-mismatch-notes="scheduleMismatchNotes"
-                            :estimated-distance-label="estimatedDistanceLabel"
-                            :estimated-cost-label="estimatedCostLabel"
-                            :schedule-card="routeInfoScheduleCard"
-                            :schedule-leg-count="scheduleCount"
-                            :requester-initials="requesterInitials"
-                            :requester-name="requesterName"
-                            :requester-subtitle="requesterSubtitle"
-                            :trip-type-label="tripTypeLabel"
-                            :sla-banner="slaBanner"
-                            :step-pickup="stepPickup"
-                            :step-dropoff="stepDropoff"
-                            :origin-label="displayOriginLabel"
-                            :destination-label="displayDestinationLabel"
-                        />
-                        <TripSchedulesPanel
-                            v-if="scheduleCount > 1"
-                            :cards="scheduleCardsForPanel"
-                            :schedule-legs="scheduleLegs"
-                            :selected-key="selectedScheduleKey"
-                            :total-guests="unifiedPassengerCount"
-                            :trip-type="tripTypeForSnap"
-                            @update:selected-key="onSchedulePanelKeyChange"
-                        />
-                    </div>
-
-                    <div
-                        class="flex min-h-0 w-full min-w-0 flex-col gap-2 lg:col-span-8 xl:col-span-8 lg:sticky lg:top-14 lg:max-h-[calc(100dvh-3.5rem)] lg:self-start"
-                    >
-                        <h2
-                            class="shrink-0 text-xs font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400"
+                        <button
+                            v-for="tab in tabs"
+                            :key="tab.key"
+                            type="button"
+                            role="tab"
+                            :aria-selected="activeTab === tab.key"
+                            class="relative shrink-0 whitespace-nowrap px-3.5 py-3 text-[13px] font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/40"
+                            :class="
+                                activeTab === tab.key
+                                    ? 'text-blue-700'
+                                    : 'text-slate-500 hover:text-slate-800'
+                            "
+                            @click="activeTab = tab.key"
                         >
-                            {{ t("trip_detail.coordination_column_title") }}
-                        </h2>
-                        <DispatchPanel
-                            class="flex min-h-0 w-full min-w-0 flex-1 flex-col"
-                            ref="dispatchPanelRef"
-                            :can-assign="canAssign"
-                            :can-update-status="canUpdateStatus"
-                            :coordination-actions-locked="coordinationActionsLocked"
-                            :can-quick-create-provider="canQuickCreateProvider"
-                            :assignment-vehicles="coordinationAssignmentVehicles"
-                            :assignment-drivers="coordinationAssignmentDrivers"
-                            :vehicle-conflict-banner="vehicleConflictBanner"
-                            :trip-id="trip.id"
-                            :schedule-date-key-for-list="scheduleDateKeyForList"
-                            :needed-seats="neededSeats"
-                            :suitable-vehicles-count="suitableVehiclesCount"
-                            :busy-vehicle-ids="busyVehicleIdList"
-                            :busy-driver-ids="busyDriverIdList"
-                            :trip-snapshot="coordinationTripSnapshot"
-                            :supplement-assignments="
-                                coordinationSupplementsForAssignment
-                            "
-                            :coordination-notes="coordinationNotes"
-                            :assign-msg="assignMsg"
-                            :assign-feedback-kind="assignFeedbackKind"
-                            :capacity-banner-text="coordinationCapacityBanner"
-                            :show-assign-footer="showCoordinationAssignFooter"
-                            :assign-ready="assignReady"
-                            :assigning="assigning"
-                            :schedule-assign-tabs="scheduleAssignTabs"
-                            :active-schedule-key="activeAssignLegKey"
-                            :assign-progress-label="assignProgressLabel"
-                            @update:active-schedule-key="onActiveAssignLegChange"
-                            @vehicle-card-change="onVehicleCardChange"
-                            @driver-card-change="onDriverCardChange"
-                            @conflict-pick-again="onVehicleConflictPickAgain"
-                            @conflict-keep="onVehicleConflictKeep"
-                            @update:resources="onDispatchResourcesUpdate"
-                            @create-vendor="openProviderModal"
-                            @assign="onApproveTransfer"
-                            @update:coordination-notes="
-                                coordinationNotes = $event
-                            "
-                        />
-                    </div>
+                            {{ tab.label }}
+                            <span
+                                v-if="tab.count != null"
+                                class="ml-1.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums"
+                                :class="
+                                    activeTab === tab.key
+                                        ? 'bg-blue-100 text-blue-700'
+                                        : 'bg-slate-100 text-slate-600'
+                                "
+                                >{{ tab.count }}</span
+                            >
+                            <span
+                                v-show="activeTab === tab.key"
+                                class="absolute inset-x-2.5 -bottom-px h-0.5 rounded-full bg-blue-600"
+                                aria-hidden="true"
+                            />
+                        </button>
+                    </nav>
                 </div>
 
-                <section
-                    class="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-950/40"
-                >
+                <!-- TAB 1 · TRIP INFORMATION (overview + schedule) -->
+                <div v-show="activeTab === 'info'" class="space-y-4">
+                    <TripInfoCard
+                        :trip="trip"
+                        :passenger-count="unifiedPassengerCount"
+                        :schedule-date-long="scheduleDateLong"
+                        :schedule-depart-time="scheduleDepartTime"
+                        :schedule-arrive-time="scheduleArriveTime"
+                        :schedule-arrive-date-short="scheduleArriveDateShort"
+                        :schedule-time-range="scheduleTimeRange"
+                        :schedule-duration="scheduleDuration"
+                        :schedule-mismatch-notes="scheduleMismatchNotes"
+                        :estimated-distance-label="estimatedDistanceLabel"
+                        :estimated-cost-label="estimatedCostLabel"
+                        :schedule-card="routeInfoScheduleCard"
+                        :schedule-leg-count="scheduleCount"
+                        :requester-initials="requesterInitials"
+                        :requester-name="requesterName"
+                        :requester-subtitle="requesterSubtitle"
+                        :trip-type-label="tripTypeLabel"
+                        :sla-banner="slaBanner"
+                        :step-pickup="stepPickup"
+                        :step-dropoff="stepDropoff"
+                        :origin-label="displayOriginLabel"
+                        :destination-label="displayDestinationLabel"
+                    />
+                    <TripSchedulesPanel
+                        v-if="scheduleCount > 1"
+                        :cards="scheduleCardsForPanel"
+                        :schedule-legs="scheduleLegs"
+                        :selected-key="selectedScheduleKey"
+                        :total-guests="unifiedPassengerCount"
+                        :trip-type="tripTypeForSnap"
+                        @update:selected-key="onSchedulePanelKeyChange"
+                    />
+                </div>
+
+                <!-- TAB 3 · DISPATCH (vehicle & driver assignment) -->
+                <div v-show="activeTab === 'dispatch'" class="space-y-4">
+                    <h2
+                        class="text-xs font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400"
+                    >
+                        {{ t("trip_detail.coordination_column_title") }}
+                    </h2>
+                    <DispatchPanel
+                        class="flex w-full min-w-0 flex-col"
+                        ref="dispatchPanelRef"
+                        :can-assign="canAssign"
+                        :can-update-status="canUpdateStatus"
+                        :coordination-actions-locked="coordinationActionsLocked"
+                        :can-quick-create-provider="canQuickCreateProvider"
+                        :assignment-vehicles="coordinationAssignmentVehicles"
+                        :assignment-drivers="coordinationAssignmentDrivers"
+                        :vehicle-conflict-banner="vehicleConflictBanner"
+                        :trip-id="trip.id"
+                        :schedule-date-key-for-list="scheduleDateKeyForList"
+                        :needed-seats="neededSeats"
+                        :suitable-vehicles-count="suitableVehiclesCount"
+                        :busy-vehicle-ids="busyVehicleIdList"
+                        :busy-driver-ids="busyDriverIdList"
+                        :trip-snapshot="coordinationTripSnapshot"
+                        :supplement-assignments="
+                            coordinationSupplementsForAssignment
+                        "
+                        :coordination-notes="coordinationNotes"
+                        :assign-msg="assignMsg"
+                        :assign-feedback-kind="assignFeedbackKind"
+                        :capacity-banner-text="coordinationCapacityBanner"
+                        :show-assign-footer="showCoordinationAssignFooter"
+                        :assign-ready="assignReady"
+                        :assigning="assigning"
+                        :schedule-assign-tabs="scheduleAssignTabs"
+                        :active-schedule-key="activeAssignLegKey"
+                        :assign-progress-label="assignProgressLabel"
+                        @update:active-schedule-key="onActiveAssignLegChange"
+                        @vehicle-card-change="onVehicleCardChange"
+                        @driver-card-change="onDriverCardChange"
+                        @conflict-pick-again="onVehicleConflictPickAgain"
+                        @conflict-keep="onVehicleConflictKeep"
+                        @update:resources="onDispatchResourcesUpdate"
+                        @create-vendor="openProviderModal"
+                        @assign="onApproveTransfer"
+                        @update:coordination-notes="coordinationNotes = $event"
+                    />
+                </div>
+
+                <!-- TAB 1 · TRIP INFORMATION (notes) -->
+                <div v-show="activeTab === 'info'">
+                    <section
+                        class="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-950/40"
+                        :aria-label="t('trip_detail.sections.notes')"
+                    >
+                        <h2
+                            class="text-[11px] font-bold uppercase tracking-wide text-slate-500"
+                        >
+                            {{ t("trip_detail.sections.notes") }}
+                        </h2>
+                        <div class="mt-3 space-y-2">
                             <div
-                                class="flex flex-col gap-2 sm:flex-row sm:items-stretch sm:justify-between sm:gap-3"
+                                v-if="tripRequestNotesFromUser"
+                                class="rounded-lg border border-amber-100 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100"
                             >
                                 <div
-                                    class="flex min-w-0 flex-1 rounded-lg bg-slate-100 p-0.5 dark:bg-slate-800/90"
-                                    role="tablist"
-                                    :aria-label="
-                                        t('trip_detail.attachments_notes_tabs_aria')
-                                    "
+                                    class="text-xs font-medium text-amber-800 dark:text-amber-200"
                                 >
-                                    <button
-                                        id="trip-detail-tab-attachments"
-                                        type="button"
-                                        role="tab"
-                                        :aria-selected="
-                                            attachmentNotesTab === 'attachments'
-                                        "
-                                        :tabindex="
-                                            attachmentNotesTab === 'attachments'
-                                                ? 0
-                                                : -1
-                                        "
-                                        aria-controls="trip-detail-panel-attachments"
-                                        class="min-w-0 flex-1 rounded-md px-2.5 py-1.5 text-center text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50"
-                                        :class="
-                                            attachmentNotesTab === 'attachments'
-                                                ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-slate-100'
-                                                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
-                                        "
-                                        @click="attachmentNotesTab = 'attachments'"
-                                    >
-                                        {{ t("trip_detail.attachments.title") }}
-                                    </button>
-                                    <button
-                                        id="trip-detail-tab-notes"
-                                        type="button"
-                                        role="tab"
-                                        :aria-selected="
-                                            attachmentNotesTab === 'notes'
-                                        "
-                                        :tabindex="
-                                            attachmentNotesTab === 'notes'
-                                                ? 0
-                                                : -1
-                                        "
-                                        aria-controls="trip-detail-panel-notes"
-                                        class="min-w-0 flex-1 rounded-md px-2.5 py-1.5 text-center text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50"
-                                        :class="
-                                            attachmentNotesTab === 'notes'
-                                                ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-slate-100'
-                                                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
-                                        "
-                                        @click="attachmentNotesTab = 'notes'"
-                                    >
-                                        {{ t("trip_detail.notes.title") }}
-                                    </button>
+                                    {{ t("trip_detail.notes.from_request") }}
                                 </div>
                                 <div
-                                    v-if="
-                                        attachmentNotesTab === 'attachments' &&
-                                        canManageAttachments &&
-                                        trip.dispatch_request?.id
-                                    "
-                                    class="flex shrink-0 flex-wrap items-center justify-end gap-2"
+                                    class="mt-1 max-h-40 overflow-y-auto overscroll-y-contain whitespace-pre-wrap scrollbar-hidden"
                                 >
-                                    <input
-                                        ref="attachInputRef"
-                                        type="file"
-                                        class="hidden"
-                                        @change="onAttachmentFile"
-                                    />
-                                    <Button
-                                        type="button"
-                                        variant="secondary"
-                                        class="!px-3"
-                                        :loading="attachUploading"
-                                        @click="attachInputRef?.click()"
+                                    {{ tripRequestNotesFromUser }}
+                                </div>
+                            </div>
+                            <div
+                                v-for="n in noteEvents"
+                                :key="n.id"
+                                class="rounded-lg border border-slate-100 bg-slate-50/50 p-2.5 dark:border-slate-700/80 dark:bg-slate-900/40"
+                            >
+                                <div
+                                    class="flex items-baseline justify-between gap-2"
+                                >
+                                    <div
+                                        class="text-xs font-medium text-slate-700 dark:text-slate-300"
                                     >
                                         {{
-                                            t("trip_detail.attachments.upload")
+                                            n.creator?.name ??
+                                            t("trip_detail.timeline.system")
                                         }}
-                                    </Button>
+                                    </div>
+                                    <div class="text-xs text-slate-400">
+                                        {{ fmt(n.created_at) }}
+                                    </div>
+                                </div>
+                                <div
+                                    class="mt-1 whitespace-pre-wrap text-sm text-slate-800 dark:text-slate-200"
+                                >
+                                    {{ n.message }}
                                 </div>
                             </div>
-
                             <div
-                                v-show="attachmentNotesTab === 'attachments'"
-                                id="trip-detail-panel-attachments"
-                                role="tabpanel"
-                                aria-labelledby="trip-detail-tab-attachments"
+                                v-if="
+                                    !noteEvents.length && !tripRequestNotesFromUser
+                                "
+                                class="text-xs text-slate-500 dark:text-slate-400"
                             >
-                                <p
-                                    v-if="attachMsg"
-                                    class="mt-2 text-xs"
-                                    :class="
-                                        attachMsgIsError
-                                            ? 'text-rose-600'
-                                            : 'text-slate-600'
+                                {{ t("trip_detail.notes.empty") }}
+                            </div>
+                            <div class="pt-1">
+                                <div
+                                    class="text-xs font-semibold text-slate-500 dark:text-slate-400"
+                                >
+                                    {{ t("trip_detail.notes.add_title") }}
+                                </div>
+                                <textarea
+                                    v-model="newNote"
+                                    rows="2"
+                                    class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm outline-none ring-blue-200 focus:ring dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                                    :placeholder="
+                                        t('trip_detail.notes.placeholder')
                                     "
+                                />
+                                <div
+                                    class="mt-1.5 flex flex-wrap items-center gap-2"
                                 >
-                                    {{ attachMsg }}
-                                </p>
-                                <ul class="mt-2 space-y-1.5">
-                                    <li
-                                        v-for="a in attachmentsList"
-                                        :key="a.id"
-                                        class="flex items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50/50 px-3 py-1.5 dark:border-slate-700/80 dark:bg-slate-900/30"
+                                    <Button
+                                        :loading="noting"
+                                        :disabled="!newNote.trim()"
+                                        @click="addNote"
+                                        >{{
+                                            t("trip_detail.notes.add_action")
+                                        }}</Button
                                     >
-                                        <div class="min-w-0">
-                                            <div
-                                                class="truncate text-sm font-medium text-slate-900 dark:text-slate-100"
-                                            >
-                                                {{
-                                                    a.original_name ||
-                                                    t(
-                                                        "trip_detail.attachments.unnamed",
-                                                    )
-                                                }}
-                                            </div>
-                                            <div
-                                                class="text-xs text-slate-500"
-                                            >
-                                                {{ fmtFileSize(a.size_bytes) }}
-                                            </div>
-                                        </div>
-                                        <div
-                                            class="flex shrink-0 items-center gap-1"
-                                        >
-                                            <a
-                                                v-if="a.url"
-                                                :href="a.url"
-                                                target="_blank"
-                                                rel="noopener"
-                                                class="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-                                                :download="
-                                                    a.original_name ||
-                                                    undefined
-                                                "
-                                            >
-                                                <ArrowDownTrayIcon
-                                                    class="h-5 w-5"
-                                                />
-                                            </a>
-                                            <button
-                                                v-if="canManageAttachments"
-                                                type="button"
-                                                class="flex h-9 w-9 items-center justify-center rounded-lg border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-800/60 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60"
-                                                :disabled="
-                                                    attachDeletingId === a.id
-                                                "
-                                                :aria-label="
-                                                    t(
-                                                        'trip_detail.attachments.delete',
-                                                    )
-                                                "
-                                                @click="removeAttachment(a)"
-                                            >
-                                                <TrashIcon class="h-5 w-5" />
-                                            </button>
-                                        </div>
-                                    </li>
-                                </ul>
-                                <p
-                                    v-if="!attachmentsList.length"
-                                    class="mt-2 text-sm text-slate-500 dark:text-slate-400"
-                                >
-                                    {{ t("trip_detail.attachments.empty") }}
-                                </p>
+                                    <span
+                                        v-if="noteMsg"
+                                        class="text-sm text-slate-600 dark:text-slate-400"
+                                        >{{ noteMsg }}</span
+                                    >
+                                </div>
                             </div>
+                        </div>
+                    </section>
+                </div>
 
-                            <div
-                                v-show="attachmentNotesTab === 'notes'"
-                                id="trip-detail-panel-notes"
-                                role="tabpanel"
-                                aria-labelledby="trip-detail-tab-notes"
+                <!-- TAB 4 · DOCUMENTS -->
+                <div v-show="activeTab === 'documents'">
+                    <section
+                        class="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-950/40"
+                        :aria-label="t('trip_detail.attachments.title')"
+                    >
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <h2
+                                class="text-[11px] font-bold uppercase tracking-wide text-slate-500"
                             >
-                                <div class="mt-2 space-y-2">
-                                    <div
-                                        v-if="tripRequestNotesFromUser"
-                                        class="rounded-lg border border-amber-100 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100"
-                                    >
+                                {{ t("trip_detail.attachments.title") }}
+                            </h2>
+                            <div
+                                v-if="
+                                    canManageAttachments &&
+                                    trip.dispatch_request?.id
+                                "
+                                class="flex shrink-0 flex-wrap items-center justify-end gap-2"
+                            >
+                                <input
+                                    ref="attachInputRef"
+                                    type="file"
+                                    class="hidden"
+                                    @change="onAttachmentFile"
+                                />
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    class="!px-3"
+                                    :loading="attachUploading"
+                                    @click="attachInputRef?.click()"
+                                >
+                                    {{ t("trip_detail.attachments.upload") }}
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div
+                            v-if="
+                                canManageAttachments && trip.dispatch_request?.id
+                            "
+                            class="mt-3 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center transition hover:border-blue-300 hover:bg-blue-50/40 dark:border-slate-700 dark:bg-slate-900/30"
+                            @click="attachInputRef?.click()"
+                            @dragover.prevent
+                            @drop.prevent="onAttachmentDrop"
+                        >
+                            <ArrowUpTrayIcon
+                                class="h-6 w-6 text-slate-400"
+                                aria-hidden="true"
+                            />
+                            <p class="mt-2 text-sm font-medium text-slate-600 dark:text-slate-300">
+                                {{ t("trip_detail.sections.documents_hint") }}
+                            </p>
+                        </div>
+
+                        <p
+                            v-if="attachMsg"
+                            class="mt-2 text-xs"
+                            :class="
+                                attachMsgIsError
+                                    ? 'text-rose-600'
+                                    : 'text-slate-600'
+                            "
+                        >
+                            {{ attachMsg }}
+                        </p>
+
+                        <ul class="mt-3 space-y-1.5">
+                            <li
+                                v-for="a in attachmentsList"
+                                :key="a.id"
+                                class="flex items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50/50 px-3 py-2 dark:border-slate-700/80 dark:bg-slate-900/30"
+                            >
+                                <div class="flex min-w-0 items-center gap-2.5">
+                                    <DocumentIcon
+                                        class="h-5 w-5 shrink-0 text-slate-400"
+                                        aria-hidden="true"
+                                    />
+                                    <div class="min-w-0">
                                         <div
-                                            class="text-xs font-medium text-amber-800 dark:text-amber-200"
+                                            class="truncate text-sm font-medium text-slate-900 dark:text-slate-100"
                                         >
                                             {{
+                                                a.original_name ||
                                                 t(
-                                                    "trip_detail.notes.from_request",
+                                                    "trip_detail.attachments.unnamed",
                                                 )
                                             }}
                                         </div>
-                                        <div
-                                            class="mt-1 max-h-40 overflow-y-auto overscroll-y-contain whitespace-pre-wrap scrollbar-hidden"
-                                        >
-                                            {{ tripRequestNotesFromUser }}
-                                        </div>
-                                    </div>
-                                    <div
-                                        v-for="n in noteEvents"
-                                        :key="n.id"
-                                        class="rounded-lg border border-slate-100 bg-slate-50/50 p-2 dark:border-slate-700/80 dark:bg-slate-900/40"
-                                    >
-                                        <div
-                                            class="flex items-baseline justify-between gap-2"
-                                        >
-                                            <div
-                                                class="text-xs font-medium text-slate-700 dark:text-slate-300"
-                                            >
-                                                {{
-                                                    n.creator?.name ??
-                                                    t(
-                                                        "trip_detail.timeline.system",
-                                                    )
-                                                }}
-                                            </div>
-                                            <div
-                                                class="text-xs text-slate-400"
-                                            >
-                                                {{ fmt(n.created_at) }}
-                                            </div>
-                                        </div>
-                                        <div
-                                            class="mt-1 whitespace-pre-wrap text-sm text-slate-800 dark:text-slate-200"
-                                        >
-                                            {{ n.message }}
-                                        </div>
-                                    </div>
-                                    <div
-                                        v-if="
-                                            !noteEvents.length &&
-                                            !tripRequestNotesFromUser
-                                        "
-                                        class="text-xs text-slate-500 dark:text-slate-400"
-                                    >
-                                        {{ t("trip_detail.notes.empty") }}
-                                    </div>
-                                    <div class="pt-1">
-                                        <div
-                                            class="text-xs font-semibold text-slate-500 dark:text-slate-400"
-                                        >
-                                            {{
-                                                t(
-                                                    "trip_detail.notes.add_title",
-                                                )
-                                            }}
-                                        </div>
-                                        <textarea
-                                            v-model="newNote"
-                                            rows="2"
-                                            class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm outline-none ring-blue-200 focus:ring dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                                            :placeholder="
-                                                t(
-                                                    'trip_detail.notes.placeholder',
-                                                )
-                                            "
-                                        />
-                                        <div
-                                            class="mt-1.5 flex flex-wrap items-center gap-2"
-                                        >
-                                            <Button
-                                                :loading="noting"
-                                                :disabled="!newNote.trim()"
-                                                @click="addNote"
-                                                >{{
-                                                    t(
-                                                        "trip_detail.notes.add_action",
-                                                    )
-                                                }}</Button
-                                            >
-                                            <span
-                                                v-if="noteMsg"
-                                                class="text-sm text-slate-600 dark:text-slate-400"
-                                                >{{ noteMsg }}</span
-                                            >
+                                        <div class="text-xs text-slate-500">
+                                            {{ fmtFileSize(a.size_bytes) }}
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                </section>
-
-                <div class="min-w-0 space-y-4">
-                        <PassengerCheckIn
-                            :trip-id="trip.id"
-                            :trip="trip"
-                            :rows="passengerRowsDisplay"
-                            :request-passenger-count="unifiedPassengerCount"
-                            :can-check-in="canPassengerCheckIn"
-                            :can-edit-list="canEditPassengerList"
-                            :special-summary="specialNeedsSummary"
-                            @trip-updated="applyTripPayload"
-                            @lock-conflict="onTripLockConflict"
-                            @passenger-list-save="onPassengerListSave"
-                            @passenger-list-delete="onPassengerListDelete"
-                            @passenger-list-add-submit="onPassengerListAddSubmit"
-                        />
-
-                        <section
-                            class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700/80 dark:bg-slate-950/40"
-                            :aria-label="t('trip_detail.status_block.title')"
+                                <div class="flex shrink-0 items-center gap-1">
+                                    <a
+                                        v-if="a.url"
+                                        :href="a.url"
+                                        target="_blank"
+                                        rel="noopener"
+                                        class="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                                        :download="a.original_name || undefined"
+                                    >
+                                        <ArrowDownTrayIcon class="h-5 w-5" />
+                                    </a>
+                                    <button
+                                        v-if="canManageAttachments"
+                                        type="button"
+                                        class="flex h-9 w-9 items-center justify-center rounded-lg border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-800/60 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60"
+                                        :disabled="attachDeletingId === a.id"
+                                        :aria-label="
+                                            t('trip_detail.attachments.delete')
+                                        "
+                                        @click="removeAttachment(a)"
+                                    >
+                                        <TrashIcon class="h-5 w-5" />
+                                    </button>
+                                </div>
+                            </li>
+                        </ul>
+                        <p
+                            v-if="!attachmentsList.length"
+                            class="mt-3 text-sm text-slate-500 dark:text-slate-400"
                         >
-                            <div
-                                class="border-b border-slate-100 bg-slate-50/80 px-4 py-3 dark:border-slate-700/80 dark:bg-slate-900/50 sm:px-5"
+                            {{ t("trip_detail.attachments.empty") }}
+                        </p>
+                    </section>
+                </div>
+
+                <!-- TAB 2 · PASSENGERS -->
+                <div v-show="activeTab === 'passengers'">
+                    <PassengerCheckIn
+                        :trip-id="trip.id"
+                        :trip="trip"
+                        :rows="passengerRowsDisplay"
+                        :request-passenger-count="unifiedPassengerCount"
+                        :can-check-in="canPassengerCheckIn"
+                        :can-edit-list="canEditPassengerList"
+                        :special-summary="specialNeedsSummary"
+                        @trip-updated="applyTripPayload"
+                        @lock-conflict="onTripLockConflict"
+                        @passenger-list-save="onPassengerListSave"
+                        @passenger-list-delete="onPassengerListDelete"
+                        @passenger-list-add-submit="onPassengerListAddSubmit"
+                    />
+                </div>
+
+                <!-- TAB 3 · DISPATCH (status & workflow actions) -->
+                <div v-show="activeTab === 'dispatch'">
+                    <section
+                        class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700/80 dark:bg-slate-950/40"
+                        :aria-label="t('trip_detail.status_block.title')"
+                    >
+                        <div
+                            class="border-b border-slate-100 bg-slate-50/80 px-4 py-3 dark:border-slate-700/80 dark:bg-slate-900/50 sm:px-5"
+                        >
+                            <h2
+                                class="text-sm font-semibold text-slate-800 dark:text-slate-100"
                             >
-                                <h2
-                                    class="text-sm font-semibold text-slate-800 dark:text-slate-100"
-                                >
-                                    {{ t("trip_detail.status_block.title") }}
-                                </h2>
-                                <p
-                                    class="mt-0.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400"
-                                >
-                                    {{ t("trip_detail.status_block.subtitle") }}
-                                </p>
-                            </div>
-                            <div class="p-4 sm:p-5">
+                                {{ t("trip_detail.status_block.title") }}
+                            </h2>
+                            <p
+                                class="mt-0.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400"
+                            >
+                                {{ t("trip_detail.status_block.subtitle") }}
+                            </p>
+                        </div>
+                        <div class="p-4 sm:p-5">
                             <StatusActions
                                 embedded
                                 hide-section-title
@@ -544,16 +555,87 @@
                                 @advance="doAdvanceTripStatus"
                                 @cancel="onWorkflowCancelTrip"
                             />
-                            </div>
-                        </section>
+                        </div>
+                    </section>
+                </div>
 
-                        <CostTracker
-                            :trip-id="trip.id"
-                            :costs="trip.costs ?? []"
-                            :can-submit="canSubmitQuickCost"
-                            :show-costs-link="auth.canAccessDispatchWebApp()"
-                            @updated="load({ silent: true })"
-                        />
+                <!-- TAB 5 · EXPENSES -->
+                <div v-show="activeTab === 'expenses'">
+                    <CostTracker
+                        :trip-id="trip.id"
+                        :costs="trip.costs ?? []"
+                        :can-submit="canSubmitQuickCost"
+                        :show-costs-link="auth.canAccessDispatchWebApp()"
+                        @updated="load({ silent: true })"
+                    />
+                </div>
+
+                <!-- TAB 6 · ACTIVITY LOG -->
+                <div v-show="activeTab === 'activity'">
+                    <section
+                        class="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-950/40"
+                        :aria-label="t('trip_detail.sections.activity_stream')"
+                    >
+                        <h2
+                            class="text-[11px] font-bold uppercase tracking-wide text-slate-500"
+                        >
+                            {{ t("trip_detail.sections.activity_stream") }}
+                        </h2>
+                        <ol v-if="timeline.length" class="mt-4">
+                            <li
+                                v-for="(ev, i) in timeline"
+                                :key="ev.key"
+                                class="relative flex gap-3 pb-5 last:pb-0"
+                            >
+                                <span
+                                    v-if="i < timeline.length - 1"
+                                    class="absolute left-3.5 top-8 h-[calc(100%-1rem)] w-px bg-slate-200 dark:bg-slate-700"
+                                    aria-hidden="true"
+                                />
+                                <span
+                                    class="relative z-[1] flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-[12px] font-semibold"
+                                    :class="timelineToneClass(ev.tone)"
+                                    aria-hidden="true"
+                                >
+                                    {{ ev.icon }}
+                                </span>
+                                <div class="min-w-0 flex-1 pt-0.5">
+                                    <div
+                                        class="flex flex-wrap items-baseline justify-between gap-x-2"
+                                    >
+                                        <p
+                                            class="text-sm font-semibold text-slate-900 dark:text-slate-100"
+                                        >
+                                            {{ ev.title }}
+                                        </p>
+                                        <p
+                                            class="text-xs tabular-nums text-slate-400"
+                                        >
+                                            {{ fmt(ev.at) }}
+                                        </p>
+                                    </div>
+                                    <p
+                                        v-if="ev.subtitle"
+                                        class="mt-0.5 whitespace-pre-wrap text-sm text-slate-600 dark:text-slate-300"
+                                    >
+                                        {{ ev.subtitle }}
+                                    </p>
+                                    <p
+                                        v-if="ev.actor"
+                                        class="mt-0.5 text-xs italic text-slate-400"
+                                    >
+                                        {{ ev.actor }}
+                                    </p>
+                                </div>
+                            </li>
+                        </ol>
+                        <p
+                            v-else
+                            class="mt-3 text-sm text-slate-500 dark:text-slate-400"
+                        >
+                            {{ t("trip_detail.notes.empty") }}
+                        </p>
+                    </section>
                 </div>
             </div>
 
@@ -650,6 +732,8 @@ import { RouterLink, useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import {
     ArrowDownTrayIcon,
+    ArrowUpTrayIcon,
+    DocumentIcon,
     TrashIcon,
 } from "@heroicons/vue/24/outline";
 import Button from "../../components/ui/Button.vue";
@@ -908,7 +992,6 @@ const attachDeletingId = ref(null);
 const attachMsg = ref("");
 const attachMsgIsError = ref(false);
 
-const attachmentNotesTab = ref("attachments");
 const newNote = ref("");
 const noting = ref(false);
 const noteMsg = ref("");
@@ -2903,6 +2986,128 @@ async function addNote() {
 }
 
 const tripStatusWorkflowNote = ref("");
+
+/* ───────────── Redesign: full-width tab layout + KPI summary ───────────── */
+const activeTab = ref("info");
+
+const tabs = computed(() => [
+    { key: "info", label: t("trip_detail.tabs.info") },
+    {
+        key: "passengers",
+        label: t("trip_detail.tabs.passengers"),
+        count: unifiedPassengerCount.value,
+    },
+    { key: "dispatch", label: t("trip_detail.tabs.dispatch") },
+    {
+        key: "documents",
+        label: t("trip_detail.tabs.documents"),
+        count: attachmentsList.value.length,
+    },
+    { key: "expenses", label: t("trip_detail.tabs.expenses") },
+    { key: "activity", label: t("trip_detail.tabs.activity") },
+]);
+
+/** Tổng hợp xe/tài xế/ghế đã phân công (gộp chặng + cấp chuyến, không trùng id). */
+const kpiAssigned = computed(() => {
+    const vIds = new Set();
+    const dIds = new Set();
+    const seatSeen = new Set();
+    let seats = 0;
+    const addVehicle = (id, seat) => {
+        if (id == null) return;
+        const n = Number(id);
+        if (!Number.isFinite(n)) return;
+        vIds.add(n);
+        if (!seatSeen.has(n)) {
+            seatSeen.add(n);
+            const s = Number(seat);
+            if (Number.isFinite(s) && s > 0) seats += Math.floor(s);
+        }
+    };
+    const addDriver = (id) => {
+        if (id == null) return;
+        const n = Number(id);
+        if (Number.isFinite(n)) dIds.add(n);
+    };
+
+    const tr = trip.value;
+    addVehicle(tr?.vehicle?.id ?? tr?.vehicle_id, tr?.vehicle?.seat_count);
+    addDriver(tr?.driver?.id ?? tr?.driver_id);
+    for (const leg of scheduleLegs.value) {
+        const a = leg?.assignment;
+        if (!a) continue;
+        addVehicle(a.vehicle?.id ?? a.vehicle_id, a.vehicle?.seat_count);
+        addDriver(a.driver?.id ?? a.driver_id);
+    }
+    return { vehicleCount: vIds.size, driverCount: dIds.size, seats };
+});
+
+const summaryKpis = computed(() => {
+    const a = kpiAssigned.value;
+    const dash = "—";
+    const range = scheduleTimeRange.value;
+    return [
+        {
+            key: "passengers",
+            label: t("trip_detail.summary.passengers"),
+            value: String(unifiedPassengerCount.value || 0),
+        },
+        {
+            key: "seats",
+            label: t("trip_detail.summary.seats"),
+            value: a.seats > 0 ? String(a.seats) : dash,
+        },
+        {
+            key: "vehicles",
+            label: t("trip_detail.summary.vehicles"),
+            value: String(a.vehicleCount),
+        },
+        {
+            key: "drivers",
+            label: t("trip_detail.summary.drivers"),
+            value: String(a.driverCount),
+        },
+        {
+            key: "schedule",
+            label: t("trip_detail.summary.schedule"),
+            value: range && !isEmptyDisplay(range) ? range : dash,
+        },
+        {
+            key: "revenue",
+            label: t("trip_detail.summary.revenue"),
+            value: estimatedCostLabel.value || dash,
+        },
+    ];
+});
+
+async function onAttachmentDrop(ev) {
+    const file = ev.dataTransfer?.files?.[0];
+    if (
+        !file ||
+        !canManageAttachments.value ||
+        !trip.value?.dispatch_request?.id
+    )
+        return;
+    attachMsg.value = "";
+    attachUploading.value = true;
+    try {
+        await uploadAttachment({
+            attachable_type: "dispatch_request",
+            attachable_id: trip.value.dispatch_request.id,
+            kind: "request_attachment",
+            file,
+        });
+        await load({ silent: true });
+        attachMsg.value = t("trip_detail.attachments.upload_ok");
+        attachMsgIsError.value = false;
+    } catch (e) {
+        attachMsg.value =
+            e?.response?.data?.message ?? t("trip_detail.messages.error");
+        attachMsgIsError.value = true;
+    } finally {
+        attachUploading.value = false;
+    }
+}
 
 watch(
     () => [trip.value?.id, scheduleDateKeyForList.value],

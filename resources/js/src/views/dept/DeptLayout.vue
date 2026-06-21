@@ -148,9 +148,9 @@
 
       <div
         class="shrink-0 border-t border-white/15 py-1.5 md:py-2"
-        :class="compactNav ? 'flex justify-center px-1 md:px-1.5' : 'flex items-center px-2 md:px-3'"
+        :class="compactNav ? 'flex justify-center px-1 md:px-1.5' : 'flex w-full items-center px-2 md:px-3'"
       >
-        <NotificationBell tone="brand" />
+        <NotificationBell tone="brand" :show-label="!compactNav" />
       </div>
 
       <div class="shrink-0 border-t border-white/15 p-2 md:p-3">

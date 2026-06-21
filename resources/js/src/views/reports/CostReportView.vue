@@ -190,10 +190,9 @@
         </div>
         <div v-else class="space-y-3 px-3 py-4 sm:px-4 md:space-y-4">
           <CostReportRecordCard
-            v-for="(row, idx) in paginatedRows"
+            v-for="row in paginatedRows"
             :key="row.id"
             :row="row"
-            :row-no="detailRowNo(idx)"
             :col-visible="colVisible"
             :status-label-fn="statusLabel"
           />
@@ -438,11 +437,6 @@ const paginatedRows = computed(() => {
   const start = (page - 1) * detailPerPage.value
   return list.slice(start, start + detailPerPage.value)
 })
-
-function detailRowNo(idx) {
-  const page = Math.min(detailPage.value, detailLastPage.value)
-  return (page - 1) * detailPerPage.value + idx + 1
-}
 
 const topCategory = computed(() => {
   const list = stats.value?.by_category ?? []

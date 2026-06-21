@@ -5,39 +5,57 @@
 
     <template v-else>
       <!-- Content header -->
-      <div
-        class="flex flex-col gap-4 border-b border-slate-200/80 pb-6 dark:border-slate-700/80 sm:flex-row sm:items-start sm:justify-between"
-      >
-        <div class="min-w-0">
-          <RouterLink
-            to="/resources/list?tab=vehicles"
-            class="mb-2 inline-flex items-center gap-1 text-sm font-medium text-teal-700 hover:underline dark:text-teal-400"
-            data-testid="vehicle-detail-back"
+      <div class="border-b border-slate-200/80 pb-6 dark:border-slate-700/80">
+        <RouterLink
+          to="/resources/list?tab=vehicles"
+          class="mb-3 inline-flex items-center gap-1 text-sm font-medium text-teal-700 hover:underline dark:text-teal-400"
+          data-testid="vehicle-detail-back"
+        >
+          ← {{ t('vehicle_detail.back') }}
+        </RouterLink>
+        <div class="flex flex-wrap items-start gap-3 sm:gap-4">
+          <div
+            class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-teal-100 text-teal-600 ring-1 ring-teal-200/60 dark:bg-teal-950/40 dark:text-teal-400 dark:ring-teal-800/60"
+            aria-hidden="true"
           >
-            ← {{ t('vehicle_detail.back') }}
-          </RouterLink>
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            {{ t('vehicle_detail.page_heading_hint') }}
-          </p>
-          <div class="mt-1 flex flex-wrap items-center gap-2">
-            <h1 class="font-mono text-xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-2xl">
-              <EmptyValue :value="vehicle.license_plate" empty-key="vehicle_detail.empty_license_plate" />
-            </h1>
-            <span
-              class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
-              :class="vehicleStatusBadgeClass(vehicle.status)"
-            >
-              {{ labelVehicleStatus(vehicle.status) }}
-            </span>
+            <component :is="vehicleIconComponent" class="h-7 w-7" />
           </div>
-          <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            <EmptyValue :value="vehicleTypeLabel" empty-key="resources.empty_type_capacity" />
-          </p>
-          <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-500">{{ t('vehicle_detail.page_subtitle') }}</p>
+          <div class="min-w-0 flex-1">
+            <p class="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+              {{ t('vehicle_detail.page_heading_hint') }}
+            </p>
+            <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2">
+              <h1 class="font-mono text-xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-2xl">
+                <EmptyValue :value="vehicle.license_plate" empty-key="vehicle_detail.empty_license_plate" />
+              </h1>
+              <span
+                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                :class="vehicleStatusBadgeClass(vehicle.status)"
+              >
+                {{ labelVehicleStatus(vehicle.status) }}
+              </span>
+            </div>
+            <p class="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-600 dark:text-slate-400">
+              <EmptyValue :value="vehicle.type" empty-key="vehicle_detail.empty_type" />
+              <template v-if="vehicle.seat_count != null">
+                <span class="text-slate-300 dark:text-slate-600" aria-hidden="true">·</span>
+                {{ t('vehicle_detail.seat_suffix', { n: vehicle.seat_count }) }}
+              </template>
+              <template v-if="vehicle.payload_kg">
+                <span class="text-slate-300 dark:text-slate-600" aria-hidden="true">·</span>
+                {{ t('vehicle_detail.payload_suffix', { n: vehicle.payload_kg }) }}
+              </template>
+              <template v-if="vehicle.owner_name">
+                <span class="text-slate-300 dark:text-slate-600" aria-hidden="true">·</span>
+                <span class="min-w-0 truncate">{{ vehicle.owner_name }}</span>
+              </template>
+            </p>
+            <p class="mt-1 text-xs text-slate-500 dark:text-slate-500">{{ t('vehicle_detail.page_subtitle') }}</p>
+          </div>
         </div>
       </div>
 
-      <!-- Hồ sơ xe — 2 cột -->
+      <!-- Hồ sơ xe -->
       <section class="rounded-xl border border-slate-200/90 bg-white p-4 dark:border-slate-700 dark:bg-slate-900/50 sm:p-5">
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -55,180 +73,112 @@
           </button>
         </div>
 
-        <div v-if="!profileEdit" class="mt-4 flex flex-col gap-4 md:flex-row md:items-start md:gap-5 lg:gap-6">
-          <div class="flex min-w-0 gap-3 sm:gap-4 md:max-w-[min(100%,20rem)] md:shrink-0 lg:max-w-[22rem]">
-            <div
-              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-teal-100 text-teal-600 dark:bg-teal-950/40 dark:text-teal-400"
-              aria-hidden="true"
-            >
-              <component :is="vehicleIconComponent" class="h-6 w-6" />
-            </div>
-            <div class="min-w-0 flex-1 space-y-2.5">
+        <div v-if="!profileEdit" class="mt-4 space-y-4">
+          <div
+            class="flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/90 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 dark:border-slate-800 dark:bg-slate-800/50"
+            data-testid="vehicle-detail-compliance-pills"
+          >
+            <p class="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              {{ t('vehicle_detail.compliance_pills_heading') }}
+            </p>
+            <dl class="flex min-w-0 flex-1 flex-wrap items-center gap-2 sm:justify-end">
               <div
-                class="rounded-lg border border-slate-100 bg-slate-50/90 px-2.5 py-2 dark:border-slate-800 dark:bg-slate-800/50"
-                data-testid="vehicle-detail-compliance-pills"
+                v-for="(pill, idx) in vehicleCompliancePills"
+                :key="idx"
+                class="inline-flex min-w-0 items-center gap-2 rounded-lg border border-slate-200/80 bg-white px-2.5 py-1.5 dark:border-slate-700 dark:bg-slate-900/60"
               >
-                <p class="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  {{ t('vehicle_detail.compliance_pills_heading') }}
-                </p>
-                <dl class="flex flex-wrap gap-x-3 gap-y-1.5">
-                  <div
-                    v-for="(pill, idx) in vehicleCompliancePills"
-                    :key="idx"
-                    class="inline-flex min-w-0 items-center gap-1.5"
-                  >
-                    <dt class="text-[11px] font-semibold text-slate-600 dark:text-slate-300">{{ pill.label }}</dt>
-                    <dd class="m-0">
-                      <span :class="pill.class">{{ pill.value }}</span>
-                    </dd>
-                  </div>
-                </dl>
+                <dt class="text-[11px] font-semibold text-slate-600 dark:text-slate-300">{{ pill.label }}</dt>
+                <dd class="m-0">
+                  <span :class="pill.class">{{ pill.value }}</span>
+                </dd>
               </div>
-            </div>
+            </dl>
           </div>
 
           <dl
-            class="min-w-0 flex-1 grid grid-cols-2 gap-x-3 gap-y-2.5 rounded-xl border border-slate-100 bg-slate-50/80 p-3 sm:grid-cols-2 lg:grid-cols-3 dark:border-slate-800 dark:bg-slate-800/40"
+            class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
             data-testid="vehicle-detail-profile-fields"
           >
-            <div class="min-w-0">
+            <div
+              v-for="field in profileReadFields"
+              :key="field.key"
+              class="min-w-0 rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2.5 dark:border-slate-800 dark:bg-slate-800/40"
+              :class="field.spanWide ? 'sm:col-span-2 lg:col-span-3' : ''"
+            >
               <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {{ t('vehicle_detail.license_plate') }}
+                {{ field.label }}
               </dt>
-              <dd class="mt-0.5 text-sm font-medium font-mono text-slate-800 dark:text-slate-200">
-                <EmptyValue :value="vehicle.license_plate" empty-key="vehicle_detail.empty_license_plate" />
-              </dd>
-            </div>
-            <div class="min-w-0">
-              <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {{ t('vehicle_detail.type') }}
-              </dt>
-              <dd class="mt-0.5 text-sm font-medium text-slate-800 dark:text-slate-200">
-                <EmptyValue :value="vehicle.type" empty-key="vehicle_detail.empty_type" />
-              </dd>
-            </div>
-            <div class="min-w-0">
-              <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {{ t('vehicle_detail.seat_count') }}
-              </dt>
-              <dd class="mt-0.5 text-sm font-medium tabular-nums text-slate-800 dark:text-slate-200">
+              <dd
+                class="mt-1 text-sm font-medium text-slate-800 dark:text-slate-200"
+                :class="[
+                  field.mono ? 'font-mono' : '',
+                  field.tabular ? 'tabular-nums' : '',
+                  field.preWrap ? 'whitespace-pre-wrap' : '',
+                ]"
+              >
+                <template v-if="field.kind === 'status'">{{ labelVehicleStatus(vehicle.status) }}</template>
                 <EmptyValue
-                  :value="vehicle.seat_count != null ? String(vehicle.seat_count) : ''"
-                  empty-key="vehicle_detail.empty_seat_count"
+                  v-else
+                  :value="field.value"
+                  :empty-key="field.emptyKey"
                 />
-              </dd>
-            </div>
-            <div class="min-w-0">
-              <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {{ t('resources.col_status') }}
-              </dt>
-              <dd class="mt-0.5 text-sm font-medium text-slate-800 dark:text-slate-200">
-                {{ labelVehicleStatus(vehicle.status) }}
-              </dd>
-            </div>
-            <div class="min-w-0">
-              <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {{ t('vehicle_detail.owner_name') }}
-              </dt>
-              <dd class="mt-0.5 text-sm font-medium text-slate-800 dark:text-slate-200">
-                <EmptyValue :value="vehicle.owner_name" empty-key="resources.empty_owner" />
-              </dd>
-            </div>
-            <div class="min-w-0">
-              <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {{ t('vehicle_detail.caretaker_name') }}
-              </dt>
-              <dd class="mt-0.5 text-sm font-medium text-slate-800 dark:text-slate-200">
-                <EmptyValue :value="vehicle.caretaker_name" empty-key="vehicle_detail.empty_caretaker" />
-              </dd>
-            </div>
-            <div class="min-w-0">
-              <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {{ t('vehicle_detail.caretaker_phone') }}
-              </dt>
-              <dd class="mt-0.5 text-sm font-medium text-slate-800 dark:text-slate-200">
-                <EmptyValue :value="vehicle.caretaker_phone" empty-key="vehicle_detail.empty_caretaker_phone" />
-              </dd>
-            </div>
-            <div class="min-w-0">
-              <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {{ t('vehicle_detail.default_driver') }}
-              </dt>
-              <dd class="mt-0.5 text-sm font-medium text-slate-800 dark:text-slate-200">
-                <EmptyValue :value="vehicle.default_driver?.full_name" empty-key="resources.unassigned" />
-              </dd>
-            </div>
-            <div class="min-w-0">
-              <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {{ t('vehicle_detail.inspection_expires') }}
-              </dt>
-              <dd class="mt-0.5 text-sm font-medium text-slate-800 dark:text-slate-200">
-                <EmptyValue :value="vehicle.inspection_expires_at" empty-key="resources.empty_date" />
-              </dd>
-            </div>
-            <div class="min-w-0">
-              <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {{ t('vehicle_detail.insurance_expires') }}
-              </dt>
-              <dd class="mt-0.5 text-sm font-medium text-slate-800 dark:text-slate-200">
-                <EmptyValue :value="vehicle.insurance_expires_at" empty-key="resources.empty_date" />
-              </dd>
-            </div>
-            <div class="min-w-0 col-span-2 lg:col-span-3">
-              <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {{ t('resources.col_notes') }}
-              </dt>
-              <dd class="mt-0.5 whitespace-pre-wrap text-sm font-medium text-slate-800 dark:text-slate-200">
-                <EmptyValue :value="vehicle.notes" empty-key="vehicle_detail.empty_notes" />
               </dd>
             </div>
           </dl>
         </div>
 
-        <form v-else class="mt-4 grid gap-3 sm:grid-cols-2" @submit.prevent="saveVehicleProfile">
-          <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-            {{ t('resources.col_status') }}
-            <select
-              v-model="profileForm.status"
-              required
-              class="mt-1 w-full rounded-lg border border-slate-200 py-2 pl-3 pr-8 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-              data-testid="vehicle-detail-profile-status"
-            >
-              <option value="ready">{{ t('resources.vehicle_status_ready') }}</option>
-              <option value="in_use">{{ t('resources.vehicle_status_in_use') }}</option>
-              <option value="maintenance">{{ t('resources.vehicle_status_maintenance') }}</option>
-              <option value="broken">{{ t('resources.vehicle_status_broken') }}</option>
-            </select>
-          </label>
-          <div class="hidden sm:block" aria-hidden="true" />
-          <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-            {{ t('vehicle_detail.caretaker_name') }}
-            <input
-              v-model="profileForm.caretaker_name"
-              type="text"
-              class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-              data-testid="vehicle-detail-profile-caretaker-name"
-            />
-          </label>
-          <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-            {{ t('vehicle_detail.caretaker_phone') }}
-            <input
-              v-model="profileForm.caretaker_phone"
-              type="text"
-              class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-              data-testid="vehicle-detail-profile-caretaker-phone"
-            />
-          </label>
-          <label class="sm:col-span-2 block text-xs font-medium text-slate-600 dark:text-slate-400">
-            {{ t('resources.col_notes') }}
-            <textarea
-              v-model="profileForm.notes"
-              rows="4"
-              class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-              data-testid="vehicle-detail-profile-notes"
-            />
-          </label>
-          <div class="sm:col-span-2 flex flex-wrap gap-2 pt-1">
+        <form v-else class="mt-4 space-y-4" @submit.prevent="saveVehicleProfile">
+          <p class="text-xs text-slate-500 dark:text-slate-400">{{ t('vehicle_detail.edit_form_hint') }}</p>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+              {{ t('resources.col_status') }}
+              <span class="text-rose-500" aria-hidden="true">*</span>
+              <select
+                v-model="profileForm.status"
+                required
+                class="mt-1 h-10 w-full rounded-lg border border-slate-200 py-2 pl-3 pr-8 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                data-testid="vehicle-detail-profile-status"
+              >
+                <option value="ready">{{ t('resources.vehicle_status_ready') }}</option>
+                <option value="in_use">{{ t('resources.vehicle_status_in_use') }}</option>
+                <option value="maintenance">{{ t('resources.vehicle_status_maintenance') }}</option>
+                <option value="broken">{{ t('resources.vehicle_status_broken') }}</option>
+              </select>
+            </label>
+            <div class="hidden sm:block" aria-hidden="true" />
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+              {{ t('vehicle_detail.caretaker_name') }}
+              <input
+                v-model="profileForm.caretaker_name"
+                type="text"
+                class="mt-1 h-10 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                :placeholder="t('resources.vehicle_ph_caretaker')"
+                data-testid="vehicle-detail-profile-caretaker-name"
+              />
+            </label>
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+              {{ t('vehicle_detail.caretaker_phone') }}
+              <input
+                v-model="profileForm.caretaker_phone"
+                type="tel"
+                autocomplete="tel"
+                class="mt-1 h-10 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                :placeholder="t('resources.vehicle_ph_caretaker_phone')"
+                data-testid="vehicle-detail-profile-caretaker-phone"
+              />
+            </label>
+            <label class="sm:col-span-2 block text-xs font-medium text-slate-600 dark:text-slate-400">
+              {{ t('vehicle_detail.notes') }}
+              <textarea
+                v-model="profileForm.notes"
+                rows="4"
+                class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                :placeholder="t('resources.vehicle_ph_notes')"
+                data-testid="vehicle-detail-profile-notes"
+              />
+            </label>
+          </div>
+          <div class="flex flex-wrap gap-2 pt-1">
             <button
               type="submit"
               class="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
@@ -575,13 +525,79 @@ const vehicleIconComponent = computed(() => {
   return VEHICLE_ICON_COMPONENTS[kind] || VEHICLE_ICON_COMPONENTS.van
 })
 
-const vehicleTypeLabel = computed(() => {
+const profileReadFields = computed(() => {
   const v = vehicle.value || {}
-  const parts = []
-  if (v.type) parts.push(v.type)
-  if (v.seat_count) parts.push(t('vehicle_detail.seat_suffix', { n: v.seat_count }))
-  if (v.payload_kg) parts.push(t('vehicle_detail.payload_suffix', { n: v.payload_kg }))
-  return parts.length ? parts.join(' · ') : ''
+  return [
+    {
+      key: 'license_plate',
+      label: t('vehicle_detail.license_plate'),
+      value: v.license_plate,
+      emptyKey: 'vehicle_detail.empty_license_plate',
+      mono: true,
+    },
+    {
+      key: 'type',
+      label: t('vehicle_detail.type'),
+      value: v.type,
+      emptyKey: 'vehicle_detail.empty_type',
+    },
+    {
+      key: 'seat_count',
+      label: t('vehicle_detail.seat_count'),
+      value: v.seat_count != null ? String(v.seat_count) : '',
+      emptyKey: 'vehicle_detail.empty_seat_count',
+      tabular: true,
+    },
+    {
+      key: 'status',
+      label: t('resources.col_status'),
+      kind: 'status',
+    },
+    {
+      key: 'owner_name',
+      label: t('vehicle_detail.owner_name'),
+      value: v.owner_name,
+      emptyKey: 'resources.empty_owner',
+    },
+    {
+      key: 'caretaker_name',
+      label: t('vehicle_detail.caretaker_name'),
+      value: v.caretaker_name,
+      emptyKey: 'vehicle_detail.empty_caretaker',
+    },
+    {
+      key: 'caretaker_phone',
+      label: t('vehicle_detail.caretaker_phone'),
+      value: v.caretaker_phone,
+      emptyKey: 'vehicle_detail.empty_caretaker_phone',
+    },
+    {
+      key: 'default_driver',
+      label: t('vehicle_detail.default_driver'),
+      value: v.default_driver?.full_name,
+      emptyKey: 'resources.unassigned',
+    },
+    {
+      key: 'inspection_expires',
+      label: t('vehicle_detail.inspection_expires'),
+      value: v.inspection_expires_at,
+      emptyKey: 'resources.empty_date',
+    },
+    {
+      key: 'insurance_expires',
+      label: t('vehicle_detail.insurance_expires'),
+      value: v.insurance_expires_at,
+      emptyKey: 'resources.empty_date',
+    },
+    {
+      key: 'notes',
+      label: t('vehicle_detail.notes'),
+      value: v.notes,
+      emptyKey: 'vehicle_detail.empty_notes',
+      spanWide: true,
+      preWrap: true,
+    },
+  ]
 })
 
 function docStateFromDate(iso) {

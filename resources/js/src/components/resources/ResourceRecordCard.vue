@@ -57,6 +57,13 @@ const titleTextClass = computed(() =>
     ? 'font-mono text-base font-bold tracking-tight'
     : 'text-base font-semibold tracking-tight',
 )
+
+const complianceGridClass = computed(() => {
+  const n = props.pills.length
+  if (n <= 1) return 'grid-cols-1'
+  if (n === 2) return 'grid-cols-2'
+  return 'grid-cols-3'
+})
 </script>
 
 <template>
@@ -106,9 +113,12 @@ const titleTextClass = computed(() =>
             <component :is="icon" class="h-6 w-6" aria-hidden="true" />
           </div>
 
-          <div class="min-w-0 flex-1 space-y-2.5">
-            <div class="grid grid-cols-2 gap-x-3 gap-y-1">
-              <div class="min-w-0">
+          <div class="min-w-0 flex-1">
+            <div
+              class="flex items-start justify-between gap-4 border-b border-slate-100 pb-3 dark:border-slate-800"
+              :class="pills.length ? '' : 'border-b-0 pb-0'"
+            >
+              <div class="min-w-0 flex-1">
                 <p
                   v-if="titleFieldLabel"
                   class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
@@ -136,30 +146,49 @@ const titleTextClass = computed(() =>
                   {{ subtitle }}
                 </p>
               </div>
-              <div v-if="statusLabel" class="min-w-0 text-right">
+              <div v-if="statusLabel" class="shrink-0 text-right">
                 <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   {{ t('resources.col_status') }}
                 </p>
-                <span class="mt-1 inline-flex max-w-full truncate" :class="statusClass">{{ statusLabel }}</span>
+                <div class="mt-0.5 flex justify-end">
+                  <span class="max-w-[9rem] truncate sm:max-w-none" :class="statusClass">{{ statusLabel }}</span>
+                </div>
               </div>
             </div>
 
             <div
               v-if="pills.length"
-              class="rounded-lg border border-slate-100 bg-slate-50/90 px-2.5 py-2 dark:border-slate-800 dark:bg-slate-800/50"
+              class="pt-3"
               data-testid="resource-card-compliance"
             >
-              <p class="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              <p class="mb-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 {{ t('resources.col_compliance') }}
               </p>
-              <dl class="flex flex-wrap gap-x-3 gap-y-1.5">
+              <dl
+                v-if="pills.length === 1"
+                class="flex items-center justify-between gap-3 rounded-lg border border-slate-200/90 bg-slate-50/95 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900/70"
+              >
+                <dt class="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                  {{ pills[0].label }}
+                </dt>
+                <dd class="m-0 shrink-0">
+                  <span :class="pills[0].class">{{ pills[0].value }}</span>
+                </dd>
+              </dl>
+              <dl
+                v-else
+                class="grid gap-px overflow-hidden rounded-lg border border-slate-200/90 bg-slate-200/80 dark:border-slate-700 dark:bg-slate-700/80"
+                :class="complianceGridClass"
+              >
                 <template v-for="(p, i) in pills" :key="i">
-                  <div class="inline-flex min-w-0 items-center gap-1.5">
-                    <dt class="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                  <div
+                    class="flex min-w-0 flex-col items-center justify-center gap-1 bg-slate-50/95 px-2 py-2.5 text-center dark:bg-slate-900/70 sm:px-3"
+                  >
+                    <dt class="w-full truncate text-[11px] font-semibold leading-tight text-slate-600 dark:text-slate-300">
                       {{ p.label }}
                     </dt>
-                    <dd class="m-0">
-                      <span :class="p.class">{{ p.value }}</span>
+                    <dd class="m-0 flex w-full justify-center">
+                      <span class="max-w-full truncate text-center" :class="p.class">{{ p.value }}</span>
                     </dd>
                   </div>
                 </template>

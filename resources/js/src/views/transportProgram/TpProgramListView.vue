@@ -194,101 +194,97 @@
         </Button>
       </div>
 
-      <div v-else-if="view === 'grid'" class="grid grid-cols-1 gap-4 px-4 pb-5 sm:px-5 xl:grid-cols-2">
+      <div v-else-if="view === 'grid'" class="grid grid-cols-1 gap-4 px-4 pb-5 sm:px-5">
         <article
           v-for="p in visibleItems"
           :key="p.id"
-          class="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-va-800/30 hover:shadow-md dark:border-slate-700 dark:bg-slate-900/40"
+          class="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:border-va-800/30 hover:shadow-md dark:border-slate-700 dark:bg-slate-900/40"
           :data-testid="`tp-program-card-${p.id}`"
           @click="goWorkspace(p.id)"
         >
-          <div class="flex flex-1 flex-col gap-4 p-5 md:flex-row md:items-start md:gap-5">
-            <div class="min-w-0 md:max-w-[min(100%,19rem)] md:shrink-0">
-              <div class="flex items-start gap-3">
-                <div class="grid h-12 w-12 shrink-0 place-items-center rounded-xl" :class="accent(p.status).iconBg">
+          <div class="flex flex-col gap-4 p-5">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div class="flex min-w-0 items-start gap-3">
+                <div class="grid h-12 w-12 shrink-0 place-items-center rounded-xl ring-1 ring-inset ring-black/5" :class="accent(p.status).iconBg">
                   <TruckIcon class="h-7 w-7" :class="accent(p.status).iconText" />
                 </div>
-                <div class="min-w-0 flex-1">
-                  <h3 class="truncate text-base font-semibold text-slate-900 dark:text-white">{{ p.name }}</h3>
+                <div class="min-w-0">
+                  <h3 class="text-base font-semibold leading-snug text-slate-900 dark:text-white sm:text-lg">{{ p.name }}</h3>
                   <p class="mt-0.5 text-xs font-medium uppercase tracking-wide text-slate-400">
                     {{ t('tp_programs_page.card_school_year', { year: schoolYear(p) }) }}
                   </p>
                 </div>
-                <span :class="statusClass(p.status)">
-                  <span class="h-1.5 w-1.5 rounded-full" :class="accent(p.status).dot"></span>
-                  {{ statusLabel(p.status) }}
-                </span>
               </div>
+              <span :class="statusClass(p.status)" class="self-start">
+                <span class="h-1.5 w-1.5 rounded-full" :class="accent(p.status).dot"></span>
+                {{ statusLabel(p.status) }}
+              </span>
+            </div>
 
-              <div class="mt-4 grid grid-cols-3 gap-2 rounded-xl bg-slate-50/70 py-3 text-center dark:bg-slate-800/40">
-                <div>
-                  <div class="text-2xl font-bold text-slate-900 dark:text-white">{{ p.enrolled_count ?? 0 }}</div>
-                  <div class="mt-0.5 text-xs text-slate-500">{{ t('tp_programs_page.card_students') }}</div>
+            <div class="grid grid-cols-3 divide-x divide-slate-200/80 overflow-hidden rounded-xl border border-slate-200/80 bg-slate-50/50 dark:divide-slate-600 dark:border-slate-700 dark:bg-slate-800/30">
+              <div class="px-3 py-3 text-center sm:px-4">
+                <div class="font-display text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{{ p.enrolled_count ?? 0 }}</div>
+                <div class="mt-0.5 text-[11px] font-medium text-slate-500">{{ t('tp_programs_page.card_students') }}</div>
+              </div>
+              <div class="px-3 py-3 text-center sm:px-4">
+                <div class="font-display text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{{ p.day_count ?? 0 }}</div>
+                <div class="mt-0.5 text-[11px] font-medium text-slate-500">{{ t('tp_programs_page.card_days') }}</div>
+              </div>
+              <div class="px-3 py-3 text-center sm:px-4">
+                <div class="font-display text-2xl font-bold tabular-nums" :class="accent(p.status).iconText">{{ runsPerWeek(p) }}</div>
+                <div class="mt-0.5 text-[11px] font-medium text-slate-500">{{ t('tp_programs_page.card_sessions_per_week') }}</div>
+              </div>
+            </div>
+
+            <div class="rounded-xl border border-slate-200/80 bg-white p-4 dark:border-slate-700 dark:bg-slate-900/50">
+              <div class="flex gap-3">
+                <div class="flex w-5 shrink-0 flex-col items-center pt-1" aria-hidden="true">
+                  <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-500/15"></span>
+                  <span class="my-1 w-px flex-1 min-h-6 bg-gradient-to-b from-emerald-300/80 to-va-800/40 dark:from-emerald-600/50"></span>
+                  <span class="h-2.5 w-2.5 rounded-full bg-va-800 ring-4 ring-va-800/15"></span>
                 </div>
-                <div class="border-x border-slate-200/70 dark:border-slate-600">
-                  <div class="text-2xl font-bold text-slate-900 dark:text-white">{{ p.day_count ?? 0 }}</div>
-                  <div class="mt-0.5 text-xs text-slate-500">{{ t('tp_programs_page.card_days') }}</div>
-                </div>
-                <div>
-                  <div class="text-2xl font-bold" :class="accent(p.status).iconText">{{ runsPerWeek(p) }}</div>
-                  <div class="mt-0.5 text-xs text-slate-500">{{ t('tp_programs_page.card_sessions_per_week') }}</div>
+                <div class="min-w-0 flex-1 space-y-4">
+                  <div>
+                    <div class="text-[10px] font-semibold uppercase tracking-wide text-emerald-700/90 dark:text-emerald-400">
+                      {{ t('tp_programs_page.card_origin') }}
+                    </div>
+                    <p class="mt-1 text-sm font-medium leading-relaxed text-slate-800 dark:text-slate-100">
+                      {{ p.origin_name || t('tp_programs_page.card_route_empty') }}
+                    </p>
+                  </div>
+                  <div>
+                    <div class="text-[10px] font-semibold uppercase tracking-wide text-va-800/90 dark:text-va-300">
+                      {{ t('tp_programs_page.card_destination') }}
+                    </div>
+                    <p class="mt-1 text-sm font-medium leading-relaxed text-slate-800 dark:text-slate-100">
+                      {{ p.destination_name || t('tp_programs_page.card_destination_default') }}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div class="min-w-0 flex-1 space-y-3">
-              <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <div class="rounded-xl bg-slate-50/80 p-3 dark:bg-slate-800/40">
-                  <div class="flex gap-2">
-                    <MapPinIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-                    <div class="min-w-0">
-                      <div class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
-                        {{ t('tp_programs_page.card_origin') }}
-                      </div>
-                      <p class="mt-1 text-sm font-medium leading-snug text-slate-800 dark:text-slate-100">
-                        {{ p.origin_name || t('tp_programs_page.card_route_empty') }}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div class="rounded-xl bg-slate-50/80 p-3 dark:bg-slate-800/40">
-                  <div class="flex gap-2">
-                    <MapPinIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-                    <div class="min-w-0">
-                      <div class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
-                        {{ t('tp_programs_page.card_destination') }}
-                      </div>
-                      <p class="mt-1 text-sm font-medium leading-snug text-slate-800 dark:text-slate-100">
-                        {{ p.destination_name || t('tp_programs_page.card_destination_default') }}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div class="rounded-xl bg-slate-50/80 p-3 dark:bg-slate-800/40">
-                  <div class="flex gap-2">
-                    <ClockIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-                    <div class="min-w-0">
-                      <div class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
-                        {{ t('tp_programs_page.card_time') }}
-                      </div>
-                      <p class="mt-1 text-sm font-medium text-slate-700 dark:text-slate-200">{{ timeRange(p) }}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span
+                class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-800/50 dark:text-slate-200"
+              >
+                <ClockIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{{ t('tp_programs_page.card_time') }}</span>
+                <span class="tabular-nums text-slate-800 dark:text-slate-100">{{ timeRange(p) }}</span>
+              </span>
+            </div>
 
-              <div>
-                <div class="mb-1.5 flex items-center justify-between text-xs">
-                  <span class="text-slate-500">{{ t('tp_programs_page.card_progress') }}</span>
-                  <span class="font-semibold text-slate-700 dark:text-slate-200">{{ progress(p) }}%</span>
-                </div>
-                <div class="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
-                  <div
-                    class="h-full rounded-full transition-all"
-                    :class="accent(p.status).bar"
-                    :style="{ width: progress(p) + '%' }"
-                  ></div>
-                </div>
+            <div>
+              <div class="mb-1.5 flex items-center justify-between text-xs">
+                <span class="font-medium text-slate-500">{{ t('tp_programs_page.card_progress') }}</span>
+                <span class="font-semibold tabular-nums text-slate-700 dark:text-slate-200">{{ progress(p) }}%</span>
+              </div>
+              <div class="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
+                <div
+                  class="h-full rounded-full transition-all"
+                  :class="accent(p.status).bar"
+                  :style="{ width: progress(p) + '%' }"
+                ></div>
               </div>
             </div>
           </div>
@@ -396,7 +392,6 @@ import {
   ListBulletIcon,
   ArrowPathIcon,
   AcademicCapIcon,
-  MapPinIcon,
   ClockIcon,
   TruckIcon,
   XMarkIcon,

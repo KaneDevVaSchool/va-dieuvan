@@ -432,23 +432,6 @@
             :class="requestCardClass(r)"
             :data-testid="`requests-row-${r.id}`"
           >
-            <div
-              v-if="!isTrashTab && requestNeedsCostUpdate(r)"
-              class="flex items-start gap-2.5 border-b border-amber-300/90 bg-amber-100 px-3 py-2.5 sm:px-5 dark:border-amber-800/60 dark:bg-amber-950/40"
-              role="alert"
-              :data-testid="`requests-card-needs-cost-update-${r.id}`"
-            >
-              <CurrencyDollarIcon class="mt-0.5 h-5 w-5 shrink-0 text-amber-800 dark:text-amber-200" aria-hidden="true" />
-              <div class="min-w-0 text-sm">
-                <p class="font-semibold text-amber-950 dark:text-amber-50">
-                  {{ t('requests_page.card_needs_cost_update_title') }}
-                </p>
-                <p class="mt-0.5 text-xs leading-relaxed text-amber-900/95 dark:text-amber-100/90">
-                  {{ costUpdateCardDetail(r) }}
-                </p>
-              </div>
-            </div>
-
             <!-- Header -->
             <div class="border-b border-slate-100 px-3 py-4 sm:px-5 dark:border-slate-800">
               <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -1646,49 +1629,6 @@ function requestCardClass(r) {
 function requestNeedsCostUpdate(r) {
   if (r?.needs_cost_update === true) return true
   return Boolean(r?.missing_extra_fee || r?.missing_unit_price)
-}
-
-/** @param {Record<string, unknown>} r */
-function costUpdateRowLabels(r, rowKey, countKey, namedKey, plainKey, countLabelKey) {
-  const rows = Array.isArray(r[rowKey]) ? r[rowKey] : []
-  const labels = rows
-    .map((row) => {
-      const idx = row?.index
-      const label = String(row?.label ?? '').trim()
-      if (label) {
-        return t(namedKey, { n: idx, route: label })
-      }
-      return t(plainKey, { n: idx })
-    })
-    .filter(Boolean)
-  if (labels.length) return labels
-  const n = Number(r[countKey] ?? 0)
-  if (n > 0) return t(countLabelKey, { n })
-  return ''
-}
-
-/** @param {Record<string, unknown>} r */
-function costUpdateCardDetail(r) {
-  const parts = [
-    costUpdateRowLabels(
-      r,
-      'missing_unit_price_rows',
-      'missing_unit_price_count',
-      'requests_page.card_missing_unit_price_row_named',
-      'requests_page.card_missing_unit_price_row',
-      'requests_page.card_missing_unit_price_count',
-    ),
-    costUpdateRowLabels(
-      r,
-      'missing_extra_fee_rows',
-      'missing_extra_fee_count',
-      'requests_page.card_missing_extra_fee_row_named',
-      'requests_page.card_missing_extra_fee_row',
-      'requests_page.card_missing_extra_fee_count',
-    ),
-  ].filter(Boolean)
-  if (parts.length) return parts.join(' · ')
-  return t('requests_page.card_needs_cost_update_title')
 }
 
 function tripTimelineHint(r) {

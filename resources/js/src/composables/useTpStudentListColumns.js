@@ -1,6 +1,6 @@
 import { ref, watch } from 'vue'
 
-export const TP_STUDENT_COL_STORAGE_KEY = 'va-tp-student-list-cols-v1'
+export const TP_STUDENT_COL_STORAGE_KEY = 'va-tp-student-list-cols-v2'
 
 /** Cột luôn hiển thị: checkbox, STT, Học sinh, Hành động */
 export const TP_STUDENT_COL_DEFAULTS = {
@@ -9,7 +9,6 @@ export const TP_STUDENT_COL_DEFAULTS = {
   date_of_birth: false,
   grade: false,
   class_name: true,
-  program: true,
   parent_contact: true,
   father: false,
   mother: false,
@@ -25,7 +24,6 @@ export const TP_STUDENT_COLUMN_LABELS = {
   date_of_birth: 'Ngày sinh',
   grade: 'Khối',
   class_name: 'Lớp',
-  program: 'Chương trình',
   parent_contact: 'Liên hệ chính',
   father: 'Cha',
   mother: 'Mẹ',

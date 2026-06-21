@@ -1606,6 +1606,7 @@
         "col_caretaker": "Caretaker",
         "col_maintenance": "Maintenance",
         "col_notes_short": "Notes",
+        "col_notes": "Notes",
         "pagination_showing": "Showing {from}–{to} of {total}",
         "pagination_per_page": "Per page",
         "pagination_prev": "Previous page",
@@ -1908,6 +1909,8 @@
         "empty_attachment": "No attachments",
         "empty_datetime": "Time not recorded",
         "empty_notes": "No notes",
+        "notes": "Notes",
+        "edit_form_hint": "Fields marked with * are required.",
         "seat_suffix": "{n} seats",
         "payload_suffix": "{n} kg",
         "audit_event_vehicle_compliance_document_created": "Document added",
@@ -3965,6 +3968,31 @@
             "trip_code_label": "Trip code",
             "notifications": "Notifications"
         },
+        "tabs": {
+            "aria": "Trip detail sections",
+            "info": "Trip Information",
+            "passengers": "Passengers",
+            "dispatch": "Dispatch",
+            "documents": "Documents",
+            "expenses": "Expenses",
+            "activity": "Activity Log"
+        },
+        "summary": {
+            "passengers": "Passengers",
+            "seats": "Seats",
+            "vehicles": "Vehicles",
+            "drivers": "Drivers",
+            "schedule": "Schedule",
+            "revenue": "Est. Revenue"
+        },
+        "sections": {
+            "request_info": "Request Information",
+            "schedule": "Schedule",
+            "notes": "Notes",
+            "activity_stream": "Activity Stream",
+            "documents_hint": "Drag & drop files here, or use the upload button",
+            "documents_empty_title": "No documents yet"
+        },
         "empty": {
             "not_available": "Not available yet",
             "datetime": "No date or time",
@@ -5121,7 +5149,14 @@
         "delete_title": "Delete student",
         "delete_message": "Delete {name}?",
         "delete_confirm": "Delete",
-        "delete_success": "Deleted."
+        "delete_success": "Deleted.",
+        "group_strip_aria": "Student groups by program — click to expand or collapse",
+        "group_strip_expand_all": "Expand all groups",
+        "group_strip_collapse_all": "Collapse all groups",
+        "group_strip_menu": "Programs",
+        "group_count": "{count} students",
+        "group_collapsed_hint": "Expand at least one program group above to view students.",
+        "group_toggle_aria": "Toggle group {name}"
     },
     "tp_attendance_page": {
         "title": "Daily attendance",

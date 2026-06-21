@@ -1685,6 +1685,7 @@
         "col_caretaker": "TX phụ trách",
         "col_maintenance": "Bảo dưỡng",
         "col_notes_short": "Ghi chú",
+        "col_notes": "Ghi chú",
         "pagination_showing": "Hiển thị {from}–{to} / {total}",
         "pagination_per_page": "Mỗi trang",
         "pagination_prev": "Trang trước",
@@ -2004,6 +2005,8 @@
         "empty_attachment": "Chưa có tệp đính kèm",
         "empty_datetime": "Chưa ghi nhận thời gian",
         "empty_notes": "Không có ghi chú",
+        "notes": "Ghi chú",
+        "edit_form_hint": "Các trường có dấu * là bắt buộc.",
         "seat_suffix": "{n} chỗ",
         "payload_suffix": "{n} kg",
         "audit_event_vehicle_compliance_document_created": "Thêm giấy tờ",
@@ -3524,6 +3527,31 @@
             "trip_ref": "Chuyến {code}",
             "trip_code_label": "Mã chuyến",
             "notifications": "Thông báo"
+        },
+        "tabs": {
+            "aria": "Các mục chi tiết chuyến",
+            "info": "Thông tin chuyến",
+            "passengers": "Hành khách",
+            "dispatch": "Điều phối",
+            "documents": "Tài liệu",
+            "expenses": "Chi phí",
+            "activity": "Nhật ký"
+        },
+        "summary": {
+            "passengers": "Hành khách",
+            "seats": "Số ghế",
+            "vehicles": "Phương tiện",
+            "drivers": "Tài xế",
+            "schedule": "Lịch trình",
+            "revenue": "Doanh thu dự kiến"
+        },
+        "sections": {
+            "request_info": "Thông tin yêu cầu",
+            "schedule": "Lịch trình",
+            "notes": "Ghi chú",
+            "activity_stream": "Dòng hoạt động",
+            "documents_hint": "Kéo thả tệp vào đây, hoặc dùng nút tải lên",
+            "documents_empty_title": "Chưa có tài liệu"
         },
         "empty": {
             "not_available": "Chưa có thông tin",
@@ -5268,7 +5296,14 @@
         "delete_title": "Xóa học sinh",
         "delete_message": "Xóa {name}?",
         "delete_confirm": "Xóa",
-        "delete_success": "Đã xóa."
+        "delete_success": "Đã xóa.",
+        "group_strip_aria": "Nhóm học sinh theo chương trình — bấm để mở hoặc thu gọn",
+        "group_strip_expand_all": "Mở tất cả nhóm",
+        "group_strip_collapse_all": "Thu gọn tất cả nhóm",
+        "group_strip_menu": "Nhóm CT",
+        "group_count": "{count} HS",
+        "group_collapsed_hint": "Mở ít nhất một nhóm chương trình ở hàng phía trên để xem học sinh.",
+        "group_toggle_aria": "Bật/tắt nhóm {name}"
     },
     "tp_attendance_page": {
         "title": "Điểm danh theo Ngày",

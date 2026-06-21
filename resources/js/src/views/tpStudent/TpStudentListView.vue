@@ -109,7 +109,7 @@
 
             <button
               type="button"
-              class="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-slate-800 dark:hover:bg-slate-800"
+              class="inline-flex h-10 shrink-0 items-center gap-1 rounded-lg px-2 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-slate-800 dark:hover:bg-slate-800"
               :title="t('tp_student_page.filter_clear_all')"
               data-testid="tp-student-reset-filters"
               @click="clearFilters"
@@ -120,6 +120,61 @@
           </div>
 
           <div class="ml-auto flex shrink-0 flex-wrap items-center gap-2">
+            <FilterVisibilityDropdown
+              :open="showGroupPanelDd"
+              :title="t('tp_student_page.group_strip_menu')"
+              @close="closeGroupPanel"
+            >
+              <template #trigger>
+                <DatagridToolbarActionButton
+                  icon="columns"
+                  :active="showGroupPanelDd"
+                  test-id="tp-student-toolbar-groups"
+                  @click="toggleGroupPanel"
+                >
+                  {{ t('tp_student_page.group_strip_menu') }}
+                </DatagridToolbarActionButton>
+              </template>
+              <li>
+                <button
+                  type="button"
+                  class="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                  data-testid="tp-student-group-expand-all"
+                  @click="expandAllGroups"
+                >
+                  {{ t('tp_student_page.group_strip_expand_all') }}
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  class="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                  data-testid="tp-student-group-collapse-all"
+                  @click="collapseAllGroups"
+                >
+                  {{ t('tp_student_page.group_strip_collapse_all') }}
+                </button>
+              </li>
+              <li class="my-1 border-t border-slate-100 dark:border-slate-700" aria-hidden="true" />
+              <li v-for="group in itemGroups" :key="'tp-stu-grp-dd-' + group.key">
+                <button
+                  type="button"
+                  class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                  :data-testid="`tp-student-group-dd-${group.key}`"
+                  @click="toggleGroup(group.key)"
+                >
+                  <ChevronRightIcon
+                    class="h-4 w-4 shrink-0 text-slate-400 transition"
+                    :class="{ 'rotate-90 text-va-800': isGroupOpen(group.key) }"
+                    aria-hidden="true"
+                  />
+                  <span class="min-w-0 flex-1 truncate">{{ groupTitle(group) }}</span>
+                  <span class="shrink-0 tabular-nums text-xs text-slate-400">
+                    {{ t('tp_student_page.group_count', { count: group.items.length }) }}
+                  </span>
+                </button>
+              </li>
+            </FilterVisibilityDropdown>
             <details ref="exportMenuRef" class="group relative">
               <summary class="list-none [&::-webkit-details-marker]:hidden">
                 <DatagridToolbarActionButton
@@ -189,6 +244,48 @@
       {{ t('tp_student_page.empty') }}
     </div>
     <div v-else class="overflow-x-auto overscroll-x-contain">
+      <div
+        class="flex flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain border-b border-slate-100 px-4 py-2.5 dark:border-slate-700 sm:px-5"
+        role="group"
+        :aria-label="t('tp_student_page.group_strip_aria')"
+      >
+        <button
+          v-for="group in itemGroups"
+          :key="'tp-stu-grp-strip-' + group.key"
+          type="button"
+          class="inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-va-700/30"
+          :class="
+            isGroupOpen(group.key)
+              ? 'border-va-800/35 bg-va-50 text-va-900 dark:border-va-600/50 dark:bg-va-950/40 dark:text-va-100'
+              : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300'
+          "
+          :aria-expanded="isGroupOpen(group.key)"
+          :aria-label="t('tp_student_page.group_toggle_aria', { name: groupTitle(group) })"
+          :data-testid="`tp-student-group-strip-${group.key}`"
+          @click="toggleGroup(group.key)"
+        >
+          <ChevronRightIcon
+            class="h-4 w-4 shrink-0 transition"
+            :class="isGroupOpen(group.key) ? 'rotate-90 text-va-800' : 'text-slate-400'"
+            aria-hidden="true"
+          />
+          <span class="max-w-[14rem] truncate">{{ groupTitle(group) }}</span>
+          <span
+            class="rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums"
+            :class="isGroupOpen(group.key) ? 'bg-va-800/10 text-va-800' : 'bg-slate-100 text-slate-500'"
+          >
+            {{ group.items.length }}
+          </span>
+          <span
+            v-if="group.program"
+            class="hidden text-[11px] font-normal sm:inline"
+            :class="programSubClass(group.program.status)"
+          >
+            · {{ programSubLabel(group.program) }}
+          </span>
+        </button>
+      </div>
+
       <table class="w-full min-w-[60rem] text-left text-sm">
         <thead class="border-b border-slate-200 bg-slate-50/80 text-[11px] uppercase tracking-wide text-slate-500">
           <tr>
@@ -202,7 +299,6 @@
             <th v-if="colOn('date_of_birth')" class="px-3 py-3 font-semibold">{{ t('tp_student_page.col_dob') }}</th>
             <th v-if="colOn('grade')" class="px-3 py-3 font-semibold">{{ t('tp_student_page.col_grade') }}</th>
             <th v-if="colOn('class_name')" class="px-3 py-3 font-semibold">{{ t('tp_student_page.col_class') }}</th>
-            <th v-if="colOn('program')" class="px-3 py-3 font-semibold">{{ t('tp_student_page.col_program') }}</th>
             <th v-if="colOn('parent_contact')" class="px-3 py-3 font-semibold">{{ t('tp_student_page.col_parent') }}</th>
             <th v-if="colOn('father')" class="px-3 py-3 font-semibold">{{ t('tp_student_page.col_father') }}</th>
             <th v-if="colOn('mother')" class="px-3 py-3 font-semibold">{{ t('tp_student_page.col_mother') }}</th>
@@ -214,11 +310,18 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100">
-          <tr v-for="(s, i) in items" :key="s.id" class="transition hover:bg-slate-50/70">
+          <tr v-if="!anyGroupOpen">
+            <td :colspan="tableColSpan" class="px-4 py-10 text-center text-sm text-slate-500">
+              {{ t('tp_student_page.group_collapsed_hint') }}
+            </td>
+          </tr>
+          <template v-for="group in itemGroups" :key="'grp-rows-' + group.key">
+            <template v-if="isGroupOpen(group.key)">
+              <tr v-for="(s, gi) in group.items" :key="s.id" class="transition hover:bg-slate-50/70">
             <td class="px-3 py-3">
               <input type="checkbox" :value="s.id" v-model="selected" class="h-4 w-4 rounded border-slate-300 accent-va-800" />
             </td>
-            <td class="px-3 py-3 text-xs font-medium text-slate-400">{{ rowNumber(i) }}</td>
+            <td class="px-3 py-3 text-xs font-medium text-slate-400">{{ rowNumber(group.startIndex + gi) }}</td>
 
             <td class="px-3 py-3">
               <div class="flex items-center gap-3">
@@ -245,19 +348,6 @@
             <td v-if="colOn('date_of_birth')" class="px-3 py-3 tabular-nums" :class="cellValueClass(s.date_of_birth)">{{ formatDob(s.date_of_birth) }}</td>
             <td v-if="colOn('grade')" class="px-3 py-3 font-medium" :class="cellValueClass(s.grade)">{{ fieldText(s.grade, 'grade') }}</td>
             <td v-if="colOn('class_name')" class="px-3 py-3 font-medium" :class="cellValueClass(s.class_name)">{{ fieldText(s.class_name, 'class') }}</td>
-
-            <td v-if="colOn('program')" class="px-3 py-3">
-              <template v-if="s.program">
-                <div class="font-medium text-va-800">{{ s.program.name }}</div>
-                <div class="mt-0.5 text-xs" :class="programSubClass(s.program.status)">
-                  <span class="inline-flex items-center gap-1">
-                    <component :is="programSubIcon(s.program.status)" class="h-3.5 w-3.5" />
-                    {{ programSubLabel(s.program) }}
-                  </span>
-                </div>
-              </template>
-              <span v-else class="text-xs italic text-slate-400">{{ t('tp_student_page.no_program') }}</span>
-            </td>
 
             <td v-if="colOn('parent_contact')" class="px-3 py-3">
               <div class="font-medium" :class="cellValueClass(s.parent_name)">{{ fieldText(s.parent_name, 'parent_name') }}</div>
@@ -298,7 +388,9 @@
                 <button class="menu-item text-rose-600" data-testid="tp-student-action-delete" @click="remove(s)"><TrashIcon class="h-4 w-4" /> {{ t('tp_student_page.action_delete') }}</button>
               </AppRowActionsMenu>
             </td>
-          </tr>
+              </tr>
+            </template>
+          </template>
         </tbody>
       </table>
 
@@ -364,7 +456,8 @@ import { useI18n } from 'vue-i18n'
 import {
   PlusIcon, ArrowPathIcon, ArrowUpTrayIcon,
   XMarkIcon, FunnelIcon, PencilSquareIcon,
-  TrashIcon, AcademicCapIcon, CalendarDaysIcon, PauseCircleIcon, ExclamationCircleIcon,
+  TrashIcon, AcademicCapIcon,
+  ChevronRightIcon,
 } from '@heroicons/vue/24/outline'
 import Button from '../../components/ui/Button.vue'
 import DatagridToolbarSearch from '../../components/shared/ui/DatagridToolbarSearch.vue'
@@ -373,7 +466,7 @@ import FilterVisibilityDropdown from '../../components/shared/ui/FilterVisibilit
 import TpStudentSummaryBar from '../../components/transportProgram/TpStudentSummaryBar.vue'
 import TpStudentListFilters from '../../components/transportProgram/TpStudentListFilters.vue'
 import { useDetailsAutoClose, useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
-import { useTpStudentListColumns } from '../../composables/useTpStudentListColumns.js'
+import { useTpStudentListColumns, TP_STUDENT_COL_DEFAULTS } from '../../composables/useTpStudentListColumns.js'
 import AppRowActionsMenu from '../../components/ui/AppRowActionsMenu.vue'
 import TpStudentFormModal from '../../components/transportProgram/TpStudentFormModal.vue'
 import TpStudentDetailModal from '../../components/transportProgram/TpStudentDetailModal.vue'
@@ -461,6 +554,7 @@ const { colOn, setColumn, columnToggleOptions } = useTpStudentListColumns()
 const filterControlVisible = reactive(loadFilterControlVisibility())
 const showFilterPanelDd = ref(false)
 const showColPanelDd = ref(false)
+const showGroupPanelDd = ref(false)
 const exportMenuRef = ref(null)
 const datagridRef = ref(null)
 useDetailsAutoClose(exportMenuRef)
@@ -496,6 +590,75 @@ const hasVisibleBarFilters = computed(() =>
   TP_FILTER_CONTROL_IDS.some((id) => filterControlVisible[id] === true),
 )
 
+const NONE_PROGRAM_GROUP_KEY = '__none__'
+const openGroups = reactive({})
+
+const itemGroups = computed(() => {
+  const map = new Map()
+  for (const s of items.value) {
+    const key = s.program?.id ?? NONE_PROGRAM_GROUP_KEY
+    if (!map.has(key)) {
+      map.set(key, { key, program: s.program ?? null, items: [] })
+    }
+    map.get(key).items.push(s)
+  }
+  const groups = [...map.values()]
+  groups.sort((a, b) => {
+    if (a.key === NONE_PROGRAM_GROUP_KEY) return 1
+    if (b.key === NONE_PROGRAM_GROUP_KEY) return -1
+    return String(a.program?.name ?? '').localeCompare(String(b.program?.name ?? ''), 'vi')
+  })
+  let idx = 0
+  for (const g of groups) {
+    g.startIndex = idx
+    idx += g.items.length
+  }
+  return groups
+})
+
+const tableColSpan = computed(() => {
+  let n = 4
+  for (const id of Object.keys(TP_STUDENT_COL_DEFAULTS)) {
+    if (colOn(id)) n += 1
+  }
+  return n
+})
+
+const anyGroupOpen = computed(() => itemGroups.value.some((g) => isGroupOpen(g.key)))
+
+watch(
+  itemGroups,
+  (groups) => {
+    for (const g of groups) {
+      if (!(g.key in openGroups)) openGroups[g.key] = true
+    }
+  },
+  { immediate: true },
+)
+
+function isGroupOpen(key) {
+  return openGroups[key] !== false
+}
+
+function toggleGroup(key) {
+  openGroups[key] = !isGroupOpen(key)
+}
+
+function expandAllGroups() {
+  for (const g of itemGroups.value) openGroups[g.key] = true
+  showGroupPanelDd.value = false
+}
+
+function collapseAllGroups() {
+  for (const g of itemGroups.value) openGroups[g.key] = false
+  showGroupPanelDd.value = false
+}
+
+function groupTitle(group) {
+  if (group.program?.name) return group.program.name
+  return t('tp_student_page.no_program')
+}
+
 function onPatchFilter(patch) {
   Object.assign(filters, patch)
   if ('parent_phone' in patch || 'address_contains' in patch) {
@@ -516,6 +679,7 @@ function onKpiQuickFilter({ transport_status }) {
 
 function toggleFilterPanel() {
   showColPanelDd.value = false
+  showGroupPanelDd.value = false
   showFilterPanelDd.value = !showFilterPanelDd.value
 }
 
@@ -525,11 +689,22 @@ function closeFilterPanel() {
 
 function toggleColPanel() {
   showFilterPanelDd.value = false
+  showGroupPanelDd.value = false
   showColPanelDd.value = !showColPanelDd.value
 }
 
 function closeColPanel() {
   showColPanelDd.value = false
+}
+
+function toggleGroupPanel() {
+  showFilterPanelDd.value = false
+  showColPanelDd.value = false
+  showGroupPanelDd.value = !showGroupPanelDd.value
+}
+
+function closeGroupPanel() {
+  showGroupPanelDd.value = false
 }
 
 function onToggleFilterControl(id, checked) {
@@ -793,9 +968,6 @@ function programSubLabel(p) {
 }
 function programSubClass(status) {
   return { paused: 'text-rose-500', draft: 'text-amber-600' }[status] || 'text-slate-400'
-}
-function programSubIcon(status) {
-  return { paused: PauseCircleIcon, draft: ExclamationCircleIcon }[status] || CalendarDaysIcon
 }
 
 function transportLabel(s) {

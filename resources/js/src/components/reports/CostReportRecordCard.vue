@@ -12,7 +12,6 @@ import { formatVnd } from '../../util/labels'
 import { useCostReportPresentation } from '../../composables/useCostReportPresentation'
 const props = defineProps({
   row: { type: Object, required: true },
-  rowNo: { type: Number, required: true },
   colVisible: { type: Object, required: true },
   statusLabelFn: { type: Function, required: true },
 })
@@ -116,7 +115,6 @@ const showMoneyGrid = computed(
           </div>
           <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-center gap-2">
-              <span class="text-[11px] font-semibold tabular-nums text-slate-400">#{{ rowNo }}</span>
               <RouterLink
                 v-if="tripCode && row.trip_id"
                 :to="`${tripDetailPrefix}/${row.trip_id}`"
