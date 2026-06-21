@@ -1,15 +1,18 @@
 <template>
-  <div class="space-y-4 md:space-y-5">
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+  <div class="space-y-6">
+    <!-- Page header -->
+    <div class="flex flex-col gap-3 border-b border-slate-200/80 pb-6 lg:flex-row lg:items-end lg:justify-between">
       <div>
-        <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl md:text-2xl">
+        <h1 class="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">
           {{ t('cargo_page.hero_title') }}
         </h1>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ t('cargo_page.hero_subtitle') }}</p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <RouterLink
           to="/dispatch-requests/new"
           class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-teal-600/20 transition hover:bg-teal-700"
+          data-testid="cargo-cta-new"
         >
           <PlusIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
           {{ t('cargo_page.cta_new_request') }}
@@ -17,833 +20,347 @@
         <RouterLink
           :to="{ path: '/requests', query: { trip_type: 'cargo' } }"
           class="inline-flex shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+          data-testid="cargo-link-requests"
         >
           {{ t('cargo_page.link_cargo_requests') }}
         </RouterLink>
       </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
-      <div
-        v-for="box in kpiBoxes"
-        :key="box.key"
-        class="rounded-2xl border border-slate-200/90 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/50 sm:p-4"
-      >
-        <div class="flex min-w-0 items-center gap-3">
-          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" :class="box.iconWrap">
-            <component :is="box.icon" class="h-5 w-5" :class="box.iconClass" aria-hidden="true" />
+    <!-- KPI Summary Strip -->
+    <CargoSummaryBar
+      :stats="kpiStats"
+      :loading="kpiLoading"
+      :active-status="filters.status"
+      @quick-filter="onKpiQuickFilter"
+    />
+
+    <!-- Datagrid card -->
+    <div
+      ref="cargoDatagridRef"
+      class="overflow-visible rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40"
+    >
+      <!-- Toolbar row -->
+      <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+        <div class="flex w-full min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
+          <div class="min-w-0 w-full basis-full lg:min-w-[10rem] lg:flex-1 lg:basis-auto">
+            <DatagridToolbarSearch
+              v-model="searchInput"
+              input-id="cargo-list-search"
+              :placeholder="t('cargo_page.search_placeholder')"
+              stretch
+              inline-actions
+              hide-label
+              input-height="h-10"
+              data-testid="cargo-toolbar-search"
+              @enter="flushSearch"
+            />
           </div>
-          <div class="min-w-0 flex-1">
-            <div class="text-xl font-bold tabular-nums text-slate-900 dark:text-white sm:text-2xl">
-              {{ kpiLoading ? '…' : fmtInt(box.value) }}
-            </div>
-            <div class="mt-0.5 text-xs font-medium leading-snug text-slate-600 dark:text-slate-400">
-              {{ box.label }}
-            </div>
+
+          <div class="flex shrink-0 items-center gap-2">
+            <FilterVisibilityDropdown
+              :open="showFilterPanelDd"
+              :title="t('cargo_page.filter_show_controls_title')"
+              :hint="t('cargo_page.filter_show_controls_hint')"
+              @close="closeFilterPanel"
+            >
+              <template #trigger>
+                <DatagridToolbarActionButton
+                  icon="filter"
+                  :active="showFilterPanelDd"
+                  test-id="cargo-toolbar-filter"
+                  @click="openFilterPanel"
+                >
+                  {{ t('cargo_page.toolbar_filter') }}
+                </DatagridToolbarActionButton>
+              </template>
+              <li v-for="fd in filterControlDefs" :key="'cargo-vis-' + fd.key" class="flex items-start gap-2">
+                <input
+                  :id="`cargo-filter-vis-${fd.key}`"
+                  v-model="visibleFilters[fd.key]"
+                  type="checkbox"
+                  class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-va-800 focus:ring-va-700/30 dark:border-slate-600"
+                  :data-testid="`cargo-filter-vis-${fd.key}`"
+                />
+                <label
+                  :for="`cargo-filter-vis-${fd.key}`"
+                  class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
+                >
+                  {{ fd.label }}
+                </label>
+              </li>
+            </FilterVisibilityDropdown>
+          </div>
+
+          <div class="ml-auto flex shrink-0 items-center">
+            <button
+              type="button"
+              class="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-slate-800 dark:hover:bg-slate-800"
+              :title="t('cargo_page.filter_clear_all')"
+              data-testid="cargo-reset-filters"
+              @click="resetFilters"
+            >
+              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
+              <XMarkIcon class="h-3 w-3 text-rose-500" aria-hidden="true" />
+            </button>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="relative z-40">
-      <AppFilterBar>
-        <div ref="cargoFilterBarRef" class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
-          <AppFilterFunnelMenu ref="filterMenuRef" :badge-count="activeFilterCount">
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              {{ t('cargo_page.filter_menu_title') }}
-            </p>
-            <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
-                  <li class="flex justify-between gap-2 border-b border-slate-100 pb-2 dark:border-slate-700">
-                    <span class="text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.filter_period_label') }}</span>
-                    <span class="font-medium text-slate-900 dark:text-slate-100">{{ currentPresetLabel }}</span>
-                  </li>
-                  <li class="flex justify-between gap-2 tabular-nums">
-                    <span class="text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.filter_dates_label') }}</span>
-                    <span class="text-right font-medium text-slate-700 dark:text-slate-300">
-                      {{ rangeChipSummary }}
-                      <span
-                        v-if="hasDateRangeFilter && rangeValid && rangeDaySpan > 0"
-                        class="ml-1 inline-block rounded-md bg-violet-100/90 px-1.5 py-0.5 text-[10px] font-semibold text-violet-800 dark:bg-violet-950/70 dark:text-violet-200"
-                      >
-                        {{ t('dashboard_analytics.date_range_span', { n: rangeDaySpan }) }}
-                      </span>
-                    </span>
-                  </li>
-                  <li v-for="(row, i) in activeFilterLines" :key="i" class="border-t border-slate-100 pt-2 dark:border-slate-700">
-                    <span class="text-slate-500 dark:text-slate-400">{{ row.label }}:</span>
-                    <span class="font-medium text-slate-800 dark:text-slate-200">{{ row.value }}</span>
-                  </li>
-                  <li v-if="filters.q" class="border-t border-slate-100 pt-2 dark:border-slate-700">
-                    <span class="text-slate-500 dark:text-slate-400">{{ t('filter_bar.search') }}:</span>
-                    <span class="font-medium text-slate-800 dark:text-slate-200">{{ filters.q }}</span>
-                  </li>
-                  <li v-if="filters.per_page !== 20" class="border-t border-slate-100 pt-2 dark:border-slate-700">
-                    <span class="text-slate-500 dark:text-slate-400">{{ t('filter_bar.per_page') }}:</span>
-                    <span class="font-medium text-slate-800 dark:text-slate-200">{{ filters.per_page }}</span>
-                  </li>
-                </ul>
-                <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
-                  <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
-                    {{ t('trips_page.filter_show_controls_title') }}
-                  </p>
-                  <p class="mt-1 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
-                    {{ t('trips_page.filter_show_controls_hint') }}
-                  </p>
-                  <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
-                    <li v-for="opt in cargoFilterVisOptions" :key="'vis-' + opt.id" class="flex items-start gap-2">
-                      <input
-                        :id="'cargo-filter-vis-' + opt.id"
-                        v-model="filterBarVisible[opt.id]"
-                        type="checkbox"
-                        class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:focus:ring-offset-slate-900"
-                      />
-                      <label
-                        :for="'cargo-filter-vis-' + opt.id"
-                        class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
-                      >
-                        {{ t(opt.labelKey) }}
-                      </label>
-                    </li>
-                  </ul>
-                </div>
-                <button
-                  type="button"
-                  class="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
-                  @click="resetFilters(); closeFilterMenu()"
-                >
-                  {{ t('dashboard_analytics.filter_clear_all') }}
-                </button>
-          </AppFilterFunnelMenu>
-
-          <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
-
-          <button
-            type="button"
-            class="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
-            :title="t('filter_bar.clear_icon')"
-            :aria-label="t('filter_bar.clear_icon')"
-            @click="resetFilters"
+      <!-- Filter row -->
+      <div
+        v-if="hasFilterRow"
+        class="grid grid-cols-1 gap-3 border-t border-slate-100 px-5 py-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 dark:border-slate-700"
+      >
+        <DatagridFilterField v-if="visibleFilters.status">
+          <select
+            v-model="filters.status"
+            :class="FILTER_CONTROL_CLASS"
+            :aria-label="t('filter_bar.status')"
+            data-testid="cargo-filter-status"
+            @change="onFilterChange"
           >
-            <span class="relative inline-flex">
-              <FunnelIcon class="h-5 w-5" />
-              <XMarkIcon
-                class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/40"
-              />
-            </span>
-          </button>
-        </div>
+            <option v-for="opt in statusFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+        </DatagridFilterField>
 
-        <div
-          v-if="hasVisibleBarFilters"
-          class="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-2 border-t border-violet-100/80 pt-2 dark:border-violet-900/30 sm:gap-x-3"
-        >
-              <select
-                v-if="filterBarVisible.period"
-                :value="preset"
-                class="h-9 max-w-[min(100%,11rem)] rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-                :aria-label="t('dashboard_analytics.filter_period_label')"
-                @change="onPresetSelectChange($event.target.value)"
-              >
-                <option v-for="p in presetDefs" :key="p.id" :value="p.id">{{ p.label }}</option>
-              </select>
+        <DatagridFilterField v-if="visibleFilters.date_range">
+          <FilterDatePicker
+            v-model="filters.from"
+            :placeholder="t('dashboard_analytics.range_from')"
+            :max-date="filters.to || null"
+            input-id="cargo-filter-from"
+            @update:model-value="onFilterChange"
+          />
+        </DatagridFilterField>
 
-            <details v-if="filterBarVisible.dates" class="group relative min-w-0">
-              <summary
-                class="flex max-w-full cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
-              >
-                <span class="shrink-0 text-xs font-medium text-slate-500 dark:text-slate-400">{{
-                  t('dashboard_analytics.filter_dates_label')
-                }}</span>
-                <span class="flex min-w-0 max-w-[11rem] items-center gap-1.5 sm:max-w-[14rem]">
-                  <span class="min-w-0 truncate text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100">
-                    {{ rangeChipSummary }}
-                  </span>
-                  <span
-                    v-if="hasDateRangeFilter && rangeValid && rangeDaySpan > 0"
-                    class="shrink-0 rounded-md bg-violet-100/90 px-1.5 py-px text-[10px] font-bold tabular-nums text-violet-800 dark:bg-violet-950/70 dark:text-violet-200"
-                  >
-                    {{ rangeDaySpan }}
-                  </span>
-                </span>
-                <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-              </summary>
-              <div
-                class="fixed inset-x-3 top-20 z-[200] max-h-[min(75vh,28rem)] w-auto overflow-y-auto overflow-x-hidden rounded-2xl border border-violet-200/60 bg-gradient-to-b from-white via-white to-slate-50/95 shadow-2xl shadow-violet-500/20 ring-1 ring-slate-900/5 dark:border-violet-800/45 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 dark:shadow-black/50 dark:ring-slate-950/50 sm:absolute sm:inset-x-auto sm:left-auto sm:right-0 sm:top-[calc(100%+8px)] sm:z-[100] sm:max-h-[min(70vh,32rem)] sm:w-[20.5rem] sm:shadow-xl"
-              >
-                <div
-                  class="border-b border-violet-100/90 bg-gradient-to-r from-violet-50/80 to-indigo-50/40 px-3 py-2.5 dark:border-violet-900/40 dark:from-violet-950/40 dark:to-indigo-950/20"
-                >
-                  <div class="flex items-start gap-2">
-                    <CalendarDaysIcon class="mt-0.5 h-5 w-5 shrink-0 text-violet-600 dark:text-violet-400" aria-hidden="true" />
-                    <div>
-                      <p class="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
-                        {{ t('dashboard_analytics.date_range_title') }}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div class="p-3">
-                  <div class="flex flex-wrap gap-1.5">
-                    <button
-                      type="button"
-                      class="rounded-lg border border-slate-200/90 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:border-teal-300 hover:bg-teal-50/80 hover:text-teal-900 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:border-teal-700 dark:hover:bg-teal-950/40 dark:hover:text-teal-100"
-                      @click="onApplyPresetAllTime($event)"
-                    >
-                      {{ t('dashboard_analytics.preset_all_time') }}
-                    </button>
-                    <button
-                      v-for="chip in dateQuickChips"
-                      :key="chip.kind"
-                      type="button"
-                      class="rounded-lg border border-slate-200/90 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:border-teal-300 hover:bg-teal-50/80 hover:text-teal-900 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:border-teal-700 dark:hover:bg-teal-950/40 dark:hover:text-teal-100"
-                      @click="onApplyQuickDateRange(chip.kind, $event)"
-                    >
-                      {{ chip.label }}
-                    </button>
-                  </div>
-                  <div class="mt-3 space-y-3">
-                    <div
-                      class="rounded-xl border border-slate-200/80 bg-white/90 p-2.5 shadow-inner dark:border-slate-600 dark:bg-slate-950/50 dark:shadow-none"
-                    >
-                      <label class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" for="cargo-range-from">
-                        {{ t('dashboard_analytics.range_from') }}
-                      </label>
-                      <input
-                        id="cargo-range-from"
-                        v-model="rangeFrom"
-                        type="date"
-                        :max="rangeTo || undefined"
-                        class="mt-1.5 h-10 w-full rounded-lg border border-slate-200/90 bg-slate-50/80 px-3 text-sm font-medium tabular-nums text-slate-900 shadow-sm focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/25 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-                        @change="onRangeFromChange"
-                      />
-                    </div>
-                    <div class="flex items-center justify-center gap-2 px-1">
-                      <span class="h-px flex-1 bg-gradient-to-r from-transparent via-violet-200 to-transparent dark:via-violet-800/60" />
-                      <span
-                        class="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-violet-800 dark:bg-violet-950/80 dark:text-violet-200"
-                      >
-                        {{ rangeValid ? t('dashboard_analytics.date_range_span', { n: rangeDaySpan }) : '—' }}
-                      </span>
-                      <span class="h-px flex-1 bg-gradient-to-r from-transparent via-violet-200 to-transparent dark:via-violet-800/60" />
-                    </div>
-                    <div
-                      class="rounded-xl border border-slate-200/80 bg-white/90 p-2.5 shadow-inner dark:border-slate-600 dark:bg-slate-950/50 dark:shadow-none"
-                    >
-                      <label class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" for="cargo-range-to">
-                        {{ t('dashboard_analytics.range_to') }}
-                      </label>
-                      <input
-                        id="cargo-range-to"
-                        v-model="rangeTo"
-                        type="date"
-                        :min="rangeFrom || undefined"
-                        class="mt-1.5 h-10 w-full rounded-lg border border-slate-200/90 bg-slate-50/80 px-3 text-sm font-medium tabular-nums text-slate-900 shadow-sm focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/25 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-                        @change="onRangeToChange"
-                      />
-                    </div>
-                  </div>
-                  <button
-                    v-if="preset === 'custom'"
-                    type="button"
-                    class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-teal-600 to-teal-500 px-3 py-2.5 text-sm font-semibold text-white shadow-md shadow-teal-600/25 transition hover:from-teal-700 hover:to-teal-600 disabled:opacity-50 dark:shadow-teal-900/30"
-                    :disabled="loading || !rangeValid"
-                    @click="applyCustomRange"
-                  >
-                    {{ t('dashboard_analytics.apply_range') }}
-                  </button>
-                  <p v-if="!rangeValid" class="mt-2 text-center text-xs text-rose-600 dark:text-rose-400">
-                    {{ t('dashboard_analytics.range_invalid') }}
-                  </p>
-                </div>
-              </div>
-            </details>
+        <DatagridFilterField v-if="visibleFilters.date_range">
+          <FilterDatePicker
+            v-model="filters.to"
+            :placeholder="t('dashboard_analytics.range_to')"
+            :min-date="filters.from || null"
+            input-id="cargo-filter-to"
+            @update:model-value="onFilterChange"
+          />
+        </DatagridFilterField>
 
-            <template v-for="fd in visibleDimensionFilters" :key="fd.id">
-              <label
-                v-if="fd.id === 'search'"
-                class="inline-flex min-w-0 shrink-0 items-center gap-1.5"
-              >
-                <span class="whitespace-nowrap text-xs font-medium text-slate-600 dark:text-slate-400">{{ fd.label }}</span>
-                <input
-                  id="cargo-filter-q"
-                  v-model="searchInput"
-                  type="search"
-                  :placeholder="t('cargo_page.search_placeholder')"
-                  :aria-label="t('filter_bar.search')"
-                  class="h-9 w-[min(100%,11rem)] rounded-md border-0 bg-white/90 px-2 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 sm:w-44 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-                  @keydown.enter.prevent="flushSearch"
-                />
-              </label>
-              <label v-else class="inline-flex min-w-0 shrink-0 items-center gap-1.5">
-                <span class="whitespace-nowrap text-xs font-medium text-slate-600 dark:text-slate-400">{{ fd.label }}</span>
-                <select
-                  :value="dimensionSelectValue(fd)"
-                  class="h-9 max-w-[min(100%,11rem)] rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-                  :aria-label="fd.label"
-                  @change="onDimensionSelect(fd, $event.target.value)"
-                >
-                  <option v-for="opt in fd.options" :key="String(opt.value) + opt.label" :value="opt.value">
-                    {{ opt.label }}
-                  </option>
-                </select>
-              </label>
-            </template>
-        </div>
-      </AppFilterBar>
+        <DatagridFilterField v-if="visibleFilters.per_page">
+          <select
+            v-model.number="filters.per_page"
+            :class="FILTER_CONTROL_CLASS"
+            :aria-label="t('filter_bar.per_page')"
+            data-testid="cargo-filter-per-page"
+            @change="onFilterChange"
+          >
+            <option v-for="opt in perPageFilterOptions" :key="opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+        </DatagridFilterField>
+      </div>
     </div>
 
+    <!-- List -->
+    <div v-if="loading" class="text-sm text-slate-500 dark:text-slate-400">
+      {{ t('cargo_page.loading') }}
+    </div>
+    <div v-else class="space-y-3 md:space-y-4">
+      <CargoCard
+        v-for="shipment in items"
+        :key="shipment.id"
+        :shipment="shipment"
+      />
+      <div
+        v-if="!items.length"
+        class="rounded-2xl border border-dashed border-slate-200 py-12 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400"
+      >
+        {{ t('cargo_page.empty') }}
+      </div>
+    </div>
 
-    <div class="space-y-5">
-        <div class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
-          <div class="flex flex-col gap-2 border-b border-slate-200/90 px-4 py-3 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('cargo_page.list_title') }}</h2>
-        
-            </div>
-          </div>
-          <div v-if="loading" class="p-6 text-sm text-slate-500 dark:text-slate-400">{{ t('cargo_page.loading') }}</div>
-          <div v-else class="overflow-x-auto">
-            <table class="min-w-[800px] w-full border-collapse text-left text-sm">
-              <thead>
-                <tr class="border-b border-slate-200/90 bg-slate-50/80 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-400">
-                  <th class="px-4 py-3">{{ t('cargo_page.col_code') }}</th>
-                  <th class="px-4 py-3">{{ t('cargo_page.col_route') }}</th>
-                  <th class="px-4 py-3">{{ t('cargo_page.col_status') }}</th>
-                  <th class="px-4 py-3">{{ t('cargo_page.col_time') }}</th>
-                  <th
-                    class="min-w-[14rem] border-l border-teal-100/90 bg-gradient-to-br from-teal-50/90 via-white to-slate-50/50 px-3 py-3 text-teal-900 dark:border-teal-900/40 dark:from-teal-950/40 dark:via-slate-900/80 dark:to-slate-900/60 dark:text-teal-200"
-                  >
-                    <span class="flex items-center gap-1.5">
-                      <span class="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-teal-500 dark:bg-teal-400" aria-hidden="true" />
-                      {{ t('cargo_page.col_links') }}
-                    </span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="s in items"
-                  :key="s.id"
-                  class="border-b border-slate-100 transition hover:bg-slate-50/80 dark:border-slate-800 dark:hover:bg-slate-800/30"
-                >
-                  <td class="px-4 py-3 font-mono text-xs text-slate-800 dark:text-slate-200">
-                    <RouterLink
-                      :to="'/cargo/' + s.id"
-                      class="font-semibold text-teal-700 underline decoration-teal-700/30 underline-offset-2 hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-200"
-                    >
-                      {{ s.tracking_code || '#' + s.id }}
-                    </RouterLink>
-                  </td>
-                  <td class="max-w-[240px] px-4 py-3 text-slate-700 dark:text-slate-300">
-                    <RouterLink :to="'/cargo/' + s.id" class="block hover:opacity-90">
-                      <div class="truncate font-medium">{{ s.pickup_address || '—' }}</div>
-                      <div class="truncate text-xs text-slate-500 dark:text-slate-400">→ {{ s.delivery_address || '—' }}</div>
-                    </RouterLink>
-                  </td>
-                  <td class="px-4 py-3">
-                    <span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium" :class="cargoStatusPillClass(s.status)">
-                      {{ labelCargoStatus(s.status) }}
-                    </span>
-                  </td>
-                  <td class="px-4 py-3 tabular-nums text-xs text-slate-600 dark:text-slate-400">
-                    {{ fmt(s.created_at) }}
-                    <div v-if="s.sla_due_at" class="mt-0.5 text-[11px] text-slate-500">
-                      {{ t('cargo_page.sla_prefix') }} {{ fmt(s.sla_due_at) }}
-                    </div>
-                  </td>
-                  <td class="border-l border-slate-100/90 bg-slate-50/30 align-top px-3 py-3 dark:border-slate-800 dark:bg-slate-900/20">
-                    <div class="flex min-w-[12.5rem] flex-col gap-1.5">
-                      <RouterLink
-                        :to="'/cargo/' + s.id"
-                        class="group flex items-center gap-2 rounded-xl border border-teal-200/80 bg-white px-2.5 py-2 text-xs font-semibold text-teal-800 shadow-sm transition hover:border-teal-400 hover:bg-teal-50/90 hover:shadow dark:border-teal-800/60 dark:bg-slate-900/80 dark:text-teal-100 dark:hover:border-teal-600 dark:hover:bg-teal-950/50"
-                      >
-                        <CubeIcon class="h-4 w-4 shrink-0 text-teal-600 opacity-90 group-hover:opacity-100 dark:text-teal-400" aria-hidden="true" />
-                        <span class="min-w-0 flex-1 leading-snug">{{ t('cargo_page.link_detail') }}</span>
-                        <ArrowTopRightOnSquareIcon
-                          class="h-3.5 w-3.5 shrink-0 text-teal-500/80 opacity-0 transition group-hover:opacity-100 dark:text-teal-400/90"
-                          aria-hidden="true"
-                        />
-                      </RouterLink>
-                      <RouterLink
-                        v-if="dispatchRequestId(s)"
-                        :to="'/requests/' + dispatchRequestId(s)"
-                        class="group flex items-center gap-2 rounded-xl border border-slate-200/90 bg-white px-2.5 py-2 text-xs font-medium text-slate-800 shadow-sm transition hover:border-violet-300 hover:bg-violet-50/80 dark:border-slate-600 dark:bg-slate-900/70 dark:text-slate-100 dark:hover:border-violet-600 dark:hover:bg-violet-950/40"
-                      >
-                        <DocumentTextIcon class="h-4 w-4 shrink-0 text-violet-600 dark:text-violet-400" aria-hidden="true" />
-                        <span class="min-w-0 flex-1 leading-snug">{{ t('cargo_page.link_request') }}</span>
-                        <span
-                          class="rounded-md bg-violet-100/90 px-1.5 py-px text-[10px] font-bold tabular-nums text-violet-800 dark:bg-violet-950/80 dark:text-violet-200"
-                          >#{{ dispatchRequestId(s) }}</span
-                        >
-                      </RouterLink>
-                      <RouterLink
-                        v-if="s.trip_id"
-                        :to="'/trips/' + s.trip_id"
-                        class="group flex items-center gap-2 rounded-xl border border-slate-200/90 bg-white px-2.5 py-2 text-xs font-medium text-slate-800 shadow-sm transition hover:border-sky-300 hover:bg-sky-50/80 dark:border-slate-600 dark:bg-slate-900/70 dark:text-slate-100 dark:hover:border-sky-600 dark:hover:bg-sky-950/40"
-                      >
-                        <TruckIcon class="h-4 w-4 shrink-0 text-sky-600 dark:text-sky-400" aria-hidden="true" />
-                        <span class="min-w-0 flex-1 leading-snug">{{ t('cargo_page.link_trip') }}</span>
-                        <span
-                          class="rounded-md bg-sky-100/90 px-1.5 py-px text-[10px] font-bold tabular-nums text-sky-900 dark:bg-sky-950/80 dark:text-sky-200"
-                          >#{{ s.trip_id }}</span
-                        >
-                      </RouterLink>
-                      <div
-                        v-if="!dispatchRequestId(s) && !s.trip_id"
-                        class="rounded-xl border border-dashed border-slate-200/90 bg-slate-50/50 px-2.5 py-2 text-center text-[11px] text-slate-500 dark:border-slate-600 dark:bg-slate-800/30 dark:text-slate-400"
-                      >
-                        {{ t('cargo_page.links_only_detail') }}
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <div v-if="!items.length" class="p-8 text-center text-slate-500 dark:text-slate-400">{{ t('cargo_page.empty') }}</div>
-          </div>
-          <div class="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200/90 px-4 py-3 text-sm dark:border-slate-700">
-            <span class="text-slate-500 dark:text-slate-400">{{ t('cargo_page.total', { n: meta.total ?? 0 }) }}</span>
-            <div class="flex gap-2">
-              <Button variant="secondary" :disabled="(meta.current_page ?? 1) <= 1" @click="page(-1)">
-                {{ t('cargo_page.prev') }}
-              </Button>
-              <Button variant="secondary" :disabled="(meta.current_page ?? 1) >= (meta.last_page ?? 1)" @click="page(1)">
-                {{ t('cargo_page.next') }}
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        <div class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
-          <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('cargo_page.chart_fleet_title') }}</h3>
-          <DashboardEChart class="mt-2" height="220px" :option="fleetChartOption" :aria-label="t('cargo_page.chart_fleet_title')" />
-        </div>
+    <!-- Pagination -->
+    <div
+      v-if="(meta.total ?? 0) > 0"
+      class="flex flex-col gap-3 rounded-2xl border border-slate-200/90 bg-white px-4 py-3 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900/50 sm:flex-row sm:items-center sm:justify-between"
+    >
+      <p class="text-slate-600 dark:text-slate-400">
+        {{ t('cargo_page.page_range', { from: pageFrom, to: pageTo, total: meta.total ?? 0 }) }}
+      </p>
+      <div class="flex flex-wrap items-center justify-end gap-1">
+        <button
+          type="button"
+          class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 disabled:opacity-40 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+          :disabled="(meta.current_page ?? 1) <= 1"
+          :aria-label="t('cargo_page.prev')"
+          data-testid="cargo-prev-page"
+          @click="goPage((meta.current_page ?? 1) - 1)"
+        >
+          <ChevronLeftIcon class="h-5 w-5" aria-hidden="true" />
+        </button>
+        <button
+          v-for="n in pageNumbers"
+          :key="'p-' + n"
+          type="button"
+          :class="[
+            'h-9 min-w-[2.25rem] rounded-lg px-2 text-sm font-medium tabular-nums',
+            n === (meta.current_page ?? 1)
+              ? 'bg-teal-600 text-white shadow-sm'
+              : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800',
+          ]"
+          @click="goPage(n)"
+        >
+          {{ n }}
+        </button>
+        <button
+          type="button"
+          class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 disabled:opacity-40 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+          :disabled="(meta.current_page ?? 1) >= (meta.last_page ?? 1)"
+          :aria-label="t('cargo_page.next')"
+          data-testid="cargo-next-page"
+          @click="goPage((meta.current_page ?? 1) + 1)"
+        >
+          <ChevronRightIcon class="h-5 w-5" aria-hidden="true" />
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, onActivated, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, onActivated, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
-  ArrowTopRightOnSquareIcon,
-  CalendarDaysIcon,
-  CheckCircleIcon,
-  ChevronDownIcon,
-  ClockIcon,
-  CubeIcon,
-  DocumentTextIcon,
-  ExclamationTriangleIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   FunnelIcon,
   PlusIcon,
-  TruckIcon,
   XMarkIcon,
 } from '@heroicons/vue/24/outline'
-import Button from '../../components/ui/Button.vue'
-import AppFilterBar from '../../components/filters/AppFilterBar.vue'
-import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vue'
-import { useFilterBarVisibility } from '../../composables/useFilterBarVisibility.js'
-import DashboardEChart from '../../components/dashboard/DashboardEChart.vue'
+import CargoSummaryBar from '../../components/cargo/CargoSummaryBar.vue'
+import CargoCard from '../../components/cargo/CargoCard.vue'
+import DatagridToolbarSearch from '../../components/shared/ui/DatagridToolbarSearch.vue'
+import DatagridToolbarActionButton from '../../components/shared/ui/DatagridToolbarActionButton.vue'
+import DatagridFilterField from '../../components/shared/ui/DatagridFilterField.vue'
+import FilterVisibilityDropdown from '../../components/shared/ui/FilterVisibilityDropdown.vue'
+import FilterDatePicker from '../../components/shared/ui/FilterDatePicker.vue'
 import { listCargoShipments } from '../../api/cargo'
-import { useNotificationStore } from '../../store/notificationCenter'
-import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 import { labelCargoStatus } from '../../util/labels'
+import { useVisibleFilterControls } from '../../composables/useVisibleFilterControls.js'
+import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
+import { useNotificationStore } from '../../store/notificationCenter'
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const notifStore = useNotificationStore()
 
 const loading = ref(false)
 const kpiLoading = ref(false)
 const items = ref([])
 const meta = ref({})
-const filters = reactive({ status: '', from: '', to: '', q: '', page: 1, per_page: 20 })
-const filterMenuRef = ref(null)
-const cargoFilterBarRef = ref(null)
-useDetailsAutoCloseWithin(cargoFilterBarRef)
+
+const kpiStats = ref({
+  total: 0,
+  pending: 0,
+  picked_up: 0,
+  in_transit: 0,
+  delivered: 0,
+  failed: 0,
+  cancelled: 0,
+})
 
 const searchInput = ref('')
 const searchDebounce = ref(null)
+const cargoDatagridRef = ref(null)
+useDetailsAutoCloseWithin(cargoDatagridRef)
 
-const CARGO_FILTER_BAR_VIS_IDS = ['period', 'dates', 'status', 'search', 'per_page']
-const CARGO_FILTER_BAR_VIS_DEFAULTS = Object.fromEntries(CARGO_FILTER_BAR_VIS_IDS.map((id) => [id, false]))
+const FILTER_CONTROL_CLASS =
+  'h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm focus:border-va-700 focus:outline-none focus:ring-2 focus:ring-va-700/15 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100'
+
+const CARGO_FILTER_CONTROLS = [
+  { key: 'status', label: '', default: false },
+  { key: 'date_range', label: '', default: false },
+  { key: 'per_page', label: '', default: false },
+]
+
 const {
-  visible: filterBarVisible,
-  resetVisibility: resetFilterBarVisibility,
-  hasVisibleOnBar: hasVisibleBarFilters,
-} = useFilterBarVisibility(CARGO_FILTER_BAR_VIS_IDS, CARGO_FILTER_BAR_VIS_DEFAULTS)
+  visibleFilters,
+  hasFilterRow,
+  showFilterPanelDd,
+  openFilterPanel,
+  closeFilterPanel,
+} = useVisibleFilterControls(CARGO_FILTER_CONTROLS, 'va-dieuvan.cargo.visible-filters.v1')
 
-const cargoFilterVisOptions = computed(() =>
-  CARGO_FILTER_BAR_VIS_IDS.map((id) => ({
-    id,
-    labelKey:
-      id === 'status'
-        ? 'cargo_page.filter_vis_status'
-        : `trips_page.filter_vis_${id}`,
+const FILTER_LABEL_KEYS = {
+  status: 'filter_bar.status',
+  date_range: 'trips_page.filter_vis_dates',
+  per_page: 'filter_bar.per_page',
+}
+
+const filterControlDefs = computed(() =>
+  CARGO_FILTER_CONTROLS.map((fd) => ({
+    key: fd.key,
+    label: t(FILTER_LABEL_KEYS[fd.key] ?? fd.key),
   })),
 )
 
-function onCargoFilterBarEnter() {
-  resetFilterBarVisibility()
-}
-
-function closeFilterMenu() {
-  filterMenuRef.value?.close?.()
-}
-
-const CARGO_STATUS_VALUES = ['pending', 'picked_up', 'in_transit', 'delivered', 'failed', 'cancelled']
-
-const rangeFrom = ref('')
-const rangeTo = ref('')
-const preset = ref('all')
-
-const presetDefs = computed(() => [
-  { id: 'all', label: t('dashboard_analytics.preset_all_time') },
-  { id: 'month', label: t('dashboard_analytics.preset_month') },
-  { id: 'last30', label: t('dashboard_analytics.preset_last30') },
-  { id: 'last7', label: t('dashboard_analytics.preset_last7') },
-  { id: 'quarter', label: t('dashboard_analytics.preset_quarter') },
-  { id: 'custom', label: t('dashboard_analytics.preset_custom') },
-])
-
-const currentPresetLabel = computed(() => presetDefs.value.find((p) => p.id === preset.value)?.label ?? '')
+const filters = reactive({
+  status: '',
+  from: '',
+  to: '',
+  q: '',
+  page: 1,
+  per_page: 20,
+})
 
 const rangeValid = computed(() => {
-  const from = rangeFrom.value
-  const to = rangeTo.value
+  const { from, to } = filters
   if (!from && !to) return true
   if (!from || !to) return false
   return from <= to
 })
 
-const hasDateRangeFilter = computed(() => !!(filters.from || filters.to))
+const CARGO_STATUS_VALUES = ['pending', 'picked_up', 'in_transit', 'delivered', 'failed', 'cancelled']
 
-const rangeDaySpan = computed(() => {
-  if (!rangeFrom.value || !rangeTo.value || rangeFrom.value > rangeTo.value) return 0
-  const a = new Date(`${rangeFrom.value}T12:00:00`)
-  const b = new Date(`${rangeTo.value}T12:00:00`)
-  return Math.floor((b.getTime() - a.getTime()) / 86400000) + 1
-})
-
-function formatDisplayDate(iso) {
-  if (!iso) return '…'
-  const [y, m, d] = iso.split('-')
-  if (!y || !m || !d) return iso
-  return `${d}/${m}/${y}`
-}
-
-const rangeDisplayFormatted = computed(
-  () => `${formatDisplayDate(rangeFrom.value)} — ${formatDisplayDate(rangeTo.value)}`,
-)
-
-const rangeChipSummary = computed(() =>
-  hasDateRangeFilter.value ? rangeDisplayFormatted.value : t('dashboard_analytics.filter_all'),
-)
-
-const dateQuickChips = computed(() => [
-  { kind: 'today', label: t('dashboard_analytics.date_range_quick_today') },
-  { kind: 'yesterday', label: t('dashboard_analytics.date_range_quick_yesterday') },
-  { kind: 'last7', label: t('dashboard_analytics.date_range_quick_last7') },
-  { kind: 'month', label: t('dashboard_analytics.date_range_quick_month') },
-])
-
-function ymd(d) {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
-}
-
-function subDays(d, n) {
-  const x = new Date(d)
-  x.setDate(x.getDate() - n)
-  return x
-}
-
-function startOfQuarter(d) {
-  const m = d.getMonth()
-  const q0 = Math.floor(m / 3) * 3
-  return new Date(d.getFullYear(), q0, 1)
-}
-
-function syncRangeForPreset(id) {
-  if (id === 'all') {
-    rangeFrom.value = ''
-    rangeTo.value = ''
-    return
-  }
-  const now = new Date()
-  const end = ymd(now)
-  if (id === 'month') {
-    rangeFrom.value = ymd(new Date(now.getFullYear(), now.getMonth(), 1))
-    rangeTo.value = end
-  } else if (id === 'last30') {
-    rangeFrom.value = ymd(subDays(now, 29))
-    rangeTo.value = end
-  } else if (id === 'last7') {
-    rangeFrom.value = ymd(subDays(now, 6))
-    rangeTo.value = end
-  } else if (id === 'quarter') {
-    rangeFrom.value = ymd(startOfQuarter(now))
-    rangeTo.value = end
-  }
-}
-
-function closeParentDetails(ev) {
-  const el = ev?.currentTarget
-  if (!el || typeof el.closest !== 'function') return
-  const d = el.closest('details')
-  if (d) d.open = false
-}
-
-function onPresetSelectChange(id) {
-  applyPreset(id)
-}
-
-function onApplyPresetAllTime(ev) {
-  applyPreset('all')
-  closeParentDetails(ev)
-}
-
-function onApplyQuickDateRange(kind, ev) {
-  applyQuickDateRange(kind)
-  closeParentDetails(ev)
-}
-
-function dimensionSelectValue(fd) {
-  if (fd.id === 'status') return filters.status
-  if (fd.id === 'per_page') return filters.per_page
-  return ''
-}
-
-function onDimensionSelect(fd, raw) {
-  if (fd.id === 'per_page') {
-    const n = Number(raw)
-    if ([10, 20, 50, 100].includes(n)) {
-      filters.per_page = n
-      onFilterChange()
-    }
-    return
-  }
-  const value = raw === '' || raw == null ? '' : String(raw)
-  fd.pick(value)
-}
-
-function applyPreset(id) {
-  preset.value = id
-  if (id === 'all' || id !== 'custom') {
-    syncRangeForPreset(id)
-    syncFiltersFromRange()
-    onFilterChange()
-  }
-}
-
-function applyQuickDateRange(kind) {
-  const now = new Date()
-  const end = ymd(now)
-  if (kind === 'today') {
-    rangeFrom.value = end
-    rangeTo.value = end
-  } else if (kind === 'yesterday') {
-    const y = ymd(subDays(now, 1))
-    rangeFrom.value = y
-    rangeTo.value = y
-  } else if (kind === 'last7') {
-    rangeFrom.value = ymd(subDays(now, 6))
-    rangeTo.value = end
-  } else if (kind === 'month') {
-    rangeFrom.value = ymd(new Date(now.getFullYear(), now.getMonth(), 1))
-    rangeTo.value = end
-  }
-  preset.value = 'custom'
-  syncFiltersFromRange()
-  onFilterChange()
-}
-
-function onRangeFromChange() {
-  if (rangeFrom.value && rangeTo.value && rangeFrom.value > rangeTo.value) {
-    rangeTo.value = rangeFrom.value
-  }
-  preset.value = 'custom'
-  syncFiltersFromRange()
-  onFilterChange()
-}
-
-function onRangeToChange() {
-  if (rangeFrom.value && rangeTo.value && rangeFrom.value > rangeTo.value) {
-    rangeFrom.value = rangeTo.value
-  }
-  preset.value = 'custom'
-  syncFiltersFromRange()
-  onFilterChange()
-}
-
-function applyCustomRange() {
-  syncFiltersFromRange()
-  onFilterChange()
-}
-
-function syncFiltersFromRange() {
-  filters.from = rangeFrom.value
-  filters.to = rangeTo.value
-}
-
-const statusOptions = computed(() => [
-  { value: '', label: t('requests_page.filter_option_any') },
+const statusFilterOptions = computed(() => [
+  { value: '', label: t('filter_bar.status') },
   ...CARGO_STATUS_VALUES.map((s) => ({ value: s, label: labelCargoStatus(s) })),
 ])
 
-const perPageOptions = computed(() => [
+const perPageFilterOptions = computed(() => [
   { value: 10, label: '10' },
-  { value: 20, label: '20' },
+  { value: 20, label: t('filter_bar.per_page') },
   { value: 50, label: '50' },
   { value: 100, label: '100' },
 ])
 
-const dimensionFilters = computed(() => {
-  return [
-    {
-      id: 'status',
-      label: t('filter_bar.status'),
-      options: statusOptions.value,
-      isSelected: (v) => (v === '' ? !filters.status : filters.status === v),
-      pick: (v) => {
-        filters.status = v || ''
-        onFilterChange()
-      },
-    },
-    {
-      id: 'search',
-      label: t('filter_bar.search'),
-      options: [],
-      isSelected: () => false,
-      pick: () => {},
-    },
-    {
-      id: 'per_page',
-      label: t('filter_bar.per_page'),
-      options: perPageOptions.value.map((o) => ({ value: o.value, label: o.label })),
-      isSelected: (v) => filters.per_page === v,
-      pick: (v) => {
-        filters.per_page = v
-        onFilterChange()
-      },
-    },
-  ]
+const pageFrom = computed(() => {
+  const total = meta.value.total ?? 0
+  if (total <= 0) return 0
+  const cur = meta.value.current_page ?? 1
+  const pp = meta.value.per_page ?? filters.per_page
+  return (cur - 1) * pp + 1
 })
 
-const visibleDimensionFilters = computed(() =>
-  dimensionFilters.value.filter((fd) => filterBarVisible[fd.id] === true),
-)
-
-const activeFilterLines = computed(() => {
-  const rows = []
-  if (filters.status) {
-    rows.push({ label: t('filter_bar.status'), value: labelCargoStatus(filters.status) })
-  }
-  return rows
+const pageTo = computed(() => {
+  const total = meta.value.total ?? 0
+  if (total <= 0) return 0
+  const cur = meta.value.current_page ?? 1
+  const pp = meta.value.per_page ?? filters.per_page
+  return Math.min(cur * pp, total)
 })
 
-const activeFilterCount = computed(() => {
-  let n = 0
-  if (hasDateRangeFilter.value) n++
-  if (filters.status) n++
-  if (filters.q?.trim()) n++
-  if (filters.per_page !== 20) n++
-  return n
+const pageNumbers = computed(() => {
+  const last = meta.value.last_page ?? 1
+  const cur = meta.value.current_page ?? 1
+  const delta = 2
+  const start = Math.max(1, cur - delta)
+  const end = Math.min(last, cur + delta)
+  const pages = []
+  for (let i = start; i <= end; i++) pages.push(i)
+  return pages
 })
-
-const kpi = ref({ inTransit: 0, completed: 0, pending: 0, issues: 0 })
-
-const kpiBoxes = computed(() => [
-  {
-    key: 'inTransit',
-    label: t('cargo_page.kpi_in_transit'),
-    value: kpi.value.inTransit,
-    icon: TruckIcon,
-    iconWrap: 'bg-sky-100 dark:bg-sky-950/50',
-    iconClass: 'text-sky-600 dark:text-sky-400',
-  },
-  {
-    key: 'completed',
-    label: t('cargo_page.kpi_completed'),
-    value: kpi.value.completed,
-    icon: CheckCircleIcon,
-    iconWrap: 'bg-emerald-100 dark:bg-emerald-950/50',
-    iconClass: 'text-emerald-600 dark:text-emerald-400',
-  },
-  {
-    key: 'pending',
-    label: t('cargo_page.kpi_pending'),
-    value: kpi.value.pending,
-    icon: ClockIcon,
-    iconWrap: 'bg-amber-100 dark:bg-amber-950/50',
-    iconClass: 'text-amber-600 dark:text-amber-400',
-  },
-  {
-    key: 'issues',
-    label: t('cargo_page.kpi_issues'),
-    value: kpi.value.issues,
-    icon: ExclamationTriangleIcon,
-    iconWrap: 'bg-rose-100 dark:bg-rose-950/50',
-    iconClass: 'text-rose-600 dark:text-rose-400',
-  },
-])
-
-const chartLinePts = ref([0, 0, 0, 0, 0, 0, 0])
-
-const chartLineLabels = computed(() => {
-  const loc = locale.value === 'en' ? 'en-GB' : 'vi-VN'
-  const labels = []
-  for (let i = 6; i >= 0; i--) {
-    const d = subDays(new Date(), i)
-    labels.push(d.toLocaleDateString(loc, { weekday: 'short' }))
-  }
-  return labels
-})
-
-const fleetChartOption = computed(() => ({
-  grid: { left: 40, right: 12, top: 16, bottom: 22 },
-  tooltip: { trigger: 'axis' },
-  xAxis: {
-    type: 'category',
-    data: chartLineLabels.value,
-    axisLabel: { fontSize: 10, color: '#64748b' },
-  },
-  yAxis: {
-    type: 'value',
-    splitLine: { lineStyle: { opacity: 0.2 } },
-    axisLabel: { fontSize: 10, color: '#64748b' },
-  },
-  series: [
-    {
-      type: 'line',
-      smooth: true,
-      data: chartLinePts.value,
-      areaStyle: { color: 'rgba(13,148,136,0.12)' },
-      lineStyle: { color: '#0d9488', width: 2 },
-      itemStyle: { color: '#0f766e' },
-    },
-  ],
-}))
-
-function fmtInt(n) {
-  return new Intl.NumberFormat(locale.value === 'en' ? 'en-US' : 'vi-VN').format(n ?? 0)
-}
-
-function kpiBaseParams() {
-  const p = {
-    from: filters.from || undefined,
-    to: filters.to || undefined,
-    q: filters.q?.trim() || undefined,
-    per_page: 1,
-    page: 1,
-  }
-  Object.keys(p).forEach((k) => {
-    if (p[k] === '' || p[k] === undefined || p[k] === null) delete p[k]
-  })
-  return p
-}
 
 function listParams() {
   const p = {
@@ -860,83 +377,49 @@ function listParams() {
   return p
 }
 
+function kpiBaseParams() {
+  return {
+    from: filters.from || undefined,
+    to: filters.to || undefined,
+    q: filters.q?.trim() || undefined,
+    per_page: 1,
+    page: 1,
+  }
+}
+
 async function reloadKpis() {
   if (!rangeValid.value) return
   kpiLoading.value = true
   try {
     const base = kpiBaseParams()
-    const [r1, r2, rDone, rPend, rFail, rCanc] = await Promise.all([
-      listCargoShipments({ ...base, status: 'in_transit' }),
-      listCargoShipments({ ...base, status: 'picked_up' }),
-      listCargoShipments({ ...base, status: 'delivered' }),
+    const [rPend, rPickedUp, rInTransit, rDone, rFail, rCanc] = await Promise.all([
       listCargoShipments({ ...base, status: 'pending' }),
+      listCargoShipments({ ...base, status: 'picked_up' }),
+      listCargoShipments({ ...base, status: 'in_transit' }),
+      listCargoShipments({ ...base, status: 'delivered' }),
       listCargoShipments({ ...base, status: 'failed' }),
       listCargoShipments({ ...base, status: 'cancelled' }),
     ])
-    kpi.value.inTransit = (r1.meta?.total ?? 0) + (r2.meta?.total ?? 0)
-    kpi.value.completed = rDone.meta?.total ?? 0
-    kpi.value.pending = rPend.meta?.total ?? 0
-    kpi.value.issues = (rFail.meta?.total ?? 0) + (rCanc.meta?.total ?? 0)
+    const pending = rPend.meta?.total ?? 0
+    const pickedUp = rPickedUp.meta?.total ?? 0
+    const inTransit = rInTransit.meta?.total ?? 0
+    const delivered = rDone.meta?.total ?? 0
+    const failed = rFail.meta?.total ?? 0
+    const cancelled = rCanc.meta?.total ?? 0
+    kpiStats.value = {
+      pending,
+      picked_up: pickedUp,
+      in_transit: inTransit,
+      delivered,
+      failed,
+      cancelled,
+      total: pending + pickedUp + inTransit + delivered + failed + cancelled,
+    }
   } catch {
-    kpi.value = { inTransit: 0, completed: 0, pending: 0, issues: 0 }
+    kpiStats.value = { total: 0, pending: 0, picked_up: 0, in_transit: 0, delivered: 0, failed: 0, cancelled: 0 }
   } finally {
     kpiLoading.value = false
   }
-}
-
-async function loadChartSeries() {
-  const days = Array.from({ length: 7 }, (_, i) => ymd(subDays(new Date(), 6 - i)))
-  try {
-    const results = await Promise.all(
-      days.map((day) => listCargoShipments({ from: day, to: day, status: 'delivered', per_page: 1 })),
-    )
-    chartLinePts.value = results.map((r) => r.meta?.total ?? 0)
-  } catch {
-    chartLinePts.value = [0, 0, 0, 0, 0, 0, 0]
-  }
-}
-
-function fmt(v) {
-  return v ? new Date(v).toLocaleString(locale.value === 'en' ? 'en-GB' : 'vi-VN') : ''
-}
-
-function cargoStatusPillClass(st) {
-  const map = {
-    pending: 'bg-amber-100 text-amber-900 dark:bg-amber-950/40 dark:text-amber-100',
-    picked_up: 'bg-sky-100 text-sky-900 dark:bg-sky-950/40 dark:text-sky-100',
-    in_transit: 'bg-teal-100 text-teal-900 dark:bg-teal-950/40 dark:text-teal-100',
-    delivered: 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100',
-    failed: 'bg-rose-100 text-rose-900 dark:bg-rose-950/40 dark:text-rose-100',
-    cancelled: 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200',
-  }
-  return map[st] ?? 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200'
-}
-
-function dispatchRequestId(s) {
-  return s.dispatch_request_id ?? s.dispatch_request?.id ?? null
-}
-
-function onFilterChange() {
-  if (!rangeValid.value) return
-  filters.page = 1
-  reloadKpis()
-  loadChartSeries()
-  reload()
-}
-
-function resetFilters() {
-  filters.status = ''
-  filters.q = ''
-  searchInput.value = ''
-  filters.per_page = 20
-  filters.page = 1
-  preset.value = 'all'
-  syncRangeForPreset('all')
-  syncFiltersFromRange()
-  closeFilterMenu()
-  reloadKpis()
-  loadChartSeries()
-  reload()
 }
 
 async function reload() {
@@ -952,8 +435,40 @@ async function reload() {
   }
 }
 
-function page(d) {
-  filters.page = (meta.value.current_page ?? 1) + d
+function onKpiQuickFilter(payload) {
+  const { kind, value } = payload
+  if (kind === 'reset') {
+    filters.status = ''
+  } else if (kind === 'status') {
+    filters.status = filters.status === value ? '' : value
+  }
+  onFilterChange()
+}
+
+function onFilterChange() {
+  if (!rangeValid.value) return
+  filters.page = 1
+  reloadKpis()
+  reload()
+}
+
+function resetFilters() {
+  filters.status = ''
+  filters.from = ''
+  filters.to = ''
+  filters.q = ''
+  searchInput.value = ''
+  filters.per_page = 20
+  filters.page = 1
+  closeFilterPanel()
+  reloadKpis()
+  reload()
+}
+
+function goPage(n) {
+  const last = meta.value.last_page ?? 1
+  if (n < 1 || n > last) return
+  filters.page = n
   reload()
 }
 
@@ -970,20 +485,16 @@ watch(searchInput, () => {
       filters.q = next
       onFilterChange()
     }
-  }, 320)
+  }, 350)
 })
 
 onMounted(() => {
-  onCargoFilterBarEnter()
-  syncRangeForPreset('all')
-  syncFiltersFromRange()
-  searchInput.value = filters.q
   reloadKpis()
-  loadChartSeries()
   reload()
 })
 
 onActivated(() => {
-  onCargoFilterBarEnter()
+  reloadKpis()
+  reload()
 })
 </script>

@@ -1,610 +1,333 @@
-<template>
-  <div class="resources-page space-y-4 text-slate-900 md:space-y-5 dark:text-slate-100">
-    <!-- Header -->
-    <div class="border-b border-slate-200/80 pb-4 dark:border-slate-700">
-      <div class="flex flex-wrap items-center gap-2">
-        <h1 class="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">{{ t('resources.page_title') }}</h1>
-        <span
-          class="inline-flex items-center rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-800 ring-1 ring-inset ring-teal-600/20 dark:bg-teal-950/50 dark:text-teal-300 dark:ring-teal-600/40"
-        >
-          {{ t('resources.workspace_badge') }}
-        </span>
-      </div>
-      <p class="mt-1 max-w-3xl text-sm text-slate-600 dark:text-slate-400">
-        {{ t('resources.page_subtitle') }}
-      </p>
-      <div class="relative mt-4 w-full min-w-0">
-          <MagnifyingGlassIcon
-            class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
-            aria-hidden="true"
-          />
-          <input
-            v-model="search"
-            type="search"
-            class="min-h-[44px] w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-base text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 sm:min-h-0 sm:py-2 sm:text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
-            :placeholder="searchPlaceholder"
-          />
-      </div>
-
-      <div class="mt-4 flex flex-wrap items-center gap-2 sm:gap-3">
-        <!-- Xe: danh sách / thùng rác (cùng hàng với tab + nút) -->
-        <div
-          v-if="activeTab === 'vehicles'"
-          class="inline-flex shrink-0 gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-600 dark:bg-slate-800"
-        >
-          <button
-            type="button"
-            :class="[
-              'inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition sm:py-1.5',
-              vehiclesViewMode === 'active'
-                ? 'bg-white text-teal-800 shadow-sm dark:bg-slate-700 dark:text-teal-300'
-                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white',
-            ]"
-            @click="setVehiclesViewMode('active')"
-          >
-            {{ t('resources.vehicles_view_active') }}
-          </button>
-          <button
-            type="button"
-            :class="[
-              'inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition sm:py-1.5',
-              vehiclesViewMode === 'trash'
-                ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white'
-                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white',
-            ]"
-            @click="setVehiclesViewMode('trash')"
-          >
-            <TrashIcon class="h-4 w-4" aria-hidden="true" />
-            {{ t('resources.vehicles_view_trash') }}
-          </button>
+﻿<template>
+  <div class="space-y-6">
+    <!-- Page header -->
+    <div class="flex flex-col gap-3 border-b border-slate-200/80 pb-6 lg:flex-row lg:items-end lg:justify-between">
+      <div>
+        <div class="flex flex-wrap items-center gap-2">
+          <h1 class="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">{{ t('resources.page_title') }}</h1>
+          <span class="inline-flex items-center rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-800 ring-1 ring-inset ring-teal-600/20 dark:bg-teal-950/50 dark:text-teal-300 dark:ring-teal-600/40">
+            {{ t('resources.workspace_badge') }}
+          </span>
         </div>
-
-        <div
-          v-if="activeTab === 'drivers'"
-          class="inline-flex shrink-0 gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-600 dark:bg-slate-800"
-        >
-          <button
-            type="button"
-            :class="[
-              'inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition sm:py-1.5',
-              driversViewMode === 'active'
-                ? 'bg-white text-teal-800 shadow-sm dark:bg-slate-700 dark:text-teal-300'
-                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white',
-            ]"
-            @click="setDriversViewMode('active')"
-          >
-            {{ t('resources.drivers_view_active') }}
-          </button>
-          <button
-            type="button"
-            :class="[
-              'inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition sm:py-1.5',
-              driversViewMode === 'trash'
-                ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white'
-                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white',
-            ]"
-            @click="setDriversViewMode('trash')"
-          >
-            <TrashIcon class="h-4 w-4" aria-hidden="true" />
-            {{ t('resources.vehicles_view_trash') }}
-          </button>
-        </div>
-
-        <div
-          v-if="activeTab === 'suppliers'"
-          class="inline-flex shrink-0 gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-600 dark:bg-slate-800"
-        >
-          <button
-            type="button"
-            :class="[
-              'inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition sm:py-1.5',
-              suppliersViewMode === 'active'
-                ? 'bg-white text-teal-800 shadow-sm dark:bg-slate-700 dark:text-teal-300'
-                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white',
-            ]"
-            @click="setSuppliersViewMode('active')"
-          >
-            {{ t('resources.suppliers_view_active') }}
-          </button>
-          <button
-            type="button"
-            :class="[
-              'inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition sm:py-1.5',
-              suppliersViewMode === 'trash'
-                ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white'
-                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white',
-            ]"
-            @click="setSuppliersViewMode('trash')"
-          >
-            <TrashIcon class="h-4 w-4" aria-hidden="true" />
-            {{ t('resources.vehicles_view_trash') }}
-          </button>
-        </div>
-
-        <div class="min-w-0 flex-1 overflow-x-auto overscroll-x-contain sm:flex-initial">
-          <div class="inline-flex shrink-0 gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-600 dark:bg-slate-800">
-            <button
-              v-for="tab in tabs"
-              :key="tab.id"
-              type="button"
-              :class="[
-                'shrink-0 snap-start rounded-md px-3 py-2 text-xs font-medium transition sm:py-1.5',
-                activeTab === tab.id
-                  ? 'bg-teal-600 text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white',
-              ]"
-              @click="setTab(tab.id)"
-            >
-              {{ t(tab.labelKey) }}
-            </button>
-          </div>
-        </div>
-
-        <div class="flex min-w-0 flex-wrap items-center justify-end gap-2 sm:ml-auto sm:shrink-0">
-          <button
-            v-if="activeTab === 'drivers' && driversViewMode === 'active' && canManageDrivers"
-            type="button"
-            class="inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-500 sm:min-h-0 sm:w-auto sm:py-2"
-            @click="openAssignModal(null)"
-          >
-            {{ t('resources.assign_driver') }}
-          </button>
-          <button
-            v-else-if="activeTab === 'vehicles' && canManageVehicles && vehiclesViewMode === 'active'"
-            type="button"
-            class="inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-500 sm:min-h-0 sm:w-auto sm:py-2"
-            @click="openVehicleForm(null)"
-          >
-            {{ t('resources.add_vehicle') }}
-          </button>
-          <button
-            v-else-if="activeTab === 'suppliers' && canManageProviders && suppliersViewMode === 'active'"
-            type="button"
-            class="inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-500 sm:min-h-0 sm:w-auto sm:py-2"
-            @click="openProviderForm(null)"
-          >
-            {{ t('resources.add_supplier') }}
-          </button>
-          <button
-            v-else-if="!(activeTab === 'vehicles' && vehiclesViewMode === 'trash') && !(activeTab === 'drivers' && driversViewMode === 'trash') && !(activeTab === 'suppliers' && suppliersViewMode === 'trash')"
-            type="button"
-            class="inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 sm:min-h-0 sm:w-auto sm:py-2"
-            disabled
-          >
-            {{ addButtonLabel }}
-          </button>
-        </div>
+        <p class="mt-1 max-w-3xl text-sm text-slate-600 dark:text-slate-400">{{ t('resources.page_subtitle') }}</p>
       </div>
     </div>
 
-    <AppFilterBar
-      v-show="!(activeTab === 'vehicles' && vehiclesViewMode === 'trash') && !(activeTab === 'drivers' && driversViewMode === 'trash') && !(activeTab === 'suppliers' && suppliersViewMode === 'trash')"
+    <!-- KPI Summary Strip -->
+    <ResourcesSummaryBar
+      :vehicles="vehicles"
+      :drivers="drivers"
+      :suppliers="suppliers"
+      :loading="loading"
+    />
+
+    <!-- Datagrid card -->
+    <div
+      ref="resourcesDatagridRef"
+      class="overflow-visible rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40"
     >
-      <div ref="resourcesFilterBarRef" class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
-        <AppFilterFunnelMenu ref="filterMenuRef" :badge-count="activeResourceFilterCount">
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('resources.filter_menu_title') }}</p>
-            <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
-              <li v-if="filters.status" class="flex justify-between gap-2">
-                <span class="text-slate-500">{{ t('resources.filter_status') }}</span>
-                <span class="max-w-[60%] text-right font-medium">{{ resourceFilterStatusLabel }}</span>
-              </li>
-              <li v-if="activeTab === 'vehicles' && filters.type" class="flex justify-between gap-2">
-                <span class="text-slate-500">{{ t('resources.filter_type') }}</span>
-                <span class="max-w-[60%] text-right font-medium">{{ resourceFilterTypeLabel }}</span>
-              </li>
-              <li v-if="activeTab === 'vehicles' && filters.driver_default" class="flex justify-between gap-2">
-                <span class="text-slate-500">{{ t('resources.filter_driver_default') }}</span>
-                <span class="max-w-[60%] text-right font-medium">{{ resourceFilterDriverDefaultLabel }}</span>
-              </li>
-              <li v-if="activeTab === 'vehicles' && filters.insurance" class="flex justify-between gap-2">
-                <span class="text-slate-500">{{ t('resources.filter_insurance') }}</span>
-                <span class="max-w-[60%] text-right font-medium">{{ resourceFilterDocStateLabel(filters.insurance) }}</span>
-              </li>
-              <li v-if="activeTab === 'vehicles' && filters.inspection" class="flex justify-between gap-2">
-                <span class="text-slate-500">{{ t('resources.filter_inspection') }}</span>
-                <span class="max-w-[60%] text-right font-medium">{{ resourceFilterDocStateLabel(filters.inspection) }}</span>
-              </li>
-              <li v-if="activeTab === 'vehicles' && filters.road_fee" class="flex justify-between gap-2">
-                <span class="text-slate-500">{{ t('resources.filter_road_fee') }}</span>
-                <span class="max-w-[60%] text-right font-medium">{{ resourceFilterDocStateLabel(filters.road_fee) }}</span>
-              </li>
-              <li v-if="activeTab === 'suppliers' && filters.contract" class="flex justify-between gap-2">
-                <span class="text-slate-500">{{ t('resources.filter_contract') }}</span>
-                <span class="max-w-[60%] text-right font-medium">{{ resourceFilterContractLabel }}</span>
-              </li>
-              <li v-if="activeTab === 'drivers' && filters.driver_license" class="flex justify-between gap-2">
-                <span class="text-slate-500">{{ t('resources.filter_driver_license') }}</span>
-                <span class="max-w-[60%] text-right font-medium">{{ resourceFilterDocStateLabel(filters.driver_license) }}</span>
-              </li>
-              <li v-if="activeTab === 'drivers' && filters.driver_availability" class="flex justify-between gap-2">
-                <span class="text-slate-500">{{ t('resources.filter_driver_availability') }}</span>
-                <span class="max-w-[60%] text-right font-medium">{{ resourceFilterDriverAvailabilityLabel }}</span>
-              </li>
-              <li v-if="activeResourceFilterCount === 0" class="text-slate-400">{{ t('resources.filter_menu_empty') }}</li>
-            </ul>
-            <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
-              <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
-                {{ t('trips_page.filter_show_controls_title') }}
-              </p>
-              <p class="mt-1 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
-                {{ t('trips_page.filter_show_controls_hint') }}
-              </p>
-              <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
-                <li v-for="opt in resourceFilterVisibilityOptions" :key="'res-vis-' + opt.id" class="flex items-start gap-2">
-                  <input
-                    :id="'resource-filter-vis-' + opt.id"
-                    v-model="filterBarVisible[opt.id]"
-                    type="checkbox"
-                    class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:focus:ring-offset-slate-900"
-                  />
-                  <label
-                    :for="'resource-filter-vis-' + opt.id"
-                    class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
-                  >
-                    {{ t(opt.labelKey) }}
-                  </label>
-                </li>
-              </ul>
-            </div>
-            <button
-              type="button"
-              class="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
-              @click="resetResourceFilters(); closeResourceFilterMenu()"
-            >
-              {{ t('resources.filter_clear_all') }}
-            </button>
-        </AppFilterFunnelMenu>
-
-        <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-600" aria-hidden="true" />
-
-          <button
-            type="button"
-            class="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
-            :title="t('resources.filter_clear')"
-            :aria-label="t('resources.filter_clear')"
-            @click="resetResourceFilters"
-          >
-            <span class="relative inline-flex">
-              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-              <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/50" />
-            </span>
-          </button>
+      <!-- Tab bar -->
+      <div class="flex items-center gap-0 border-b border-slate-100 px-4 sm:px-5 dark:border-slate-700">
+        <button
+          v-for="tab in tabs"
+          :key="tab.id"
+          type="button"
+          :class="[
+            'shrink-0 px-4 py-3 text-sm font-medium transition border-b-2',
+            activeTab === tab.id
+              ? 'border-teal-600 text-teal-700 dark:border-teal-400 dark:text-teal-300'
+              : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200',
+          ]"
+          :data-testid="`resources-tab-${tab.id}`"
+          @click="setTab(tab.id)"
+        >
+          {{ t(tab.labelKey) }}
+        </button>
       </div>
 
-      <div
-        v-if="hasVisibleBarFilters"
-        class="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-2 border-t border-violet-100/80 pt-2 dark:border-violet-900/30 sm:gap-x-3"
-      >
-          <!-- Trạng thái -->
-          <details v-if="filterBarVisible.status" class="group relative min-w-0">
-            <summary
-              class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-2 py-1.5 shadow-sm transition [&::-webkit-details-marker]:hidden"
-              :class="
-                filters.status
-                  ? 'border-teal-300/90 bg-teal-50/90 text-teal-950 ring-1 ring-teal-200/70 hover:bg-teal-50 dark:border-teal-700/60 dark:bg-teal-950/40 dark:text-teal-100 dark:ring-teal-800/50'
-                  : 'border-white/80 bg-white/90 text-slate-700 hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700'
-              "
-              :aria-label="t('resources.filter_status')"
-            >
-              <span
-                class="min-w-0 max-w-[10rem] truncate"
-                :class="
-                  filters.status
-                    ? 'text-sm font-semibold text-teal-950 dark:text-teal-50'
-                    : 'text-xs font-medium text-slate-600 sm:text-sm dark:text-slate-400'
-                "
-              >{{ statusFilterChipSummary }}</span>
-              <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-            </summary>
-            <div
-              class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
-            >
-              <p class="border-b border-slate-100 bg-slate-50/80 px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200">
-                {{ t('resources.filter_status') }}
-              </p>
-              <ul class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1">
-                <li v-for="opt in resourceStatusFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
-                  <button
-                    type="button"
-                    class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
-                    :class="
-                      filters.status === opt.value
-                        ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-200'
-                        : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
-                    "
-                    @click="applyResourceFilterPatch($event, { status: opt.value })"
-                  >
-                    {{ opt.label }}
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </details>
+      <!-- Toolbar row -->
+      <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+        <div class="flex w-full min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
+          <!-- Search -->
+          <div class="min-w-0 w-full basis-full lg:min-w-[10rem] lg:flex-1 lg:basis-auto">
+            <DatagridToolbarSearch
+              v-model="search"
+              input-id="resources-list-search"
+              :placeholder="searchPlaceholder"
+              stretch
+              inline-actions
+              hide-label
+              input-height="h-10"
+              data-testid="resources-toolbar-search"
+            />
+          </div>
 
-          <!-- Xe: loại, tài xế mặc định -->
-          <template v-if="activeTab === 'vehicles'">
-            <details v-if="filterBarVisible.type" class="group relative min-w-0">
-              <summary
-                class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-2 py-1.5 shadow-sm transition [&::-webkit-details-marker]:hidden"
-                :class="
-                  filters.type
-                    ? 'border-teal-300/90 bg-teal-50/90 text-teal-950 ring-1 ring-teal-200/70 hover:bg-teal-50 dark:border-teal-700/60 dark:bg-teal-950/40 dark:text-teal-100 dark:ring-teal-800/50'
-                    : 'border-white/80 bg-white/90 text-slate-700 hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700'
-                "
-                :aria-label="t('resources.filter_type')"
-              >
-                <span
-                  class="min-w-0 max-w-[10rem] truncate"
-                  :class="
-                    filters.type
-                      ? 'text-sm font-semibold text-teal-950 dark:text-teal-50'
-                      : 'text-xs font-medium text-slate-600 sm:text-sm dark:text-slate-400'
-                  "
-                >{{ typeFilterChipSummary }}</span>
-                <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-              </summary>
-              <div
-                class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
-              >
-                <p class="border-b border-slate-100 bg-slate-50/80 px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200">
-                  {{ t('resources.filter_type') }}
-                </p>
-                <ul class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1">
-                  <li v-for="opt in resourceVehicleTypeFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
-                    <button
-                      type="button"
-                      class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
-                      :class="
-                        filters.type === opt.value
-                          ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-200'
-                          : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
-                      "
-                      @click="applyResourceFilterPatch($event, { type: opt.value })"
-                    >
-                      {{ opt.label }}
-                    </button>
-                  </li>
-                </ul>
-              </div>
-            </details>
-
-            <details v-if="filterBarVisible.driver_default" class="group relative min-w-0">
-              <summary
-                class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-2 py-1.5 shadow-sm transition [&::-webkit-details-marker]:hidden"
-                :class="
-                  filters.driver_default
-                    ? 'border-teal-300/90 bg-teal-50/90 text-teal-950 ring-1 ring-teal-200/70 hover:bg-teal-50 dark:border-teal-700/60 dark:bg-teal-950/40 dark:text-teal-100 dark:ring-teal-800/50'
-                    : 'border-white/80 bg-white/90 text-slate-700 hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700'
-                "
-                :aria-label="t('resources.filter_driver_default')"
-              >
-                <span
-                  class="min-w-0 max-w-[9rem] truncate"
-                  :class="
-                    filters.driver_default
-                      ? 'text-sm font-semibold text-teal-950 dark:text-teal-50'
-                      : 'text-xs font-medium text-slate-600 sm:text-sm dark:text-slate-400'
-                  "
-                >{{ driverDefaultFilterChipSummary }}</span>
-                <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-              </summary>
-              <div
-                class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
-              >
-                <p class="border-b border-slate-100 bg-slate-50/80 px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200">
-                  {{ t('resources.filter_driver_default') }}
-                </p>
-                <ul class="space-y-0.5 px-1 py-1">
-                  <li v-for="opt in resourceDriverDefaultFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
-                    <button
-                      type="button"
-                      class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
-                      :class="
-                        filters.driver_default === opt.value
-                          ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-200'
-                          : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
-                      "
-                      @click="applyResourceFilterPatch($event, { driver_default: opt.value })"
-                    >
-                      {{ opt.label }}
-                    </button>
-                  </li>
-                </ul>
-              </div>
-            </details>
-          </template>
-
-          <!-- NCC: hợp đồng -->
-          <template v-if="activeTab === 'drivers' && driversViewMode === 'active'">
-            <details v-if="filterBarVisible.driver_license" class="group relative min-w-0">
-              <summary
-                class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-2 py-1.5 shadow-sm transition [&::-webkit-details-marker]:hidden"
-                :class="
-                  filters.driver_license
-                    ? 'border-teal-300/90 bg-teal-50/90 text-teal-950 ring-1 ring-teal-200/70 hover:bg-teal-50 dark:border-teal-700/60 dark:bg-teal-950/40 dark:text-teal-100 dark:ring-teal-800/50'
-                    : 'border-white/80 bg-white/90 text-slate-700 hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700'
-                "
-                :aria-label="t('resources.filter_driver_license')"
-              >
-                <span
-                  class="min-w-0 max-w-[9rem] truncate"
-                  :class="
-                    filters.driver_license
-                      ? 'text-sm font-semibold text-teal-950 dark:text-teal-50'
-                      : 'text-xs font-medium text-slate-600 sm:text-sm dark:text-slate-400'
-                  "
-                >{{ driverLicenseFilterChipSummary }}</span>
-                <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-              </summary>
-              <div
-                class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
-              >
-                <p class="border-b border-slate-100 bg-slate-50/80 px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200">
-                  {{ t('resources.filter_driver_license') }}
-                </p>
-                <ul class="space-y-0.5 px-1 py-1">
-                  <li v-for="opt in resourceDocStateFilterOptions" :key="'dl-' + (opt.value === '' ? '_all' : opt.value)">
-                    <button
-                      type="button"
-                      class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
-                      :class="
-                        filters.driver_license === opt.value
-                          ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-200'
-                          : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
-                      "
-                      @click="applyResourceFilterPatch($event, { driver_license: opt.value })"
-                    >
-                      {{ opt.label }}
-                    </button>
-                  </li>
-                </ul>
-              </div>
-            </details>
-
-            <details v-if="filterBarVisible.driver_availability" class="group relative min-w-0">
-              <summary
-                class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-2 py-1.5 shadow-sm transition [&::-webkit-details-marker]:hidden"
-                :class="
-                  filters.driver_availability
-                    ? 'border-teal-300/90 bg-teal-50/90 text-teal-950 ring-1 ring-teal-200/70 hover:bg-teal-50 dark:border-teal-700/60 dark:bg-teal-950/40 dark:text-teal-100 dark:ring-teal-800/50'
-                    : 'border-white/80 bg-white/90 text-slate-700 hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700'
-                "
-                :aria-label="t('resources.filter_driver_availability')"
-              >
-                <span
-                  class="min-w-0 max-w-[9rem] truncate"
-                  :class="
-                    filters.driver_availability
-                      ? 'text-sm font-semibold text-teal-950 dark:text-teal-50'
-                      : 'text-xs font-medium text-slate-600 sm:text-sm dark:text-slate-400'
-                  "
-                >{{ driverAvailabilityFilterChipSummary }}</span>
-                <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-              </summary>
-              <div
-                class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
-              >
-                <p class="border-b border-slate-100 bg-slate-50/80 px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200">
-                  {{ t('resources.filter_driver_availability') }}
-                </p>
-                <ul class="space-y-0.5 px-1 py-1">
-                  <li v-for="opt in resourceDriverAvailabilityFilterOptions" :key="'da-' + (opt.value === '' ? '_all' : opt.value)">
-                    <button
-                      type="button"
-                      class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
-                      :class="
-                        filters.driver_availability === opt.value
-                          ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-200'
-                          : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
-                      "
-                      @click="applyResourceFilterPatch($event, { driver_availability: opt.value })"
-                    >
-                      {{ opt.label }}
-                    </button>
-                  </li>
-                </ul>
-              </div>
-            </details>
-          </template>
-
-          <details v-if="activeTab === 'suppliers' && filterBarVisible.contract" class="group relative min-w-0">
-            <summary
-              class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-2 py-1.5 shadow-sm transition [&::-webkit-details-marker]:hidden"
-              :class="
-                filters.contract
-                  ? 'border-teal-300/90 bg-teal-50/90 text-teal-950 ring-1 ring-teal-200/70 hover:bg-teal-50 dark:border-teal-700/60 dark:bg-teal-950/40 dark:text-teal-100 dark:ring-teal-800/50'
-                  : 'border-white/80 bg-white/90 text-slate-700 hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700'
-              "
-              :aria-label="t('resources.filter_contract')"
-            >
-              <span
-                class="min-w-0 max-w-[9rem] truncate"
-                :class="
-                  filters.contract
-                    ? 'text-sm font-semibold text-teal-950 dark:text-teal-50'
-                    : 'text-xs font-medium text-slate-600 sm:text-sm dark:text-slate-400'
-                "
-              >{{ contractFilterChipSummary }}</span>
-              <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-            </summary>
-            <div
-              class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
-            >
-              <p class="border-b border-slate-100 bg-slate-50/80 px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200">
-                {{ t('resources.filter_contract') }}
-              </p>
-              <ul class="space-y-0.5 px-1 py-1">
-                <li v-for="opt in resourceDocStateFilterOptions" :key="'contract-' + (opt.value === '' ? '_all' : opt.value)">
-                  <button
-                    type="button"
-                    class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
-                    :class="
-                      filters.contract === opt.value
-                        ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-200'
-                        : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
-                    "
-                    @click="applyResourceFilterPatch($event, { contract: opt.value })"
-                  >
-                    {{ opt.label }}
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </details>
-
-          <template v-if="activeTab === 'vehicles' && vehiclesViewMode === 'active'">
-            <template v-for="spec in resourceVehicleDocFiltersExtra" :key="'extra-' + spec.key">
-            <details
-              v-if="filterBarVisible[spec.key]"
-              class="group relative min-w-0"
-            >
-          <summary
-            class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-2 py-1.5 shadow-sm transition [&::-webkit-details-marker]:hidden"
-            :class="
-              filters[spec.key]
-                ? 'border-teal-300/90 bg-teal-50/90 text-teal-950 ring-1 ring-teal-200/70 hover:bg-teal-50 dark:border-teal-700/60 dark:bg-teal-950/40 dark:text-teal-100 dark:ring-teal-800/50'
-                : 'border-white/80 bg-white/90 text-slate-700 hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700'
-            "
-            :aria-label="spec.label"
-          >
-            <span
-              class="min-w-0 max-w-[8rem] truncate"
-              :class="
-                filters[spec.key]
-                  ? 'text-sm font-semibold text-teal-950 dark:text-teal-50'
-                  : 'text-xs font-medium text-slate-600 sm:text-sm dark:text-slate-400'
-              "
-            >{{ resourceDocFilterChipSummary(spec) }}</span>
-            <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-          </summary>
-          <div
-            class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[200px] overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
-          >
-            <p class="border-b border-slate-100 bg-slate-50/80 px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200">
-              {{ spec.label }}
-            </p>
-            <ul class="space-y-0.5 px-1 py-1">
-              <li v-for="opt in resourceDocStateFilterOptions" :key="'ex-' + spec.key + '-' + (opt.value === '' ? '_all' : opt.value)">
+          <!-- View mode + Filter + Add -->
+          <div class="flex shrink-0 flex-wrap items-center gap-2">
+            <!-- Active / Trash toggle -->
+            <div class="inline-flex gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-600 dark:bg-slate-800">
+              <template v-if="activeTab === 'vehicles'">
                 <button
                   type="button"
-                  class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
-                  :class="
-                    filters[spec.key] === opt.value
-                      ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-200'
-                      : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
-                  "
-                  @click="applyResourceFilterPatch($event, { [spec.key]: opt.value })"
+                  :class="['inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition', vehiclesViewMode === 'active' ? 'bg-white text-teal-800 shadow-sm dark:bg-slate-700 dark:text-teal-300' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white']"
+                  data-testid="resources-vehicles-view-active"
+                  @click="setVehiclesViewMode('active')"
+                >{{ t('resources.vehicles_view_active') }}</button>
+                <button
+                  type="button"
+                  :class="['inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition', vehiclesViewMode === 'trash' ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white']"
+                  data-testid="resources-vehicles-view-trash"
+                  @click="setVehiclesViewMode('trash')"
+                ><TrashIcon class="h-3.5 w-3.5" aria-hidden="true" />{{ t('resources.vehicles_view_trash') }}</button>
+              </template>
+              <template v-else-if="activeTab === 'drivers'">
+                <button
+                  type="button"
+                  :class="['inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition', driversViewMode === 'active' ? 'bg-white text-teal-800 shadow-sm dark:bg-slate-700 dark:text-teal-300' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white']"
+                  data-testid="resources-drivers-view-active"
+                  @click="setDriversViewMode('active')"
+                >{{ t('resources.drivers_view_active') }}</button>
+                <button
+                  type="button"
+                  :class="['inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition', driversViewMode === 'trash' ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white']"
+                  data-testid="resources-drivers-view-trash"
+                  @click="setDriversViewMode('trash')"
+                ><TrashIcon class="h-3.5 w-3.5" aria-hidden="true" />{{ t('resources.vehicles_view_trash') }}</button>
+              </template>
+              <template v-else>
+                <button
+                  type="button"
+                  :class="['inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition', suppliersViewMode === 'active' ? 'bg-white text-teal-800 shadow-sm dark:bg-slate-700 dark:text-teal-300' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white']"
+                  data-testid="resources-suppliers-view-active"
+                  @click="setSuppliersViewMode('active')"
+                >{{ t('resources.suppliers_view_active') }}</button>
+                <button
+                  type="button"
+                  :class="['inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition', suppliersViewMode === 'trash' ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white']"
+                  data-testid="resources-suppliers-view-trash"
+                  @click="setSuppliersViewMode('trash')"
+                ><TrashIcon class="h-3.5 w-3.5" aria-hidden="true" />{{ t('resources.vehicles_view_trash') }}</button>
+              </template>
+            </div>
+
+            <!-- Filter visibility toggle (hidden in trash mode) -->
+            <FilterVisibilityDropdown
+              v-if="!isInTrashMode"
+              :open="showFilterPanelDd"
+              :title="t('resources.filter_show_controls_title')"
+              :hint="t('resources.filter_show_controls_hint')"
+              @close="closeFilterPanel"
+            >
+              <template #trigger>
+                <DatagridToolbarActionButton
+                  icon="filter"
+                  :active="showFilterPanelDd"
+                  test-id="resources-toolbar-filter"
+                  @click="openFilterPanel"
                 >
-                  {{ opt.label }}
-                </button>
+                  {{ t('resources.toolbar_filter') }}
+                </DatagridToolbarActionButton>
+              </template>
+              <li v-for="fd in filterControlDefs" :key="'res-vis-' + fd.key" class="flex items-start gap-2">
+                <input
+                  :id="`resource-filter-vis-${fd.key}`"
+                  v-model="visibleFilters[fd.key]"
+                  type="checkbox"
+                  class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-va-800 focus:ring-va-700/30 dark:border-slate-600"
+                  :data-testid="`resource-filter-vis-${fd.key}`"
+                />
+                <label
+                  :for="`resource-filter-vis-${fd.key}`"
+                  class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
+                >
+                  {{ fd.label }}
+                </label>
               </li>
-            </ul>
+            </FilterVisibilityDropdown>
+
+            <!-- Add button -->
+            <button
+              v-if="activeTab === 'drivers' && driversViewMode === 'active' && canManageDrivers"
+              type="button"
+              class="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-teal-600 px-4 text-sm font-medium text-white shadow-sm transition hover:bg-teal-500"
+              data-testid="resources-assign-driver"
+              @click="openAssignModal(null)"
+            >
+              {{ t('resources.assign_driver') }}
+            </button>
+            <button
+              v-else-if="activeTab === 'vehicles' && vehiclesViewMode === 'active' && canManageVehicles"
+              type="button"
+              class="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-teal-600 px-4 text-sm font-medium text-white shadow-sm transition hover:bg-teal-500"
+              data-testid="resources-add-vehicle"
+              @click="openVehicleForm(null)"
+            >
+              {{ t('resources.add_vehicle') }}
+            </button>
+            <button
+              v-else-if="activeTab === 'suppliers' && suppliersViewMode === 'active' && canManageProviders"
+              type="button"
+              class="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-teal-600 px-4 text-sm font-medium text-white shadow-sm transition hover:bg-teal-500"
+              data-testid="resources-add-supplier"
+              @click="openProviderForm(null)"
+            >
+              {{ t('resources.add_supplier') }}
+            </button>
           </div>
-        </details>
-            </template>
-          </template>
+
+          <!-- Reset filters -->
+          <div class="ml-auto flex shrink-0 items-center">
+            <button
+              type="button"
+              class="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-slate-800 dark:hover:bg-slate-800"
+              :title="t('resources.filter_clear_all')"
+              data-testid="resources-reset-filters"
+              @click="resetResourceFilters"
+            >
+              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
+              <XMarkIcon class="h-3 w-3 text-rose-500" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
       </div>
-    </AppFilterBar>
+
+      <!-- Filter row (hidden in trash mode) -->
+      <div
+        v-if="hasFilterRow && !isInTrashMode"
+        class="grid grid-cols-1 gap-3 border-t border-slate-100 px-5 py-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 dark:border-slate-700"
+      >
+        <DatagridFilterField v-if="visibleFilters.status">
+          <select
+            :value="filters.status"
+            :class="FILTER_CONTROL_CLASS"
+            :aria-label="t('resources.filter_status')"
+            data-testid="resources-filter-status"
+            @change="applyResourceFilterPatch($event, { status: $event.target.value })"
+          >
+            <option v-for="opt in resourceStatusFilterOptions" :key="opt.value === '' ? '_all' : opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+        </DatagridFilterField>
+
+        <template v-if="activeTab === 'vehicles'">
+          <DatagridFilterField v-if="visibleFilters.type">
+            <select
+              :value="filters.type"
+              :class="FILTER_CONTROL_CLASS"
+              :aria-label="t('resources.filter_type')"
+              data-testid="resources-filter-type"
+              @change="applyResourceFilterPatch($event, { type: $event.target.value })"
+            >
+              <option v-for="opt in resourceVehicleTypeFilterOptions" :key="opt.value === '' ? '_all' : opt.value" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+          </DatagridFilterField>
+
+          <DatagridFilterField v-if="visibleFilters.driver_default">
+            <select
+              :value="filters.driver_default"
+              :class="FILTER_CONTROL_CLASS"
+              :aria-label="t('resources.filter_driver_default')"
+              data-testid="resources-filter-driver-default"
+              @change="applyResourceFilterPatch($event, { driver_default: $event.target.value })"
+            >
+              <option v-for="opt in resourceDriverDefaultFilterOptions" :key="opt.value === '' ? '_all' : opt.value" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+          </DatagridFilterField>
+
+          <DatagridFilterField v-if="visibleFilters.insurance">
+            <select
+              :value="filters.insurance"
+              :class="FILTER_CONTROL_CLASS"
+              :aria-label="t('resources.filter_insurance')"
+              data-testid="resources-filter-insurance"
+              @change="applyResourceFilterPatch($event, { insurance: $event.target.value })"
+            >
+              <option v-for="opt in resourceDocStateFilterOptions" :key="'ins-' + (opt.value || '_all')" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+          </DatagridFilterField>
+
+          <DatagridFilterField v-if="visibleFilters.inspection">
+            <select
+              :value="filters.inspection"
+              :class="FILTER_CONTROL_CLASS"
+              :aria-label="t('resources.filter_inspection')"
+              data-testid="resources-filter-inspection"
+              @change="applyResourceFilterPatch($event, { inspection: $event.target.value })"
+            >
+              <option v-for="opt in resourceDocStateFilterOptions" :key="'insp-' + (opt.value || '_all')" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+          </DatagridFilterField>
+
+          <DatagridFilterField v-if="visibleFilters.road_fee">
+            <select
+              :value="filters.road_fee"
+              :class="FILTER_CONTROL_CLASS"
+              :aria-label="t('resources.filter_road_fee')"
+              data-testid="resources-filter-road-fee"
+              @change="applyResourceFilterPatch($event, { road_fee: $event.target.value })"
+            >
+              <option v-for="opt in resourceDocStateFilterOptions" :key="'rf-' + (opt.value || '_all')" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+          </DatagridFilterField>
+        </template>
+
+        <template v-if="activeTab === 'drivers'">
+          <DatagridFilterField v-if="visibleFilters.driver_license">
+            <select
+              :value="filters.driver_license"
+              :class="FILTER_CONTROL_CLASS"
+              :aria-label="t('resources.filter_driver_license')"
+              data-testid="resources-filter-driver-license"
+              @change="applyResourceFilterPatch($event, { driver_license: $event.target.value })"
+            >
+              <option v-for="opt in resourceDocStateFilterOptions" :key="'dl-' + (opt.value || '_all')" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+          </DatagridFilterField>
+
+          <DatagridFilterField v-if="visibleFilters.driver_availability">
+            <select
+              :value="filters.driver_availability"
+              :class="FILTER_CONTROL_CLASS"
+              :aria-label="t('resources.filter_driver_availability')"
+              data-testid="resources-filter-driver-availability"
+              @change="applyResourceFilterPatch($event, { driver_availability: $event.target.value })"
+            >
+              <option v-for="opt in resourceDriverAvailabilityFilterOptions" :key="'da-' + (opt.value || '_all')" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+          </DatagridFilterField>
+        </template>
+
+        <DatagridFilterField v-if="activeTab === 'suppliers' && visibleFilters.contract">
+          <select
+            :value="filters.contract"
+            :class="FILTER_CONTROL_CLASS"
+            :aria-label="t('resources.filter_contract')"
+            data-testid="resources-filter-contract"
+            @change="applyResourceFilterPatch($event, { contract: $event.target.value })"
+          >
+            <option v-for="opt in resourceDocStateFilterOptions" :key="'ct-' + (opt.value || '_all')" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+        </DatagridFilterField>
+      </div>
+    </div>
+
 
     <div v-if="loading" class="px-4 py-12 text-center text-sm text-slate-500">{{ t('resources.loading') }}</div>
     <div v-else-if="error" class="px-4 py-12 text-center text-sm text-rose-600">{{ error }}</div>
@@ -650,7 +373,7 @@
                   <div>
                     <div class="font-semibold tracking-tight text-slate-900 dark:text-white">{{ v.code }}</div>
                     <div class="mt-0.5 line-clamp-2 text-xs leading-snug text-slate-500 dark:text-slate-400">
-                      {{ v.model }} · {{ v.typeLabel }}
+                      {{ v.model }} Â· {{ v.typeLabel }}
                     </div>
                   </div>
                   <span :class="statusBadgeClass(v.status)">{{ labelVehicleStatus(v.status) }}</span>
@@ -921,10 +644,10 @@
                     {{ fmtVehicleTableDate(v.road_fee_expires_at) }}
                   </td>
                   <td v-if="vehicleColOn('owner')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-700 dark:text-slate-300">
-                    {{ v.owner_name || '—' }}
+                    {{ v.owner_name || 'â€”' }}
                   </td>
                   <td v-if="vehicleColOn('year')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-700 dark:text-slate-300">
-                    {{ v.year_manufactured ?? '—' }}
+                    {{ v.year_manufactured ?? 'â€”' }}
                   </td>
                   <td v-if="vehicleColOn('purchase')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-700 dark:text-slate-300">
                     {{ fmtVehicleTableDate(v.purchased_at) }}
@@ -937,7 +660,7 @@
                     {{ vehicleMaintenanceLine(v) }}
                   </td>
                   <td v-if="vehicleColOn('notes')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-600 dark:text-slate-400">
-                    {{ v.notes || '—' }}
+                    {{ v.notes || 'â€”' }}
                   </td>
                   <td class="px-3 py-3 align-middle text-right text-slate-400" @click.stop>
                     <div v-if="vehiclesViewMode === 'trash' && canManageVehicles" class="flex flex-wrap justify-end gap-1.5">
@@ -1130,14 +853,14 @@
                       <span>{{ d.name }}</span>
                     </div>
                   </td>
-                  <td v-if="driverColOn('email')" class="whitespace-nowrap px-3 py-3 text-slate-600 dark:text-slate-400">{{ d.email || '—' }}</td>
-                  <td v-if="driverColOn('employee_code')" class="whitespace-nowrap px-3 py-3 font-mono text-xs text-slate-700 dark:text-slate-300">{{ d.employeeCode || '—' }}</td>
-                  <td v-if="driverColOn('license_class')" class="whitespace-nowrap px-3 py-3 text-slate-700 dark:text-slate-300">{{ d.license_class || '—' }}</td>
+                  <td v-if="driverColOn('email')" class="whitespace-nowrap px-3 py-3 text-slate-600 dark:text-slate-400">{{ d.email || 'â€”' }}</td>
+                  <td v-if="driverColOn('employee_code')" class="whitespace-nowrap px-3 py-3 font-mono text-xs text-slate-700 dark:text-slate-300">{{ d.employeeCode || 'â€”' }}</td>
+                  <td v-if="driverColOn('license_class')" class="whitespace-nowrap px-3 py-3 text-slate-700 dark:text-slate-300">{{ d.license_class || 'â€”' }}</td>
                   <td v-if="driverColOn('license_expires')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-700 dark:text-slate-300">
                     <span v-if="d.license_expires_at" :class="compliancePillClass(d.licenseExpiry)">{{ fmtVehicleTableDate(d.license_expires_at) }}</span>
                     <span v-else class="italic text-slate-500">{{ t('resources.unassigned') }}</span>
                   </td>
-                  <td v-if="driverColOn('phone')" class="whitespace-nowrap px-3 py-3 text-slate-600 dark:text-slate-400">{{ d.phone || '—' }}</td>
+                  <td v-if="driverColOn('phone')" class="whitespace-nowrap px-3 py-3 text-slate-600 dark:text-slate-400">{{ d.phone || 'â€”' }}</td>
                   <td v-if="driverColOn('employment')" class="whitespace-nowrap px-3 py-3">
                     <span :class="statusBadgeClass(d.uiStatus)">{{ labelVehicleStatus(d.uiStatus) }}</span>
                   </td>
@@ -1343,7 +1066,7 @@
                     <span :class="statusBadgeClass(s.uiStatus)">{{ labelProviderStatus(s.uiStatus) }}</span>
                   </td>
                   <td v-if="supplierColOn('contact')" class="max-w-[12rem] px-3 py-3 align-middle text-xs text-slate-600 dark:text-slate-400">
-                    <span class="line-clamp-2">{{ s.contact || '—' }}</span>
+                    <span class="line-clamp-2">{{ s.contact || 'â€”' }}</span>
                   </td>
                   <td class="whitespace-nowrap px-3 py-3 align-middle text-right text-slate-400" @click.stop>
                     <div v-if="suppliersViewMode === 'trash' && canManageProviders" class="flex flex-wrap justify-end gap-1.5">
@@ -1607,8 +1330,8 @@
                   </div>
                   <div v-if="selectedVehicle.caretaker_name || selectedVehicle.caretaker_phone" class="text-sm">
                     <span class="text-[11px] text-slate-500 dark:text-slate-400">{{ t('resources.vehicle_form_caretaker') }}: </span>
-                    <span class="font-medium text-slate-900 dark:text-slate-100">{{ selectedVehicle.caretaker_name || '—' }}</span>
-                    <span v-if="selectedVehicle.caretaker_phone" class="text-slate-600 dark:text-slate-400"> · {{ selectedVehicle.caretaker_phone }}</span>
+                    <span class="font-medium text-slate-900 dark:text-slate-100">{{ selectedVehicle.caretaker_name || 'â€”' }}</span>
+                    <span v-if="selectedVehicle.caretaker_phone" class="text-slate-600 dark:text-slate-400"> Â· {{ selectedVehicle.caretaker_phone }}</span>
                   </div>
                   <template v-if="selectedVehicle.notes">
                     <div>
@@ -2234,7 +1957,7 @@
       </div>
     </Teleport>
 
-    <!-- Modal: tab Tài xế = thêm tài xế từ user; chi tiết xe = gán TX mặc định (select) -->
+    <!-- Modal: tab Tài xế = thêm tài xế từ user; chi tiết xe = gán TX mặc ��9nh (select) -->
     <Teleport to="body">
       <div
         v-if="assignModalOpen"
@@ -2261,7 +1984,7 @@
           </div>
 
           <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
-          <!-- Thêm tài xế: từ user HOẶC ngoài hệ thống (tab Tài xế) -->
+          <!-- Thêm tài xế: từ user HOẶC ngoài h�! th�ng (tab Tài xế) -->
           <div v-if="assignVehicleId == null" class="px-5 py-4 sm:px-6">
             <div class="mb-4 flex flex-wrap gap-2 rounded-xl border border-slate-200 bg-slate-50/80 p-1 dark:border-slate-700 dark:bg-slate-800/50">
               <button
@@ -2417,12 +2140,12 @@
             <p v-if="assignError" class="mt-3 text-xs text-rose-600">{{ assignError }}</p>
           </div>
 
-          <!-- Gán tài xế mặc định cho xe (chi tiết xe) -->
+          <!-- Gán tài xế mặc ��9nh cho xe (chi tiết xe) -->
           <div v-else class="space-y-4 px-5 py-4 sm:px-6">
             <div class="rounded-lg border border-slate-200 bg-slate-50/90 px-3 py-2.5 text-sm dark:border-slate-700 dark:bg-slate-800/60">
               <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('resources.col_vehicle') }}</div>
               <div v-if="assignVehicleDisplay" class="mt-0.5 font-semibold text-slate-900 dark:text-white">
-                {{ assignVehicleDisplay.code }} <span class="font-normal text-slate-600 dark:text-slate-400">· {{ assignVehicleDisplay.model }}</span>
+                {{ assignVehicleDisplay.code }} <span class="font-normal text-slate-600 dark:text-slate-400">Â· {{ assignVehicleDisplay.model }}</span>
               </div>
             </div>
 
@@ -2803,7 +2526,7 @@
       </div>
     </Teleport>
 
-    <!-- Modal: chuyển xe vào thùng rác -->
+    <!-- Modal: chuyỒn xe vào thùng rác -->
     <Teleport to="body">
       <div
         v-if="vehicleDeleteModalOpen"
@@ -3169,16 +2892,18 @@ import {
   ChevronRightIcon,
   EyeIcon,
   FunnelIcon,
-  MagnifyingGlassIcon,
   TrashIcon,
   ViewColumnsIcon,
   XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import PdfFileIcon from '../../components/icons/PdfFileIcon.vue'
+import ResourcesSummaryBar from '../../components/resources/ResourcesSummaryBar.vue'
+import DatagridToolbarSearch from '../../components/shared/ui/DatagridToolbarSearch.vue'
+import DatagridToolbarActionButton from '../../components/shared/ui/DatagridToolbarActionButton.vue'
+import DatagridFilterField from '../../components/shared/ui/DatagridFilterField.vue'
+import FilterVisibilityDropdown from '../../components/shared/ui/FilterVisibilityDropdown.vue'
 import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
-import { useFilterBarVisibility } from '../../composables/useFilterBarVisibility.js'
-import AppFilterBar from '../../components/filters/AppFilterBar.vue'
-import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vue'
+import { useVisibleFilterControls } from '../../composables/useVisibleFilterControls.js'
 import {
   bulkDeleteDrivers,
   bulkDeleteTransportProviders,
@@ -3226,7 +2951,7 @@ const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 const canManageVehicles = computed(() => auth.hasPermission('resource.vehicle.manage'))
-/** Xem danh sách giấy tờ / đính kèm (cùng quyền gần với xem danh sách xe) */
+/** Xem danh sách giấy tờ / �ính kèm (cùng quyền gần v�:i xem danh sách xe) */
 const canViewVehicleComplianceDocs = computed(
   () => auth.hasPermission('resource.vehicle.manage') || auth.hasPermission('trip.assign'),
 )
@@ -3265,23 +2990,73 @@ const filters = ref({
   driver_availability: '',
 })
 
-const RESOURCE_FILTER_VIS_IDS = [
-  'status',
-  'type',
-  'driver_default',
-  'insurance',
-  'inspection',
-  'road_fee',
-  'contract',
-  'driver_license',
-  'driver_availability',
+const RESOURCE_FILTER_CONTROLS = [
+  { key: 'status', label: '', default: false },
+  { key: 'type', label: '', default: false },
+  { key: 'driver_default', label: '', default: false },
+  { key: 'insurance', label: '', default: false },
+  { key: 'inspection', label: '', default: false },
+  { key: 'road_fee', label: '', default: false },
+  { key: 'contract', label: '', default: false },
+  { key: 'driver_license', label: '', default: false },
+  { key: 'driver_availability', label: '', default: false },
 ]
-const RESOURCE_FILTER_VIS_DEFAULTS = Object.fromEntries(RESOURCE_FILTER_VIS_IDS.map((id) => [id, false]))
+
+const FILTER_CONTROL_CLASS =
+  'h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm focus:border-va-700 focus:outline-none focus:ring-2 focus:ring-va-700/15 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100'
+
 const {
-  visible: filterBarVisible,
-  resetVisibility: resetFilterBarVisibility,
-  hasVisibleOnBar: hasVisibleBarFilters,
-} = useFilterBarVisibility(RESOURCE_FILTER_VIS_IDS, RESOURCE_FILTER_VIS_DEFAULTS)
+  visibleFilters,
+  hasFilterRow,
+  showFilterPanelDd,
+  openFilterPanel,
+  closeFilterPanel,
+} = useVisibleFilterControls(RESOURCE_FILTER_CONTROLS, 'va-dieuvan.resources.visible-filters.v1')
+
+const FILTER_CONTROL_LABEL_KEYS = {
+  status: 'resources.filter_vis_status',
+  type: 'resources.filter_vis_type',
+  driver_default: 'resources.filter_vis_driver_default',
+  insurance: 'resources.filter_vis_insurance',
+  inspection: 'resources.filter_vis_inspection',
+  road_fee: 'resources.filter_vis_road_fee',
+  contract: 'resources.filter_vis_contract',
+  driver_license: 'resources.filter_vis_driver_license',
+  driver_availability: 'resources.filter_vis_driver_availability',
+}
+
+const filterControlDefs = computed(() => {
+  const tab = activeTab.value
+  const base = [{ key: 'status', label: t(FILTER_CONTROL_LABEL_KEYS.status) }]
+  if (tab === 'vehicles') {
+    return [
+      ...base,
+      { key: 'type', label: t(FILTER_CONTROL_LABEL_KEYS.type) },
+      { key: 'driver_default', label: t(FILTER_CONTROL_LABEL_KEYS.driver_default) },
+      { key: 'insurance', label: t(FILTER_CONTROL_LABEL_KEYS.insurance) },
+      { key: 'inspection', label: t(FILTER_CONTROL_LABEL_KEYS.inspection) },
+      { key: 'road_fee', label: t(FILTER_CONTROL_LABEL_KEYS.road_fee) },
+    ]
+  }
+  if (tab === 'drivers') {
+    return [
+      ...base,
+      { key: 'driver_license', label: t(FILTER_CONTROL_LABEL_KEYS.driver_license) },
+      { key: 'driver_availability', label: t(FILTER_CONTROL_LABEL_KEYS.driver_availability) },
+    ]
+  }
+  if (tab === 'suppliers') {
+    return [...base, { key: 'contract', label: t(FILTER_CONTROL_LABEL_KEYS.contract) }]
+  }
+  return base
+})
+
+const isInTrashMode = computed(() => {
+  if (activeTab.value === 'vehicles') return vehiclesViewMode.value === 'trash'
+  if (activeTab.value === 'drivers') return driversViewMode.value === 'trash'
+  if (activeTab.value === 'suppliers') return suppliersViewMode.value === 'trash'
+  return false
+})
 
 const resourceFilterVisibilityOptions = computed(() => {
   const tab = activeTab.value
@@ -3308,7 +3083,7 @@ const resourceFilterVisibilityOptions = computed(() => {
 })
 
 function onResourcesFilterBarEnter() {
-  resetFilterBarVisibility()
+  // no-op: filter visibility now persisted via useVisibleFilterControls
 }
 
 const activeResourceFilterCount = computed(() => {
@@ -3379,7 +3154,7 @@ const resourceFilterContractLabel = computed(() => {
   return map[f] ?? f
 })
 
-/** Chip: nhãn trường khi mặc định; giá trị đã chọn khi đang lọc. */
+/** Chip: nhãn trường khi mặc ��9nh; giá tr�9 �ã chọn khi �ang lọc. */
 function filterChipSummary(fieldLabel, valueLabel, isActive) {
   return isActive ? valueLabel : fieldLabel
 }
@@ -3434,10 +3209,7 @@ function resetResourceFilters() {
     driver_license: '',
     driver_availability: '',
   }
-}
-
-function closeResourceFilterMenu() {
-  filterMenuRef.value?.close?.()
+  closeFilterPanel()
 }
 
 function emptyExternalDriverForm() {
@@ -3519,9 +3291,8 @@ const bulkForceModalOpen = ref(false)
 const bulkForceKind = ref('')
 const bulkForcePendingIds = ref([])
 const bulkForceSubmitting = ref(false)
-const filterMenuRef = ref(null)
-const resourcesFilterBarRef = ref(null)
-useDetailsAutoCloseWithin(resourcesFilterBarRef)
+const resourcesDatagridRef = ref(null)
+useDetailsAutoCloseWithin(resourcesDatagridRef)
 
 const resourceStatusFilterOptions = computed(() => [
   { value: '', label: t('resources.filter_all') },
@@ -3764,7 +3535,7 @@ const driverPerPage = ref(10)
 const driverPerPageOptions = [5, 10, 15, 20]
 
 function fmtVehicleTableDate(iso) {
-  if (!iso) return '—'
+  if (!iso) return 'â€”'
   return String(iso)
 }
 
@@ -3772,7 +3543,7 @@ function vehicleMaintenanceLine(v) {
   const parts = []
   if (v.last_maintenance_at) parts.push(fmtVehicleTableDate(v.last_maintenance_at))
   if (v.maintenance_schedule_note) parts.push(String(v.maintenance_schedule_note).trim())
-  return parts.length ? parts.join(' · ') : '—'
+  return parts.length ? parts.join(' Â· ') : 'â€”'
 }
 
 function emptyVehicleForm() {
@@ -3911,7 +3682,7 @@ function docStateFromDate(iso) {
   return { state: 'ok', days: null, until }
 }
 
-/** Hợp đồng NCC: không có ngày hết hạn → trạng thái riêng (không gộp với hết hạn xe). */
+/** Hợp ��ng NCC: không có ngày hết hạn �  trạng thái riêng (không g�"p v�:i hết hạn xe). */
 function contractStateFromDate(iso) {
   if (!iso) {
     return { state: 'none', days: null, until: null }
@@ -3938,11 +3709,11 @@ function vehicleUiStatus(apiStatus) {
 function enrichVehicle(raw) {
   const parts = []
   if (raw.type) parts.push(raw.type)
-  if (raw.seat_count) parts.push(`${raw.seat_count} chỗ`)
+  if (raw.seat_count) parts.push(`${raw.seat_count} ch�`)
   if (raw.payload_kg) parts.push(`${raw.payload_kg} kg`)
-  const typeLabel = parts.length ? parts.join(' · ') : '—'
-  let capacityLabel = '—'
-  if (raw.seat_count) capacityLabel = `${raw.seat_count} chỗ`
+  const typeLabel = parts.length ? parts.join(' Â· ') : 'â€”'
+  let capacityLabel = 'â€”'
+  if (raw.seat_count) capacityLabel = `${raw.seat_count} ch�`
   else if (raw.payload_kg) capacityLabel = `${raw.payload_kg} kg tải`
 
   const dd = raw.default_driver
@@ -3954,7 +3725,7 @@ function enrichVehicle(raw) {
     license_plate: raw.license_plate,
     owner_name: raw.owner_name ?? '',
     frame_engine_number: raw.frame_engine_number ?? '',
-    model: raw.type || '—',
+    model: raw.type || 'â€”',
     type: raw.type ?? '',
     year_manufactured: raw.year_manufactured ?? null,
     purchased_at: raw.purchased_at ?? '',
@@ -3994,13 +3765,13 @@ function driverUiStatus(emp) {
 }
 
 function enrichDriver(raw) {
-  const lic = [raw.license_class, raw.license_expires_at].filter(Boolean).join(' — ')
+  const lic = [raw.license_class, raw.license_expires_at].filter(Boolean).join(' â€” ')
   return {
     id: raw.id,
     name: raw.full_name,
     email: raw.email ?? raw.user?.email ?? '',
     employeeCode: raw.user?.employee_code ?? '',
-    license: lic || '—',
+    license: lic || 'â€”',
     license_class: raw.license_class ?? '',
     license_expires_at: raw.license_expires_at ?? '',
     licenseExpiry: docStateFromDate(raw.license_expires_at),
@@ -4015,9 +3786,9 @@ function enrichDriver(raw) {
 
 function enrichProvider(raw) {
   const typeLabel = raw.type === 'taxi' ? t('resources.provider_form_type_taxi') : t('resources.provider_form_type_vendor')
-  const contact = [raw.contact_name, raw.contact_phone].filter(Boolean).join(' · ') || '—'
+  const contact = [raw.contact_name, raw.contact_phone].filter(Boolean).join(' Â· ') || 'â€”'
   const servicesList = Array.isArray(raw.services) ? raw.services.filter((x) => x && String(x.name || '').trim()) : []
-  const serviceSummary = servicesList.length ? servicesList.map((s) => s.name).join(' · ') : '—'
+  const serviceSummary = servicesList.length ? servicesList.map((s) => s.name).join(' Â· ') : 'â€”'
   const contract = contractStateFromDate(raw.contract_expires_at)
   return {
     id: raw.id,
@@ -4190,7 +3961,7 @@ function insuranceHint(doc) {
 
 function complianceDocLine(doc) {
   if (doc.state === 'none') return t('resources.contract_date_unset')
-  if (!doc.until) return '—'
+  if (!doc.until) return 'â€”'
   if (doc.state === 'ok') return t('resources.valid_until', { date: doc.until })
   if (doc.state === 'soon') return t('resources.exp_in_days', { n: doc.days })
   return t('resources.expired_on', { date: doc.until })
@@ -4254,7 +4025,7 @@ function labelDriverAvailability(s) {
   if (s === 'available') return t('driver_detail.avail_available')
   if (s === 'busy') return t('driver_detail.avail_busy')
   if (s === 'offline') return t('driver_detail.avail_offline')
-  return '—'
+  return 'â€”'
 }
 
 function driverRowInitials(name) {
@@ -4493,8 +4264,8 @@ function isPdfAttachment(a) {
 }
 
 /**
- * Chuẩn hóa URL file public disk: API có thể trả về `APP_URL` khác host (localhost vs 127.0.0.1 / cổng),
- * khiến fetch sai origin. Với `/storage/...` luôn dùng origin trang hoặc (dev) VITE_APP_URL.
+ * Chuẩn hóa URL file public disk: API có thỒ trả về `APP_URL` khác host (localhost vs 127.0.0.1 / c�"ng),
+ * khiến fetch sai origin. V�:i `/storage/...` luôn dùng origin trang hoặc (dev) VITE_APP_URL.
  */
 function resolveAttachmentAbsoluteUrl(a) {
   const u = a?.url
@@ -4521,7 +4292,7 @@ function resolveAttachmentAbsoluteUrl(a) {
   }
 }
 
-/** Tên file khi lưu PDF (blob download). */
+/** TÃªn file khi lÆ°u PDF (blob download). */
 function attachmentDownloadName(a) {
   const n = String(a?.original_name || '').trim()
   if (n) return n
@@ -4869,7 +4640,7 @@ async function submitProviderForm() {
 
 function driverAssignOptionLabel(d) {
   const sub = d.employeeCode || d.email
-  return sub ? `${d.name} — ${sub}` : d.name
+  return sub ? `${d.name} â€” ${sub}` : d.name
 }
 
 function setAddDriverMode(mode) {

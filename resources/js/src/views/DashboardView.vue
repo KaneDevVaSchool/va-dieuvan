@@ -109,11 +109,11 @@
                     </div>
                     <div class="mt-1 space-y-1 leading-snug">
                       <p class="text-sm">
-                        <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">{{ t('requests_page.col_origin') }}:</span>
+                        <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">{{ t('trips_page.col_origin') }}:</span>
                         <span :class="routeValueClass(tr.dispatch_request?.origin)">{{ displayOrigin(tr.dispatch_request?.origin) }}</span>
                       </p>
                       <p class="text-sm">
-                        <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">{{ t('requests_page.col_destination') }}:</span>
+                        <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">{{ t('trips_page.col_destination') }}:</span>
                         <span :class="routeValueClass(tr.dispatch_request?.destination)">{{ displayDestination(tr.dispatch_request?.destination) }}</span>
                       </p>
                     </div>
@@ -197,11 +197,11 @@
                     </div>
                     <div class="mt-1 space-y-1 leading-snug">
                       <p class="text-sm">
-                        <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">{{ t('requests_page.col_origin') }}:</span>
+                        <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">{{ t('trips_page.col_origin') }}:</span>
                         <span :class="routeValueClass(rq.origin, true)">{{ displayOrigin(rq.origin) }}</span>
                       </p>
                       <p class="text-sm">
-                        <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">{{ t('requests_page.col_destination') }}:</span>
+                        <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">{{ t('trips_page.col_destination') }}:</span>
                         <span :class="routeValueClass(rq.destination, true)">{{ displayDestination(rq.destination) }}</span>
                       </p>
                     </div>
