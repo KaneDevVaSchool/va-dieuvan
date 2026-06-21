@@ -1,18 +1,7 @@
 <script setup>
 import { computed, onActivated, onMounted, reactive, ref, watch } from 'vue'
-import {
-  ChevronDownIcon,
-  FunnelIcon,
-  LockClosedIcon,
-  MagnifyingGlassIcon,
-  PencilSquareIcon,
-  PlusIcon,
-  TrashIcon,
-  XMarkIcon,
-} from '@heroicons/vue/24/outline'
-import { useFilterBarVisibility } from '../../composables/useFilterBarVisibility.js'
-import AppFilterBar from '../../components/filters/AppFilterBar.vue'
-import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vue'
+import { PlusIcon, XMarkIcon, FunnelIcon } from '@heroicons/vue/24/outline'
+import { useI18n } from 'vue-i18n'
 import { PERMISSION_MODULES, groupPermissions, getModuleId } from '../../config/permissionModules.js'
 import { SEED_PERMISSION_PRESETS } from '../../config/systemSeedOptions'
 import permissionPlainVi from '../../data/permission_plain_vi.json'
@@ -26,8 +15,44 @@ import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
 import Select from '../../components/ui/Select.vue'
+import { useVisibleFilterControls } from '../../composables/useVisibleFilterControls.js'
+import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
+import SystemPermissionsSummaryBar from '../../components/system/SystemPermissionsSummaryBar.vue'
+import SystemPermissionRecordCard from '../../components/system/SystemPermissionRecordCard.vue'
+import DatagridToolbarSearch from '../../components/shared/ui/DatagridToolbarSearch.vue'
+import DatagridToolbarActionButton from '../../components/shared/ui/DatagridToolbarActionButton.vue'
+import DatagridFilterField from '../../components/shared/ui/DatagridFilterField.vue'
+import FilterVisibilityDropdown from '../../components/shared/ui/FilterVisibilityDropdown.vue'
+import { ChevronDownIcon, LockClosedIcon } from '@heroicons/vue/24/outline'
 
-// ─── Màu badge role ───────────────────────────────────────────────────────────
+const { t } = useI18n()
+
+const PERM_FILTER_CONTROLS = [
+  { key: 'module', label: 'Module', default: false },
+  { key: 'role', label: 'Vai trò', default: false },
+  { key: 'unassigned', label: 'Chưa gán', default: false },
+  { key: 'assigned', label: 'Đã gán', default: false },
+  { key: 'system', label: 'system.*', default: false },
+]
+
+const {
+  visibleFilters,
+  hasFilterRow,
+  showFilterPanelDd,
+  openFilterPanel,
+  closeFilterPanel,
+  filterControlDefs,
+} = useVisibleFilterControls(PERM_FILTER_CONTROLS, 'va-dieuvan.system.permissions.filters.v1')
+
+const datagridRef = ref(null)
+useDetailsAutoCloseWithin(datagridRef)
+
+function toggleFilterPanel() {
+  openFilterPanel()
+}
+
+const FILTER_CONTROL_CLASS =
+  'input h-10 w-full text-sm rounded-lg border border-slate-200 bg-white px-3 text-slate-900 shadow-sm focus:border-va-700 focus:outline-none focus:ring-2 focus:ring-va-700/15 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100'
 
 const ROLE_COLORS = [
   'bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300',
@@ -55,41 +80,23 @@ const filterUnassigned = ref(false)
 const filterSystemOnly = ref(false)
 const filterAssignedOnly = ref(false)
 
-const PERM_FILTER_VIS_IDS = ['module', 'role', 'unassigned', 'assigned', 'system']
-const PERM_FILTER_VIS_DEFAULTS = Object.fromEntries(PERM_FILTER_VIS_IDS.map((id) => [id, false]))
-const {
-  visible: filterBarVisible,
-  resetVisibility: resetFilterBarVisibility,
-  hasVisibleOnBar: hasVisibleBarFilters,
-} = useFilterBarVisibility(PERM_FILTER_VIS_IDS, PERM_FILTER_VIS_DEFAULTS)
+const permActiveFilter = computed(() => {
+  if (filterUnassigned.value) return 'unassigned'
+  if (filterAssignedOnly.value) return 'assigned'
+  if (filterSystemOnly.value) return 'system'
+  return 'all'
+})
 
-const filterMenuRef = ref(null)
-
-const permFilterVisibilityOptions = [
-  { id: 'module', label: 'Module' },
-  { id: 'role', label: 'Vai trò' },
-  { id: 'unassigned', label: 'Chưa gán vai trò' },
-  { id: 'assigned', label: 'Đã gán vai trò' },
-  { id: 'system', label: 'Quyền hệ thống (system.*)' },
-]
-
-function onPermissionsFilterBarEnter() {
-  resetFilterBarVisibility()
-}
-
-function closeFilterMenu() {
-  filterMenuRef.value?.close?.()
-}
-
-function moduleFilterSummary() {
-  if (filterModule.value === 'all') return 'Tất cả module'
-  return MODULE_OPTS.value.find((o) => o.value === filterModule.value)?.label ?? filterModule.value
-}
-
-function roleFilterSummary() {
-  if (!filterRoleId.value) return 'Tất cả vai trò'
-  const r = roles.value.find((x) => String(x.id) === filterRoleId.value)
-  return r?.display_name || r?.name || filterRoleId.value
+function onKpiQuickFilter(payload) {
+  if (!payload?.kind) return
+  filterUnassigned.value = payload.kind === 'unassigned'
+  filterAssignedOnly.value = payload.kind === 'assigned'
+  filterSystemOnly.value = payload.kind === 'system'
+  if (payload.kind === 'all') {
+    filterUnassigned.value = false
+    filterAssignedOnly.value = false
+    filterSystemOnly.value = false
+  }
 }
 
 // Module accordions — mở mặc định tất cả
@@ -324,14 +331,9 @@ function resetFilters() {
   filterSystemOnly.value = false
 }
 
-onMounted(() => {
-  onPermissionsFilterBarEnter()
-  load()
-})
+onMounted(() => load())
 
-onActivated(() => {
-  onPermissionsFilterBarEnter()
-})
+onActivated(() => load())
 </script>
 
 <template>
@@ -349,236 +351,149 @@ onActivated(() => {
       </Button>
     </div>
 
-    <AppFilterBar>
-      <div class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
-        <AppFilterFunnelMenu ref="filterMenuRef" :badge-count="activeFilters">
-          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Bộ lọc đang áp dụng</p>
-          <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
-            <li v-if="searchRaw.trim()" class="flex justify-between gap-2">
-              <span class="text-slate-500">Tìm kiếm</span>
-              <span class="max-w-[60%] truncate text-right font-medium">{{ searchRaw }}</span>
-            </li>
-            <li v-if="filterModule !== 'all'" class="flex justify-between gap-2">
-              <span class="text-slate-500">Module</span>
-              <span class="font-medium">{{ moduleFilterSummary() }}</span>
-            </li>
-            <li v-if="filterRoleId" class="flex justify-between gap-2">
-              <span class="text-slate-500">Vai trò</span>
-              <span class="font-medium">{{ roleFilterSummary() }}</span>
-            </li>
-            <li v-if="filterUnassigned" class="flex justify-between gap-2">
-              <span class="text-slate-500">Gán vai trò</span>
-              <span class="font-medium">Chưa gán</span>
-            </li>
-            <li v-if="filterAssignedOnly" class="flex justify-between gap-2">
-              <span class="text-slate-500">Gán vai trò</span>
-              <span class="font-medium">Đã gán</span>
-            </li>
-            <li v-if="filterSystemOnly" class="flex justify-between gap-2">
-              <span class="text-slate-500">Loại quyền</span>
-              <span class="font-medium">system.*</span>
-            </li>
-            <li v-if="activeFilters === 0" class="text-slate-400">Chưa có điều kiện lọc</li>
-          </ul>
-          <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
-            <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">Hiển thị bộ lọc trên thanh</p>
-            <ul class="mt-2 space-y-2">
-              <li v-for="opt in permFilterVisibilityOptions" :key="'perm-vis-' + opt.id" class="flex gap-2">
-                <input :id="'perm-filter-vis-' + opt.id" v-model="filterBarVisible[opt.id]" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" />
-                <label :for="'perm-filter-vis-' + opt.id" class="text-sm">{{ opt.label }}</label>
-              </li>
-            </ul>
+    <SystemPermissionsSummaryBar
+      :items="items"
+      :loading="loading"
+      :active-filter="permActiveFilter"
+      @quick-filter="onKpiQuickFilter"
+    />
+
+    <div
+      ref="datagridRef"
+      class="overflow-visible rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40"
+    >
+      <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+        <div class="mb-2">
+          <h2 class="text-sm font-semibold text-slate-800 dark:text-slate-100">
+            {{ t('system_pages.permissions.list_title') }}
+            <span class="ml-1 text-xs font-normal text-slate-400">({{ filteredItems.length }})</span>
+          </h2>
+        </div>
+        <div class="flex w-full min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
+          <div class="min-w-0 w-full basis-full lg:min-w-[10rem] lg:flex-1 lg:basis-auto">
+            <DatagridToolbarSearch
+              v-model="searchRaw"
+              input-id="system-permissions-search"
+              :placeholder="t('system_pages.permissions.search_ph')"
+              :aria-label="t('system_pages.permissions.search_aria')"
+              stretch
+              inline-actions
+              hide-label
+              input-height="h-10"
+            />
           </div>
-          <button type="button" class="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium dark:border-slate-600" @click="resetFilters(); closeFilterMenu()">
-            Xóa tất cả bộ lọc
-          </button>
-        </AppFilterFunnelMenu>
-        <div class="hidden h-6 w-px bg-slate-200 sm:block dark:bg-slate-700" aria-hidden="true" />
-        <button type="button" class="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500" title="Xóa bộ lọc" @click="resetFilters">
-          <span class="relative inline-flex">
-            <FunnelIcon class="h-5 w-5" />
-            <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 text-rose-500" />
-          </span>
-        </button>
-        <div class="relative min-w-0 flex-1 basis-[10rem] sm:min-w-[12rem] sm:max-w-md">
-          <MagnifyingGlassIcon class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-          <input
-            v-model="searchRaw"
-            type="search"
-            placeholder="Tìm quyền…"
-            aria-label="Tìm quyền"
-            class="h-9 w-full rounded-md border-0 bg-white/90 py-0 pl-9 pr-3 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600 dark:placeholder:text-slate-500"
-          />
+          <div class="flex shrink-0 items-center gap-2">
+            <FilterVisibilityDropdown
+              :open="showFilterPanelDd"
+              :title="t('system_pages.filter_show_controls_title')"
+              :hint="t('system_pages.filter_show_controls_hint')"
+              @close="closeFilterPanel"
+            >
+              <template #trigger>
+                <DatagridToolbarActionButton
+                  icon="filter"
+                  :active="showFilterPanelDd"
+                  test-id="system-permissions-toolbar-filter"
+                  @click="toggleFilterPanel"
+                >
+                  {{ t('system_pages.toolbar_filter') }}
+                </DatagridToolbarActionButton>
+              </template>
+              <li v-for="fd in filterControlDefs" :key="'perm-vis-' + fd.key" class="flex items-start gap-2">
+                <input :id="'perm-filter-vis-' + fd.key" v-model="visibleFilters[fd.key]" type="checkbox" class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-va-800" />
+                <label :for="'perm-filter-vis-' + fd.key" class="cursor-pointer text-sm text-slate-700 dark:text-slate-300">{{ fd.label }}</label>
+              </li>
+            </FilterVisibilityDropdown>
+            <button type="button" class="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-sm text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800" :title="t('system_pages.clear_filters')" data-testid="system-permissions-reset-filters" @click="resetFilters">
+              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
+              <XMarkIcon class="h-3 w-3 text-rose-500" aria-hidden="true" />
+            </button>
+          </div>
         </div>
       </div>
-      <div v-if="hasVisibleBarFilters" class="mt-2 flex flex-wrap items-center gap-2 border-t border-violet-100/80 pt-2 dark:border-violet-900/30">
-        <select
-          v-if="filterBarVisible.module"
-          v-model="filterModule"
-          aria-label="Lọc theo module"
-          class="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900"
-          :class="filterModule === 'all' ? 'text-slate-500' : 'text-slate-900 dark:text-slate-100'"
-        >
-          <option v-for="opt in MODULE_OPTS" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-        </select>
-        <select
-          v-if="filterBarVisible.role"
-          v-model="filterRoleId"
-          aria-label="Lọc theo vai trò"
-          class="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900"
-          :class="!filterRoleId ? 'text-slate-500' : 'text-slate-900 dark:text-slate-100'"
-        >
-          <option value="">Vai trò</option>
-          <option v-for="r in roles" :key="r.id" :value="String(r.id)">
-            {{ r.display_name || r.name }}
-          </option>
-        </select>
-        <label
-          v-if="filterBarVisible.unassigned"
-          class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-        >
-          <input v-model="filterUnassigned" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900" />
-          Chưa gán vai trò
-        </label>
-        <label
-          v-if="filterBarVisible.assigned"
-          class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-        >
-          <input v-model="filterAssignedOnly" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900" />
-          Đã gán vai trò
-        </label>
-        <label
-          v-if="filterBarVisible.system"
-          class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-        >
-          <input v-model="filterSystemOnly" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900" />
-          Quyền system.*
-        </label>
+
+      <div v-if="hasFilterRow" class="grid grid-cols-1 gap-3 border-t border-slate-100 px-5 py-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 dark:border-slate-700">
+        <DatagridFilterField v-if="visibleFilters.module">
+          <select v-model="filterModule" :class="FILTER_CONTROL_CLASS" :aria-label="t('system_pages.permissions.filter_module')" data-testid="system-permissions-filter-module">
+            <option v-for="opt in MODULE_OPTS" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+          </select>
+        </DatagridFilterField>
+        <DatagridFilterField v-if="visibleFilters.role">
+          <select v-model="filterRoleId" :class="FILTER_CONTROL_CLASS" :aria-label="t('system_pages.permissions.filter_role')" data-testid="system-permissions-filter-role">
+            <option value="">{{ t('system_pages.permissions.filter_role') }}</option>
+            <option v-for="r in roles" :key="r.id" :value="String(r.id)">{{ r.display_name || r.name }}</option>
+          </select>
+        </DatagridFilterField>
+        <DatagridFilterField v-if="visibleFilters.unassigned" class="sm:col-span-2">
+          <label class="flex h-10 w-full cursor-pointer items-center gap-2 rounded-lg bg-slate-50 px-3 text-sm dark:bg-slate-800/50">
+            <input v-model="filterUnassigned" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" data-testid="system-permissions-filter-unassigned" />
+            {{ t('system_pages.permissions.filter_unassigned') }}
+          </label>
+        </DatagridFilterField>
+        <DatagridFilterField v-if="visibleFilters.assigned" class="sm:col-span-2">
+          <label class="flex h-10 w-full cursor-pointer items-center gap-2 rounded-lg bg-slate-50 px-3 text-sm dark:bg-slate-800/50">
+            <input v-model="filterAssignedOnly" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" data-testid="system-permissions-filter-assigned" />
+            {{ t('system_pages.permissions.filter_assigned') }}
+          </label>
+        </DatagridFilterField>
+        <DatagridFilterField v-if="visibleFilters.system" class="sm:col-span-2">
+          <label class="flex h-10 w-full cursor-pointer items-center gap-2 rounded-lg bg-slate-50 px-3 text-sm dark:bg-slate-800/50">
+            <input v-model="filterSystemOnly" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" data-testid="system-permissions-filter-system" />
+            {{ t('system_pages.permissions.filter_system') }}
+          </label>
+        </DatagridFilterField>
       </div>
-    </AppFilterBar>
 
-    <!-- ── Loading ────────────────────────────────────────────────────────── -->
-    <div v-if="loading" class="space-y-3">
-      <div v-for="i in 4" :key="i" class="h-32 animate-pulse rounded-xl border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800" />
-    </div>
+      <div v-if="loading" class="space-y-2 p-4 sm:p-5">
+        <div v-for="i in 4" :key="i" class="h-24 animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800" />
+      </div>
 
-    <!-- ── Empty ─────────────────────────────────────────────────────────── -->
-    <template v-else-if="!items.length">
-      <Card>
+      <template v-else-if="!items.length">
         <div class="py-12 text-center">
           <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Chưa có quyền nào trong hệ thống.</p>
-          <Button class="mt-4" @click="openCreate">Thêm quyền đầu tiên</Button>
+          <Button class="mt-4" data-testid="system-permissions-add-first" @click="openCreate">Thêm quyền đầu tiên</Button>
         </div>
-      </Card>
-    </template>
+      </template>
 
-    <template v-else>
-      <!-- Không khớp filter -->
-      <div
-        v-if="grouped.length === 0"
-        class="rounded-xl border border-dashed border-amber-200/80 bg-amber-50/40 py-10 text-center text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200"
-      >
-        Không tìm thấy quyền nào khớp bộ lọc.
-      </div>
-
-      <!-- Module groups -->
-      <div v-else class="space-y-3">
-        <div
-          v-for="group in grouped"
-          :key="group.module.id"
-          class="overflow-hidden rounded-xl border border-slate-200/90 shadow-sm dark:border-slate-700"
-        >
-          <!-- Module header -->
-          <button
-            type="button"
-            class="flex w-full items-center justify-between px-4 py-3 text-left transition"
-            :class="openModules.has(group.module.id)
-              ? 'bg-slate-50 dark:bg-slate-800/60'
-              : 'bg-white hover:bg-slate-50/60 dark:bg-slate-900 dark:hover:bg-slate-800/40'"
-            @click="toggleModule(group.module.id)"
-          >
-            <span class="flex items-center gap-2.5">
-              <span class="text-sm font-semibold text-slate-800 dark:text-slate-100">{{ group.module.label }}</span>
-              <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-                {{ group.perms.length }}
-              </span>
-            </span>
-            <ChevronDownIcon
-              class="h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200"
-              :class="{ '-rotate-180': openModules.has(group.module.id) }"
-              aria-hidden="true"
-            />
-          </button>
-
-          <!-- Perm rows -->
-          <div v-show="openModules.has(group.module.id)" class="divide-y divide-slate-100 dark:divide-slate-800">
-            <div
-              v-for="perm in group.perms"
-              :key="perm.id"
-              class="flex items-start gap-3 bg-white px-4 py-3 transition hover:bg-slate-50/50 dark:bg-slate-900/60 dark:hover:bg-slate-800/30"
+      <template v-else>
+        <div v-if="grouped.length === 0" class="border-t border-slate-100 py-10 text-center text-sm text-amber-800 dark:border-slate-700 dark:text-amber-200">
+          Không tìm thấy quyền nào khớp bộ lọc.
+        </div>
+        <div v-else class="space-y-4 border-t border-slate-100 p-3 sm:p-4 dark:border-slate-700">
+          <section v-for="group in grouped" :key="group.module.id" class="space-y-2">
+            <button
+              type="button"
+              class="flex w-full items-center justify-between rounded-xl bg-slate-100/80 px-3 py-2.5 text-left dark:bg-slate-800/50"
+              :data-testid="`perm-module-${group.module.id}`"
+              @click="toggleModule(group.module.id)"
             >
-              <!-- Info -->
-              <div class="min-w-0 flex-1">
-                <div class="flex flex-wrap items-center gap-1.5">
-                  <span class="font-semibold text-slate-900 dark:text-slate-100">{{ permDisplayName(perm) }}</span>
-                  <!-- System badge -->
-                  <span
-                    v-if="isSystemPerm(perm.name)"
-                    class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400"
-                  >
-                    <LockClosedIcon class="h-2.5 w-2.5" aria-hidden="true" />
-                    Hệ thống
-                  </span>
-                </div>
-                <p class="mt-0.5 font-mono text-[11px] text-slate-400 dark:text-slate-500">{{ perm.name }}</p>
-                <p v-if="perm.plain_summary" class="mt-1 text-xs leading-snug text-slate-500 dark:text-slate-400">{{ perm.plain_summary }}</p>
-              </div>
-
-              <!-- Role badges -->
-              <div class="flex shrink-0 flex-wrap justify-end gap-1 pt-0.5">
-                <template v-if="rolesOfPerm(perm).length">
-                  <span
-                    v-for="r in rolesOfPerm(perm)"
-                    :key="r.id"
-                    :title="r.name"
-                    class="rounded-full px-2 py-0.5 text-[10px] font-medium"
-                    :class="roleColorMap.get(r.id) ?? ROLE_COLORS[0]"
-                  >{{ r.display_name || r.name }}</span>
-                </template>
-                <span
-                  v-else
-                  class="rounded-full border border-dashed border-slate-200 px-2 py-0.5 text-[10px] text-slate-400 dark:border-slate-700 dark:text-slate-500"
-                >Chưa gán</span>
-              </div>
-
-              <!-- Actions -->
-              <div class="flex shrink-0 items-center gap-1 self-start">
-                <button
-                  type="button"
-                  title="Chỉnh sửa"
-                  class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                  :disabled="saving"
-                  @click="openEdit(perm)"
-                >
-                  <PencilSquareIcon class="h-4 w-4" aria-hidden="true" />
-                </button>
-                <button
-                  v-if="!isSystemPerm(perm.name)"
-                  type="button"
-                  :title="(perm.role_ids?.length ?? 0) > 0 ? `${perm.role_ids.length} vai trò đang dùng` : 'Xóa quyền'"
-                  class="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-red-950/40 dark:hover:text-red-400"
-                  :disabled="saving"
-                  @click="removePerm(perm)"
-                >
-                  <TrashIcon class="h-4 w-4" aria-hidden="true" />
-                </button>
-              </div>
+              <span class="flex items-center gap-2.5">
+                <span class="text-sm font-semibold text-slate-800 dark:text-slate-100">{{ group.module.label }}</span>
+                <span class="rounded-full bg-white/80 px-2 py-0.5 text-[11px] font-medium text-slate-500 dark:bg-slate-900/60 dark:text-slate-400">{{ group.perms.length }}</span>
+              </span>
+              <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400 transition-transform" :class="{ '-rotate-180': openModules.has(group.module.id) }" aria-hidden="true" />
+            </button>
+            <div v-show="openModules.has(group.module.id)" class="space-y-2 pl-1 sm:pl-2">
+              <SystemPermissionRecordCard
+                v-for="perm in group.perms"
+                :key="perm.id"
+                :perm="perm"
+                :display-name="permDisplayName(perm)"
+                :is-system="isSystemPerm(perm.name)"
+                :roles="rolesOfPerm(perm)"
+                :role-color-map="roleColorMap"
+                :role-colors-fallback="ROLE_COLORS[0]"
+                :saving="saving"
+                @edit="openEdit(perm)"
+                @remove="removePerm(perm)"
+              />
             </div>
-          </div>
+          </section>
         </div>
-      </div>
-    </template>
+      </template>
+    </div>
 
+    <!-- ── Create modal ───────────────────────────────────────────────────── -->
     <!-- ── Create modal ───────────────────────────────────────────────────── -->
     <Teleport to="body">
     <div

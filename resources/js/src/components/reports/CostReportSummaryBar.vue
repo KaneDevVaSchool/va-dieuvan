@@ -29,7 +29,7 @@ const cards = computed(() => {
       label: t('cost_report.kpi_total_amount'),
       tone: 'brand',
       icon: BanknotesIcon,
-      display: props.loading ? '…' : stats ? formatVnd(stats.total_amount) : '—',
+      display: props.loading ? '…' : stats ? formatVnd(stats.total_amount) : t('cost_report.empty_no_data'),
       sub: t('cost_report.kpi_total_amount_sub'),
     },
     {
@@ -37,7 +37,7 @@ const cards = computed(() => {
       label: t('cost_report.kpi_count'),
       tone: 'sky',
       icon: QueueListIcon,
-      display: props.loading ? '…' : stats ? stats.count.toLocaleString('vi-VN') : '—',
+      display: props.loading ? '…' : stats ? stats.count.toLocaleString('vi-VN') : t('cost_report.empty_no_data'),
       sub: t('cost_report.kpi_count_sub'),
     },
     {
@@ -45,7 +45,7 @@ const cards = computed(() => {
       label: t('cost_report.kpi_top_category'),
       tone: 'amber',
       icon: TagIcon,
-      display: props.loading ? '…' : props.topCategory || '—',
+      display: props.loading ? '…' : props.topCategory || t('cost_report.empty_top_category'),
       sub: t('cost_report.kpi_top_category_sub'),
     },
     {
@@ -53,7 +53,7 @@ const cards = computed(() => {
       label: t('cost_report.kpi_top_provider'),
       tone: 'emerald',
       icon: BuildingOffice2Icon,
-      display: props.loading ? '…' : (props.topProvider ? labelProviderDisplay(props.topProvider) : '—'),
+      display: props.loading ? '…' : (props.topProvider ? labelProviderDisplay(props.topProvider) : t('cost_report.empty_top_provider')),
       sub: t('cost_report.kpi_top_provider_sub'),
     },
   ]

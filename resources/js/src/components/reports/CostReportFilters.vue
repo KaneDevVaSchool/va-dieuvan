@@ -57,16 +57,41 @@
             <XMarkIcon class="h-3 w-3 text-rose-500" aria-hidden="true" />
           </button>
 
-          <button
-            type="button"
-            class="tr-rev-refresh"
-            :disabled="loading"
-            data-testid="cost-report-reload"
-            @click="$emit('reload')"
-          >
-            <span v-if="loading" class="inline-block size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-            <template v-else>{{ t('cost_report.btn_refresh') }}</template>
-          </button>
+          <details ref="exportMenuRef" class="group relative">
+            <summary class="list-none [&::-webkit-details-marker]:hidden">
+              <DatagridToolbarActionButton
+                icon="export"
+                :disabled="!!exporting"
+                test-id="cost-report-filters-export"
+                @click.prevent
+              >
+                {{ t('cost_report.toolbar_export') }}
+              </DatagridToolbarActionButton>
+            </summary>
+            <div
+              class="absolute right-0 top-[calc(100%+8px)] z-[110] min-w-[200px] rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-600 dark:bg-slate-900"
+              @click.stop
+            >
+              <button
+                type="button"
+                class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                data-testid="cost-report-filters-export-xlsx"
+                :disabled="!!exporting"
+                @click="$emit('export-xlsx')"
+              >
+                {{ t('cost_report.btn_export_xlsx') }}
+              </button>
+              <button
+                type="button"
+                class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                data-testid="cost-report-filters-export-pdf"
+                :disabled="!!exporting"
+                @click="$emit('export-pdf')"
+              >
+                {{ t('cost_report.btn_export_pdf') }}
+              </button>
+            </div>
+          </details>
         </div>
       </div>
     </div>
@@ -147,7 +172,7 @@ import DatagridToolbarActionButton from '../shared/ui/DatagridToolbarActionButto
 import DatagridFilterField from '../shared/ui/DatagridFilterField.vue'
 import FilterVisibilityDropdown from '../shared/ui/FilterVisibilityDropdown.vue'
 import FilterDatePicker from '../shared/ui/FilterDatePicker.vue'
-import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
+import { useDetailsAutoClose, useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 
 defineProps({
   filters: { type: Object, required: true },
@@ -159,10 +184,12 @@ defineProps({
   hasVisibleBarFilters: { type: Boolean, default: false },
   showFilterPanel: { type: Boolean, default: false },
   loading: { type: Boolean, default: false },
+  exporting: { type: String, default: null },
 })
 
 defineEmits([
-  'reload',
+  'export-xlsx',
+  'export-pdf',
   'reset-filters',
   'patch-filter',
   'toggle-filter-panel',
@@ -172,14 +199,11 @@ defineEmits([
 
 const { t } = useI18n()
 const rootRef = ref(null)
+const exportMenuRef = ref(null)
 useDetailsAutoCloseWithin(rootRef)
+useDetailsAutoClose(exportMenuRef)
 
 const FILTER_CONTROL_CLASS =
   'input h-10 w-full text-sm rounded-lg border border-slate-200 bg-white px-3 text-slate-900 shadow-sm focus:border-va-700 focus:outline-none focus:ring-2 focus:ring-va-700/15 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100'
 </script>
 
-<style scoped>
-.tr-rev-refresh {
-  @apply inline-flex h-10 shrink-0 items-center justify-center rounded-lg bg-teal-800 px-4 text-sm font-medium text-white transition hover:bg-teal-900 focus:outline-none focus:ring-2 focus:ring-teal-600/30 disabled:opacity-50 dark:bg-teal-700 dark:hover:bg-teal-600;
-}
-</style>

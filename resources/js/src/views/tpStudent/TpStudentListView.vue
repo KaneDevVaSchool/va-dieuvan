@@ -235,16 +235,16 @@
                   >
                     {{ s.full_name }}
                   </button>
-                  <div class="truncate text-xs text-slate-400">{{ studentMeta(s) }}</div>
+                  <div class="truncate text-xs text-slate-400">{{ studentMeta(s) || t('tp_student_page.empty_not_available') }}</div>
                 </div>
               </div>
             </td>
 
-            <td v-if="colOn('code')" class="px-3 py-3 font-mono text-xs text-slate-700">{{ s.code || '—' }}</td>
-            <td v-if="colOn('gender')" class="px-3 py-3 text-slate-700">{{ genderLabel(s.gender) || '—' }}</td>
-            <td v-if="colOn('date_of_birth')" class="px-3 py-3 tabular-nums text-slate-700">{{ formatDob(s.date_of_birth) }}</td>
-            <td v-if="colOn('grade')" class="px-3 py-3 font-medium text-slate-700">{{ s.grade || '—' }}</td>
-            <td v-if="colOn('class_name')" class="px-3 py-3 font-medium text-slate-700">{{ s.class_name || '—' }}</td>
+            <td v-if="colOn('code')" class="px-3 py-3 font-mono text-xs" :class="cellValueClass(s.code)">{{ fieldText(s.code, 'code') }}</td>
+            <td v-if="colOn('gender')" class="px-3 py-3" :class="cellValueClass(s.gender)">{{ fieldText(s.gender, 'gender', genderLabel(s.gender)) }}</td>
+            <td v-if="colOn('date_of_birth')" class="px-3 py-3 tabular-nums" :class="cellValueClass(s.date_of_birth)">{{ formatDob(s.date_of_birth) }}</td>
+            <td v-if="colOn('grade')" class="px-3 py-3 font-medium" :class="cellValueClass(s.grade)">{{ fieldText(s.grade, 'grade') }}</td>
+            <td v-if="colOn('class_name')" class="px-3 py-3 font-medium" :class="cellValueClass(s.class_name)">{{ fieldText(s.class_name, 'class') }}</td>
 
             <td v-if="colOn('program')" class="px-3 py-3">
               <template v-if="s.program">
@@ -260,25 +260,28 @@
             </td>
 
             <td v-if="colOn('parent_contact')" class="px-3 py-3">
-              <div class="font-medium text-slate-700">{{ s.parent_name || '—' }}</div>
+              <div class="font-medium" :class="cellValueClass(s.parent_name)">{{ fieldText(s.parent_name, 'parent_name') }}</div>
               <a v-if="s.parent_phone" :href="`tel:${s.parent_phone}`" class="text-xs text-sky-600 hover:underline">{{ s.parent_phone }}</a>
+              <span v-else class="text-xs italic text-slate-400">{{ t('tp_student_page.empty_phone') }}</span>
             </td>
             <td v-if="colOn('father')" class="px-3 py-3">
-              <div class="text-slate-700">{{ s.father_name || '—' }}</div>
+              <div :class="cellValueClass(s.father_name)">{{ fieldText(s.father_name, 'father_name') }}</div>
               <a v-if="s.father_phone" :href="`tel:${s.father_phone}`" class="text-xs text-sky-600 hover:underline">{{ s.father_phone }}</a>
+              <span v-else class="text-xs italic text-slate-400">{{ t('tp_student_page.empty_phone') }}</span>
             </td>
             <td v-if="colOn('mother')" class="px-3 py-3">
-              <div class="text-slate-700">{{ s.mother_name || '—' }}</div>
+              <div :class="cellValueClass(s.mother_name)">{{ fieldText(s.mother_name, 'mother_name') }}</div>
               <a v-if="s.mother_phone" :href="`tel:${s.mother_phone}`" class="text-xs text-sky-600 hover:underline">{{ s.mother_phone }}</a>
+              <span v-else class="text-xs italic text-slate-400">{{ t('tp_student_page.empty_phone') }}</span>
             </td>
-            <td v-if="colOn('address')" class="max-w-[14rem] px-3 py-3 text-slate-600">
-              <span class="line-clamp-2">{{ s.address || '—' }}</span>
+            <td v-if="colOn('address')" class="max-w-[14rem] px-3 py-3">
+              <span class="line-clamp-2" :class="cellValueClass(s.address)">{{ fieldText(s.address, 'address') }}</span>
             </td>
-            <td v-if="colOn('pickup_point')" class="max-w-[12rem] px-3 py-3 text-slate-600">
-              <span class="line-clamp-2">{{ s.pickup_point || '—' }}</span>
+            <td v-if="colOn('pickup_point')" class="max-w-[12rem] px-3 py-3">
+              <span class="line-clamp-2" :class="cellValueClass(s.pickup_point)">{{ fieldText(s.pickup_point, 'pickup') }}</span>
             </td>
-            <td v-if="colOn('note')" class="max-w-[12rem] px-3 py-3 text-xs text-slate-500">
-              <span class="line-clamp-2">{{ s.note || '—' }}</span>
+            <td v-if="colOn('note')" class="max-w-[12rem] px-3 py-3 text-xs">
+              <span class="line-clamp-2" :class="cellValueClass(s.note)">{{ fieldText(s.note, 'note') }}</span>
             </td>
 
             <td v-if="colOn('transport_status')" class="px-3 py-3">
@@ -757,8 +760,23 @@ function genderLabel(g) {
   const key = String(g).toLowerCase()
   return { male: 'Nam', female: 'Nữ', other: 'Khác', nam: 'Nam', nu: 'Nữ' }[key] || g
 }
+function isFieldEmpty(value) {
+  if (value == null) return true
+  return String(value).trim() === ''
+}
+function emptyFieldLabel(key) {
+  return t(`tp_student_page.empty_${key}`)
+}
+function fieldText(value, emptyKey, formatted) {
+  if (isFieldEmpty(value)) return emptyFieldLabel(emptyKey)
+  if (formatted != null && formatted !== '') return formatted
+  return String(value).trim()
+}
+function cellValueClass(value) {
+  return isFieldEmpty(value) ? 'text-xs italic text-slate-400' : 'text-slate-700'
+}
 function formatDob(iso) {
-  if (!iso) return '—'
+  if (!iso) return emptyFieldLabel('dob')
   const [y, m, d] = String(iso).slice(0, 10).split('-')
   if (!y || !m || !d) return iso
   return `${d}/${m}/${y}`

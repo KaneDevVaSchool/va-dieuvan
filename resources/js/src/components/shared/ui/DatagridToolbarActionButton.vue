@@ -38,7 +38,7 @@ const IconComp = computed(() => {
     "
     :disabled="disabled"
     :data-testid="testId || `datagrid-toolbar-${icon}`"
-    @click="$emit('click')"
+    @click.stop="$emit('click', $event)"
   >
     <component :is="IconComp" class="h-[15px] w-[15px] shrink-0 opacity-80" aria-hidden="true" />
     <span><slot /></span>

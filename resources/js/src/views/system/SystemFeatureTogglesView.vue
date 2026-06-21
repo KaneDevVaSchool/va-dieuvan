@@ -1,14 +1,9 @@
 <script setup>
 import { computed, onActivated, onMounted, reactive, ref, watch } from 'vue'
 import {
-  ChevronDownIcon,
-  MagnifyingGlassIcon,
-  FunnelIcon,
   PlusIcon,
-  TrashIcon,
   XMarkIcon,
-  LinkIcon,
-  ShieldCheckIcon,
+  FunnelIcon,
 } from '@heroicons/vue/24/outline'
 import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
@@ -26,30 +21,43 @@ import { showAppError, showAppSuccess } from '../../composables/appMessage'
 import { confirmAction } from '../../composables/useConfirm'
 import { debounceTrailing } from '../../composables/useDebounce'
 import { useAuthStore } from '../../store'
-import { useFilterBarVisibility } from '../../composables/useFilterBarVisibility.js'
-import AppFilterBar from '../../components/filters/AppFilterBar.vue'
-import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vue'
+import { useVisibleFilterControls } from '../../composables/useVisibleFilterControls.js'
+import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
+import SystemFeatureTogglesSummaryBar from '../../components/system/SystemFeatureTogglesSummaryBar.vue'
+import SystemFeatureToggleRecordCard from '../../components/system/SystemFeatureToggleRecordCard.vue'
+import DatagridToolbarSearch from '../../components/shared/ui/DatagridToolbarSearch.vue'
+import DatagridToolbarActionButton from '../../components/shared/ui/DatagridToolbarActionButton.vue'
+import DatagridFilterField from '../../components/shared/ui/DatagridFilterField.vue'
+import FilterVisibilityDropdown from '../../components/shared/ui/FilterVisibilityDropdown.vue'
 
-const FT_FILTER_VIS_IDS = ['status', 'module', 'maintenance', 'upgrade']
-const FT_FILTER_VIS_DEFAULTS = Object.fromEntries(FT_FILTER_VIS_IDS.map((id) => [id, false]))
+const FT_FILTER_CONTROLS = [
+  { key: 'status', label: 'Tr?ng th?i', default: false },
+  { key: 'module', label: 'Module', default: false },
+  { key: 'maintenance', label: 'Ch? b?o tr?', default: false },
+  { key: 'upgrade', label: 'N?ng c?p', default: false },
+]
+
 const {
-  visible: filterBarVisible,
-  resetVisibility: resetFilterBarVisibility,
-  hasVisibleOnBar: hasVisibleBarFilters,
-} = useFilterBarVisibility(FT_FILTER_VIS_IDS, FT_FILTER_VIS_DEFAULTS)
+  visibleFilters,
+  hasFilterRow,
+  showFilterPanelDd,
+  openFilterPanel,
+  closeFilterPanel,
+  filterControlDefs,
+} = useVisibleFilterControls(FT_FILTER_CONTROLS, 'va-dieuvan.system.feature-toggles.filters.v1')
 
-const filterMenuRef = ref(null)
+const datagridRef = ref(null)
+useDetailsAutoCloseWithin(datagridRef)
 
-function onFeatureTogglesFilterBarEnter() {
-  resetFilterBarVisibility()
+function toggleFilterPanel() {
+  openFilterPanel()
 }
 
-function closeFilterMenu() {
-  filterMenuRef.value?.close?.()
-}
+const FILTER_CONTROL_CLASS =
+  'input h-10 w-full text-sm rounded-lg border border-slate-200 bg-white px-3 text-slate-900 shadow-sm focus:border-va-700 focus:outline-none focus:ring-2 focus:ring-va-700/15 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100'
 
-// ─── Nav clusters: featureKey → links ─────────────────────────────────────────
-// Tính một lần, dùng per-row khi expand
+// ??? Nav clusters: featureKey ? links ?????????????????????????????????????????
+// T?nh m?t l?n, d?ng per-row khi expand
 const navKeyMap = computed(() => {
   const m = new Map()
   for (const cluster of getFeatureToggleNavClusters()) {
@@ -83,7 +91,7 @@ function relatedPermHint(permName) {
   return permissionPlainVi[permName] ?? ''
 }
 
-// ─── State ────────────────────────────────────────────────────────────────────
+// ??? State ????????????????????????????????????????????????????????????????????
 
 const auth = useAuthStore()
 const { t } = useI18n()
@@ -91,7 +99,7 @@ const { t } = useI18n()
 const loading    = ref(true)
 const saving     = ref(false)
 const items      = ref([])
-const expandedId = ref(null)  // id của row đang expand nav panel
+const expandedId = ref(null)  // id c?a row ?ang expand nav panel
 
 const searchRaw  = ref('')
 const searchQ    = ref('')
@@ -105,14 +113,14 @@ const presetIdx    = ref('')
 const form = reactive({ key: '', name: '', module: '', is_enabled: true, maintenance_mode: false, upgrade_notice: false })
 
 const STATUS_OPTS = [
-  { value: 'all',         label: 'Tất cả' },
-  { value: 'on',          label: 'Đang bật' },
-  { value: 'off',         label: 'Đang tắt' },
-  { value: 'maintenance', label: 'Đang bảo trì' },
-  { value: 'upgrade',     label: 'Có thông báo nâng cấp' },
+  { value: 'all',         label: 'T?t c?' },
+  { value: 'on',          label: '?ang b?t' },
+  { value: 'off',         label: '?ang t?t' },
+  { value: 'maintenance', label: '?ang b?o tr?' },
+  { value: 'upgrade',     label: 'C? th?ng b?o n?ng c?p' },
 ]
 
-// ─── Computed ─────────────────────────────────────────────────────────────────
+// ??? Computed ?????????????????????????????????????????????????????????????????
 
 const bumpSearch = debounceTrailing(() => { searchQ.value = searchRaw.value }, 300)
 watch(searchRaw, () => bumpSearch())
@@ -168,14 +176,14 @@ const activeFilters = computed(() => {
   return n
 })
 
-// ─── Sync session sau mutation ────────────────────────────────────────────────
+// ??? Sync session sau mutation ????????????????????????????????????????????????
 
 async function syncSession() {
   if (!auth.isLoggedIn) return
   try { await auth.fetchMe() } catch { /* ignore */ }
 }
 
-// ─── API ──────────────────────────────────────────────────────────────────────
+// ??? API ??????????????????????????????????????????????????????????????????????
 
 async function load() {
   loading.value = true
@@ -201,10 +209,10 @@ async function patchToggle(row, partial) {
     Object.assign(row, partial)
     await syncSession()
     const label = 'is_enabled' in partial
-      ? (partial.is_enabled ? 'Đã bật tính năng.' : 'Đã tắt tính năng.')
+      ? (partial.is_enabled ? '?? b?t t?nh n?ng.' : '?? t?t t?nh n?ng.')
       : 'maintenance_mode' in partial
-        ? (partial.maintenance_mode ? 'Đã bật chế độ bảo trì.' : 'Đã tắt chế độ bảo trì.')
-        : (partial.upgrade_notice ? 'Đã bật thông báo nâng cấp.' : 'Đã tắt thông báo nâng cấp.')
+        ? (partial.maintenance_mode ? '?? b?t ch? ?? b?o tr?.' : '?? t?t ch? ?? b?o tr?.')
+        : (partial.upgrade_notice ? '?? b?t th?ng b?o n?ng c?p.' : '?? t?t th?ng b?o n?ng c?p.')
     showAppSuccess(label, row.name)
   } catch (e) {
     showAppError(formatApiError(e))
@@ -216,9 +224,9 @@ async function patchToggle(row, partial) {
 
 async function confirmDelete(row) {
   const ok = await confirmAction({
-    title:        'Xóa tính năng?',
-    message:      `Xóa tính năng «${row.name}» (${row.key})?\nCác menu liên quan sẽ bị ảnh hưởng ngay lập tức.`,
-    confirmLabel: 'Xóa',
+    title:        'X?a t?nh n?ng?',
+    message:      `X?a t?nh n?ng ?${row.name}? (${row.key})?\nC?c menu li?n quan s? b? ?nh h??ng ngay l?p t?c.`,
+    confirmLabel: 'X?a',
     danger:       true,
   })
   if (!ok) return
@@ -227,7 +235,7 @@ async function confirmDelete(row) {
     await admin.deleteFeatureToggle(row.id)
     await load()
     await syncSession()
-    showAppSuccess('Đã xóa tính năng.')
+    showAppSuccess('?? x?a t?nh n?ng.')
   } catch (e) {
     showAppError(formatApiError(e))
   } finally {
@@ -235,7 +243,7 @@ async function confirmDelete(row) {
   }
 }
 
-// ─── Create ───────────────────────────────────────────────────────────────────
+// ??? Create ???????????????????????????????????????????????????????????????????
 
 watch(presetIdx, (v) => {
   if (v === '' || v == null) return
@@ -273,7 +281,7 @@ async function submitAdd() {
     addModalOpen.value = false
     await load()
     await syncSession()
-    showAppSuccess('Đã thêm tính năng mới.')
+    showAppSuccess('?? th?m t?nh n?ng m?i.')
   } catch (e) {
     showAppError(formatApiError(e))
   } finally {
@@ -282,10 +290,17 @@ async function submitAdd() {
 }
 
 function resetFilters() {
-  searchRaw.value    = ''
-  searchQ.value      = ''
+  searchRaw.value = ''
+  searchQ.value = ''
   filterStatus.value = 'all'
   filterModule.value = ''
+  filterMaintenanceOnly.value = false
+  filterUpgradeOnly.value = false
+}
+
+function onKpiQuickFilter(payload) {
+  if (!payload?.status) return
+  filterStatus.value = payload.status
   filterMaintenanceOnly.value = false
   filterUpgradeOnly.value = false
 }
@@ -294,398 +309,165 @@ function toggleExpand(id) {
   expandedId.value = expandedId.value === id ? null : id
 }
 
-onMounted(() => {
-  onFeatureTogglesFilterBarEnter()
-  load()
-})
+onMounted(() => load())
 
-onActivated(() => {
-  onFeatureTogglesFilterBarEnter()
-})
+onActivated(() => load())
 </script>
+
 
 <template>
   <div class="space-y-5 pb-8">
 
-    <!-- ── Header ─────────────────────────────────────────────────────────── -->
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-lg font-bold text-slate-900 dark:text-slate-50">Tính năng hệ thống</h1>
+        <h1 class="text-lg font-bold text-slate-900 dark:text-slate-50">T?nh n?ng h? th?ng</h1>
         <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-          Bật / tắt các tính năng và quản lý chế độ bảo trì, thông báo nâng cấp.
+          B?t / t?t c?c t?nh n?ng v? qu?n l? ch? ?? b?o tr?, th?ng b?o n?ng c?p.
         </p>
       </div>
-      <Button type="button" class="shrink-0 gap-1.5" :disabled="loading || saving" @click="openAdd">
+      <Button type="button" class="shrink-0 gap-1.5" :disabled="loading || saving" data-testid="feature-toggles-add" @click="openAdd">
         <PlusIcon class="h-4 w-4" aria-hidden="true" />
-        Thêm tính năng
+        Th?m t?nh n?ng
       </Button>
     </div>
 
-    <AppFilterBar>
-      <div class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
-        <AppFilterFunnelMenu ref="filterMenuRef" :badge-count="activeFilters">
-          <p class="text-xs font-semibold uppercase text-slate-500">Bộ lọc đang áp dụng</p>
-          <ul class="mt-2 space-y-2 text-sm text-slate-700">
-            <li v-if="searchRaw.trim()" class="flex justify-between gap-2"><span class="text-slate-500">Tìm kiếm</span><span class="truncate font-medium">{{ searchRaw }}</span></li>
-            <li v-if="filterStatus !== 'all'" class="flex justify-between gap-2"><span class="text-slate-500">Trạng thái</span><span class="font-medium">{{ STATUS_OPTS.find(o => o.value === filterStatus)?.label }}</span></li>
-            <li v-if="filterModule" class="flex justify-between gap-2"><span class="text-slate-500">Module</span><span class="font-medium">{{ filterModule }}</span></li>
-            <li v-if="filterMaintenanceOnly" class="flex justify-between gap-2"><span class="text-slate-500">Bảo trì</span><span class="font-medium">Đang bảo trì</span></li>
-            <li v-if="filterUpgradeOnly" class="flex justify-between gap-2"><span class="text-slate-500">Nâng cấp</span><span class="font-medium">Có thông báo</span></li>
-            <li v-if="activeFilters === 0" class="text-slate-400">Chưa có điều kiện lọc</li>
-          </ul>
-          <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
-            <p class="text-[11px] font-semibold uppercase text-violet-700">Hiển thị bộ lọc trên thanh</p>
-            <ul class="mt-2 space-y-2">
-              <li class="flex gap-2"><input id="ft-vis-status" v-model="filterBarVisible.status" type="checkbox" class="h-4 w-4 rounded" /><label for="ft-vis-status" class="text-sm">Trạng thái</label></li>
-              <li class="flex gap-2"><input id="ft-vis-module" v-model="filterBarVisible.module" type="checkbox" class="h-4 w-4 rounded" /><label for="ft-vis-module" class="text-sm">Module</label></li>
-              <li class="flex gap-2"><input id="ft-vis-maintenance" v-model="filterBarVisible.maintenance" type="checkbox" class="h-4 w-4 rounded" /><label for="ft-vis-maintenance" class="text-sm">Chỉ đang bảo trì</label></li>
-              <li class="flex gap-2"><input id="ft-vis-upgrade" v-model="filterBarVisible.upgrade" type="checkbox" class="h-4 w-4 rounded" /><label for="ft-vis-upgrade" class="text-sm">Có thông báo nâng cấp</label></li>
-            </ul>
+    <SystemFeatureTogglesSummaryBar
+      :items="items"
+      :loading="loading"
+      :active-status="filterStatus"
+      @quick-filter="onKpiQuickFilter"
+    />
+
+    <div
+      ref="datagridRef"
+      class="overflow-visible rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40"
+    >
+      <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+        <div class="mb-2">
+          <h2 class="text-sm font-semibold text-slate-800 dark:text-slate-100">
+            {{ t('system_pages.feature_toggles.list_title') }}
+            <span class="ml-1 text-xs font-normal text-slate-400">({{ filteredItems.length }})</span>
+          </h2>
+        </div>
+        <div class="flex w-full min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
+          <div class="min-w-0 w-full basis-full lg:min-w-[10rem] lg:flex-1 lg:basis-auto">
+            <DatagridToolbarSearch
+              v-model="searchRaw"
+              input-id="feature-toggles-search"
+              :placeholder="t('system_pages.feature_toggles.search_ph')"
+              :aria-label="t('system_pages.feature_toggles.search_aria')"
+              stretch
+              inline-actions
+              hide-label
+              input-height="h-10"
+            />
           </div>
-          <button type="button" class="mt-3 w-full rounded-lg border py-2 text-sm dark:border-slate-600" @click="resetFilters(); closeFilterMenu()">Xóa tất cả bộ lọc</button>
-        </AppFilterFunnelMenu>
-        <div class="hidden h-6 w-px bg-slate-200 sm:block dark:bg-slate-700" />
-        <button type="button" class="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500" @click="resetFilters">
-          <span class="relative inline-flex">
-            <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-            <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 text-rose-500" aria-hidden="true" />
-          </span>
-        </button>
-        <div class="relative min-w-0 flex-1 basis-[10rem] sm:min-w-[12rem] sm:max-w-md">
-          <MagnifyingGlassIcon class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-          <input
-            v-model="searchRaw"
-            type="search"
-            placeholder="Tìm tính năng…"
-            aria-label="Tìm tính năng"
-            class="h-9 w-full rounded-md border-0 bg-white/90 py-0 pl-9 pr-3 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600 dark:placeholder:text-slate-500"
+          <div class="flex shrink-0 items-center gap-2">
+            <FilterVisibilityDropdown
+              :open="showFilterPanelDd"
+              :title="t('system_pages.filter_show_controls_title')"
+              :hint="t('system_pages.filter_show_controls_hint')"
+              @close="closeFilterPanel"
+            >
+              <template #trigger>
+                <DatagridToolbarActionButton
+                  icon="filter"
+                  :active="showFilterPanelDd"
+                  test-id="feature-toggles-toolbar-filter"
+                  @click="toggleFilterPanel"
+                >
+                  {{ t('system_pages.toolbar_filter') }}
+                </DatagridToolbarActionButton>
+              </template>
+              <li v-for="fd in filterControlDefs" :key="'ft-vis-' + fd.key" class="flex items-start gap-2">
+                <input
+                  :id="'ft-filter-vis-' + fd.key"
+                  v-model="visibleFilters[fd.key]"
+                  type="checkbox"
+                  class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-va-800 focus:ring-va-700/30 dark:border-slate-600"
+                />
+                <label :for="'ft-filter-vis-' + fd.key" class="cursor-pointer text-sm text-slate-700 dark:text-slate-300">{{ fd.label }}</label>
+              </li>
+            </FilterVisibilityDropdown>
+            <button
+              type="button"
+              class="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-sm text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
+              :title="t('system_pages.clear_filters')"
+              data-testid="feature-toggles-reset-filters"
+              @click="resetFilters"
+            >
+              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
+              <XMarkIcon class="h-3 w-3 text-rose-500" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div
+        v-if="hasFilterRow"
+        class="grid grid-cols-1 gap-3 border-t border-slate-100 px-5 py-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 dark:border-slate-700"
+      >
+        <DatagridFilterField v-if="visibleFilters.status">
+          <select v-model="filterStatus" :class="FILTER_CONTROL_CLASS" :aria-label="t('system_pages.feature_toggles.filter_status')" data-testid="feature-toggles-filter-status">
+            <option value="all">{{ t('system_pages.feature_toggles.filter_status') }}</option>
+            <option v-for="opt in STATUS_OPTS.filter(o => o.value !== 'all')" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+          </select>
+        </DatagridFilterField>
+        <DatagridFilterField v-if="visibleFilters.module">
+          <select v-model="filterModule" :class="FILTER_CONTROL_CLASS" :aria-label="t('system_pages.feature_toggles.filter_module')" data-testid="feature-toggles-filter-module">
+            <option value="">{{ t('system_pages.feature_toggles.filter_module') }}</option>
+            <option v-for="m in moduleOptions" :key="m" :value="m">{{ m }}</option>
+          </select>
+        </DatagridFilterField>
+        <DatagridFilterField v-if="visibleFilters.maintenance" class="sm:col-span-2">
+          <label class="flex h-10 w-full cursor-pointer items-center gap-2 rounded-lg bg-slate-50 px-3 text-sm dark:bg-slate-800/50">
+            <input v-model="filterMaintenanceOnly" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" data-testid="feature-toggles-filter-maintenance" />
+            {{ t('system_pages.feature_toggles.filter_maintenance_only') }}
+          </label>
+        </DatagridFilterField>
+        <DatagridFilterField v-if="visibleFilters.upgrade" class="sm:col-span-2">
+          <label class="flex h-10 w-full cursor-pointer items-center gap-2 rounded-lg bg-slate-50 px-3 text-sm dark:bg-slate-800/50">
+            <input v-model="filterUpgradeOnly" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" data-testid="feature-toggles-filter-upgrade" />
+            {{ t('system_pages.feature_toggles.filter_upgrade_only') }}
+          </label>
+        </DatagridFilterField>
+      </div>
+
+      <div v-if="loading" class="space-y-2 p-4 sm:p-5">
+        <div v-for="i in 6" :key="i" class="h-24 animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800" />
+      </div>
+
+      <template v-else-if="!items.length">
+        <div class="py-12 text-center">
+          <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Ch?a c? t?nh n?ng n?o.</p>
+          <Button class="mt-4" data-testid="feature-toggles-add-first" @click="openAdd">Th?m t?nh n?ng ??u ti?n</Button>
+        </div>
+      </template>
+
+      <template v-else>
+        <div v-if="filteredItems.length === 0" class="border-t border-slate-100 py-10 text-center text-sm text-amber-800 dark:border-slate-700 dark:text-amber-200">
+          Kh�ng t�m th?y t�nh n?ng n�o kh?p b? l?c.
+        </div>
+        <div v-else class="space-y-2 border-t border-slate-100 p-3 sm:p-4 dark:border-slate-700">
+          <SystemFeatureToggleRecordCard
+            v-for="row in filteredItems"
+            :key="row.id"
+            :row="row"
+            :expanded="expandedId === row.id"
+            :saving="saving"
+            :nav-links="navLinksForKey(row.key)"
+            :related-perms="relatedPermsForKey(row.key)"
+            :nav-link-label="navLinkLabel"
+            :related-perm-label="getCapabilityLabelForPerm"
+            :related-perm-hint="relatedPermHint"
+            @patch="(partial) => patchToggle(row, partial)"
+            @toggle-expand="toggleExpand(row.id)"
+            @delete=" confirmDelete(row)"
           />
         </div>
-      </div>
-      <div v-if="hasVisibleBarFilters" class="mt-2 flex flex-wrap items-center gap-2 border-t border-violet-100/80 pt-2 dark:border-violet-900/30">
-        <select v-if="filterBarVisible.status" v-model="filterStatus" class="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-slate-600 dark:bg-slate-900" :class="filterStatus === 'all' ? 'text-slate-500' : 'text-slate-900'">
-          <option value="all">Trạng thái</option>
-          <option v-for="opt in STATUS_OPTS.filter(o => o.value !== 'all')" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-        </select>
-        <select
-          v-if="filterBarVisible.module"
-          v-model="filterModule"
-          class="h-9 max-w-[14rem] rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-slate-600 dark:bg-slate-900"
-          :class="filterModule ? 'text-slate-900' : 'text-slate-500'"
-        >
-          <option value="">Module</option>
-          <option v-for="m in moduleOptions" :key="m" :value="m">{{ m }}</option>
-        </select>
-        <label
-          v-if="filterBarVisible.maintenance"
-          class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300"
-        >
-          <input v-model="filterMaintenanceOnly" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" />
-          Chỉ đang bảo trì
-        </label>
-        <label
-          v-if="filterBarVisible.upgrade"
-          class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300"
-        >
-          <input v-model="filterUpgradeOnly" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" />
-          Có thông báo nâng cấp
-        </label>
-      </div>
-    </AppFilterBar>
-
-    <!-- ── Loading ────────────────────────────────────────────────────────── -->
-    <div v-if="loading" class="space-y-2">
-      <div v-for="i in 6" :key="i" class="h-14 animate-pulse rounded-xl border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800" />
+      </template>
     </div>
 
-    <!-- ── Empty ─────────────────────────────────────────────────────────── -->
-    <template v-else-if="!items.length">
-      <Card>
-        <div class="py-12 text-center">
-          <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Chưa có tính năng nào.</p>
-          <Button class="mt-4" @click="openAdd">Thêm tính năng đầu tiên</Button>
-        </div>
-      </Card>
-    </template>
-
-    <template v-else>
-      <div
-        v-if="filteredItems.length === 0"
-        class="rounded-xl border border-dashed border-amber-200/80 bg-amber-50/40 py-10 text-center text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200"
-      >
-        Không tìm thấy tính năng nào khớp bộ lọc.
-      </div>
-
-      <!-- Desktop table -->
-      <div v-else class="overflow-hidden rounded-xl border border-slate-200/90 shadow-sm dark:border-slate-700">
-        <div class="hidden md:block">
-          <table class="w-full border-collapse text-left text-sm">
-            <thead>
-              <tr class="border-b border-slate-200 bg-slate-50/95 text-slate-500 dark:border-slate-700 dark:bg-slate-800/80">
-                <th class="py-2.5 pl-4 pr-3 text-xs font-semibold uppercase tracking-wide">Tên tính năng</th>
-                <th class="py-2.5 pr-3 text-xs font-semibold uppercase tracking-wide">Khoá (Key)</th>
-                <th class="py-2.5 pr-3 text-xs font-semibold uppercase tracking-wide">Nhóm</th>
-                <th class="w-24 py-2.5 px-2 text-center text-xs font-semibold uppercase tracking-wide text-teal-600 dark:text-teal-400">Bật</th>
-                <th class="w-28 py-2.5 px-2 text-center text-xs font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">Bảo trì</th>
-                <th class="w-28 py-2.5 px-2 text-center text-xs font-semibold uppercase tracking-wide text-violet-600 dark:text-violet-400">Nâng cấp</th>
-                <th class="w-10 py-2.5 px-2 text-right text-xs font-semibold uppercase tracking-wide">Nav</th>
-                <th class="py-2.5 pl-2 pr-4 text-right text-xs font-semibold uppercase tracking-wide">Xoá</th>
-              </tr>
-            </thead>
-            <tbody>
-              <template v-for="row in filteredItems" :key="row.id">
-                <tr
-                  class="border-b border-slate-100 transition-colors hover:bg-slate-50/60 dark:border-slate-800 dark:hover:bg-slate-800/30"
-                  :class="{ 'bg-slate-50/30 dark:bg-slate-900/30': !row.is_enabled }"
-                >
-                  <!-- Tên -->
-                  <td class="py-3 pl-4 pr-3 align-middle">
-                    <span class="font-semibold text-slate-900 dark:text-slate-100">{{ row.name }}</span>
-                    <div class="mt-0.5 flex gap-1">
-                      <span v-if="row.maintenance_mode" class="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/60 dark:text-amber-300">Bảo trì</span>
-                      <span v-if="row.upgrade_notice" class="rounded-full bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold text-violet-700 dark:bg-violet-950/60 dark:text-violet-300">Nâng cấp</span>
-                    </div>
-                  </td>
-
-                  <!-- Key -->
-                  <td class="max-w-[14rem] py-3 pr-3 align-middle">
-                    <span class="break-all font-mono text-xs text-slate-500 dark:text-slate-400">{{ row.key }}</span>
-                  </td>
-
-                  <!-- Module -->
-                  <td class="py-3 pr-3 align-middle text-sm text-slate-500 dark:text-slate-400">{{ row.module ?? '—' }}</td>
-
-                  <!-- Toggle: Bật -->
-                  <td class="py-3 px-2 text-center align-middle">
-                    <button
-                      type="button"
-                      role="switch"
-                      :aria-checked="row.is_enabled"
-                      :disabled="saving"
-                      class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-slate-900"
-                      :class="row.is_enabled ? 'bg-teal-500' : 'bg-slate-200 dark:bg-slate-700'"
-                      @click="patchToggle(row, { is_enabled: !row.is_enabled })"
-                    >
-                      <span
-                        class="inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
-                        :class="row.is_enabled ? 'translate-x-5' : 'translate-x-0'"
-                      />
-                    </button>
-                  </td>
-
-                  <!-- Toggle: Bảo trì -->
-                  <td class="py-3 px-2 text-center align-middle">
-                    <button
-                      type="button"
-                      role="switch"
-                      :aria-checked="row.maintenance_mode"
-                      :disabled="saving"
-                      class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-slate-900"
-                      :class="row.maintenance_mode ? 'bg-amber-500' : 'bg-slate-200 dark:bg-slate-700'"
-                      @click="patchToggle(row, { maintenance_mode: !row.maintenance_mode })"
-                    >
-                      <span
-                        class="inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
-                        :class="row.maintenance_mode ? 'translate-x-5' : 'translate-x-0'"
-                      />
-                    </button>
-                  </td>
-
-                  <!-- Toggle: Nâng cấp -->
-                  <td class="py-3 px-2 text-center align-middle">
-                    <button
-                      type="button"
-                      role="switch"
-                      :aria-checked="row.upgrade_notice"
-                      :disabled="saving"
-                      class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-slate-900"
-                      :class="row.upgrade_notice ? 'bg-violet-500' : 'bg-slate-200 dark:bg-slate-700'"
-                      @click="patchToggle(row, { upgrade_notice: !row.upgrade_notice })"
-                    >
-                      <span
-                        class="inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
-                        :class="row.upgrade_notice ? 'translate-x-5' : 'translate-x-0'"
-                      />
-                    </button>
-                  </td>
-
-                  <!-- Nav expand -->
-                  <td class="py-3 px-2 text-right align-middle">
-                    <button
-                      v-if="navLinksForKey(row.key).length > 0 || relatedPermsForKey(row.key).length > 0"
-                      type="button"
-                      :title="expandedId === row.id ? 'Ẩn nav' : 'Xem nav bị ảnh hưởng'"
-                      class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-teal-600 dark:hover:bg-slate-800 dark:hover:text-teal-400"
-                      @click="toggleExpand(row.id)"
-                    >
-                      <ChevronDownIcon
-                        class="h-4 w-4 transition-transform duration-200"
-                        :class="{ '-rotate-180': expandedId === row.id }"
-                        aria-hidden="true"
-                      />
-                    </button>
-                  </td>
-
-                  <!-- Delete -->
-                  <td class="py-3 pl-2 pr-4 text-right align-middle">
-                    <button
-                      type="button"
-                      title="Xóa"
-                      class="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-40 dark:hover:bg-red-950/40 dark:hover:text-red-400"
-                      :disabled="saving"
-                      @click="confirmDelete(row)"
-                    >
-                      <TrashIcon class="h-4 w-4" aria-hidden="true" />
-                    </button>
-                  </td>
-                </tr>
-
-                <!-- Nav affected panel (expand) -->
-                <tr v-if="expandedId === row.id" :key="'nav-' + row.id">
-                  <td colspan="8" class="border-b border-slate-100 bg-slate-50/70 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/40">
-                    <div class="space-y-3">
-                      <div v-if="navLinksForKey(row.key).length" class="flex items-start gap-2">
-                        <LinkIcon class="mt-0.5 h-4 w-4 shrink-0 text-teal-500" aria-hidden="true" />
-                        <div class="min-w-0 flex-1">
-                          <p class="mb-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">Mục menu bị ảnh hưởng khi tắt tính năng</p>
-                          <div class="flex flex-wrap gap-1.5">
-                            <span
-                              v-for="link in navLinksForKey(row.key)"
-                              :key="link.to"
-                              class="rounded-lg border border-teal-200/60 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 dark:border-teal-800/40 dark:bg-slate-900 dark:text-slate-300"
-                            >
-                              {{ navLinkLabel(link) }}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div v-if="relatedPermsForKey(row.key).length" class="flex items-start gap-2">
-                        <ShieldCheckIcon class="mt-0.5 h-4 w-4 shrink-0 text-violet-500" aria-hidden="true" />
-                        <div class="min-w-0 flex-1">
-                          <p class="mb-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">Quyền nghiệp vụ liên quan (RBAC)</p>
-                          <ul class="space-y-1.5">
-                            <li
-                              v-for="perm in relatedPermsForKey(row.key)"
-                              :key="perm"
-                              class="rounded-lg border border-violet-200/50 bg-white px-2.5 py-1.5 text-xs dark:border-violet-900/40 dark:bg-slate-900"
-                            >
-                              <span class="font-semibold text-slate-800 dark:text-slate-100">{{ getCapabilityLabelForPerm(perm) }}</span>
-                              <span class="ml-1.5 font-mono text-[10px] text-slate-400">{{ perm }}</span>
-                              <p v-if="relatedPermHint(perm)" class="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">{{ relatedPermHint(perm) }}</p>
-                            </li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              </template>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Mobile cards -->
-        <div class="divide-y divide-slate-100 dark:divide-slate-800 md:hidden">
-          <div v-for="row in filteredItems" :key="'m' + row.id" class="bg-white p-4 dark:bg-slate-900/60">
-            <div class="flex items-start justify-between gap-2">
-              <div>
-                <p class="font-semibold text-slate-900 dark:text-slate-100">{{ row.name }}</p>
-                <p class="mt-0.5 break-all font-mono text-xs text-slate-400 dark:text-slate-500">{{ row.key }}</p>
-                <p v-if="row.module" class="mt-0.5 text-xs text-slate-500">{{ row.module }}</p>
-                <div class="mt-1 flex gap-1">
-                  <span v-if="row.maintenance_mode" class="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/60 dark:text-amber-300">Bảo trì</span>
-                  <span v-if="row.upgrade_notice" class="rounded-full bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold text-violet-700 dark:bg-violet-950/60 dark:text-violet-300">Nâng cấp</span>
-                </div>
-              </div>
-              <button
-                type="button"
-                class="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
-                :disabled="saving"
-                @click="confirmDelete(row)"
-              >
-                <TrashIcon class="h-4 w-4" aria-hidden="true" />
-              </button>
-            </div>
-
-            <div class="mt-4 grid grid-cols-3 gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
-              <div class="flex flex-col items-center gap-1.5">
-                <span class="text-xs font-medium text-teal-600 dark:text-teal-400">Bật</span>
-                <button
-                  type="button"
-                  role="switch"
-                  :aria-checked="row.is_enabled"
-                  :disabled="saving"
-                  class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors disabled:opacity-50"
-                  :class="row.is_enabled ? 'bg-teal-500' : 'bg-slate-200 dark:bg-slate-700'"
-                  @click="patchToggle(row, { is_enabled: !row.is_enabled })"
-                >
-                  <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200" :class="row.is_enabled ? 'translate-x-5' : 'translate-x-0'" />
-                </button>
-              </div>
-              <div class="flex flex-col items-center gap-1.5">
-                <span class="text-xs font-medium text-amber-600 dark:text-amber-400">Bảo trì</span>
-                <button
-                  type="button"
-                  role="switch"
-                  :aria-checked="row.maintenance_mode"
-                  :disabled="saving"
-                  class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors disabled:opacity-50"
-                  :class="row.maintenance_mode ? 'bg-amber-500' : 'bg-slate-200 dark:bg-slate-700'"
-                  @click="patchToggle(row, { maintenance_mode: !row.maintenance_mode })"
-                >
-                  <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200" :class="row.maintenance_mode ? 'translate-x-5' : 'translate-x-0'" />
-                </button>
-              </div>
-              <div class="flex flex-col items-center gap-1.5">
-                <span class="text-xs font-medium text-violet-600 dark:text-violet-400">Nâng cấp</span>
-                <button
-                  type="button"
-                  role="switch"
-                  :aria-checked="row.upgrade_notice"
-                  :disabled="saving"
-                  class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors disabled:opacity-50"
-                  :class="row.upgrade_notice ? 'bg-violet-500' : 'bg-slate-200 dark:bg-slate-700'"
-                  @click="patchToggle(row, { upgrade_notice: !row.upgrade_notice })"
-                >
-                  <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200" :class="row.upgrade_notice ? 'translate-x-5' : 'translate-x-0'" />
-                </button>
-              </div>
-            </div>
-
-            <!-- Nav affected (mobile) -->
-            <div v-if="navLinksForKey(row.key).length || relatedPermsForKey(row.key).length" class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-800">
-              <button type="button" class="flex items-center gap-1 text-xs font-medium text-teal-600 dark:text-teal-400" @click="toggleExpand(row.id)">
-                <LinkIcon class="h-3.5 w-3.5" aria-hidden="true" />
-                {{ expandedId === row.id ? 'Ẩn chi tiết' : 'Menu & quyền liên quan' }}
-              </button>
-              <div v-if="expandedId === row.id" class="mt-2 space-y-2">
-                <div v-if="navLinksForKey(row.key).length" class="flex flex-wrap gap-1.5">
-                  <span
-                    v-for="link in navLinksForKey(row.key)"
-                    :key="link.to"
-                    class="rounded-lg border border-teal-200/60 bg-slate-50 px-2 py-1 text-xs text-slate-600 dark:border-teal-800/40 dark:bg-slate-800 dark:text-slate-300"
-                  >
-                    {{ navLinkLabel(link) }}
-                  </span>
-                </div>
-                <ul v-if="relatedPermsForKey(row.key).length" class="space-y-1">
-                  <li
-                    v-for="perm in relatedPermsForKey(row.key)"
-                    :key="perm"
-                    class="rounded-lg border border-violet-200/50 bg-slate-50 px-2 py-1.5 text-xs dark:border-violet-900/40 dark:bg-slate-800"
-                  >
-                    <span class="font-semibold text-slate-800 dark:text-slate-100">{{ getCapabilityLabelForPerm(perm) }}</span>
-                    <p v-if="relatedPermHint(perm)" class="mt-0.5 text-[11px] text-slate-500">{{ relatedPermHint(perm) }}</p>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </template>
-
-    <!-- ── Add modal ─────────────────────────────────────────────────────── -->
     <Teleport to="body">
     <div
       v-if="addModalOpen"
@@ -697,74 +479,52 @@ onActivated(() => {
     >
       <Card class="max-h-[90vh] w-full max-w-lg overflow-y-auto shadow-xl">
         <div class="mb-4 flex items-center justify-between">
-          <h2 id="feature-add-title" class="text-sm font-semibold text-slate-900 dark:text-slate-100">Thêm tính năng mới</h2>
+          <h2 id="feature-add-title" class="text-sm font-semibold text-slate-900 dark:text-slate-100">Th?m t?nh n?ng m?i</h2>
           <button type="button" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800" @click="addModalOpen = false">
             <XMarkIcon class="h-5 w-5" />
           </button>
         </div>
 
         <form class="space-y-4" @submit.prevent="submitAdd">
-          <Select v-model="presetIdx" label="Chọn từ mẫu có sẵn">
-            <option value="">— Không dùng mẫu —</option>
+          <Select v-model="presetIdx" label="Ch?n t? m?u c? s?n">
+            <option value="">? Kh?ng d?ng m?u ?</option>
             <option v-for="(row, i) in SEED_FEATURE_TOGGLE_PRESETS" :key="row.key" :value="String(i)">
               {{ row.name }} ({{ row.key }})
             </option>
           </Select>
 
           <div class="grid gap-4 sm:grid-cols-2">
-            <Input v-model="form.key" label="Khoá (Key) *" placeholder="vd. module.reports" required />
-            <Input v-model="form.name" label="Tên hiển thị *" placeholder="vd. Báo cáo" required />
+            <Input v-model="form.key" label="Kho? (Key) *" placeholder="vd. module.reports" required />
+            <Input v-model="form.name" label="T?n hi?n th? *" placeholder="vd. B?o c?o" required />
           </div>
 
-          <Input v-model="form.module" label="Nhóm (tùy chọn)" placeholder="vd. reports" />
+          <Input v-model="form.module" label="Nh?m (t?y ch?n)" placeholder="vd. reports" />
 
-          <!-- Toggle defaults -->
           <div class="space-y-2 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
-            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">TRẠNG THÁI MẶC ĐỊNH</p>
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">TR?NG TH?I M?C ??NH</p>
             <label class="flex cursor-pointer items-center justify-between gap-2 text-sm text-slate-700 dark:text-slate-300">
-              <span>Bật tính năng</span>
-              <button
-                type="button"
-                role="switch"
-                :aria-checked="form.is_enabled"
-                class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 border-transparent transition-colors"
-                :class="form.is_enabled ? 'bg-teal-500' : 'bg-slate-200 dark:bg-slate-700'"
-                @click="form.is_enabled = !form.is_enabled"
-              >
+              <span>B?t t?nh n?ng</span>
+              <button type="button" role="switch" :aria-checked="form.is_enabled" class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 border-transparent transition-colors" :class="form.is_enabled ? 'bg-teal-500' : 'bg-slate-200 dark:bg-slate-700'" @click="form.is_enabled = !form.is_enabled">
                 <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200" :class="form.is_enabled ? 'translate-x-5' : 'translate-x-0'" />
               </button>
             </label>
             <label class="flex cursor-pointer items-center justify-between gap-2 text-sm text-slate-700 dark:text-slate-300">
-              <span>Chế độ bảo trì</span>
-              <button
-                type="button"
-                role="switch"
-                :aria-checked="form.maintenance_mode"
-                class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 border-transparent transition-colors"
-                :class="form.maintenance_mode ? 'bg-amber-500' : 'bg-slate-200 dark:bg-slate-700'"
-                @click="form.maintenance_mode = !form.maintenance_mode"
-              >
+              <span>Ch? ?? b?o tr?</span>
+              <button type="button" role="switch" :aria-checked="form.maintenance_mode" class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 border-transparent transition-colors" :class="form.maintenance_mode ? 'bg-amber-500' : 'bg-slate-200 dark:bg-slate-700'" @click="form.maintenance_mode = !form.maintenance_mode">
                 <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200" :class="form.maintenance_mode ? 'translate-x-5' : 'translate-x-0'" />
               </button>
             </label>
             <label class="flex cursor-pointer items-center justify-between gap-2 text-sm text-slate-700 dark:text-slate-300">
-              <span>Thông báo nâng cấp</span>
-              <button
-                type="button"
-                role="switch"
-                :aria-checked="form.upgrade_notice"
-                class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 border-transparent transition-colors"
-                :class="form.upgrade_notice ? 'bg-violet-500' : 'bg-slate-200 dark:bg-slate-700'"
-                @click="form.upgrade_notice = !form.upgrade_notice"
-              >
+              <span>Th?ng b?o n?ng c?p</span>
+              <button type="button" role="switch" :aria-checked="form.upgrade_notice" class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 border-transparent transition-colors" :class="form.upgrade_notice ? 'bg-violet-500' : 'bg-slate-200 dark:bg-slate-700'" @click="form.upgrade_notice = !form.upgrade_notice">
                 <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200" :class="form.upgrade_notice ? 'translate-x-5' : 'translate-x-0'" />
               </button>
             </label>
           </div>
 
           <div class="flex flex-col-reverse gap-2 border-t border-slate-100 pt-4 dark:border-slate-800 sm:flex-row sm:justify-end">
-            <Button variant="secondary" type="button" :disabled="saving" @click="addModalOpen = false">Huỷ</Button>
-            <Button type="submit" :loading="saving" :disabled="saving || !form.key.trim() || !form.name.trim()">Thêm tính năng</Button>
+            <Button variant="secondary" type="button" :disabled="saving" @click="addModalOpen = false">Hu?</Button>
+            <Button type="submit" :loading="saving" :disabled="saving || !form.key.trim() || !form.name.trim()">Th?m t?nh n?ng</Button>
           </div>
         </form>
       </Card>

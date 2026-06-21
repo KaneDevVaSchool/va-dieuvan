@@ -28,7 +28,9 @@
         </div>
         <div class="min-w-0 flex-1">
           <h2 class="text-lg font-bold tracking-tight text-slate-900">{{ student.full_name }}</h2>
-          <p class="mt-0.5 font-mono text-sm text-slate-500">{{ student.code }}</p>
+          <p class="mt-0.5 font-mono text-sm" :class="student.code ? 'text-slate-500' : 'italic text-slate-400'">
+            {{ student.code?.trim() ? student.code : t('tp_student_page.empty_code') }}
+          </p>
           <div class="mt-2 flex flex-wrap gap-2">
             <span :class="profileStatusClass(student.status)">{{ profileStatusLabel(student.status) }}</span>
             <span :class="transportBadgeClass(student.transport_status)">{{ transportLabel(student.transport_status) }}</span>
@@ -42,10 +44,10 @@
           {{ t('tp_attendance_page.student_detail_session') }}
         </h3>
         <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <DetailItem :label="t('tp_attendance_page.col_status')" :value="sessionStatusLabel" />
-          <DetailItem :label="t('tp_attendance_page.col_boarded_time')" :value="formatBoardedTime(attendanceRow.boarded_at)" />
-          <DetailItem :label="t('tp_attendance_page.col_pickup')" :value="attendanceRow.pickup_point" />
-          <DetailItem v-if="attendanceRow.display_status !== 'present'" :label="t('tp_attendance_page.student_detail_absence_reason')" :value="absenceReasonText" />
+          <DetailItem :label="t('tp_attendance_page.col_status')" :value="sessionStatusLabel" :empty-text="t('tp_student_page.empty_not_available')" />
+          <DetailItem :label="t('tp_attendance_page.col_boarded_time')" :value="formatBoardedTime(attendanceRow.boarded_at)" :empty-text="t('tp_student_page.empty_not_available')" />
+          <DetailItem :label="t('tp_attendance_page.col_pickup')" :value="attendanceRow.pickup_point" :empty-text="t('tp_student_page.empty_pickup')" />
+          <DetailItem v-if="attendanceRow.display_status !== 'present'" :label="t('tp_attendance_page.student_detail_absence_reason')" :value="absenceReasonText" :empty-text="t('tp_student_page.empty_not_available')" />
           <div v-if="attendanceRow.absence_reason" class="sm:col-span-2">
             <DetailItem
               :label="t('tp_attendance_page.col_notes')"
@@ -67,11 +69,11 @@
           {{ t('tp_attendance_page.student_detail_section_student') }}
         </h3>
         <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <DetailItem :label="t('tp_attendance_page.student_detail_grade')" :value="student.grade" />
-          <DetailItem :label="t('tp_attendance_page.col_class')" :value="student.class_name" />
-          <DetailItem :label="t('tp_attendance_page.student_detail_gender')" :value="genderLabel(student.gender)" />
-          <DetailItem :label="t('tp_attendance_page.student_detail_dob')" :value="formatDate(student.date_of_birth)" />
-          <DetailItem :label="t('tp_attendance_page.student_detail_age')" :value="ageText" />
+          <DetailItem :label="t('tp_attendance_page.student_detail_grade')" :value="student.grade" :empty-text="t('tp_student_page.empty_grade')" />
+          <DetailItem :label="t('tp_attendance_page.col_class')" :value="student.class_name" :empty-text="t('tp_student_page.empty_class')" />
+          <DetailItem :label="t('tp_attendance_page.student_detail_gender')" :value="genderLabel(student.gender)" :empty-text="t('tp_student_page.empty_gender')" />
+          <DetailItem :label="t('tp_attendance_page.student_detail_dob')" :value="formatDate(student.date_of_birth)" :empty-text="t('tp_student_page.empty_dob')" />
+          <DetailItem :label="t('tp_attendance_page.student_detail_age')" :value="ageText" :empty-text="t('tp_student_page.empty_not_available')" />
         </dl>
       </section>
 
@@ -81,12 +83,12 @@
           {{ t('tp_attendance_page.student_detail_section_family') }}
         </h3>
         <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <DetailItem :label="t('tp_attendance_page.student_detail_father')" :value="student.father_name" />
-          <DetailItem :label="t('tp_attendance_page.student_detail_father_phone')" :value="student.father_phone" :href="telHref(student.father_phone)" />
-          <DetailItem :label="t('tp_attendance_page.student_detail_mother')" :value="student.mother_name" />
-          <DetailItem :label="t('tp_attendance_page.student_detail_mother_phone')" :value="student.mother_phone" :href="telHref(student.mother_phone)" />
-          <DetailItem :label="t('tp_attendance_page.student_detail_primary_contact')" :value="student.parent_name" />
-          <DetailItem :label="t('tp_attendance_page.col_parent_phone')" :value="student.parent_phone" :href="telHref(student.parent_phone)" />
+          <DetailItem :label="t('tp_attendance_page.student_detail_father')" :value="student.father_name" :empty-text="t('tp_student_page.empty_father_name')" />
+          <DetailItem :label="t('tp_attendance_page.student_detail_father_phone')" :value="student.father_phone" :href="telHref(student.father_phone)" :empty-text="t('tp_student_page.empty_phone')" />
+          <DetailItem :label="t('tp_attendance_page.student_detail_mother')" :value="student.mother_name" :empty-text="t('tp_student_page.empty_mother_name')" />
+          <DetailItem :label="t('tp_attendance_page.student_detail_mother_phone')" :value="student.mother_phone" :href="telHref(student.mother_phone)" :empty-text="t('tp_student_page.empty_phone')" />
+          <DetailItem :label="t('tp_attendance_page.student_detail_primary_contact')" :value="student.parent_name" :empty-text="t('tp_student_page.empty_parent_name')" />
+          <DetailItem :label="t('tp_attendance_page.col_parent_phone')" :value="student.parent_phone" :href="telHref(student.parent_phone)" :empty-text="t('tp_student_page.empty_phone')" />
         </dl>
       </section>
 
@@ -96,8 +98,8 @@
           {{ t('tp_attendance_page.student_detail_section_address') }}
         </h3>
         <dl class="grid grid-cols-1 gap-3">
-          <DetailItem :label="t('tp_attendance_page.student_detail_home_address')" :value="student.address" />
-          <DetailItem :label="t('tp_attendance_page.col_pickup')" :value="student.pickup_point" />
+          <DetailItem :label="t('tp_attendance_page.student_detail_home_address')" :value="student.address" :empty-text="t('tp_student_page.empty_address')" />
+          <DetailItem :label="t('tp_attendance_page.col_pickup')" :value="student.pickup_point" :empty-text="t('tp_student_page.empty_pickup')" />
         </dl>
       </section>
 
@@ -113,10 +115,10 @@
         </h3>
         <template v-if="student.program">
           <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <DetailItem :label="t('tp_attendance_page.student_detail_program_name')" :value="student.program.name" />
-            <DetailItem :label="t('tp_attendance_page.student_detail_program_code')" :value="student.program.code" />
-            <DetailItem :label="t('tp_attendance_page.student_detail_program_status')" :value="programStatusLabel(student.program.status)" />
-            <DetailItem :label="t('tp_attendance_page.student_detail_program_start')" :value="formatDate(student.program.start_date)" />
+            <DetailItem :label="t('tp_attendance_page.student_detail_program_name')" :value="student.program.name" :empty-text="t('tp_student_page.empty_not_available')" />
+            <DetailItem :label="t('tp_attendance_page.student_detail_program_code')" :value="student.program.code" :empty-text="t('tp_student_page.empty_code')" />
+            <DetailItem :label="t('tp_attendance_page.student_detail_program_status')" :value="programStatusLabel(student.program.status)" :empty-text="t('tp_student_page.empty_not_available')" />
+            <DetailItem :label="t('tp_attendance_page.student_detail_program_start')" :value="formatDate(student.program.start_date)" :empty-text="t('tp_student_page.empty_date')" />
           </dl>
         </template>
         <p v-else class="text-sm italic text-slate-400">{{ t('tp_attendance_page.student_detail_no_program') }}</p>
@@ -195,19 +197,24 @@ const DetailItem = defineComponent({
     label: { type: String, required: true },
     value: { type: [String, Number], default: '' },
     href: { type: String, default: '' },
+    emptyText: { type: String, default: '' },
   },
   setup(itemProps) {
+    const { t } = useI18n()
     const empty = computed(() => {
       const v = itemProps.value
       if (v == null) return true
       return String(v).trim() === ''
     })
+    const emptyLabel = computed(
+      () => itemProps.emptyText || t('tp_student_page.empty_not_available'),
+    )
     return () =>
       h('div', { class: 'min-w-0 rounded-lg border border-slate-100 bg-white px-3 py-2.5' }, [
         h('dt', { class: 'text-[11px] font-semibold uppercase tracking-wide text-slate-400' }, itemProps.label),
         h('dd', { class: 'mt-1 text-sm' }, [
           empty.value
-            ? h('span', { class: 'italic text-slate-400' }, '—')
+            ? h('span', { class: 'italic text-slate-400' }, emptyLabel.value)
             : itemProps.href
               ? h(
                   'a',

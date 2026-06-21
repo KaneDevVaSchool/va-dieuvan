@@ -353,6 +353,7 @@
               :icon="vehicleIconComponent(v.iconKind)"
               tone="teal"
               :title="v.code"
+              :title-field-label="t('resources.license_plate')"
               :to="!isInTrashMode ? `/resources/vehicles/${v.id}` : null"
               :subtitle="v.model"
               :status-label="labelVehicleStatus(v.status)"
@@ -444,6 +445,8 @@
               :initials="driverRowInitials(d.name)"
               tone="teal"
               :title="d.name"
+              :title-field-label="t('resources.col_driver_name')"
+              :title-mono="false"
               :to="!isInTrashMode ? { name: 'driverDetail', params: { id: d.id } } : null"
               :status-label="labelVehicleStatus(d.uiStatus)"
               :status-class="statusBadgeClass(d.uiStatus)"
@@ -538,6 +541,8 @@
               :icon="BuildingOffice2Icon"
               tone="indigo"
               :title="s.name"
+              :title-field-label="t('resources.col_supplier')"
+              :title-mono="false"
               :subtitle="s.typeLabel"
               :status-label="labelProviderStatus(s.uiStatus)"
               :status-class="statusBadgeClass(s.uiStatus)"
@@ -3205,16 +3210,22 @@ function labelVehicleStatus(s) {
 }
 
 // ---- Card view-models (trip-style record cards) ----
+function complianceStatusLabel(doc) {
+  if (doc.state === 'none') return t('resources.empty_date')
+  if (doc.state === 'ok') return t('resources.compliance_ok')
+  if (doc.state === 'soon') return t('resources.exp_in_days', { n: doc.days })
+  return t('resources.compliance_exp')
+}
+
 function compliancePill(label, doc) {
-  const hint = insuranceHint(doc)
-  return { label: hint ? `${label} ${hint}` : label, class: compliancePillClass(doc) }
+  return { label, value: complianceStatusLabel(doc), class: compliancePillClass(doc) }
 }
 
 function vehicleCardPills(v) {
   return [
     compliancePill(t('resources.tag_ins'), v.insurance),
     compliancePill(t('resources.tag_reg'), v.inspection),
-    compliancePill('Phí ĐB', v.road_fee),
+    compliancePill(t('resources.tag_road_fee'), v.road_fee),
   ]
 }
 
@@ -3255,7 +3266,7 @@ function vehicleCardFields(v) {
 
 function driverCardPills(d) {
   if (!d.license_expires_at) return []
-  return [compliancePill(t('driver_detail.license_expires'), d.licenseExpiry)]
+  return [compliancePill(t('resources.col_license'), d.licenseExpiry)]
 }
 
 function driverCardFields(d) {

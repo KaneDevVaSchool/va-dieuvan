@@ -1,20 +1,13 @@
 <script setup>
 import { computed, onActivated, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
-  MagnifyingGlassIcon,
   FunnelIcon,
   XMarkIcon,
   PlusIcon,
-  PencilSquareIcon,
-  TrashIcon,
-  DocumentDuplicateIcon,
-  UserGroupIcon,
   ShieldCheckIcon,
-  ChevronRightIcon,
   SparklesIcon,
-  ChevronDownIcon,
-  UsersIcon,
 } from '@heroicons/vue/24/outline'
 import { JOB_ROLE_TEMPLATES } from '../../config/jobRoleTemplates.js'
 import { getPermissionFriendlyTitle } from '../../config/businessCapabilities.js'
@@ -23,50 +16,54 @@ import { formatApiError } from '../../api/http'
 import { showAppError, showAppSuccess } from '../../composables/appMessage'
 import { confirmAction } from '../../composables/useConfirm'
 import { debounceTrailing } from '../../composables/useDebounce'
-import { useFilterBarVisibility } from '../../composables/useFilterBarVisibility.js'
-import AppFilterBar from '../../components/filters/AppFilterBar.vue'
-import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vue'
+import { useVisibleFilterControls } from '../../composables/useVisibleFilterControls.js'
+import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
+import SystemRolesSummaryBar from '../../components/system/SystemRolesSummaryBar.vue'
+import SystemRoleRecordCard from '../../components/system/SystemRoleRecordCard.vue'
+import DatagridToolbarSearch from '../../components/shared/ui/DatagridToolbarSearch.vue'
+import DatagridToolbarActionButton from '../../components/shared/ui/DatagridToolbarActionButton.vue'
+import DatagridFilterField from '../../components/shared/ui/DatagridFilterField.vue'
+import FilterVisibilityDropdown from '../../components/shared/ui/FilterVisibilityDropdown.vue'
 
 const router = useRouter()
+const { t } = useI18n()
 
-const ROLE_FILTER_VIS_IDS = ['users', 'template']
-const ROLE_FILTER_VIS_DEFAULTS = Object.fromEntries(ROLE_FILTER_VIS_IDS.map((id) => [id, false]))
-const {
-  visible: filterBarVisible,
-  resetVisibility: resetFilterBarVisibility,
-  hasVisibleOnBar: hasVisibleBarFilters,
-} = useFilterBarVisibility(ROLE_FILTER_VIS_IDS, ROLE_FILTER_VIS_DEFAULTS)
-
-const filterMenuRef = ref(null)
-const filterUsers = ref('all')
-const filterTemplate = ref('all')
-
-const roleFilterVisibilityOptions = [
-  { id: 'users', label: 'Nhân viên được gán' },
-  { id: 'template', label: 'Loại vai trò (mẫu)' },
+const ROLE_FILTER_CONTROLS = [
+  { key: 'users', label: 'Nhân viên được gán', default: false },
+  { key: 'template', label: 'Loại vai trò', default: false },
 ]
 
-const activeRoleSearchFilter = computed(() => {
-  let n = 0
-  if (debouncedQuery.value.trim()) n++
-  if (filterUsers.value !== 'all') n++
-  if (filterTemplate.value !== 'all') n++
-  return n
-})
+const {
+  visibleFilters,
+  hasFilterRow,
+  showFilterPanelDd,
+  openFilterPanel,
+  closeFilterPanel,
+  filterControlDefs,
+} = useVisibleFilterControls(ROLE_FILTER_CONTROLS, 'va-dieuvan.system.roles.filters.v1')
 
-function onSystemRolesFilterBarEnter() {
-  resetFilterBarVisibility()
+const datagridRef = ref(null)
+useDetailsAutoCloseWithin(datagridRef)
+
+function toggleFilterPanel() {
+  openFilterPanel()
 }
 
-function closeFilterMenu() {
-  filterMenuRef.value?.close?.()
-}
+const FILTER_CONTROL_CLASS =
+  'input h-10 w-full text-sm rounded-lg border border-slate-200 bg-white px-3 text-slate-900 shadow-sm focus:border-va-700 focus:outline-none focus:ring-2 focus:ring-va-700/15 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100'
+
+const filterUsers = ref('all')
+const filterTemplate = ref('all')
 
 function clearRoleSearch() {
   query.value = ''
   debouncedQuery.value = ''
   filterUsers.value = 'all'
   filterTemplate.value = 'all'
+}
+
+function onKpiQuickFilter(payload) {
+  if (payload?.users) filterUsers.value = payload.users
 }
 
 // ─── State ───────────────────────────────────────────────────────────────────
@@ -123,6 +120,23 @@ function getRoleIcon(role) {
 function getRoleColorKey(role) {
   const tpl = matchTemplate(role)
   return tpl?.colorKey ?? 'slate'
+}
+
+const ROLE_COLOR_BAR = {
+  blue: 'bg-blue-400',
+  teal: 'bg-teal-400',
+  amber: 'bg-amber-400',
+  green: 'bg-green-400',
+  indigo: 'bg-indigo-400',
+  purple: 'bg-purple-400',
+  violet: 'bg-violet-400',
+  rose: 'bg-rose-400',
+  cyan: 'bg-cyan-400',
+  slate: 'bg-slate-300',
+}
+
+function roleColorBarClass(role) {
+  return ROLE_COLOR_BAR[getRoleColorKey(role)] ?? ROLE_COLOR_BAR.slate
 }
 
 const filteredRoles = computed(() => {
@@ -212,14 +226,9 @@ async function remove(role) {
   }
 }
 
-onMounted(() => {
-  onSystemRolesFilterBarEnter()
-  load()
-})
+onMounted(() => load())
 
-onActivated(() => {
-  onSystemRolesFilterBarEnter()
-})
+onActivated(() => load())
 </script>
 
 <template>
@@ -244,278 +253,136 @@ onActivated(() => {
       </button>
     </div>
 
-    <!-- ── Stats strip ─────────────────────────────────────────────────────── -->
-    <div v-if="!loading && roles.length" class="grid grid-cols-2 gap-3 sm:grid-cols-3">
-      <div class="rounded-2xl border border-slate-200/80 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
-        <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Vai trò đang dùng</p>
-        <p class="mt-1 text-2xl font-bold text-slate-900 tabular-nums dark:text-slate-50">{{ roles.length }}</p>
-      </div>
-      <div class="rounded-2xl border border-slate-200/80 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
-        <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Nhân viên được gán</p>
-        <p class="mt-1 text-2xl font-bold text-slate-900 tabular-nums dark:text-slate-50">{{ totalUsers }}</p>
-      </div>
-      <div class="col-span-2 rounded-2xl border border-slate-200/80 bg-white px-4 py-3 sm:col-span-1 dark:border-slate-700 dark:bg-slate-900">
-        <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Mẫu có sẵn</p>
-        <p class="mt-1 text-2xl font-bold text-slate-900 tabular-nums dark:text-slate-50">{{ JOB_ROLE_TEMPLATES.length - 1 }}</p>
-      </div>
-    </div>
+    <SystemRolesSummaryBar
+      :roles="roles"
+      :template-count="JOB_ROLE_TEMPLATES.length - 1"
+      :loading="loading"
+      :active-users-filter="filterUsers"
+      @quick-filter="onKpiQuickFilter"
+    />
 
-    <AppFilterBar>
-      <div class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
-        <AppFilterFunnelMenu ref="filterMenuRef" :badge-count="activeRoleSearchFilter">
-          <p class="text-xs font-semibold uppercase text-slate-500">Bộ lọc đang áp dụng</p>
-          <ul class="mt-2 space-y-2 text-sm text-slate-700">
-            <li v-if="query.trim()" class="flex justify-between gap-2"><span class="text-slate-500">Tìm kiếm</span><span class="truncate font-medium">{{ query }}</span></li>
-            <li v-if="filterUsers !== 'all'" class="flex justify-between gap-2">
-              <span class="text-slate-500">Nhân viên</span>
-              <span class="font-medium">{{ filterUsers === 'with_users' ? 'Có người dùng' : 'Chưa gán ai' }}</span>
-            </li>
-            <li v-if="filterTemplate !== 'all'" class="flex justify-between gap-2">
-              <span class="text-slate-500">Loại vai trò</span>
-              <span class="font-medium">{{ filterTemplate === 'template' ? 'Theo mẫu' : 'Tùy chỉnh' }}</span>
-            </li>
-            <li v-if="activeRoleSearchFilter === 0" class="text-slate-400">Chưa có điều kiện lọc</li>
-          </ul>
-          <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
-            <p class="text-[11px] font-semibold uppercase text-violet-700 dark:text-violet-300">Hiển thị bộ lọc trên thanh</p>
-            <ul class="mt-2 space-y-2">
-              <li v-for="opt in roleFilterVisibilityOptions" :key="'role-vis-' + opt.id" class="flex gap-2">
-                <input :id="'role-filter-vis-' + opt.id" v-model="filterBarVisible[opt.id]" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" />
-                <label :for="'role-filter-vis-' + opt.id" class="text-sm">{{ opt.label }}</label>
-              </li>
-            </ul>
+    <div
+      ref="datagridRef"
+      class="overflow-visible rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40"
+    >
+      <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+        <div class="mb-2">
+          <h2 class="text-sm font-semibold text-slate-800 dark:text-slate-100">
+            {{ t('system_pages.roles.list_title') }}
+            <span class="ml-1 text-xs font-normal text-slate-400">({{ filteredRoles.length }})</span>
+          </h2>
+        </div>
+        <div class="flex w-full min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
+          <div class="min-w-0 w-full basis-full lg:min-w-[10rem] lg:flex-1 lg:basis-auto">
+            <DatagridToolbarSearch
+              v-model="query"
+              input-id="system-roles-search"
+              :placeholder="t('system_pages.roles.search_ph')"
+              :aria-label="t('system_pages.roles.search_aria')"
+              stretch
+              inline-actions
+              hide-label
+              input-height="h-10"
+              @update:model-value="bumpQ"
+            />
           </div>
-          <button type="button" class="mt-3 w-full rounded-lg border py-2 text-sm" @click="clearRoleSearch(); closeFilterMenu()">Xóa bộ lọc</button>
-        </AppFilterFunnelMenu>
-        <div class="hidden h-6 w-px bg-slate-200 sm:block dark:bg-slate-700" />
-        <button type="button" class="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500" @click="clearRoleSearch">
-          <span class="relative inline-flex">
-            <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-            <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 text-rose-500" aria-hidden="true" />
-          </span>
-        </button>
-        <div class="relative min-w-0 flex-1 basis-[10rem] sm:min-w-[12rem] sm:max-w-md">
-          <MagnifyingGlassIcon class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-          <input
-            v-model="query"
-            type="search"
-            placeholder="Tìm theo tên vai trò hoặc mô tả…"
-            aria-label="Tìm vai trò"
-            class="h-9 w-full rounded-md border-0 bg-white/90 py-0 pl-9 pr-3 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600 dark:placeholder:text-slate-500"
-            @input="bumpQ"
-          />
+          <div class="flex shrink-0 items-center gap-2">
+            <FilterVisibilityDropdown
+              :open="showFilterPanelDd"
+              :title="t('system_pages.filter_show_controls_title')"
+              :hint="t('system_pages.filter_show_controls_hint')"
+              @close="closeFilterPanel"
+            >
+              <template #trigger>
+                <DatagridToolbarActionButton
+                  icon="filter"
+                  :active="showFilterPanelDd"
+                  test-id="system-roles-toolbar-filter"
+                  @click="toggleFilterPanel"
+                >
+                  {{ t('system_pages.toolbar_filter') }}
+                </DatagridToolbarActionButton>
+              </template>
+              <li v-for="fd in filterControlDefs" :key="'role-vis-' + fd.key" class="flex items-start gap-2">
+                <input :id="'role-filter-vis-' + fd.key" v-model="visibleFilters[fd.key]" type="checkbox" class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-va-800" />
+                <label :for="'role-filter-vis-' + fd.key" class="cursor-pointer text-sm text-slate-700 dark:text-slate-300">{{ fd.label }}</label>
+              </li>
+            </FilterVisibilityDropdown>
+            <button type="button" class="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-sm text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800" :title="t('system_pages.clear_filters')" data-testid="system-roles-reset-filters" @click="clearRoleSearch">
+              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
+              <XMarkIcon class="h-3 w-3 text-rose-500" aria-hidden="true" />
+            </button>
+          </div>
         </div>
       </div>
-      <div v-if="hasVisibleBarFilters" class="mt-2 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-2 dark:border-slate-700">
-        <select
-          v-if="filterBarVisible.users"
-          v-model="filterUsers"
-          class="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
-          :class="filterUsers === 'all' ? 'text-slate-500' : 'text-slate-900 dark:text-slate-100'"
-        >
-          <option value="all">Nhân viên được gán</option>
-          <option value="with_users">Có người dùng</option>
-          <option value="empty">Chưa gán ai</option>
-        </select>
-        <select
-          v-if="filterBarVisible.template"
-          v-model="filterTemplate"
-          class="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
-          :class="filterTemplate === 'all' ? 'text-slate-500' : 'text-slate-900 dark:text-slate-100'"
-        >
-          <option value="all">Loại vai trò</option>
-          <option value="template">Theo mẫu công việc</option>
-          <option value="custom">Tùy chỉnh</option>
-        </select>
-      </div>
-    </AppFilterBar>
 
-    <!-- ── Loading ─────────────────────────────────────────────────────────── -->
-    <div v-if="loading" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <div
-        v-for="i in 6"
-        :key="i"
-        class="h-40 animate-pulse rounded-2xl border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800"
-      />
-    </div>
-
-    <!-- ── Empty state ────────────────────────────────────────────────────── -->
-    <template v-else-if="!roles.length">
-      <div class="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 py-16 text-center dark:border-slate-700 dark:bg-slate-900/30">
-        <ShieldCheckIcon class="mb-4 h-14 w-14 text-slate-300 dark:text-slate-600" />
-        <p class="text-base font-semibold text-slate-700 dark:text-slate-300">Chưa có vai trò nào</p>
-        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Tạo vai trò đầu tiên bằng cách chọn một mẫu công việc.</p>
-        <button
-          type="button"
-          class="mt-5 inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-teal-700"
-          @click="openNew"
-        >
-          <PlusIcon class="h-4 w-4" />
-          Tạo vai trò đầu tiên
-        </button>
-      </div>
-    </template>
-
-    <template v-else>
-      <!-- ── No search match ──────────────────────────────────────────────── -->
-      <div
-        v-if="filteredRoles.length === 0"
-        class="rounded-2xl border border-amber-200/80 bg-amber-50/60 py-10 text-center text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200"
-      >
-        Không có vai trò nào khớp với "{{ debouncedQuery }}".
+      <div v-if="hasFilterRow" class="grid grid-cols-1 gap-3 border-t border-slate-100 px-5 py-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 dark:border-slate-700">
+        <DatagridFilterField v-if="visibleFilters.users">
+          <select v-model="filterUsers" :class="FILTER_CONTROL_CLASS" :aria-label="t('system_pages.roles.filter_users')" data-testid="system-roles-filter-users">
+            <option value="all">{{ t('system_pages.roles.filter_users') }}</option>
+            <option value="with_users">Có người dùng</option>
+            <option value="empty">Chưa gán ai</option>
+          </select>
+        </DatagridFilterField>
+        <DatagridFilterField v-if="visibleFilters.template">
+          <select v-model="filterTemplate" :class="FILTER_CONTROL_CLASS" :aria-label="t('system_pages.roles.filter_template')" data-testid="system-roles-filter-template">
+            <option value="all">{{ t('system_pages.roles.filter_template') }}</option>
+            <option value="template">Theo mẫu công việc</option>
+            <option value="custom">Tùy chỉnh</option>
+          </select>
+        </DatagridFilterField>
       </div>
 
-      <!-- ── Role cards grid ─────────────────────────────────────────────── -->
-      <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <article
-          v-for="role in filteredRoles"
-          :key="role.id"
-          class="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm transition hover:border-slate-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:hover:border-slate-600"
-        >
-          <!-- Card top color accent -->
-          <div
-            class="h-1 w-full"
-            :class="{
-              'bg-blue-400':   getRoleColorKey(role) === 'blue',
-              'bg-teal-400':   getRoleColorKey(role) === 'teal',
-              'bg-amber-400':  getRoleColorKey(role) === 'amber',
-              'bg-green-400':  getRoleColorKey(role) === 'green',
-              'bg-indigo-400': getRoleColorKey(role) === 'indigo',
-              'bg-purple-400': getRoleColorKey(role) === 'purple',
-              'bg-violet-400': getRoleColorKey(role) === 'violet',
-              'bg-rose-400':   getRoleColorKey(role) === 'rose',
-              'bg-cyan-400':   getRoleColorKey(role) === 'cyan',
-              'bg-slate-300':  getRoleColorKey(role) === 'slate',
-            }"
+      <div v-if="loading" class="space-y-2 p-4 sm:p-5">
+        <div v-for="i in 6" :key="i" class="h-24 animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800" />
+      </div>
+
+      <template v-else-if="!roles.length">
+        <div class="flex flex-col items-center py-16 text-center">
+          <ShieldCheckIcon class="mb-4 h-14 w-14 text-slate-300 dark:text-slate-600" />
+          <p class="text-base font-semibold text-slate-700 dark:text-slate-300">Chưa có vai trò nào</p>
+          <button type="button" class="mt-5 inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-700" data-testid="system-roles-create-first" @click="openNew">
+            <PlusIcon class="h-4 w-4" />
+            Tạo vai trò đầu tiên
+          </button>
+        </div>
+      </template>
+
+      <template v-else>
+        <div v-if="filteredRoles.length === 0" class="border-t border-slate-100 py-10 text-center text-sm text-amber-800 dark:border-slate-700 dark:text-amber-200">
+          Không có vai trò nào khớp bộ lọc.
+        </div>
+        <div v-else class="space-y-2 border-t border-slate-100 p-3 sm:p-4 dark:border-slate-700">
+          <SystemRoleRecordCard
+            v-for="role in filteredRoles"
+            :key="role.id"
+            :role="role"
+            :icon="getRoleIcon(role)"
+            :color-bar-class="roleColorBarClass(role)"
+            :expanded="expandedPermRoleId === role.id"
+            :perm-loading="permLoading"
+            :permissions="permsByRoleId[role.id] ?? []"
+            :perm-title-fn="getPermissionFriendlyTitle"
+            :saving="saving"
+            @detail="openDetail(role)"
+            @assign-users="goToUserRoles(role)"
+            @edit="openEdit(role)"
+            @clone="cloneRole(role)"
+            @remove="remove(role)"
+            @toggle-perms="togglePermissions(role)"
           />
-
-          <!-- Card body -->
-          <div class="flex flex-1 flex-col p-5">
-            <!-- Icon + name -->
-            <div class="mb-3 flex items-start gap-3">
-              <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-2xl dark:bg-slate-800">
-                {{ getRoleIcon(role) }}
-              </span>
-              <div class="min-w-0 flex-1">
-                <h3 class="truncate text-base font-semibold text-slate-900 dark:text-slate-50">
-                  {{ role.display_name || role.name }}
-                </h3>
-                <p v-if="role.description" class="mt-0.5 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">
-                  {{ role.description }}
-                </p>
-                <p v-else class="mt-0.5 text-xs italic text-slate-400 dark:text-slate-600">Chưa có mô tả</p>
-              </div>
-            </div>
-
-            <!-- Stats row -->
-            <div class="mt-auto flex items-center gap-4 border-t border-slate-100 pt-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
-              <span class="flex items-center gap-1.5">
-                <UserGroupIcon class="h-3.5 w-3.5" />
-                <span class="font-semibold text-slate-700 dark:text-slate-300">{{ role.users_count ?? 0 }}</span>
-                nhân viên
-              </span>
-              <!-- Badge permissions — click để expand -->
-              <button
-                type="button"
-                class="flex items-center gap-1.5 transition hover:text-slate-800 dark:hover:text-slate-200"
-                :title="expandedPermRoleId === role.id ? 'Ẩn danh sách quyền' : 'Xem danh sách quyền'"
-                @click="togglePermissions(role)"
-              >
-                <ShieldCheckIcon class="h-3.5 w-3.5" />
-                <span class="font-semibold text-slate-700 dark:text-slate-300">{{ role.permissions_count ?? 0 }}</span>
-                quyền
-                <ChevronDownIcon
-                  class="h-3 w-3 transition-transform duration-200"
-                  :class="{ '-rotate-180': expandedPermRoleId === role.id }"
-                  aria-hidden="true"
-                />
-              </button>
-            </div>
-
-            <!-- Expand: danh sách permissions -->
-            <div v-if="expandedPermRoleId === role.id" class="border-t border-slate-100 px-4 py-3 dark:border-slate-800">
-              <div v-if="permLoading" class="text-xs text-slate-400">Đang tải…</div>
-              <div v-else-if="!permsByRoleId[role.id]?.length" class="text-xs text-slate-400">Chưa có quyền nào.</div>
-              <div v-else class="flex flex-wrap gap-1">
-                <span
-                  v-for="p in permsByRoleId[role.id]"
-                  :key="p.id"
-                  :title="`${p.name}${p.plain_summary ? ' — ' + p.plain_summary : ''}`"
-                  class="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                >{{ getPermissionFriendlyTitle(p) }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Action bar -->
-          <div class="flex items-center justify-between border-t border-slate-100 px-4 py-2.5 dark:border-slate-800">
-            <!-- View detail + Gán nhân viên -->
-            <div class="flex items-center gap-3">
-              <button
-                type="button"
-                class="flex items-center gap-1 text-xs font-medium text-teal-600 transition hover:text-teal-800 dark:text-teal-400 dark:hover:text-teal-200"
-                @click="openDetail(role)"
-              >
-                Xem chi tiết
-                <ChevronRightIcon class="h-3.5 w-3.5" />
-              </button>
-              <button
-                type="button"
-                class="flex items-center gap-1 text-xs font-medium text-violet-600 transition hover:text-violet-800 dark:text-violet-400 dark:hover:text-violet-200"
-                :title="`Gán nhân viên vào vai trò ${role.display_name || role.name}`"
-                @click="goToUserRoles(role)"
-              >
-                <UsersIcon class="h-3.5 w-3.5" />
-                Gán nhân viên
-              </button>
-            </div>
-
-            <!-- Quick actions -->
-            <div class="flex items-center gap-0.5">
-              <button
-                type="button"
-                title="Chỉnh sửa"
-                class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                :disabled="saving"
-                @click="openEdit(role)"
-              >
-                <PencilSquareIcon class="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                title="Nhân bản"
-                class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                :disabled="saving"
-                @click="cloneRole(role)"
-              >
-                <DocumentDuplicateIcon class="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                title="Xóa vai trò"
-                class="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-30 dark:hover:bg-red-950/40 dark:hover:text-red-400"
-                :disabled="saving || role.name === 'superadmin'"
-                @click="remove(role)"
-              >
-                <TrashIcon class="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        </article>
-
-        <!-- New role CTA card -->
-        <button
-          type="button"
-          class="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-200 bg-transparent py-10 text-slate-400 transition hover:border-teal-300 hover:bg-teal-50/40 hover:text-teal-600 dark:border-slate-700 dark:hover:border-teal-700 dark:hover:bg-teal-950/20 dark:hover:text-teal-400"
-          @click="openNew"
-        >
-          <span class="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800">
-            <SparklesIcon class="h-6 w-6" />
-          </span>
-          <span class="text-sm font-medium">Tạo vai trò mới</span>
-        </button>
-      </div>
-    </template>
+          <button
+            type="button"
+            class="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-50/90 py-8 text-slate-500 transition hover:bg-teal-50/80 hover:text-teal-700 dark:bg-slate-800/35 dark:hover:bg-teal-950/30 dark:hover:text-teal-400"
+            data-testid="system-roles-create-inline"
+            @click="openNew"
+          >
+            <SparklesIcon class="h-5 w-5" aria-hidden="true" />
+            Tạo vai trò mới
+          </button>
+        </div>
+      </template>
+    </div>
 
   </div>
 </template>

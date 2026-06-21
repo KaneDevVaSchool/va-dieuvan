@@ -8,8 +8,8 @@
 <script setup>
 import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import { isDispatchStaffHomePath } from '../../config/dispatchWebBase'
 import { NAV_ICON_MAP } from '../../config/navIconMap'
+import { isNavRouteActive } from '../../util/isNavRouteActive'
 
 const props = defineProps({
   to: { type: String, required: true },
@@ -20,12 +20,7 @@ const props = defineProps({
 const route = useRoute()
 const IconComp = computed(() => NAV_ICON_MAP[props.icon] ?? NAV_ICON_MAP.home)
 
-const isActive = computed(() => {
-  if (isDispatchStaffHomePath(props.to)) {
-    return isDispatchStaffHomePath(route.path)
-  }
-  return route.path === props.to || route.path.startsWith(`${props.to}/`)
-})
+const isActive = computed(() => isNavRouteActive(props.to, route.path))
 
 const linkClass = computed(() => [
   'flex flex-col items-center justify-center gap-0.5 px-0.5 py-2 text-[10px] leading-tight sm:text-[11px]',

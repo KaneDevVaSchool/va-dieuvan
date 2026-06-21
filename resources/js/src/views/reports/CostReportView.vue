@@ -46,7 +46,9 @@
       :has-visible-bar-filters="hasVisibleBarFilters"
       :show-filter-panel="showFilterPanelDd"
       :loading="loading"
-      @reload="reload"
+      :exporting="exporting"
+      @export-xlsx="doExportXlsx"
+      @export-pdf="doExportPdf"
       @reset-filters="resetFilters"
       @patch-filter="onPatchFilter"
       @toggle-filter-panel="toggleFilterPanel"
@@ -115,7 +117,7 @@
           <div class="mb-2 flex flex-wrap items-center gap-2">
             <h2 id="cr-table-title" class="text-sm font-semibold text-slate-800 dark:text-slate-100">
               {{ t('cost_report.table_title') }}
-              <span v-if="filteredRows.length" class="ml-1 text-xs font-normal text-slate-400">({{ filteredRows.length }})</span>
+              <span class="ml-1 text-xs font-normal text-slate-400">({{ filteredRows.length }})</span>
             </h2>
           </div>
           <div class="flex w-full min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
@@ -199,21 +201,6 @@
                   </button>
                 </div>
               </details>
-              <label class="inline-flex shrink-0 items-center gap-1.5">
-                <span class="sr-only">{{ t('filter_bar.per_page') }}</span>
-                <select
-                  v-model.number="detailPerPage"
-                  class="input h-10 w-full min-w-[4.5rem] rounded-lg border border-slate-200 bg-white px-2 text-sm dark:border-slate-600 dark:bg-slate-950"
-                  :aria-label="t('filter_bar.per_page')"
-                  data-testid="cost-report-per-page"
-                  @change="onDetailPerPageChange"
-                >
-                  <option :value="5">5</option>
-                  <option :value="10">10</option>
-                  <option :value="15">15</option>
-                  <option :value="20">20</option>
-                </select>
-              </label>
             </div>
           </div>
         </div>
@@ -312,7 +299,6 @@ const STATUS_FILTER_KEYS = ['draft', 'submitted', 'confirmed', 'rejected', 'esti
 const CHART_PALETTE = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899', '#f97316']
 
 const COST_REPORT_COL_VISIBILITY_KEY = 'va.cost_report.col_visibility_v1'
-const COST_REPORT_DETAIL_PER_PAGE_KEY = 'va.cost_report.detail_per_page_v1'
 const COST_REPORT_FILTER_VIS_KEY = 'va.cost_report.filter_visibility.v2'
 
 const FILTER_CONTROL_IDS = ['date', 'trip_type', 'status', 'fleet_mode']
@@ -329,7 +315,7 @@ const COL_IDS = [
   'status',
 ]
 
-const DEFAULT_DETAIL_PER_PAGE = 10
+const DEFAULT_DETAIL_PER_PAGE = 5
 
 function defaultFilterControlVisibility() {
   return Object.fromEntries(FILTER_CONTROL_IDS.map((id) => [id, false]))
@@ -355,7 +341,7 @@ function defaultColVisibility() {
 }
 
 function statusLabel(s) {
-  if (!s) return '—'
+  if (!s) return t('cost_report.empty_status')
   if (s === 'estimate') return t('cost_report.badge_estimate')
   const key = `dashboard_analytics.cost_status_${s}`
   return te(key) ? t(key) : s
@@ -648,15 +634,6 @@ function detailPageStep(delta) {
   detailPage.value = next
 }
 
-function onDetailPerPageChange() {
-  detailPage.value = 1
-  try {
-    localStorage.setItem(COST_REPORT_DETAIL_PER_PAGE_KEY, String(detailPerPage.value))
-  } catch {
-    /* ignore */
-  }
-}
-
 function loadColVisibility() {
   try {
     const raw = localStorage.getItem(COST_REPORT_COL_VISIBILITY_KEY)
@@ -667,16 +644,6 @@ function loadColVisibility() {
       if (typeof o[id] === 'boolean') base[id] = o[id]
     }
     Object.assign(colVisible, base)
-  } catch {
-    /* ignore */
-  }
-}
-
-function loadDetailPerPage() {
-  try {
-    const raw = localStorage.getItem(COST_REPORT_DETAIL_PER_PAGE_KEY)
-    const n = Number(raw)
-    if ([5, 10, 15, 20].includes(n)) detailPerPage.value = n
   } catch {
     /* ignore */
   }
@@ -730,7 +697,6 @@ async function doExportPdf() {
 
 onMounted(() => {
   loadColVisibility()
-  loadDetailPerPage()
   reload()
 })
 

@@ -71,7 +71,7 @@
 import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { isDispatchStaffHomePath } from '../../config/dispatchWebBase'
+import { isNavRouteActive } from '../../util/isNavRouteActive'
 import { NAV_ICON_MAP } from '../../config/navIconMap'
 
 const props = defineProps({
@@ -103,16 +103,10 @@ const badgeTotal = computed(() =>
   props.children.reduce((sum, c) => sum + props.badgeCount(c), 0),
 )
 
-function pathMatches(to, path) {
-  if (!to) return false
-  if (isDispatchStaffHomePath(to)) return isDispatchStaffHomePath(path)
-  return path === to || path.startsWith(`${to}/`)
-}
-
-const isChildActive = (to) => pathMatches(to, route.path)
+const isChildActive = (to) => isNavRouteActive(to, route.path)
 
 const anyChildActive = computed(() =>
-  props.children.some((c) => pathMatches(c.to, route.path)),
+  props.children.some((c) => isNavRouteActive(c.to, route.path)),
 )
 
 const iconClass = computed(() => {

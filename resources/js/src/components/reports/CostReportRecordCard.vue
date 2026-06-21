@@ -24,6 +24,31 @@ const tripDetailPrefix = computed(() =>
 )
 const { labelProviderDisplay, labelUnitDisplay, tripCodeForRow, categoryLabel } = useCostReportPresentation()
 
+function labelSubmitter(raw) {
+  const v = String(raw ?? '').trim()
+  return v && v !== '—' ? v : t('cost_report.empty_submitter')
+}
+
+function labelDescription(raw) {
+  const v = String(raw ?? '').trim()
+  return v && v !== '—' ? v : t('cost_report.empty_description')
+}
+
+function labelFleetSource(raw) {
+  const v = String(raw ?? '').trim()
+  return v && v !== '—' ? v : t('cost_report.empty_fleet_source')
+}
+
+function labelUnitPrice(value) {
+  if (value != null && value > 0) return formatVnd(value)
+  return t('cost_report.empty_unit_price')
+}
+
+function labelExtraFee(value) {
+  if (value != null && value > 0) return formatVnd(value)
+  return t('cost_report.empty_extra_fee')
+}
+
 const tripCode = computed(() => tripCodeForRow(props.row))
 const isEstimate = computed(() => props.row.source === 'estimate')
 
@@ -56,7 +81,7 @@ const statusPillClass = computed(() => {
 
 const statusText = computed(() => {
   if (props.row.status === 'estimate') return t('cost_report.badge_estimate')
-  return props.row.status_label || props.statusLabelFn(props.row.status) || '—'
+  return props.row.status_label || props.statusLabelFn(props.row.status) || t('cost_report.empty_status')
 })
 
 const showMoneyGrid = computed(
@@ -128,7 +153,7 @@ const showMoneyGrid = computed(
                   {{ t('cost_report.col_submitter') }}
                 </dt>
                 <dd class="mt-0.5 font-medium text-slate-800 dark:text-slate-200">
-                  {{ row.submitter || '—' }}
+                  {{ labelSubmitter(row.submitter) }}
                 </dd>
               </div>
             </dl>
@@ -148,7 +173,7 @@ const showMoneyGrid = computed(
           {{ t('cost_report.col_description') }}
         </p>
         <p class="mt-1 text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100 sm:text-base">
-          {{ row.description || '—' }}
+          {{ labelDescription(row.description) }}
         </p>
       </div>
       <div
@@ -159,7 +184,7 @@ const showMoneyGrid = computed(
           {{ t('cost_report.col_fleet_source') }}
         </p>
         <p class="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
-          {{ row.fleet_source || '—' }}
+          {{ labelFleetSource(row.fleet_source) }}
         </p>
       </div>
       <div
@@ -185,7 +210,7 @@ const showMoneyGrid = computed(
             {{ t('cost_report.col_unit_price') }}
           </dt>
           <dd class="mt-0.5 tabular-nums font-semibold text-slate-800 dark:text-slate-200">
-            {{ row.unit_price != null && row.unit_price > 0 ? formatVnd(row.unit_price) : '—' }}
+            {{ labelUnitPrice(row.unit_price) }}
           </dd>
         </div>
         <div v-if="colVisible.extra_fee">
@@ -193,7 +218,7 @@ const showMoneyGrid = computed(
             {{ t('cost_report.col_extra_fee') }}
           </dt>
           <dd class="mt-0.5 tabular-nums font-semibold text-slate-800 dark:text-slate-200">
-            {{ row.extra_fee != null && row.extra_fee > 0 ? formatVnd(row.extra_fee) : '—' }}
+            {{ labelExtraFee(row.extra_fee) }}
           </dd>
         </div>
         <div v-if="colVisible.payment">

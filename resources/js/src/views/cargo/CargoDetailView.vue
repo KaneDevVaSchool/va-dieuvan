@@ -305,24 +305,16 @@
           </div>
 
           <div class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
-            <div class="flex flex-col gap-3 border-b border-slate-200/90 px-4 py-3 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+            <div class="border-b border-slate-200/90 px-4 py-3 dark:border-slate-700 sm:px-5">
               <h2 class="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
                 <ClockIcon class="h-5 w-5 text-violet-600 dark:text-violet-400" aria-hidden="true" />
                 {{ t('cargo_detail.card_timeline') }}
               </h2>
-              <select
-                v-model="timelineFilter"
-                class="max-w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-800 shadow-sm outline-none ring-teal-500/30 focus:ring-2 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-              >
-                <option value="all">{{ t('cargo_detail.timeline_filter_all') }}</option>
-                <option value="milestone">{{ t('cargo_detail.timeline_filter_milestone') }}</option>
-                <option value="audit">{{ t('cargo_detail.timeline_filter_audit') }}</option>
-              </select>
             </div>
             <div class="px-4 py-4 sm:px-5">
               <div v-if="timelineLoading" class="text-sm text-slate-500 dark:text-slate-400">{{ t('cargo_page.timeline_loading') }}</div>
-              <ul v-else-if="timelineFiltered.length" class="relative ml-1 space-y-4 border-l-2 border-slate-200 pl-5 dark:border-slate-600">
-                <li v-for="(ev, idx) in timelineFiltered" :key="idx + '-' + (ev.at || '') + '-' + (ev.kind || '') + '-' + (ev.code || '')" class="relative">
+              <ul v-else-if="timelineItems.length" class="relative ml-1 space-y-4 border-l-2 border-slate-200 pl-5 dark:border-slate-600">
+                <li v-for="(ev, idx) in timelineItems" :key="idx + '-' + (ev.at || '') + '-' + (ev.code || '')" class="relative">
                   <span
                     class="absolute -left-[calc(1.25rem+5px)] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-teal-600 dark:border-slate-900"
                   />
@@ -331,7 +323,6 @@
                     <span class="tabular-nums text-slate-500 dark:text-slate-400">{{ fmt(ev.at) }}</span>
                   </div>
                   <p v-if="timelineSubtitle(ev)" class="mt-0.5 text-xs text-slate-600 dark:text-slate-400">{{ timelineSubtitle(ev) }}</p>
-                  <p v-if="ev.actor?.name" class="mt-0.5 text-[11px] text-slate-500">{{ ev.actor.name }}</p>
                 </li>
               </ul>
               <p v-else class="text-sm text-slate-500 dark:text-slate-400">{{ t('cargo_page.timeline_empty') }}</p>
@@ -730,7 +721,6 @@ const loadError = ref('')
 const shipment = ref(null)
 const timelineItems = ref([])
 const timelineLoading = ref(true)
-const timelineFilter = ref('all')
 const costItems = ref([])
 const costsLoading = ref(false)
 const costsForbidden = ref(false)
@@ -1304,13 +1294,6 @@ const quickStatusActions = computed(() => {
   return out
 })
 
-const timelineFiltered = computed(() => {
-  const items = timelineItems.value
-  const f = timelineFilter.value
-  if (f === 'all') return items
-  return items.filter((ev) => ev.kind === f)
-})
-
 function quickStatusLabel(status) {
   const key = `cargo_detail.quick_${status}`
   return te(key) ? t(key) : status
@@ -1383,22 +1366,12 @@ function formatMoney(amount, currency) {
 const costsTotal = computed(() => costItems.value.reduce((s, c) => s + (Number(c.amount) || 0), 0))
 
 function timelineTitle(ev) {
-  if (ev.kind === 'milestone') {
-    const key = `labels.cargo_timeline.${ev.code}`
-    return te(key) ? t(key) : ev.code
-  }
-  const key = `labels.cargo_audit.${ev.code}`
+  const key = `labels.cargo_timeline.${ev.code}`
   return te(key) ? t(key) : ev.code
 }
 
 function timelineSubtitle(ev) {
-  if (ev.kind === 'milestone' && ev.detail) return ev.detail
-  if (ev.kind === 'audit' && ev.code === 'cargo.status_change' && ev.after?.status) {
-    const st = ev.after.status
-    const key = `labels.cargo_status.${st}`
-    return te(key) ? t(key) : st
-  }
-  return ''
+  return ev.detail || ''
 }
 
 function setDocumentTitle() {

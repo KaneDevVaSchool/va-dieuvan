@@ -14,7 +14,7 @@ export function useCostReportPresentation() {
 
   function labelProviderDisplay(raw) {
     const v = String(raw ?? '').trim()
-    if (!v || v === '—') return '—'
+    if (!v || v === '—') return t('cost_report.provider_unassigned')
     const i18nKey = PROVIDER_CODE_KEYS[v] || PROVIDER_CODE_KEYS[v.toUpperCase()]
     if (i18nKey && te(i18nKey)) return t(i18nKey)
     return v
@@ -46,7 +46,7 @@ export function useCostReportPresentation() {
 /** @param {string|null|undefined} provider */
 export function labelReportProvider(provider, t, te) {
   const v = String(provider ?? '').trim()
-  if (!v) return '—'
+  if (!v || v === '—') return t('cost_report.provider_unassigned')
   if (v === 'INTERNAL') {
     const key = 'cost_report.provider_internal'
     return te(key) ? t(key) : 'Nội bộ'

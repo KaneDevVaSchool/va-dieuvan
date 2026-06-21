@@ -1,8 +1,11 @@
 <script setup>
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import EmptyValue from '../ui/EmptyValue.vue'
 import { isEmptyDisplay } from '../../util/displayValue'
+
+const { t } = useI18n()
 
 const props = defineProps({
   /** Heroicon component for the leading icon box (ignored when avatar shown). */
@@ -15,6 +18,10 @@ const props = defineProps({
   tone: { type: String, default: 'teal' },
   /** Main heading (license plate / name). */
   title: { type: String, required: true },
+  /** Eyebrow above the title (e.g. license plate / name). */
+  titleFieldLabel: { type: String, default: '' },
+  /** Use monospace for the title (license plates). */
+  titleMono: { type: Boolean, default: true },
   /** Optional router-link target for the title. */
   to: { type: [String, Object], default: null },
   /** Sub line under the title. */
@@ -22,7 +29,7 @@ const props = defineProps({
   /** Status badge text + class. */
   statusLabel: { type: String, default: '' },
   statusClass: { type: String, default: '' },
-  /** Small pills shown next to the status badge: [{ label, class }]. */
+  /** Compliance rows: [{ label, value, class }]. */
   pills: { type: Array, default: () => [] },
   /** Detail fields: [{ label, value, mono?, emptyKey? }]. */
   fields: { type: Array, default: () => [] },
@@ -44,6 +51,12 @@ const TONE_MAP = {
 const iconWrapClass = computed(() => TONE_MAP[props.tone] || TONE_MAP.teal)
 
 const showSubtitle = computed(() => !isEmptyDisplay(props.subtitle))
+
+const titleTextClass = computed(() =>
+  props.titleMono
+    ? 'font-mono text-base font-bold tracking-tight'
+    : 'text-base font-semibold tracking-tight',
+)
 </script>
 
 <template>
@@ -90,26 +103,63 @@ const showSubtitle = computed(() => !isEmptyDisplay(props.subtitle))
           <component :is="icon" class="h-6 w-6" aria-hidden="true" />
         </div>
 
-        <div class="min-w-0 flex-1">
-          <div class="flex flex-wrap items-center gap-2">
-            <RouterLink
-              v-if="to"
-              :to="to"
-              class="truncate font-mono text-base font-bold tracking-tight text-slate-900 underline decoration-slate-300 underline-offset-2 hover:text-teal-700 hover:decoration-teal-400 dark:text-slate-100"
-              @click.stop
-            >
-              {{ title }}
-            </RouterLink>
-            <span v-else class="truncate font-mono text-base font-bold tracking-tight text-slate-900 dark:text-slate-100">
-              {{ title }}
-            </span>
-            <span v-if="statusLabel" :class="statusClass">{{ statusLabel }}</span>
-            <span v-for="(p, i) in pills" :key="i" :class="p.class">{{ p.label }}</span>
+        <div class="min-w-0 flex-1 space-y-2.5">
+          <div class="grid grid-cols-2 gap-x-3 gap-y-1">
+            <div class="min-w-0">
+              <p
+                v-if="titleFieldLabel"
+                class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+              >
+                {{ titleFieldLabel }}
+              </p>
+              <RouterLink
+                v-if="to"
+                :to="to"
+                class="mt-0.5 block truncate text-slate-900 underline decoration-slate-300 underline-offset-2 hover:text-teal-700 hover:decoration-teal-400 dark:text-slate-100"
+                :class="titleTextClass"
+                data-testid="resource-card-title-link"
+                @click.stop
+              >
+                {{ title }}
+              </RouterLink>
+              <span
+                v-else
+                class="mt-0.5 block truncate text-slate-900 dark:text-slate-100"
+                :class="titleTextClass"
+              >
+                {{ title }}
+              </span>
+              <p v-if="showSubtitle" class="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">
+                {{ subtitle }}
+              </p>
+            </div>
+            <div v-if="statusLabel" class="min-w-0 text-right">
+              <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                {{ t('resources.col_status') }}
+              </p>
+              <span class="mt-1 inline-flex max-w-full truncate" :class="statusClass">{{ statusLabel }}</span>
+            </div>
           </div>
 
-          <p v-if="showSubtitle" class="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">
-            {{ subtitle }}
-          </p>
+          <div
+            v-if="pills.length"
+            class="rounded-lg border border-slate-100 bg-slate-50/90 px-2.5 py-2 dark:border-slate-800 dark:bg-slate-800/50"
+            data-testid="resource-card-compliance"
+          >
+            <p class="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              {{ t('resources.col_compliance') }}
+            </p>
+            <dl class="grid grid-cols-2 gap-x-2 gap-y-1.5">
+              <template v-for="(p, i) in pills" :key="i">
+                <dt class="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                  {{ p.label }}
+                </dt>
+                <dd class="flex justify-end">
+                  <span :class="p.class">{{ p.value }}</span>
+                </dd>
+              </template>
+            </dl>
+          </div>
         </div>
       </div>
 

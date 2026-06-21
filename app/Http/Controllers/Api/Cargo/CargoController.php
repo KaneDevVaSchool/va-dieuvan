@@ -10,7 +10,6 @@ use App\Http\Requests\Api\Cargo\ShowCargoShipmentRequest;
 use App\Http\Requests\Api\Cargo\UpdateCargoShipmentStatusRequest;
 use App\Http\Requests\Api\Cargo\UploadCargoPodRequest;
 use App\Models\Attachment;
-use App\Models\AuditLog;
 use App\Models\CargoShipment;
 use App\Services\Auditing\AuditLogger;
 use Illuminate\Database\Eloquent\Builder;
@@ -92,7 +91,7 @@ class CargoController extends Controller
     }
 
     /**
-     * Dòng thời gian: mốc từ shipment + nhật ký audit (tương thích quy trình phiếu / trạng thái xử lý).
+     * Dòng thời gian: các mốc vận hành từ shipment (tạo, SLA, lấy hàng, giao hàng).
      */
     public function timeline(ShowCargoShipmentRequest $request, CargoShipment $cargoShipment)
     {
@@ -138,29 +137,6 @@ class CargoController extends Controller
                 'delivered',
                 null,
             );
-        }
-
-        $logs = AuditLog::query()
-            ->where('auditable_type', $cargoShipment->getMorphClass())
-            ->where('auditable_id', $cargoShipment->getKey())
-            ->with(['actor:id,name,email'])
-            ->orderBy('id')
-            ->get();
-
-        foreach ($logs as $log) {
-            $items[] = [
-                'at' => Carbon::parse($log->created_at)->toIso8601String(),
-                'kind' => 'audit',
-                'code' => $log->event,
-                'detail' => null,
-                'actor' => $log->actor ? [
-                    'id' => $log->actor->id,
-                    'name' => $log->actor->name,
-                    'email' => $log->actor->email,
-                ] : null,
-                'before' => $log->before,
-                'after' => $log->after,
-            ];
         }
 
         usort($items, function (array $a, array $b) {

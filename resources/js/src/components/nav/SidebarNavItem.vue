@@ -31,8 +31,8 @@
 <script setup>
 import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import { isDispatchStaffHomePath } from '../../config/dispatchWebBase'
 import { NAV_ICON_MAP } from '../../config/navIconMap'
+import { isNavRouteActive } from '../../util/isNavRouteActive'
 import { useHaptics } from '../../composables/useHaptics'
 
 const props = defineProps({
@@ -74,17 +74,7 @@ function onNavClick() {
 
 const IconComp = computed(() => NAV_ICON_MAP[props.icon] ?? NAV_ICON_MAP.home)
 
-const isActive = computed(() => {
-  if (isDispatchStaffHomePath(props.to)) {
-    return isDispatchStaffHomePath(route.path)
-  }
-  if (props.to === '/driver/schedule') {
-    return (
-      route.path === '/driver/schedule' || /^\/driver\/trips\/\d+/.test(route.path)
-    )
-  }
-  return route.path === props.to || route.path.startsWith(`${props.to}/`)
-})
+const isActive = computed(() => isNavRouteActive(props.to, route.path))
 
 const showLabel = computed(() => props.variant !== 'vertical-compact')
 const showIcon = computed(() => props.variant !== 'horizontal')

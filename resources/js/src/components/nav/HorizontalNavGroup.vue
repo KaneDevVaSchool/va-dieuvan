@@ -113,7 +113,7 @@
 import { computed, nextTick, onUnmounted, ref, useId, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { ChevronDownIcon } from '@heroicons/vue/24/outline'
-import { isDispatchStaffHomePath } from '../../config/dispatchWebBase'
+import { isNavRouteActive } from '../../util/isNavRouteActive'
 import { NAV_ICON_MAP } from '../../config/navIconMap'
 
 const panelId = useId()
@@ -145,11 +145,7 @@ function labelFor(item) {
 }
 
 function isItemActive(to) {
-  if (!to) return false
-  if (isDispatchStaffHomePath(to)) {
-    return isDispatchStaffHomePath(route.path)
-  }
-  return route.path === to || route.path.startsWith(`${to}/`)
+  return isNavRouteActive(to, route.path)
 }
 
 function branchActive(item) {
