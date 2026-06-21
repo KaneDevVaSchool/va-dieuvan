@@ -45,7 +45,7 @@ export function useRequestWorkflowSteps(reqRef, ctxRef) {
         key: 'fill-price',
         label: t('request_detail.todo_fill_price'),
         done: false,
-        tab: 'form',
+        tab: 'approval',
         focus: 'fill-price',
         priority: 1,
       })

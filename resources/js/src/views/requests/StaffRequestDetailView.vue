@@ -45,8 +45,8 @@
       />
 
       <!-- ═══════════ Body ═══════════ -->
-      <div class="min-w-0 flex-1">
-        <div class="w-full min-w-0 space-y-0 pb-16">
+      <div class="min-w-0 flex-1 px-4 sm:px-5 lg:px-6">
+        <div class="w-full min-w-0 space-y-4 pb-16 pt-4">
           <!-- Alerts -->
           <div
             v-if="req.status === 'rejected'"
@@ -98,10 +98,22 @@
           </div>
 
           <!-- ─── Tab: Phê duyệt ─── -->
-          <div v-show="activeTab === 'approval'" class="space-y-0">
+          <div v-show="activeTab === 'approval'" class="space-y-4">
+            <FillPricePanel
+              v-if="showFillPriceSection"
+              ref="fillPricePanelRef"
+              :req="req"
+              :acting="fillPriceActing"
+              :message="fillPriceMsg"
+              actions-in-sidebar
+              @save="onSaveRowPrices"
+              @summary-change="fillPriceSummary = $event"
+              @open-reference-pricing="referencePricingModalOpen = true"
+            />
+
             <div
               v-if="hasAnyAction"
-              class="overflow-hidden border-y border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
+              class="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
             >
             <div class="flex items-center gap-2.5 border-b border-slate-100 px-4 py-3 dark:border-slate-800 sm:px-5">
               <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
@@ -126,9 +138,6 @@
                   </span>
                   <div class="min-w-0 flex-1">
                     <p class="text-sm font-bold text-slate-900 dark:text-slate-100">{{ t('request_detail.fill_price_title') }}</p>
-                    <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                      {{ fillPriceAutoApproves ? t('request_detail.todo_fill_price_auto') : t('request_detail.todo_fill_price') }}
-                    </p>
                   </div>
                 </div>
                 <div class="flex items-center justify-between gap-2 rounded-lg border border-sky-200/60 bg-white/80 px-3 py-2.5 dark:border-sky-900/40 dark:bg-slate-900/60">
@@ -174,7 +183,7 @@
                   :key="item.key"
                   type="button"
                   class="flex w-full items-center justify-between gap-2 rounded-lg border border-amber-200/70 bg-white/80 px-3.5 py-2.5 text-left text-sm font-semibold text-amber-900 transition hover:bg-white dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200 dark:hover:bg-amber-950/40"
-                  @click="onWorkflowNavigate({ tab: mapTodoTab(item.tab), focus: item.focus })"
+                  @click="onWorkflowNavigate({ tab: mapTodoTab(item), focus: item.focus })"
                 >
                   <span class="min-w-0 truncate">{{ item.label }}</span>
                   <ArrowRightIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -183,17 +192,9 @@
             </div>
             </div>
 
-            <div class="border-y border-slate-200 bg-white px-4 py-4 dark:border-slate-800 dark:bg-slate-900 sm:px-5">
-              <PortalStatusTimeline
-                :title="t('portal.timeline_heading')"
-                :steps="timelineSteps"
-                variant="staff"
-              />
-            </div>
-
             <p
-              v-if="!hasAnyAction"
-              class="border-y border-dashed border-slate-200 px-4 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400 sm:px-5"
+              v-if="!hasAnyAction && !showFillPriceSection"
+              class="rounded-xl border border-dashed border-slate-200 px-4 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400 sm:px-5"
             >
               {{ t('request_detail.ops_no_actions') }}
             </p>
@@ -308,165 +309,129 @@
                   </div>
 
                   <!-- ===== Tab: Chi tiết chuyến ===== -->
-                  <div v-show="activeTab === 'route'" class="space-y-4">
-                    <FillPricePanel
-                      v-if="showFillPriceSection"
-                      ref="fillPricePanelRef"
-                      :req="req"
-                      :acting="fillPriceActing"
-                      :message="fillPriceMsg"
-                      actions-in-sidebar
-                      @save="onSaveRowPrices"
-                      @summary-change="fillPriceSummary = $event"
-                      @open-reference-pricing="referencePricingModalOpen = true"
-                    />
-
-                    <template v-else>
-                      <!-- Chi tiết hành trình -->
-                      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
-                        <div class="flex min-w-0 items-center gap-2.5">
-                          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-va-50 text-va-700 dark:bg-va-950/50 dark:text-va-300">
-                            <MapIcon class="h-4 w-4" aria-hidden="true" />
-                          </span>
-                          <div class="min-w-0">
-                            <h2 class="text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">
-                              {{ t('request_detail.ops_itinerary_heading') }}
-                            </h2>
-                            <p v-if="itineraryCards.length" class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                              {{ t('request_detail.ops_itinerary_count', { n: itineraryCards.length }) }}
-                            </p>
-                          </div>
-                        </div>
-                        <div v-if="itineraryCollapsible" class="flex shrink-0 items-center gap-2">
-                          <button
-                            type="button"
-                            class="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-                            @click="expandAllItinerary"
-                          >
-                            {{ t('request_detail.ops_itinerary_expand_all') }}
-                          </button>
-                          <button
-                            type="button"
-                            class="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-                            @click="collapseAllItinerary"
-                          >
-                            {{ t('request_detail.ops_itinerary_collapse_all') }}
-                          </button>
+                  <div v-show="activeTab === 'route'" class="space-y-4 p-4 sm:p-5">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                      <div class="flex min-w-0 items-center gap-2.5">
+                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-va-50 text-va-700 dark:bg-va-950/50 dark:text-va-300">
+                          <MapIcon class="h-5 w-5" aria-hidden="true" />
+                        </span>
+                        <div class="min-w-0">
+                          <h2 class="text-base font-bold text-slate-900 dark:text-white">
+                            {{ t('request_detail.ops_itinerary_heading') }}
+                          </h2>
+                          <p v-if="itineraryCards.length" class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+                            {{ t('request_detail.ops_itinerary_count', { n: itineraryCards.length }) }}
+                          </p>
                         </div>
                       </div>
-                      <p
-                        v-if="!itineraryCards.length"
-                        class="rounded-2xl border border-dashed border-slate-200 px-4 py-12 text-center text-base text-slate-400 dark:border-slate-700 dark:text-slate-500"
-                      >{{ t('request_detail.ops_no_itinerary') }}</p>
-                      <div
-                        v-for="card in itineraryCards"
-                        :key="card.key"
-                        class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
-                      >
-                        <component
-                          :is="itineraryCollapsible ? 'button' : 'div'"
-                          :type="itineraryCollapsible ? 'button' : undefined"
-                          class="flex w-full flex-wrap items-start justify-between gap-3 border-b border-slate-100 bg-slate-50/80 px-4 py-3 text-left dark:border-slate-800 dark:bg-slate-800/40"
-                          :class="itineraryCollapsible ? 'cursor-pointer transition hover:bg-slate-100/80 dark:hover:bg-slate-800/70' : ''"
-                          :aria-expanded="itineraryCollapsible ? isItineraryExpanded(card.key) : undefined"
-                          :aria-label="itineraryCollapsible
-                            ? (isItineraryExpanded(card.key)
-                              ? t('request_detail.ops_itinerary_collapse_row', { n: card.idx })
-                              : t('request_detail.ops_itinerary_expand_row', { n: card.idx }))
-                            : undefined"
-                          @click="itineraryCollapsible ? toggleItineraryCard(card.key) : undefined"
-                        >
-                          <div class="flex min-w-0 flex-1 items-start gap-3">
-                            <span
-                              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-va-100 text-sm font-semibold text-va-800 dark:bg-va-950/50 dark:text-va-300"
-                              :aria-hidden="itineraryCollapsible ? true : undefined"
-                            >
-                              {{ card.idx }}
-                            </span>
-                            <div class="min-w-0 flex-1">
-                              <p class="text-[10px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                                {{ t('request_detail.ops_itinerary_row_label') }}
-                              </p>
-                              <p v-if="card.title && card.title !== card.subtitle" class="mt-0.5 text-base font-semibold leading-snug text-slate-900 dark:text-white">{{ card.title }}</p>
-                              <p
-                                v-else-if="card.subtitle && !card.timeline.length"
-                                class="mt-0.5 text-base font-semibold leading-snug text-slate-900 dark:text-white"
-                              >{{ card.subtitle }}</p>
-                            </div>
-                          </div>
-                          <ChevronDownIcon
-                            v-if="itineraryCollapsible"
-                            class="mt-2 h-5 w-5 shrink-0 text-slate-400 transition-transform duration-200"
-                            :class="{ '-rotate-180': isItineraryExpanded(card.key) }"
-                            aria-hidden="true"
-                          />
-                        </component>
+                    </div>
 
-                        <div
-                          v-if="itineraryCollapsible && !isItineraryExpanded(card.key) && card.timeline.length"
-                          class="border-b border-slate-100 px-4 py-3 dark:border-slate-800"
-                        >
-                          <RequestItineraryTimelineTabs :legs="card.timeline" compact />
-                        </div>
+                    <p
+                      v-if="!itineraryCards.length"
+                      class="rounded-2xl border border-dashed border-slate-200 px-4 py-12 text-center text-base text-slate-400 dark:border-slate-700 dark:text-slate-500"
+                    >{{ t('request_detail.ops_no_itinerary') }}</p>
 
-                        <div v-show="!itineraryCollapsible || isItineraryExpanded(card.key)">
-                        <div
-                          v-if="card.timeline.length"
-                          class="border-b border-slate-100 px-4 py-2 dark:border-slate-800"
-                        >
-                          <RequestItineraryTimelineTabs :legs="card.timeline" />
-                        </div>
-
-                        <div
-                          v-if="card.priceTotal || card.unitPrice || card.extraFee"
-                          class="border-b border-slate-100 bg-slate-50/50 px-4 py-4 dark:border-slate-800 dark:bg-slate-800/25"
-                        >
+                    <div
+                      v-for="card in itineraryCards"
+                      :key="card.key"
+                      class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
+                      :data-testid="`staff-request-itinerary-row-${card.idx}`"
+                    >
+                      <div class="flex items-center gap-3 border-b border-slate-100 bg-slate-50/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/50">
+                        <span
+                          class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-va-100 text-sm font-bold text-va-800 dark:bg-va-950/50 dark:text-va-300"
+                          :aria-label="t('request_detail.ops_row_badge_aria', { n: card.idx })"
+                        >{{ card.idx }}</span>
+                        <div class="min-w-0 flex-1">
                           <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                            {{ t('request_detail.ops_route_cost_breakdown') }}
+                            {{ t('request_detail.ops_itinerary_row_label') }}
                           </p>
-                          <dl class="mt-2.5 grid gap-2 sm:grid-cols-3">
-                            <FieldRow
-                              v-if="card.unitPrice"
-                              boxed
-                              :label="t('request_detail.ops_lbl_unit_price')"
-                              :value="card.unitPrice.display"
-                            />
-                            <FieldRow
-                              v-if="card.extraFee"
-                              boxed
-                              :label="t('request_detail.ops_lbl_extra_fee')"
-                              :value="card.extraFee.display"
-                            />
-                            <FieldRow
-                              v-if="card.priceTotal"
-                              boxed
-                              :label="t('request_detail.ops_lbl_row_cost')"
-                              :value="card.priceTotal.display"
-                              highlight
-                            />
-                          </dl>
-                          <p v-if="card.priceTotal?.words" class="mt-2 text-xs italic leading-relaxed text-slate-500 dark:text-slate-400">
-                            <span class="font-semibold not-italic text-slate-400 dark:text-slate-500">{{ t('request_detail.ops_lbl_amount_in_words') }}:</span>
-                            {{ card.priceTotal.words }}
-                          </p>
+                          <p class="mt-0.5 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">{{ card.title }}</p>
                         </div>
+                      </div>
 
-                        <dl v-if="card.fields.length" class="grid gap-2.5 px-4 py-4 sm:grid-cols-2">
-                          <FieldRow v-for="(f, fi) in card.fields" :key="fi" boxed :label="f.label" :value="f.value" :multiline="f.multiline" />
+                      <div
+                        v-if="card.from || card.to"
+                        class="grid grid-cols-[1fr_auto_1fr] border-b border-slate-100 dark:border-slate-800"
+                      >
+                        <div class="bg-emerald-50/50 px-4 py-3 dark:bg-emerald-950/15">
+                          <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-600/80 dark:text-emerald-400/80">{{ t('request_detail.lbl_origin') }}</p>
+                          <p class="mt-0.5 text-sm font-semibold leading-snug text-slate-800 dark:text-slate-100">{{ card.from || friendlyEmpty }}</p>
+                        </div>
+                        <div class="flex items-center justify-center bg-slate-50/50 px-2 dark:bg-slate-800/30">
+                          <ArrowRightIcon class="h-4 w-4 text-slate-300 dark:text-slate-600" aria-hidden="true" />
+                        </div>
+                        <div class="bg-rose-50/50 px-4 py-3 dark:bg-rose-950/15">
+                          <p class="text-[10px] font-bold uppercase tracking-wider text-rose-600/80 dark:text-rose-400/80">{{ t('request_detail.lbl_destination') }}</p>
+                          <p class="mt-0.5 text-sm font-semibold leading-snug text-slate-800 dark:text-slate-100">{{ card.to || friendlyEmpty }}</p>
+                        </div>
+                      </div>
+
+                      <ItineraryRowInfoGrid :row="card.sourceRow" :trip-type="itineraryTripType" />
+
+                      <div
+                        v-if="card.timeline.length"
+                        class="border-b border-slate-100 px-4 py-3 dark:border-slate-800"
+                      >
+                        <RequestItineraryTimelineTabs :legs="card.timeline" />
+                      </div>
+
+                      <div
+                        v-if="card.priceTotal || card.unitPrice || card.extraFee"
+                        class="border-b border-slate-100 bg-slate-50/50 px-4 py-4 dark:border-slate-800 dark:bg-slate-800/25"
+                      >
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                          {{ t('request_detail.ops_route_cost_breakdown') }}
+                        </p>
+                        <dl class="mt-2.5 grid gap-2 sm:grid-cols-3">
+                          <FieldRow
+                            v-if="card.unitPrice"
+                            boxed
+                            :label="t('request_detail.ops_lbl_unit_price')"
+                            :value="card.unitPrice.display"
+                          />
+                          <FieldRow
+                            v-if="card.extraFee"
+                            boxed
+                            :label="t('request_detail.ops_lbl_extra_fee')"
+                            :value="card.extraFee.display"
+                          />
+                          <FieldRow
+                            v-if="card.priceTotal"
+                            boxed
+                            :label="t('request_detail.ops_lbl_row_cost')"
+                            :value="card.priceTotal.display"
+                            highlight
+                          />
                         </dl>
-                        </div>
+                        <p v-if="card.priceTotal?.words" class="mt-2 text-xs italic leading-relaxed text-slate-500 dark:text-slate-400">
+                          <span class="font-semibold not-italic text-slate-400 dark:text-slate-500">{{ t('request_detail.ops_lbl_amount_in_words') }}:</span>
+                          {{ card.priceTotal.words }}
+                        </p>
                       </div>
 
-                      <div v-if="extraNotes.length" class="rounded-2xl border border-slate-200 bg-slate-50/60 p-5 dark:border-slate-800 dark:bg-slate-800/30">
-                        <h3 :class="sectionTitleClass">{{ t('request_detail.ops_extra_notes_heading') }}</h3>
-                        <ul class="mt-3 space-y-2 text-sm text-slate-700 dark:text-slate-300">
-                          <li v-for="(n, ni) in extraNotes" :key="ni" class="flex gap-2">
-                            <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" aria-hidden="true" />
-                            <span class="min-w-0">{{ n }}</span>
-                          </li>
-                        </ul>
-                      </div>
-                    </template>
+                      <dl v-if="card.fields.length" class="grid gap-2.5 px-4 py-4 sm:grid-cols-2">
+                        <FieldRow v-for="(f, fi) in card.fields" :key="fi" boxed :label="f.label" :value="f.value" :multiline="f.multiline" />
+                      </dl>
+                    </div>
+
+                    <div v-if="extraNotes.length" class="rounded-2xl border border-slate-200 bg-slate-50/60 p-5 dark:border-slate-800 dark:bg-slate-800/30">
+                      <h3 :class="sectionTitleClass">{{ t('request_detail.ops_extra_notes_heading') }}</h3>
+                      <ul class="mt-3 space-y-2 text-sm text-slate-700 dark:text-slate-300">
+                        <li v-for="(n, ni) in extraNotes" :key="ni" class="flex gap-2">
+                          <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" aria-hidden="true" />
+                          <span class="min-w-0">{{ n }}</span>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white px-4 py-4 dark:border-slate-800 dark:bg-slate-900 sm:px-5">
+                      <PortalStatusTimeline
+                        :title="t('portal.timeline_heading')"
+                        :steps="timelineSteps"
+                        variant="staff"
+                      />
+                    </div>
                   </div>
 
                   <!-- ===== Tab: Hồ sơ ===== -->
@@ -694,7 +659,6 @@ import {
   BoltIcon,
   CalendarDaysIcon,
   CheckCircleIcon,
-  ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ClipboardDocumentIcon,
@@ -732,6 +696,7 @@ import RejectReasonModal from '../../components/requests/RejectReasonModal.vue'
 import ReferencePricingModal from '../../components/pricing/ReferencePricingModal.vue'
 import PortalStatusTimeline from '../../components/portal/PortalStatusTimeline.vue'
 import RequestItineraryTimelineTabs from '../../components/requests/RequestItineraryTimelineTabs.vue'
+import ItineraryRowInfoGrid from '../../components/requests/workspace/ItineraryRowInfoGrid.vue'
 import { useRequestDetailPage } from '../../composables/useRequestDetailPage'
 import { useAssignedDeptHeadDisplay } from '../../composables/useAssignedDeptHeadDisplay'
 import { formatVndCurrency as formatVndMoney, parseMoneyVnd, VND_CURRENCY_SUFFIX, vndAmountInWords } from '../../util/money'
@@ -838,7 +803,7 @@ const {
 const { showDeptHeadPanel } = useAssignedDeptHeadDisplay(req)
 
 // ── Style tokens ──
-const cardClass = 'overflow-hidden border-y border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900'
+const cardClass = 'overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900'
 const sectionTitleClass = 'text-sm font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400'
 const btnGhostClass = 'inline-flex items-center rounded-md border border-slate-200 px-2.5 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
 const btnTealClass = 'inline-flex items-center rounded-md bg-teal-600 px-2.5 py-1.5 text-sm font-semibold text-white transition hover:bg-teal-700 disabled:opacity-50'
@@ -1054,8 +1019,6 @@ const itineraryCards = computed(() => {
       extraFee: null,
       priceTotal: buildRowMoney(r.cost),
       fields: [
-        { label: t('request_detail.ops_lbl_qty'), value: nz(r.qty) },
-        { label: t('request_detail.ops_lbl_weight'), value: nz(r.weight) },
         { label: t('request_detail.ops_lbl_dimensions'), value: nz(r.dimensions) },
         { label: t('request_detail.ops_lbl_pickup_contact'), value: nz(r.pickup_contact) },
         { label: t('request_detail.ops_lbl_delivery_contact'), value: nz(r.delivery_contact) },
@@ -1074,7 +1037,6 @@ const itineraryCards = computed(() => {
         extraFee,
         priceTotal: buildRowMoney(totalAmount),
         fields: [
-          { label: t('request_detail.ops_lbl_guests'), value: nz(r.guests) },
           { label: t('request_detail.ops_lbl_person_in_charge'), value: nz(r.person_in_charge) },
           { label: t('request_detail.ops_lbl_notes'), value: nz(r.notes), multiline: true },
         ].filter((f) => f.value),
@@ -1091,36 +1053,11 @@ const itineraryCards = computed(() => {
       extraFee,
       priceTotal: buildRowMoney(totalAmount),
       fields: [
-        { label: t('request_detail.ops_lbl_guests'), value: nz(r.guests) },
-        { label: t('request_detail.ops_lbl_person_in_charge'), value: nz(r.person_in_charge) },
         { label: t('request_detail.ops_lbl_notes'), value: nz(r.notes), multiline: true },
       ].filter((f) => f.value),
     }
   })
 })
-
-const itineraryExpandedKeys = ref(new Set())
-const itineraryCollapsible = computed(() => itineraryCards.value.some((c) => c.timeline?.length))
-
-function isItineraryExpanded(key) {
-  if (!itineraryCollapsible.value) return true
-  return itineraryExpandedKeys.value.has(key)
-}
-
-function toggleItineraryCard(key) {
-  const next = new Set(itineraryExpandedKeys.value)
-  if (next.has(key)) next.delete(key)
-  else next.add(key)
-  itineraryExpandedKeys.value = next
-}
-
-function expandAllItinerary() {
-  itineraryExpandedKeys.value = new Set(itineraryCards.value.map((c) => c.key))
-}
-
-function collapseAllItinerary() {
-  itineraryExpandedKeys.value = new Set()
-}
 
 const extraNotes = computed(() => {
   const f = formData.value
@@ -1130,14 +1067,6 @@ const extraNotes = computed(() => {
   if (nz(f.cargo_extra_notes)) out.push(nz(f.cargo_extra_notes))
   return out
 })
-
-watch(
-  itineraryCards,
-  (cards) => {
-    itineraryExpandedKeys.value = new Set()
-  },
-  { immediate: true },
-)
 
 // ── Signed doc badge ──
 const signedVerifyLabel = computed(() => {
@@ -1176,10 +1105,10 @@ const workspaceTabs = computed(() => {
   return out
 })
 
-function mapTodoTab(tab) {
-  if (tab === 'form') return 'route'
-  if (tab === 'approval') return 'approval'
-  return tab
+function mapTodoTab(item) {
+  if (item?.focus === 'fill-price') return 'approval'
+  if (item?.tab === 'approval') return 'approval'
+  return item?.tab || 'form'
 }
 
 const heroPriorityLabel = computed(() =>

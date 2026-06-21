@@ -66,11 +66,18 @@
       <!-- ── Row 1: ID + Status + Priority ── -->
       <div
         class="flex flex-wrap items-center gap-x-6 gap-y-2 border-b py-3"
-        :class="urgentAccent ? 'border-rose-100/80 dark:border-rose-900/30' : 'border-slate-100 dark:border-slate-800'"
+        :class="urgentAccent
+          ? 'border-rose-100/80 bg-rose-50/70 dark:border-rose-900/30 dark:bg-rose-950/25'
+          : 'border-slate-100 dark:border-slate-800'"
       >
-        <h1 class="font-mono text-xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-2xl">
-          {{ requestRefCode }}
-        </h1>
+        <div class="min-w-0">
+          <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            {{ t('request_detail.hero_lbl_request_code') }}
+          </p>
+          <h1 class="font-mono text-xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-2xl">
+            {{ requestRefCode }}
+          </h1>
+        </div>
         <div class="h-4 w-px bg-slate-200 dark:bg-slate-700 max-sm:hidden" aria-hidden="true" />
         <div class="flex items-center gap-1.5">
           <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ t('request_detail.hero_lbl_status') }}</span>

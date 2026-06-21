@@ -10,7 +10,6 @@
       </div>
       <div class="min-w-0 flex-1">
         <h2 class="text-base font-semibold tracking-tight text-slate-900">{{ t('request_detail.fill_price_title') }}</h2>
-        <p class="mt-1 text-sm leading-snug text-slate-600">{{ t('request_detail.fill_price_lead') }}</p>
         <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
           <a
             v-if="referencePricingUrl"

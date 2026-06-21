@@ -53,17 +53,8 @@
         <p class="text-xs font-medium text-amber-900 dark:text-amber-100">
           {{ t('request_detail.assign_dept_head_missing_staff_title') }}
         </p>
-        <p class="mt-1 text-xs leading-relaxed text-amber-800 dark:text-amber-200/90">
-          {{ t('request_detail.assign_dept_head_missing_staff_body') }}
-        </p>
       </div>
       <p v-if="deptHeadsLoadErr" class="mt-2 text-xs font-medium text-rose-600">{{ deptHeadsLoadErr }}</p>
-      <p
-        v-else-if="showAssignedDeptHeadOnForm && variant === 'staff'"
-        class="mt-2 text-xs text-slate-500 dark:text-slate-400"
-      >
-        {{ t('request_detail.assign_dept_head_preset_hint') }}
-      </p>
     </div>
   </div>
 </template>

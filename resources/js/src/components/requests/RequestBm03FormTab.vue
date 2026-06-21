@@ -271,7 +271,6 @@
                       <p class="text-xs font-medium text-slate-600">{{ t('request_detail.assign_dept_head_preset_label') }}</p>
                       <p class="mt-1 text-sm font-semibold text-slate-900">{{ deptHeadDisplayLine }}</p>
                       <p v-if="deptHeadsLoadErr" class="mt-1 text-xs text-rose-600">{{ deptHeadsLoadErr }}</p>
-                      <p class="mt-1 text-xs text-slate-500">{{ t('request_detail.assign_dept_head_preset_hint') }}</p>
                     </div>
                     <div
                       v-else
@@ -279,7 +278,6 @@
                       role="alert"
                     >
                       <p class="text-xs font-medium text-amber-900">{{ t('request_detail.assign_dept_head_missing_staff_title') }}</p>
-                      <p class="mt-1 text-xs text-amber-800">{{ t('request_detail.assign_dept_head_missing_staff_body') }}</p>
                     </div>
                   </div>
                   <div class="flex flex-wrap items-center gap-2.5">
@@ -484,7 +482,6 @@
                     <p class="text-xs font-medium text-slate-600">{{ t('request_detail.assign_dept_head_preset_label') }}</p>
                     <p class="mt-1 text-sm font-semibold text-slate-900">{{ deptHeadDisplayLine }}</p>
                     <p v-if="deptHeadsLoadErr" class="text-xs text-rose-600">{{ deptHeadsLoadErr }}</p>
-                    <p class="mt-1 text-xs text-slate-500">{{ t('request_detail.assign_dept_head_preset_hint') }}</p>
                   </div>
                   <div
                     v-else
@@ -492,7 +489,6 @@
                     role="alert"
                   >
                     <p class="text-xs font-medium text-amber-900">{{ t('request_detail.assign_dept_head_missing_staff_title') }}</p>
-                    <p class="mt-1 text-xs text-amber-800">{{ t('request_detail.assign_dept_head_missing_staff_body') }}</p>
                   </div>
                 </div>
                 <div class="flex flex-wrap items-center gap-2.5">

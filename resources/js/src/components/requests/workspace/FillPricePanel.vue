@@ -8,7 +8,6 @@
         </span>
         <div class="min-w-0">
           <h2 class="text-base font-bold text-slate-900 dark:text-white">{{ t('request_detail.fill_price_title') }}</h2>
-          <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{{ t('request_detail.fill_price_lead') }}</p>
         </div>
       </div>
       <Button
@@ -188,7 +187,6 @@
         >
           <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ deptHeadDisplayLine }}</p>
           <p v-if="deptHeadLoadErr" class="mt-1 text-xs text-rose-600 dark:text-rose-400">{{ deptHeadLoadErr }}</p>
-          <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ t('request_detail.assign_dept_head_preset_hint') }}</p>
         </div>
         <div
           v-else
@@ -196,7 +194,6 @@
           role="alert"
         >
           <p class="text-sm font-semibold text-amber-900 dark:text-amber-100">{{ t('request_detail.assign_dept_head_missing_staff_title') }}</p>
-          <p class="mt-0.5 text-xs text-amber-700 dark:text-amber-300/80">{{ t('request_detail.assign_dept_head_missing_staff_body') }}</p>
         </div>
 
         <div class="mt-4 flex flex-wrap items-center gap-3">
