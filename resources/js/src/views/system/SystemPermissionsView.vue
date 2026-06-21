@@ -494,7 +494,6 @@ onActivated(() => load())
     </div>
 
     <!-- ── Create modal ───────────────────────────────────────────────────── -->
-    <!-- ── Create modal ───────────────────────────────────────────────────── -->
     <Teleport to="body">
     <div
       v-if="createOpen"
