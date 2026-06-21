@@ -1,5 +1,52 @@
 <template>
-  <section id="request-focus-fill-price" class="scroll-mt-24 space-y-3">
+  <section
+    id="request-focus-fill-price"
+    class="scroll-mt-24"
+    :class="workspaceMode ? '' : 'space-y-3'"
+  >
+    <!-- Workspace: grid 4 cột — không lặp hành trình -->
+    <div v-if="workspaceMode" class="space-y-2">
+      <div
+        class="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-slate-200/80 bg-slate-200/80 dark:border-slate-800 dark:bg-slate-800 sm:grid-cols-4"
+      >
+        <div
+          v-for="cell in workspaceCells"
+          :key="cell.key"
+          class="bg-white px-3 py-3 dark:bg-slate-900 sm:px-4"
+        >
+          <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            {{ cell.label }}
+          </p>
+          <div v-if="cell.editable" class="relative mt-1">
+            <input
+              :value="cell.value"
+              type="text"
+              inputmode="numeric"
+              class="w-full rounded border border-slate-200 bg-slate-50/80 py-1.5 pl-2 pr-10 text-right text-sm font-semibold tabular-nums text-slate-900 outline-none focus:border-va-500 focus:ring-1 focus:ring-va-500/30 dark:border-slate-700 dark:bg-slate-950/50 dark:text-slate-100"
+              :data-testid="cell.testId"
+              :disabled="acting"
+              @input="cell.onInput($event)"
+              @blur="cell.onBlur?.()"
+            />
+            <span class="pointer-events-none absolute inset-y-0 right-2 flex items-center text-[10px] text-slate-400">{{ vndSuffix }}</span>
+          </div>
+          <p v-else class="mt-1 text-base font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+            {{ cell.display }}
+          </p>
+        </div>
+      </div>
+      <button
+        v-if="rows.length > 1"
+        type="button"
+        class="text-xs font-semibold text-va-700 underline-offset-2 hover:underline dark:text-va-400"
+        data-testid="fill-price-workspace-multi-row"
+        @click="emit('open-multi-row')"
+      >
+        {{ t('request_detail.approval_ws_edit_multi_row', { n: rows.length }) }}
+      </button>
+    </div>
+
+    <template v-if="!workspaceMode">
     <!-- Intro banner -->
     <div class="flex flex-wrap items-start justify-between gap-3 rounded-2xl border border-sky-200/80 bg-gradient-to-r from-sky-50 to-slate-50 px-5 py-4 dark:border-sky-900/40 dark:from-sky-950/30 dark:to-slate-900">
       <div class="flex min-w-0 items-center gap-3">
@@ -218,12 +265,14 @@
         </div>
       </div>
     </div>
+    </template>
   </section>
 </template>
 
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { dispatchRequestDisplayPassengerCount } from '../../../util/dispatchRequestPassengers'
 import { CurrencyDollarIcon } from '@heroicons/vue/24/outline'
 import Button from '../../ui/Button.vue'
 import FillPriceFieldLabel from './FillPriceFieldLabel.vue'
@@ -251,9 +300,19 @@ const props = defineProps({
   message: { type: String, default: '' },
   /** Khi true: tổng / trưởng BP / nút Lưu do sidebar «Trung tâm xử lý» đảm nhiệm */
   actionsInSidebar: { type: Boolean, default: false },
+  /** Tab Phê duyệt — chỉ lưới giá, không card hành trình */
+  workspaceMode: { type: Boolean, default: false },
+  /** Điền giá xong duyệt luôn (không bắt buộc Trưởng BP trên phiếu) */
+  allowAutoApprove: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['save', 'summary-change', 'open-reference-pricing'])
+const emit = defineEmits([
+  'save',
+  'summary-change',
+  'open-reference-pricing',
+  'workspace-metrics-change',
+  'open-multi-row',
+])
 
 const snap = computed(() => props.req?.wizard_snapshot ?? {})
 const isCargo = computed(() => props.req?.trip_type === 'cargo')
@@ -324,6 +383,136 @@ const total = computed(() => {
 })
 const totalFmt = computed(() => formatVndCurrency(total.value, VND_CURRENCY_SUFFIX))
 
+const unitSum = computed(() => {
+  if (isCargo.value) return total.value
+  let s = 0
+  rows.value.forEach((_, i) => {
+    s += parseMoneyVnd(unitDraft.value[i] ?? '')
+  })
+  return s
+})
+
+const extraSum = computed(() => {
+  if (isCargo.value) return 0
+  let s = 0
+  rows.value.forEach((_, i) => {
+    s += parseMoneyVnd(extraDraft.value[i] ?? '')
+  })
+  return s
+})
+
+const unitSumFmt = computed(() => formatVndCurrency(unitSum.value, VND_CURRENCY_SUFFIX))
+const extraSumFmt = computed(() => formatVndCurrency(extraSum.value, VND_CURRENCY_SUFFIX))
+
+const passengerDisplay = computed(() => {
+  const pax = dispatchRequestDisplayPassengerCount(props.req)
+  if (pax == null || pax === '') return '—'
+  return t('request_detail.approval_ws_passengers_n', { n: pax })
+})
+
+function setDraftOnRow(field, idx, raw) {
+  if (field === 'unit') unitDraft.value[idx] = fmtTyping(raw)
+  else if (field === 'extra') extraDraft.value[idx] = fmtTyping(raw)
+  else if (field === 'cargo') cargoCost.value[idx] = fmtTyping(raw)
+}
+
+function blurDraftOnRow(field, idx) {
+  if (field === 'unit') unitDraft.value[idx] = fmtBlur(unitDraft.value[idx])
+  else if (field === 'extra') extraDraft.value[idx] = fmtBlur(extraDraft.value[idx])
+  else if (field === 'cargo') cargoCost.value[idx] = fmtBlur(cargoCost.value[idx])
+}
+
+function workspaceInputHandlers(field) {
+  const multi = rows.value.length > 1
+  return {
+    onInput: (e) => {
+      const v = String(e.target?.value ?? '')
+      if (multi) {
+        rows.value.forEach((_, i) => setDraftOnRow(field, i, i === 0 ? v : '0'))
+      } else {
+        setDraftOnRow(field, 0, v)
+      }
+    },
+    onBlur: () => {
+      if (multi) {
+        rows.value.forEach((_, i) => blurDraftOnRow(field, i))
+      } else {
+        blurDraftOnRow(field, 0)
+      }
+    },
+  }
+}
+
+const workspaceCells = computed(() => {
+  if (isCargo.value) {
+    const h = workspaceInputHandlers('cargo')
+    return [
+      {
+        key: 'unit',
+        label: t('request_detail.ops_lbl_cost'),
+        editable: rows.value.length <= 1,
+        value: rows.value.length <= 1 ? cargoCost.value[0] ?? '' : '',
+        display: unitSumFmt.value,
+        testId: 'approval-ws-unit-price',
+        ...h,
+      },
+      {
+        key: 'extra',
+        label: t('request_detail.ops_lbl_extra_fee'),
+        editable: false,
+        display: '—',
+      },
+      {
+        key: 'pax',
+        label: t('request_detail.hero_lbl_passengers'),
+        editable: false,
+        display: passengerDisplay.value,
+      },
+      {
+        key: 'total',
+        label: t('request_detail.approval_ws_metric_total'),
+        editable: false,
+        display: totalFmt.value,
+      },
+    ]
+  }
+  const unitH = workspaceInputHandlers('unit')
+  const extraH = workspaceInputHandlers('extra')
+  const multi = rows.value.length > 1
+  return [
+    {
+      key: 'unit',
+      label: t('request_detail.ops_lbl_unit_price'),
+      editable: !multi,
+      value: multi ? '' : unitDraft.value[0] ?? '',
+      display: unitSumFmt.value,
+      testId: 'approval-ws-unit-price',
+      ...unitH,
+    },
+    {
+      key: 'extra',
+      label: t('request_detail.ops_lbl_extra_fee'),
+      editable: !multi,
+      value: multi ? '' : extraDraft.value[0] ?? '',
+      display: extraSumFmt.value,
+      testId: 'approval-ws-extra-fee',
+      ...extraH,
+    },
+    {
+      key: 'pax',
+      label: t('request_detail.hero_lbl_passengers'),
+      editable: false,
+      display: passengerDisplay.value,
+    },
+    {
+      key: 'total',
+      label: t('request_detail.approval_ws_metric_total'),
+      editable: false,
+      display: totalFmt.value,
+    },
+  ]
+})
+
 const deptHeadLoadErr = ref('')
 const lockedLabel = ref('')
 
@@ -342,7 +531,11 @@ const presetDeptHeadId = computed(() => {
 
 const deptHeadPresetLocked = computed(() => presetDeptHeadId.value != null)
 
-const canSubmitFillPrice = computed(() => deptHeadPresetLocked.value && !props.acting)
+const canSubmitFillPrice = computed(() => {
+  if (props.acting || total.value <= 0) return false
+  if (props.allowAutoApprove) return true
+  return deptHeadPresetLocked.value
+})
 
 const deptHeadDisplayLine = computed(() => {
   if (lockedLabel.value.trim()) return lockedLabel.value.trim()
@@ -376,8 +569,13 @@ watch(
   { immediate: true },
 )
 
+function setProcessingNote(note) {
+  const text = String(note ?? '').slice(0, 2000)
+  notesDraft.value = rows.value.map((_, i) => (i === 0 ? text : notesDraft.value[i] ?? ''))
+}
+
 function onSave() {
-  if (!deptHeadPresetLocked.value) return
+  if (!deptHeadPresetLocked.value && !props.allowAutoApprove) return
   const payloadRows = isCargo.value
     ? rows.value.map((_, i) => ({
         transport_note: String(cargoTransport.value[i] ?? '').slice(0, 500),
@@ -403,11 +601,23 @@ const summaryState = computed(() => ({
   deptHeadLoadErr: deptHeadLoadErr.value,
 }))
 
+const workspaceMetricsState = computed(() => ({
+  unitSumFmt: unitSumFmt.value,
+  extraSumFmt: extraSumFmt.value,
+  rowCount: rows.value.length,
+}))
+
 watch(
   summaryState,
   (state) => emit('summary-change', { ...state }),
   { immediate: true, deep: true },
 )
 
-defineExpose({ submit: onSave })
+watch(
+  workspaceMetricsState,
+  (state) => emit('workspace-metrics-change', { ...state }),
+  { immediate: true, deep: true },
+)
+
+defineExpose({ submit: onSave, setProcessingNote })
 </script>

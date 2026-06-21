@@ -233,7 +233,7 @@ import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { CheckIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/outline'
 import { useI18n } from 'vue-i18n'
-import { useStaffRequestTripDetailTab } from '../../composables/useStaffRequestTripDetailTab'
+import { useStaffRequestTripDetailTab } from '../../../composables/useStaffRequestTripDetailTab'
 
 const props = defineProps({
   req: { type: Object, required: true },

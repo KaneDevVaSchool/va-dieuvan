@@ -98,107 +98,33 @@
           </div>
 
           <!-- ─── Tab: Phê duyệt ─── -->
-          <div v-show="activeTab === 'approval'" class="space-y-4">
-            <FillPricePanel
-              v-if="showFillPriceSection"
-              ref="fillPricePanelRef"
-              :req="req"
-              :acting="fillPriceActing"
-              :message="fillPriceMsg"
-              actions-in-sidebar
-              @save="onSaveRowPrices"
-              @summary-change="fillPriceSummary = $event"
-              @open-reference-pricing="referencePricingModalOpen = true"
-            />
-
-            <div
-              v-if="hasAnyAction"
-              class="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
-            >
-            <div class="flex items-center gap-2.5 border-b border-slate-100 px-4 py-3 dark:border-slate-800 sm:px-5">
-              <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                <BoltIcon class="h-4 w-4" aria-hidden="true" />
-              </span>
-              <h2 class="text-sm font-bold text-slate-900 dark:text-slate-100">
-                {{ t('request_detail.ops_action_center') }}
-              </h2>
-            </div>
-            <div class="flex flex-wrap items-start gap-3 p-4 sm:p-5">
-              <!-- D2D approve/reject (secondary when not in header) -->
-              <div v-if="showD2dDecisionSection && d2dMsg && !d2dRejectOpen" class="w-full text-sm text-rose-600 dark:text-rose-400">{{ d2dMsg }}</div>
-
-              <!-- Fill price -->
-              <div
-                v-if="showFillPriceSection"
-                class="shrink-0 space-y-3 rounded-xl border border-sky-200/80 bg-sky-50/60 px-3.5 py-3.5 dark:border-sky-900/50 dark:bg-sky-950/25"
-              >
-                <div class="flex items-start gap-2.5">
-                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-600 text-white">
-                    <CurrencyDollarIcon class="h-5 w-5" aria-hidden="true" />
-                  </span>
-                  <div class="min-w-0 flex-1">
-                    <p class="text-sm font-bold text-slate-900 dark:text-slate-100">{{ t('request_detail.fill_price_title') }}</p>
-                  </div>
-                </div>
-                <div class="flex items-center justify-between gap-2 rounded-lg border border-sky-200/60 bg-white/80 px-3 py-2.5 dark:border-sky-900/40 dark:bg-slate-900/60">
-                  <span class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('request_detail.fill_price_total') }}</span>
-                  <span class="text-lg font-bold tabular-nums" :class="fillPriceSummary.total > 0 ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-slate-500'">{{ fillPriceSummary.totalFmt }}</span>
-                </div>
-                <div v-if="!fillPriceAutoApproves">
-                  <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ t('request_detail.assign_dept_head_preset_label') }}</p>
-                  <div v-if="fillPriceSummary.deptHeadPresetLocked" class="mt-1.5 rounded-lg border border-sky-200/60 bg-white/80 px-3 py-2 dark:border-sky-900/40 dark:bg-slate-900/60">
-                    <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ fillPriceSummary.deptHeadDisplayLine }}</p>
-                    <p v-if="fillPriceSummary.deptHeadLoadErr" class="mt-1 text-xs text-rose-600 dark:text-rose-400">{{ fillPriceSummary.deptHeadLoadErr }}</p>
-                  </div>
-                  <div v-else class="mt-1.5 rounded-lg border border-amber-200/80 bg-amber-50/80 px-3 py-2 dark:border-amber-900/40 dark:bg-amber-950/20" role="alert">
-                    <p class="text-xs font-semibold text-amber-900 dark:text-amber-100">{{ t('request_detail.assign_dept_head_missing_staff_title') }}</p>
-                  </div>
-                </div>
-                <Button class="w-full !bg-sky-600 hover:!bg-sky-700" :loading="fillPriceActing" :disabled="!fillPriceSummary.canSubmitFillPrice" @click="onFillPriceSubmitFromSidebar">
-                  {{ fillPriceAutoApproves ? t('request_detail.fill_price_submit_approve') : t('request_detail.fill_price_submit_preset_dept') }}
-                </Button>
-                <Button type="button" variant="secondary" class="w-full" data-testid="fill-price-sidebar-open-reference-pricing" :disabled="fillPriceActing" @click="referencePricingModalOpen = true">
-                  {{ t('request_detail.reference_pricing_link') }}
-                </Button>
-                <p v-if="fillPriceMsg" class="text-xs text-slate-500 dark:text-slate-400">{{ fillPriceMsg }}</p>
-              </div>
-
-              <!-- Reset / clone -->
-              <button
-                v-if="showResetCloneBtn"
-                type="button"
-                class="inline-flex shrink-0 items-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
-                :disabled="resetCloneBusy"
-                @click="onResetCloneRequest"
-              >
-                <ArrowPathIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-                {{ resetCloneBusy ? t('request_detail.reset_clone_busy') : t('request_detail.reset_clone') }}
-              </button>
-
-              <!-- Workflow todos -->
-              <div v-if="workflowTodoItems.length" class="shrink-0 space-y-1.5">
-                <p class="text-xs font-bold uppercase tracking-wide text-amber-700 dark:text-amber-400">{{ t('request_detail.aside_todos_heading') }}</p>
-                <button
-                  v-for="item in workflowTodoItems"
-                  :key="item.key"
-                  type="button"
-                  class="flex w-full items-center justify-between gap-2 rounded-lg border border-amber-200/70 bg-white/80 px-3.5 py-2.5 text-left text-sm font-semibold text-amber-900 transition hover:bg-white dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200 dark:hover:bg-amber-950/40"
-                  @click="onWorkflowNavigate({ tab: mapTodoTab(item), focus: item.focus })"
-                >
-                  <span class="min-w-0 truncate">{{ item.label }}</span>
-                  <ArrowRightIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-                </button>
-              </div>
-            </div>
-            </div>
-
-            <p
-              v-if="!hasAnyAction && !showFillPriceSection"
-              class="rounded-xl border border-dashed border-slate-200 px-4 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400 sm:px-5"
-            >
-              {{ t('request_detail.ops_no_actions') }}
-            </p>
-          </div>
+          <StaffRequestApprovalTab
+            v-show="activeTab === 'approval'"
+            :req="req"
+            :show-fill-price-section="showFillPriceSection"
+            :fill-price-auto-approves="fillPriceAutoApproves"
+            :fill-price-acting="fillPriceActing"
+            :fill-price-msg="fillPriceMsg"
+            :fill-price-summary="fillPriceSummary"
+            :show-d2d-decision-section="showD2dDecisionSection"
+            :d2d-acting="d2dActing"
+            :d2d-msg="d2dMsg"
+            :show-reset-clone="showResetCloneBtn"
+            :reset-clone-busy="resetCloneBusy"
+            :declared-total-display="asideDeclaredTotalDisplay"
+            :audit-items="auditItems"
+            :audit-loading="auditLoading"
+            :audit-error="auditError"
+            :audit-event-label="auditEventLabel"
+            :fmt-audit="fmt"
+            @save-fill-price="onSaveRowPrices"
+            @fill-price-summary-change="fillPriceSummary = $event"
+            @open-reference-pricing="referencePricingModalOpen = true"
+            @approve="onD2dApproveClick"
+            @reject="openD2dReject"
+            @supplement="setActiveTab('form')"
+            @reset-clone="onResetCloneRequest"
+          />
 
           <!-- ─── 1-col tab panels ─── -->
           <div :class="cardClass">
@@ -543,11 +469,10 @@
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent, h, ref, watch } from 'vue'
+import { computed, h, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import {
   ArrowPathIcon,
-  ArrowRightIcon,
   ArrowTopRightOnSquareIcon,
   ArrowUturnLeftIcon,
   BoltIcon,
@@ -586,6 +511,7 @@ import StaffRequestHeroHeader from '../../components/requests/detail/StaffReques
 import StaffRequestDetailTabNav from '../../components/requests/detail/StaffRequestDetailTabNav.vue'
 import StaffRequestOverviewInfoGrid from '../../components/requests/detail/StaffRequestOverviewInfoGrid.vue'
 import StaffRequestTripDetailTab from '../../components/requests/detail/StaffRequestTripDetailTab.vue'
+import StaffRequestApprovalTab from '../../components/requests/detail/StaffRequestApprovalTab.vue'
 import RejectReasonModal from '../../components/requests/RejectReasonModal.vue'
 import ReferencePricingModal from '../../components/pricing/ReferencePricingModal.vue'
 import PortalStatusTimeline from '../../components/portal/PortalStatusTimeline.vue'
@@ -595,9 +521,6 @@ import { formatVndCurrency as formatVndMoney, parseMoneyVnd, VND_CURRENCY_SUFFIX
 import { formatTripCode, labelTripStatus } from '../../util/labels'
 import { dispatchRequestDisplayPassengerCount } from '../../util/dispatchRequestPassengers'
 
-const FillPricePanel = defineAsyncComponent(() =>
-  import('../../components/requests/workspace/FillPricePanel.vue'),
-)
 const { t, locale } = useI18n()
 
 const page = useRequestDetailPage()
@@ -619,8 +542,6 @@ const {
   rejectionBannerTitle,
   copyRejectionFeedback,
   copyRejectionReason,
-  workflowTodoItems,
-  onWorkflowNavigate,
   timelineSteps,
   journeyDepartLine,
   requesterInitials,
@@ -700,7 +621,6 @@ const linkedTripCode = computed(() => formatTripCode(req.value?.trip?.id))
 
 const referencePricingModalOpen = ref(false)
 
-const fillPricePanelRef = ref(null)
 const fillPriceSummary = ref({
   totalFmt: '—',
   total: 0,
@@ -709,10 +629,6 @@ const fillPriceSummary = ref({
   deptHeadPresetLocked: false,
   deptHeadLoadErr: '',
 })
-
-function onFillPriceSubmitFromSidebar() {
-  fillPricePanelRef.value?.submit?.()
-}
 
 const asidePanelTab = ref('info')
 const asidePanelTabs = computed(() => [
@@ -839,12 +755,6 @@ const workspaceTabs = computed(() => {
   return out
 })
 
-function mapTodoTab(item) {
-  if (item?.focus === 'fill-price') return 'approval'
-  if (item?.tab === 'approval') return 'approval'
-  return item?.tab || 'form'
-}
-
 const heroPriorityLabel = computed(() =>
   showUrgentBadge.value ? t('request_detail.hero_priority_high') : t('request_detail.hero_priority_normal'),
 )
@@ -928,10 +838,6 @@ const overviewInfoGroups = computed(() => {
     },
   ]
 })
-
-const hasAnyAction = computed(
-  () => showD2dDecisionSection.value || showFillPriceSection.value || showResetCloneBtn.value || workflowTodoItems.value.length > 0,
-)
 
 // ── Audit ──
 function auditEventLabel(event) {
