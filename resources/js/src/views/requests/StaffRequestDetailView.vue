@@ -209,7 +209,7 @@
 
                     <!-- Workflow progress — first in overview -->
                     <div
-                      class="overflow-hidden border-b border-slate-200 bg-white px-4 py-4 dark:border-slate-800 dark:bg-slate-900 sm:px-5"
+                      class="overflow-hidden border-b border-slate-200 bg-white px-4 py-2.5 dark:border-slate-800 dark:bg-slate-900 sm:px-5"
                       data-testid="staff-request-overview-timeline"
                     >
                       <PortalStatusTimeline
@@ -322,122 +322,11 @@
                   </div>
 
                   <!-- ===== Tab: Chi tiết chuyến ===== -->
-                  <div v-show="activeTab === 'route'" class="space-y-4 p-4 sm:p-5">
-                    <div class="flex flex-wrap items-center justify-between gap-3">
-                      <div class="flex min-w-0 items-center gap-2.5">
-                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-va-50 text-va-700 dark:bg-va-950/50 dark:text-va-300">
-                          <MapIcon class="h-5 w-5" aria-hidden="true" />
-                        </span>
-                        <div class="min-w-0">
-                          <h2 class="text-base font-bold text-slate-900 dark:text-white">
-                            {{ t('request_detail.ops_itinerary_heading') }}
-                          </h2>
-                          <p v-if="itineraryCards.length" class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-                            {{ t('request_detail.ops_itinerary_count', { n: itineraryCards.length }) }}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <p
-                      v-if="!itineraryCards.length"
-                      class="rounded-2xl border border-dashed border-slate-200 px-4 py-12 text-center text-base text-slate-400 dark:border-slate-700 dark:text-slate-500"
-                    >{{ t('request_detail.ops_no_itinerary') }}</p>
-
-                    <div
-                      v-for="card in itineraryCards"
-                      :key="card.key"
-                      class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
-                      :data-testid="`staff-request-itinerary-row-${card.idx}`"
-                    >
-                      <div class="flex items-center gap-3 border-b border-slate-100 bg-slate-50/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/50">
-                        <span
-                          class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-va-100 text-sm font-bold text-va-800 dark:bg-va-950/50 dark:text-va-300"
-                          :aria-label="t('request_detail.ops_row_badge_aria', { n: card.idx })"
-                        >{{ card.idx }}</span>
-                        <div class="min-w-0 flex-1">
-                          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                            {{ t('request_detail.ops_itinerary_row_label') }}
-                          </p>
-                          <p class="mt-0.5 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">{{ card.title }}</p>
-                        </div>
-                      </div>
-
-                      <div
-                        v-if="card.from || card.to"
-                        class="grid grid-cols-[1fr_auto_1fr] border-b border-slate-100 dark:border-slate-800"
-                      >
-                        <div class="bg-emerald-50/50 px-4 py-3 dark:bg-emerald-950/15">
-                          <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-600/80 dark:text-emerald-400/80">{{ t('request_detail.lbl_origin') }}</p>
-                          <p class="mt-0.5 text-sm font-semibold leading-snug text-slate-800 dark:text-slate-100">{{ card.from || friendlyEmpty }}</p>
-                        </div>
-                        <div class="flex items-center justify-center bg-slate-50/50 px-2 dark:bg-slate-800/30">
-                          <ArrowRightIcon class="h-4 w-4 text-slate-300 dark:text-slate-600" aria-hidden="true" />
-                        </div>
-                        <div class="bg-rose-50/50 px-4 py-3 dark:bg-rose-950/15">
-                          <p class="text-[10px] font-bold uppercase tracking-wider text-rose-600/80 dark:text-rose-400/80">{{ t('request_detail.lbl_destination') }}</p>
-                          <p class="mt-0.5 text-sm font-semibold leading-snug text-slate-800 dark:text-slate-100">{{ card.to || friendlyEmpty }}</p>
-                        </div>
-                      </div>
-
-                      <ItineraryRowInfoGrid :row="card.sourceRow" :trip-type="itineraryTripType" />
-
-                      <div
-                        v-if="card.timeline.length"
-                        class="border-b border-slate-100 px-4 py-3 dark:border-slate-800"
-                      >
-                        <RequestItineraryTimelineTabs :legs="card.timeline" />
-                      </div>
-
-                      <div
-                        v-if="card.priceTotal || card.unitPrice || card.extraFee"
-                        class="border-b border-slate-100 bg-slate-50/50 px-4 py-4 dark:border-slate-800 dark:bg-slate-800/25"
-                      >
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                          {{ t('request_detail.ops_route_cost_breakdown') }}
-                        </p>
-                        <dl class="mt-2.5 grid gap-2 sm:grid-cols-3">
-                          <FieldRow
-                            v-if="card.unitPrice"
-                            boxed
-                            :label="t('request_detail.ops_lbl_unit_price')"
-                            :value="card.unitPrice.display"
-                          />
-                          <FieldRow
-                            v-if="card.extraFee"
-                            boxed
-                            :label="t('request_detail.ops_lbl_extra_fee')"
-                            :value="card.extraFee.display"
-                          />
-                          <FieldRow
-                            v-if="card.priceTotal"
-                            boxed
-                            :label="t('request_detail.ops_lbl_row_cost')"
-                            :value="card.priceTotal.display"
-                            highlight
-                          />
-                        </dl>
-                        <p v-if="card.priceTotal?.words" class="mt-2 text-xs italic leading-relaxed text-slate-500 dark:text-slate-400">
-                          <span class="font-semibold not-italic text-slate-400 dark:text-slate-500">{{ t('request_detail.ops_lbl_amount_in_words') }}:</span>
-                          {{ card.priceTotal.words }}
-                        </p>
-                      </div>
-
-                      <dl v-if="card.fields.length" class="grid gap-2.5 px-4 py-4 sm:grid-cols-2">
-                        <FieldRow v-for="(f, fi) in card.fields" :key="fi" boxed :label="f.label" :value="f.value" :multiline="f.multiline" />
-                      </dl>
-                    </div>
-
-                    <div v-if="extraNotes.length" class="rounded-2xl border border-slate-200 bg-slate-50/60 p-5 dark:border-slate-800 dark:bg-slate-800/30">
-                      <h3 :class="sectionTitleClass">{{ t('request_detail.ops_extra_notes_heading') }}</h3>
-                      <ul class="mt-3 space-y-2 text-sm text-slate-700 dark:text-slate-300">
-                        <li v-for="(n, ni) in extraNotes" :key="ni" class="flex gap-2">
-                          <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" aria-hidden="true" />
-                          <span class="min-w-0">{{ n }}</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
+                  <StaffRequestTripDetailTab
+                    v-show="activeTab === 'route'"
+                    :req="req"
+                    :cost-estimate="costEstimate"
+                  />
 
                   <!-- ===== Tab: Hồ sơ ===== -->
                   <div
@@ -674,7 +563,6 @@ import {
   DocumentTextIcon,
   PaperClipIcon,
   ExclamationTriangleIcon,
-  MapIcon,
   MapPinIcon,
   PencilSquareIcon,
   PlusCircleIcon,
@@ -697,20 +585,13 @@ import AssignedDeptHeadFormCard from '../../components/requests/AssignedDeptHead
 import StaffRequestHeroHeader from '../../components/requests/detail/StaffRequestHeroHeader.vue'
 import StaffRequestDetailTabNav from '../../components/requests/detail/StaffRequestDetailTabNav.vue'
 import StaffRequestOverviewInfoGrid from '../../components/requests/detail/StaffRequestOverviewInfoGrid.vue'
+import StaffRequestTripDetailTab from '../../components/requests/detail/StaffRequestTripDetailTab.vue'
 import RejectReasonModal from '../../components/requests/RejectReasonModal.vue'
 import ReferencePricingModal from '../../components/pricing/ReferencePricingModal.vue'
 import PortalStatusTimeline from '../../components/portal/PortalStatusTimeline.vue'
-import RequestItineraryTimelineTabs from '../../components/requests/RequestItineraryTimelineTabs.vue'
-import ItineraryRowInfoGrid from '../../components/requests/workspace/ItineraryRowInfoGrid.vue'
 import { useRequestDetailPage } from '../../composables/useRequestDetailPage'
 import { useAssignedDeptHeadDisplay } from '../../composables/useAssignedDeptHeadDisplay'
 import { formatVndCurrency as formatVndMoney, parseMoneyVnd, VND_CURRENCY_SUFFIX, vndAmountInWords } from '../../util/money'
-import {
-  itineraryRowEndpoints,
-  itineraryRowHeading,
-  resolveItineraryTripType,
-} from '../../util/requestItineraryRowDisplay'
-import { isPassengerRowFilled, isBusinessRowFilled } from '../../composables/dispatchWizardConstants'
 import { formatTripCode, labelTripStatus } from '../../util/labels'
 import { dispatchRequestDisplayPassengerCount } from '../../util/dispatchRequestPassengers'
 
@@ -867,12 +748,10 @@ const asideDeclaredTotalWords = computed(() => {
 
 // ── BM.03 data ──
 const formData = computed(() => req.value?.wizard_snapshot?.form ?? {})
-const snap = computed(() => req.value?.wizard_snapshot ?? {})
 const isCargo = computed(() => req.value?.trip_type === 'cargo')
 const metaLoadLabel = computed(() =>
   isCargo.value ? t('request_detail.ops_lbl_weight') : t('request_detail.ops_lbl_passenger_count'),
 )
-const isBusiness = computed(() => req.value?.trip_type === 'business')
 
 function nz(v) {
   return v == null ? '' : String(v).trim()
@@ -886,15 +765,6 @@ function fmtDateOnly(v) {
   }
   const d = new Date(s)
   return Number.isNaN(d.getTime()) ? s : d.toLocaleDateString('vi-VN')
-}
-function fmtRowDt(v) {
-  if (!v) return ''
-  return fmt(v)
-}
-
-function money(v) {
-  const n = parseMoneyVnd(v)
-  return n > 0 ? formatVndCurrency(n) : ''
 }
 
 const urgentReasonText = computed(() => (formData.value.is_urgent ? nz(formData.value.urgent_reason) : ''))
@@ -930,147 +800,6 @@ const paperStatusText = computed(() => {
   if (s === 'received') return t('request_detail.ops_paper_received')
   if (s === 'pending') return t('request_detail.ops_paper_pending')
   return ''
-})
-
-const itineraryTripType = computed(() => resolveItineraryTripType(isCargo.value, isBusiness.value))
-
-function buildRowMoney(n) {
-  const amount = parseMoneyVnd(n)
-  if (!amount) return null
-  const words = vndAmountInWords(amount)
-  return {
-    display: formatVndMoney(amount, VND_CURRENCY_SUFFIX),
-    words: words && words !== 'Không đồng' ? words : '',
-    amount,
-  }
-}
-
-
-function buildItineraryTimeline(r, tripType) {
-  const { from, to } = itineraryRowEndpoints(r)
-  const legs = []
-
-  if (tripType === 'cargo') {
-    if (from || fmtRowDt(r.pickup_at)) {
-      legs.push({
-        tone: 'pickup',
-        label: t('request_detail.ops_route_timeline_pickup'),
-        time: fmtRowDt(r.pickup_at),
-        place: from,
-      })
-    }
-    if (to || fmtRowDt(r.delivery_at)) {
-      legs.push({
-        tone: 'back',
-        label: t('request_detail.ops_route_timeline_delivery'),
-        time: fmtRowDt(r.delivery_at),
-        place: to,
-      })
-    }
-    return legs
-  }
-
-  if (from || fmtRowDt(r.depart_at)) {
-    legs.push({
-      tone: 'out',
-      label: t('request_detail.ops_route_timeline_out'),
-      time: fmtRowDt(r.depart_at),
-      place: from,
-    })
-  }
-  if (tripType === 'business' && nz(r.waypoint)) {
-    legs.push({
-      tone: 'waypoint',
-      label: t('request_detail.ops_route_timeline_waypoint'),
-      time: '',
-      place: nz(r.waypoint),
-    })
-  }
-  if (to || fmtRowDt(r.return_at)) {
-    legs.push({
-      tone: 'back',
-      label: t('request_detail.ops_route_timeline_back'),
-      time: fmtRowDt(r.return_at),
-      place: to,
-    })
-  }
-  return legs
-}
-
-function buildItineraryCard(r, i, keyPrefix) {
-  const tripType = itineraryTripType.value
-  const { from, to } = itineraryRowEndpoints(r)
-  const routeLabel = from || to ? `${from || '—'} → ${to || '—'}` : ''
-  const title = itineraryRowHeading(r, i, { tripType, t })
-  return {
-    key: `${keyPrefix}-${i}`,
-    idx: i + 1,
-    title,
-    subtitle: routeLabel || title,
-    routeLabel,
-    from,
-    to,
-    sourceRow: r,
-    timeline: buildItineraryTimeline(r, tripType),
-  }
-}
-
-const itineraryCards = computed(() => {
-  const s = snap.value
-  if (isCargo.value) {
-    return (Array.isArray(s.cargoRows) ? s.cargoRows : []).filter((r) => nz(r?.name)).map((r, i) => ({
-      ...buildItineraryCard(r, i, 'c'),
-      unitPrice: null,
-      extraFee: null,
-      priceTotal: buildRowMoney(r.cost),
-      fields: [
-        { label: t('request_detail.ops_lbl_dimensions'), value: nz(r.dimensions) },
-        { label: t('request_detail.ops_lbl_pickup_contact'), value: nz(r.pickup_contact) },
-        { label: t('request_detail.ops_lbl_delivery_contact'), value: nz(r.delivery_contact) },
-        { label: t('request_detail.ops_lbl_notes'), value: nz(r.item_notes) || nz(r.transport_note), multiline: true },
-      ].filter((f) => f.value),
-    }))
-  }
-  if (isBusiness.value) {
-    return (Array.isArray(s.businessRows) ? s.businessRows : []).filter(isBusinessRowFilled).map((r, i) => {
-      const unitPrice = buildRowMoney(r.unit_price)
-      const extraFee = buildRowMoney(r.extra_fee)
-      const totalAmount = parseMoneyVnd(r.unit_price) + parseMoneyVnd(r.extra_fee)
-      return {
-        ...buildItineraryCard(r, i, 'b'),
-        unitPrice,
-        extraFee,
-        priceTotal: buildRowMoney(totalAmount),
-        fields: [
-          { label: t('request_detail.ops_lbl_person_in_charge'), value: nz(r.person_in_charge) },
-          { label: t('request_detail.ops_lbl_notes'), value: nz(r.notes), multiline: true },
-        ].filter((f) => f.value),
-      }
-    })
-  }
-  return (Array.isArray(s.passengerRows) ? s.passengerRows : []).filter(isPassengerRowFilled).map((r, i) => {
-    const unitPrice = buildRowMoney(r.unit_price)
-    const extraFee = buildRowMoney(r.extra_fee)
-    const totalAmount = parseMoneyVnd(r.unit_price) + parseMoneyVnd(r.extra_fee)
-    return {
-      ...buildItineraryCard(r, i, 'p'),
-      unitPrice,
-      extraFee,
-      priceTotal: buildRowMoney(totalAmount),
-      fields: [
-        { label: t('request_detail.ops_lbl_notes'), value: nz(r.notes), multiline: true },
-      ].filter((f) => f.value),
-    }
-  })
-})
-
-const extraNotes = computed(() => {
-  const f = formData.value
-  const out = []
-  if (f.need_porters) out.push([t('request_detail.ops_porter_label'), nz(f.porter_qty) && `× ${nz(f.porter_qty)}`, money(f.porter_cost)].filter(Boolean).join(' '))
-  if (f.interprovincial) out.push([t('request_detail.ops_interprovincial_label'), money(f.interprovincial_cost)].filter(Boolean).join(' — '))
-  if (nz(f.cargo_extra_notes)) out.push(nz(f.cargo_extra_notes))
-  return out
 })
 
 // ── Signed doc badge ──
@@ -1327,41 +1056,6 @@ async function onPickScan(file) {
 }
 
 // ── Presentational helpers ──
-const FieldRow = {
-  props: {
-    label: { type: String, default: '' },
-    value: { type: [String, Number], default: '' },
-    multiline: { type: Boolean, default: false },
-    highlight: { type: Boolean, default: false },
-    emphasize: { type: Boolean, default: false },
-    boxed: { type: Boolean, default: false },
-  },
-  setup(props) {
-    const empty = computed(() => props.value === '' || props.value == null)
-    const valueClass = computed(() => {
-      if (empty.value) return 'mt-1 text-sm italic text-slate-400 dark:text-slate-500'
-      const base = ['mt-1 break-words', props.multiline ? 'whitespace-pre-wrap text-sm leading-relaxed' : 'text-sm']
-      if (props.emphasize) base.push('font-semibold text-rose-800 dark:text-rose-200')
-      else if (props.highlight) base.push('font-semibold text-va-800 dark:text-va-200')
-      else base.push('font-medium text-slate-800 dark:text-slate-200')
-      return base
-    })
-    const labelClass = props.boxed
-      ? 'text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500'
-      : 'text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500'
-    const wrapClass = props.boxed
-      ? 'min-w-0 rounded-xl border border-slate-100 bg-slate-50/70 px-3.5 py-2.5 dark:border-slate-800 dark:bg-slate-800/40'
-      : 'min-w-0'
-    return () =>
-      h('div', { class: wrapClass }, [
-        h('dt', { class: labelClass }, props.label),
-        empty.value
-          ? h('dd', { class: 'mt-1 text-sm italic text-slate-400 dark:text-slate-500' }, t('request_detail.ops_no_data'))
-          : h('dd', { class: valueClass.value }, String(props.value)),
-      ])
-  },
-}
-
 const DOC_GROUP_ACCENT = {
   sky: {
     icon: 'bg-sky-50 text-sky-600 dark:bg-sky-950/40 dark:text-sky-400',
