@@ -27,6 +27,7 @@ import { dispatchRequestDisplayPassengerCount } from '../util/dispatchRequestPas
 import { downloadBinaryAttachmentFromApi } from '../util/downloadPdfAttachment'
 import { toDatetimeLocalValue } from '../util/datetime'
 import { createActionIdempotencyKey } from '../util/idempotency'
+import { rdEmptyLabel } from '../util/requestDetailEmpty'
 import { useAuthStore } from '../store'
 import { confirmAction } from './useConfirm'
 import { showAppSuccess, showAppError } from './appMessage'
@@ -332,7 +333,7 @@ export function useRequestDetailPage() {
 
   const passengerOrCargoLine = computed(() => {
     const r = req.value
-    if (!r) return '—'
+    if (!r) return ''
     if (r.trip_type === 'cargo' && r.wizard_snapshot?.cargoRows?.length) {
       const weights = r.wizard_snapshot.cargoRows.map((x) => x.weight).filter((w) => String(w).trim())
       if (weights.length) {
@@ -345,17 +346,21 @@ export function useRequestDetailPage() {
     if (n > 0) {
       return t('request_detail.passengers_count_line', { n })
     }
-    return '—'
+    return ''
   })
+
+  const passengerOrCargoEmptyLabel = computed(() =>
+    req.value?.trip_type === 'cargo' ? rdEmptyLabel(t, 'load') : rdEmptyLabel(t, 'passengers'),
+  )
 
   function requestDetailLocaleTag() {
     return locale.value === 'en' ? 'en-GB' : 'vi-VN'
   }
 
   function fmt(v) {
-    if (!v) return '—'
+    if (!v) return rdEmptyLabel(t, 'datetime')
     const d = new Date(v)
-    if (Number.isNaN(d.getTime())) return '—'
+    if (Number.isNaN(d.getTime())) return rdEmptyLabel(t, 'datetime')
     const loc = requestDetailLocaleTag()
     const hour12 = locale.value === 'en'
     return d.toLocaleString(loc, {
@@ -369,7 +374,7 @@ export function useRequestDetailPage() {
   }
 
   function fmtDateVi(iso) {
-    if (!iso) return '—'
+    if (!iso) return rdEmptyLabel(t, 'date')
     try {
       return new Date(iso).toLocaleDateString(requestDetailLocaleTag(), {
         day: '2-digit',
@@ -377,12 +382,12 @@ export function useRequestDetailPage() {
         year: 'numeric',
       })
     } catch {
-      return '—'
+      return rdEmptyLabel(t, 'date')
     }
   }
 
   function fmtTimeWindow(depart, arrive) {
-    if (!depart) return '—'
+    if (!depart) return rdEmptyLabel(t, 'time')
     const loc = requestDetailLocaleTag()
     const hour12 = locale.value === 'en'
     const opt = { hour: '2-digit', minute: '2-digit', hour12 }
@@ -989,6 +994,7 @@ export function useRequestDetailPage() {
     requesterAsideSubtitle,
     requesterAsideFields,
     passengerOrCargoLine,
+    passengerOrCargoEmptyLabel,
     showD2dDecisionSection,
     showDeptDecisionSection,
     showFillPriceSection,

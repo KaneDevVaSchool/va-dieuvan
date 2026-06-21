@@ -9,6 +9,7 @@ import { buildDriverTripPaxList } from '../util/buildDriverTripPaxList'
 import { formatTripTimeHm24 } from '../util/tripDatetime'
 import { labelTripStatus } from '../util/labels'
 import { parseMoneyVnd, formatVndCurrency as formatVndMoney, VND_CURRENCY_SUFFIX } from '../util/money'
+import { rdEmptyLabel } from '../util/requestDetailEmpty'
 
 function nz(v) {
   return v == null ? '' : String(v).trim()
@@ -60,15 +61,16 @@ export function useStaffRequestTripDetailTab(reqSource, costEstimateSource) {
   const isCargo = computed(() => req.value?.trip_type === 'cargo')
   const isBusiness = computed(() => req.value?.trip_type === 'business')
 
-  const emptyLabel = computed(() => t('request_detail.ops_no_data'))
+  const emptyLabel = computed(() => rdEmptyLabel(t, 'default'))
+  const emptyTime = computed(() => rdEmptyLabel(t, 'time'))
 
-  function moneyDisplay(v) {
+  function moneyDisplay(v, emptyKind = 'money') {
     const n = parseMoneyVnd(v)
-    if (!n) return ''
+    if (!n) return rdEmptyLabel(t, emptyKind)
     return formatVndMoney(n, VND_CURRENCY_SUFFIX)
   }
 
-  const planDateNeeded = computed(() => fmtDateOnly(form.value.date_needed, locale.value) || emptyLabel.value)
+  const planDateNeeded = computed(() => fmtDateOnly(form.value.date_needed, locale.value) || rdEmptyLabel(t, 'date'))
 
   const planDuration = computed(() => {
     const fromTrip = durationBetween(req.value?.depart_at, req.value?.arrive_by, t)
@@ -78,10 +80,10 @@ export function useStaffRequestTripDetailTab(reqSource, costEstimateSource) {
       : isBusiness.value
         ? (snap.value.businessRows ?? []).find(isBusinessRowFilled)
         : (snap.value.passengerRows ?? []).find(isPassengerRowFilled)
-    if (!row) return emptyLabel.value
+    if (!row) return rdEmptyLabel(t, 'duration')
     const start = row.depart_at || row.pickup_at
     const end = row.return_at || row.delivery_at
-    return durationBetween(start, end, t) || emptyLabel.value
+    return durationBetween(start, end, t) || rdEmptyLabel(t, 'duration')
   })
 
   const planVehicleType = computed(() => {
@@ -90,47 +92,63 @@ export function useStaffRequestTripDetailTab(reqSource, costEstimateSource) {
     const seats = trip.value?.vehicle?.seat_count
     if (seats) return t('request_detail.trip_tab_seats_n', { n: seats })
     const est = costEstimate.value?.vehicleHint
-    return est || emptyLabel.value
+    return est || rdEmptyLabel(t, 'vehicle')
   })
 
   const planBudget = computed(() => {
     const total = costEstimate.value?.total
-    if (total != null && total > 0) return moneyDisplay(total)
-    const ev = moneyDisplay(form.value.estimated_vehicle_cost)
-    if (ev) return ev
-    const sp = moneyDisplay(req.value?.service_price)
-    return sp || emptyLabel.value
+    if (total != null && total > 0) return moneyDisplay(total, 'budget')
+    if (parseMoneyVnd(form.value.estimated_vehicle_cost)) {
+      return moneyDisplay(form.value.estimated_vehicle_cost, 'budget')
+    }
+    if (parseMoneyVnd(req.value?.service_price)) {
+      return moneyDisplay(req.value?.service_price, 'budget')
+    }
+    return rdEmptyLabel(t, 'budget')
   })
 
   const hasAssignment = computed(() => {
     const tr = trip.value
     if (!tr) return false
-    return !!(tr.vehicle_id || tr.driver_id || tr.vehicle || tr.driver)
+    return !!(
+      tr.vehicle_id ||
+      tr.driver_id ||
+      tr.vehicle ||
+      tr.driver ||
+      nz(tr.external_vehicle_ref) ||
+      nz(tr.external_driver_ref)
+    )
   })
 
   const assignmentVehicle = computed(() => {
     const v = trip.value?.vehicle
-    if (!v) return emptyLabel.value
-    const parts = [v.type, v.license_plate].map(nz).filter(Boolean)
-    return parts.length ? parts.join(' · ') : emptyLabel.value
+    const ext = nz(trip.value?.external_vehicle_ref)
+    if (v) {
+      const parts = [v.type, v.license_plate].map(nz).filter(Boolean)
+      if (parts.length) return parts.join(' · ')
+    }
+    if (ext) return ext
+    return rdEmptyLabel(t, 'vehicle')
   })
 
   const assignmentDriver = computed(() => {
     const d = trip.value?.driver
     const name = d?.full_name || d?.name
-    return nz(name) || emptyLabel.value
+    const ext = nz(trip.value?.external_driver_ref)
+    return nz(name) || ext || rdEmptyLabel(t, 'driver')
   })
 
-  const assignmentPlate = computed(() => nz(trip.value?.vehicle?.license_plate) || emptyLabel.value)
+  const assignmentPlate = computed(() => nz(trip.value?.vehicle?.license_plate) || rdEmptyLabel(t, 'plate'))
 
   const assignmentOperator = computed(() => {
     const tp = trip.value?.transport_provider ?? trip.value?.transportProvider
-    return nz(tp?.name) || emptyLabel.value
+    const disp = trip.value?.dispatcher
+    return nz(tp?.name) || nz(disp?.name) || rdEmptyLabel(t, 'operator')
   })
 
   const assignmentStatus = computed(() => {
     const st = trip.value?.status
-    return st ? labelTripStatus(st) : emptyLabel.value
+    return st ? labelTripStatus(st) : rdEmptyLabel(t, 'dispatch_status')
   })
 
   const passengerRows = computed(() => {
@@ -146,9 +164,9 @@ export function useStaffRequestTripDetailTab(reqSource, costEstimateSource) {
         out.push({
           key: `c-${i}`,
           name,
-          department: nz(r.dimensions) || emptyLabel.value,
+          department: nz(r.dimensions) || rdEmptyLabel(t, 'place'),
           role: t('request_detail.trip_tab_role_cargo'),
-          phone: nz(r.pickup_contact_phone) || nz(r.delivery_contact_phone) || emptyLabel.value,
+          phone: nz(r.pickup_contact_phone) || nz(r.delivery_contact_phone) || rdEmptyLabel(t, 'phone'),
           initials: initialsFromName(name),
         })
       }
@@ -164,9 +182,9 @@ export function useStaffRequestTripDetailTab(reqSource, costEstimateSource) {
         out.push({
           key: `b-${i}`,
           name,
-          department: nz(r.waypoint) || emptyLabel.value,
+          department: nz(r.waypoint) || rdEmptyLabel(t, 'place'),
           role: t('request_detail.trip_tab_role_business'),
-          phone: emptyLabel.value,
+          phone: rdEmptyLabel(t, 'phone'),
           initials: initialsFromName(name),
         })
       }
@@ -187,9 +205,9 @@ export function useStaffRequestTripDetailTab(reqSource, costEstimateSource) {
     return list.map((p, i) => ({
       key: `p-${i}`,
       name: p.name,
-      department: nz(p.address) || emptyLabel.value,
+      department: nz(p.address) || rdEmptyLabel(t, 'place'),
       role: nz(p.subtitle) !== '—' ? p.subtitle : t('request_detail.trip_tab_role_passenger'),
-      phone: p.phone || emptyLabel.value,
+      phone: p.phone || rdEmptyLabel(t, 'phone'),
       initials: initialsFromName(p.name),
     }))
   })
@@ -238,8 +256,8 @@ export function useStaffRequestTripDetailTab(reqSource, costEstimateSource) {
     const movePlanned =
       durationBetween(plannedDepart, plannedArrive, t) ||
       t('request_detail.trip_tab_move_window', {
-        from: fmtHm(plannedDepart) || '—',
-        to: fmtHm(plannedArrive) || '—',
+        from: fmtHm(plannedDepart) || emptyTime.value,
+        to: fmtHm(plannedArrive) || emptyTime.value,
       })
     const moveActual =
       actualDepart && actualComplete
@@ -291,14 +309,19 @@ export function useStaffRequestTripDetailTab(reqSource, costEstimateSource) {
   })
 
   const financeVehicle = computed(() => {
-    const sp = moneyDisplay(req.value?.service_price)
-    if (sp) return sp
-    const ev = moneyDisplay(form.value.estimated_vehicle_cost)
-    if (ev) return ev
+    if (parseMoneyVnd(req.value?.service_price)) {
+      return moneyDisplay(req.value?.service_price, 'money')
+    }
+    if (parseMoneyVnd(form.value.estimated_vehicle_cost)) {
+      return moneyDisplay(form.value.estimated_vehicle_cost, 'money')
+    }
     const rowTotal = costEstimate.value?.breakdown?.find((b) =>
       ['pass', 'bus', 'cargo'].includes(b.key),
     )
-    return rowTotal ? moneyDisplay(rowTotal.amount) : emptyLabel.value
+    if (rowTotal && parseMoneyVnd(rowTotal.amount)) {
+      return moneyDisplay(rowTotal.amount, 'money')
+    }
+    return rdEmptyLabel(t, 'money')
   })
 
   const financeExtras = computed(() => {
@@ -306,15 +329,15 @@ export function useStaffRequestTripDetailTab(reqSource, costEstimateSource) {
       ['porter', 'toll', 'e1', 'e2d', 'e2s', 'e2n'].includes(b.key),
     )
     const sum = extras.reduce((s, x) => s + (Number(x.amount) || 0), 0)
-    return sum > 0 ? moneyDisplay(sum) : emptyLabel.value
+    return sum > 0 ? moneyDisplay(sum, 'extra_fee') : rdEmptyLabel(t, 'extra_fee')
   })
 
-  const financeAdvance = computed(() => emptyLabel.value)
+  const financeAdvance = computed(() => rdEmptyLabel(t, 'advance'))
 
   const financeTotal = computed(() => {
     const total = costEstimate.value?.total
-    if (total != null && total > 0) return moneyDisplay(total)
-    return emptyLabel.value
+    if (total != null && total > 0) return moneyDisplay(total, 'money_total')
+    return rdEmptyLabel(t, 'money_total')
   })
 
   const noteDispatcher = computed(() => nz(req.value?.notes))

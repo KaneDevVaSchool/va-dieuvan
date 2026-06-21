@@ -17,18 +17,29 @@
           <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
             {{ cell.label }}
           </p>
-          <div v-if="cell.editable" class="relative mt-1">
-            <input
-              :value="cell.value"
-              type="text"
-              inputmode="numeric"
-              class="w-full rounded border border-slate-200 bg-slate-50/80 py-1.5 pl-2 pr-10 text-right text-sm font-semibold tabular-nums text-slate-900 outline-none focus:border-va-500 focus:ring-1 focus:ring-va-500/30 dark:border-slate-700 dark:bg-slate-950/50 dark:text-slate-100"
-              :data-testid="cell.testId"
-              :disabled="acting"
-              @input="cell.onInput($event)"
-              @blur="cell.onBlur?.()"
-            />
-            <span class="pointer-events-none absolute inset-y-0 right-2 flex items-center text-[10px] text-slate-400">{{ vndSuffix }}</span>
+          <div v-if="cell.editable" class="mt-1">
+            <div class="relative">
+              <input
+                :value="cell.value"
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+                class="w-full rounded border border-slate-200 bg-slate-50/80 py-1.5 pl-2 pr-10 text-right text-sm font-semibold tabular-nums text-slate-900 outline-none focus:border-va-500 focus:ring-1 focus:ring-va-500/30 dark:border-slate-700 dark:bg-slate-950/50 dark:text-slate-100"
+                :data-testid="cell.testId"
+                :disabled="acting"
+                @keydown="onVndMoneyKeydown"
+                @input="cell.onInput($event)"
+                @blur="cell.onBlur?.()"
+              />
+              <span class="pointer-events-none absolute inset-y-0 right-2 flex items-center text-[10px] text-slate-400">{{ vndSuffix }}</span>
+            </div>
+            <p
+              v-if="cell.words"
+              class="mt-1 text-[10px] font-medium leading-snug text-rose-600 dark:text-rose-400"
+              :data-testid="cell.wordsTestId"
+            >
+              {{ cell.words }}
+            </p>
           </div>
           <p v-else class="mt-1 text-base font-semibold tabular-nums text-slate-900 dark:text-slate-100">
             {{ cell.display }}
@@ -96,14 +107,14 @@
       >
         <div class="bg-emerald-50/50 px-4 py-3 dark:bg-emerald-950/15">
           <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-600/80 dark:text-emerald-400/80">{{ t('request_detail.lbl_origin') }}</p>
-          <p class="mt-0.5 text-sm font-semibold leading-snug text-slate-800 dark:text-slate-100">{{ rowFrom(row) || '—' }}</p>
+          <p class="mt-0.5 text-sm font-semibold leading-snug text-slate-800 dark:text-slate-100">{{ rowFrom(row) || rdEmptyLabel(t, 'route_from') }}</p>
         </div>
         <div class="flex items-center justify-center bg-slate-50/50 px-2 dark:bg-slate-800/30">
           <svg class="h-4 w-4 text-slate-300 dark:text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
         </div>
         <div class="bg-rose-50/50 px-4 py-3 dark:bg-rose-950/15">
           <p class="text-[10px] font-bold uppercase tracking-wider text-rose-600/80 dark:text-rose-400/80">{{ t('request_detail.lbl_destination') }}</p>
-          <p class="mt-0.5 text-sm font-semibold leading-snug text-slate-800 dark:text-slate-100">{{ rowTo(row) || '—' }}</p>
+          <p class="mt-0.5 text-sm font-semibold leading-snug text-slate-800 dark:text-slate-100">{{ rowTo(row) || rdEmptyLabel(t, 'route_to') }}</p>
         </div>
       </div>
 
@@ -131,19 +142,28 @@
             :label="t('request_detail.ops_lbl_cost')"
             :tooltip="t('request_detail.ops_cost_tooltip')"
           />
-          <div class="relative mt-1.5">
-            <input
-              :value="cargoCost[idx]"
-              type="text"
-              inputmode="numeric"
-              class="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-3 pr-14 text-right text-sm tabular-nums text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-              :placeholder="t('request_detail.ops_money_ph')"
-              :title="t('request_detail.ops_cost_tooltip')"
-              @input="cargoCost[idx] = fmtTyping($event.target.value)"
-              @blur="cargoCost[idx] = fmtBlur(cargoCost[idx])"
-            />
-            <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-medium text-slate-400 dark:text-slate-500">{{ vndSuffix }}</span>
-          </div>
+            <div class="relative mt-1.5">
+              <input
+                :value="cargoCost[idx]"
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+                class="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-3 pr-14 text-right text-sm tabular-nums text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                :placeholder="t('request_detail.ops_money_ph')"
+                :title="t('request_detail.ops_cost_tooltip')"
+                data-testid="fill-price-cargo-cost"
+                @keydown="onVndMoneyKeydown"
+                @input="onCargoCostInput(idx, $event)"
+                @blur="cargoCost[idx] = fmtBlur(cargoCost[idx])"
+              />
+              <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-medium text-slate-400 dark:text-slate-500">{{ vndSuffix }}</span>
+            </div>
+            <p
+              v-if="vndMoneyWordsHint(cargoCost[idx])"
+              class="mt-1 text-xs font-medium leading-snug text-rose-600 dark:text-rose-400"
+            >
+              {{ vndMoneyWordsHint(cargoCost[idx]) }}
+            </p>
         </label>
       </div>
 
@@ -160,14 +180,24 @@
                 :value="unitDraft[idx]"
                 type="text"
                 inputmode="numeric"
+                autocomplete="off"
                 class="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-3 pr-14 text-right text-sm tabular-nums text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 :placeholder="t('request_detail.ops_money_ph')"
                 :title="t('request_detail.ops_unit_price_tooltip')"
-                @input="unitDraft[idx] = fmtTyping($event.target.value)"
+                :data-testid="idx === 0 ? 'fill-price-unit-price' : undefined"
+                @keydown="onVndMoneyKeydown"
+                @input="onUnitInput(idx, $event)"
                 @blur="unitDraft[idx] = fmtBlur(unitDraft[idx])"
               />
               <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-medium text-slate-400 dark:text-slate-500">{{ vndSuffix }}</span>
             </div>
+            <p
+              v-if="vndMoneyWordsHint(unitDraft[idx])"
+              class="mt-1 text-xs font-medium leading-snug text-rose-600 dark:text-rose-400"
+              :data-testid="idx === 0 ? 'fill-price-unit-price-words' : undefined"
+            >
+              {{ vndMoneyWordsHint(unitDraft[idx]) }}
+            </p>
           </label>
           <label class="block">
             <FillPriceFieldLabel
@@ -179,14 +209,24 @@
                 :value="extraDraft[idx]"
                 type="text"
                 inputmode="numeric"
+                autocomplete="off"
                 class="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-3 pr-14 text-right text-sm tabular-nums text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 :placeholder="t('request_detail.ops_money_zero_ph')"
                 :title="t('request_detail.ops_extra_fee_tooltip')"
-                @input="extraDraft[idx] = fmtTyping($event.target.value)"
+                :data-testid="idx === 0 ? 'fill-price-extra-fee' : undefined"
+                @keydown="onVndMoneyKeydown"
+                @input="onExtraInput(idx, $event)"
                 @blur="extraDraft[idx] = fmtBlur(extraDraft[idx])"
               />
               <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-medium text-slate-400 dark:text-slate-500">{{ vndSuffix }}</span>
             </div>
+            <p
+              v-if="vndMoneyWordsHint(extraDraft[idx])"
+              class="mt-1 text-xs font-medium leading-snug text-rose-600 dark:text-rose-400"
+              :data-testid="idx === 0 ? 'fill-price-extra-fee-words' : undefined"
+            >
+              {{ vndMoneyWordsHint(extraDraft[idx]) }}
+            </p>
           </label>
         </div>
         <label class="block">
@@ -284,6 +324,8 @@ import {
   formatVndWhileTyping,
   formatMoneyDraftDisplay,
   VND_CURRENCY_SUFFIX,
+  onVndMoneyKeydown,
+  vndMoneyWordsHint,
 } from '../../../util/money'
 import {
   itineraryRowHeading,
@@ -291,6 +333,7 @@ import {
   nz,
   resolveItineraryTripType,
 } from '../../../util/requestItineraryRowDisplay'
+import { rdEmptyLabel } from '../../../util/requestDetailEmpty'
 
 const { t } = useI18n()
 
@@ -337,6 +380,37 @@ function fmtBlur(v) {
   return n > 0 ? formatVndWhileTyping(String(n)) : ''
 }
 
+function syncMoneyInputEl(e, formatted) {
+  const el = e?.target
+  if (el && el.value !== formatted) {
+    el.value = formatted
+  }
+}
+
+function onUnitInput(idx, e) {
+  const formatted = fmtTyping(e?.target?.value ?? '')
+  syncMoneyInputEl(e, formatted)
+  const cp = [...unitDraft.value]
+  cp[idx] = formatted
+  unitDraft.value = cp
+}
+
+function onExtraInput(idx, e) {
+  const formatted = fmtTyping(e?.target?.value ?? '')
+  syncMoneyInputEl(e, formatted)
+  const cp = [...extraDraft.value]
+  cp[idx] = formatted
+  extraDraft.value = cp
+}
+
+function onCargoCostInput(idx, e) {
+  const formatted = fmtTyping(e?.target?.value ?? '')
+  syncMoneyInputEl(e, formatted)
+  const cp = [...cargoCost.value]
+  cp[idx] = formatted
+  cargoCost.value = cp
+}
+
 function rowHeading(row, idx) {
   return itineraryRowHeading(row, idx, { tripType: itineraryTripType.value, t })
 }
@@ -381,7 +455,10 @@ const total = computed(() => {
   }
   return s
 })
-const totalFmt = computed(() => formatVndCurrency(total.value, VND_CURRENCY_SUFFIX))
+const totalFmt = computed(() => {
+  if (total.value <= 0) return rdEmptyLabel(t, 'money_total')
+  return formatVndCurrency(total.value, VND_CURRENCY_SUFFIX)
+})
 
 const unitSum = computed(() => {
   if (isCargo.value) return total.value
@@ -401,25 +478,53 @@ const extraSum = computed(() => {
   return s
 })
 
-const unitSumFmt = computed(() => formatVndCurrency(unitSum.value, VND_CURRENCY_SUFFIX))
-const extraSumFmt = computed(() => formatVndCurrency(extraSum.value, VND_CURRENCY_SUFFIX))
+const unitSumFmt = computed(() => {
+  if (unitSum.value <= 0) return rdEmptyLabel(t, 'unit_price')
+  return formatVndCurrency(unitSum.value, VND_CURRENCY_SUFFIX)
+})
+const extraSumFmt = computed(() => {
+  if (extraSum.value <= 0) return rdEmptyLabel(t, 'extra_fee')
+  return formatVndCurrency(extraSum.value, VND_CURRENCY_SUFFIX)
+})
 
 const passengerDisplay = computed(() => {
   const pax = dispatchRequestDisplayPassengerCount(props.req)
-  if (pax == null || pax === '') return '—'
+  if (pax == null || pax === '') return rdEmptyLabel(t, 'passengers')
   return t('request_detail.approval_ws_passengers_n', { n: pax })
 })
 
-function setDraftOnRow(field, idx, raw) {
-  if (field === 'unit') unitDraft.value[idx] = fmtTyping(raw)
-  else if (field === 'extra') extraDraft.value[idx] = fmtTyping(raw)
-  else if (field === 'cargo') cargoCost.value[idx] = fmtTyping(raw)
+function setDraftOnRow(field, idx, raw, e) {
+  const formatted = fmtTyping(raw)
+  syncMoneyInputEl(e, formatted)
+  if (field === 'unit') {
+    const cp = [...unitDraft.value]
+    cp[idx] = formatted
+    unitDraft.value = cp
+  } else if (field === 'extra') {
+    const cp = [...extraDraft.value]
+    cp[idx] = formatted
+    extraDraft.value = cp
+  } else if (field === 'cargo') {
+    const cp = [...cargoCost.value]
+    cp[idx] = formatted
+    cargoCost.value = cp
+  }
 }
 
 function blurDraftOnRow(field, idx) {
-  if (field === 'unit') unitDraft.value[idx] = fmtBlur(unitDraft.value[idx])
-  else if (field === 'extra') extraDraft.value[idx] = fmtBlur(extraDraft.value[idx])
-  else if (field === 'cargo') cargoCost.value[idx] = fmtBlur(cargoCost.value[idx])
+  if (field === 'unit') {
+    const cp = [...unitDraft.value]
+    cp[idx] = fmtBlur(cp[idx])
+    unitDraft.value = cp
+  } else if (field === 'extra') {
+    const cp = [...extraDraft.value]
+    cp[idx] = fmtBlur(cp[idx])
+    extraDraft.value = cp
+  } else if (field === 'cargo') {
+    const cp = [...cargoCost.value]
+    cp[idx] = fmtBlur(cp[idx])
+    cargoCost.value = cp
+  }
 }
 
 function workspaceInputHandlers(field) {
@@ -428,9 +533,9 @@ function workspaceInputHandlers(field) {
     onInput: (e) => {
       const v = String(e.target?.value ?? '')
       if (multi) {
-        rows.value.forEach((_, i) => setDraftOnRow(field, i, i === 0 ? v : '0'))
+        rows.value.forEach((_, i) => setDraftOnRow(field, i, i === 0 ? v : '0', i === 0 ? e : undefined))
       } else {
-        setDraftOnRow(field, 0, v)
+        setDraftOnRow(field, 0, v, e)
       }
     },
     onBlur: () => {
@@ -453,6 +558,8 @@ const workspaceCells = computed(() => {
         editable: rows.value.length <= 1,
         value: rows.value.length <= 1 ? cargoCost.value[0] ?? '' : '',
         display: unitSumFmt.value,
+        words: rows.value.length <= 1 ? vndMoneyWordsHint(cargoCost.value[0] ?? '') : '',
+        wordsTestId: 'approval-ws-unit-price-words',
         testId: 'approval-ws-unit-price',
         ...h,
       },
@@ -460,7 +567,7 @@ const workspaceCells = computed(() => {
         key: 'extra',
         label: t('request_detail.ops_lbl_extra_fee'),
         editable: false,
-        display: '—',
+        display: rdEmptyLabel(t, 'extra_fee_na'),
       },
       {
         key: 'pax',
@@ -486,6 +593,8 @@ const workspaceCells = computed(() => {
       editable: !multi,
       value: multi ? '' : unitDraft.value[0] ?? '',
       display: unitSumFmt.value,
+      words: multi ? '' : vndMoneyWordsHint(unitDraft.value[0] ?? ''),
+      wordsTestId: 'approval-ws-unit-price-words',
       testId: 'approval-ws-unit-price',
       ...unitH,
     },
@@ -495,6 +604,8 @@ const workspaceCells = computed(() => {
       editable: !multi,
       value: multi ? '' : extraDraft.value[0] ?? '',
       display: extraSumFmt.value,
+      words: multi ? '' : vndMoneyWordsHint(extraDraft.value[0] ?? ''),
+      wordsTestId: 'approval-ws-extra-fee-words',
       testId: 'approval-ws-extra-fee',
       ...extraH,
     },
@@ -544,7 +655,7 @@ const deptHeadDisplayLine = computed(() => {
   const snap = props.req?.wizard_snapshot?.form
   const fromSnap = nz(snap?.dept_head_label)
   if (fromSnap) return fromSnap
-  return presetDeptHeadId.value != null ? `#${presetDeptHeadId.value}` : '—'
+  return presetDeptHeadId.value != null ? `#${presetDeptHeadId.value}` : rdEmptyLabel(t, 'dept_head')
 })
 
 watch(

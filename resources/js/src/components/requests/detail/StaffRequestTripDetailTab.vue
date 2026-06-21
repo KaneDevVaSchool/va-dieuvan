@@ -1,239 +1,213 @@
 <template>
-  <div
-    class="divide-y divide-slate-100 dark:divide-slate-800"
-    data-testid="staff-request-trip-detail-tab"
-  >
-    <!-- Section 1 — Kế hoạch điều vận -->
-    <section class="px-4 py-6 sm:px-5" :aria-label="t('request_detail.trip_tab_section_plan')">
-      <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-        {{ t('request_detail.trip_tab_section_plan') }}
-      </p>
-      <div class="mt-4 grid grid-cols-2 gap-x-6 gap-y-5 lg:grid-cols-4">
+  <div class="space-y-1.5 pb-1 text-[90%]" data-testid="staff-request-trip-detail-tab">
+    <StaffRequestTripCollapseSection
+      section-key="plan"
+      :title="t('request_detail.trip_tab_section_plan')"
+      tone="brand"
+      :default-open="true"
+      :expand-label="t('request_detail.trip_tab_expand_section')"
+      :collapse-label="t('request_detail.trip_tab_collapse_section')"
+    >
+      <dl class="grid grid-cols-2 gap-x-3 gap-y-1.5 sm:grid-cols-4">
         <div v-for="stat in planStats" :key="stat.key" class="min-w-0">
-          <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+          <dt class="text-[9px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
             {{ stat.label }}
-          </p>
-          <p class="mt-1 font-display text-xl font-semibold tabular-nums leading-tight text-slate-900 dark:text-white sm:text-2xl">
+          </dt>
+          <dd class="mt-px truncate text-xs font-semibold tabular-nums text-slate-900 dark:text-slate-100">
             {{ stat.value }}
-          </p>
+          </dd>
         </div>
-      </div>
-    </section>
+      </dl>
+    </StaffRequestTripCollapseSection>
 
-    <!-- Section 2 — Điều phối phương tiện -->
-    <section class="px-4 py-6 sm:px-5" :aria-label="t('request_detail.trip_tab_section_assignment')">
-      <div class="flex flex-wrap items-start justify-between gap-3">
-        <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-          {{ t('request_detail.trip_tab_section_assignment') }}
-        </p>
+    <StaffRequestTripCollapseSection
+      section-key="assignment"
+      :title="t('request_detail.trip_tab_section_assignment')"
+      :badge="hasAssignment && trip?.status ? assignmentStatus : ''"
+      tone="sky"
+      :default-open="true"
+      :expand-label="t('request_detail.trip_tab_expand_section')"
+      :collapse-label="t('request_detail.trip_tab_collapse_section')"
+    >
+      <template #header-actions>
         <RouterLink
           v-if="trip?.id"
           :to="`/trips/${trip.id}`"
-          class="text-xs font-semibold text-va-700 hover:text-va-900 dark:text-va-400 dark:hover:text-va-200"
+          class="shrink-0 text-[10px] font-semibold text-va-700 hover:underline dark:text-va-400"
           data-testid="staff-request-trip-tab-open-trip"
+          @click.stop
         >
           {{ t('request_detail.ops_open_trip_detail') }}
         </RouterLink>
-      </div>
+      </template>
 
-      <div
+      <p
         v-if="!hasAssignment"
-        class="mt-4 flex flex-col items-center rounded-xl bg-slate-50/80 px-6 py-10 text-center dark:bg-slate-800/40"
+        class="py-2 text-center text-[11px] text-slate-500 dark:text-slate-400"
         data-testid="staff-request-trip-tab-assignment-empty"
       >
-        <span class="flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
-          <ExclamationTriangleIcon class="h-6 w-6" aria-hidden="true" />
-        </span>
-        <p class="mt-3 text-sm font-semibold text-slate-800 dark:text-slate-100">
-          {{ t('request_detail.trip_tab_assignment_empty_title') }}
-        </p>
-        <p class="mt-1 max-w-sm text-sm text-slate-500 dark:text-slate-400">
-          {{ t('request_detail.trip_tab_assignment_empty_hint') }}
-        </p>
-      </div>
+        <ExclamationTriangleIcon class="mx-auto mb-1 h-4 w-4 text-amber-500" aria-hidden="true" />
+        {{ t('request_detail.trip_tab_assignment_empty_title') }}
+      </p>
 
       <dl
         v-else
-        class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-5"
+        class="grid grid-cols-2 gap-x-2 gap-y-1.5 sm:grid-cols-3 lg:grid-cols-5"
         data-testid="staff-request-trip-tab-assignment-grid"
       >
         <div v-for="cell in assignmentCells" :key="cell.key" class="min-w-0">
-          <dt class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            {{ cell.label }}
-          </dt>
-          <dd class="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+          <dt class="text-[9px] font-semibold uppercase tracking-wide text-slate-400">{{ cell.label }}</dt>
+          <dd
+            class="truncate text-[11px] font-semibold leading-snug"
+            :class="cell.key === 'status' ? statusValueClass : 'text-slate-900 dark:text-slate-100'"
+          >
             {{ cell.value }}
           </dd>
         </div>
       </dl>
-    </section>
+    </StaffRequestTripCollapseSection>
 
-    <!-- Section 3 — Hành khách -->
-    <section class="px-4 py-6 sm:px-5" :aria-label="t('request_detail.trip_tab_section_passengers')">
-      <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-        {{ passengerSectionTitle }}
-      </p>
-
+    <StaffRequestTripCollapseSection
+      section-key="passengers"
+      :title="passengerSectionTitle"
+      :badge="passengerRows.length ? String(passengerRows.length) : ''"
+      tone="violet"
+      :default-open="passengerRows.length > 0 && passengerRows.length <= 8"
+      :expand-label="t('request_detail.trip_tab_expand_section')"
+      :collapse-label="t('request_detail.trip_tab_collapse_section')"
+    >
       <p
         v-if="!passengerRows.length"
-        class="mt-4 text-sm italic text-slate-400 dark:text-slate-500"
+        class="text-[11px] italic text-slate-400"
         data-testid="staff-request-trip-tab-passengers-empty"
       >
         {{ t('request_detail.trip_tab_passengers_empty') }}
       </p>
 
-      <div v-else class="mt-4 -mx-4 overflow-x-auto sm:mx-0">
-        <table class="min-w-full text-left text-sm" data-testid="staff-request-trip-tab-passengers-table">
-          <thead>
-            <tr class="border-b border-slate-100 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:border-slate-800 dark:text-slate-500">
-              <th scope="col" class="px-4 py-2 font-semibold sm:px-0">{{ t('request_detail.trip_tab_col_name') }}</th>
-              <th scope="col" class="hidden px-3 py-2 font-semibold sm:table-cell">{{ t('request_detail.trip_tab_col_department') }}</th>
-              <th scope="col" class="px-3 py-2 font-semibold">{{ t('request_detail.trip_tab_col_role') }}</th>
-              <th scope="col" class="px-3 py-2 font-semibold sm:px-0">{{ t('request_detail.trip_tab_col_phone') }}</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-50 dark:divide-slate-800/80">
-            <tr v-for="row in passengerRows" :key="row.key">
-              <td class="px-4 py-3 sm:px-0">
-                <div class="flex min-w-0 items-center gap-2.5">
-                  <span
-                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300"
-                    aria-hidden="true"
-                  >{{ row.initials }}</span>
-                  <span class="min-w-0 font-medium text-slate-900 dark:text-slate-100">{{ row.name }}</span>
-                </div>
-              </td>
-              <td class="hidden px-3 py-3 text-slate-600 dark:text-slate-300 sm:table-cell">{{ row.department }}</td>
-              <td class="px-3 py-3 text-slate-600 dark:text-slate-300">{{ row.role }}</td>
-              <td class="px-3 py-3 tabular-nums text-slate-700 dark:text-slate-200 sm:px-0">{{ row.phone }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
+      <table v-else class="w-full min-w-0 text-left text-[11px]" data-testid="staff-request-trip-tab-passengers-table">
+        <thead>
+          <tr class="border-b border-slate-100 text-[9px] font-semibold uppercase tracking-wide text-slate-400 dark:border-slate-800">
+            <th scope="col" class="py-1 pr-2 font-semibold">{{ t('request_detail.trip_tab_col_name') }}</th>
+            <th scope="col" class="hidden py-1 pr-2 font-semibold md:table-cell">{{ t('request_detail.trip_tab_col_department') }}</th>
+            <th scope="col" class="py-1 pr-2 font-semibold">{{ t('request_detail.trip_tab_col_role') }}</th>
+            <th scope="col" class="py-1 font-semibold">{{ t('request_detail.trip_tab_col_phone') }}</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-50 dark:divide-slate-800/80">
+          <tr v-for="row in passengerRows" :key="row.key">
+            <td class="max-w-[9rem] truncate py-1 pr-2 font-medium text-slate-900 dark:text-slate-100">{{ row.name }}</td>
+            <td class="hidden max-w-[8rem] truncate py-1 pr-2 text-slate-600 dark:text-slate-400 md:table-cell">{{ row.department }}</td>
+            <td class="max-w-[6rem] truncate py-1 pr-2 text-slate-600 dark:text-slate-400">{{ row.role }}</td>
+            <td class="py-1 tabular-nums text-slate-700 dark:text-slate-300">{{ row.phone }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </StaffRequestTripCollapseSection>
 
-    <!-- Section 4 — Lịch trình thực hiện -->
-    <section class="px-4 py-6 sm:px-5" :aria-label="t('request_detail.trip_tab_section_execution')">
-      <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-        {{ t('request_detail.trip_tab_section_execution') }}
-      </p>
-      <ol class="relative mt-5 space-y-0" data-testid="staff-request-trip-tab-execution-timeline">
-        <li
-          v-for="(step, idx) in executionSteps"
-          :key="step.key"
-          class="relative flex gap-4 pb-8 last:pb-0"
-        >
-          <div class="flex shrink-0 flex-col items-center">
-            <span
-              class="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold"
-              :class="stepCircleClass(step.state)"
-              :aria-current="step.state === 'current' ? 'step' : undefined"
-            >
-              <CheckIcon v-if="step.state === 'done'" class="h-4 w-4" />
-              <span v-else class="tabular-nums">{{ idx + 1 }}</span>
-            </span>
-            <span
-              v-if="idx < executionSteps.length - 1"
-              class="mt-1 w-px flex-1 min-h-[2rem] bg-slate-200 dark:bg-slate-700"
-              :class="step.state === 'done' ? 'bg-va-500 dark:bg-va-400' : ''"
-              aria-hidden="true"
-            />
-          </div>
-          <div class="min-w-0 flex-1 pt-0.5">
-            <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ step.label }}</p>
-            <div class="mt-2 grid gap-2 sm:grid-cols-2">
-              <div>
-                <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{{ t('request_detail.trip_tab_planned') }}</p>
-                <p class="mt-0.5 text-sm tabular-nums text-slate-600 dark:text-slate-300">{{ step.planned }}</p>
-              </div>
-              <div>
-                <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{{ t('request_detail.trip_tab_actual') }}</p>
-                <p class="mt-0.5 text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100">{{ step.actual }}</p>
-              </div>
-            </div>
-          </div>
-        </li>
-      </ol>
-    </section>
+    <StaffRequestTripCollapseSection
+      section-key="execution"
+      :title="t('request_detail.trip_tab_section_execution')"
+      tone="emerald"
+      :default-open="true"
+      :expand-label="t('request_detail.trip_tab_expand_section')"
+      :collapse-label="t('request_detail.trip_tab_collapse_section')"
+    >
+      <StaffRequestTripExecutionTimeline
+        :steps="executionSteps"
+        :planned-label="t('request_detail.trip_tab_planned')"
+        :actual-label="t('request_detail.trip_tab_actual')"
+        :planned-short="t('request_detail.trip_tab_planned_short')"
+        :actual-short="t('request_detail.trip_tab_actual_short')"
+      />
+    </StaffRequestTripCollapseSection>
 
-    <!-- Section 5 — Thông tin nghiệp vụ -->
-    <section class="px-4 py-6 sm:px-5" :aria-label="t('request_detail.trip_tab_section_business')">
-      <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-        {{ t('request_detail.trip_tab_section_business') }}
-      </p>
-      <div class="mt-4 grid gap-6 lg:grid-cols-2">
+    <StaffRequestTripCollapseSection
+      section-key="business"
+      :title="t('request_detail.trip_tab_section_business')"
+      tone="slate"
+      :default-open="false"
+      :expand-label="t('request_detail.trip_tab_expand_section')"
+      :collapse-label="t('request_detail.trip_tab_collapse_section')"
+    >
+      <div class="grid gap-2 sm:grid-cols-2">
         <div class="min-w-0">
-          <h3 class="text-xs font-semibold text-slate-700 dark:text-slate-300">{{ t('request_detail.ops_lbl_purpose') }}</h3>
-          <p
-            v-if="purposeText"
-            class="mt-2 text-sm leading-relaxed text-slate-800 dark:text-slate-200"
-          >{{ purposeText }}</p>
-          <p v-else class="mt-2 text-sm italic text-slate-400">{{ emptyLabel }}</p>
-          <div v-if="purposeTargets.length" class="mt-3 flex flex-wrap gap-1.5">
+          <p class="text-[9px] font-semibold uppercase tracking-wide text-slate-400">{{ t('request_detail.ops_lbl_purpose') }}</p>
+          <p v-if="purposeText" class="mt-0.5 text-[11px] leading-snug text-slate-800 dark:text-slate-200">{{ purposeText }}</p>
+          <p v-else class="mt-0.5 text-[11px] italic text-slate-400">{{ rdEmptyLabel(t, 'purpose') }}</p>
+          <div v-if="purposeTargets.length" class="mt-1 flex flex-wrap gap-1">
             <span
               v-for="(tg, i) in purposeTargets"
               :key="i"
-              class="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+              class="rounded bg-slate-100 px-1.5 py-px text-[10px] text-slate-700 dark:bg-slate-800 dark:text-slate-300"
             >{{ tg }}</span>
           </div>
         </div>
         <div class="min-w-0">
-          <h3 class="text-xs font-semibold text-slate-700 dark:text-slate-300">{{ t('request_detail.ops_lbl_basis') }}</h3>
-          <div
-            class="mt-2 rounded-lg bg-slate-50/90 px-4 py-3 text-sm leading-relaxed text-slate-800 dark:bg-slate-800/50 dark:text-slate-200"
+          <p class="text-[9px] font-semibold uppercase tracking-wide text-slate-400">{{ t('request_detail.ops_lbl_basis') }}</p>
+          <p
+            class="mt-0.5 whitespace-pre-wrap text-[11px] leading-snug text-slate-800 dark:text-slate-200"
             data-testid="staff-request-trip-tab-basis-block"
           >
-            <p v-if="basisText" class="whitespace-pre-wrap">{{ basisText }}</p>
-            <p v-else class="italic text-slate-400">{{ emptyLabel }}</p>
-          </div>
+            <template v-if="basisText">{{ basisText }}</template>
+            <template v-else><span class="italic text-slate-400">{{ rdEmptyLabel(t, 'basis') }}</span></template>
+          </p>
         </div>
       </div>
-    </section>
+    </StaffRequestTripCollapseSection>
 
-    <!-- Section 6 — Chi phí -->
-    <section class="px-4 py-6 sm:px-5" :aria-label="t('request_detail.trip_tab_section_finance')">
-      <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-        {{ t('request_detail.trip_tab_section_finance') }}
-      </p>
-      <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div v-for="line in financeLines" :key="line.key" class="min-w-0" :class="line.key === 'total' ? 'sm:col-span-2 lg:col-span-1' : ''">
-          <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            {{ line.label }}
-          </p>
-          <p
-            class="mt-1 tabular-nums text-slate-900 dark:text-white"
-            :class="line.key === 'total' ? 'font-display text-2xl font-bold sm:text-3xl' : 'text-lg font-semibold'"
+    <StaffRequestTripCollapseSection
+      section-key="finance"
+      :title="t('request_detail.trip_tab_section_finance')"
+      tone="amber"
+      :default-open="false"
+      :expand-label="t('request_detail.trip_tab_expand_section')"
+      :collapse-label="t('request_detail.trip_tab_collapse_section')"
+    >
+      <dl class="grid grid-cols-2 gap-x-3 gap-y-1 sm:grid-cols-4">
+        <div v-for="line in financeLines" :key="line.key" class="min-w-0">
+          <dt class="text-[9px] font-semibold uppercase tracking-wide text-slate-400">{{ line.label }}</dt>
+          <dd
+            class="mt-px truncate tabular-nums font-semibold text-slate-900 dark:text-slate-100"
+            :class="line.key === 'total' ? 'text-sm' : 'text-xs'"
           >
             {{ line.value }}
-          </p>
+          </dd>
         </div>
-      </div>
-    </section>
+      </dl>
+    </StaffRequestTripCollapseSection>
 
-    <!-- Section 7 — Ghi chú -->
-    <section class="px-4 py-6 sm:px-5" :aria-label="t('request_detail.trip_tab_section_notes')">
-      <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-        {{ t('request_detail.trip_tab_section_notes') }}
-      </p>
-      <div class="mt-4 grid gap-5 lg:grid-cols-3">
+    <StaffRequestTripCollapseSection
+      section-key="notes"
+      :title="t('request_detail.trip_tab_section_notes')"
+      tone="slate"
+      :default-open="false"
+      :expand-label="t('request_detail.trip_tab_expand_section')"
+      :collapse-label="t('request_detail.trip_tab_collapse_section')"
+    >
+      <dl class="grid gap-2 sm:grid-cols-3">
         <div v-for="note in noteBlocks" :key="note.key" class="min-w-0">
-          <h3 class="text-xs font-semibold text-slate-600 dark:text-slate-400">{{ note.label }}</h3>
-          <p
-            class="mt-2 whitespace-pre-wrap text-sm leading-relaxed"
+          <dt class="text-[9px] font-semibold uppercase tracking-wide text-slate-400">{{ note.label }}</dt>
+          <dd
+            class="mt-0.5 whitespace-pre-wrap text-[11px] leading-snug"
             :class="note.text ? 'text-slate-800 dark:text-slate-200' : 'italic text-slate-400'"
-          >{{ note.text || emptyLabel }}</p>
+          >
+            {{ note.text || rdEmptyLabel(t, 'note') }}
+          </dd>
         </div>
-      </div>
-    </section>
+      </dl>
+    </StaffRequestTripCollapseSection>
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
-import { CheckIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/outline'
+import { ExclamationTriangleIcon } from '@heroicons/vue/24/outline'
 import { useI18n } from 'vue-i18n'
+import StaffRequestTripCollapseSection from './StaffRequestTripCollapseSection.vue'
+import StaffRequestTripExecutionTimeline from './StaffRequestTripExecutionTimeline.vue'
 import { useStaffRequestTripDetailTab } from '../../../composables/useStaffRequestTripDetailTab'
+import { rdEmptyLabel } from '../../../util/requestDetailEmpty'
 
 const props = defineProps({
   req: { type: Object, required: true },
@@ -243,7 +217,6 @@ const props = defineProps({
 const { t } = useI18n()
 
 const {
-  emptyLabel,
   planDateNeeded,
   planDuration,
   planVehicleType,
@@ -307,9 +280,12 @@ const noteBlocks = computed(() => [
   { key: 'extra', label: t('request_detail.trip_tab_note_extra'), text: noteExtra.value },
 ])
 
-function stepCircleClass(state) {
-  if (state === 'done') return 'bg-va-600 text-white dark:bg-va-500'
-  if (state === 'current') return 'bg-sky-100 text-sky-800 ring-2 ring-sky-500/40 dark:bg-sky-950/50 dark:text-sky-200'
-  return 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
-}
+const statusValueClass = computed(() => {
+  const raw = trip.value?.status
+  if (!raw) return 'text-slate-900 dark:text-slate-100'
+  if (['completed', 'done'].includes(raw)) return 'text-emerald-700 dark:text-emerald-400'
+  if (['in_progress', 'started', 'en_route'].includes(raw)) return 'text-sky-700 dark:text-sky-400'
+  if (['cancelled', 'incident'].includes(raw)) return 'text-rose-700 dark:text-rose-400'
+  return 'text-amber-800 dark:text-amber-300'
+})
 </script>

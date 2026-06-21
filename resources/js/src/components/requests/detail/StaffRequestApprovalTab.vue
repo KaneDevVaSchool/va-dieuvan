@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto w-full max-w-5xl space-y-5 py-1" data-testid="staff-request-approval-tab">
+  <div class="w-full min-w-0 space-y-5 py-1" data-testid="staff-request-approval-tab">
     <!-- Khối 1 — Tóm tắt duyệt -->
     <section
       class="rounded-lg border border-slate-200/80 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900 sm:px-5"
@@ -236,7 +236,7 @@ const props = defineProps({
   d2dMsg: { type: String, default: '' },
   showResetClone: { type: Boolean, default: false },
   resetCloneBusy: { type: Boolean, default: false },
-  declaredTotalDisplay: { type: String, default: '—' },
+  declaredTotalDisplay: { type: String, default: '' },
   auditItems: { type: Array, default: () => [] },
   auditLoading: { type: Boolean, default: false },
   auditError: { type: String, default: '' },
@@ -258,7 +258,7 @@ const emit = defineEmits([
 const { t } = useI18n()
 
 const fillPricePanelRef = ref(null)
-const fillPriceWorkspace = ref({ unitSumFmt: '—', extraSumFmt: '—', rowCount: 0 })
+const fillPriceWorkspace = ref({ unitSumFmt: '', extraSumFmt: '', rowCount: 0 })
 const processingNote = ref('')
 const historyOpen = ref(false)
 const multiRowModalOpen = ref(false)

@@ -3,6 +3,7 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../store'
 import { dispatchRequestDisplayPassengerCount } from '../util/dispatchRequestPassengers'
 import { formatVndCurrency, parseMoneyVnd, VND_CURRENCY_SUFFIX } from '../util/money'
+import { rdEmptyLabel, formatVndOrRdEmpty, isRdLegacyDash } from '../util/requestDetailEmpty'
 
 /**
  * Copy trạng thái + mini-stepper cho tab Phê duyệt (staff).
@@ -37,7 +38,7 @@ export function useStaffRequestApprovalWorkspace(reqRef, ctxRef) {
     const r = unref(reqRef)
     if (c?.showFillPriceSection && c?.fillPriceSummary?.deptHeadDisplayLine) {
       const line = String(c.fillPriceSummary.deptHeadDisplayLine || '').trim()
-      if (line && line !== '—') return line
+      if (line && !isRdLegacyDash(line)) return line
     }
     const head = r?.assigned_dept_head
     if (head?.name) return String(head.name).trim()
@@ -108,20 +109,19 @@ export function useStaffRequestApprovalWorkspace(reqRef, ctxRef) {
   })
 
   function formatAmount(n) {
-    const amount = parseMoneyVnd(n)
-    if (!amount) return '—'
-    return formatVndCurrency(amount, VND_CURRENCY_SUFFIX)
+    return formatVndOrRdEmpty(t, n, parseMoneyVnd, formatVndCurrency, VND_CURRENCY_SUFFIX, 'money')
   }
 
   const readOnlyMetrics = computed(() => {
     const r = unref(reqRef)
     const c = unref(ctxRef)
+    const empty = rdEmptyLabel(t, 'default')
     if (!r) {
       return {
-        unitPrice: '—',
-        extraFee: '—',
-        passengers: '—',
-        total: '—',
+        unitPrice: rdEmptyLabel(t, 'unit_price'),
+        extraFee: rdEmptyLabel(t, 'extra_fee'),
+        passengers: rdEmptyLabel(t, 'passengers'),
+        total: rdEmptyLabel(t, 'money_total'),
       }
     }
 
@@ -129,26 +129,29 @@ export function useStaffRequestApprovalWorkspace(reqRef, ctxRef) {
     const passengers =
       pax != null && pax !== ''
         ? t('request_detail.approval_ws_passengers_n', { n: pax })
-        : '—'
+        : rdEmptyLabel(t, 'passengers')
 
     const fromSummary = c?.fillPriceSummary
     if (fromSummary?.totalFmt && c?.showFillPriceSection) {
+      const unitFmt = c?.fillPriceWorkspace?.unitSumFmt
+      const extraFmt = c?.fillPriceWorkspace?.extraSumFmt
       return {
-        unitPrice: c?.fillPriceWorkspace?.unitSumFmt ?? '—',
-        extraFee: c?.fillPriceWorkspace?.extraSumFmt ?? '—',
+        unitPrice: unitFmt && !isRdLegacyDash(unitFmt) ? unitFmt : rdEmptyLabel(t, 'unit_price'),
+        extraFee: extraFmt && !isRdLegacyDash(extraFmt) ? extraFmt : rdEmptyLabel(t, 'extra_fee'),
         passengers,
         total: fromSummary.totalFmt,
       }
     }
 
-    const service = r.service_price != null ? formatAmount(r.service_price) : '—'
-    const estTotal = c?.declaredTotalDisplay ?? '—'
+    const service = r.service_price != null ? formatAmount(r.service_price) : rdEmptyLabel(t, 'unit_price')
+    const estTotal = c?.declaredTotalDisplay ?? empty
+    const totalEmpty = !estTotal || isRdLegacyDash(estTotal) || estTotal === empty
 
     return {
       unitPrice: service,
-      extraFee: '—',
+      extraFee: rdEmptyLabel(t, 'extra_fee'),
       passengers,
-      total: estTotal !== '—' ? estTotal : service,
+      total: totalEmpty ? service : estTotal,
     }
   })
 

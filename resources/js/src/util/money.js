@@ -37,6 +37,30 @@ export function formatVndWhileTyping(raw) {
   return Number(digits).toLocaleString('vi-VN')
 }
 
+const VND_MONEY_ALLOWED_KEYS = new Set([
+  'Backspace',
+  'Delete',
+  'Tab',
+  'Escape',
+  'Enter',
+  'ArrowLeft',
+  'ArrowRight',
+  'ArrowUp',
+  'ArrowDown',
+  'Home',
+  'End',
+])
+
+/** Chặn gõ chữ vào ô tiền (vẫn cho phép Ctrl/Cmd+A,C,V,X…). */
+export function onVndMoneyKeydown(e) {
+  if (!e || e.isComposing) return
+  if (VND_MONEY_ALLOWED_KEYS.has(e.key)) return
+  if (e.ctrlKey || e.metaKey || e.altKey) return
+  if (e.key.length === 1 && !/\d/.test(e.key)) {
+    e.preventDefault()
+  }
+}
+
 /** Giá trị đã lưu (snapshot / API) → chuỗi nhập tay đã nhóm nghìn. */
 export function formatMoneyDraftDisplay(v) {
   const n = normalizeMoneyAmount(v)
@@ -102,4 +126,12 @@ export function vndAmountInWords(amount) {
 
   const text = chunks.join(' ').replace(/\s+/g, ' ').trim()
   return `${text.charAt(0).toUpperCase()}${text.slice(1)} đồng`
+}
+
+/** Gợi ý đọc tiền dưới ô nhập (ẩn khi 0 / rỗng). */
+export function vndMoneyWordsHint(draftOrAmount) {
+  const n = parseMoneyVnd(draftOrAmount)
+  if (!n) return ''
+  const words = vndAmountInWords(n)
+  return words && words !== 'Không đồng' ? words : ''
 }

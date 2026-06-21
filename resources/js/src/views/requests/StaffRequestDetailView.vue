@@ -20,7 +20,7 @@
         :destination="req.destination || ''"
         :depart-summary="heroDepartSummary"
         :trip-type="labelTripType(req.trip_type)"
-        :passenger-line="passengerOrCargoLine !== '—' ? passengerOrCargoLine : ''"
+        :passenger-line="passengerOrCargoLine || passengerOrCargoEmptyLabel"
         :requester-name="req.requester?.name || ''"
         :requester-unit="heroRequesterUnit"
         :requester-initials="requesterInitials"
@@ -164,15 +164,15 @@
                       <dl class="grid grid-cols-2 divide-x divide-y divide-slate-100 dark:divide-slate-800 sm:grid-cols-4">
                         <div class="px-4 py-3">
                           <dt class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ t('request_detail.overview_lbl_driver') }}</dt>
-                          <dd class="mt-0.5 text-sm font-semibold text-slate-900 dark:text-slate-100">{{ req.trip.driver?.full_name || req.trip.driver?.name || friendlyEmpty }}</dd>
+                          <dd class="mt-0.5 text-sm font-semibold text-slate-900 dark:text-slate-100">{{ req.trip.driver?.full_name || req.trip.driver?.name || rdEmptyLabel(t, 'driver') }}</dd>
                         </div>
                         <div class="px-4 py-3">
                           <dt class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ t('request_detail.overview_lbl_vehicle') }}</dt>
-                          <dd class="mt-0.5 text-sm font-semibold text-slate-900 dark:text-slate-100">{{ req.trip.vehicle?.type || friendlyEmpty }}</dd>
+                          <dd class="mt-0.5 text-sm font-semibold text-slate-900 dark:text-slate-100">{{ req.trip.vehicle?.type || rdEmptyLabel(t, 'vehicle') }}</dd>
                         </div>
                         <div class="px-4 py-3">
                           <dt class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ t('request_detail.overview_lbl_plate') }}</dt>
-                          <dd class="mt-0.5 text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100">{{ req.trip.vehicle?.license_plate || friendlyEmpty }}</dd>
+                          <dd class="mt-0.5 text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100">{{ req.trip.vehicle?.license_plate || rdEmptyLabel(t, 'plate') }}</dd>
                         </div>
                         <div class="px-4 py-3">
                           <dt class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ t('request_detail.overview_lbl_cost') }}</dt>
@@ -194,14 +194,14 @@
                         <div class="px-4 py-3 sm:col-span-2 lg:col-span-1">
                           <dt class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ t('request_detail.ops_lbl_purpose') }}</dt>
                           <dd class="mt-1 text-sm leading-relaxed text-slate-800 dark:text-slate-200" :class="nz(formData.purpose) ? '' : 'italic text-slate-400 dark:text-slate-500'">
-                            {{ nz(formData.purpose) || friendlyEmpty }}
+                            {{ nz(formData.purpose) || rdEmptyLabel(t, 'purpose') }}
                           </dd>
                         </div>
                         <!-- Căn cứ -->
                         <div class="px-4 py-3 sm:col-span-2 lg:col-span-2">
                           <dt class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ t('request_detail.ops_lbl_basis') }}</dt>
                           <dd class="mt-1 text-sm leading-relaxed text-slate-800 dark:text-slate-200" :class="basisText ? '' : 'italic text-slate-400 dark:text-slate-500'">
-                            {{ basisText || friendlyEmpty }}
+                            {{ basisText || rdEmptyLabel(t, 'basis') }}
                           </dd>
                         </div>
                       </dl>
@@ -209,12 +209,12 @@
                       <dl class="grid grid-cols-2 divide-x divide-y divide-slate-100 dark:divide-slate-800 sm:grid-cols-4">
                         <div class="px-4 py-3">
                           <dt class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ t('request_detail.ops_lbl_proposed_date') }}</dt>
-                          <dd class="mt-0.5 text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100">{{ fmtDateOnly(formData.proposed_date) || friendlyEmpty }}</dd>
+                          <dd class="mt-0.5 text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100">{{ fmtDateOnly(formData.proposed_date) || rdEmptyLabel(t, 'date') }}</dd>
                         </div>
                         <div class="px-4 py-3">
                           <dt class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ t('request_detail.ops_lbl_date_needed') }}</dt>
                           <dd class="mt-0.5 text-sm font-semibold tabular-nums" :class="formData.date_needed ? 'text-slate-900 dark:text-slate-100' : 'italic text-slate-400 dark:text-slate-500'">
-                            {{ fmtDateOnly(formData.date_needed) || friendlyEmpty }}
+                            {{ fmtDateOnly(formData.date_needed) || rdEmptyLabel(t, 'date') }}
                           </dd>
                         </div>
                         <div v-if="coordinatorName" class="px-4 py-3">
@@ -366,11 +366,11 @@
                   <div v-show="activeTab === 'students' && showStudentCountTab" class="grid gap-4 sm:grid-cols-2">
                     <div class="rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
                       <p :class="sectionTitleClass">{{ t('request_detail.bm03_student_count_plan_short') }}</p>
-                      <p class="mt-2 text-4xl font-bold tabular-nums text-slate-900 dark:text-white">{{ dispatchRequestDisplayPassengerCount(req) || friendlyEmpty }}</p>
+                      <p class="mt-2 text-4xl font-bold tabular-nums text-slate-900 dark:text-white">{{ dispatchRequestDisplayPassengerCount(req) || rdEmptyLabel(t, 'passengers') }}</p>
                     </div>
                     <div class="rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
                       <p :class="sectionTitleClass">{{ t('request_detail.bm03_student_count_actual_short') }}</p>
-                      <p class="mt-2 text-4xl font-bold tabular-nums text-teal-600 dark:text-teal-400">{{ req.student_count_actual ?? friendlyEmpty }}</p>
+                      <p class="mt-2 text-4xl font-bold tabular-nums text-teal-600 dark:text-teal-400">{{ req.student_count_actual != null ? req.student_count_actual : rdEmptyLabel(t, 'student_actual') }}</p>
                     </div>
                   </div>
 
@@ -519,6 +519,7 @@ import { useRequestDetailPage } from '../../composables/useRequestDetailPage'
 import { useAssignedDeptHeadDisplay } from '../../composables/useAssignedDeptHeadDisplay'
 import { formatVndCurrency as formatVndMoney, parseMoneyVnd, VND_CURRENCY_SUFFIX, vndAmountInWords } from '../../util/money'
 import { formatTripCode, labelTripStatus } from '../../util/labels'
+import { rdEmptyLabel } from '../../util/requestDetailEmpty'
 import { dispatchRequestDisplayPassengerCount } from '../../util/dispatchRequestPassengers'
 
 const { t, locale } = useI18n()
@@ -548,6 +549,7 @@ const {
   requesterAsideSubtitle,
   requesterAsideFields,
   passengerOrCargoLine,
+  passengerOrCargoEmptyLabel,
   showD2dDecisionSection,
   showFillPriceSection,
   fillPriceAutoApproves,
@@ -622,10 +624,10 @@ const linkedTripCode = computed(() => formatTripCode(req.value?.trip?.id))
 const referencePricingModalOpen = ref(false)
 
 const fillPriceSummary = ref({
-  totalFmt: '—',
+  totalFmt: '',
   total: 0,
   canSubmitFillPrice: false,
-  deptHeadDisplayLine: '—',
+  deptHeadDisplayLine: '',
   deptHeadPresetLocked: false,
   deptHeadLoadErr: '',
 })
@@ -639,7 +641,7 @@ const asidePanelTabs = computed(() => [
 
 function formatVndSidebar(n) {
   const amount = parseMoneyVnd(n)
-  if (!amount) return friendlyEmpty.value
+  if (!amount) return rdEmptyLabel(t, 'money_total')
   return formatVndMoney(amount, VND_CURRENCY_SUFFIX)
 }
 
@@ -654,7 +656,7 @@ const asideServicePriceWords = computed(() => {
 const asideDeclaredTotalDisplay = computed(() => {
   const total = costEstimate.value?.total
   if (total != null && total > 0) return formatVndSidebar(total)
-  return friendlyEmpty.value
+  return rdEmptyLabel(t, 'money_total')
 })
 const asideDeclaredTotalWords = computed(() => {
   const total = costEstimate.value?.total
@@ -723,7 +725,7 @@ const signedVerifyLabel = computed(() => {
   const v = signedDocumentCurrent.value?.verification_status
   const key = `request_detail.signed_verify_${String(v || 'pending')}`
   const tr = t(key)
-  return tr !== key ? tr : (v || '—')
+  return tr !== key ? tr : (v ? String(v) : rdEmptyLabel(t, 'signed_status'))
 })
 const signedVerifyBadgeClass = computed(() => {
   const v = signedDocumentCurrent.value?.verification_status
@@ -806,17 +808,22 @@ const overviewInfoGroups = computed(() => {
   const driverName = trip?.driver?.full_name || trip?.driver?.name || ''
   const vehicleLabel = trip?.vehicle?.type || ''
   const plate = trip?.vehicle?.license_plate || ''
-  const dispatchStatus = trip?.status ? labelTripStatus(trip.status) : ''
+  const dispatchStatus = trip?.status ? labelTripStatus(trip.status) : rdEmptyLabel(t, 'dispatch_status')
+
+  const fieldOr = (val, kind) => {
+    const s = val == null ? '' : String(val).trim()
+    return s || rdEmptyLabel(t, kind)
+  }
 
   return [
     {
       key: 'requester',
       title: t('request_detail.overview_group_requester'),
       fields: [
-        { key: 'name', label: t('request_detail.overview_lbl_requester'), value: r.requester?.name ?? '' },
-        { key: 'dept', label: t('request_detail.overview_lbl_department'), value: dept },
+        { key: 'name', label: t('request_detail.overview_lbl_requester'), value: fieldOr(r.requester?.name, 'default') },
+        { key: 'dept', label: t('request_detail.overview_lbl_department'), value: fieldOr(dept, 'department') },
         { key: 'created', label: t('request_detail.ops_lbl_created_at'), value: fmt(r.created_at) },
-        { key: 'email', label: t('request_detail.lbl_email'), value: emailRow },
+        { key: 'email', label: t('request_detail.lbl_email'), value: fieldOr(emailRow, 'email') },
       ],
     },
     {
@@ -827,18 +834,18 @@ const overviewInfoGroups = computed(() => {
         {
           key: 'pax',
           label: metaLoadLabel.value,
-          value: passengerOrCargoLine.value !== '—' ? passengerOrCargoLine.value : '',
+          value: passengerOrCargoLine.value || passengerOrCargoEmptyLabel.value,
         },
-        { key: 'driver', label: t('request_detail.overview_lbl_driver'), value: driverName },
-        { key: 'vehicle', label: t('request_detail.overview_lbl_vehicle'), value: vehicleLabel },
+        { key: 'driver', label: t('request_detail.overview_lbl_driver'), value: fieldOr(driverName, 'driver') },
+        { key: 'vehicle', label: t('request_detail.overview_lbl_vehicle'), value: fieldOr(vehicleLabel, 'vehicle') },
       ],
     },
     {
       key: 'dispatch',
       title: t('request_detail.overview_group_dispatch'),
       fields: [
-        { key: 'unit', label: t('request_detail.overview_lbl_vehicle_unit'), value: vehicleLabel },
-        { key: 'plate', label: t('request_detail.overview_lbl_plate'), value: plate },
+        { key: 'unit', label: t('request_detail.overview_lbl_vehicle_unit'), value: fieldOr(vehicleLabel, 'vehicle') },
+        { key: 'plate', label: t('request_detail.overview_lbl_plate'), value: fieldOr(plate, 'plate') },
         { key: 'cost', label: t('request_detail.overview_lbl_cost'), value: asideDeclaredTotalDisplay.value },
         { key: 'status', label: t('request_detail.overview_lbl_dispatch_status'), value: dispatchStatus },
       ],
@@ -1045,7 +1052,7 @@ const DocGroup = {
                 String(props.highlightId) === String(a.id) ? 'border-teal-300 bg-teal-50/60 dark:border-teal-700 dark:bg-teal-950/30' : 'border-slate-200 dark:border-slate-800'],
             }, [
               h('div', { class: 'min-w-0 flex-1' }, [
-                h('p', { class: ['font-medium text-slate-800 dark:text-slate-200', props.column ? 'line-clamp-2 text-sm leading-snug' : 'truncate text-sm'] }, a.original_name || '—'),
+                h('p', { class: ['font-medium text-slate-800 dark:text-slate-200', props.column ? 'line-clamp-2 text-sm leading-snug' : 'truncate text-sm'] }, a.original_name || rdEmptyLabel(t, 'file_name')),
                 h('p', { class: 'mt-0.5 text-xs tabular-nums text-slate-500 dark:text-slate-400' }, [
                   props.fmtSize(a.size) ? `${props.fmtSize(a.size)} · ` : '',
                   props.fmtDate(a.created_at),
