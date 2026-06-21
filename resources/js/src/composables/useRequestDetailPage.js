@@ -32,7 +32,7 @@ import { confirmAction } from './useConfirm'
 import { showAppSuccess, showAppError } from './appMessage'
 
 const DETAIL_TABS = ['form', 'students', 'docs']
-const STAFF_DETAIL_TABS = ['form', 'route', 'docs', 'students', 'activity']
+const STAFF_DETAIL_TABS = ['form', 'route', 'approval', 'docs', 'students', 'activity']
 
 const FOCUS_TARGETS = {
   'fill-price': 'request-focus-fill-price',
@@ -414,6 +414,7 @@ export function useRequestDetailPage() {
   function tabFromRouteQuery() {
     const q = route.query.tab
     if (typeof q !== 'string') return null
+    if (q === 'info') return 'form'
     if (q === 'route' && !isStaffContext.value) return 'form'
     if (q === 'students' && !showStudentCountTab.value) return null
     return allowedDetailTabs().includes(q) ? q : null
@@ -509,6 +510,9 @@ export function useRequestDetailPage() {
       passengerPatchErr.value = ''
       const tabQ = tabFromRouteQuery()
       activeTab.value = tabQ ?? 'form'
+      if (isStaffContext.value && route.query.tab === 'info') {
+        router.replace({ query: { ...route.query, tab: 'form' } })
+      }
       if (route.query.tab === 'route' && !isStaffContext.value) {
         router.replace({ query: { ...route.query, tab: 'form' } })
       }
