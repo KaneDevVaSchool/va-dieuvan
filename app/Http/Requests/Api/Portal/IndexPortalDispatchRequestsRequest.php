@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Api\Portal;
 
 use App\Http\Requests\Api\ApiFormRequest;
-use App\Models\User;
 
 class IndexPortalDispatchRequestsRequest extends ApiFormRequest
 {
@@ -18,7 +17,7 @@ class IndexPortalDispatchRequestsRequest extends ApiFormRequest
     {
         $merge = [];
 
-        foreach (['is_urgent', 'extracurricular_only'] as $key) {
+        foreach (['is_urgent', 'extracurricular_only', 'sla_risk_only'] as $key) {
             if (! $this->has($key)) {
                 continue;
             }
@@ -43,7 +42,8 @@ class IndexPortalDispatchRequestsRequest extends ApiFormRequest
             'page' => ['sometimes', 'integer', 'min:1'],
             'q' => ['sometimes', 'string', 'max:120'],
             'sort' => ['sometimes', 'string', 'in:depart_desc,depart_asc,created_desc,created_asc'],
-            'filter' => ['sometimes', 'string', 'in:all,pending,approved,rejected,returned'],
+            'filter' => ['sometimes', 'string', 'in:all,pending,approved,rejected,returned,processing,completed,draft'],
+            'sla_risk_only' => ['sometimes', 'boolean'],
             'trip_type' => ['sometimes', 'string', 'in:business,cargo,door_to_door,point_to_point'],
             'is_urgent' => ['sometimes', 'boolean'],
             'extracurricular_only' => ['sometimes', 'boolean'],

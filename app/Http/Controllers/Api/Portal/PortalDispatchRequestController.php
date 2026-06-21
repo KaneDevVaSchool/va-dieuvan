@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\Api\Portal;
 
+use App\Http\Controllers\Api\Attachments\AttachmentController;
 use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Api\Concerns\PresentsDispatchRequest;
+use App\Http\Controllers\Api\SignedDocuments\SignedDocumentController;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Portal\CreatePortalDispatchRequestRequest;
-use App\Support\DispatchRequestDeptHeadAssignment;
 use App\Http\Requests\Api\Portal\IndexPortalDispatchRequestsRequest;
 use App\Http\Requests\Api\Portal\PatchPortalRecurringDispatchInstanceRequest;
 use App\Http\Requests\Api\Portal\PortalPatchSigningWorkflowRequest;
@@ -15,24 +16,23 @@ use App\Http\Requests\Api\Portal\PortalUploadSignedPaperRequest;
 use App\Http\Requests\Api\Portal\ShowPortalDispatchRequestRequest;
 use App\Http\Requests\Api\Portal\SubmitPortalRecurringDispatchInstanceRequest;
 use App\Http\Requests\Api\Portal\SummaryPortalDispatchRequestsRequest;
-use App\Services\Notifications\DispatchStaffNotificationRecipients;
-use App\Http\Controllers\Api\Attachments\AttachmentController;
+use App\Http\Resources\SignedDocumentVersionResource;
 use App\Models\Attachment;
 use App\Models\DispatchRequest;
 use App\Models\User;
 use App\Notifications\NewDispatchRequestNotification;
 use App\Services\Auditing\AuditLogger;
-use App\Http\Controllers\Api\SignedDocuments\SignedDocumentController;
-use App\Http\Resources\SignedDocumentVersionResource;
+use App\Services\Notifications\DispatchStaffNotificationRecipients;
 use App\Services\RecurringDispatch\PortalRecurringBm03GroupSyncService;
 use App\Services\SignedDocuments\SignedDocumentUploadService;
 use App\Services\SignedDocuments\SigningWorkflowService;
+use App\Support\DispatchRequestDeptHeadAssignment;
 use App\Support\Messages;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Database\Eloquent\Builder;
 
 class PortalDispatchRequestController extends Controller
 {
@@ -42,8 +42,16 @@ class PortalDispatchRequestController extends Controller
     public function summary(SummaryPortalDispatchRequestsRequest $request): \Illuminate\Http\JsonResponse
     {
         $user = $request->user();
+        $data = $request->validated();
+        $module = isset($data['module']) ? (string) $data['module'] : 'all';
 
         $base = DispatchRequest::query()->where('requester_id', $user->getKey());
+
+        if ($module === 'extracurricular') {
+            $base->extracurricularOnly();
+        }
+
+        $total = (clone $base)->count();
 
         $pendingApproval = (clone $base)->whereIn('status', ['pending', 'price_filled'])->count();
 
@@ -65,6 +73,38 @@ class PortalDispatchRequestController extends Controller
 
         $rejected = (clone $base)->where('status', 'rejected')->count();
 
+        $slaRisk = (clone $base)->where('status', 'pending')
+            ->where(function (Builder $inner) {
+                $inner->where('is_urgent', true)
+                    ->orWhere('depart_at', '<=', now()->addHours(48));
+            })->count();
+
+        $overdue = (clone $base)->where(function (Builder $q) {
+            $q->where(function (Builder $pending) {
+                $pending->whereIn('status', ['pending', 'price_filled'])
+                    ->whereNotNull('depart_at')
+                    ->where('depart_at', '<', now());
+            })->orWhere(function (Builder $active) {
+                $active->where('status', 'approved')
+                    ->whereNotNull('depart_at')
+                    ->where('depart_at', '<', now())
+                    ->where(function (Builder $tripQ) {
+                        $tripQ->whereDoesntHave('trip')
+                            ->orWhereHas('trip', function ($tq) {
+                                $tq->whereNotIn('status', ['completed', 'cancelled']);
+                            });
+                    });
+            });
+        })->count();
+
+        $plans = 0;
+        if ($module === 'extracurricular') {
+            $plans = (clone $base)
+                ->whereNotNull('dispatch_request_template_id')
+                ->distinct()
+                ->count('dispatch_request_template_id');
+        }
+
         $startPrevMonth = now()->subMonth()->startOfMonth();
         $endPrevMonth = now()->subMonth()->endOfMonth();
         $completedPrevMonth = (clone $base)->where('status', 'approved')
@@ -75,10 +115,15 @@ class PortalDispatchRequestController extends Controller
             })->count();
 
         return $this->ok([
+            'total' => $total,
             'processing' => $processing,
             'pending' => $pendingApproval,
             'completed_this_month' => $completedThisMonth,
             'rejected' => $rejected,
+            'sla_risk' => $slaRisk,
+            'overdue' => $overdue,
+            'plans' => $plans,
+            'in_progress' => $processing,
             'trends' => [
                 'completed_this_month' => $completedThisMonth - $completedPrevMonth,
             ],
@@ -98,15 +143,39 @@ class PortalDispatchRequestController extends Controller
 
         $query = DispatchRequest::query()
             ->where('requester_id', $user->getKey())
-            ->with(['dispatchRequestTemplate.dispatchPackage', 'trip:id,dispatch_request_id,status']);
+            ->with([
+                'dispatchRequestTemplate.dispatchPackage',
+                'trip:id,dispatch_request_id,status,completed_at',
+                'trip.dispatcher:id,name',
+            ]);
 
         match ($filter) {
             'pending' => $query->whereIn('status', ['pending', 'price_filled']),
             'approved' => $query->where('status', 'approved'),
             'rejected' => $query->where('status', 'rejected'),
             'returned' => $query->where('status', 'rejected'),
+            'processing' => $query->where('status', 'approved')
+                ->where(function ($q) {
+                    $q->whereDoesntHave('trip')
+                        ->orWhereHas('trip', function ($tq) {
+                            $tq->whereNotIn('status', ['completed', 'cancelled']);
+                        });
+                }),
+            'completed' => $query->where('status', 'approved')
+                ->whereHas('trip', function ($tq) {
+                    $tq->where('status', 'completed');
+                }),
+            'draft' => $query->extracurricularRecurringDraft(),
             default => null,
         };
+
+        if (! empty($data['sla_risk_only'])) {
+            $query->where('status', 'pending')
+                ->where(function (Builder $inner) {
+                    $inner->where('is_urgent', true)
+                        ->orWhere('depart_at', '<=', now()->addHours(48));
+                });
+        }
 
         if (isset($data['trip_type'])) {
             $query->where('trip_type', (string) $data['trip_type']);

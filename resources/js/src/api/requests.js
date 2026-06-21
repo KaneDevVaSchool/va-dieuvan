@@ -100,8 +100,8 @@ export async function searchPortalDeptHeads(opts = {}) {
  * Portal dashboard KPI counts (scoped to current requester).
  * @returns {Promise<{ processing: number, pending: number, completed_this_month: number, rejected: number }>}
  */
-export async function getPortalRequestsSummary() {
-  const { data } = await http.get('/portal/dispatch-requests/summary')
+export async function getPortalRequestsSummary(params = {}) {
+  const { data } = await http.get('/portal/dispatch-requests/summary', { params })
   return data.data
 }
 

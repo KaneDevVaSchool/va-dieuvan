@@ -25,36 +25,46 @@
         :class="compactNav ? 'px-1 py-1.5 md:px-1.5 md:py-2' : 'px-2 py-2 md:px-3 md:py-2.5'"
       >
         <div
-          class="flex w-full min-w-0 items-center gap-2"
-          :class="compactNav ? 'flex-col md:flex-col' : 'flex-row justify-between'"
+          class="relative flex w-full min-w-0 items-center justify-center"
+          :class="compactNav ? 'flex-col gap-1.5' : 'px-9'"
         >
+          <AppLogo
+            align="center"
+            class="w-full min-w-0 [&_img]:mx-auto [&_img]:object-contain"
+            :class="compactNav ? 'max-w-full px-0.5' : 'max-w-full'"
+            :variant="compactNav ? 'icon' : 'wordmark'"
+            :size="compactNav ? 'sm' : 'lg'"
+            data-testid="dept-sidebar-logo"
+          />
+          <button
+            type="button"
+            class="hidden shrink-0 items-center justify-center rounded-md text-white/85 transition hover:bg-white/10 md:inline-flex"
+            :class="
+              compactNav
+                ? 'h-7 w-7'
+                : 'absolute right-0 top-1/2 h-7 w-7 -translate-y-1/2 sm:h-8 sm:w-8'
+            "
+            :title="sidebarCollapsed ? t('app.sidebar_expand') : t('app.sidebar_collapse')"
+            data-testid="dept-sidebar-collapse"
+            @click="sidebarCollapsed = !sidebarCollapsed"
+          >
+            <ChevronLeftIcon v-if="!sidebarCollapsed" class="h-4 w-4 sm:h-[1.125rem] sm:w-[1.125rem]" aria-hidden="true" />
+            <ChevronRightIcon v-else class="h-4 w-4" aria-hidden="true" />
+            <span class="sr-only">
+              {{ sidebarCollapsed ? t('app.sidebar_expand') : t('app.sidebar_collapse') }}
+            </span>
+          </button>
 
-
-          <div class="flex shrink-0 items-center gap-1">
-            <button
-              type="button"
-              class="hidden shrink-0 items-center justify-center rounded-md text-white/85 transition hover:bg-white/10 md:inline-flex"
-              :class="compactNav ? 'h-7 w-7' : 'h-8 w-8'"
-              :title="sidebarCollapsed ? t('app.sidebar_expand') : t('app.sidebar_collapse')"
-              @click="sidebarCollapsed = !sidebarCollapsed"
-            >
-              <ChevronLeftIcon v-if="!sidebarCollapsed" class="h-4 w-4 sm:h-[1.125rem] sm:w-[1.125rem]" aria-hidden="true" />
-              <ChevronRightIcon v-else class="h-4 w-4" aria-hidden="true" />
-              <span class="sr-only">
-                {{ sidebarCollapsed ? t('app.sidebar_expand') : t('app.sidebar_collapse') }}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white/90 transition hover:bg-white/10 md:hidden"
-              :title="t('app.cancel')"
-              @click="mobileOpen = false"
-            >
-              <XMarkIcon class="h-6 w-6" aria-hidden="true" />
-              <span class="sr-only">{{ t('app.cancel') }}</span>
-            </button>
-          </div>
+          <button
+            type="button"
+            class="absolute left-0 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 shrink-0 items-center justify-center rounded-lg text-white/90 transition hover:bg-white/10 md:hidden"
+            :title="t('app.cancel')"
+            data-testid="dept-sidebar-close-mobile"
+            @click="mobileOpen = false"
+          >
+            <XMarkIcon class="h-6 w-6" aria-hidden="true" />
+            <span class="sr-only">{{ t('app.cancel') }}</span>
+          </button>
         </div>
 
         <div
@@ -308,6 +318,7 @@ import {
   XCircleIcon,
   XMarkIcon,
 } from '@heroicons/vue/24/outline'
+import AppLogo from '../../components/branding/AppLogo.vue'
 import NotificationBell from '../../components/notifications/NotificationBell.vue'
 import { useAppViewportLock } from '../../composables/useAppViewportLock'
 import { useAuthStore } from '../../store'

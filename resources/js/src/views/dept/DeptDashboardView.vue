@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto w-full max-w-5xl space-y-5">
+  <div class="w-full space-y-5">
     <header class="md:hidden">
       <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
         {{ t('dept.pending_heading', { dept: deptName }) }}

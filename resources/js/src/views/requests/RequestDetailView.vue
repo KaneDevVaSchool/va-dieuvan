@@ -120,36 +120,14 @@
           <div :class="cardClass">
             <!-- ===== Tab: Tổng quan ===== -->
             <div v-show="activeTab === 'form'" class="space-y-0">
-              <div
-                class="overflow-hidden border-b border-slate-200 bg-white px-4 py-2.5 dark:border-slate-800 dark:bg-slate-900 sm:px-5"
-              >
-                <PortalStatusTimeline
-                  :title="t('portal.timeline_heading')"
-                  :steps="timelineSteps"
-                  variant="staff"
-                  embedded
-                />
-              </div>
+              <StaffRequestOverviewPanel
+                :req="req"
+                :timeline-steps="timelineSteps"
+                :cost-estimate="costEstimate"
+              />
 
-              <div class="p-4 sm:p-5">
-                <RequestBm03FormTab
-                  :req="req"
-                  :show-fill-price-section="showFillPriceSection"
-                  :fill-price-acting="fillPriceActing"
-                  :fill-price-msg="fillPriceMsg"
-                  :signed-paper-attachments="signedPaperAttachments"
-                  :signed-upload-component-key="`signed-${route.params.id}-${signedPaperAttachments.length}`"
-                  :upload-signed-fn="uploadSignedPaper"
-                  :signed-upload-err="signedUploadErr"
-                  :show-signed-paper-section="showSignedPaperSection"
-                  :signed-document-current="signedDocumentCurrent"
-                  :approval-tab-needs-focus="approvalTabNeedsFocus"
-                  @save-row-prices="onSaveRowPrices"
-                  @open-reference-pricing="referencePricingModalOpen = true"
-                  @download-signed="downloadFile"
-                  @signed-uploaded="onSignedUploaded"
-                />
-                <ResetCloneSection v-if="showResetCloneBtn" class="mt-5" :busy="resetCloneBusy" @clone="onResetCloneRequest" />
+              <div v-if="showResetCloneBtn" class="p-4 sm:p-5">
+                <ResetCloneSection :busy="resetCloneBusy" @clone="onResetCloneRequest" />
               </div>
             </div>
 
@@ -308,14 +286,12 @@
         @close="closeD2dReject"
         @confirm="submitD2dReject"
       />
-
-      <ReferencePricingModal :open="referencePricingModalOpen" @close="referencePricingModalOpen = false" />
     </template>
   </div>
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent, ref } from 'vue'
+import { computed, defineAsyncComponent } from 'vue'
 import {
   ClipboardDocumentIcon,
   XCircleIcon,
@@ -332,15 +308,11 @@ import AttachmentPreviewModal from '../../components/requests/AttachmentPreviewM
 import DeptApprovalSection from '../../components/requests/DeptApprovalSection.vue'
 import DispatchD2dDecisionSection from '../../components/requests/DispatchD2dDecisionSection.vue'
 import RejectReasonModal from '../../components/requests/RejectReasonModal.vue'
-import ReferencePricingModal from '../../components/pricing/ReferencePricingModal.vue'
 import StaffRequestHeroHeader from '../../components/requests/detail/StaffRequestHeroHeader.vue'
 import StaffRequestDetailTabNav from '../../components/requests/detail/StaffRequestDetailTabNav.vue'
-import PortalStatusTimeline from '../../components/portal/PortalStatusTimeline.vue'
+import StaffRequestOverviewPanel from '../../components/requests/detail/StaffRequestOverviewPanel.vue'
 import { useRequestDetailPage } from '../../composables/useRequestDetailPage'
 
-const RequestBm03FormTab = defineAsyncComponent(() =>
-  import('../../components/requests/RequestBm03FormTab.vue'),
-)
 const RequestStudentCountTab = defineAsyncComponent(() =>
   import('../../components/requests/RequestStudentCountTab.vue'),
 )
@@ -377,7 +349,6 @@ const {
   passengerOrCargoEmptyLabel,
   showD2dDecisionSection,
   showDeptDecisionSection,
-  showFillPriceSection,
   focusHighlight,
   costEstimate,
   formatVndCurrency,
@@ -397,20 +368,12 @@ const {
   closeDeptReject,
   submitDeptReject,
   onDeptApproveClick,
-  fillPriceActing,
-  fillPriceMsg,
-  onSaveRowPrices,
   showStudentCountTab,
   showResetCloneBtn,
   resetCloneBusy,
   onResetCloneRequest,
   signedPaperAttachments,
-  showSignedPaperSection,
-  signedUploadErr,
-  uploadSignedPaper,
-  onSignedUploaded,
   downloadFile,
-  approvalTabNeedsFocus,
   passengerDraft,
   passengerSaving,
   passengerPatchErr,
@@ -453,8 +416,6 @@ const {
   previewAttachment,
   closeAttachmentPreview,
 } = page
-
-const referencePricingModalOpen = ref(false)
 
 // ── Style tokens ──
 const cardClass =

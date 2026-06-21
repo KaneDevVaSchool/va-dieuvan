@@ -1,20 +1,22 @@
 <template>
   <div>
     <!-- Tablet / desktop -->
-    <div class="portal-requests-table-wrap hidden overflow-hidden rounded-2xl bg-white shadow-sm sm:block">
+    <div class="portal-requests-table-wrap hidden overflow-hidden sm:block">
       <div class="portal-requests-table-scroll overflow-x-auto">
-        <table class="portal-requests-table min-w-full text-left">
-          <thead>
+        <table class="portal-requests-table min-w-full text-left text-sm">
+          <thead class="sticky top-0 z-10 bg-slate-50/95 backdrop-blur-sm">
             <tr>
-              <th class="whitespace-nowrap px-4 py-3.5">{{ t('portal.table_code') }}</th>
-              <th class="whitespace-nowrap px-4 py-3.5">{{ t('portal.table_trip_type') }}</th>
-              <th class="hidden min-w-[9rem] px-4 py-3.5 lg:table-cell">{{ t('portal.table_origin') }}</th>
-              <th class="hidden min-w-[9rem] px-4 py-3.5 lg:table-cell">{{ t('portal.table_destination') }}</th>
-              <th class="min-w-[10rem] px-4 py-3.5 lg:hidden">{{ t('portal.table_route') }}</th>
-              <th class="whitespace-nowrap px-4 py-3.5">{{ t('portal.table_time') }}</th>
-              <th class="hidden whitespace-nowrap px-4 py-3.5 xl:table-cell">{{ t('portal.table_created') }}</th>
-              <th class="whitespace-nowrap px-4 py-3.5">{{ t('portal.table_status') }}</th>
-              <th class="w-12 px-4 py-3.5 text-right" :aria-label="t('portal.table_action')">
+              <th class="portal-requests-table__sticky-col whitespace-nowrap px-4 py-3">{{ t('portal.table_code') }}</th>
+              <th class="whitespace-nowrap px-4 py-3">{{ t('portal.table_trip_type') }}</th>
+              <th class="hidden whitespace-nowrap px-4 py-3 lg:table-cell">{{ t('portal.table_created') }}</th>
+              <th class="hidden min-w-[9rem] px-4 py-3 lg:table-cell">{{ t('portal.table_origin') }}</th>
+              <th class="hidden min-w-[9rem] px-4 py-3 lg:table-cell">{{ t('portal.table_destination') }}</th>
+              <th class="min-w-[10rem] px-4 py-3 lg:hidden">{{ t('portal.table_route') }}</th>
+              <th class="whitespace-nowrap px-4 py-3">{{ t('portal.table_time') }}</th>
+              <th class="whitespace-nowrap px-4 py-3">{{ t('portal.table_status') }}</th>
+              <th class="hidden whitespace-nowrap px-4 py-3 xl:table-cell">{{ t('portal.shell.table_dispatcher') }}</th>
+              <th class="whitespace-nowrap px-4 py-3">{{ t('portal.shell.table_sla') }}</th>
+              <th class="w-12 px-4 py-3 text-right" :aria-label="t('portal.table_action')">
                 <span class="sr-only">{{ t('portal.table_action') }}</span>
               </th>
             </tr>
@@ -26,8 +28,8 @@
               class="group/row transition-colors"
               :class="rowHighlightClass(req)"
             >
-              <td class="whitespace-nowrap px-4 py-3.5">
-                <div class="inline-flex items-center gap-1.5 font-mono text-[15px] font-semibold tracking-tight text-slate-900">
+              <td class="portal-requests-table__sticky-col whitespace-nowrap bg-white px-4 py-3">
+                <div class="inline-flex items-center gap-1.5 font-mono text-sm font-semibold tracking-tight text-slate-900">
                   <BoltIcon
                     v-if="req.is_urgent"
                     class="h-4 w-4 shrink-0 text-amber-500"
@@ -37,16 +39,19 @@
                   <span>{{ refCode(req) }}</span>
                 </div>
               </td>
-              <td class="px-4 py-3.5">
+              <td class="px-4 py-3">
                 <span
                   v-if="tripTypeLabel(req)"
-                  class="inline-flex max-w-[10rem] rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700"
+                  class="inline-flex max-w-[10rem] rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700"
                 >
                   {{ tripTypeLabel(req) }}
                 </span>
-                <span v-else class="text-base text-slate-400">—</span>
+                <span v-else class="text-slate-400">—</span>
               </td>
-              <td class="hidden max-w-[12rem] px-4 py-3.5 lg:table-cell">
+              <td class="hidden whitespace-nowrap px-4 py-3 lg:table-cell">
+                <p class="text-slate-700">{{ createdFmt(req) }}</p>
+              </td>
+              <td class="hidden max-w-[12rem] px-4 py-3 lg:table-cell">
                 <p class="truncate text-base text-slate-800" :title="formatPortalPlace(req.origin)">
                   {{ formatPortalPlace(req.origin) }}
                 </p>
@@ -59,22 +64,28 @@
               <td class="min-w-[10rem] px-4 py-3.5 lg:hidden">
                 <p class="text-base font-medium text-slate-800">{{ routeLine(req) }}</p>
               </td>
-              <td class="px-4 py-3.5">
-                <p v-if="departFmt(req)" class="whitespace-nowrap text-base font-medium text-slate-800">
+              <td class="px-4 py-3">
+                <p v-if="departFmt(req)" class="whitespace-nowrap font-medium text-slate-800">
                   {{ departFmt(req) }}
                 </p>
-                <p v-else class="text-base text-slate-400">—</p>
-                <p v-if="req.arrive_by" class="mt-0.5 whitespace-nowrap text-sm text-slate-500">
-                  {{ arriveFmt(req) }}
-                </p>
+                <p v-else class="text-slate-400">—</p>
               </td>
-              <td class="hidden whitespace-nowrap px-4 py-3.5 xl:table-cell">
-                <p class="text-base text-slate-700">{{ createdFmt(req) }}</p>
-              </td>
-              <td class="px-4 py-3.5">
+              <td class="px-4 py-3">
                 <StatusBadge :status="req.status" size="sm" />
               </td>
-              <td class="px-4 py-3.5 text-right">
+              <td class="hidden px-4 py-3 xl:table-cell">
+                <span class="truncate text-slate-700">{{ dispatcherName(req) }}</span>
+              </td>
+              <td class="px-4 py-3">
+                <span
+                  class="inline-flex items-center gap-1.5 text-xs font-semibold"
+                  :class="slaToneClass(req)"
+                >
+                  <span class="h-2 w-2 rounded-full" :class="slaDotClass(req)" aria-hidden="true" />
+                  {{ slaLabel(req) }}
+                </span>
+              </td>
+              <td class="px-4 py-3 text-right">
                 <RouterLink
                   :to="portalDetailRouteForRequest(req)"
                   class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-slate-400 transition group-hover/row:bg-va-50 group-hover/row:text-va-700 hover:text-va-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-va-800"
@@ -217,17 +228,39 @@ function arriveFmt(req) {
 
 function createdFmt(req) {
   if (!req.created_at) return '—'
-  try {
-    const d = new Date(req.created_at)
-    if (Number.isNaN(d.getTime())) return '—'
-    return new Intl.DateTimeFormat(localeKey.value === 'vi' ? 'vi-VN' : 'en-US', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    }).format(d)
-  } catch {
-    return '—'
-  }
+  return formatPortalDepartLine(req.created_at, localeKey.value)
+}
+
+function dispatcherName(req) {
+  const n = req.trip?.dispatcher?.name
+  return n && String(n).trim() ? String(n).trim() : '—'
+}
+
+function slaIsRisk(req) {
+  if (req.status !== 'pending' && req.status !== 'price_filled') return false
+  if (req.is_urgent) return true
+  if (!req.depart_at) return false
+  const depart = new Date(req.depart_at)
+  if (Number.isNaN(depart.getTime())) return false
+  const hours = (depart.getTime() - Date.now()) / (1000 * 60 * 60)
+  return hours <= 48
+}
+
+function slaLabel(req) {
+  if (req.status === 'approved' && req.trip?.status === 'completed') return t('portal.shell.sla_ok')
+  if (slaIsRisk(req)) return t('portal.shell.sla_risk')
+  if (req.status === 'rejected') return t('portal.shell.sla_na')
+  return t('portal.shell.sla_ok')
+}
+
+function slaToneClass(req) {
+  if (slaIsRisk(req)) return 'text-amber-700'
+  return 'text-emerald-700'
+}
+
+function slaDotClass(req) {
+  if (slaIsRisk(req)) return 'bg-amber-500'
+  return 'bg-emerald-500'
 }
 </script>
 
@@ -248,6 +281,21 @@ function createdFmt(req) {
   top: 0;
   z-index: 2;
   background: rgb(248 250 252);
+}
+
+.portal-requests-table__sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  box-shadow: 1px 0 0 rgb(226 232 240);
+}
+
+.portal-requests-table tbody tr:nth-child(even) .portal-requests-table__sticky-col {
+  background-color: rgb(248 250 252 / 0.5);
+}
+
+.portal-requests-table tbody tr:hover .portal-requests-table__sticky-col {
+  background-color: rgb(240 253 250 / 0.45);
 }
 
 .portal-requests-table thead th {

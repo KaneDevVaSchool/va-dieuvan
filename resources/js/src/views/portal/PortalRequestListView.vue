@@ -1,417 +1,90 @@
-<template>
-  <div>
-    <section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:py-10">
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <RouterLink
-            :to="{ name: portalRoutes.home }"
-            class="text-xs font-semibold text-va-800 underline-offset-2 hover:underline"
-          >
-            ←
-            {{
-              isExtracurricularModule
-                ? t('portal.extracurricular_module.back_hub')
-                : t('portal.back_dashboard')
-            }}
-          </RouterLink>
-          <h1 class="mt-3 text-2xl font-bold tracking-tight text-slate-900">
-            {{
-              isExtracurricularModule
-                ? t('portal.extracurricular_module.list_heading')
-                : t('portal.list_page_heading')
-            }}
-          </h1>
-          <p class="mt-2 text-sm text-slate-600">
-            {{
-              isExtracurricularModule
-                ? t('portal.extracurricular_module.list_lead')
-                : t('portal.list_page_lead')
-            }}
-          </p>
-        </div>
-        <RouterLink
-          :to="{ name: portalRoutes.create }"
-          class="inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-2xl bg-va-800 px-6 text-sm font-bold text-white shadow-md hover:bg-va-800"
-        >
-          {{ t('portal.cta_primary') }}
-        </RouterLink>
-      </div>
+﻿<template>
+  <div class="mx-auto max-w-7xl space-y-4 px-4 py-4 sm:px-6 sm:py-6">
+    <PortalDispatchSummaryBar
+      :variant="summaryVariant"
+      :loading="summaryLoading"
+      :summary="summary"
+      :active-key="kpiActiveKey"
+      @quick-filter="onKpiQuickFilter"
+    />
 
-      <!-- Filter bar -->
-      <div class="relative z-40 mt-8">
-        <AppFilterBar>
-          <div ref="filterBarRef" class="flex flex-col gap-2">
-            <!-- Search — full width on all breakpoints -->
-            <div class="relative w-full min-w-0">
-              <label class="sr-only" for="portal-list-q">{{ t('portal.search_placeholder') }}</label>
-              <MagnifyingGlassIcon
-                class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-                aria-hidden="true"
-              />
-              <input
-                id="portal-list-q"
-                v-model="searchInput"
-                type="search"
-                autocomplete="off"
-                role="combobox"
-                :aria-expanded="showSearchSuggest"
-                aria-controls="portal-list-q-suggest"
-                aria-autocomplete="list"
-                :aria-label="t('portal.search_placeholder')"
-                :placeholder="t('portal.search_placeholder')"
-                :title="t('portal.search_placeholder')"
-                class="portal-list-q h-10 w-full rounded-lg border-0 bg-white/90 py-2 pl-9 pr-3 text-sm ring-1 ring-slate-200/80 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
-                @input="onSearchInput"
-                @focus="onSearchFocus"
-                @blur="onSearchBlur"
-                @keydown.down.prevent="moveSearchSuggest(1)"
-                @keydown.up.prevent="moveSearchSuggest(-1)"
-                @keydown.enter.prevent="commitSearchSuggest"
-                @keydown.escape="closeSearchSuggest"
-              />
-              <div
-                v-if="searchSuggestLoading"
-                class="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin rounded-full border-2 border-slate-200 border-t-teal-600"
-                aria-hidden="true"
-              />
-              <ul
-                v-if="showSearchSuggest"
-                id="portal-list-q-suggest"
-                class="absolute z-[110] mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg ring-1 ring-slate-900/5"
-                role="listbox"
-                :aria-label="t('portal.search_suggest_aria')"
-              >
-                <li v-if="searchSuggestLoading" class="px-3 py-2.5 text-slate-500">
-                  {{ t('portal.search_suggest_loading') }}
-                </li>
-                <template v-else-if="searchSuggestions.length">
-                  <li v-for="(req, idx) in searchSuggestions" :key="req.id" role="presentation">
-                    <button
-                      type="button"
-                      role="option"
-                      :aria-selected="idx === searchSuggestFocus"
-                      :class="[
-                        'flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition',
-                        idx === searchSuggestFocus ? 'bg-teal-50' : 'hover:bg-slate-50',
-                      ]"
-                      @mousedown.prevent="pickSearchSuggestion(req)"
-                    >
-                      <span class="font-mono text-sm font-semibold text-slate-900">{{ formatDispatchRequestRefCode(req) }}</span>
-                      <span class="truncate text-xs text-slate-500">{{ suggestRouteLine(req) }}</span>
-                    </button>
-                  </li>
-                </template>
-                <li v-else class="px-3 py-2.5 text-slate-500">{{ t('portal.search_suggest_empty') }}</li>
-              </ul>
-            </div>
+    <PortalExtracurricularStatusTabs v-if="isExtracurricularModule" v-model="ecWorkflowTab" />
 
-            <div class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+    <div class="overflow-visible rounded-xl border border-slate-200/80 bg-white shadow-sm">
+      <PortalRequestsListToolbar
+        v-model:search-input="searchInput"
+        v-model:quick-filter="quickFilter"
+        v-model:filter-drawer-open="filterDrawerOpen"
+        v-model:export-open="exportOpen"
+        :active-filter-count="activeFilterCount"
+        :show-suggest="showSearchSuggest"
+        :search-suggest-loading="searchSuggestLoading"
+        :search-suggestions="searchSuggestions"
+        :search-suggest-focus="searchSuggestFocus"
+        @search-input="onSearchInput"
+        @search-focus="onSearchFocus"
+        @search-blur="onSearchBlur"
+        @search-enter="commitSearchSuggest"
+        @search-suggest-pick="pickSearchSuggestion"
+        @open-filter="filterDrawerOpen = true"
+        @export-csv="exportCurrentCsv"
+        @export-excel="exportCurrentCsv"
+      >
+        <template #suggest-row="{ req }">
+          <span class="font-mono text-sm font-semibold text-slate-900">{{ formatDispatchRequestRefCode(req) }}</span>
+          <span class="truncate text-xs text-slate-500">{{ suggestRouteLine(req) }}</span>
+        </template>
+      </PortalRequestsListToolbar>
 
-            <!-- Funnel / phễu -->
-            <details ref="funnelRef" class="group relative shrink-0">
-              <summary
-                class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md [&::-webkit-details-marker]:hidden"
-                :aria-label="t('portal.filter_toolbar_label')"
-              >
-                <span class="relative inline-flex">
-                  <FunnelIcon class="h-5 w-5 text-slate-600" aria-hidden="true" />
-                  <span
-                    v-if="activeFilterCount > 0"
-                    class="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-teal-500 px-1 text-[10px] font-bold leading-none text-white"
-                  >
-                    {{ activeFilterCount > 9 ? '9+' : activeFilterCount }}
-                  </span>
-                </span>
-                <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-              </summary>
-              <div
-                class="absolute left-0 top-[calc(100%+8px)] z-[100] min-w-[260px] overflow-hidden rounded-2xl border border-va-200/50 bg-white shadow-xl shadow-va-500/10 ring-1 ring-slate-900/5"
-              >
-                <!-- Applied filters header -->
-                <p class="border-b border-va-100/80 bg-gradient-to-r from-va-50/60 to-transparent px-3 py-2 text-xs font-semibold uppercase tracking-wide text-va-800">
-                  {{ t('portal.filter_applied_title') }}
-                </p>
-                <div class="p-3 pt-2">
-                  <ul class="mt-1 space-y-2 text-sm text-slate-700">
-                    <li v-if="!activeFilterLines.length" class="text-slate-400">
-                      {{ t('portal.filter_no_active') }}
-                    </li>
-                    <li
-                      v-for="(row, i) in activeFilterLines"
-                      :key="i"
-                      class="flex items-center gap-1.5"
-                    >
-                      <span class="text-slate-500">{{ row.label }}:</span>
-                      <span class="font-medium text-slate-800">{{ row.value }}</span>
-                    </li>
-                  </ul>
-
-                  <!-- Visibility toggles -->
-                  <div class="mt-3 border-t border-slate-100 pt-3">
-                    <p class="text-[11px] font-semibold uppercase tracking-wide text-va-800">
-                      {{ t('portal.filter_show_controls_title') }}
-                    </p>
-                    <p class="mt-0.5 text-[10px] leading-snug text-slate-500">
-                      {{ t('portal.filter_show_controls_hint') }}
-                    </p>
-                    <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
-                      <li v-for="fd in visibilityOptions" :key="'vis-' + fd.id" class="flex items-start gap-2">
-                        <input
-                          :id="'portal-filter-vis-' + fd.id"
-                          v-model="filterDropdownVisible[fd.id]"
-                          type="checkbox"
-                          class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
-                        />
-                        <label
-                          :for="'portal-filter-vis-' + fd.id"
-                          class="cursor-pointer text-sm leading-snug text-slate-700"
-                        >
-                          {{ fd.label }}
-                        </label>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <!-- Clear all -->
-                  <button
-                    type="button"
-                    class="mt-3 w-full rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-                    @click="resetFilters"
-                  >
-                    {{ t('portal.filter_clear_all') }}
-                  </button>
-                </div>
-              </div>
-            </details>
-
-            <div
-              class="hidden h-6 w-px shrink-0 bg-slate-200/90 sm:block dark:bg-slate-700"
-              aria-hidden="true"
-            />
-
-            <!-- Filter chips -->
-            <div class="flex min-w-0 flex-1 items-center gap-x-2 gap-y-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:overflow-visible sm:pb-0 [&::-webkit-scrollbar]:hidden sm:gap-x-3">
-
-              <!-- Status chip -->
-              <AppFilterDropdown
-                v-if="filterDropdownVisible.status !== false"
-                :panel-title="t('portal.filter_label_status')"
-                :summary-text="statusChipSummary"
-                :active="statusFilterActive"
-                :aria-label="t('portal.filter_label_status')"
-                panel-class="min-w-[200px] py-1"
-                class="shrink-0 snap-start"
-              >
-                <ul class="max-h-[min(60vh,300px)] overflow-y-auto px-1 py-1">
-                  <li v-for="opt in filterOptions" :key="opt.key">
-                    <button
-                      type="button"
-                      :class="[
-                        'flex w-full rounded-lg px-3 py-2 text-left text-sm transition',
-                        filterStatus === opt.key
-                          ? 'bg-teal-50 font-medium text-teal-900'
-                          : 'text-slate-700 hover:bg-slate-50',
-                      ]"
-                      @click="onFilter(opt.key, $event)"
-                    >
-                      {{ opt.label }}
-                    </button>
-                  </li>
-                </ul>
-              </AppFilterDropdown>
-
-              <!-- Sort chip -->
-              <AppFilterDropdown
-                v-if="filterDropdownVisible.sort !== false"
-                :panel-title="t('portal.filter_label_sort')"
-                :summary-text="sortChipSummary"
-                :active="sortFilterActive"
-                :aria-label="t('portal.filter_label_sort')"
-                panel-class="min-w-[240px] py-1"
-                class="shrink-0 snap-start"
-              >
-                <ul class="max-h-[min(60vh,300px)] overflow-y-auto px-1 py-1">
-                  <li v-for="opt in sortOptions" :key="opt.value">
-                    <button
-                      type="button"
-                      :class="[
-                        'flex w-full rounded-lg px-3 py-2 text-left text-sm transition',
-                        sort === opt.value
-                          ? 'bg-teal-50 font-medium text-teal-900'
-                          : 'text-slate-700 hover:bg-slate-50',
-                      ]"
-                      @click="onSort(opt.value, $event)"
-                    >
-                      {{ opt.label }}
-                    </button>
-                  </li>
-                </ul>
-              </AppFilterDropdown>
-
-              <!-- Trip type chip -->
-              <AppFilterDropdown
-                v-if="filterDropdownVisible.trip_type !== false"
-                :panel-title="t('portal.filter_label_trip_type')"
-                :summary-text="tripTypeChipSummary"
-                :active="tripTypeFilterActive"
-                :aria-label="t('portal.filter_label_trip_type')"
-                panel-class="min-w-[220px] py-1"
-                class="shrink-0 snap-start"
-              >
-                <ul class="max-h-[min(60vh,300px)] overflow-y-auto px-1 py-1">
-                  <li v-for="opt in tripTypeOptions" :key="opt.key">
-                    <button
-                      type="button"
-                      :class="[
-                        'flex w-full rounded-lg px-3 py-2 text-left text-sm transition',
-                        filterTripType === opt.key
-                          ? 'bg-teal-50 font-medium text-teal-900'
-                          : 'text-slate-700 hover:bg-slate-50',
-                      ]"
-                      @click="onTripType(opt.key, $event)"
-                    >
-                      {{ opt.label }}
-                    </button>
-                  </li>
-                </ul>
-              </AppFilterDropdown>
-
-              <!-- Urgent chip -->
-              <AppFilterDropdown
-                v-if="filterDropdownVisible.urgent !== false"
-                :panel-title="t('portal.filter_label_urgent')"
-                :summary-text="urgentChipSummary"
-                :active="urgentFilterActive"
-                :aria-label="t('portal.filter_label_urgent')"
-                panel-class="min-w-[180px] py-1"
-                class="shrink-0 snap-start"
-              >
-                <ul class="max-h-[min(60vh,300px)] overflow-y-auto px-1 py-1">
-                  <li v-for="opt in urgentOptions" :key="opt.key">
-                    <button
-                      type="button"
-                      :class="[
-                        'flex w-full rounded-lg px-3 py-2 text-left text-sm transition',
-                        filterUrgent === opt.key
-                          ? 'bg-teal-50 font-medium text-teal-900'
-                          : 'text-slate-700 hover:bg-slate-50',
-                      ]"
-                      @click="onUrgent(opt.key, $event)"
-                    >
-                      {{ opt.label }}
-                    </button>
-                  </li>
-                </ul>
-              </AppFilterDropdown>
-
-              <!-- Extracurricular chip -->
-              <AppFilterDropdown
-                v-if="!isExtracurricularModule && filterDropdownVisible.extracurricular !== false"
-                :panel-title="t('portal.filter_label_extracurricular')"
-                :summary-text="extracurricularChipSummary"
-                :active="extracurricularFilterActive"
-                :aria-label="t('portal.filter_label_extracurricular')"
-                panel-class="min-w-[240px] py-1"
-                class="shrink-0 snap-start"
-              >
-                <ul class="max-h-[min(60vh,300px)] overflow-y-auto px-1 py-1">
-                  <li v-for="opt in extracurricularOptions" :key="opt.key">
-                    <button
-                      type="button"
-                      :class="[
-                        'flex w-full rounded-lg px-3 py-2 text-left text-sm transition',
-                        filterExtracurricular === opt.key
-                          ? 'bg-teal-50 font-medium text-teal-900'
-                          : 'text-slate-700 hover:bg-slate-50',
-                      ]"
-                      @click="onExtracurricular(opt.key, $event)"
-                    >
-                      {{ opt.label }}
-                    </button>
-                  </li>
-                </ul>
-              </AppFilterDropdown>
-
-              <!-- Date range chip -->
-              <AppFilterDropdown
-                v-if="filterDropdownVisible.date_range !== false"
-                :panel-title="t('portal.filter_label_date_range')"
-                :summary-text="dateRangeChipSummary"
-                :active="dateRangeFilterActive"
-                :aria-label="t('portal.filter_label_date_range')"
-                panel-class="min-w-[260px] p-3"
-                class="shrink-0 snap-start"
-              >
-                <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-                  <label class="flex flex-1 flex-col gap-1 text-xs text-slate-600">
-                    <span>{{ t('portal.filter_date_from') }}</span>
-                    <input
-                      v-model="dateFrom"
-                      type="date"
-                      class="h-9 w-full rounded-lg border-0 bg-white/90 px-2 text-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
-                    />
-                  </label>
-                  <span class="hidden text-slate-400 sm:inline" aria-hidden="true">—</span>
-                  <label class="flex flex-1 flex-col gap-1 text-xs text-slate-600">
-                    <span>{{ t('portal.filter_date_to') }}</span>
-                    <input
-                      v-model="dateTo"
-                      type="date"
-                      class="h-9 w-full rounded-lg border-0 bg-white/90 px-2 text-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
-                    />
-                  </label>
-                </div>
-              </AppFilterDropdown>
-            </div>
-
-            <!-- Action area: clear button -->
-            <div
-              v-if="activeFilterCount > 0"
-              class="ml-auto flex shrink-0 items-center pl-2"
-            >
-              <button
-                type="button"
-                :title="t('portal.filter_clear_all')"
-                :aria-label="t('portal.filter_clear_all')"
-                class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
-                @click="resetFilters"
-              >
-                <XMarkIcon class="h-4 w-4" aria-hidden="true" />
-              </button>
-            </div>
-            </div>
-          </div>
-        </AppFilterBar>
-      </div>
+      <PortalListFilterDrawer
+        :open="filterDrawerOpen"
+        v-model:filter-status="filterStatus"
+        v-model:filter-trip-type="filterTripType"
+        v-model:filter-urgent="filterUrgent"
+        v-model:filter-extracurricular="filterExtracurricular"
+        v-model:sort="sort"
+        v-model:date-from="dateFrom"
+        v-model:date-to="dateTo"
+        :show-extracurricular-filter="!isExtracurricularModule"
+        :filter-options="filterOptions"
+        :sort-options="sortOptions"
+        :trip-type-options="tripTypeOptions"
+        :urgent-options="urgentOptions"
+        :extracurricular-options="extracurricularOptions"
+        :active-filter-count="activeFilterCount"
+        @close="filterDrawerOpen = false"
+        @reset="resetFilters"
+        @apply="applyDrawerFilters"
+      />
 
       <PortalRequestSkeleton
         v-if="loading && !silentListRefresh"
-        class="mt-8"
+        class="px-4 py-8"
         :aria-label="t('portal.loading_requests')"
       />
 
-      <div v-else-if="fetchError" class="mt-8 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+      <div v-else-if="fetchError" class="mx-4 mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
         {{ fetchError }}
       </div>
 
       <template v-else>
         <PortalEmptyState
           v-if="!items.length"
-          class="mt-10"
+          class="px-4 py-10"
           :title="t('portal.empty_title')"
           :description="t('portal.empty_desc')"
         >
           <template #action>
             <RouterLink
               :to="{ name: portalRoutes.create }"
-              class="inline-flex min-h-[48px] items-center justify-center rounded-2xl bg-va-800 px-8 text-sm font-semibold text-white shadow-md hover:bg-va-800"
+              class="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-va-800 px-6 text-sm font-semibold text-white hover:bg-va-900"
             >
               {{ t('portal.cta_primary') }}
             </RouterLink>
           </template>
         </PortalEmptyState>
 
-        <div v-else class="mt-8 space-y-4">
+        <div v-else class="space-y-4 px-4 pb-4 pt-2">
           <div
             v-if="isExtracurricularMode && showPlanCreatedHint"
             class="flex gap-3 rounded-xl border border-teal-200 bg-teal-50/90 px-4 py-3 text-sm text-teal-950"
@@ -564,33 +237,32 @@
           </nav>
         </div>
       </template>
-    </section>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ChevronDownIcon, FunnelIcon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/vue/24/outline'
-import { cloneDispatchRequest, listPortalRequests } from '../../api/requests'
+import { cloneDispatchRequest, getPortalRequestsSummary, listPortalRequests } from '../../api/requests'
 import { formatApiError } from '../../api/http'
-import AppFilterBar from '../../components/filters/AppFilterBar.vue'
-import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
 import PortalEmptyState from '../../components/portal/PortalEmptyState.vue'
 import PortalRequestSkeleton from '../../components/portal/PortalRequestSkeleton.vue'
 import PortalRequestsTable from '../../components/portal/PortalRequestsTable.vue'
+import PortalDispatchSummaryBar from '../../components/portal/PortalDispatchSummaryBar.vue'
+import PortalRequestsListToolbar from '../../components/portal/PortalRequestsListToolbar.vue'
+import PortalListFilterDrawer from '../../components/portal/PortalListFilterDrawer.vue'
+import PortalExtracurricularStatusTabs from '../../components/portal/PortalExtracurricularStatusTabs.vue'
 import ExtracurricularRequestsDataTable from '../../components/requests/ExtracurricularRequestsDataTable.vue'
 import ExtracurricularRequestsCalendar from '../../components/portal/extracurricular/ExtracurricularRequestsCalendar.vue'
 import ExtracurricularScheduleTable from '../../components/portal/extracurricular/ExtracurricularScheduleTable.vue'
 import { usePortalExtracurricularModule } from '../../composables/usePortalExtracurricularModule'
-import { useDetailsAutoClose, useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 import { formatDispatchRequestRefCode } from '../../util/portalRequestFormat.js'
 
 const PER_PAGE_OPTIONS = [5, 10, 15, 20]
 const PER_PAGE_KEY = 'portal-list-per-page'
 const SUGGEST_PER_PAGE = 8
-const VIS_KEY = 'portal-filter-vis'
 
 function readStoredPerPage() {
   try {
@@ -613,11 +285,20 @@ const isExtracurricularMode = computed(
 const extracurricularTableRef = ref(null)
 const extracurricularListView = ref('schedule')
 const scheduleGroupBy = ref('plan')
-const filterBarRef = ref(null)
-const funnelRef = ref(null)
 
-useDetailsAutoCloseWithin(filterBarRef)
-useDetailsAutoClose(funnelRef)
+const summary = ref(null)
+const summaryLoading = ref(true)
+const kpiActiveKey = ref('')
+const quickFilter = ref('all')
+const filterDrawerOpen = ref(false)
+const exportOpen = ref(false)
+const slaRiskOnly = ref(false)
+const ecWorkflowTab = ref('all')
+const suppressQuickFilterReload = ref(false)
+
+const summaryVariant = computed(() =>
+  isExtracurricularModule.value ? 'extracurricular' : 'list',
+)
 
 const listViewModes = computed(() => [
   { id: 'calendar', label: t('portal.recurring_plan.list_view_calendar') },
@@ -625,7 +306,7 @@ const listViewModes = computed(() => [
   { id: 'detail', label: t('portal.recurring_plan.list_view_detail') },
 ])
 
-// ── List state ───────────────────────────────────────────────
+// â”€â”€ List state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const loading = ref(true)
 const silentListRefresh = ref(false)
 const fetchError = ref('')
@@ -634,7 +315,7 @@ const pagination = ref(null)
 const perPage = ref(readStoredPerPage())
 const perPageOptions = PER_PAGE_OPTIONS
 
-// ── Filter state ─────────────────────────────────────────────
+// â”€â”€ Filter state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const filterStatus = ref('all')
 const filterTripType = ref('all')
 const filterUrgent = ref('all')
@@ -653,42 +334,13 @@ const showSearchSuggest = computed(
   () => searchDropdownOpen.value && String(searchInput.value ?? '').trim().length >= 1,
 )
 
-// ── Filter chip visibility (persisted) ───────────────────────
-const filterDropdownVisible = reactive(
-  (() => {
-    try {
-      return JSON.parse(localStorage.getItem(VIS_KEY) ?? '{}') ?? {}
-    } catch {
-      return {}
-    }
-  })(),
-)
-
-watch(
-  filterDropdownVisible,
-  (v) => {
-    try {
-      localStorage.setItem(VIS_KEY, JSON.stringify(v))
-    } catch {
-      // localStorage unavailable
-    }
-  },
-  { deep: true },
-)
-
-const visibilityOptions = computed(() => [
-  { id: 'status', label: t('portal.filter_label_status') },
-  { id: 'sort', label: t('portal.filter_label_sort') },
-  { id: 'trip_type', label: t('portal.filter_label_trip_type') },
-  { id: 'urgent', label: t('portal.filter_label_urgent') },
-  { id: 'extracurricular', label: t('portal.filter_label_extracurricular') },
-  { id: 'date_range', label: t('portal.filter_label_date_range') },
-])
-
-// ── Filter / sort option lists ────────────────────────────────
+// â”€â”€ Filter chip visibility (persisted) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const filterOptions = computed(() => [
   { key: 'all', label: t('portal.filter_all') },
   { key: 'pending', label: t('portal.filter_pending') },
+  { key: 'processing', label: t('portal.shell.quick_processing') },
+  { key: 'completed', label: t('portal.shell.quick_done') },
+  { key: 'draft', label: t('portal.shell.ec_tab_draft') },
   { key: 'approved', label: t('portal.filter_approved') },
   { key: 'rejected', label: t('portal.filter_rejected') },
   { key: 'returned', label: t('portal.filter_returned') },
@@ -743,7 +395,7 @@ const currentExtracurricularLabel = computed(
 )
 
 const currentDateRangeLabel = computed(() => {
-  if (dateFrom.value && dateTo.value) return `${dateFrom.value} — ${dateTo.value}`
+  if (dateFrom.value && dateTo.value) return `${dateFrom.value} â€” ${dateTo.value}`
   if (dateFrom.value) return `${t('portal.filter_date_from')}: ${dateFrom.value}`
   if (dateTo.value) return `${t('portal.filter_date_to')}: ${dateTo.value}`
   return t('portal.filter_all')
@@ -799,7 +451,7 @@ const dateRangeChipSummary = computed(() =>
   ),
 )
 
-// ── Active filter count + summary lines ──────────────────────
+// â”€â”€ Active filter count + summary lines â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const activeFilterCount = computed(() => {
   let n = 0
   if (filterStatus.value !== 'all') n++
@@ -809,36 +461,110 @@ const activeFilterCount = computed(() => {
   if (sort.value !== 'depart_desc') n++
   if (debouncedQ.value) n++
   if (dateFrom.value || dateTo.value) n++
+  if (slaRiskOnly.value) n++
   return n
 })
 
-const activeFilterLines = computed(() => {
-  const lines = []
-  if (filterStatus.value !== 'all') {
-    lines.push({ label: t('portal.filter_label_status'), value: currentStatusLabel.value })
-  }
-  if (filterTripType.value !== 'all') {
-    lines.push({ label: t('portal.filter_label_trip_type'), value: currentTripTypeLabel.value })
-  }
-  if (filterUrgent.value !== 'all') {
-    lines.push({ label: t('portal.filter_label_urgent'), value: currentUrgentLabel.value })
-  }
-  if (filterExtracurricular.value !== 'all') {
-    lines.push({
-      label: t('portal.filter_label_extracurricular'),
-      value: currentExtracurricularLabel.value,
+async function loadSummary() {
+  summaryLoading.value = true
+  try {
+    summary.value = await getPortalRequestsSummary({
+      module: isExtracurricularModule.value ? 'extracurricular' : 'all',
     })
+  } catch {
+    summary.value = null
+  } finally {
+    summaryLoading.value = false
   }
-  if (sort.value !== 'depart_desc') {
-    lines.push({ label: t('portal.filter_label_sort'), value: currentSortLabel.value })
+}
+
+function onKpiQuickFilter(payload) {
+  const key = payload?.key ?? ''
+  kpiActiveKey.value = key
+  slaRiskOnly.value = key === 'sla_risk'
+
+  if (key === 'pending') {
+    filterStatus.value = 'pending'
+    quickFilter.value = 'pending'
+  } else if (key === 'processing' || key === 'in_progress') {
+    filterStatus.value = 'processing'
+    quickFilter.value = 'processing'
+  } else if (key === 'completed') {
+    filterStatus.value = 'completed'
+    quickFilter.value = 'done'
+  } else if (key === 'overdue') {
+    filterStatus.value = 'pending'
+    quickFilter.value = 'pending'
+  } else {
+    filterStatus.value = 'all'
+    quickFilter.value = 'all'
   }
-  if (dateFrom.value || dateTo.value) {
-    lines.push({ label: t('portal.filter_label_date_range'), value: currentDateRangeLabel.value })
+
+  if (isExtracurricularModule.value) {
+    const tabMap = {
+      plans: 'all',
+      in_progress: 'processing',
+      completed: 'completed',
+      overdue: 'pending',
+      pending: 'pending',
+      processing: 'processing',
+    }
+    if (tabMap[key]) ecWorkflowTab.value = tabMap[key]
   }
-  if (debouncedQ.value) {
-    lines.push({ label: t('portal.search_placeholder'), value: debouncedQ.value })
+
+  reloadFromStart()
+}
+
+function applyDrawerFilters() {
+  filterDrawerOpen.value = false
+  reloadFromStart()
+}
+
+function exportCurrentCsv() {
+  const rows = items.value || []
+  if (!rows.length) return
+  const header = ['id', 'status', 'origin', 'destination', 'depart_at']
+  const lines = [header.join(',')]
+  for (const r of rows) {
+    const cols = [r.id, r.status, r.origin, r.destination, r.depart_at].map((c) =>
+      `"${String(c ?? '').replace(/"/g, '""')}"`,
+    )
+    lines.push(cols.join(','))
   }
-  return lines
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'portal-requests.csv'
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+watch(quickFilter, (v) => {
+  if (suppressQuickFilterReload.value) return
+  slaRiskOnly.value = false
+  kpiActiveKey.value = ''
+  ecWorkflowTab.value = 'all'
+  if (v === 'all') filterStatus.value = 'all'
+  else if (v === 'pending') filterStatus.value = 'pending'
+  else if (v === 'processing') filterStatus.value = 'processing'
+  else if (v === 'done') filterStatus.value = 'completed'
+  reloadFromStart()
+})
+
+watch(ecWorkflowTab, (tab) => {
+  slaRiskOnly.value = false
+  kpiActiveKey.value = ''
+  quickFilter.value = 'all'
+  const map = {
+    all: 'all',
+    draft: 'draft',
+    pending: 'pending',
+    processing: 'processing',
+    completed: 'completed',
+  }
+  filterStatus.value = map[tab] || 'all'
+  reloadFromStart()
 })
 
 const pageFrom = computed(() => {
@@ -867,7 +593,7 @@ const pageNumbers = computed(() => {
   return list
 })
 
-// ── Search autocomplete ──────────────────────────────────────
+// â”€â”€ Search autocomplete â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let suggestTimer = null
 
 function suggestRouteLine(req) {
@@ -974,7 +700,7 @@ function commitSearchSuggest() {
   flushSearch()
 }
 
-// ── Debounced search ─────────────────────────────────────────
+// â”€â”€ Debounced search â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let debounceTimer = null
 
 watch(searchInput, (v) => {
@@ -996,7 +722,7 @@ watch([dateFrom, dateTo], () => {
   }, 400)
 })
 
-// ── Actions ──────────────────────────────────────────────────
+// â”€â”€ Actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function closeParentDetails(ev) {
   const el = ev?.currentTarget?.closest?.('details')
   if (el && 'open' in el) el.open = false
@@ -1045,17 +771,21 @@ function resetFilters() {
   searchSuggestions.value = []
   dateFrom.value = ''
   dateTo.value = ''
-  if (funnelRef.value?.open) funnelRef.value.open = false
+  slaRiskOnly.value = false
+  quickFilter.value = 'all'
+  kpiActiveKey.value = ''
+  ecWorkflowTab.value = 'all'
   reloadFromStart()
 }
 
-// ── API ──────────────────────────────────────────────────────
+// â”€â”€ API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function listParams(page) {
   return {
     per_page: perPage.value,
     page,
     sort: sort.value,
     filter: filterStatus.value === 'all' ? undefined : filterStatus.value,
+    sla_risk_only: slaRiskOnly.value ? true : undefined,
     q: debouncedQ.value || undefined,
     trip_type: filterTripType.value !== 'all' ? filterTripType.value : undefined,
     is_urgent:
@@ -1178,9 +908,28 @@ watch(extracurricularListView, () => {
 })
 
 onMounted(() => {
+  if (route.query.q) {
+    const q = String(route.query.q)
+    searchInput.value = q
+    debouncedQ.value = q
+  }
+  const qFilter = route.query.filter
+  if (qFilter && typeof qFilter === 'string') {
+    suppressQuickFilterReload.value = true
+    filterStatus.value = qFilter
+    if (qFilter === 'processing') quickFilter.value = 'processing'
+    else if (qFilter === 'pending') quickFilter.value = 'pending'
+    else if (qFilter === 'completed') quickFilter.value = 'done'
+    suppressQuickFilterReload.value = false
+  }
+  if (String(route.query.sla) === '1') {
+    slaRiskOnly.value = true
+    kpiActiveKey.value = 'sla_risk'
+  }
   if (isExtracurricularModule.value) {
     filterExtracurricular.value = 'extracurricular'
   }
+  loadSummary()
   loadPage(1)
 })
 

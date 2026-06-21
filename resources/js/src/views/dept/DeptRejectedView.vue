@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto w-full max-w-5xl space-y-5">
+  <div class="w-full space-y-5">
     <DeptRejectedSummaryBar
       :stats="kpiStats"
       :loading="kpiLoading"

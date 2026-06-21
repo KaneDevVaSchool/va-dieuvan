@@ -16,6 +16,8 @@ class SummaryPortalDispatchRequestsRequest extends ApiFormRequest
     /** @return array<string, mixed> */
     public function rules(): array
     {
-        return [];
+        return [
+            'module' => ['sometimes', 'string', 'in:all,extracurricular'],
+        ];
     }
 }
