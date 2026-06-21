@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-y-auto overscroll-y-contain bg-slate-50 dark:bg-slate-950 -mx-3 -my-3 sm:-mx-4 sm:-my-4 md:-mx-6 md:-my-5 lg:-mx-8 lg:-my-6"
+    class="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-y-auto overscroll-y-contain bg-slate-50 dark:bg-slate-950"
   >
     <div
       v-if="loading"
@@ -19,7 +19,15 @@
         :origin="req.origin || ''"
         :destination="req.destination || ''"
         :depart-summary="heroDepartSummary"
+        :trip-type="labelTripType(req.trip_type)"
+        :passenger-line="passengerOrCargoLine !== '—' ? passengerOrCargoLine : ''"
+        :requester-name="req.requester?.name || ''"
+        :requester-unit="heroRequesterUnit"
+        :requester-initials="requesterInitials"
+        :requester-avatar="req.requester?.avatar_url || ''"
+        :created-date="heroCreatedDate"
         :urgent-accent="showUrgentBadge"
+        :show-recurring="showRecurringBadge"
         :pdf-busy="pdfBusy"
         :pdf-export-disabled="pdfExportDisabled"
         :show-approve-actions="showD2dDecisionSection"
@@ -38,7 +46,7 @@
 
       <!-- ═══════════ Body ═══════════ -->
       <div class="min-w-0 flex-1">
-        <div class="mx-auto w-full max-w-none space-y-4 px-4 py-4 pb-16 sm:px-6 lg:px-8">
+        <div class="w-full min-w-0 space-y-4 px-4 py-4 pb-16 sm:px-6 lg:px-8">
           <!-- Alerts -->
           <div
             v-if="req.status === 'rejected'"
@@ -193,108 +201,108 @@
           <div :class="cardClass">
                 <div class="p-4 sm:p-6">
                   <!-- ===== Tab: Tổng quan ===== -->
-                  <div v-show="activeTab === 'form'" class="space-y-5">
-                    <StaffRequestOverviewInfoGrid :groups="overviewInfoGroups" />
+                  <!-- ════ Tab: Tổng quan ════ -->
+                  <div v-show="activeTab === 'form'" class="space-y-4">
 
-                    <div
-                      v-if="req.trip"
-                      class="rounded-xl border border-va-200/80 bg-va-50/40 p-4 dark:border-va-800/50 dark:bg-va-950/20"
-                    >
-                      <RouterLink
-                        :to="`/trips/${req.trip.id}`"
-                        class="flex items-center gap-3 rounded-lg border border-va-200/80 bg-white/80 px-4 py-3 transition hover:bg-white dark:border-va-800/50 dark:bg-slate-900/60 dark:hover:bg-slate-900"
-                        data-testid="staff-request-linked-trip"
-                      >
-                        <TruckIcon class="h-5 w-5 shrink-0 text-va-600 dark:text-va-400" aria-hidden="true" />
-                        <span class="min-w-0 flex-1">
-                          <span class="block text-[11px] font-semibold uppercase tracking-wide text-va-600 dark:text-va-400">{{ t('request_detail.ops_linked_trip') }}</span>
-                          <span class="font-mono text-base font-bold text-va-900 dark:text-va-100">{{ linkedTripCode }}</span>
-                        </span>
-                        <ArrowTopRightOnSquareIcon class="h-4 w-4 shrink-0 text-va-600 dark:text-va-400" aria-hidden="true" />
-                      </RouterLink>
+                    <!-- Dispatch + cost summary (driver, vehicle, cost) — only when trip exists -->
+                    <div v-if="req.trip" class="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+                      <div class="flex items-center justify-between gap-2 border-b border-slate-100 px-4 py-2.5 dark:border-slate-800">
+                        <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          {{ t('request_detail.overview_group_dispatch') }}
+                        </p>
+                        <RouterLink
+                          :to="`/trips/${req.trip.id}`"
+                          class="inline-flex items-center gap-1 text-xs font-semibold text-va-700 transition hover:text-va-900 dark:text-va-400 dark:hover:text-va-200"
+                          data-testid="staff-request-linked-trip"
+                        >
+                          <span>{{ t('request_detail.ops_linked_trip') }} {{ linkedTripCode }}</span>
+                          <ArrowTopRightOnSquareIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                        </RouterLink>
+                      </div>
+                      <dl class="grid grid-cols-2 divide-x divide-y divide-slate-100 dark:divide-slate-800 sm:grid-cols-4">
+                        <div class="px-4 py-3">
+                          <dt class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ t('request_detail.overview_lbl_driver') }}</dt>
+                          <dd class="mt-0.5 text-sm font-semibold text-slate-900 dark:text-slate-100">{{ req.trip.driver?.full_name || req.trip.driver?.name || friendlyEmpty }}</dd>
+                        </div>
+                        <div class="px-4 py-3">
+                          <dt class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ t('request_detail.overview_lbl_vehicle') }}</dt>
+                          <dd class="mt-0.5 text-sm font-semibold text-slate-900 dark:text-slate-100">{{ req.trip.vehicle?.type || friendlyEmpty }}</dd>
+                        </div>
+                        <div class="px-4 py-3">
+                          <dt class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ t('request_detail.overview_lbl_plate') }}</dt>
+                          <dd class="mt-0.5 text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100">{{ req.trip.vehicle?.license_plate || friendlyEmpty }}</dd>
+                        </div>
+                        <div class="px-4 py-3">
+                          <dt class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ t('request_detail.overview_lbl_cost') }}</dt>
+                          <dd class="mt-0.5 text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100">{{ asideDeclaredTotalDisplay }}</dd>
+                        </div>
+                      </dl>
                     </div>
 
-                    <div class="space-y-4">
-                      <div class="grid gap-4 md:grid-cols-2">
-                        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                          <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3 dark:border-slate-800">
-                            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-600 dark:bg-sky-950/40 dark:text-sky-400">
-                              <CalendarDaysIcon class="h-4 w-4" aria-hidden="true" />
-                            </span>
-                            <h2 class="text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">{{ t('request_detail.ops_schedule_heading') }}</h2>
-                          </div>
-                          <dl class="mt-4 grid gap-2.5 sm:grid-cols-2">
-                            <FieldRow boxed :label="t('request_detail.ops_lbl_proposed_date')" :value="fmtDateOnly(formData.proposed_date)" />
-                            <FieldRow
-                              boxed
-                              :label="t('request_detail.ops_lbl_date_needed')"
-                              :value="fmtDateOnly(formData.date_needed)"
-                              :highlight="!!formData.date_needed"
-                            />
-                            <div
-                              v-if="urgentReasonText"
-                              class="sm:col-span-2 rounded-xl border border-rose-200 bg-rose-50/70 px-3 py-2.5 dark:border-rose-900/50 dark:bg-rose-950/25"
-                            >
-                              <FieldRow :label="t('request_detail.ops_lbl_urgent_reason')" :value="urgentReasonText" multiline emphasize />
-                            </div>
-                          </dl>
-                        </div>
-                        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                          <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3 dark:border-slate-800">
-                            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-600 dark:bg-violet-950/40 dark:text-violet-400">
-                              <DocumentTextIcon class="h-4 w-4" aria-hidden="true" />
-                            </span>
-                            <h2 class="text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">{{ t('request_detail.ops_purpose_heading') }}</h2>
-                          </div>
-                          <dl class="mt-4 grid gap-2.5">
-                            <FieldRow boxed :label="t('request_detail.ops_lbl_purpose')" :value="nz(formData.purpose)" multiline />
-                            <FieldRow boxed :label="t('request_detail.ops_lbl_basis')" :value="basisText" multiline />
-                          </dl>
-                        </div>
+                    <!-- Single unified request-info card -->
+                    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+                      <div class="border-b border-slate-100 px-4 py-2.5 dark:border-slate-800">
+                        <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          {{ t('request_detail.hero_card_request_info') }}
+                        </p>
                       </div>
 
+                      <dl class="grid grid-cols-1 divide-y divide-slate-100 dark:divide-slate-800 sm:grid-cols-2 sm:divide-x lg:grid-cols-3">
+                        <!-- Mục đích -->
+                        <div class="px-4 py-3 sm:col-span-2 lg:col-span-1">
+                          <dt class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ t('request_detail.ops_lbl_purpose') }}</dt>
+                          <dd class="mt-1 text-sm leading-relaxed text-slate-800 dark:text-slate-200" :class="nz(formData.purpose) ? '' : 'italic text-slate-400 dark:text-slate-500'">
+                            {{ nz(formData.purpose) || friendlyEmpty }}
+                          </dd>
+                        </div>
+                        <!-- Căn cứ -->
+                        <div class="px-4 py-3 sm:col-span-2 lg:col-span-2">
+                          <dt class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ t('request_detail.ops_lbl_basis') }}</dt>
+                          <dd class="mt-1 text-sm leading-relaxed text-slate-800 dark:text-slate-200" :class="basisText ? '' : 'italic text-slate-400 dark:text-slate-500'">
+                            {{ basisText || friendlyEmpty }}
+                          </dd>
+                        </div>
+                      </dl>
+
+                      <dl class="grid grid-cols-2 divide-x divide-y divide-slate-100 dark:divide-slate-800 sm:grid-cols-4">
+                        <div class="px-4 py-3">
+                          <dt class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ t('request_detail.ops_lbl_proposed_date') }}</dt>
+                          <dd class="mt-0.5 text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100">{{ fmtDateOnly(formData.proposed_date) || friendlyEmpty }}</dd>
+                        </div>
+                        <div class="px-4 py-3">
+                          <dt class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ t('request_detail.ops_lbl_date_needed') }}</dt>
+                          <dd class="mt-0.5 text-sm font-semibold tabular-nums" :class="formData.date_needed ? 'text-slate-900 dark:text-slate-100' : 'italic text-slate-400 dark:text-slate-500'">
+                            {{ fmtDateOnly(formData.date_needed) || friendlyEmpty }}
+                          </dd>
+                        </div>
+                        <div v-if="coordinatorName" class="px-4 py-3">
+                          <dt class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ t('request_detail.ops_lbl_coordinator') }}</dt>
+                          <dd class="mt-0.5 text-sm font-semibold text-slate-900 dark:text-slate-100">{{ coordinatorName }}</dd>
+                        </div>
+                        <div v-if="targets.length" class="px-4 py-3" :class="coordinatorName ? '' : 'col-span-2'">
+                          <dt class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ t('request_detail.ops_lbl_target_audience') }}</dt>
+                          <dd class="mt-1 flex flex-wrap gap-1">
+                            <span
+                              v-for="(tg, i) in targets"
+                              :key="i"
+                              class="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                            >{{ tg }}</span>
+                          </dd>
+                        </div>
+                      </dl>
+
+                      <!-- Urgent reason banner (inline, no extra card) -->
                       <div
-                        v-if="targets.length || coordinatorName || showDeptHeadPanel"
-                        class="grid gap-4 lg:grid-cols-2 lg:items-start"
+                        v-if="urgentReasonText"
+                        class="border-t border-rose-100 bg-rose-50/70 px-4 py-3 dark:border-rose-900/40 dark:bg-rose-950/20"
                       >
-                        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                          <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3 dark:border-slate-800">
-                            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
-                              <UserGroupIcon class="h-4 w-4" aria-hidden="true" />
-                            </span>
-                            <h2 class="text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">{{ t('request_detail.ops_targets_heading') }}</h2>
-                          </div>
-                          <div v-if="targets.length" class="mt-4">
-                            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                              {{ t('request_detail.ops_lbl_target_audience') }}
-                            </p>
-                            <div class="mt-2 flex flex-wrap gap-2">
-                              <span
-                                v-for="(tg, i) in targets"
-                                :key="i"
-                                class="inline-flex rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-sm font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                              >{{ tg }}</span>
-                            </div>
-                          </div>
-                          <dl
-                            v-if="coordinatorName"
-                            class="mt-4 grid gap-2.5"
-                            :class="targets.length ? 'sm:grid-cols-3' : 'sm:grid-cols-1'"
-                          >
-                            <FieldRow boxed :label="t('request_detail.ops_lbl_coordinator')" :value="coordinatorName" />
-                            <FieldRow boxed :label="t('request_detail.lbl_email')" :value="nz(formData.coordinator_email)" />
-                            <FieldRow boxed :label="t('request_detail.lbl_phone')" :value="nz(formData.coordinator_phone)" />
-                          </dl>
-                          <p
-                            v-if="!targets.length && !coordinatorName"
-                            class="mt-4 text-sm text-slate-500 dark:text-slate-400"
-                          >
-                            —
-                          </p>
-                        </div>
-                        <AssignedDeptHeadFormCard :req="req" variant="staff" />
+                        <p class="text-[10px] font-semibold uppercase tracking-wider text-rose-600 dark:text-rose-400">{{ t('request_detail.ops_lbl_urgent_reason') }}</p>
+                        <p class="mt-0.5 text-sm text-rose-900 dark:text-rose-200">{{ urgentReasonText }}</p>
                       </div>
                     </div>
+
+                    <!-- Assigned dept head (retained, important for workflow) -->
+                    <AssignedDeptHeadFormCard v-if="showDeptHeadPanel" :req="req" variant="staff" />
                   </div>
 
                   <!-- ===== Tab: Chi tiết chuyến ===== -->
@@ -1176,17 +1184,33 @@ const heroPriorityLabel = computed(() =>
   showUrgentBadge.value ? t('request_detail.hero_priority_high') : t('request_detail.hero_priority_normal'),
 )
 
-const heroDepartSummary = computed(() => {
-  const raw = req.value?.depart_at
-  if (!raw) return ''
-  const d = new Date(raw)
+function _fmtHeroDate(isoStr) {
+  if (!isoStr) return ''
+  const d = new Date(isoStr)
   if (Number.isNaN(d.getTime())) return ''
   const loc = locale.value === 'en' ? 'en-GB' : 'vi-VN'
   const hour12 = locale.value === 'en'
   const time = d.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit', hour12 })
   const date = d.toLocaleDateString(loc, { day: '2-digit', month: '2-digit', year: 'numeric' })
   return `${time} • ${date}`
+}
+
+const heroDepartSummary = computed(() => _fmtHeroDate(req.value?.depart_at))
+
+const heroCreatedDate = computed(() => {
+  const raw = req.value?.created_at
+  if (!raw) return ''
+  const d = new Date(raw)
+  if (Number.isNaN(d.getTime())) return ''
+  const loc = locale.value === 'en' ? 'en-GB' : 'vi-VN'
+  return d.toLocaleDateString(loc, { day: '2-digit', month: '2-digit', year: 'numeric' })
 })
+
+const heroRequesterUnit = computed(() =>
+  req.value?.wizard_snapshot?.form?.requester_unit?.trim() ||
+  requesterAsideSubtitle.value ||
+  '',
+)
 
 const overviewInfoGroups = computed(() => {
   const r = req.value

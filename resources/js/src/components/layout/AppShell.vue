@@ -10,11 +10,14 @@
     <main
       id="app-main-scroll"
       :class="[
-        'flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-y-contain bg-slate-50 scrollbar-hidden px-3 py-3 dark:bg-slate-950 sm:px-4 sm:py-4 md:px-6 md:py-5 lg:px-8 lg:py-6',
+        'flex min-h-0 min-w-0 flex-1 flex-col overscroll-y-contain bg-slate-50 scrollbar-hidden dark:bg-slate-950',
+        mainFlush
+          ? 'overflow-hidden px-0 py-0'
+          : 'overflow-y-auto overflow-x-hidden px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5 lg:px-8 lg:py-6',
         isHorizontalMobilePad,
       ]"
     >
-      <OperationalStatusBanner class="print:hidden" />
+      <OperationalStatusBanner class="print:hidden" :class="mainFlush ? 'shrink-0 px-3 pt-3 sm:px-4 md:px-6 lg:px-8' : ''" />
       <div class="flex min-h-0 min-w-0 flex-1 flex-col">
         <slot />
       </div>
@@ -33,12 +36,16 @@
 
 <script setup>
 import { computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAppViewportLock } from '../../composables/useAppViewportLock'
 import AppSidebar from './AppSidebar.vue'
 import OperationalStatusBanner from './OperationalStatusBanner.vue'
 import MobileBottomNav from '../nav/MobileBottomNav.vue'
 import { useSidebarLayout } from '../../composables/useSidebarLayout'
 import { useAuthStore } from '../../store'
+
+const route = useRoute()
+const mainFlush = computed(() => route.matched.some((record) => record.meta.mainFlush === true))
 
 const { isVertical, isHorizontal } = useSidebarLayout()
 

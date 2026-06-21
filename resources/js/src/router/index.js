@@ -81,6 +81,8 @@ const staffChildRoutes = [
             title: "Chi tiết yêu cầu",
             subtitle: "Phiếu điều vận",
             featureKey: "module.operations",
+            /** Full-bleed trong #app-main-scroll (bỏ padding shell). */
+            mainFlush: true,
         },
     },
     {
