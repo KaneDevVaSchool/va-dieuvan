@@ -27,8 +27,8 @@ export function formatCostNoteCode(id) {
 export function labelTripType(v) {
   const key = v ? `labels.trip_type.${v}` : ''
   const m = {
-    door_to_door: 'Đưa đón (D2D)',
-    point_to_point: 'Điểm — điểm',
+    door_to_door: 'Door-to-door',
+    point_to_point: 'Point to point',
     business: 'Công tác',
     cargo: 'Hàng hóa',
   }

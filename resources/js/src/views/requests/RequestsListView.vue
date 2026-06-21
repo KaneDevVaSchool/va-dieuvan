@@ -348,51 +348,51 @@
           </button>
         </div>
       </div>
-    </div>
 
-    <!-- Table -->
-    <div class="rounded-xl border border-slate-200/80 bg-white shadow-sm">
+      <div class="border-t border-slate-100 dark:border-slate-700">
       <div
-        class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 bg-slate-50/50 px-3 py-2"
+        v-if="canBulkTrash && selectedIds.length"
+        class="flex flex-wrap items-center gap-2 border-b border-slate-100 bg-slate-50/50 px-3 py-2 dark:border-slate-700"
       >
-        <div v-if="canBulkTrash" class="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-          <span v-if="selectedIds.length" class="text-sm text-slate-600">
-            {{ t('requests_page.selected_count', { n: selectedIds.length }) }}
-          </span>
+        <span class="text-sm text-slate-600 dark:text-slate-400">
+          {{ t('requests_page.selected_count', { n: selectedIds.length }) }}
+        </span>
+        <button
+          v-if="!isTrashTab"
+          type="button"
+          class="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-sm font-medium text-rose-800 shadow-sm transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+          :disabled="bulkSubmitting"
+          data-testid="requests-bulk-move-trash"
+          @click="openBulkConfirm('delete')"
+        >
+          <TrashIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+          {{ t('requests_page.bulk_move_trash') }}
+        </button>
+        <template v-else>
           <button
-            v-if="!isTrashTab"
             type="button"
-            class="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-sm font-medium text-rose-800 shadow-sm transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
-            :disabled="!selectedIds.length || bulkSubmitting"
-            @click="openBulkConfirm('delete')"
+            class="inline-flex items-center gap-1.5 rounded-lg border border-teal-200 bg-white px-3 py-1.5 text-sm font-medium text-teal-900 shadow-sm transition hover:bg-teal-50 disabled:cursor-not-allowed disabled:opacity-50"
+            :disabled="bulkSubmitting"
+            data-testid="requests-bulk-restore"
+            @click="openBulkConfirm('restore')"
           >
-            <TrashIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-            {{ t('requests_page.bulk_move_trash') }}
+            <ArrowPathIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+            {{ t('requests_page.bulk_restore') }}
           </button>
-          <template v-else>
-            <button
-              type="button"
-              class="inline-flex items-center gap-1.5 rounded-lg border border-teal-200 bg-white px-3 py-1.5 text-sm font-medium text-teal-900 shadow-sm transition hover:bg-teal-50 disabled:cursor-not-allowed disabled:opacity-50"
-              :disabled="!selectedIds.length || bulkSubmitting"
-              @click="openBulkConfirm('restore')"
-            >
-              <ArrowPathIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-              {{ t('requests_page.bulk_restore') }}
-            </button>
-            <button
-              type="button"
-              class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-900 shadow-sm transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-              :disabled="!selectedIds.length || bulkSubmitting"
-              @click="openBulkConfirm('force_delete')"
-            >
-              <ExclamationTriangleIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-              {{ t('requests_page.bulk_force_delete') }}
-            </button>
-          </template>
-        </div>
+          <button
+            type="button"
+            class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-900 shadow-sm transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+            :disabled="bulkSubmitting"
+            data-testid="requests-bulk-force-delete"
+            @click="openBulkConfirm('force_delete')"
+          >
+            <ExclamationTriangleIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+            {{ t('requests_page.bulk_force_delete') }}
+          </button>
+        </template>
       </div>
 
-      <div v-if="loading" class="border-t border-slate-100 px-4 py-5">
+      <div v-if="loading" class="px-4 py-5">
         <div class="mb-3 h-4 w-40 animate-pulse rounded bg-slate-100" />
         <div class="space-y-2">
           <div v-for="n in 7" :key="n" class="h-14 animate-pulse rounded-lg bg-slate-100" />
@@ -516,7 +516,7 @@
                       REQ-{{ r.id }}
                     </RouterLink>
                   </div>
-                  <div class="mt-0.5 text-sm text-slate-500">{{ formatShortDate(r.created_at) }}</div>
+                  <div class="mt-0.5 text-sm tabular-nums text-slate-500">{{ formatRequestDateTime(r.created_at) }}</div>
                 </div>
               </td>
               <td class="max-w-xs px-4 py-3.5 align-top">
@@ -524,7 +524,7 @@
                   <component :is="tripTypeIcon(r.trip_type)" class="mt-0.5 h-6 w-6 shrink-0 text-teal-600" />
                   <div class="min-w-0">
                     <div class="truncate text-base font-semibold leading-snug text-slate-900">
-                      {{ (r.origin ?? '—') + ' → ' + (r.destination ?? '—') }}
+                      {{ displayRoute(r) }}
                     </div>
                     <div class="mt-0.5 text-sm text-slate-500">
                       <span v-if="dispatchRequestDisplayPassengerCount(r)">{{ t('requests_page.passengers', { n: dispatchRequestDisplayPassengerCount(r) }) }}</span>
@@ -535,8 +535,10 @@
                 </div>
               </td>
               <td v-if="requestColOn('type_channel')" class="px-4 py-3.5 align-top">
-                <div class="font-medium text-slate-900">{{ labelTripType(r.trip_type) }}</div>
-                <div class="mt-0.5 text-sm text-slate-500">{{ labelSourceChannel(r.source_channel) }}</div>
+                <div class="font-medium text-slate-900">{{ labelTripType(r.trip_type) || t('requests_page.empty_trip_type') }}</div>
+                <div class="mt-0.5 text-sm text-slate-500">
+                  {{ r.source_channel ? labelSourceChannel(r.source_channel) : t('requests_page.empty_channel') }}
+                </div>
               </td>
               <td v-if="requestColOn('timeline')" class="px-4 py-3.5 align-top">
                 <StatusBadge :status="r.status" />
@@ -551,22 +553,24 @@
                   <ExclamationTriangleIcon class="h-5 w-5 shrink-0" />
                   {{ slaCell(r).text }}
                 </span>
-                <span v-else class="text-slate-400">—</span>
+                <span v-else class="text-sm text-slate-500">{{ t('requests_page.empty_sla') }}</span>
               </td>
               <td v-if="requestColOn('depart_at')" class="whitespace-nowrap px-4 py-3.5 align-top text-sm font-medium tabular-nums text-slate-700">
                 {{ formatDepartDate(r.depart_at) }}
               </td>
               <td v-if="requestColOn('arrive_by')" class="whitespace-nowrap px-4 py-3.5 align-top text-sm font-medium tabular-nums text-slate-700">
-                {{ formatDepartDate(r.arrive_by) }}
+                {{ formatArriveByDate(r.arrive_by) }}
               </td>
               <td v-if="requestColOn('paper')" class="max-w-[10rem] px-4 py-3.5 align-top text-sm">
-                <div class="font-medium text-slate-800">{{ labelPaperStatus(r.paper_status) }}</div>
+                <div class="font-medium text-slate-800">
+                  {{ r.paper_status ? labelPaperStatus(r.paper_status) : t('requests_page.empty_paper') }}
+                </div>
                 <div v-if="r.paper_reference" class="mt-0.5 truncate text-slate-500" :title="r.paper_reference">
                   {{ r.paper_reference }}
                 </div>
               </td>
               <td v-if="requestColOn('requester')" class="max-w-[10rem] px-4 py-3.5 align-top text-sm font-medium text-slate-700">
-                <span class="truncate">{{ r.requester?.name ?? '—' }}</span>
+                <span class="truncate">{{ r.requester?.name || t('requests_page.empty_requester') }}</span>
               </td>
               <td v-if="requestColOn('urgent')" class="px-4 py-3.5 align-top">
                 <span
@@ -575,7 +579,7 @@
                 >
                   {{ t('requests_page.filter_priority_urgent') }}
                 </span>
-                <span v-else class="text-sm text-slate-400">—</span>
+                <span v-else class="text-sm text-slate-500">{{ t('requests_page.empty_priority_normal') }}</span>
               </td>
               <td v-if="requestColOn('notes')" class="max-w-xs px-4 py-3.5 align-top text-sm leading-relaxed text-slate-600">
                 <p class="line-clamp-2">{{ requestNotesListCell(r) }}</p>
@@ -647,45 +651,79 @@
             @click="!isTrashTab && openRequestDetail(r.id)"
             @keydown.enter="!isTrashTab && openRequestDetail(r.id)"
           >
-            <div class="flex items-start justify-between gap-3">
-              <div class="min-w-0">
-                <div class="flex flex-wrap items-center gap-1.5 text-base font-semibold text-slate-900">
-                  <span
-                    v-if="r.dispatch_request_template_id"
-                    class="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-indigo-50 px-2 py-0.5 text-sm font-bold uppercase text-indigo-900 ring-1 ring-indigo-600/20 dark:bg-indigo-950/60 dark:text-indigo-200 dark:ring-indigo-500/30"
-                  >
-                    <ArrowPathIcon class="h-4 w-4 shrink-0 text-indigo-700 dark:text-indigo-300" aria-hidden="true" />
-                    {{ t('requests_page.badge_recurring') }}
-                  </span>
-                  <ExclamationTriangleIcon
-                    v-if="r.is_urgent"
-                    class="h-5 w-5 shrink-0 text-amber-600"
-                    aria-hidden="true"
-                  />
-                  <RouterLink
-                    :to="{ name: 'requestDetail', params: { id: String(r.id) } }"
-                    class="font-mono underline decoration-slate-300 underline-offset-2 hover:text-va-800"
-                    @click.stop
-                  >
-                    REQ-{{ r.id }}
-                  </RouterLink>
-                </div>
-                <div class="mt-0.5 text-sm text-slate-500">{{ formatShortDate(r.created_at) }}</div>
-                <div class="mt-1.5 truncate text-base font-semibold text-slate-800">
-                  {{ (r.origin ?? '—') + ' → ' + (r.destination ?? '—') }}
-                </div>
+            <div class="flex items-start gap-3">
+              <div v-if="canBulkTrash" class="pt-1" @click.stop>
+                <input
+                  v-if="isTrashTab || canDeleteRow(r)"
+                  type="checkbox"
+                  class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                  :checked="selectedIds.includes(r.id)"
+                  :aria-label="t('requests_page.col_select')"
+                  @change="toggleRowSelected(r.id, $event.target.checked)"
+                />
               </div>
-              <StatusBadge class="shrink-0" :status="r.status" />
+              <div class="min-w-0 flex-1">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-1.5 text-base font-semibold text-slate-900">
+                      <span
+                        v-if="r.dispatch_request_template_id"
+                        class="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-indigo-50 px-2 py-0.5 text-sm font-bold uppercase text-indigo-900 ring-1 ring-indigo-600/20 dark:bg-indigo-950/60 dark:text-indigo-200 dark:ring-indigo-500/30"
+                      >
+                        <ArrowPathIcon class="h-4 w-4 shrink-0 text-indigo-700 dark:text-indigo-300" aria-hidden="true" />
+                        {{ t('requests_page.badge_recurring') }}
+                      </span>
+                      <ExclamationTriangleIcon
+                        v-if="r.is_urgent"
+                        class="h-5 w-5 shrink-0 text-amber-600"
+                        aria-hidden="true"
+                      />
+                      <RouterLink
+                        :to="{ name: 'requestDetail', params: { id: String(r.id) } }"
+                        class="font-mono underline decoration-slate-300 underline-offset-2 hover:text-va-800"
+                        @click.stop
+                      >
+                        REQ-{{ r.id }}
+                      </RouterLink>
+                    </div>
+                    <p class="mt-1 text-sm font-semibold leading-snug text-slate-800">
+                      {{ displayRoute(r) }}
+                    </p>
+                  </div>
+                  <StatusBadge class="shrink-0" :status="r.status" />
+                </div>
+                <dl class="mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                  <div>
+                    <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t('requests_page.meta_created') }}</dt>
+                    <dd class="mt-0.5 tabular-nums text-slate-700">{{ formatRequestDateTime(r.created_at) }}</dd>
+                  </div>
+                  <div>
+                    <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t('requests_page.mobile_meta_type') }}</dt>
+                    <dd class="mt-0.5 font-medium text-slate-800">{{ labelTripType(r.trip_type) || t('requests_page.empty_trip_type') }}</dd>
+                  </div>
+                  <div>
+                    <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t('requests_page.mobile_meta_channel') }}</dt>
+                    <dd class="mt-0.5 text-slate-700">
+                      {{ r.source_channel ? labelSourceChannel(r.source_channel) : t('requests_page.empty_channel') }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t('requests_page.mobile_meta_depart') }}</dt>
+                    <dd class="mt-0.5 tabular-nums text-slate-700">{{ formatDepartDate(r.depart_at) }}</dd>
+                  </div>
+                </dl>
+              </div>
             </div>
           </li>
         </ul>
         </template>
       </div>
+      </div>
     </div>
 
     <nav
       v-if="!loading && items.length"
-      class="flex flex-col gap-3 border-t border-slate-200/90 pt-4 sm:flex-row sm:items-center sm:justify-between"
+      class="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between"
       :aria-label="t('requests_page.filter_per_page')"
     >
       <p class="text-sm text-slate-500">
@@ -870,9 +908,9 @@ import {
   labelTripType,
 } from '../../util/labels'
 import { isLegacyBm03NotesBlock } from '../../util/formatDispatchNotes'
-import { dispatchRequestDisplayPassengerCount } from '../../util/dispatchRequestPassengers'
+import { formatListDateTime } from '../../util/datetime'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
@@ -1107,8 +1145,8 @@ function requestColOn(id) {
 /** Chỉ hiển thị ghi chú do người dùng nhập; bản cũ lưu BM.03 trong `notes` thì để trống (xem chi tiết). */
 function requestNotesListCell(r) {
   const n = String(r?.notes ?? '').trim()
-  if (!n) return '—'
-  if (isLegacyBm03NotesBlock(n)) return '—'
+  if (!n) return t('requests_page.empty_notes')
+  if (isLegacyBm03NotesBlock(n)) return t('requests_page.empty_notes')
   return n
 }
 
@@ -1299,7 +1337,7 @@ function requestRowsToCsvLines(rows) {
     ...rows.map((r) =>
       [
         csvEscapeCell(`REQ-${r.id}`),
-        csvEscapeCell(`${r.origin ?? '—'} → ${r.destination ?? '—'}`),
+        csvEscapeCell(displayRoute(r)),
         csvEscapeCell(labelRequestStatus(r.status)),
         csvEscapeCell(formatDepartDate(r.depart_at)),
         r.is_urgent ? '1' : '',
@@ -1464,22 +1502,39 @@ function formatInt(n) {
   return new Intl.NumberFormat('vi-VN').format(n ?? 0)
 }
 
-function formatShortDate(v) {
-  if (!v) return '—'
-  try {
-    return new Date(v).toLocaleString('vi-VN', { dateStyle: 'medium', timeStyle: 'short' })
-  } catch {
-    return String(v)
-  }
+function dateLocaleKey() {
+  return locale.value === 'en' ? 'en' : 'vi'
+}
+
+function formatRequestDateTime(v) {
+  if (!v) return t('requests_page.empty_datetime')
+  const out = formatListDateTime(v, dateLocaleKey())
+  return out || t('requests_page.empty_datetime')
 }
 
 function formatDepartDate(v) {
-  if (!v) return '—'
-  try {
-    return new Date(v).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' })
-  } catch {
-    return String(v)
-  }
+  if (!v) return t('requests_page.empty_depart_at')
+  const out = formatListDateTime(v, dateLocaleKey())
+  return out || t('requests_page.empty_depart_at')
+}
+
+function formatArriveByDate(v) {
+  if (!v) return t('requests_page.empty_arrive_by')
+  const out = formatListDateTime(v, dateLocaleKey())
+  return out || t('requests_page.empty_arrive_by')
+}
+
+function displayRoute(r) {
+  const o = String(r?.origin ?? '').trim()
+  const d = String(r?.destination ?? '').trim()
+  if (!o && !d) return t('requests_page.empty_route')
+  if (!o) return `${t('requests_page.empty_origin')} → ${d}`
+  if (!d) return `${o} → ${t('requests_page.empty_destination')}`
+  return `${o} → ${d}`
+}
+
+function formatShortDate(v) {
+  return formatRequestDateTime(v)
 }
 
 function tripTypeIcon(type) {
@@ -1494,7 +1549,8 @@ function tripTimelineHint(r) {
   }
   if (r.status === 'pending') return t('requests_page.hint_await_assign')
   if (r.status === 'approved' && !r.trip) return t('requests_page.hint_no_trip')
-  return labelPaperStatus(r.paper_status) || '—'
+  if (r.paper_status) return labelPaperStatus(r.paper_status)
+  return t('requests_page.empty_timeline_hint')
 }
 
 /** @param {Record<string, unknown>} r */

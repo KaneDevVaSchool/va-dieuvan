@@ -217,67 +217,90 @@
         :key="trip.id"
         class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/50"
       >
-        <div class="border-b border-slate-100 px-3 py-3 sm:px-4 sm:py-3.5 dark:border-slate-800">
-          <div class="flex flex-wrap items-start justify-between gap-3">
-            <div class="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
+        <div class="border-b border-slate-100 px-3 py-4 sm:px-5 dark:border-slate-800">
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div class="flex min-w-0 gap-3 sm:gap-4">
               <div
-                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-11 sm:w-11"
+                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12"
                 :class="tripTypeIconWrap(trip.dispatch_request?.trip_type)"
               >
-                <TruckIcon v-if="trip.dispatch_request?.trip_type === 'door_to_door'" class="h-5 w-5 text-sky-600 dark:text-sky-400 sm:h-6 sm:w-6" />
-                <MapPinIcon v-else-if="trip.dispatch_request?.trip_type === 'point_to_point'" class="h-5 w-5 text-emerald-600 dark:text-emerald-400 sm:h-6 sm:w-6" />
-                <BriefcaseIcon v-else-if="trip.dispatch_request?.trip_type === 'business'" class="h-5 w-5 text-amber-600 dark:text-amber-400 sm:h-6 sm:w-6" />
-                <QueueListIcon v-else class="h-5 w-5 text-slate-600 dark:text-slate-400 sm:h-6 sm:w-6" />
+                <TruckIcon v-if="trip.dispatch_request?.trip_type === 'door_to_door'" class="h-6 w-6 text-sky-600 dark:text-sky-400" />
+                <MapPinIcon v-else-if="trip.dispatch_request?.trip_type === 'point_to_point'" class="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                <BriefcaseIcon v-else-if="trip.dispatch_request?.trip_type === 'business'" class="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                <QueueListIcon v-else class="h-6 w-6 text-slate-600 dark:text-slate-400" />
               </div>
-              <div class="min-w-0 flex-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                <div class="flex flex-nowrap items-center gap-x-2 gap-y-1 py-0.5 text-xs sm:gap-x-2.5 sm:text-sm">
-                  <span class="shrink-0 font-mono text-sm font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-base">{{ tripCode(trip.id) }}</span>
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <RouterLink
+                    :to="`${tripDetailPrefix}/${trip.id}`"
+                    class="font-mono text-lg font-bold tracking-tight text-slate-900 underline decoration-slate-300 underline-offset-2 hover:text-va-800 hover:decoration-va-400 dark:text-slate-100"
+                    :data-testid="`trips-card-link-${trip.id}`"
+                  >
+                    {{ tripCode(trip.id) }}
+                  </RouterLink>
                   <span
-                    class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold sm:text-xs"
+                    class="rounded-full px-2.5 py-0.5 text-xs font-semibold"
                     :class="tripTypeBadgeClass(trip.dispatch_request?.trip_type)"
                   >
-                    {{ tripTypeShort(trip.dispatch_request?.trip_type) }}
-                  </span>
-                  <span class="shrink-0 whitespace-nowrap text-slate-600 dark:text-slate-400">
-                    <span class="font-medium text-slate-700 dark:text-slate-300">{{ t('trips_page.created_at_label') }}</span>
-                    {{ fmtDateTimeFull(trip.created_at) }}
+                    {{ tripTypeLabel(trip.dispatch_request?.trip_type) }}
                   </span>
                   <span
                     v-if="trip.dispatch_request?.is_urgent"
-                    class="shrink-0 rounded-md bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-800 dark:bg-rose-950/60 dark:text-rose-200"
+                    class="rounded-md bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-800 dark:bg-rose-950/60 dark:text-rose-200"
                   >
                     {{ t('trips_page.badge_urgent') }}
                   </span>
                   <span
-                    v-if="trip.dispatch_request?.source_channel"
-                    class="shrink-0 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                  >
-                    {{ labelSourceChannel(trip.dispatch_request.source_channel) }}
-                  </span>
-                  <span
-                    v-if="trip.dispatch_request?.paper_status"
-                    class="shrink-0 rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-900 dark:bg-amber-950/50 dark:text-amber-100"
-                  >
-                    {{ labelPaperStatus(trip.dispatch_request.paper_status) }}
-                  </span>
-                  <span
                     v-if="trip.dispatch_request?.dispatch_request_template_id"
-                    class="shrink-0 rounded-md bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-100"
+                    class="rounded-md bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-100"
                   >
                     {{ t('trips_page.badge_recurring') }}
                   </span>
                 </div>
+                <dl class="mt-3 grid grid-cols-1 gap-x-4 gap-y-2 text-sm sm:grid-cols-2 xl:grid-cols-3">
+                  <div class="min-w-0">
+                    <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      {{ t('trips_page.created_at_label') }}
+                    </dt>
+                    <dd class="mt-0.5 font-medium tabular-nums text-slate-800 dark:text-slate-200">
+                      {{ fmtTripDateTime(trip.created_at) }}
+                    </dd>
+                  </div>
+                  <div class="min-w-0">
+                    <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      {{ t('trips_page.meta_channel') }}
+                    </dt>
+                    <dd class="mt-0.5 font-medium text-slate-800 dark:text-slate-200">
+                      {{
+                        trip.dispatch_request?.source_channel
+                          ? labelSourceChannel(trip.dispatch_request.source_channel)
+                          : t('trips_page.empty_channel')
+                      }}
+                    </dd>
+                  </div>
+                  <div class="min-w-0">
+                    <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      {{ t('trips_page.meta_paper') }}
+                    </dt>
+                    <dd class="mt-0.5 font-medium text-slate-800 dark:text-slate-200">
+                      {{
+                        trip.dispatch_request?.paper_status
+                          ? labelPaperStatus(trip.dispatch_request.paper_status)
+                          : t('trips_page.empty_paper')
+                      }}
+                    </dd>
+                  </div>
+                </dl>
               </div>
             </div>
-            <div class="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
+            <div class="flex shrink-0 flex-wrap items-center gap-2 lg:justify-end">
               <span :class="['rounded-full px-2.5 py-1 text-xs font-semibold sm:text-sm', statusPillClass(trip.status)]">
                 {{ labelTripStatus(trip.status) }}
               </span>
               <span
-                v-if="trip.payment_status && trip.payment_status !== 'unpaid'"
                 class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300"
               >
-                {{ paymentLabel(trip.payment_status) }}
+                {{ t('trips_page.meta_payment') }}: {{ paymentLabel(trip.payment_status) }}
               </span>
             </div>
           </div>
@@ -290,22 +313,15 @@
               {{ t('trips_page.col_origin') }}
             </div>
             <p class="mt-1 text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100 sm:text-base">
-              {{ trip.dispatch_request?.origin || '—' }}
+              {{ displayPlace(trip.dispatch_request?.origin, 'empty_origin') }}
             </p>
-            <div class="trip-time-block mt-2">
-              <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            <div class="mt-2">
+              <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 {{ t('trips_page.depart_at_label') }}
               </p>
-              <template v-if="dateTimeParts(trip.depart_at)">
-                <p class="mt-0.5 text-xl font-bold tabular-nums leading-tight text-teal-700 dark:text-teal-400 sm:text-2xl">
-                  {{ dateTimeParts(trip.depart_at).time }}
-                </p>
-                <p class="text-sm font-semibold tabular-nums text-slate-800 dark:text-slate-200">
-                  {{ dateTimeParts(trip.depart_at).date }}
-                  <span class="ml-1 text-xs font-normal text-slate-500 dark:text-slate-400">({{ dateTimeParts(trip.depart_at).weekday }})</span>
-                </p>
-              </template>
-              <p v-else class="mt-1 text-sm text-slate-500">—</p>
+              <p class="mt-0.5 text-sm font-semibold tabular-nums text-teal-800 dark:text-teal-300">
+                {{ fmtDepartAt(trip.depart_at) }}
+              </p>
             </div>
           </div>
           <div class="min-w-0">
@@ -314,24 +330,15 @@
               {{ t('trips_page.col_destination') }}
             </div>
             <p class="mt-1 text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100 sm:text-base">
-              {{ trip.dispatch_request?.destination || '—' }}
+              {{ displayPlace(trip.dispatch_request?.destination, 'empty_destination') }}
             </p>
-            <div class="trip-time-block mt-2">
-              <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            <div class="mt-2">
+              <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 {{ t('trips_page.arrive_by_label') }}
               </p>
-              <template v-if="dateTimeParts(trip.arrive_by || trip.dispatch_request?.arrive_by)">
-                <p class="mt-0.5 text-xl font-bold tabular-nums leading-tight text-rose-700 dark:text-rose-400 sm:text-2xl">
-                  {{ dateTimeParts(trip.arrive_by || trip.dispatch_request?.arrive_by).time }}
-                </p>
-                <p class="text-sm font-semibold tabular-nums text-slate-800 dark:text-slate-200">
-                  {{ dateTimeParts(trip.arrive_by || trip.dispatch_request?.arrive_by).date }}
-                  <span class="ml-1 text-xs font-normal text-slate-500 dark:text-slate-400">
-                    ({{ dateTimeParts(trip.arrive_by || trip.dispatch_request?.arrive_by).weekday }})
-                  </span>
-                </p>
-              </template>
-              <p v-else class="mt-1 text-sm text-slate-500">{{ t('trips_page.no_eta') }}</p>
+              <p class="mt-0.5 text-sm font-semibold tabular-nums text-rose-800 dark:text-rose-300">
+                {{ fmtArriveBy(trip.arrive_by || trip.dispatch_request?.arrive_by) }}
+              </p>
             </div>
           </div>
           <div class="min-w-0 rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/40">
@@ -351,6 +358,7 @@
                 </p>
                 <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">
                   <span v-if="trip.vehicle" class="font-medium">{{ trip.vehicle.license_plate }}</span>
+                  <span v-else class="text-slate-500">{{ t('trips_page.empty_vehicle') }}</span>
                   <span v-if="trip.external_vehicle_ref" class="block truncate">{{ trip.external_vehicle_ref }}</span>
                   <span v-if="trip.external_driver_ref" class="block truncate">{{ trip.external_driver_ref }}</span>
                 </p>
@@ -372,17 +380,17 @@
               {{ t('trips_page.col_ops_meta') }}
             </p>
             <ul class="mt-2 space-y-2 text-xs text-slate-700 dark:text-slate-300 sm:text-sm">
-              <li v-if="trip.dispatcher">
+              <li>
                 <span class="font-semibold text-slate-600 dark:text-slate-400">{{ t('trips_page.col_dispatcher') }}</span>
-                {{ trip.dispatcher.name }}
+                {{ trip.dispatcher?.name || t('trips_page.empty_dispatcher') }}
               </li>
-              <li v-if="trip.started_at">
+              <li>
                 <span class="font-semibold text-slate-600 dark:text-slate-400">{{ t('trips_page.started_at_label') }}</span>
-                {{ fmtDateTimeFull(trip.started_at) }}
+                {{ fmtTripDateTime(trip.started_at) }}
               </li>
-              <li v-if="trip.completed_at">
+              <li>
                 <span class="font-semibold text-slate-600 dark:text-slate-400">{{ t('trips_page.completed_at_label') }}</span>
-                {{ fmtDateTimeFull(trip.completed_at) }}
+                {{ fmtTripDateTime(trip.completed_at) }}
               </li>
             </ul>
             <p
@@ -539,6 +547,7 @@ import { useVisibleFilterControls } from '../../composables/useVisibleFilterCont
 import { useVisiblePoll } from '../../composables/useDriverVisiblePoll'
 import { useAuthStore } from '../../store'
 import { buildStaffPrefixedPath as staffPath } from '../../config/dispatchWebBase'
+import { formatListDateTime } from '../../util/datetime'
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -638,9 +647,9 @@ const rangeValid = computed(() => {
 
 const tripTypeFilterOptions = computed(() => [
   { value: '', label: t('requests_page.filter_trip_type') },
-  { value: 'door_to_door', label: t('trips_page.tab_d2d') },
-  { value: 'point_to_point', label: t('trips_page.tab_p2p') },
-  { value: 'business', label: t('trips_page.tab_business') },
+  { value: 'door_to_door', label: labelTripType('door_to_door') },
+  { value: 'point_to_point', label: labelTripType('point_to_point') },
+  { value: 'business', label: labelTripType('business') },
 ])
 
 const runBucketFilterOptions = computed(() => [
@@ -740,11 +749,36 @@ function tripCode(id) {
   return `TRP-${String(id).padStart(4, '0')}`
 }
 
-function tripTypeShort(tt) {
-  if (tt === 'door_to_door') return 'D2D'
-  if (tt === 'point_to_point') return 'P2P'
-  if (tt === 'business') return t('trips_page.badge_business_short')
-  return '—'
+function dateLocaleKey() {
+  return locale.value === 'en' ? 'en' : 'vi'
+}
+
+function fmtTripDateTime(v) {
+  if (v == null || v === '') return t('trips_page.empty_datetime')
+  const out = formatListDateTime(v, dateLocaleKey())
+  return out || t('trips_page.empty_datetime')
+}
+
+function fmtDepartAt(v) {
+  if (v == null || v === '') return t('trips_page.empty_depart_at')
+  const out = formatListDateTime(v, dateLocaleKey())
+  return out || t('trips_page.empty_depart_at')
+}
+
+function fmtArriveBy(v) {
+  if (v == null || v === '') return t('trips_page.no_eta')
+  const out = formatListDateTime(v, dateLocaleKey())
+  return out || t('trips_page.no_eta')
+}
+
+function displayPlace(value, emptyKey) {
+  const s = value != null ? String(value).trim() : ''
+  return s || t(`trips_page.${emptyKey}`)
+}
+
+function tripTypeLabel(tt) {
+  if (!tt) return t('trips_page.empty_trip_type')
+  return labelTripType(tt)
 }
 
 function tripTypeBadgeClass(tt) {
@@ -765,36 +799,6 @@ function statusPillClass(s) {
   return tripStatusAdminPillClass(s)
 }
 
-/** Hiển thị ngày + giờ đầy đủ (danh sách / meta vận hành) */
-function fmtDateTimeFull(v) {
-  if (v == null || v === '') return '—'
-  const d = new Date(v)
-  if (Number.isNaN(d.getTime())) return '—'
-  const loc = locale.value === 'en' ? 'en-GB' : 'vi-VN'
-  return d.toLocaleString(loc, {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: locale.value === 'en',
-  })
-}
-
-/** Khối giờ lớn + ngày + thứ cho điểm đi/đến */
-function dateTimeParts(v) {
-  if (v == null || v === '') return null
-  const d = new Date(v)
-  if (Number.isNaN(d.getTime())) return null
-  const loc = locale.value === 'en' ? 'en-GB' : 'vi-VN'
-  const hour12 = locale.value === 'en'
-  return {
-    date: d.toLocaleDateString(loc, { day: '2-digit', month: '2-digit', year: 'numeric' }),
-    time: d.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit', hour12 }),
-    weekday: d.toLocaleDateString(loc, { weekday: 'short' }),
-  }
-}
-
 function paymentLabel(ps) {
   const k = ps && ['unpaid', 'pending', 'paid'].includes(ps) ? ps : 'unpaid'
   return t(`trips_page.payment_${k}`)
@@ -812,7 +816,7 @@ function passengerMetaSummary(trip) {
   if (n > 0) {
     return t('trips_page.meta_passengers', { n })
   }
-  return labelTripType(trip.dispatch_request?.trip_type)
+  return t('requests_page.no_passenger_info')
 }
 
 function distanceSummary(trip) {
@@ -820,14 +824,14 @@ function distanceSummary(trip) {
   if (km != null && Number(km) > 0) {
     return t('trips_page.meta_km', { n: Math.round(Number(km) * 10) / 10 })
   }
-  return '—'
+  return t('trips_page.empty_distance')
 }
 
 function durationSummary(trip) {
   const a = trip.depart_at ? new Date(trip.depart_at).getTime() : null
   const bRaw = trip.arrive_by || trip.dispatch_request?.arrive_by
   const b = bRaw ? new Date(bRaw).getTime() : null
-  if (!a || !b || b <= a) return '—'
+  if (!a || !b || b <= a) return t('trips_page.empty_duration')
   const mins = Math.round((b - a) / 60000)
   const h = Math.floor(mins / 60)
   const m = mins % 60

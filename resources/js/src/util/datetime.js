@@ -72,6 +72,25 @@ export function formatIsoDateTime(iso, locale = 'vi') {
   })
 }
 
+/**
+ * Hiển thị thống nhất trên danh sách (vd. 15:03 10/06/2026).
+ * @param {string | null | undefined} iso
+ * @param {'vi' | 'en'} [locale]
+ */
+export function formatListDateTime(iso, locale = 'vi') {
+  if (iso == null || iso === '') return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  const pad = (n) => String(n).padStart(2, '0')
+  const datePart = `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`
+  if (locale === 'en') {
+    const h12 = d.getHours() % 12 || 12
+    const ampm = d.getHours() < 12 ? 'AM' : 'PM'
+    return `${h12}:${pad(d.getMinutes())} ${ampm} ${datePart}`
+  }
+  return `${pad(d.getHours())}:${pad(d.getMinutes())} ${datePart}`
+}
+
 /** @param {Date} d */
 export function toDatetimeLocalValue(d) {
   const pad = (n) => String(n).padStart(2, '0')

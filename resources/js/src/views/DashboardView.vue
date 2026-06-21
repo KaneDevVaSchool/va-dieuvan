@@ -1,18 +1,25 @@
 <template>
-  <div class="space-y-4 md:space-y-5">
-    <div v-if="loadError" class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-100">
+  <div class="space-y-5">
+    <div
+      v-if="loadError"
+      class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-100"
+    >
       {{ loadError }}
     </div>
 
     <div class="space-y-4">
+      <!-- Tiêu đề trang -->
       <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl md:text-2xl">
             {{ t('dashboard_analytics.title') }}
           </h1>
+          <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            {{ t('dashboard_analytics.subtitle') }}
+          </p>
         </div>
         <RouterLink
-          class="shrink-0 text-sm font-medium text-teal-700 hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-300"
+          class="shrink-0 text-sm font-medium text-va-800 hover:text-va-900 dark:text-va-300 dark:hover:text-va-200"
           :to="staffPath('/reports')"
         >
           {{ t('dashboard_analytics.reports_link') }} →
@@ -27,7 +34,7 @@
         <div class="relative -mx-0.5 mt-2 flex items-stretch gap-1 sm:-mx-1 sm:gap-2">
           <button
             type="button"
-            class="flex h-auto min-h-[5.5rem] w-8 shrink-0 items-center justify-center rounded-xl border border-slate-200/90 bg-white/90 text-slate-600 shadow-sm transition hover:border-teal-200/70 hover:bg-white hover:text-teal-700 disabled:pointer-events-none disabled:opacity-25 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:border-teal-800 dark:hover:text-teal-400 sm:w-9"
+            class="flex h-auto min-h-[4.75rem] w-8 shrink-0 items-center justify-center rounded-xl border border-slate-200/90 bg-white/90 text-slate-600 shadow-sm transition hover:border-va-200/70 hover:bg-white hover:text-va-800 disabled:pointer-events-none disabled:opacity-25 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:border-va-800 dark:hover:text-va-300 sm:w-9"
             :disabled="!quickCanScrollLeft"
             :aria-label="t('dashboard_analytics.quick_scroll_prev')"
             @click="scrollQuickLinks(-1)"
@@ -36,7 +43,7 @@
           </button>
           <div
             ref="quickScrollRef"
-            class="dash-quick-scroll min-h-[5.5rem] min-w-0 flex-1 overflow-x-auto overflow-y-hidden scroll-smooth"
+            class="dash-quick-scroll min-h-[4.75rem] min-w-0 flex-1 overflow-x-auto overflow-y-hidden scroll-smooth"
             @scroll.passive="updateQuickScrollState"
           >
             <div class="flex h-full flex-nowrap items-stretch gap-2 px-0.5 py-0.5 sm:gap-3">
@@ -44,12 +51,13 @@
                 v-for="item in quickLinks"
                 :key="item.to"
                 :to="item.to"
+                :title="item.hint"
                 :class="[
-                  'flex w-[6.5rem] shrink-0 flex-col items-center justify-center gap-2 rounded-2xl border bg-gradient-to-b px-2.5 py-3.5 text-center shadow-sm ring-1 transition hover:-translate-y-0.5 hover:shadow-md sm:w-32 md:w-36',
+                  'flex w-[6.25rem] shrink-0 flex-col items-center justify-center gap-1.5 rounded-2xl border bg-gradient-to-b px-2.5 py-3 text-center shadow-sm ring-1 transition hover:-translate-y-0.5 hover:shadow-md sm:w-28 md:w-32',
                   item.cardClass,
                 ]"
               >
-                <component :is="item.icon" :class="['h-7 w-7 shrink-0 sm:h-8 sm:w-8', item.iconClass]" aria-hidden="true" />
+                <component :is="item.icon" :class="['h-6 w-6 shrink-0 sm:h-7 sm:w-7', item.iconClass]" aria-hidden="true" />
                 <span class="w-full text-center line-clamp-2 text-[11px] font-medium leading-tight sm:text-xs" :class="item.labelClass">
                   {{ item.title }}
                 </span>
@@ -58,7 +66,7 @@
           </div>
           <button
             type="button"
-            class="flex h-auto min-h-[5.5rem] w-8 shrink-0 items-center justify-center rounded-xl border border-slate-200/90 bg-white/90 text-slate-600 shadow-sm transition hover:border-teal-200/70 hover:bg-white hover:text-teal-700 disabled:pointer-events-none disabled:opacity-25 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:border-teal-800 dark:hover:text-teal-400 sm:w-9"
+            class="flex h-auto min-h-[4.75rem] w-8 shrink-0 items-center justify-center rounded-xl border border-slate-200/90 bg-white/90 text-slate-600 shadow-sm transition hover:border-va-200/70 hover:bg-white hover:text-va-800 disabled:pointer-events-none disabled:opacity-25 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:border-va-800 dark:hover:text-va-300 sm:w-9"
             :disabled="!quickCanScrollRight"
             :aria-label="t('dashboard_analytics.quick_scroll_next')"
             @click="scrollQuickLinks(1)"
@@ -76,371 +84,200 @@
       {{ t('dashboard_analytics.loading') }}
     </div>
 
-    <section class="space-y-3" aria-labelledby="dash-section-kpis">
-      <h2
-        id="dash-section-kpis"
-        class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-      >
-        {{ t('dashboard_analytics.section_kpis') }}
-      </h2>
-    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      <Card
-        :title="t('dashboard_analytics.kpi_trips_title')"
-        :hint="t('dashboard_analytics.kpi_trips_tooltip')"
-        class="border-teal-200/90 bg-gradient-to-br from-teal-50/90 via-white to-white shadow-md shadow-teal-900/[0.04] ring-1 ring-teal-900/[0.04] dark:border-teal-900/35 dark:from-teal-950/35 dark:via-slate-900/90 dark:to-slate-900/80 dark:shadow-none dark:ring-teal-900/20"
-      >
-        <div class="text-2xl font-bold tabular-nums text-teal-800 dark:text-teal-200 md:text-3xl">{{ totalTrips }}</div>
-        <p class="mt-0.5 text-[11px] text-teal-900/70 dark:text-teal-300/80">{{ t('dashboard_analytics.kpi_trips_sub') }}</p>
-        <div class="mt-2 max-h-24 space-y-1 overflow-y-auto border-t border-teal-100/90 pt-2 text-[11px] text-slate-600 dark:border-teal-900/40 dark:text-slate-300 md:max-h-28">
-          <div v-for="row in tripStatusRows" :key="row.key" class="flex justify-between gap-2 tabular-nums">
-            <span class="truncate text-slate-500 dark:text-slate-400">{{ row.label }}</span>
-            <span class="shrink-0 font-medium text-slate-900 dark:text-slate-100">{{ row.n }}</span>
-          </div>
-          <div v-if="!tripStatusRows.length" class="text-slate-400 dark:text-slate-500">—</div>
-        </div>
-      </Card>
+    <!-- Dải thống kê KPI -->
+    <DashboardSummaryBar :metrics="dashboardMetrics" />
 
-      <Card
-        :title="t('dashboard_analytics.kpi_cost_title')"
-        :hint="t('dashboard_analytics.kpi_cost_tooltip')"
-        class="border-amber-200/90 bg-gradient-to-br from-amber-50/90 via-white to-white shadow-md shadow-amber-900/[0.04] ring-1 ring-amber-900/[0.04] dark:border-amber-900/35 dark:from-amber-950/30 dark:via-slate-900/90 dark:to-slate-900/80 dark:shadow-none dark:ring-amber-900/20"
-      >
-        <div class="text-xl font-bold tabular-nums text-amber-800 dark:text-amber-200 md:text-2xl">{{ formatMoney(totalConfirmedCost) }}</div>
-        <p class="mt-0.5 text-[11px] text-amber-900/70 dark:text-amber-300/80">{{ t('dashboard_analytics.kpi_cost_sub') }}</p>
-      </Card>
-
-      <Card
-        :title="t('dashboard_analytics.kpi_sla_title')"
-        :hint="t('dashboard_analytics.kpi_sla_tooltip')"
-        class="border-rose-200/90 bg-gradient-to-br from-rose-50/90 via-white to-white shadow-md shadow-rose-900/[0.04] ring-1 ring-rose-900/[0.04] dark:border-rose-900/35 dark:from-rose-950/30 dark:via-slate-900/90 dark:to-slate-900/80 dark:shadow-none dark:ring-rose-900/20"
-      >
-        <div class="text-xl font-bold tabular-nums text-rose-600 dark:text-rose-400 md:text-2xl">{{ summary?.cargo_sla_breaches ?? 0 }}</div>
-        <p class="mt-0.5 text-[11px] text-rose-900/70 dark:text-rose-300/80">{{ t('dashboard_analytics.kpi_sla_sub') }}</p>
-      </Card>
-
-      <Card
-        :title="t('dashboard_analytics.kpi_providers_title')"
-        :hint="t('dashboard_analytics.kpi_providers_tooltip')"
-        class="border-violet-200/90 bg-gradient-to-br from-violet-50/90 via-white to-white shadow-md shadow-violet-900/[0.04] ring-1 ring-violet-900/[0.04] dark:border-violet-900/35 dark:from-violet-950/30 dark:via-slate-900/90 dark:to-slate-900/80 dark:shadow-none dark:ring-violet-900/20"
-      >
-        <div class="truncate text-base font-semibold text-violet-900 dark:text-violet-200 md:text-lg">{{ topProviderName }}</div>
-        <p class="mt-0.5 text-[11px] text-violet-800/80 dark:text-violet-300/80">{{ t('dashboard_analytics.kpi_providers_sub') }}</p>
-        <p v-if="topProviderAmount" class="mt-1.5 text-sm font-medium tabular-nums text-violet-800 dark:text-violet-300">
-          {{ formatMoney(topProviderAmount) }}
-        </p>
-      </Card>
-    </div>
-
-    <!-- KPI hàng 2 -->
-    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-      <Card
-        :title="t('dashboard_analytics.kpi_completion_title')"
-        :hint="t('dashboard_analytics.kpi_completion_tooltip')"
-        class="border-emerald-200/90 bg-gradient-to-br from-emerald-50/90 via-white to-white shadow-md shadow-emerald-900/[0.04] ring-1 ring-emerald-900/[0.04] dark:border-emerald-900/35 dark:from-emerald-950/30 dark:via-slate-900/90 dark:to-slate-900/80 dark:shadow-none dark:ring-emerald-900/20"
-      >
-        <div class="text-xl font-bold tabular-nums text-emerald-800 dark:text-emerald-200 md:text-2xl">
-          <template v-if="completionRate != null">{{ completionRate }}%</template>
-          <template v-else>—</template>
-        </div>
-        <p class="mt-0.5 text-[11px] text-emerald-900/70 dark:text-emerald-300/80">
-          {{ completedTrips }} / {{ totalTripsInRange }} · {{ t('dashboard_analytics.kpi_completion_sub') }}
-        </p>
-      </Card>
-      <Card
-        :title="t('dashboard_analytics.kpi_distance_title')"
-        :hint="t('dashboard_analytics.kpi_distance_tooltip')"
-        class="border-sky-200/90 bg-gradient-to-br from-sky-50/90 via-white to-white shadow-md shadow-sky-900/[0.04] ring-1 ring-sky-900/[0.04] dark:border-sky-900/35 dark:from-sky-950/30 dark:via-slate-900/90 dark:to-slate-900/80 dark:shadow-none dark:ring-sky-900/20"
-      >
-        <div class="text-xl font-bold tabular-nums text-sky-800 dark:text-sky-200 md:text-2xl">
-          {{ formatDistanceKm(summary?.trip_records_distance_km) }}
-        </div>
-        <p class="mt-0.5 text-[11px] text-sky-900/70 dark:text-sky-300/80">{{ t('dashboard_analytics.kpi_distance_sub') }}</p>
-      </Card>
-    </div>
-    </section>
-
-    <section class="border-t border-slate-200/80 pt-6 md:pt-7 dark:border-slate-800" aria-labelledby="dash-section-compliance">
-    <!-- Tuân thủ xe -->
-    <div class="rounded-xl border border-slate-200 bg-gradient-to-br from-white via-slate-50/40 to-teal-50/25 p-3 shadow-sm ring-1 ring-slate-900/[0.03] dark:border-slate-800 dark:from-slate-900 dark:via-slate-900 dark:to-teal-950/20 dark:ring-white/[0.04] md:p-4">
-      <h2
-        id="dash-section-compliance"
-        class="text-sm font-semibold text-slate-900 dark:text-white"
-      >
-        {{ t('dashboard_analytics.section_compliance') }}
-      </h2>
-      <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
-        <div
-          v-for="box in complianceBoxes"
-          :key="box.key"
-          class="rounded-lg border border-slate-100/90 bg-white/90 px-3 py-2.5 shadow-sm ring-1 ring-slate-900/[0.02] dark:border-slate-700 dark:bg-slate-950/50 dark:ring-white/[0.04]"
-          :class="box.cardTone"
-        >
-          <div class="text-xs font-semibold" :class="box.titleClass">{{ box.title }}</div>
-          <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] tabular-nums">
-            <span class="text-rose-600 dark:text-rose-400">{{ t('dashboard_analytics.compliance_overdue') }}: {{ box.overdue }}</span>
-            <span v-if="box.soon != null" class="text-amber-700 dark:text-amber-400">{{ t('dashboard_analytics.compliance_due_30d') }}: {{ box.soon }}</span>
-            <span v-if="box.stale != null" class="text-slate-600 dark:text-slate-400">{{ box.staleLabel }}: {{ box.stale }}</span>
+    <!-- Tuân thủ & bảo trì xe -->
+    <section aria-labelledby="dash-section-compliance">
+      <div class="rounded-xl border border-slate-200 bg-gradient-to-br from-white via-slate-50/40 to-va-50/25 p-3 shadow-sm ring-1 ring-slate-900/[0.03] dark:border-slate-800 dark:from-slate-900 dark:via-slate-900 dark:to-va-950/20 dark:ring-white/[0.04]">
+        <h2 id="dash-section-compliance" class="text-sm font-semibold text-slate-900 dark:text-white">
+          {{ t('dashboard_analytics.section_compliance') }}
+        </h2>
+        <div class="mt-2.5 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          <div
+            v-for="box in complianceBoxes"
+            :key="box.key"
+            class="rounded-lg border border-slate-100/90 bg-white/90 px-3 py-2.5 shadow-sm ring-1 ring-slate-900/[0.02] dark:border-slate-700 dark:bg-slate-950/50 dark:ring-white/[0.04]"
+            :class="box.cardTone"
+          >
+            <div class="text-xs font-semibold" :class="box.titleClass">{{ box.title }}</div>
+            <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] tabular-nums">
+              <span class="text-rose-600 dark:text-rose-400">{{ t('dashboard_analytics.compliance_overdue') }}: {{ box.overdue }}</span>
+              <span v-if="box.soon != null" class="text-amber-700 dark:text-amber-400">{{ t('dashboard_analytics.compliance_due_30d') }}: {{ box.soon }}</span>
+              <span v-if="box.stale != null" class="text-slate-600 dark:text-slate-400">{{ box.staleLabel }}: {{ box.stale }}</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
     </section>
 
-    <section class="border-t border-slate-200/80 pt-6 md:pt-7 dark:border-slate-800" aria-labelledby="dash-section-recent">
+    <!-- Hoạt động gần đây -->
+    <section class="border-t border-slate-200/80 pt-5 dark:border-slate-800" aria-labelledby="dash-section-recent">
       <h2 id="dash-section-recent" class="mb-3 px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
         {{ t('dashboard_analytics.section_recent_activity') }}
       </h2>
-    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <div class="rounded-xl border border-slate-200/90 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-4">
-        <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h3 class="text-sm font-semibold text-slate-900 dark:text-white">
-            {{ t('dashboard_analytics.section_recent_trips') }}
-          </h3>
-          <RouterLink
-            class="text-xs font-medium text-teal-600 hover:text-teal-800 dark:text-teal-400"
-            :to="staffPath('/trips')"
-          >
-            {{ t('dashboard_analytics.recent_see_all') }} →
-          </RouterLink>
-        </div>
-        <div v-if="recentTripsBusy && !recentTrips.length" class="space-y-2" aria-busy="true">
-          <div
-            v-for="s in 5"
-            :key="'tskel-' + s"
-            class="h-[4.25rem] animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800/80"
-          />
-        </div>
-        <div v-else-if="recentTrips.length" class="space-y-2">
-          <RouterLink
-            v-for="tr in recentTrips"
-            :key="tr.id"
-            :to="staffPath(`/trips/${tr.id}`)"
-            :class="[
-              'group flex gap-3 rounded-xl border p-3 transition',
-              'border-slate-100 bg-gradient-to-br from-white to-slate-50/90 shadow-sm ring-1 ring-slate-900/[0.03]',
-              'hover:border-teal-200/90 hover:shadow-md hover:ring-teal-500/10',
-              'dark:border-slate-700/90 dark:from-slate-900 dark:to-slate-900/80 dark:ring-white/[0.04]',
-              'dark:hover:border-teal-800/60',
-              recentTripsBusy ? 'pointer-events-none opacity-55' : '',
-            ]"
-          >
-            <div
-              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-100/95 text-teal-700 shadow-inner dark:bg-teal-950/55 dark:text-teal-300"
-              aria-hidden="true"
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <!-- Chuyến gần đây -->
+        <div class="rounded-xl border border-slate-200/90 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-4">
+          <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h3 class="text-sm font-semibold text-slate-900 dark:text-white">
+              {{ t('dashboard_analytics.section_recent_trips') }}
+            </h3>
+            <RouterLink
+              class="text-xs font-medium text-va-800 hover:text-va-900 dark:text-va-300"
+              :to="staffPath('/trips')"
             >
-              <TruckIcon class="h-5 w-5" />
-            </div>
-            <div class="min-w-0 flex-1">
-              <div class="flex flex-wrap items-start justify-between gap-2">
-                <div class="min-w-0 flex-1">
-                  <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                    <span class="font-mono text-[11px] font-semibold tabular-nums text-slate-400 dark:text-slate-500">
-                      TRP-{{ String(tr.id).padStart(4, '0') }}
-                    </span>
-                    <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                      <ArrowsRightLeftIcon class="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
-                      {{ t('dashboard_analytics.recent_col_route') }}
-                    </span>
-                  </div>
-                  <p
-                    class="mt-1 line-clamp-2 text-sm font-semibold leading-snug text-slate-900 group-hover:text-teal-800 dark:text-slate-50 dark:group-hover:text-teal-300"
-                  >
-                    <span class="text-slate-800 dark:text-slate-100">{{ tr.dispatch_request?.origin ?? '—' }}</span>
-                    <span class="mx-1 text-teal-500 dark:text-teal-500/90">→</span>
-                    <span class="text-slate-800 dark:text-slate-100">{{ tr.dispatch_request?.destination ?? '—' }}</span>
-                  </p>
-                  <p class="mt-1 flex items-center gap-1.5 text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
-                    <ClockIcon class="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden="true" />
-                    <span>{{ t('dashboard_analytics.recent_col_when') }}: {{ formatDepartShort(tr.depart_at) }}</span>
-                  </p>
-                </div>
-                <span
-                  :class="[
-                    'shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold leading-none',
-                    tripStatusPillClass(tr.status),
-                  ]"
-                >
-                  {{ labelTripStatus(tr.status) }}
-                </span>
-              </div>
-            </div>
-          </RouterLink>
-          <div
-            v-if="(recentTripsMeta.last_page ?? 1) > 1"
-            class="flex flex-col gap-2 border-t border-slate-100 pt-3 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between"
-          >
-            <p class="text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
-              {{
-                t('dashboard_analytics.recent_page_range', {
-                  from: recentTripsPageFrom,
-                  to: recentTripsPageTo,
-                  total: recentTripsMeta.total ?? 0,
-                })
-              }}
-            </p>
-            <div class="flex flex-wrap items-center justify-end gap-1">
-              <button
-                type="button"
-                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 disabled:opacity-35 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300"
-                :disabled="recentTripsBusy || (recentTripsMeta.current_page ?? 1) <= 1"
-                :aria-label="t('trips_page.prev')"
-                @click="goRecentTripsPage((recentTripsMeta.current_page ?? 1) - 1)"
-              >
-                <ChevronLeftIcon class="h-4 w-4" />
-              </button>
-              <button
-                v-for="n in recentTripsPageNumbers"
-                :key="'rtp-' + n"
-                type="button"
-                :class="[
-                  'h-8 min-w-[2rem] rounded-lg px-2 text-xs font-semibold tabular-nums transition',
-                  n === (recentTripsMeta.current_page ?? 1)
-                    ? 'bg-teal-600 text-white shadow-sm dark:bg-teal-600'
-                    : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800',
-                ]"
-                :disabled="recentTripsBusy"
-                @click="goRecentTripsPage(n)"
-              >
-                {{ n }}
-              </button>
-              <button
-                type="button"
-                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 disabled:opacity-35 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300"
-                :disabled="recentTripsBusy || (recentTripsMeta.current_page ?? 1) >= (recentTripsMeta.last_page ?? 1)"
-                :aria-label="t('trips_page.next')"
-                @click="goRecentTripsPage((recentTripsMeta.current_page ?? 1) + 1)"
-              >
-                <ChevronRightIcon class="h-4 w-4" />
-              </button>
-            </div>
+              {{ t('dashboard_analytics.recent_see_all') }} →
+            </RouterLink>
           </div>
-        </div>
-        <p v-else class="text-sm text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.recent_empty') }}</p>
-      </div>
-      <div class="rounded-xl border border-slate-200/90 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-4">
-        <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h3 class="text-sm font-semibold text-slate-900 dark:text-white">
-            {{ t('dashboard_analytics.section_recent_requests') }}
-          </h3>
-          <RouterLink
-            class="text-xs font-medium text-teal-600 hover:text-teal-800 dark:text-teal-400"
-            :to="staffPath('/requests')"
-          >
-            {{ t('dashboard_analytics.recent_see_all') }} →
-          </RouterLink>
-        </div>
-        <div v-if="recentRequestsBusy && !recentRequests.length" class="space-y-2" aria-busy="true">
-          <div
-            v-for="s in 5"
-            :key="'rskel-' + s"
-            class="h-[4.25rem] animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800/80"
-          />
-        </div>
-        <div v-else-if="recentRequests.length" class="space-y-2">
-          <div
-            v-for="rq in recentRequests"
-            :key="rq.id"
-            :class="[
-              'flex gap-3 rounded-xl border p-3',
-              'border-slate-100 bg-gradient-to-br from-white to-violet-50/40 shadow-sm ring-1 ring-slate-900/[0.03]',
-              'dark:border-slate-700/90 dark:from-slate-900 dark:to-violet-950/25 dark:ring-white/[0.04]',
-              recentRequestsBusy ? 'opacity-55' : '',
-            ]"
-          >
-            <div
-              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-100/95 text-violet-700 shadow-inner dark:bg-violet-950/50 dark:text-violet-300"
-              aria-hidden="true"
+
+          <div v-if="recentTrips.length" class="mb-3">
+            <DatagridToolbarSearch
+              v-model="tripSearch"
+              input-id="dash-recent-trips-search"
+              :placeholder="t('dashboard_analytics.recent_search_trips')"
+              :aria-label="t('dashboard_analytics.recent_search_trips')"
+              stretch
+              inline-actions
+              hide-label
+              input-height="h-9"
+            />
+          </div>
+
+          <div v-if="recentTripsBusy && !recentTrips.length" class="space-y-2" aria-busy="true">
+            <div v-for="s in 5" :key="'tskel-' + s" class="h-[4.25rem] animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800/80" />
+          </div>
+          <div v-else-if="filteredRecentTrips.length" class="space-y-2">
+            <RouterLink
+              v-for="tr in filteredRecentTrips"
+              :key="tr.id"
+              :to="staffPath(`/trips/${tr.id}`)"
+              :class="[
+                'group flex gap-3 rounded-xl border p-3 transition',
+                'border-slate-100 bg-gradient-to-br from-white to-slate-50/90 shadow-sm ring-1 ring-slate-900/[0.03]',
+                'hover:border-va-200/90 hover:shadow-md hover:ring-va-700/10',
+                'dark:border-slate-700/90 dark:from-slate-900 dark:to-slate-900/80 dark:ring-white/[0.04]',
+                'dark:hover:border-va-800/60',
+                recentTripsBusy ? 'pointer-events-none opacity-55' : '',
+              ]"
             >
-              <ClipboardDocumentListIcon class="h-5 w-5" />
-            </div>
-            <div class="min-w-0 flex-1">
-              <div class="flex flex-wrap items-start justify-between gap-2">
-                <div class="min-w-0 flex-1">
-                  <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                    <span class="font-mono text-[11px] font-semibold tabular-nums text-slate-400 dark:text-slate-500">
-                      #{{ rq.id }}
-                    </span>
-                    <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                      <ArrowsRightLeftIcon class="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
-                      {{ t('dashboard_analytics.recent_col_route') }}
-                    </span>
+              <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-va-50 text-va-800 shadow-inner dark:bg-va-950/55 dark:text-va-300" aria-hidden="true">
+                <TruckIcon class="h-5 w-5" />
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-start justify-between gap-2">
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                      <span class="font-mono text-[11px] font-semibold tabular-nums text-slate-400 dark:text-slate-500">
+                        TRP-{{ String(tr.id).padStart(4, '0') }}
+                      </span>
+                      <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                        <ArrowsRightLeftIcon class="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
+                        {{ t('dashboard_analytics.recent_col_route') }}
+                      </span>
+                    </div>
+                    <p class="mt-1 line-clamp-2 text-sm font-semibold leading-snug text-slate-900 group-hover:text-va-900 dark:text-slate-50 dark:group-hover:text-va-200">
+                      <span class="text-slate-800 dark:text-slate-100">{{ tr.dispatch_request?.origin ?? '—' }}</span>
+                      <span class="mx-1 text-va-700 dark:text-va-400">→</span>
+                      <span class="text-slate-800 dark:text-slate-100">{{ tr.dispatch_request?.destination ?? '—' }}</span>
+                    </p>
+                    <p class="mt-1 flex items-center gap-1.5 text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
+                      <ClockIcon class="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden="true" />
+                      <span>{{ t('dashboard_analytics.recent_col_when') }}: {{ formatDepartShort(tr.depart_at) }}</span>
+                    </p>
                   </div>
-                  <p
-                    class="mt-1 line-clamp-2 text-sm font-semibold leading-snug text-slate-900 group-hover:text-violet-800 dark:text-slate-50 dark:group-hover:text-violet-300"
-                  >
-                    <span class="text-slate-800 dark:text-slate-100">{{ rq.origin ?? '—' }}</span>
-                    <span class="mx-1 text-violet-500 dark:text-violet-400">→</span>
-                    <span class="text-slate-800 dark:text-slate-100">{{ rq.destination ?? '—' }}</span>
-                  </p>
-                  <p class="mt-1 flex items-center gap-1.5 text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
-                    <ClockIcon class="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden="true" />
-                    <span>{{ t('dashboard_analytics.recent_col_when') }}: {{ formatDepartShort(rq.depart_at) }}</span>
-                  </p>
+                  <span :class="['shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold leading-none', tripStatusPillClass(tr.status)]">
+                    {{ labelTripStatus(tr.status) }}
+                  </span>
                 </div>
-                <span
-                  :class="[
-                    'shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold leading-none',
-                    requestStatusPillClass(rq.status),
-                  ]"
-                >
-                  {{ labelRequestStatus(rq.status) }}
-                </span>
+              </div>
+            </RouterLink>
+          </div>
+          <p v-else-if="recentTrips.length" class="text-sm text-slate-500 dark:text-slate-400">
+            {{ t('dashboard_analytics.recent_filtered_empty') }}
+          </p>
+          <p v-else class="text-sm text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.recent_empty') }}</p>
+        </div>
+
+        <!-- Yêu cầu gần đây -->
+        <div class="rounded-xl border border-slate-200/90 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-4">
+          <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h3 class="text-sm font-semibold text-slate-900 dark:text-white">
+              {{ t('dashboard_analytics.section_recent_requests') }}
+            </h3>
+            <RouterLink
+              class="text-xs font-medium text-va-800 hover:text-va-900 dark:text-va-300"
+              :to="staffPath('/requests')"
+            >
+              {{ t('dashboard_analytics.recent_see_all') }} →
+            </RouterLink>
+          </div>
+
+          <div v-if="recentRequests.length" class="mb-3">
+            <DatagridToolbarSearch
+              v-model="requestSearch"
+              input-id="dash-recent-requests-search"
+              :placeholder="t('dashboard_analytics.recent_search_requests')"
+              :aria-label="t('dashboard_analytics.recent_search_requests')"
+              stretch
+              inline-actions
+              hide-label
+              input-height="h-9"
+            />
+          </div>
+
+          <div v-if="recentRequestsBusy && !recentRequests.length" class="space-y-2" aria-busy="true">
+            <div v-for="s in 5" :key="'rskel-' + s" class="h-[4.25rem] animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800/80" />
+          </div>
+          <div v-else-if="filteredRecentRequests.length" class="space-y-2">
+            <div
+              v-for="rq in filteredRecentRequests"
+              :key="rq.id"
+              :class="[
+                'flex gap-3 rounded-xl border p-3',
+                'border-slate-100 bg-gradient-to-br from-white to-violet-50/40 shadow-sm ring-1 ring-slate-900/[0.03]',
+                'dark:border-slate-700/90 dark:from-slate-900 dark:to-violet-950/25 dark:ring-white/[0.04]',
+                recentRequestsBusy ? 'opacity-55' : '',
+              ]"
+            >
+              <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-100/95 text-violet-700 shadow-inner dark:bg-violet-950/50 dark:text-violet-300" aria-hidden="true">
+                <ClipboardDocumentListIcon class="h-5 w-5" />
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-start justify-between gap-2">
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                      <span class="font-mono text-[11px] font-semibold tabular-nums text-slate-400 dark:text-slate-500">
+                        #{{ rq.id }}
+                      </span>
+                      <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                        <ArrowsRightLeftIcon class="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
+                        {{ t('dashboard_analytics.recent_col_route') }}
+                      </span>
+                    </div>
+                    <p class="mt-1 line-clamp-2 text-sm font-semibold leading-snug text-slate-900 dark:text-slate-50">
+                      <span class="text-slate-800 dark:text-slate-100">{{ rq.origin ?? '—' }}</span>
+                      <span class="mx-1 text-violet-500 dark:text-violet-400">→</span>
+                      <span class="text-slate-800 dark:text-slate-100">{{ rq.destination ?? '—' }}</span>
+                    </p>
+                    <p class="mt-1 flex items-center gap-1.5 text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
+                      <ClockIcon class="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden="true" />
+                      <span>{{ t('dashboard_analytics.recent_col_when') }}: {{ formatDepartShort(rq.depart_at) }}</span>
+                    </p>
+                  </div>
+                  <span :class="['shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold leading-none', requestStatusPillClass(rq.status)]">
+                    {{ labelRequestStatus(rq.status) }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
-          <div
-            v-if="(recentRequestsMeta.last_page ?? 1) > 1"
-            class="flex flex-col gap-2 border-t border-slate-100 pt-3 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between"
-          >
-            <p class="text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
-              {{
-                t('dashboard_analytics.recent_page_range', {
-                  from: recentRequestsPageFrom,
-                  to: recentRequestsPageTo,
-                  total: recentRequestsMeta.total ?? 0,
-                })
-              }}
-            </p>
-            <div class="flex flex-wrap items-center justify-end gap-1">
-              <button
-                type="button"
-                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 disabled:opacity-35 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300"
-                :disabled="recentRequestsBusy || (recentRequestsMeta.current_page ?? 1) <= 1"
-                :aria-label="t('trips_page.prev')"
-                @click="goRecentRequestsPage((recentRequestsMeta.current_page ?? 1) - 1)"
-              >
-                <ChevronLeftIcon class="h-4 w-4" />
-              </button>
-              <button
-                v-for="n in recentRequestsPageNumbers"
-                :key="'rrp-' + n"
-                type="button"
-                :class="[
-                  'h-8 min-w-[2rem] rounded-lg px-2 text-xs font-semibold tabular-nums transition',
-                  n === (recentRequestsMeta.current_page ?? 1)
-                    ? 'bg-violet-600 text-white shadow-sm dark:bg-violet-600'
-                    : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800',
-                ]"
-                :disabled="recentRequestsBusy"
-                @click="goRecentRequestsPage(n)"
-              >
-                {{ n }}
-              </button>
-              <button
-                type="button"
-                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 disabled:opacity-35 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300"
-                :disabled="recentRequestsBusy || (recentRequestsMeta.current_page ?? 1) >= (recentRequestsMeta.last_page ?? 1)"
-                :aria-label="t('trips_page.next')"
-                @click="goRecentRequestsPage((recentRequestsMeta.current_page ?? 1) + 1)"
-              >
-                <ChevronRightIcon class="h-4 w-4" />
-              </button>
-            </div>
-          </div>
+          <p v-else-if="recentRequests.length" class="text-sm text-slate-500 dark:text-slate-400">
+            {{ t('dashboard_analytics.recent_filtered_empty') }}
+          </p>
+          <p v-else class="text-sm text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.recent_empty') }}</p>
         </div>
-        <p v-else class="text-sm text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.recent_empty') }}</p>
       </div>
-    </div>
     </section>
   </div>
 </template>
@@ -463,8 +300,9 @@ import {
   TruckIcon,
   UserGroupIcon,
 } from '@heroicons/vue/24/outline'
-import Card from '../components/ui/Card.vue'
 import TransportReportFilters from '../components/reports/TransportReportFilters.vue'
+import DashboardSummaryBar from '../components/dashboard/DashboardSummaryBar.vue'
+import DatagridToolbarSearch from '../components/shared/ui/DatagridToolbarSearch.vue'
 import { useTransportReportSummary } from '../composables/useTransportReportSummary'
 import { listTrips } from '../api/trips'
 import { listRequests, normalizeRequestListParams } from '../api/requests'
@@ -478,7 +316,6 @@ const {
   loadError,
   summary,
   summaryFilters,
-  formatMoney,
   totalTrips,
   totalConfirmedCost,
   topProviderName,
@@ -498,12 +335,22 @@ const RECENT_PAGE_SIZE = 5
 
 const recentTrips = ref([])
 const recentRequests = ref([])
-const recentTripsPage = ref(1)
-const recentRequestsPage = ref(1)
-const recentTripsMeta = ref({})
-const recentRequestsMeta = ref({})
 const recentTripsBusy = ref(false)
 const recentRequestsBusy = ref(false)
+const tripSearch = ref('')
+const requestSearch = ref('')
+
+const dashboardMetrics = computed(() => ({
+  totalTrips: totalTrips.value,
+  completionRate: completionRate.value,
+  completedTrips: completedTrips.value,
+  totalTripsInRange: totalTripsInRange.value,
+  confirmedCost: totalConfirmedCost.value,
+  distanceKm: summary.value?.trip_records_distance_km,
+  topProviderName: topProviderName.value,
+  topProviderAmount: topProviderAmount.value,
+  slaBreaches: summary.value?.cargo_sla_breaches ?? 0,
+}))
 
 function updateQuickScrollState() {
   const el = quickScrollRef.value
@@ -622,16 +469,24 @@ const requestListQuery = computed(() => {
   return o
 })
 
-const tripStatusRows = computed(() => {
-  const raw = summary.value?.trips_by_status ?? {}
-  return Object.entries(raw)
-    .map(([key, v]) => ({
-      key,
-      label: labelTripStatus(key),
-      n: Number(v ?? 0),
-    }))
-    .filter((r) => r.n > 0)
-    .sort((a, b) => b.n - a.n)
+const filteredRecentTrips = computed(() => {
+  const q = tripSearch.value.trim().toLowerCase()
+  if (!q) return recentTrips.value
+  return recentTrips.value.filter((tr) => {
+    const hay = `TRP-${String(tr.id).padStart(4, '0')} ${tr.dispatch_request?.origin ?? ''} ${
+      tr.dispatch_request?.destination ?? ''
+    } ${labelTripStatus(tr.status)}`.toLowerCase()
+    return hay.includes(q)
+  })
+})
+
+const filteredRecentRequests = computed(() => {
+  const q = requestSearch.value.trim().toLowerCase()
+  if (!q) return recentRequests.value
+  return recentRequests.value.filter((rq) => {
+    const hay = `#${rq.id} ${rq.origin ?? ''} ${rq.destination ?? ''} ${labelRequestStatus(rq.status)}`.toLowerCase()
+    return hay.includes(q)
+  })
 })
 
 const complianceBoxes = computed(() => {
@@ -644,7 +499,6 @@ const complianceBoxes = computed(() => {
     {
       key: 'insp',
       title: t('dashboard_analytics.compliance_inspection'),
-      tooltip: t('dashboard_analytics.compliance_inspection_tooltip'),
       cardTone: 'border-l-4 border-l-teal-500 bg-gradient-to-r from-teal-50/80 to-white dark:from-teal-950/35 dark:to-slate-950/50',
       titleClass: 'text-teal-900 dark:text-teal-200',
       overdue: ins.overdue ?? 0,
@@ -655,7 +509,6 @@ const complianceBoxes = computed(() => {
     {
       key: 'insu',
       title: t('dashboard_analytics.compliance_insurance'),
-      tooltip: t('dashboard_analytics.compliance_insurance_tooltip'),
       cardTone: 'border-l-4 border-l-sky-500 bg-gradient-to-r from-sky-50/80 to-white dark:from-sky-950/35 dark:to-slate-950/50',
       titleClass: 'text-sky-900 dark:text-sky-200',
       overdue: insu.overdue ?? 0,
@@ -666,7 +519,6 @@ const complianceBoxes = computed(() => {
     {
       key: 'road',
       title: t('dashboard_analytics.compliance_road_fee'),
-      tooltip: t('dashboard_analytics.compliance_road_fee_tooltip'),
       cardTone: 'border-l-4 border-l-amber-500 bg-gradient-to-r from-amber-50/80 to-white dark:from-amber-950/30 dark:to-slate-950/50',
       titleClass: 'text-amber-900 dark:text-amber-200',
       overdue: road.overdue ?? 0,
@@ -677,7 +529,6 @@ const complianceBoxes = computed(() => {
     {
       key: 'maint',
       title: t('dashboard_analytics.compliance_maintenance'),
-      tooltip: t('dashboard_analytics.compliance_maintenance_tooltip'),
       cardTone: 'border-l-4 border-l-violet-500 bg-gradient-to-r from-violet-50/80 to-white dark:from-violet-950/30 dark:to-slate-950/50',
       titleClass: 'text-violet-900 dark:text-violet-200',
       overdue: 0,
@@ -687,12 +538,6 @@ const complianceBoxes = computed(() => {
     },
   ]
 })
-
-function formatDistanceKm(v) {
-  const n = Number(v ?? 0)
-  if (!Number.isFinite(n) || n <= 0) return '—'
-  return `${new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(Math.round(n))} km`
-}
 
 function formatDepartShort(s) {
   if (s == null || s === '') return '—'
@@ -724,66 +569,6 @@ function requestStatusPillClass(s) {
   return map[s] ?? 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-100'
 }
 
-const recentTripsPageFrom = computed(() => {
-  const m = recentTripsMeta.value
-  const total = m.total ?? 0
-  if (total <= 0) return 0
-  const cur = m.current_page ?? 1
-  const pp = m.per_page ?? RECENT_PAGE_SIZE
-  return (cur - 1) * pp + 1
-})
-
-const recentTripsPageTo = computed(() => {
-  const m = recentTripsMeta.value
-  const total = m.total ?? 0
-  if (total <= 0) return 0
-  const cur = m.current_page ?? 1
-  const pp = m.per_page ?? RECENT_PAGE_SIZE
-  return Math.min(cur * pp, total)
-})
-
-const recentTripsPageNumbers = computed(() => {
-  const m = recentTripsMeta.value
-  const last = m.last_page ?? 1
-  const cur = m.current_page ?? 1
-  const delta = 1
-  const start = Math.max(1, cur - delta)
-  const end = Math.min(last, cur + delta)
-  const pages = []
-  for (let i = start; i <= end; i++) pages.push(i)
-  return pages
-})
-
-const recentRequestsPageFrom = computed(() => {
-  const m = recentRequestsMeta.value
-  const total = m.total ?? 0
-  if (total <= 0) return 0
-  const cur = m.current_page ?? 1
-  const pp = m.per_page ?? RECENT_PAGE_SIZE
-  return (cur - 1) * pp + 1
-})
-
-const recentRequestsPageTo = computed(() => {
-  const m = recentRequestsMeta.value
-  const total = m.total ?? 0
-  if (total <= 0) return 0
-  const cur = m.current_page ?? 1
-  const pp = m.per_page ?? RECENT_PAGE_SIZE
-  return Math.min(cur * pp, total)
-})
-
-const recentRequestsPageNumbers = computed(() => {
-  const m = recentRequestsMeta.value
-  const last = m.last_page ?? 1
-  const cur = m.current_page ?? 1
-  const delta = 1
-  const start = Math.max(1, cur - delta)
-  const end = Math.min(last, cur + delta)
-  const pages = []
-  for (let i = start; i <= end; i++) pages.push(i)
-  return pages
-})
-
 async function fetchRecentTrips() {
   if (!rangeValid.value) return
   recentTripsBusy.value = true
@@ -791,13 +576,11 @@ async function fetchRecentTrips() {
     const res = await listTrips({
       ...tripListQuery.value,
       per_page: RECENT_PAGE_SIZE,
-      page: recentTripsPage.value,
+      page: 1,
     })
     recentTrips.value = res.items ?? []
-    recentTripsMeta.value = res.meta ?? {}
   } catch {
     recentTrips.value = []
-    recentTripsMeta.value = {}
   } finally {
     recentTripsBusy.value = false
   }
@@ -811,37 +594,19 @@ async function fetchRecentRequests() {
       normalizeRequestListParams({
         ...requestListQuery.value,
         per_page: RECENT_PAGE_SIZE,
-        page: recentRequestsPage.value,
+        page: 1,
       }),
     )
     recentRequests.value = res.items ?? []
-    recentRequestsMeta.value = res.meta ?? {}
   } catch {
     recentRequests.value = []
-    recentRequestsMeta.value = {}
   } finally {
     recentRequestsBusy.value = false
   }
 }
 
-async function goRecentTripsPage(n) {
-  const last = recentTripsMeta.value.last_page ?? 1
-  if (n < 1 || n > last) return
-  recentTripsPage.value = n
-  await fetchRecentTrips()
-}
-
-async function goRecentRequestsPage(n) {
-  const last = recentRequestsMeta.value.last_page ?? 1
-  if (n < 1 || n > last) return
-  recentRequestsPage.value = n
-  await fetchRecentRequests()
-}
-
 async function loadRecentLists() {
   if (!rangeValid.value) return
-  recentTripsPage.value = 1
-  recentRequestsPage.value = 1
   await Promise.all([fetchRecentTrips(), fetchRecentRequests()])
 }
 
