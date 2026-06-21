@@ -1,8 +1,5 @@
 <template>
-  <div
-    class="space-y-6"
-    :class="!loading && items.length ? 'pb-[4.75rem] sm:pb-[4.25rem]' : ''"
-  >
+  <div class="space-y-6">
     <!-- Header -->
     <div class="flex flex-col gap-4 border-b border-slate-200/80 pb-6 lg:flex-row lg:items-center lg:justify-between">
       <div>
@@ -23,7 +20,8 @@
 
     <RequestsSummaryBar
       :stats="stats"
-      :active-tab="activeTab"
+      :request-status="filters.request_status"
+      :only-trashed="filters.only_trashed"
       :sla-risk-only="filters.sla_risk_only"
       @quick-filter="onKpiQuickFilter"
     />
@@ -169,40 +167,38 @@
           </select>
         </DatagridFilterField>
 
-        <div v-if="visibleFilters.date_range" class="min-w-0 w-full sm:col-span-2 xl:col-span-2">
-          <div class="mb-2 flex flex-wrap gap-2">
-            <button
-              type="button"
-              class="rounded-md bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100"
-              @click="applyDepartRangePreset('week')"
-            >
-              {{ t('requests_page.filter_depart_this_week') }}
-            </button>
-            <button
-              type="button"
-              class="rounded-md bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100"
-              @click="applyDepartRangePreset('month')"
-            >
-              {{ t('requests_page.filter_depart_this_month') }}
-            </button>
-          </div>
-          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
-            <FilterDatePicker
-              v-model="filters.from"
-              :placeholder="t('requests_page.filter_depart_range')"
-              :max-date="filters.to || null"
-              input-id="requests-filter-from"
-              @update:model-value="onFilterChange"
-            />
-            <FilterDatePicker
-              v-model="filters.to"
-              :placeholder="t('requests_page.filter_depart_range')"
-              :min-date="filters.from || null"
-              input-id="requests-filter-to"
-              @update:model-value="onFilterChange"
-            />
-          </div>
-        </div>
+        <DatagridFilterField v-if="visibleFilters.date_range">
+          <FilterDatePicker
+            v-model="filters.from"
+            :placeholder="t('requests_page.filter_depart_from')"
+            :max-date="filters.to || null"
+            input-id="requests-filter-from"
+            @update:model-value="onFilterChange"
+          />
+        </DatagridFilterField>
+
+        <DatagridFilterField v-if="visibleFilters.date_range">
+          <FilterDatePicker
+            v-model="filters.to"
+            :placeholder="t('requests_page.filter_depart_to')"
+            :min-date="filters.from || null"
+            input-id="requests-filter-to"
+            @update:model-value="onFilterChange"
+          />
+        </DatagridFilterField>
+
+        <DatagridFilterField v-if="visibleFilters.trash">
+          <select
+            :value="filters.only_trashed ? '1' : ''"
+            :class="FILTER_CONTROL_CLASS"
+            :aria-label="t('requests_page.filter_vis_trash')"
+            data-testid="requests-filter-trash"
+            @change="onTrashFilterSelect($event.target.value)"
+          >
+            <option value="">{{ t('requests_page.filter_vis_trash') }}</option>
+            <option value="1">{{ t('requests_page.tab_trash') }}</option>
+          </select>
+        </DatagridFilterField>
 
         <DatagridFilterField v-if="visibleFilters.channel">
           <select
@@ -352,28 +348,6 @@
           </button>
         </div>
       </div>
-    </div>
-
-
-    <!-- Status tabs -->
-    <div class="-mx-1 overflow-x-auto pb-1">
-      <nav class="flex min-w-max gap-1 border-b border-slate-200 px-1" aria-label="Tabs">
-        <button
-          v-for="tab in tabDefs"
-          :key="tab.id"
-          type="button"
-          class="whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition"
-          :class="
-            activeTab === tab.id
-              ? 'border-teal-600 text-teal-800'
-              : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-800'
-          "
-          @click="setTab(tab.id)"
-        >
-          {{ tab.label }}
-          <span class="ml-1.5 tabular-nums text-slate-400">({{ formatInt(tabCount(tab.id)) }})</span>
-        </button>
-      </nav>
     </div>
 
     <!-- Table -->
@@ -711,7 +685,7 @@
 
     <nav
       v-if="!loading && items.length"
-      class="sticky bottom-0 z-30 -mx-3 flex flex-col gap-3 border-t border-slate-200/90 bg-white/95 px-3 py-3 shadow-[0_-4px_12px_-4px_rgba(15,23,42,0.08)] backdrop-blur supports-[padding:max(0px)]:pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:-mx-4 sm:flex-row sm:items-center sm:justify-between sm:px-4 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8"
+      class="flex flex-col gap-3 border-t border-slate-200/90 pt-4 sm:flex-row sm:items-center sm:justify-between"
       :aria-label="t('requests_page.filter_per_page')"
     >
       <p class="text-sm text-slate-500">
@@ -921,7 +895,6 @@ const stats = ref({
   ops: {},
 })
 
-const activeTab = ref('all')
 const searchInput = ref('')
 let searchDebounce = null
 const FILTER_CONTROL_CLASS =
@@ -930,6 +903,7 @@ const FILTER_CONTROL_CLASS =
 const REQUEST_FILTER_CONTROLS = [
   { key: 'trip_type', label: '', default: false },
   { key: 'date_range', label: '', default: false },
+  { key: 'trash', label: '', default: false },
   { key: 'channel', label: '', default: false },
   { key: 'paper', label: '', default: false },
   { key: 'priority', label: '', default: false },
@@ -949,11 +923,12 @@ const {
   showFilterPanelDd,
   openFilterPanel,
   closeFilterPanel,
-} = useVisibleFilterControls(REQUEST_FILTER_CONTROLS, 'va-dieuvan.requests.visible-filters.v1')
+} = useVisibleFilterControls(REQUEST_FILTER_CONTROLS, 'va-dieuvan.requests.visible-filters.v2')
 
 const FILTER_CONTROL_LABEL_KEYS = {
   trip_type: 'requests_page.filter_vis_trip_type',
   date_range: 'requests_page.filter_vis_depart',
+  trash: 'requests_page.filter_vis_trash',
   channel: 'requests_page.filter_vis_channel',
   paper: 'requests_page.filter_vis_paper',
   priority: 'requests_page.filter_vis_priority',
@@ -1007,17 +982,46 @@ function onDatagridDocMouseDown(ev) {
 
 function onKpiQuickFilter({ tab, sla }) {
   filters.sla_risk_only = !!sla
-  filters.request_status = ''
+  filters.only_trashed = false
   filters.trip_status_filter = ''
-  if (tab && tab !== activeTab.value) {
-    setTab(tab)
-  } else if (sla) {
-    filters.page = 1
-    syncRoutePageAfterReset()
-    reload()
-  } else if (tab === 'all' && activeTab.value !== 'all') {
-    setTab('all')
+  if (tab === 'pending') {
+    filters.request_status = 'pending'
+  } else if (tab === 'approved') {
+    filters.request_status = 'approved'
+  } else if (!sla) {
+    filters.request_status = ''
   }
+  filters.page = 1
+  syncListScopeToRoute()
+  reload()
+}
+
+function onTrashFilterSelect(raw) {
+  filters.only_trashed = raw === '1'
+  if (filters.only_trashed) {
+    filters.request_status = ''
+    filters.trip_status_filter = ''
+  }
+  filters.page = 1
+  syncListScopeToRoute()
+  syncRoutePageAfterReset()
+  reload()
+}
+
+function syncListScopeToRoute() {
+  const q = { ...route.query }
+  delete q.page
+  delete q.status
+  delete q.trip_status
+  delete q.trash
+  if (filters.only_trashed) {
+    q.trash = '1'
+  } else if (filters.trip_status_filter) {
+    q.trip_status = filters.trip_status_filter
+  } else if (filters.request_status) {
+    q.status = filters.request_status
+  }
+  router.replace({ query: q })
 }
 
 function onSlaRiskSelect(raw) {
@@ -1136,9 +1140,7 @@ function canDeleteRow(r) {
   return false
 }
 
-const isTrashTab = computed(() => activeTab.value === 'trash')
 
-/** Hàng gấp: viền trái + nền cảnh báo (cột Gấp có thể tắt). */
 function openRequestDetail(id) {
   router.push({ name: 'requestDetail', params: { id: String(id) } })
 }
@@ -1181,27 +1183,11 @@ function onToggleHeaderCheckbox(ev) {
   selectedIds.value = on ? [...selectableIdsOnPage.value] : []
 }
 
-watch(activeTab, () => {
-  selectedIds.value = []
-})
-
 watch(items, () => {
   selectedIds.value = selectedIds.value.filter((id) => items.value.some((r) => r.id === id))
 })
 
 const REQUEST_SORT_VALUES = ['created_desc', 'created_asc', 'depart_desc', 'depart_asc', 'id_desc']
-
-const REQUEST_TAB_IDS = [
-  'all',
-  'draft',
-  'pending',
-  'approved',
-  'rejected',
-  'cancelled',
-  'trip_in_progress',
-  'trip_completed',
-  'trash',
-]
 
 const filters = reactive({
   q: '',
@@ -1213,6 +1199,7 @@ const filters = reactive({
   priority: '',
   request_status: '',
   trip_status_filter: '',
+  only_trashed: false,
   sla_risk_only: false,
   recurring_only: false,
   extracurricular_only: false,
@@ -1222,9 +1209,18 @@ const filters = reactive({
   sort: 'created_desc',
 })
 
+const isTrashTab = computed(() => filters.only_trashed)
+
+watch(
+  () => filters.only_trashed,
+  () => {
+    selectedIds.value = []
+  },
+)
+
 const activeFilterCount = computed(() => {
   let n = 0
-  if (activeTab.value !== 'all') n++
+  if (filters.only_trashed) n++
   if (searchInput.value.trim()) n++
   if (filters.trip_type) n++
   if (filters.from || filters.to) n++
@@ -1419,25 +1415,11 @@ const tripStatusFilterOptions = computed(() => [
   })),
 ])
 
-const tabDefs = computed(() => [
-  { id: 'all', label: t('requests_page.tab_all') },
-  { id: 'draft', label: t('requests_page.tab_draft') },
-  { id: 'pending', label: t('requests_page.tab_pending') },
-  { id: 'approved', label: t('requests_page.tab_approved') },
-  { id: 'rejected', label: t('requests_page.tab_rejected') },
-  { id: 'cancelled', label: t('requests_page.tab_cancelled') },
-  { id: 'trip_in_progress', label: t('requests_page.tab_trip_running') },
-  { id: 'trip_completed', label: t('requests_page.tab_trip_done') },
-  { id: 'trash', label: t('requests_page.tab_trash') },
-])
-
 function buildRouteQueryFromState() {
   const out = {}
-  const id = activeTab.value
-  if (id === 'trash') out.trash = '1'
-  else if (id === 'trip_in_progress') out.trip_status = 'in_progress'
-  else if (id === 'trip_completed') out.trip_status = 'completed'
-  else if (id !== 'all') out.status = id
+  if (filters.only_trashed) out.trash = '1'
+  else if (filters.trip_status_filter) out.trip_status = filters.trip_status_filter
+  else if (filters.request_status) out.status = filters.request_status
 
   if (filters.trip_type) out.trip_type = filters.trip_type
   if (filters.source_channel) out.source_channel = filters.source_channel
@@ -1536,32 +1518,6 @@ function slaCell(r) {
   return { kind: 'ok' }
 }
 
-function tabCount(tabId) {
-  const b = stats.value.by_status || {}
-  switch (tabId) {
-    case 'all':
-      return stats.value.total ?? 0
-    case 'draft':
-      return b.draft ?? 0
-    case 'pending':
-      return b.pending ?? 0
-    case 'approved':
-      return b.approved ?? 0
-    case 'rejected':
-      return b.rejected ?? 0
-    case 'cancelled':
-      return b.cancelled ?? 0
-    case 'trip_in_progress':
-      return stats.value.trips_in_progress ?? 0
-    case 'trip_completed':
-      return stats.value.trips_completed ?? 0
-    case 'trash':
-      return stats.value.trashed_total ?? 0
-    default:
-      return 0
-  }
-}
-
 function buildListParams() {
   const params = { ...filters }
   delete params.priority
@@ -1572,23 +1528,15 @@ function buildListParams() {
 
   delete params.request_status
   delete params.trip_status_filter
+  delete params.only_trashed
 
-  if (activeTab.value === 'trash') {
+  if (filters.only_trashed) {
     params.only_trashed = 1
     params.status = undefined
     params.trip_status = undefined
-  } else if (activeTab.value === 'trip_in_progress') {
-    params.trip_status = 'in_progress'
-    params.status = undefined
-  } else if (activeTab.value === 'trip_completed') {
-    params.trip_status = 'completed'
-    params.status = undefined
   } else if (filters.request_status) {
     params.status = filters.request_status
     params.trip_status = filters.trip_status_filter || undefined
-  } else if (activeTab.value !== 'all') {
-    params.status = activeTab.value
-    params.trip_status = undefined
   } else {
     params.status = undefined
     params.trip_status = filters.trip_status_filter || undefined
@@ -1625,16 +1573,20 @@ function onFilterChange() {
 
 function onRequestStatusFilterChange() {
   if (filters.request_status) {
-    activeTab.value = 'all'
+    filters.only_trashed = false
+    filters.trip_status_filter = ''
   }
   onFilterChange()
+  syncListScopeToRoute()
 }
 
 function onTripStatusFilterChange() {
   if (filters.trip_status_filter) {
-    activeTab.value = 'all'
+    filters.only_trashed = false
+    filters.request_status = ''
   }
   onFilterChange()
+  syncListScopeToRoute()
 }
 
 function onRecurringFilterSelect(raw) {
@@ -1670,33 +1622,6 @@ function onStudentCountFilterSelect(raw) {
   filters.page = 1
   syncRoutePageAfterReset()
   reload()
-}
-
-function isoDateLocal(d) {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
-}
-
-function applyDepartRangePreset(kind) {
-  const now = new Date()
-  if (kind === 'week') {
-    const day = now.getDay()
-    const diffToMon = day === 0 ? -6 : 1 - day
-    const mon = new Date(now)
-    mon.setDate(now.getDate() + diffToMon)
-    const sun = new Date(mon)
-    sun.setDate(mon.getDate() + 6)
-    filters.from = isoDateLocal(mon)
-    filters.to = isoDateLocal(sun)
-  } else if (kind === 'month') {
-    const first = new Date(now.getFullYear(), now.getMonth(), 1)
-    const last = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-    filters.from = isoDateLocal(first)
-    filters.to = isoDateLocal(last)
-  }
-  onFilterChange()
 }
 
 async function reload() {
@@ -1769,24 +1694,6 @@ function goPage(p) {
   router.replace({ query: q })
 }
 
-function setTab(id) {
-  activeTab.value = id
-  filters.request_status = ''
-  filters.trip_status_filter = ''
-  filters.page = 1
-  const q = { ...route.query }
-  delete q.page
-  delete q.status
-  delete q.trip_status
-  delete q.trash
-  if (id === 'trash') {
-    q.trash = '1'
-  } else if (id === 'trip_in_progress') q.trip_status = 'in_progress'
-  else if (id === 'trip_completed') q.trip_status = 'completed'
-  else if (id !== 'all') q.status = id
-  router.replace({ query: q })
-}
-
 function toggleSla() {
   filters.sla_risk_only = !filters.sla_risk_only
   filters.page = 1
@@ -1842,7 +1749,6 @@ async function onExtracurricularClone(req) {
 }
 
 function resetFilters() {
-  activeTab.value = 'all'
   filters.trip_type = ''
   filters.source_channel = ''
   filters.paper_status = ''
@@ -1851,6 +1757,7 @@ function resetFilters() {
   filters.priority = ''
   filters.request_status = ''
   filters.trip_status_filter = ''
+  filters.only_trashed = false
   filters.sla_risk_only = false
   filters.recurring_only = false
   filters.extracurricular_only = false
@@ -1874,15 +1781,18 @@ function applySearchNow() {
 
 function applyRouteQuery() {
   const q = route.query
-  if (q.trash === '1' || q.trash === 'true') {
-    activeTab.value = 'trash'
+  filters.only_trashed = q.trash === '1' || q.trash === 'true'
+  filters.trip_status_filter = ''
+  filters.request_status = ''
+  if (filters.only_trashed) {
+    /* scope from trash */
   } else if (typeof q.trip_status === 'string') {
-    if (q.trip_status === 'in_progress') activeTab.value = 'trip_in_progress'
-    else if (q.trip_status === 'completed') activeTab.value = 'trip_completed'
-  } else if (typeof q.status === 'string' && ['draft', 'pending', 'price_filled', 'approved', 'rejected', 'cancelled'].includes(q.status)) {
-    activeTab.value = q.status
-  } else {
-    activeTab.value = 'all'
+    filters.trip_status_filter = q.trip_status
+  } else if (
+    typeof q.status === 'string' &&
+    ['draft', 'pending', 'price_filled', 'approved', 'rejected', 'cancelled'].includes(q.status)
+  ) {
+    filters.request_status = q.status
   }
   if (typeof q.trip_type === 'string') filters.trip_type = q.trip_type
   if (typeof q.source_channel === 'string') filters.source_channel = q.source_channel

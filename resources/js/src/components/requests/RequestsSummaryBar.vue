@@ -11,7 +11,8 @@ import KpiSummaryStrip from '../shared/ui/KpiSummaryStrip.vue'
 
 const props = defineProps({
   stats: { type: Object, required: true },
-  activeTab: { type: String, default: 'all' },
+  requestStatus: { type: String, default: '' },
+  onlyTrashed: { type: Boolean, default: false },
   slaRiskOnly: { type: Boolean, default: false },
 })
 
@@ -48,9 +49,10 @@ const approvedShareOfTotalPct = computed(() => {
 
 const activeCardKey = computed(() => {
   if (props.slaRiskOnly) return 'sla_risk'
-  if (props.activeTab === 'pending') return 'pending'
-  if (props.activeTab === 'approved') return 'approved'
-  if (props.activeTab === 'all') return 'total'
+  if (props.onlyTrashed) return ''
+  if (props.requestStatus === 'pending') return 'pending'
+  if (props.requestStatus === 'approved') return 'approved'
+  if (!props.requestStatus && !props.slaRiskOnly) return 'total'
   return ''
 })
 
