@@ -23,7 +23,7 @@ class AuditLogController extends Controller
 
         $q->when(isset($data['actor_id']), fn (Builder $b) => $b->where('actor_id', $data['actor_id']));
         $q->when(isset($data['event']), fn (Builder $b) => $b->where('event', $data['event']));
-        $q->when(!empty($data['events']), fn (Builder $b) => $b->whereIn('event', $data['events']));
+        $q->when(! empty($data['events']), fn (Builder $b) => $b->whereIn('event', $data['events']));
         $q->when(isset($data['auditable_type']), fn (Builder $b) => $b->where('auditable_type', $data['auditable_type']));
         $q->when(isset($data['auditable_id']), fn (Builder $b) => $b->where('auditable_id', $data['auditable_id']));
 
@@ -47,6 +47,41 @@ class AuditLogController extends Controller
                 'total' => $results->total(),
                 'last_page' => $results->lastPage(),
             ],
+            'summary' => $this->buildSummary($data),
         ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return array{total: int, request: int, file: int, alert: int, system: int}
+     */
+    private function buildSummary(array $filters): array
+    {
+        $base = AuditLog::query();
+
+        $base->when(isset($filters['actor_id']), fn (Builder $b) => $b->where('actor_id', $filters['actor_id']));
+        $base->when(isset($filters['auditable_type']), fn (Builder $b) => $b->where('auditable_type', $filters['auditable_type']));
+        $base->when(isset($filters['from']), function (Builder $b) use ($filters) {
+            $from = Carbon::parse($filters['from'])->startOfDay();
+            $b->where('created_at', '>=', $from);
+        });
+        $base->when(isset($filters['to']), function (Builder $b) use ($filters) {
+            $to = Carbon::parse($filters['to'])->endOfDay();
+            $b->where('created_at', '<=', $to);
+        });
+
+        $groups = [
+            'request' => ['request.create', 'request.paper_received', 'request.reject', 'request.approve'],
+            'file' => ['attachment.upload', 'attachment.ocr_stub'],
+            'alert' => ['cargo.sla_breached'],
+            'system' => ['api.request'],
+        ];
+
+        $out = ['total' => (clone $base)->count()];
+        foreach ($groups as $key => $events) {
+            $out[$key] = (clone $base)->whereIn('event', $events)->count();
+        }
+
+        return $out;
     }
 }

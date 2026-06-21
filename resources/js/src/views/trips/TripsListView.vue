@@ -231,13 +231,18 @@
               </div>
               <div class="min-w-0 flex-1">
                 <div class="flex flex-wrap items-center gap-2">
-                  <RouterLink
-                    :to="`${tripDetailPrefix}/${trip.id}`"
-                    class="font-mono text-lg font-bold tracking-tight text-slate-900 underline decoration-slate-300 underline-offset-2 hover:text-va-800 hover:decoration-va-400 dark:text-slate-100"
-                    :data-testid="`trips-card-link-${trip.id}`"
-                  >
-                    {{ tripCode(trip.id) }}
-                  </RouterLink>
+                  <div class="min-w-0">
+                    <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      {{ t('trips_page.card_trip_code') }}
+                    </p>
+                    <RouterLink
+                      :to="`${tripDetailPrefix}/${trip.id}`"
+                      class="mt-0.5 inline-block font-mono text-lg font-bold tracking-tight text-slate-900 underline decoration-slate-300 underline-offset-2 hover:text-va-800 hover:decoration-va-400 dark:text-slate-100"
+                      :data-testid="`trips-card-link-${trip.id}`"
+                    >
+                      {{ tripCode(trip.id) }}
+                    </RouterLink>
+                  </div>
                   <span
                     class="rounded-full px-2.5 py-0.5 text-xs font-semibold"
                     :class="tripTypeBadgeClass(trip.dispatch_request?.trip_type)"

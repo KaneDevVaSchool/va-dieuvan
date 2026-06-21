@@ -363,17 +363,29 @@
                 </div>
                 <div class="min-w-0 flex-1">
                   <div class="flex flex-wrap items-center gap-2">
-                    <RouterLink
-                      v-if="c.trip_id"
-                      :to="`/trips/${c.trip_id}`"
-                      class="font-mono text-lg font-bold tracking-tight text-slate-900 underline decoration-slate-300 underline-offset-2 hover:text-va-800 hover:decoration-va-400 dark:text-slate-100"
-                      :data-testid="`cost-card-link-${c.id}`"
-                      @click.stop
-                    >
-                      {{ costTripCode(c) }}
-                    </RouterLink>
+                    <div v-if="c.trip_id" class="min-w-0">
+                      <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                        {{ t('costs_page.card_trip_code') }}
+                      </p>
+                      <RouterLink
+                        :to="`/trips/${c.trip_id}`"
+                        class="mt-0.5 inline-block font-mono text-lg font-bold tracking-tight text-slate-900 underline decoration-slate-300 underline-offset-2 hover:text-va-800 hover:decoration-va-400 dark:text-slate-100"
+                        :data-testid="`cost-card-link-${c.id}`"
+                        @click.stop
+                      >
+                        {{ costTripCode(c) }}
+                      </RouterLink>
+                    </div>
+                    <div v-else class="min-w-0">
+                      <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                        {{ t('costs_page.detail_cost_code') }}
+                      </p>
+                      <p class="mt-0.5 font-mono text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                        {{ formatCostNoteCode(c.id) }}
+                      </p>
+                    </div>
                     <span
-                      v-else
+                      v-if="!c.trip_id"
                       class="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800 dark:bg-amber-950/60 dark:text-amber-200"
                     >
                       {{ t('costs_page.badge_standalone') }}
@@ -578,163 +590,268 @@
     ═══════════════════════════════════════════════════════════════ -->
     <section v-else-if="activeTab === 'business_personnel'" aria-labelledby="costs-section-business-personnel">
 
-      <!-- Filter bar (always visible) -->
-      <div class="cv-filter-strip mt-4">
-        <div class="flex items-center gap-1">
-          <input
-            v-model="bpFilters.from"
-            type="date"
-            class="cv-date-input"
-            :aria-label="t('costs_page.filter_recorded_date')"
-            @change="onBpFilterDropdownChange"
-          />
-          <span class="text-xs text-slate-400">→</span>
-          <input
-            v-model="bpFilters.to"
-            type="date"
-            class="cv-date-input"
-            :aria-label="t('costs_page.filter_recorded_date')"
-            @change="onBpFilterDropdownChange"
-          />
-        </div>
-
-        <!-- BP trip picker -->
-        <details ref="bpFilterTripDropdownRef" class="cv-dropdown-details group relative shrink-0">
-          <summary
-            class="cv-dropdown-trigger"
-            :class="bpFilters.trip_id ? 'cv-dropdown-trigger--active' : ''"
-          >
-            <span class="max-w-[11rem] truncate">{{ bpFilters.trip_id ? bpTripFilterSummaryShort : t('costs_page.filter_trip') }}</span>
-            <ChevronDownIcon class="ml-1 h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
-          </summary>
-          <div class="cv-dropdown-panel">
-            <input
-              v-model="bpFilterTripSearch"
-              type="search"
-              class="costs-input mb-2 h-8 w-full text-sm"
-              :placeholder="t('costs_page.trip_search_ph')"
-              autocomplete="off"
-              @click.stop
-            />
-            <ul class="max-h-[min(50vh,280px)] space-y-0.5 overflow-y-auto px-0.5">
-              <li>
-                <button
-                  type="button"
-                  class="cv-dropdown-item"
-                  :class="!bpFilters.trip_id ? 'cv-dropdown-item--active' : ''"
-                  @click="applyBpTripFilter($event, '')"
-                >
-                  {{ t('costs_page.trip_all') }}
-                </button>
-              </li>
-              <li v-for="tripRow in filteredTripsForBpFilter" :key="tripRow.id">
-                <button
-                  type="button"
-                  class="cv-dropdown-item"
-                  :class="String(bpFilters.trip_id) === String(tripRow.id) ? 'cv-dropdown-item--active' : ''"
-                  @click="applyBpTripFilter($event, String(tripRow.id))"
-                >
-                  {{ formatTripPickerLabel(tripRow) }}
-                </button>
-              </li>
-            </ul>
-            <p v-if="!tripsForModalLoading && tripOptionsRaw.length && !filteredTripsForBpFilter.length" class="mt-2 text-[11px] text-amber-800 dark:text-amber-200">{{ t('costs_page.trip_no_match') }}</p>
-            <p v-else-if="tripsForModalLoading" class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">{{ t('costs_page.trip_loading') }}</p>
-            <p v-else-if="!tripsForModalLoading && !tripOptionsRaw.length" class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">{{ t('costs_page.trip_empty_scope') }}</p>
-          </div>
-        </details>
-
-        <div class="ml-auto">
-          <button
-            v-if="bpActiveFilterCount > 0"
-            type="button"
-            class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
-            @click="resetBpFilters"
-          >
-            <XMarkIcon class="h-3.5 w-3.5" aria-hidden="true" />
-            {{ t('costs_page.filter_clear') }}
-          </button>
-        </div>
-      </div>
-
-      <!-- Table -->
-      <div class="mt-4 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
-        <div class="border-b border-slate-200/90 px-4 py-3 dark:border-slate-700">
+      <div class="overflow-visible rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
+        <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
           <h2
             id="costs-section-business-personnel"
-            class="text-sm font-semibold text-slate-900 dark:text-slate-100"
+            class="sr-only"
           >
             {{ t('costs_page.section_business_personnel') }}
           </h2>
-        </div>
-        <div class="overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
-          <table class="cv-table min-w-[700px] w-full">
-            <thead>
-              <tr>
-                <th class="cv-th w-10 text-center">{{ t('costs_page.col_no') }}</th>
-                <th class="cv-th min-w-[5rem]">{{ t('costs_page.col_trip') }}</th>
-                <th class="cv-th min-w-[8rem]">{{ t('costs_page.col_personnel') }}</th>
-                <th class="cv-th min-w-[12rem]">{{ t('costs_page.col_route') }}</th>
-                <th class="cv-th min-w-[6.5rem] text-right">{{ t('costs_page.col_unit_price') }}</th>
-                <th class="cv-th min-w-[6rem] text-right">{{ t('costs_page.col_extra_fee') }}</th>
-                <th class="cv-th min-w-[7rem] text-right">{{ t('costs_page.col_payment') }}</th>
-                <th class="cv-th min-w-[7rem]">{{ t('costs_page.col_submitter') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="(row, idx) in bpLines"
-                :key="`${row.trip_id}-${row.line_no}`"
-                class="cv-row cv-row--clickable"
-                :class="idx % 2 === 1 ? 'cv-row--alt' : ''"
-                role="button"
-                :tabindex="0"
-                :data-testid="`bp-row-${row.trip_id}`"
-                @click="router.push({ name: 'tripDetail', params: { id: row.trip_id } })"
-                @keydown.enter.prevent="router.push({ name: 'tripDetail', params: { id: row.trip_id } })"
+          <div class="flex w-full min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
+            <div class="min-w-0 w-full basis-full lg:min-w-[10rem] lg:flex-1 lg:basis-auto">
+              <DatagridToolbarSearch
+                v-model="bpSearchQ"
+                input-id="costs-bp-search"
+                :placeholder="t('costs_page.bp_search_placeholder')"
+                stretch
+                inline-actions
+                hide-label
+                input-height="h-10"
+              />
+            </div>
+            <div class="flex shrink-0 items-center gap-2">
+              <FilterVisibilityDropdown
+                :open="showBpFilterPanelDd"
+                :title="t('costs_page.filter_show_controls_title')"
+                :hint="t('costs_page.filter_show_controls_hint')"
+                @close="closeBpFilterPanel"
               >
-                <td class="cv-td text-center tabular-nums text-slate-400 dark:text-slate-500">{{ idx + 1 }}</td>
-                <td class="cv-td" @click.stop>
-                  <RouterLink
-                    :to="{ name: 'tripDetail', params: { id: row.trip_id } }"
-                    class="font-mono text-sm font-bold text-teal-700 underline decoration-teal-700/30 underline-offset-2 hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-200"
+                <template #trigger>
+                  <DatagridToolbarActionButton
+                    icon="filter"
+                    :active="showBpFilterPanelDd"
+                    test-id="costs-bp-toolbar-filter"
+                    @click="toggleBpFilterPanel"
                   >
-                    {{ formatTripCode(row.trip_id) }}
-                  </RouterLink>
-                </td>
-                <td class="cv-td">
-                  <span
-                    class="line-clamp-2"
-                    :class="displayTextOrNull(row.personnel_label) ? '' : 'italic text-slate-400 dark:text-slate-500'"
+                    {{ t('costs_page.toolbar_filter') }}
+                  </DatagridToolbarActionButton>
+                </template>
+                <li v-for="fd in bpFilterControlDefs" :key="'costs-bp-vis-' + fd.key" class="flex items-start gap-2">
+                  <input
+                    :id="`costs-bp-filter-vis-${fd.key}`"
+                    v-model="bpVisibleFilters[fd.key]"
+                    type="checkbox"
+                    class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-va-800 focus:ring-va-700/30 dark:border-slate-600"
+                    :data-testid="`costs-bp-filter-vis-${fd.key}`"
+                  />
+                  <label
+                    :for="`costs-bp-filter-vis-${fd.key}`"
+                    class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
                   >
-                    {{ displayTextOrNull(row.personnel_label) || t('costs_page.empty_not_available') }}
-                  </span>
-                  <span v-if="row.guests" class="mt-0.5 block text-[11px] text-slate-500 dark:text-slate-400">{{ row.guests }}</span>
-                </td>
-                <td class="cv-td text-slate-700 dark:text-slate-300">
-                  <span v-if="bpRoutePrimary(row)">{{ bpRoutePrimary(row) }}</span>
-                  <span v-else class="italic text-slate-400 dark:text-slate-500">{{ t('costs_page.empty_route') }}</span>
-                </td>
-                <td class="cv-td text-right tabular-nums">{{ formatVnd(row.unit_price) }}</td>
-                <td class="cv-td text-right tabular-nums">{{ formatVnd(row.extra_fee) }}</td>
-                <td class="cv-td text-right font-semibold tabular-nums text-slate-900 dark:text-slate-100">{{ formatVnd(row.amount_total) }}</td>
-                <td class="cv-td">
-                  <span
-                    :class="displayTextOrNull(row.requester_name) ? '' : 'italic text-slate-400 dark:text-slate-500'"
-                  >
-                    {{ displayTextOrNull(row.requester_name) || t('costs_page.empty_not_available') }}
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <div v-if="bpLoading && !bpLines.length" class="flex items-center justify-center gap-2 px-4 py-12 text-sm text-slate-500">
-            <span class="inline-block size-5 animate-spin rounded-full border-2 border-slate-200 border-t-va-700" aria-hidden="true" />
-            {{ t('costs_page.business_personnel_loading') }}
+                    {{ fd.label }}
+                  </label>
+                </li>
+              </FilterVisibilityDropdown>
+            </div>
+            <div class="ml-auto flex shrink-0 items-center gap-2">
+              <button
+                v-if="bpActiveFilterCount > 0"
+                type="button"
+                class="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-slate-800 dark:hover:bg-slate-800"
+                :title="t('costs_page.filter_clear')"
+                data-testid="costs-bp-reset-filters"
+                @click="resetBpFilters"
+              >
+                <FunnelIcon class="h-5 w-5" aria-hidden="true" />
+                <XMarkIcon class="h-3 w-3 text-rose-500" aria-hidden="true" />
+              </button>
+            </div>
           </div>
-          <div v-else-if="!bpLoading && !bpLines.length" class="px-4 py-12 text-center text-sm text-slate-500 dark:text-slate-400">
-            {{ t('costs_page.business_personnel_empty') }}
+        </div>
+
+        <div
+          v-if="hasBpFilterRow"
+          class="grid grid-cols-1 gap-3 border-t border-slate-100 px-5 py-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 dark:border-slate-700"
+        >
+            <template v-if="bpVisibleFilters.date_range">
+              <DatagridFilterField>
+                <FilterDatePicker
+                v-model="bpFilters.from"
+                :placeholder="t('dashboard_analytics.range_from')"
+                :max-date="bpFilters.to || null"
+                input-id="costs-bp-filter-from"
+                @update:model-value="onBpFilterDateChange"
+              />
+            </DatagridFilterField>
+            <DatagridFilterField>
+              <FilterDatePicker
+                v-model="bpFilters.to"
+                :placeholder="t('dashboard_analytics.range_to')"
+                :min-date="bpFilters.from || null"
+                input-id="costs-bp-filter-to"
+                @update:model-value="onBpFilterDateChange"
+              />
+            </DatagridFilterField>
+          </template>
+
+          <DatagridFilterField v-if="bpVisibleFilters.trip">
+            <select
+              v-model="bpFilters.trip_id"
+              :class="FILTER_CONTROL_CLASS"
+              :aria-label="t('costs_page.filter_trip')"
+              data-testid="costs-bp-filter-trip"
+              :disabled="tripsForModalLoading"
+              @change="onBpTripFilterChange"
+            >
+              <option value="">{{ t('costs_page.filter_trip') }}</option>
+              <option v-for="tripRow in tripOptionsRaw" :key="tripRow.id" :value="String(tripRow.id)">
+                {{ formatTripPickerLabel(tripRow) }}
+              </option>
+            </select>
+          </DatagridFilterField>
+        </div>
+      </div>
+
+      <p class="mt-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
+        {{ t('costs_page.section_business_personnel') }}
+        <span v-if="bpMeta.total > 0" class="ml-1 font-normal text-slate-500 dark:text-slate-400">({{ bpDisplayedLines.length }})</span>
+      </p>
+
+      <div v-if="bpLoading && !bpLines.length" class="mt-3 flex items-center justify-center gap-2 py-12 text-sm text-slate-500">
+        <span class="inline-block size-5 animate-spin rounded-full border-2 border-slate-200 border-t-va-700" aria-hidden="true" />
+        {{ t('costs_page.business_personnel_loading') }}
+      </div>
+
+      <div v-else class="mt-3 space-y-3 md:space-y-4">
+        <article
+          v-for="row in bpDisplayedLines"
+          :key="bpRowKey(row)"
+          class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm transition hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900/50"
+          :data-testid="`bp-card-${row.trip_id}-${row.line_no}`"
+        >
+          <div class="border-b border-slate-100 px-3 py-4 sm:px-5 dark:border-slate-800">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div class="flex min-w-0 gap-3 sm:gap-4">
+                <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-100 sm:h-12 sm:w-12 dark:bg-violet-950/40">
+                  <BriefcaseIcon class="h-6 w-6 text-violet-700 dark:text-violet-300" aria-hidden="true" />
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <div class="min-w-0">
+                      <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                        {{ t('costs_page.card_trip_code') }}
+                      </p>
+                      <RouterLink
+                        :to="{ name: 'tripDetail', params: { id: row.trip_id } }"
+                        class="mt-0.5 inline-block font-mono text-lg font-bold tracking-tight text-slate-900 underline decoration-slate-300 underline-offset-2 hover:text-va-800 hover:decoration-va-400 dark:text-slate-100"
+                        :data-testid="`bp-card-link-${row.trip_id}-${row.line_no}`"
+                        @click.stop
+                      >
+                        {{ formatTripCode(row.trip_id) }}
+                      </RouterLink>
+                    </div>
+                    <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                      {{ t('costs_page.cost_type_estimate_e2') }}
+                    </span>
+                    <span class="rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-semibold text-violet-900 dark:bg-violet-950/50 dark:text-violet-100">
+                      {{ labelTripType('business') }}
+                    </span>
+                    <span
+                      v-if="row.line_no > 1"
+                      class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                    >
+                      {{ t('costs_page.bp_line_badge', { n: row.line_no }) }}
+                    </span>
+                  </div>
+                  <dl class="mt-3 grid grid-cols-1 gap-x-4 gap-y-2 text-sm sm:grid-cols-2 xl:grid-cols-3">
+                    <div class="min-w-0">
+                      <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                        {{ t('costs_page.bp_card_depart_label') }}
+                      </dt>
+                      <dd
+                        class="mt-0.5 font-medium tabular-nums"
+                        :class="bpDepartDisplay(row) ? 'text-slate-800 dark:text-slate-200' : 'italic text-slate-400 dark:text-slate-500'"
+                      >
+                        {{ bpDepartDisplay(row) || t('costs_page.empty_date') }}
+                      </dd>
+                    </div>
+                    <div class="min-w-0">
+                      <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                        {{ t('costs_page.col_submitter') }}
+                      </dt>
+                      <dd
+                        class="mt-0.5 font-medium"
+                        :class="displayTextOrNull(row.requester_name) ? 'text-slate-800 dark:text-slate-200' : 'italic text-slate-400 dark:text-slate-500'"
+                      >
+                        {{ displayTextOrNull(row.requester_name) || t('costs_page.empty_not_available') }}
+                      </dd>
+                    </div>
+                    <div class="min-w-0 sm:col-span-2 xl:col-span-1">
+                      <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                        {{ t('costs_page.col_route') }}
+                      </dt>
+                      <dd
+                        class="mt-0.5 font-medium"
+                        :class="bpRoutePrimary(row) ? 'text-slate-800 dark:text-slate-200' : 'italic text-slate-400 dark:text-slate-500'"
+                      >
+                        {{ bpRoutePrimary(row) || t('costs_page.empty_route') }}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              </div>
+              <div class="flex shrink-0 flex-col items-start gap-2 lg:items-end">
+                <span class="text-xl font-bold tabular-nums text-slate-900 dark:text-slate-100 sm:text-2xl">
+                  {{ formatVnd(row.amount_total) }}
+                </span>
+                <span class="cv-status-badge cv-status-badge--default">
+                  {{ t('costs_page.bp_estimate_badge') }}
+                </span>
+              </div>
+            </div>
           </div>
+
+          <div class="px-3 py-4 sm:px-5">
+            <p
+              v-if="displayTextOrNull(row.personnel_label)"
+              class="text-sm leading-relaxed text-slate-700 dark:text-slate-300"
+              :title="row.personnel_label"
+            >
+              {{ row.personnel_label }}
+            </p>
+            <p v-else class="text-sm italic text-slate-400 dark:text-slate-500">
+              {{ t('costs_page.empty_description') }}
+            </p>
+            <p v-if="row.guests && String(row.guests).trim() !== '1'" class="mt-2 text-xs text-slate-500 dark:text-slate-400">
+              {{ t('costs_page.bp_guests_label') }}: {{ row.guests }}
+            </p>
+          </div>
+
+          <div class="flex flex-col gap-3 border-t border-slate-100 px-3 py-3 dark:border-slate-800 sm:px-5 sm:py-3.5 md:flex-row md:items-center md:justify-between">
+            <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-slate-400 sm:text-sm">
+              <span class="inline-flex items-center gap-1.5">
+                <BanknotesIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                {{
+                  t('costs_page.note_estimate_breakdown', {
+                    unit: formatVnd(row.unit_price),
+                    extra: formatVnd(row.extra_fee),
+                  })
+                }}
+              </span>
+              <span v-if="displayTextOrNull(row.waypoint)" class="inline-flex items-center gap-1.5">
+                <MapPinIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                {{ row.waypoint }}
+              </span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
+              <RouterLink
+                :to="{ name: 'tripDetail', params: { id: row.trip_id } }"
+                class="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 sm:min-h-0 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+                :data-testid="`bp-card-detail-${row.trip_id}-${row.line_no}`"
+              >
+                <EyeIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                {{ t('costs_page.action_view_detail') }}
+              </RouterLink>
+            </div>
+          </div>
+        </article>
+
+        <div
+          v-if="!bpLoading && !bpDisplayedLines.length"
+          class="rounded-2xl border border-dashed border-slate-200 py-12 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400"
+        >
+          {{ bpSearchQ.trim() ? t('costs_page.bp_empty_search') : t('costs_page.business_personnel_empty') }}
         </div>
       </div>
     </section>
@@ -1277,16 +1394,16 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   BanknotesIcon,
+  BriefcaseIcon,
   CheckCircleIcon,
-  ChevronDownIcon,
   EyeIcon,
   FunnelIcon,
+  MapPinIcon,
   PlusCircleIcon,
   TruckIcon,
   XCircleIcon,
   XMarkIcon,
 } from '@heroicons/vue/24/outline'
-import { useDetailsAutoClose } from '../../composables/useDetailsAutoClose.js'
 import { useVisibleFilterControls } from '../../composables/useVisibleFilterControls.js'
 import DatagridToolbarSearch from '../../components/shared/ui/DatagridToolbarSearch.vue'
 import DatagridToolbarActionButton from '../../components/shared/ui/DatagridToolbarActionButton.vue'
@@ -1307,7 +1424,7 @@ import {
 } from '../../api/costs'
 import { listTrips } from '../../api/trips'
 import { newIdempotencyKey } from '../../util/idempotency'
-import { formatTripCode, formatVnd, formatVndDigitsInput, labelTripType } from '../../util/labels'
+import { formatCostNoteCode, formatTripCode, formatVnd, formatVndDigitsInput, labelTripType } from '../../util/labels'
 import StaffCostDetailModal from '../../components/costs/StaffCostDetailModal.vue'
 import AppRowActionsMenu from '../../components/ui/AppRowActionsMenu.vue'
 import { showAppErrorFromApi } from '../../composables/appMessage'
@@ -1352,6 +1469,16 @@ const COSTS_FILTER_VIS_LABEL_KEYS = {
   fleet_mode: 'costs_page.filter_vis_fleet_mode',
   amount_range: 'costs_page.filter_vis_amount_range',
   per_page: 'filter_bar.per_page',
+}
+
+const BP_FILTER_CONTROLS = [
+  { key: 'date_range', default: false },
+  { key: 'trip', default: false },
+]
+
+const BP_FILTER_VIS_LABEL_KEYS = {
+  date_range: 'costs_page.filter_vis_date',
+  trip: 'costs_page.filter_vis_trip',
 }
 
 function defaultColVisibility() {
@@ -1565,6 +1692,25 @@ const {
   closeFilterPanel,
 } = useVisibleFilterControls(COSTS_FILTER_CONTROLS, 'va-dieuvan.costs.visible-filters.v1')
 
+const {
+  visibleFilters: bpVisibleFilters,
+  hasFilterRow: hasBpFilterRow,
+  showFilterPanelDd: showBpFilterPanelDd,
+  openFilterPanel: openBpFilterPanel,
+  closeFilterPanel: closeBpFilterPanel,
+} = useVisibleFilterControls(BP_FILTER_CONTROLS, 'va-dieuvan.costs.bp.visible-filters.v1')
+
+const bpFilterControlDefs = computed(() =>
+  BP_FILTER_CONTROLS.map((fd) => ({
+    key: fd.key,
+    label: t(BP_FILTER_VIS_LABEL_KEYS[fd.key] ?? fd.key),
+  })),
+)
+
+function toggleBpFilterPanel() {
+  openBpFilterPanel()
+}
+
 const filterControlDefs = computed(() =>
   COSTS_FILTER_CONTROLS.map((fd) => ({
     key: fd.key,
@@ -1591,7 +1737,7 @@ const colVisible = reactive(defaultColVisibility())
 const bpLoading = ref(false)
 const bpLines = ref([])
 const bpMeta = ref({ total: 0 })
-const bpFilterTripSearch = ref('')
+const bpSearchQ = ref('')
 const bpFilters = reactive({
   trip_id: '',
   from: '',
@@ -1612,10 +1758,6 @@ const costNoteMsg = ref('')
 const costNoteMsgIsError = ref(false)
 /** @type {import('vue').Ref<number | null>} */
 const deletingNoteId = ref(null)
-
-// Dropdown refs for auto-close (business-personnel trip picker)
-const bpFilterTripDropdownRef = ref(null)
-useDetailsAutoClose(bpFilterTripDropdownRef)
 
 // ── Decide / reject / delete ─────────────────────────────────────
 const decidingId = ref(null)
@@ -1865,6 +2007,14 @@ function tripMatchesSearch(tripRow, qRaw) {
   return id.includes(q) || o.includes(q) || d.includes(q)
 }
 
+function bpRowKey(row) {
+  return `${row.trip_id}-${row.line_no}`
+}
+
+function bpDepartDisplay(row) {
+  return formatDateDMYDisplay(row.depart_at || row.trip_depart_at)
+}
+
 const filteredTripsForPicker = computed(() => {
   const q = tripPickerSearch.value
   const list = tripOptionsRaw.value
@@ -1872,30 +2022,24 @@ const filteredTripsForPicker = computed(() => {
   return list.filter((tripRow) => tripMatchesSearch(tripRow, q))
 })
 
-const filteredTripsForBpFilter = computed(() => {
-  const q = bpFilterTripSearch.value
-  const list = tripOptionsRaw.value
-  if (!q.trim()) return list
-  return list.filter((tripRow) => tripMatchesSearch(tripRow, q))
-})
-
-const selectedBpFilterTrip = computed(() => {
-  if (!bpFilters.trip_id) return null
-  const id = Number(bpFilters.trip_id)
-  if (!Number.isFinite(id)) return null
-  return tripOptionsRaw.value.find((tripRow) => Number(tripRow.id) === id) ?? null
-})
-
-const bpTripFilterSummaryShort = computed(() => {
-  if (!bpFilters.trip_id) return t('costs_page.filter_trip')
-  const tr = selectedBpFilterTrip.value
-  if (tr) {
-    const dr = tr.dispatch_request ?? tr.dispatchRequest
-    const o = (dr?.origin ?? '—').trim().slice(0, 22)
-    const d = (dr?.destination ?? '—').trim().slice(0, 22)
-    return `${formatTripCode(tr.id)} · ${o} → ${d}`
-  }
-  return formatTripCode(bpFilters.trip_id)
+const bpDisplayedLines = computed(() => {
+  const q = bpSearchQ.value.trim().toLowerCase()
+  const list = bpLines.value
+  if (!q) return list
+  return list.filter((row) => {
+    const code = formatTripCode(row.trip_id).toLowerCase()
+    const personnel = String(row.personnel_label ?? '').toLowerCase()
+    const route = String(bpRoutePrimary(row) ?? '').toLowerCase()
+    const req = String(row.requester_name ?? '').toLowerCase()
+    const guests = String(row.guests ?? '').toLowerCase()
+    return (
+      code.includes(q) ||
+      personnel.includes(q) ||
+      route.includes(q) ||
+      req.includes(q) ||
+      guests.includes(q)
+    )
+  })
 })
 
 const bpActiveFilterCount = computed(() => {
@@ -2141,13 +2285,6 @@ onUnmounted(() => {
   }
 })
 
-function closeParentDetails(ev) {
-  const el = ev?.currentTarget
-  if (!el || typeof el.closest !== 'function') return
-  const d = el.closest('details')
-  if (d) d.open = false
-}
-
 // ── Filter actions ───────────────────────────────────────────────
 function setStatusFilter(val) {
   filters.status = val
@@ -2165,8 +2302,11 @@ function onFilterDateChange() {
   reload()
 }
 
-function onBpFilterDropdownChange(ev) {
-  if (ev) closeParentDetails(ev)
+function onBpFilterDateChange() {
+  reloadBp()
+}
+
+function onBpTripFilterChange() {
   reloadBp()
 }
 
@@ -2238,17 +2378,10 @@ async function reloadBp() {
   }
 }
 
-function applyBpTripFilter(ev, tripId) {
-  bpFilters.trip_id = tripId
-  closeParentDetails(ev)
-  reloadBp()
-}
-
 function resetBpFilters() {
   bpFilters.trip_id = ''
   bpFilters.from = ''
   bpFilters.to = ''
-  bpFilterTripSearch.value = ''
   reloadBp()
 }
 
@@ -2385,6 +2518,7 @@ watch(
 
 watch(activeTab, (tab) => {
   if (tab === 'business_personnel') {
+    loadTripPickerOptions()
     reloadBp()
     return
   }

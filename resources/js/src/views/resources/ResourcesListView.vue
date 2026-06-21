@@ -64,50 +64,19 @@
 
           <!-- View mode + Filter + Add -->
           <div class="flex shrink-0 flex-wrap items-center gap-2">
-            <!-- Active / Trash toggle -->
-            <div class="inline-flex gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-600 dark:bg-slate-800">
-              <template v-if="activeTab === 'vehicles'">
-                <button
-                  type="button"
-                  :class="['inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition', vehiclesViewMode === 'active' ? 'bg-white text-teal-800 shadow-sm dark:bg-slate-700 dark:text-teal-300' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white']"
-                  data-testid="resources-vehicles-view-active"
-                  @click="setVehiclesViewMode('active')"
-                >{{ t('resources.vehicles_view_active') }}</button>
-                <button
-                  type="button"
-                  :class="['inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition', vehiclesViewMode === 'trash' ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white']"
-                  data-testid="resources-vehicles-view-trash"
-                  @click="setVehiclesViewMode('trash')"
-                ><TrashIcon class="h-3.5 w-3.5" aria-hidden="true" />{{ t('resources.vehicles_view_trash') }}</button>
-              </template>
-              <template v-else-if="activeTab === 'drivers'">
-                <button
-                  type="button"
-                  :class="['inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition', driversViewMode === 'active' ? 'bg-white text-teal-800 shadow-sm dark:bg-slate-700 dark:text-teal-300' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white']"
-                  data-testid="resources-drivers-view-active"
-                  @click="setDriversViewMode('active')"
-                >{{ t('resources.drivers_view_active') }}</button>
-                <button
-                  type="button"
-                  :class="['inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition', driversViewMode === 'trash' ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white']"
-                  data-testid="resources-drivers-view-trash"
-                  @click="setDriversViewMode('trash')"
-                ><TrashIcon class="h-3.5 w-3.5" aria-hidden="true" />{{ t('resources.vehicles_view_trash') }}</button>
-              </template>
-              <template v-else>
-                <button
-                  type="button"
-                  :class="['inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition', suppliersViewMode === 'active' ? 'bg-white text-teal-800 shadow-sm dark:bg-slate-700 dark:text-teal-300' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white']"
-                  data-testid="resources-suppliers-view-active"
-                  @click="setSuppliersViewMode('active')"
-                >{{ t('resources.suppliers_view_active') }}</button>
-                <button
-                  type="button"
-                  :class="['inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition', suppliersViewMode === 'trash' ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white']"
-                  data-testid="resources-suppliers-view-trash"
-                  @click="setSuppliersViewMode('trash')"
-                ><TrashIcon class="h-3.5 w-3.5" aria-hidden="true" />{{ t('resources.vehicles_view_trash') }}</button>
-              </template>
+            <!-- Trash type selector (only in trash tab) -->
+            <div
+              v-if="activeTab === 'trash'"
+              class="inline-flex gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-600 dark:bg-slate-800"
+            >
+              <button
+                v-for="tt in trashTypes"
+                :key="tt.id"
+                type="button"
+                :class="['inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition', trashType === tt.id ? 'bg-white text-teal-800 shadow-sm dark:bg-slate-700 dark:text-teal-300' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white']"
+                :data-testid="`resources-trash-type-${tt.id}`"
+                @click="setTrashType(tt.id)"
+              >{{ t(tt.labelKey) }}</button>
             </div>
 
             <!-- Filter visibility toggle (hidden in trash mode) -->
@@ -334,161 +303,26 @@
 
     <div v-else class="relative flex min-h-[280px] flex-col xl:min-h-[420px] xl:flex-row">
       <!-- Table -->
-      <div class="min-w-0 flex-1 overflow-x-auto p-2 sm:p-4 md:p-5">
-        <!-- Xe: thẻ (mobile / tablet) -->
-        <div v-if="activeTab === 'vehicles'" class="space-y-3 lg:hidden">
-          <button
-            v-for="v in paginatedVehicles"
-            :key="v.id"
-            type="button"
-            class="group relative flex w-full items-stretch gap-0 overflow-hidden rounded-2xl border border-slate-200/90 bg-white text-left shadow-sm ring-1 ring-slate-900/5 transition active:scale-[0.99] dark:border-slate-700 dark:bg-slate-900/40 dark:ring-slate-900/40"
-            :class="
-              selectedVehicle?.id === v.id
-                ? 'border-teal-300 ring-2 ring-teal-500/40 dark:border-teal-700'
-                : 'hover:border-slate-300 hover:shadow-md dark:hover:border-slate-600'
-            "
-            @click="selectVehicle(v)"
-          >
-            <span
-              class="w-1 shrink-0 rounded-l-2xl bg-gradient-to-b from-teal-500 to-teal-600"
-              :class="selectedVehicle?.id === v.id ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'"
-              aria-hidden="true"
-            />
-            <div class="flex min-w-0 flex-1 items-start gap-3 p-3.5 pl-3 sm:p-4">
+      <div class="min-w-0 flex-1 p-2 sm:p-4 md:p-5">
+        <!-- VEHICLES -->
+        <div v-if="currentResource === 'vehicles'">
+          <div v-if="vehicleTotalFiltered" class="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div class="flex flex-wrap items-center gap-3">
               <input
-                v-if="canManageVehicles && (vehiclesViewMode === 'active' || vehiclesViewMode === 'trash')"
+                v-if="canManageVehicles"
                 type="checkbox"
-                class="mt-1.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
-                :checked="bulkVehicleIds.includes(v.id)"
-                @click.stop
-                @change="toggleBulkVehicle(v.id)"
+                class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
+                :checked="vehiclePageAllSelected"
+                :aria-label="t('resources.col_select')"
+                @change="toggleVehiclePageSelectAll"
               />
-              <div
-                class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-50 to-teal-100/80 text-teal-700 shadow-inner dark:from-teal-950/60 dark:to-teal-900/40 dark:text-teal-400"
-              >
-                <component :is="vehicleIconComponent(v.iconKind)" class="h-6 w-6" aria-hidden="true" />
-              </div>
-              <div class="min-w-0 flex-1">
-                <div class="flex items-start justify-between gap-2">
-                  <div>
-                    <div class="font-semibold tracking-tight text-slate-900 dark:text-white">{{ v.code }}</div>
-                    <div class="mt-0.5 line-clamp-2 text-xs leading-snug text-slate-500 dark:text-slate-400">
-                      {{ v.model }} Â· {{ v.typeLabel }}
-                    </div>
-                  </div>
-                  <span :class="statusBadgeClass(v.status)">{{ labelVehicleStatus(v.status) }}</span>
-                </div>
-                <div class="mt-2.5 flex flex-wrap gap-1.5">
-                  <span :class="compliancePillClass(v.insurance)">{{ t('resources.tag_ins') }} {{ insuranceHint(v.insurance) }}</span>
-                  <span :class="compliancePillClass(v.inspection)">{{ t('resources.tag_reg') }} {{ insuranceHint(v.inspection) }}</span>
-                </div>
-                <div v-if="v.driverName" class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
-                  <span class="font-medium text-slate-600 dark:text-slate-300">{{ t('resources.col_driver') }}:</span>
-                  {{ v.driverName }}
-                </div>
-                <div
-                  v-if="vehiclesViewMode === 'trash' && canManageVehicles"
-                  class="mt-3 flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-3 dark:border-slate-700"
-                  @click.stop
-                >
-                  <button
-                    type="button"
-                    class="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-500 disabled:opacity-50"
-                    :disabled="vehicleRestoring"
-                    @click="submitRestoreVehicleById(v.id)"
-                  >
-                    {{ t('resources.action_restore_vehicle') }}
-                  </button>
-                  <button
-                    type="button"
-                    class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-medium text-rose-800 hover:bg-rose-100 disabled:opacity-50 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300"
-                    :disabled="forcePermDeleting"
-                    @click="openForceDeleteModal('vehicle', v.id, v.code)"
-                  >
-                    {{ t('resources.action_force_delete') }}
-                  </button>
-                </div>
-              </div>
-              <ChevronRightIcon
-                v-if="vehiclesViewMode === 'active'"
-                class="h-5 w-5 shrink-0 self-center text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-teal-600 dark:text-slate-600 dark:group-hover:text-teal-400"
-                aria-hidden="true"
-              />
+              <p class="text-xs text-slate-500 dark:text-slate-400">
+                {{ t('resources.pagination_showing', { from: vehicleRangeFrom, to: vehicleRangeTo, total: vehicleTotalFiltered }) }}
+              </p>
             </div>
-          </button>
-        </div>
-        <div
-          v-if="activeTab === 'vehicles' && vehicleTotalFiltered"
-          class="flex flex-wrap items-center justify-between gap-2 px-1 lg:hidden"
-        >
-          <p class="text-[11px] text-slate-500 dark:text-slate-400">
-            {{ t('resources.pagination_showing', { from: vehicleRangeFrom, to: vehicleRangeTo, total: vehicleTotalFiltered }) }}
-          </p>
-          <div class="flex flex-wrap items-center gap-2">
-            <button
-              v-if="vehiclesViewMode === 'active' && canManageVehicles && bulkVehicleIds.length"
-              type="button"
-              class="rounded-lg border border-rose-200 bg-rose-50 px-2 py-1 text-[11px] font-medium text-rose-800 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300"
-              @click="openBulkTrashModal('vehicle')"
-            >
-              {{ t('resources.bulk_move_to_trash', { n: bulkVehicleIds.length }) }}
-            </button>
-            <button
-              v-else-if="vehiclesViewMode === 'trash' && canManageVehicles && bulkVehicleIds.length"
-              type="button"
-              class="rounded-lg border border-rose-300 bg-rose-50 px-2 py-1 text-[11px] font-medium text-rose-900 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-200"
-              @click="openBulkForceModal('vehicle')"
-            >
-              {{ t('resources.bulk_permanent_delete_n', { n: bulkVehicleIds.length }) }}
-            </button>
-            <label class="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-400">
-              {{ t('resources.pagination_per_page') }}
-              <select
-                v-model.number="vehiclePerPage"
-                class="rounded-lg border border-slate-200 bg-white py-1 pl-2 pr-7 text-xs dark:border-slate-600 dark:bg-slate-800"
-              >
-                <option v-for="n in vehiclePerPageOptions" :key="n" :value="n">{{ n }}</option>
-              </select>
-            </label>
-            <div class="flex items-center gap-0.5">
-              <button
-                type="button"
-                class="rounded-lg border border-slate-200 p-1.5 text-slate-600 enabled:hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800"
-                :disabled="vehicleListPage <= 1"
-                :aria-label="t('resources.pagination_prev')"
-                @click="vehicleListPage = Math.max(1, vehicleListPage - 1)"
-              >
-                <ChevronLeftIcon class="h-4 w-4" aria-hidden="true" />
-              </button>
-              <span class="min-w-[3.5rem] text-center text-[11px] tabular-nums text-slate-600 dark:text-slate-400">
-                {{ vehicleListPage }} / {{ vehicleTotalPages }}
-              </span>
-              <button
-                type="button"
-                class="rounded-lg border border-slate-200 p-1.5 text-slate-600 enabled:hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800"
-                :disabled="vehicleListPage >= vehicleTotalPages"
-                :aria-label="t('resources.pagination_next')"
-                @click="vehicleListPage = Math.min(vehicleTotalPages, vehicleListPage + 1)"
-              >
-                <ChevronRightIcon class="h-4 w-4" aria-hidden="true" />
-              </button>
-            </div>
-          </div>
-        </div>
-        <div
-          v-if="activeTab === 'vehicles'"
-          class="hidden overflow-visible rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] dark:border-slate-700 dark:bg-slate-900/50 lg:block"
-        >
-          <div
-            v-if="vehicleTotalFiltered"
-            class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/80 bg-slate-50/60 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800/50"
-          >
-            <p class="text-xs text-slate-600 dark:text-slate-400">
-              {{ t('resources.pagination_showing', { from: vehicleRangeFrom, to: vehicleRangeTo, total: vehicleTotalFiltered }) }}
-            </p>
             <div class="flex flex-wrap items-center gap-2">
               <button
-                v-if="vehiclesViewMode === 'active' && canManageVehicles && bulkVehicleIds.length"
+                v-if="!isInTrashMode && canManageVehicles && bulkVehicleIds.length"
                 type="button"
                 class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-800 hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60"
                 @click="openBulkTrashModal('vehicle')"
@@ -496,239 +330,89 @@
                 {{ t('resources.bulk_move_to_trash', { n: bulkVehicleIds.length }) }}
               </button>
               <button
-                v-else-if="vehiclesViewMode === 'trash' && canManageVehicles && bulkVehicleIds.length"
+                v-else-if="isInTrashMode && canManageVehicles && bulkVehicleIds.length"
                 type="button"
                 class="rounded-lg border border-rose-300 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-900 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-200 dark:hover:bg-rose-950/70"
                 @click="openBulkForceModal('vehicle')"
               >
                 {{ t('resources.bulk_permanent_delete_n', { n: bulkVehicleIds.length }) }}
               </button>
-              <details ref="vehicleColumnPickerRef" class="relative">
-                <summary
-                  class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
-                >
-                  <ViewColumnsIcon class="h-4 w-4 text-slate-500" aria-hidden="true" />
-                  {{ t('resources.table_columns') }}
-                  <ChevronDownIcon class="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
-                </summary>
-                <div
-                  class="absolute right-0 top-[calc(100%+6px)] z-[100] min-w-[220px] rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-lg ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900"
-                  @click.stop
-                >
-                  <ul class="mt-2 max-h-[min(50vh,320px)] space-y-2 overflow-y-auto text-slate-700 dark:text-slate-300">
-                    <li v-for="opt in vehicleColumnToggleOptions" :key="opt.id" class="flex items-center gap-2">
-                      <input
-                        :id="`vcol-${opt.id}`"
-                        type="checkbox"
-                        class="rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
-                        :checked="vehicleColumnVisible[opt.id]"
-                        @change="setVehicleColumn(opt.id, $event.target.checked)"
-                      />
-                      <label :for="`vcol-${opt.id}`" class="cursor-pointer text-xs">{{ t(opt.labelKey) }}</label>
-                    </li>
-                  </ul>
-                </div>
-              </details>
               <label class="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
                 {{ t('resources.pagination_per_page') }}
-                <select
-                  v-model.number="vehiclePerPage"
-                  class="rounded-lg border border-slate-200 bg-white py-1.5 pl-2 pr-8 text-xs font-medium dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                >
+                <select v-model.number="vehiclePerPage" class="rounded-lg border border-slate-200 bg-white py-1.5 pl-2 pr-8 text-xs font-medium dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
                   <option v-for="n in vehiclePerPageOptions" :key="n" :value="n">{{ n }}</option>
                 </select>
               </label>
             </div>
           </div>
-          <div class="overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
-            <table class="w-max min-w-full border-separate border-spacing-0 text-left text-sm">
-              <thead>
-                <tr class="bg-gradient-to-r from-slate-50 to-slate-100/90 text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:from-slate-800 dark:to-slate-800/80 dark:text-slate-400">
-                  <th
-                    v-if="canManageVehicles && (vehiclesViewMode === 'active' || vehiclesViewMode === 'trash')"
-                    class="w-10 border-b border-slate-200 px-2 py-3 first:rounded-tl-xl dark:border-slate-700"
-                    :aria-label="t('resources.col_select')"
-                  >
-                    <input
-                      type="checkbox"
-                      class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
-                      :checked="vehiclePageAllSelected"
-                      @change="toggleVehiclePageSelectAll"
-                    />
-                  </th>
-                  <th
-                    class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700"
-                    :class="canManageVehicles && (vehiclesViewMode === 'active' || vehiclesViewMode === 'trash') ? '' : 'first:rounded-tl-xl'"
-                  >
-                    {{ t('resources.col_vehicle') }}
-                  </th>
-                  <th v-if="vehicleColOn('type_capacity')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">
-                    {{ t('resources.col_type_capacity') }}
-                  </th>
-                  <th v-if="vehicleColOn('status')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_status') }}</th>
-                  <th v-if="vehicleColOn('compliance')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_compliance') }}</th>
-                  <th v-if="vehicleColOn('insurance_exp')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">
-                    {{ t('resources.col_insurance_exp') }}
-                  </th>
-                  <th v-if="vehicleColOn('inspection_exp')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">
-                    {{ t('resources.col_inspection_exp') }}
-                  </th>
-                  <th v-if="vehicleColOn('road_fee')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_road_fee_exp') }}</th>
-                  <th v-if="vehicleColOn('owner')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_owner') }}</th>
-                  <th v-if="vehicleColOn('year')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_year_mfg') }}</th>
-                  <th v-if="vehicleColOn('purchase')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_purchase') }}</th>
-                  <th v-if="vehicleColOn('driver')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_driver') }}</th>
-                  <th v-if="vehicleColOn('maintenance')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">
-                    {{ t('resources.col_maintenance') }}
-                  </th>
-                  <th v-if="vehicleColOn('notes')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.vehicle_form_notes') }}</th>
-                  <th class="whitespace-nowrap border-b border-slate-200 px-3 py-3 text-right last:rounded-tr-xl dark:border-slate-700">{{ t('resources.col_actions') }}</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                <tr
-                  v-for="v in paginatedVehicles"
-                  :key="v.id"
-                  class="cursor-pointer transition hover:bg-teal-50/40 dark:hover:bg-slate-800/60"
-                  :class="selectedVehicle?.id === v.id ? 'bg-teal-50/80 dark:bg-slate-800/80' : ''"
-                  @click="selectVehicle(v)"
-                >
-                  <td
-                    v-if="canManageVehicles && (vehiclesViewMode === 'active' || vehiclesViewMode === 'trash')"
-                    class="w-10 px-2 py-3 align-middle"
-                    @click.stop
-                  >
-                    <input
-                      type="checkbox"
-                      class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
-                      :checked="bulkVehicleIds.includes(v.id)"
-                      @change="toggleBulkVehicle(v.id)"
-                    />
-                  </td>
-                  <td class="px-3 py-3 align-middle">
-                    <div class="flex items-center gap-2">
-                      <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-400">
-                        <component :is="vehicleIconComponent(v.iconKind)" class="h-5 w-5" aria-hidden="true" />
-                      </div>
-                      <div>
-                        <RouterLink
-                          :to="`/resources/vehicles/${v.id}`"
-                          class="block whitespace-nowrap font-semibold text-teal-700 hover:underline dark:text-teal-400"
-                          @click.stop
-                        >
-                          {{ v.code }}
-                        </RouterLink>
-                        <div class="whitespace-nowrap text-xs text-slate-500 dark:text-slate-400">{{ v.model }}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td v-if="vehicleColOn('type_capacity')" class="whitespace-nowrap px-3 py-3 align-middle text-slate-700 dark:text-slate-300">
-                    {{ v.typeLabel }}
-                  </td>
-                  <td v-if="vehicleColOn('status')" class="px-3 py-3 align-middle whitespace-nowrap">
-                    <span :class="statusBadgeClass(v.status)">{{ labelVehicleStatus(v.status) }}</span>
-                  </td>
-                  <td v-if="vehicleColOn('compliance')" class="px-3 py-3 align-middle">
-                    <div class="flex flex-nowrap gap-1">
-                      <span :class="compliancePillClass(v.insurance)">{{ t('resources.tag_ins') }} {{ insuranceHint(v.insurance) }}</span>
-                      <span :class="compliancePillClass(v.inspection)">{{ t('resources.tag_reg') }} {{ insuranceHint(v.inspection) }}</span>
-                    </div>
-                  </td>
-                  <td v-if="vehicleColOn('insurance_exp')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-700 dark:text-slate-300">
-                    {{ fmtVehicleTableDate(v.insurance_expires_at) }}
-                  </td>
-                  <td v-if="vehicleColOn('inspection_exp')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-700 dark:text-slate-300">
-                    {{ fmtVehicleTableDate(v.inspection_expires_at) }}
-                  </td>
-                  <td v-if="vehicleColOn('road_fee')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-700 dark:text-slate-300">
-                    {{ fmtVehicleTableDate(v.road_fee_expires_at) }}
-                  </td>
-                  <td v-if="vehicleColOn('owner')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-700 dark:text-slate-300">
-                    {{ v.owner_name || 'â€”' }}
-                  </td>
-                  <td v-if="vehicleColOn('year')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-700 dark:text-slate-300">
-                    {{ v.year_manufactured ?? 'â€”' }}
-                  </td>
-                  <td v-if="vehicleColOn('purchase')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-700 dark:text-slate-300">
-                    {{ fmtVehicleTableDate(v.purchased_at) }}
-                  </td>
-                  <td v-if="vehicleColOn('driver')" class="whitespace-nowrap px-3 py-3 align-middle">
-                    <span v-if="v.driverName" class="text-slate-800 dark:text-slate-200">{{ v.driverName }}</span>
-                    <span v-else class="italic text-slate-500">{{ t('resources.unassigned') }}</span>
-                  </td>
-                  <td v-if="vehicleColOn('maintenance')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-600 dark:text-slate-400">
-                    {{ vehicleMaintenanceLine(v) }}
-                  </td>
-                  <td v-if="vehicleColOn('notes')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-600 dark:text-slate-400">
-                    {{ v.notes || 'â€”' }}
-                  </td>
-                  <td class="px-3 py-3 align-middle text-right text-slate-400" @click.stop>
-                    <div v-if="vehiclesViewMode === 'trash' && canManageVehicles" class="flex flex-wrap justify-end gap-1.5">
-                      <button
-                        type="button"
-                        class="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-500 disabled:opacity-50"
-                        :disabled="vehicleRestoring"
-                        @click="submitRestoreVehicleById(v.id)"
-                      >
-                        {{ t('resources.action_restore_vehicle') }}
-                      </button>
-                      <button
-                        type="button"
-                        class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-800 hover:bg-rose-100 disabled:opacity-50 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60"
-                        :disabled="forcePermDeleting"
-                        @click="openForceDeleteModal('vehicle', v.id, v.code)"
-                      >
-                        {{ t('resources.action_force_delete') }}
-                      </button>
-                    </div>
-                    <ChevronRightIcon v-else class="ml-auto inline h-5 w-5" aria-hidden="true" />
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+
+          <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <ResourceRecordCard
+              v-for="v in paginatedVehicles"
+              :key="v.id"
+              :icon="vehicleIconComponent(v.iconKind)"
+              tone="teal"
+              :title="v.code"
+              :to="!isInTrashMode ? `/resources/vehicles/${v.id}` : null"
+              :subtitle="v.model"
+              :status-label="labelVehicleStatus(v.status)"
+              :status-class="statusBadgeClass(v.status)"
+              :pills="vehicleCardPills(v)"
+              :fields="vehicleCardFields(v)"
+              :selectable="canManageVehicles"
+              :selected="bulkVehicleIds.includes(v.id)"
+              :clickable="!isInTrashMode"
+              :data-testid="`resources-vehicle-card-${v.id}`"
+              @select="selectVehicle(v)"
+              @toggle-select="toggleBulkVehicle(v.id)"
+            >
+              <template v-if="isInTrashMode && canManageVehicles" #actions>
+                <button type="button" class="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-500 disabled:opacity-50" :disabled="vehicleRestoring" @click="submitRestoreVehicleById(v.id)">
+                  {{ t('resources.action_restore_vehicle') }}
+                </button>
+                <button type="button" class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-medium text-rose-800 hover:bg-rose-100 disabled:opacity-50 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60" :disabled="forcePermDeleting" @click="openForceDeleteModal('vehicle', v.id, v.code)">
+                  {{ t('resources.action_force_delete') }}
+                </button>
+              </template>
+            </ResourceRecordCard>
           </div>
-          <div
-            v-if="vehicleTotalFiltered"
-            class="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200/80 bg-slate-50/40 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800/40"
-          >
+
+          <p v-if="!filteredVehicles.length" class="py-12 text-center text-sm text-slate-500">
+            {{ isInTrashMode ? t('resources.trash_empty') : t('resources.empty') }}
+          </p>
+
+          <div v-if="vehicleTotalFiltered" class="mt-4 flex items-center justify-between gap-2">
             <span class="text-xs text-slate-500 dark:text-slate-400">{{ t('resources.pagination_page_of', { page: vehicleListPage, total: vehicleTotalPages }) }}</span>
             <div class="flex items-center gap-1">
-              <button
-                type="button"
-                class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-white disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800"
-                :disabled="vehicleListPage <= 1"
-                :aria-label="t('resources.pagination_prev')"
-                @click="vehicleListPage = Math.max(1, vehicleListPage - 1)"
-              >
+              <button type="button" class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800" :disabled="vehicleListPage <= 1" :aria-label="t('resources.pagination_prev')" @click="vehicleListPage = Math.max(1, vehicleListPage - 1)">
                 <ChevronLeftIcon class="h-4 w-4" aria-hidden="true" />
               </button>
-              <button
-                type="button"
-                class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-white disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800"
-                :disabled="vehicleListPage >= vehicleTotalPages"
-                :aria-label="t('resources.pagination_next')"
-                @click="vehicleListPage = Math.min(vehicleTotalPages, vehicleListPage + 1)"
-              >
+              <button type="button" class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800" :disabled="vehicleListPage >= vehicleTotalPages" :aria-label="t('resources.pagination_next')" @click="vehicleListPage = Math.min(vehicleTotalPages, vehicleListPage + 1)">
                 <ChevronRightIcon class="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
           </div>
         </div>
 
-        <div
-          v-else-if="activeTab === 'drivers'"
-          class="overflow-visible rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] dark:border-slate-700 dark:bg-slate-900/50"
-        >
-          <div
-            v-if="driverTotalFiltered"
-            class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/80 bg-slate-50/60 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800/50"
-          >
-            <p class="text-xs text-slate-600 dark:text-slate-400">
-              {{ t('resources.pagination_showing', { from: driverRangeFrom, to: driverRangeTo, total: driverTotalFiltered }) }}
-            </p>
+        <!-- DRIVERS -->
+        <div v-else-if="currentResource === 'drivers'">
+          <div v-if="driverTotalFiltered" class="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div class="flex flex-wrap items-center gap-3">
+              <input
+                v-if="canManageDrivers"
+                type="checkbox"
+                class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
+                :checked="driverPageAllSelected"
+                :aria-label="t('resources.col_select')"
+                @change="toggleDriverPageSelectAll"
+              />
+              <p class="text-xs text-slate-500 dark:text-slate-400">
+                {{ t('resources.pagination_showing', { from: driverRangeFrom, to: driverRangeTo, total: driverTotalFiltered }) }}
+              </p>
+            </div>
             <div class="flex flex-wrap items-center gap-2">
               <button
-                v-if="driversViewMode === 'active' && canManageDrivers && bulkDriverIds.length"
+                v-if="!isInTrashMode && canManageDrivers && bulkDriverIds.length"
                 type="button"
                 class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-800 hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60"
                 @click="openBulkTrashModal('driver')"
@@ -736,212 +420,94 @@
                 {{ t('resources.bulk_move_to_trash', { n: bulkDriverIds.length }) }}
               </button>
               <button
-                v-else-if="driversViewMode === 'trash' && canManageDrivers && bulkDriverIds.length"
+                v-else-if="isInTrashMode && canManageDrivers && bulkDriverIds.length"
                 type="button"
                 class="rounded-lg border border-rose-300 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-900 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-200 dark:hover:bg-rose-950/70"
                 @click="openBulkForceModal('driver')"
               >
                 {{ t('resources.bulk_permanent_delete_n', { n: bulkDriverIds.length }) }}
               </button>
-              <details ref="driverColumnPickerRef" class="relative">
-                <summary
-                  class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
-                >
-                  <ViewColumnsIcon class="h-4 w-4 text-slate-500" aria-hidden="true" />
-                  {{ t('resources.table_columns') }}
-                  <ChevronDownIcon class="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
-                </summary>
-                <div
-                  class="absolute right-0 top-[calc(100%+6px)] z-[100] min-w-[220px] rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-lg ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900"
-                  @click.stop
-                >
-                  <ul class="mt-2 max-h-[min(50vh,320px)] space-y-2 overflow-y-auto text-slate-700 dark:text-slate-300">
-                    <li v-for="opt in driverColumnToggleOptions" :key="opt.id" class="flex items-center gap-2">
-                      <input
-                        :id="`dcol-${opt.id}`"
-                        type="checkbox"
-                        class="rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
-                        :checked="driverColumnVisible[opt.id]"
-                        @change="setDriverColumn(opt.id, $event.target.checked)"
-                      />
-                      <label :for="`dcol-${opt.id}`" class="cursor-pointer text-xs">{{ t(opt.labelKey) }}</label>
-                    </li>
-                  </ul>
-                </div>
-              </details>
               <label class="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
                 {{ t('resources.pagination_per_page') }}
-                <select
-                  v-model.number="driverPerPage"
-                  class="rounded-lg border border-slate-200 bg-white py-1.5 pl-2 pr-8 text-xs font-medium dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                >
+                <select v-model.number="driverPerPage" class="rounded-lg border border-slate-200 bg-white py-1.5 pl-2 pr-8 text-xs font-medium dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
                   <option v-for="n in driverPerPageOptions" :key="n" :value="n">{{ n }}</option>
                 </select>
               </label>
             </div>
           </div>
-          <div class="overflow-x-auto overscroll-x-contain rounded-b-xl [-webkit-overflow-scrolling:touch]">
-            <table class="w-max min-w-full border-separate border-spacing-0 text-left text-sm">
-              <thead>
-                <tr class="bg-gradient-to-r from-slate-50 to-slate-100/90 text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:from-slate-800 dark:to-slate-800/80 dark:text-slate-400">
-                  <th
-                    v-if="canManageDrivers && (driversViewMode === 'active' || driversViewMode === 'trash')"
-                    class="w-10 border-b border-slate-200 px-2 py-3 first:rounded-tl-xl dark:border-slate-700"
-                    :aria-label="t('resources.col_select')"
-                  >
-                    <input
-                      type="checkbox"
-                      class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
-                      :checked="driverPageAllSelected"
-                      @change="toggleDriverPageSelectAll"
-                    />
-                  </th>
-                  <th
-                    class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700"
-                    :class="canManageDrivers && (driversViewMode === 'active' || driversViewMode === 'trash') ? '' : 'first:rounded-tl-xl'"
-                  >
-                    {{ t('resources.col_driver_name') }}
-                  </th>
-                  <th v-if="driverColOn('email')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_user_email') }}</th>
-                  <th v-if="driverColOn('employee_code')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_employee_code') }}</th>
-                  <th v-if="driverColOn('license_class')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('driver_detail.license_class') }}</th>
-                  <th v-if="driverColOn('license_expires')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('driver_detail.license_expires') }}</th>
-                  <th v-if="driverColOn('phone')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_phone') }}</th>
-                  <th v-if="driverColOn('employment')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.filter_status') }}</th>
-                  <th v-if="driverColOn('availability')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('driver_detail.availability') }}</th>
-                  <th class="whitespace-nowrap border-b border-slate-200 px-3 py-3 text-right last:rounded-tr-xl dark:border-slate-700">{{ t('resources.col_actions') }}</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                <tr
-                  v-for="d in paginatedDrivers"
-                  :key="d.id"
-                  :class="
-                    driversViewMode === 'active'
-                      ? 'cursor-pointer transition hover:bg-teal-50/50 dark:hover:bg-slate-800/60'
-                      : 'transition hover:bg-slate-50 dark:hover:bg-slate-800/40'
-                  "
-                  @click="goDriverDetail(d)"
-                >
-                  <td
-                    v-if="canManageDrivers && (driversViewMode === 'active' || driversViewMode === 'trash')"
-                    class="w-10 px-2 py-3 align-middle"
-                    @click.stop
-                  >
-                    <input
-                      type="checkbox"
-                      class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
-                      :checked="bulkDriverIds.includes(d.id)"
-                      @change="toggleBulkDriver(d.id)"
-                    />
-                  </td>
-                  <td class="whitespace-nowrap px-3 py-3 font-medium text-slate-900 dark:text-white">
-                    <div class="flex items-center gap-2">
-                      <img
-                        v-if="d.avatarUrl"
-                        :src="d.avatarUrl"
-                        :alt="d.name"
-                        class="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-slate-200 dark:ring-slate-600"
-                      />
-                      <div
-                        v-else
-                        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-100 text-[11px] font-semibold text-teal-800 dark:bg-teal-950/60 dark:text-teal-300"
-                        aria-hidden="true"
-                      >
-                        {{ driverRowInitials(d.name) }}
-                      </div>
-                      <span>{{ d.name }}</span>
-                    </div>
-                  </td>
-                  <td v-if="driverColOn('email')" class="whitespace-nowrap px-3 py-3 text-slate-600 dark:text-slate-400">{{ d.email || 'â€”' }}</td>
-                  <td v-if="driverColOn('employee_code')" class="whitespace-nowrap px-3 py-3 font-mono text-xs text-slate-700 dark:text-slate-300">{{ d.employeeCode || 'â€”' }}</td>
-                  <td v-if="driverColOn('license_class')" class="whitespace-nowrap px-3 py-3 text-slate-700 dark:text-slate-300">{{ d.license_class || 'â€”' }}</td>
-                  <td v-if="driverColOn('license_expires')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-700 dark:text-slate-300">
-                    <span v-if="d.license_expires_at" :class="compliancePillClass(d.licenseExpiry)">{{ fmtVehicleTableDate(d.license_expires_at) }}</span>
-                    <span v-else class="italic text-slate-500">{{ t('resources.unassigned') }}</span>
-                  </td>
-                  <td v-if="driverColOn('phone')" class="whitespace-nowrap px-3 py-3 text-slate-600 dark:text-slate-400">{{ d.phone || 'â€”' }}</td>
-                  <td v-if="driverColOn('employment')" class="whitespace-nowrap px-3 py-3">
-                    <span :class="statusBadgeClass(d.uiStatus)">{{ labelVehicleStatus(d.uiStatus) }}</span>
-                  </td>
-                  <td v-if="driverColOn('availability')" class="whitespace-nowrap px-3 py-3 text-xs text-slate-700 dark:text-slate-300">
-                    {{ labelDriverAvailability(d.availability_status) }}
-                  </td>
-                  <td class="whitespace-nowrap px-3 py-3 text-right text-slate-400" @click.stop>
-                    <div v-if="driversViewMode === 'trash' && canManageDrivers" class="flex flex-wrap justify-end gap-1.5">
-                      <button
-                        type="button"
-                        class="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-500 disabled:opacity-50"
-                        :disabled="driverRestoring"
-                        @click="submitRestoreDriverById(d.id)"
-                      >
-                        {{ t('resources.action_restore_driver') }}
-                      </button>
-                      <button
-                        type="button"
-                        class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-800 hover:bg-rose-100 disabled:opacity-50 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60"
-                        :disabled="forcePermDeleting"
-                        @click="openForceDeleteModal('driver', d.id, d.name)"
-                      >
-                        {{ t('resources.action_force_delete') }}
-                      </button>
-                    </div>
-                    <button
-                      v-else-if="driversViewMode === 'active' && canManageDrivers"
-                      type="button"
-                      class="inline-flex rounded-lg border border-slate-200 p-2 text-slate-500 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 dark:border-slate-600 dark:hover:border-rose-900 dark:hover:bg-rose-950/40 dark:hover:text-rose-300"
-                      :title="t('resources.driver_delete_action')"
-                      @click="openDriverDeleteModal(d)"
-                    >
-                      <TrashIcon class="h-4 w-4" aria-hidden="true" />
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+
+          <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <ResourceRecordCard
+              v-for="d in paginatedDrivers"
+              :key="d.id"
+              :avatar-url="d.avatarUrl || ''"
+              :initials="driverRowInitials(d.name)"
+              tone="teal"
+              :title="d.name"
+              :to="!isInTrashMode ? { name: 'driverDetail', params: { id: d.id } } : null"
+              :status-label="labelVehicleStatus(d.uiStatus)"
+              :status-class="statusBadgeClass(d.uiStatus)"
+              :pills="driverCardPills(d)"
+              :fields="driverCardFields(d)"
+              :selectable="canManageDrivers"
+              :selected="bulkDriverIds.includes(d.id)"
+              :clickable="!isInTrashMode"
+              :data-testid="`resources-driver-card-${d.id}`"
+              @select="goDriverDetail(d)"
+              @toggle-select="toggleBulkDriver(d.id)"
+            >
+              <template v-if="isInTrashMode && canManageDrivers" #actions>
+                <button type="button" class="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-500 disabled:opacity-50" :disabled="driverRestoring" @click="submitRestoreDriverById(d.id)">
+                  {{ t('resources.action_restore_driver') }}
+                </button>
+                <button type="button" class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-medium text-rose-800 hover:bg-rose-100 disabled:opacity-50 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60" :disabled="forcePermDeleting" @click="openForceDeleteModal('driver', d.id, d.name)">
+                  {{ t('resources.action_force_delete') }}
+                </button>
+              </template>
+              <template v-else-if="canManageDrivers" #actions>
+                <button type="button" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 dark:border-slate-600 dark:text-slate-300 dark:hover:border-rose-900 dark:hover:bg-rose-950/40 dark:hover:text-rose-300" @click="openDriverDeleteModal(d)">
+                  <TrashIcon class="h-4 w-4" aria-hidden="true" /> {{ t('resources.driver_delete_action') }}
+                </button>
+              </template>
+            </ResourceRecordCard>
           </div>
-          <div
-            v-if="driverTotalFiltered"
-            class="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200/80 bg-slate-50/40 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800/40"
-          >
+
+          <p v-if="!filteredDrivers.length" class="py-12 text-center text-sm text-slate-500">
+            {{ isInTrashMode ? t('resources.trash_empty') : t('resources.empty') }}
+          </p>
+
+          <div v-if="driverTotalFiltered" class="mt-4 flex items-center justify-between gap-2">
             <span class="text-xs text-slate-500 dark:text-slate-400">{{ t('resources.pagination_page_of', { page: driverListPage, total: driverTotalPages }) }}</span>
             <div class="flex items-center gap-1">
-              <button
-                type="button"
-                class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-white disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800"
-                :disabled="driverListPage <= 1"
-                :aria-label="t('resources.pagination_prev')"
-                @click="driverListPage = Math.max(1, driverListPage - 1)"
-              >
+              <button type="button" class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800" :disabled="driverListPage <= 1" :aria-label="t('resources.pagination_prev')" @click="driverListPage = Math.max(1, driverListPage - 1)">
                 <ChevronLeftIcon class="h-4 w-4" aria-hidden="true" />
               </button>
-              <button
-                type="button"
-                class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-white disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800"
-                :disabled="driverListPage >= driverTotalPages"
-                :aria-label="t('resources.pagination_next')"
-                @click="driverListPage = Math.min(driverTotalPages, driverListPage + 1)"
-              >
+              <button type="button" class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800" :disabled="driverListPage >= driverTotalPages" :aria-label="t('resources.pagination_next')" @click="driverListPage = Math.min(driverTotalPages, driverListPage + 1)">
                 <ChevronRightIcon class="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
           </div>
         </div>
 
-        <div
-          v-else-if="activeTab === 'suppliers'"
-          class="overflow-visible rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] dark:border-slate-700 dark:bg-slate-900/50"
-        >
-          <div
-            v-if="supplierTotalFiltered"
-            class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/80 bg-slate-50/60 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800/50"
-          >
-            <p class="text-xs text-slate-600 dark:text-slate-400">
-              {{ t('resources.pagination_showing', { from: supplierRangeFrom, to: supplierRangeTo, total: supplierTotalFiltered }) }}
-            </p>
+        <!-- SUPPLIERS -->
+        <div v-else-if="currentResource === 'suppliers'">
+          <div v-if="supplierTotalFiltered" class="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div class="flex flex-wrap items-center gap-3">
+              <input
+                v-if="canManageProviders"
+                type="checkbox"
+                class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
+                :checked="supplierPageAllSelected"
+                :aria-label="t('resources.col_select')"
+                @change="toggleSupplierPageSelectAll"
+              />
+              <p class="text-xs text-slate-500 dark:text-slate-400">
+                {{ t('resources.pagination_showing', { from: supplierRangeFrom, to: supplierRangeTo, total: supplierTotalFiltered }) }}
+              </p>
+            </div>
             <div class="flex flex-wrap items-center gap-2">
               <button
-                v-if="suppliersViewMode === 'active' && canManageProviders && bulkSupplierIds.length"
+                v-if="!isInTrashMode && canManageProviders && bulkSupplierIds.length"
                 type="button"
                 class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-800 hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60"
                 @click="openBulkTrashModal('supplier')"
@@ -949,197 +515,73 @@
                 {{ t('resources.bulk_move_to_trash', { n: bulkSupplierIds.length }) }}
               </button>
               <button
-                v-else-if="suppliersViewMode === 'trash' && canManageProviders && bulkSupplierIds.length"
+                v-else-if="isInTrashMode && canManageProviders && bulkSupplierIds.length"
                 type="button"
                 class="rounded-lg border border-rose-300 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-900 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-200 dark:hover:bg-rose-950/70"
                 @click="openBulkForceModal('supplier')"
               >
                 {{ t('resources.bulk_permanent_delete_n', { n: bulkSupplierIds.length }) }}
               </button>
-              <details ref="supplierColumnPickerRef" class="relative">
-                <summary
-                  class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
-                >
-                  <ViewColumnsIcon class="h-4 w-4 text-slate-500" aria-hidden="true" />
-                  {{ t('resources.table_columns') }}
-                  <ChevronDownIcon class="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
-                </summary>
-                <div
-                  class="absolute right-0 top-[calc(100%+6px)] z-[100] min-w-[220px] rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-lg ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900"
-                  @click.stop
-                >
-                  <ul class="mt-2 max-h-[min(50vh,320px)] space-y-2 overflow-y-auto text-slate-700 dark:text-slate-300">
-                    <li v-for="opt in supplierColumnToggleOptions" :key="opt.id" class="flex items-center gap-2">
-                      <input
-                        :id="`scol-${opt.id}`"
-                        type="checkbox"
-                        class="rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
-                        :checked="supplierColumnVisible[opt.id]"
-                        @change="setSupplierColumn(opt.id, $event.target.checked)"
-                      />
-                      <label :for="`scol-${opt.id}`" class="cursor-pointer text-xs">{{ t(opt.labelKey) }}</label>
-                    </li>
-                  </ul>
-                </div>
-              </details>
               <label class="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
                 {{ t('resources.pagination_per_page') }}
-                <select
-                  v-model.number="supplierPerPage"
-                  class="rounded-lg border border-slate-200 bg-white py-1.5 pl-2 pr-8 text-xs font-medium dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                >
+                <select v-model.number="supplierPerPage" class="rounded-lg border border-slate-200 bg-white py-1.5 pl-2 pr-8 text-xs font-medium dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
                   <option v-for="n in supplierPerPageOptions" :key="n" :value="n">{{ n }}</option>
                 </select>
               </label>
             </div>
           </div>
-          <div class="overflow-x-auto overscroll-x-contain rounded-b-xl [-webkit-overflow-scrolling:touch]">
-            <table class="w-max min-w-full border-separate border-spacing-0 text-left text-sm">
-              <thead>
-                <tr class="bg-gradient-to-r from-slate-50 to-slate-100/90 text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:from-slate-800 dark:to-slate-800/80 dark:text-slate-400">
-                  <th
-                    v-if="canManageProviders && (suppliersViewMode === 'active' || suppliersViewMode === 'trash')"
-                    class="w-10 border-b border-slate-200 px-2 py-3 first:rounded-tl-xl dark:border-slate-700"
-                    :aria-label="t('resources.col_select')"
-                  >
-                    <input
-                      type="checkbox"
-                      class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
-                      :checked="supplierPageAllSelected"
-                      @change="toggleSupplierPageSelectAll"
-                    />
-                  </th>
-                  <th
-                    class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700"
-                    :class="canManageProviders && (suppliersViewMode === 'active' || suppliersViewMode === 'trash') ? '' : 'first:rounded-tl-xl'"
-                  >
-                    {{ t('resources.col_supplier') }}
-                  </th>
-                  <th v-if="supplierColOn('services')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_solutions_services') }}</th>
-                  <th v-if="supplierColOn('contract')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_contract') }}</th>
-                  <th v-if="supplierColOn('status')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_status') }}</th>
-                  <th v-if="supplierColOn('contact')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_contact') }}</th>
-                  <th class="whitespace-nowrap border-b border-slate-200 px-3 py-3 text-right last:rounded-tr-xl dark:border-slate-700">{{ t('resources.col_actions') }}</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                <tr
-                  v-for="s in paginatedSuppliers"
-                  :key="s.id"
-                  class="transition hover:bg-teal-50/40 dark:hover:bg-slate-800/60"
-                  :class="[
-                    'cursor-pointer',
-                    selectedSupplier?.id === s.id ? 'bg-teal-50/80 dark:bg-slate-800/80' : '',
-                  ]"
-                  @click="selectSupplier(s)"
-                >
-                  <td
-                    v-if="canManageProviders && (suppliersViewMode === 'active' || suppliersViewMode === 'trash')"
-                    class="w-10 px-2 py-3 align-middle"
-                    @click.stop
-                  >
-                    <input
-                      type="checkbox"
-                      class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
-                      :checked="bulkSupplierIds.includes(s.id)"
-                      @change="toggleBulkSupplier(s.id)"
-                    />
-                  </td>
-                  <td class="px-3 py-3 align-middle">
-                    <div class="flex items-center gap-2">
-                      <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300">
-                        <BuildingOffice2Icon class="h-5 w-5" aria-hidden="true" />
-                      </div>
-                      <div>
-                        <div class="whitespace-nowrap font-semibold text-slate-900 dark:text-white">{{ s.name }}</div>
-                        <div class="whitespace-nowrap text-xs text-slate-500">{{ s.typeLabel }}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td v-if="supplierColOn('services')" class="max-w-[14rem] px-3 py-3 align-middle text-xs text-slate-600 dark:text-slate-400">
-                    <span class="line-clamp-2">{{ s.serviceSummary }}</span>
-                  </td>
-                  <td v-if="supplierColOn('contract')" class="whitespace-nowrap px-3 py-3 align-middle">
-                    <span :class="compliancePillClass(s.contract)">{{ t('resources.tag_contract') }} {{ insuranceHint(s.contract) }}</span>
-                  </td>
-                  <td v-if="supplierColOn('status')" class="whitespace-nowrap px-3 py-3 align-middle">
-                    <span :class="statusBadgeClass(s.uiStatus)">{{ labelProviderStatus(s.uiStatus) }}</span>
-                  </td>
-                  <td v-if="supplierColOn('contact')" class="max-w-[12rem] px-3 py-3 align-middle text-xs text-slate-600 dark:text-slate-400">
-                    <span class="line-clamp-2">{{ s.contact || 'â€”' }}</span>
-                  </td>
-                  <td class="whitespace-nowrap px-3 py-3 align-middle text-right text-slate-400" @click.stop>
-                    <div v-if="suppliersViewMode === 'trash' && canManageProviders" class="flex flex-wrap justify-end gap-1.5">
-                      <button
-                        type="button"
-                        class="rounded-lg bg-teal-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-teal-500 disabled:opacity-50"
-                        :disabled="supplierRestoring"
-                        @click="submitRestoreSupplierById(s.id)"
-                      >
-                        {{ t('resources.action_restore_supplier') }}
-                      </button>
-                      <button
-                        type="button"
-                        class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-800 hover:bg-rose-100 disabled:opacity-50 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60"
-                        :disabled="forcePermDeleting"
-                        @click="openForceDeleteModal('supplier', s.id, s.name)"
-                      >
-                        {{ t('resources.action_force_delete') }}
-                      </button>
-                    </div>
-                    <template v-else-if="suppliersViewMode === 'active' && canManageProviders">
-                      <button
-                        type="button"
-                        class="inline-flex rounded-lg border border-slate-200 p-2 text-slate-500 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 dark:border-slate-600 dark:hover:border-rose-900 dark:hover:bg-rose-950/40 dark:hover:text-rose-300"
-                        :title="t('resources.provider_delete_action')"
-                        @click="openProviderDeleteModal(s)"
-                      >
-                        <TrashIcon class="h-4 w-4" aria-hidden="true" />
-                      </button>
-                    </template>
-                    <ChevronRightIcon v-else class="ml-auto inline h-5 w-5" aria-hidden="true" />
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+
+          <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <ResourceRecordCard
+              v-for="s in paginatedSuppliers"
+              :key="s.id"
+              :icon="BuildingOffice2Icon"
+              tone="indigo"
+              :title="s.name"
+              :subtitle="s.typeLabel"
+              :status-label="labelProviderStatus(s.uiStatus)"
+              :status-class="statusBadgeClass(s.uiStatus)"
+              :pills="supplierCardPills(s)"
+              :fields="supplierCardFields(s)"
+              :selectable="canManageProviders"
+              :selected="bulkSupplierIds.includes(s.id)"
+              :clickable="!isInTrashMode"
+              :data-testid="`resources-supplier-card-${s.id}`"
+              @select="selectSupplier(s)"
+              @toggle-select="toggleBulkSupplier(s.id)"
+            >
+              <template v-if="isInTrashMode && canManageProviders" #actions>
+                <button type="button" class="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-500 disabled:opacity-50" :disabled="supplierRestoring" @click="submitRestoreSupplierById(s.id)">
+                  {{ t('resources.action_restore_supplier') }}
+                </button>
+                <button type="button" class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-medium text-rose-800 hover:bg-rose-100 disabled:opacity-50 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60" :disabled="forcePermDeleting" @click="openForceDeleteModal('supplier', s.id, s.name)">
+                  {{ t('resources.action_force_delete') }}
+                </button>
+              </template>
+              <template v-else-if="canManageProviders" #actions>
+                <button type="button" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 dark:border-slate-600 dark:text-slate-300 dark:hover:border-rose-900 dark:hover:bg-rose-950/40 dark:hover:text-rose-300" @click="openProviderDeleteModal(s)">
+                  <TrashIcon class="h-4 w-4" aria-hidden="true" /> {{ t('resources.provider_delete_action') }}
+                </button>
+              </template>
+            </ResourceRecordCard>
           </div>
-          <div
-            v-if="supplierTotalFiltered"
-            class="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200/80 bg-slate-50/40 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800/40"
-          >
+
+          <p v-if="!filteredSuppliers.length" class="py-12 text-center text-sm text-slate-500">
+            {{ isInTrashMode ? t('resources.trash_empty') : t('resources.empty') }}
+          </p>
+
+          <div v-if="supplierTotalFiltered" class="mt-4 flex items-center justify-between gap-2">
             <span class="text-xs text-slate-500 dark:text-slate-400">{{ t('resources.pagination_page_of', { page: supplierListPage, total: supplierTotalPages }) }}</span>
             <div class="flex items-center gap-1">
-              <button
-                type="button"
-                class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-white disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800"
-                :disabled="supplierListPage <= 1"
-                :aria-label="t('resources.pagination_prev')"
-                @click="supplierListPage = Math.max(1, supplierListPage - 1)"
-              >
+              <button type="button" class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800" :disabled="supplierListPage <= 1" :aria-label="t('resources.pagination_prev')" @click="supplierListPage = Math.max(1, supplierListPage - 1)">
                 <ChevronLeftIcon class="h-4 w-4" aria-hidden="true" />
               </button>
-              <button
-                type="button"
-                class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-white disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800"
-                :disabled="supplierListPage >= supplierTotalPages"
-                :aria-label="t('resources.pagination_next')"
-                @click="supplierListPage = Math.min(supplierTotalPages, supplierListPage + 1)"
-              >
+              <button type="button" class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800" :disabled="supplierListPage >= supplierTotalPages" :aria-label="t('resources.pagination_next')" @click="supplierListPage = Math.min(supplierTotalPages, supplierListPage + 1)">
                 <ChevronRightIcon class="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
           </div>
         </div>
-
-        <p v-if="activeTab === 'vehicles' && !filteredVehicles.length" class="py-8 text-center text-sm text-slate-500">
-          {{ vehiclesViewMode === 'trash' ? t('resources.trash_empty') : t('resources.empty') }}
-        </p>
-        <p v-if="activeTab === 'drivers' && !filteredDrivers.length" class="py-8 text-center text-sm text-slate-500">
-          {{ driversViewMode === 'trash' ? t('resources.trash_empty') : t('resources.empty') }}
-        </p>
-        <p v-if="activeTab === 'suppliers' && !filteredSuppliers.length" class="py-8 text-center text-sm text-slate-500">
-          {{ suppliersViewMode === 'trash' ? t('resources.trash_empty') : t('resources.empty') }}
-        </p>
       </div>
 
       <!-- Detail panel (vehicles) -->
@@ -1330,8 +772,8 @@
                   </div>
                   <div v-if="selectedVehicle.caretaker_name || selectedVehicle.caretaker_phone" class="text-sm">
                     <span class="text-[11px] text-slate-500 dark:text-slate-400">{{ t('resources.vehicle_form_caretaker') }}: </span>
-                    <span class="font-medium text-slate-900 dark:text-slate-100">{{ selectedVehicle.caretaker_name || 'â€”' }}</span>
-                    <span v-if="selectedVehicle.caretaker_phone" class="text-slate-600 dark:text-slate-400"> Â· {{ selectedVehicle.caretaker_phone }}</span>
+                    <span class="font-medium text-slate-900 dark:text-slate-100">{{ selectedVehicle.caretaker_name || '—' }}</span>
+                    <span v-if="selectedVehicle.caretaker_phone" class="text-slate-600 dark:text-slate-400"> · {{ selectedVehicle.caretaker_phone }}</span>
                   </div>
                   <template v-if="selectedVehicle.notes">
                     <div>
@@ -1957,7 +1399,7 @@
       </div>
     </Teleport>
 
-    <!-- Modal: tab Tài xế = thêm tài xế từ user; chi tiết xe = gán TX mặc ��9nh (select) -->
+    <!-- Modal: tab Tài xế = thêm tài xế từ user; chi tiết xe = gán TX mặc định (select) -->
     <Teleport to="body">
       <div
         v-if="assignModalOpen"
@@ -1984,7 +1426,7 @@
           </div>
 
           <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
-          <!-- Thêm tài xế: từ user HOẶC ngoài h�! th�ng (tab Tài xế) -->
+          <!-- Thêm tài xế: từ user HOẶC ngoài hệ thống (tab Tài xế) -->
           <div v-if="assignVehicleId == null" class="px-5 py-4 sm:px-6">
             <div class="mb-4 flex flex-wrap gap-2 rounded-xl border border-slate-200 bg-slate-50/80 p-1 dark:border-slate-700 dark:bg-slate-800/50">
               <button
@@ -2140,12 +1582,12 @@
             <p v-if="assignError" class="mt-3 text-xs text-rose-600">{{ assignError }}</p>
           </div>
 
-          <!-- Gán tài xế mặc ��9nh cho xe (chi tiết xe) -->
+          <!-- Gán tài xế mặc định cho xe (chi tiết xe) -->
           <div v-else class="space-y-4 px-5 py-4 sm:px-6">
             <div class="rounded-lg border border-slate-200 bg-slate-50/90 px-3 py-2.5 text-sm dark:border-slate-700 dark:bg-slate-800/60">
               <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('resources.col_vehicle') }}</div>
               <div v-if="assignVehicleDisplay" class="mt-0.5 font-semibold text-slate-900 dark:text-white">
-                {{ assignVehicleDisplay.code }} <span class="font-normal text-slate-600 dark:text-slate-400">Â· {{ assignVehicleDisplay.model }}</span>
+                {{ assignVehicleDisplay.code }} <span class="font-normal text-slate-600 dark:text-slate-400">· {{ assignVehicleDisplay.model }}</span>
               </div>
             </div>
 
@@ -2887,17 +2329,16 @@ import { useI18n } from 'vue-i18n'
 import {
   ArrowDownTrayIcon,
   BuildingOffice2Icon,
-  ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   EyeIcon,
   FunnelIcon,
   TrashIcon,
-  ViewColumnsIcon,
   XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import PdfFileIcon from '../../components/icons/PdfFileIcon.vue'
 import ResourcesSummaryBar from '../../components/resources/ResourcesSummaryBar.vue'
+import ResourceRecordCard from '../../components/resources/ResourceRecordCard.vue'
 import DatagridToolbarSearch from '../../components/shared/ui/DatagridToolbarSearch.vue'
 import DatagridToolbarActionButton from '../../components/shared/ui/DatagridToolbarActionButton.vue'
 import DatagridFilterField from '../../components/shared/ui/DatagridFilterField.vue'
@@ -2951,7 +2392,7 @@ const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 const canManageVehicles = computed(() => auth.hasPermission('resource.vehicle.manage'))
-/** Xem danh sách giấy tờ / �ính kèm (cùng quyền gần v�:i xem danh sách xe) */
+/** Xem danh sách giấy tờ / đính kèm (cùng quyền gần với xem danh sách xe) */
 const canViewVehicleComplianceDocs = computed(
   () => auth.hasPermission('resource.vehicle.manage') || auth.hasPermission('trip.assign'),
 )
@@ -2962,12 +2403,24 @@ const tabs = [
   { id: 'vehicles', labelKey: 'resources.tab_vehicles' },
   { id: 'drivers', labelKey: 'resources.tab_drivers' },
   { id: 'suppliers', labelKey: 'resources.tab_suppliers' },
+  { id: 'trash', labelKey: 'resources.tab_trash' },
+]
+
+// Bộ chọn loại tài nguyên hiển thị bên trong tab Thùng rác.
+const trashTypes = [
+  { id: 'vehicles', labelKey: 'resources.tab_vehicles' },
+  { id: 'drivers', labelKey: 'resources.tab_drivers' },
+  { id: 'suppliers', labelKey: 'resources.tab_suppliers' },
 ]
 
 const activeTab = ref('vehicles')
+const trashType = ref('vehicles')
 const vehiclesViewMode = ref('active')
 const driversViewMode = ref('active')
 const suppliersViewMode = ref('active')
+
+// Tài nguyên đang hiển thị: ở tab thường = chính tab đó; ở tab Thùng rác = loại đang chọn.
+const currentResource = computed(() => (activeTab.value === 'trash' ? trashType.value : activeTab.value))
 const search = ref('')
 const selectedVehicle = ref(null)
 const selectedSupplier = ref(null)
@@ -3051,12 +2504,7 @@ const filterControlDefs = computed(() => {
   return base
 })
 
-const isInTrashMode = computed(() => {
-  if (activeTab.value === 'vehicles') return vehiclesViewMode.value === 'trash'
-  if (activeTab.value === 'drivers') return driversViewMode.value === 'trash'
-  if (activeTab.value === 'suppliers') return suppliersViewMode.value === 'trash'
-  return false
-})
+const isInTrashMode = computed(() => activeTab.value === 'trash')
 
 const resourceFilterVisibilityOptions = computed(() => {
   const tab = activeTab.value
@@ -3154,7 +2602,7 @@ const resourceFilterContractLabel = computed(() => {
   return map[f] ?? f
 })
 
-/** Chip: nhãn trường khi mặc ��9nh; giá tr�9 �ã chọn khi �ang lọc. */
+/** Chip: nhãn trường khi mặc định; giá trị đã chọn khi đang lọc. */
 function filterChipSummary(fieldLabel, valueLabel, isActive) {
   return isActive ? valueLabel : fieldLabel
 }
@@ -3354,174 +2802,6 @@ function applyResourceFilterPatch(ev, patch) {
   closeParentDetails(ev)
 }
 
-const VEHICLE_COL_STORAGE_KEY = 'va-resources-vehicle-cols-v1'
-const VEHICLE_COL_DEFAULTS = {
-  type_capacity: true,
-  status: true,
-  compliance: true,
-  driver: true,
-  owner: false,
-  insurance_exp: false,
-  inspection_exp: false,
-  road_fee: false,
-  year: false,
-  purchase: false,
-  maintenance: false,
-  notes: false,
-}
-
-function loadVehicleColumnPrefs() {
-  try {
-    const raw = localStorage.getItem(VEHICLE_COL_STORAGE_KEY)
-    if (!raw) return { ...VEHICLE_COL_DEFAULTS }
-    return { ...VEHICLE_COL_DEFAULTS, ...JSON.parse(raw) }
-  } catch {
-    return { ...VEHICLE_COL_DEFAULTS }
-  }
-}
-
-const vehicleColumnVisible = ref(loadVehicleColumnPrefs())
-watch(
-  vehicleColumnVisible,
-  (v) => {
-    try {
-      localStorage.setItem(VEHICLE_COL_STORAGE_KEY, JSON.stringify(v))
-    } catch {
-      /* ignore */
-    }
-  },
-  { deep: true },
-)
-
-function vehicleColOn(id) {
-  if (id === 'vehicle' || id === 'actions') return true
-  return vehicleColumnVisible.value[id] !== false
-}
-
-function setVehicleColumn(id, checked) {
-  vehicleColumnVisible.value = { ...vehicleColumnVisible.value, [id]: checked }
-}
-
-const vehicleColumnToggleOptions = computed(() => [
-  { id: 'type_capacity', labelKey: 'resources.col_type_capacity' },
-  { id: 'status', labelKey: 'resources.col_status' },
-  { id: 'compliance', labelKey: 'resources.col_compliance' },
-  { id: 'insurance_exp', labelKey: 'resources.col_insurance_exp' },
-  { id: 'inspection_exp', labelKey: 'resources.col_inspection_exp' },
-  { id: 'road_fee', labelKey: 'resources.col_road_fee_exp' },
-  { id: 'owner', labelKey: 'resources.col_owner' },
-  { id: 'year', labelKey: 'resources.col_year_mfg' },
-  { id: 'purchase', labelKey: 'resources.col_purchase' },
-  { id: 'driver', labelKey: 'resources.col_driver' },
-  { id: 'maintenance', labelKey: 'resources.col_maintenance' },
-  { id: 'notes', labelKey: 'resources.col_notes_short' },
-])
-
-const vehicleColumnPickerRef = ref(null)
-
-const DRIVER_COL_STORAGE_KEY = 'va-resources-driver-cols-v1'
-const DRIVER_COL_DEFAULTS = {
-  email: true,
-  employee_code: true,
-  license_class: true,
-  license_expires: true,
-  phone: true,
-  employment: true,
-  availability: false,
-}
-
-function loadDriverColumnPrefs() {
-  try {
-    const raw = localStorage.getItem(DRIVER_COL_STORAGE_KEY)
-    if (!raw) return { ...DRIVER_COL_DEFAULTS }
-    return { ...DRIVER_COL_DEFAULTS, ...JSON.parse(raw) }
-  } catch {
-    return { ...DRIVER_COL_DEFAULTS }
-  }
-}
-
-const driverColumnVisible = ref(loadDriverColumnPrefs())
-watch(
-  driverColumnVisible,
-  (v) => {
-    try {
-      localStorage.setItem(DRIVER_COL_STORAGE_KEY, JSON.stringify(v))
-    } catch {
-      /* ignore */
-    }
-  },
-  { deep: true },
-)
-
-function driverColOn(id) {
-  if (id === 'name' || id === 'actions') return true
-  return driverColumnVisible.value[id] !== false
-}
-
-function setDriverColumn(id, checked) {
-  driverColumnVisible.value = { ...driverColumnVisible.value, [id]: checked }
-}
-
-const driverColumnToggleOptions = computed(() => [
-  { id: 'email', labelKey: 'resources.col_user_email' },
-  { id: 'employee_code', labelKey: 'resources.col_employee_code' },
-  { id: 'license_class', labelKey: 'driver_detail.license_class' },
-  { id: 'license_expires', labelKey: 'driver_detail.license_expires' },
-  { id: 'phone', labelKey: 'resources.col_phone' },
-  { id: 'employment', labelKey: 'resources.filter_status' },
-  { id: 'availability', labelKey: 'driver_detail.availability' },
-])
-
-const driverColumnPickerRef = ref(null)
-
-const SUPPLIER_COL_STORAGE_KEY = 'va-resources-supplier-cols-v1'
-const SUPPLIER_COL_DEFAULTS = {
-  services: true,
-  contract: true,
-  status: true,
-  contact: false,
-}
-
-function loadSupplierColumnPrefs() {
-  try {
-    const raw = localStorage.getItem(SUPPLIER_COL_STORAGE_KEY)
-    if (!raw) return { ...SUPPLIER_COL_DEFAULTS }
-    return { ...SUPPLIER_COL_DEFAULTS, ...JSON.parse(raw) }
-  } catch {
-    return { ...SUPPLIER_COL_DEFAULTS }
-  }
-}
-
-const supplierColumnVisible = ref(loadSupplierColumnPrefs())
-watch(
-  supplierColumnVisible,
-  (v) => {
-    try {
-      localStorage.setItem(SUPPLIER_COL_STORAGE_KEY, JSON.stringify(v))
-    } catch {
-      /* ignore */
-    }
-  },
-  { deep: true },
-)
-
-function supplierColOn(id) {
-  if (id === 'supplier' || id === 'actions') return true
-  return supplierColumnVisible.value[id] !== false
-}
-
-function setSupplierColumn(id, checked) {
-  supplierColumnVisible.value = { ...supplierColumnVisible.value, [id]: checked }
-}
-
-const supplierColumnToggleOptions = computed(() => [
-  { id: 'services', labelKey: 'resources.col_solutions_services' },
-  { id: 'contract', labelKey: 'resources.col_contract' },
-  { id: 'status', labelKey: 'resources.col_status' },
-  { id: 'contact', labelKey: 'resources.col_contact' },
-])
-
-const supplierColumnPickerRef = ref(null)
 const supplierListPage = ref(1)
 const supplierPerPage = ref(10)
 const supplierPerPageOptions = [5, 10, 15, 20]
@@ -3535,7 +2815,7 @@ const driverPerPage = ref(10)
 const driverPerPageOptions = [5, 10, 15, 20]
 
 function fmtVehicleTableDate(iso) {
-  if (!iso) return 'â€”'
+  if (!iso) return '—'
   return String(iso)
 }
 
@@ -3543,7 +2823,7 @@ function vehicleMaintenanceLine(v) {
   const parts = []
   if (v.last_maintenance_at) parts.push(fmtVehicleTableDate(v.last_maintenance_at))
   if (v.maintenance_schedule_note) parts.push(String(v.maintenance_schedule_note).trim())
-  return parts.length ? parts.join(' Â· ') : 'â€”'
+  return parts.length ? parts.join(' · ') : '—'
 }
 
 function emptyVehicleForm() {
@@ -3682,7 +2962,7 @@ function docStateFromDate(iso) {
   return { state: 'ok', days: null, until }
 }
 
-/** Hợp ��ng NCC: không có ngày hết hạn �  trạng thái riêng (không g�"p v�:i hết hạn xe). */
+/** Hợp đồng NCC: không có ngày hết hạn → trạng thái riêng (không gộp với hết hạn xe). */
 function contractStateFromDate(iso) {
   if (!iso) {
     return { state: 'none', days: null, until: null }
@@ -3709,11 +2989,11 @@ function vehicleUiStatus(apiStatus) {
 function enrichVehicle(raw) {
   const parts = []
   if (raw.type) parts.push(raw.type)
-  if (raw.seat_count) parts.push(`${raw.seat_count} ch�`)
+  if (raw.seat_count) parts.push(`${raw.seat_count} chỗ`)
   if (raw.payload_kg) parts.push(`${raw.payload_kg} kg`)
-  const typeLabel = parts.length ? parts.join(' Â· ') : 'â€”'
-  let capacityLabel = 'â€”'
-  if (raw.seat_count) capacityLabel = `${raw.seat_count} ch�`
+  const typeLabel = parts.length ? parts.join(' · ') : '—'
+  let capacityLabel = '—'
+  if (raw.seat_count) capacityLabel = `${raw.seat_count} chỗ`
   else if (raw.payload_kg) capacityLabel = `${raw.payload_kg} kg tải`
 
   const dd = raw.default_driver
@@ -3725,7 +3005,7 @@ function enrichVehicle(raw) {
     license_plate: raw.license_plate,
     owner_name: raw.owner_name ?? '',
     frame_engine_number: raw.frame_engine_number ?? '',
-    model: raw.type || 'â€”',
+    model: raw.type || '—',
     type: raw.type ?? '',
     year_manufactured: raw.year_manufactured ?? null,
     purchased_at: raw.purchased_at ?? '',
@@ -3765,13 +3045,13 @@ function driverUiStatus(emp) {
 }
 
 function enrichDriver(raw) {
-  const lic = [raw.license_class, raw.license_expires_at].filter(Boolean).join(' â€” ')
+  const lic = [raw.license_class, raw.license_expires_at].filter(Boolean).join(' — ')
   return {
     id: raw.id,
     name: raw.full_name,
     email: raw.email ?? raw.user?.email ?? '',
     employeeCode: raw.user?.employee_code ?? '',
-    license: lic || 'â€”',
+    license: lic || '—',
     license_class: raw.license_class ?? '',
     license_expires_at: raw.license_expires_at ?? '',
     licenseExpiry: docStateFromDate(raw.license_expires_at),
@@ -3786,9 +3066,9 @@ function enrichDriver(raw) {
 
 function enrichProvider(raw) {
   const typeLabel = raw.type === 'taxi' ? t('resources.provider_form_type_taxi') : t('resources.provider_form_type_vendor')
-  const contact = [raw.contact_name, raw.contact_phone].filter(Boolean).join(' Â· ') || 'â€”'
+  const contact = [raw.contact_name, raw.contact_phone].filter(Boolean).join(' · ') || '—'
   const servicesList = Array.isArray(raw.services) ? raw.services.filter((x) => x && String(x.name || '').trim()) : []
-  const serviceSummary = servicesList.length ? servicesList.map((s) => s.name).join(' Â· ') : 'â€”'
+  const serviceSummary = servicesList.length ? servicesList.map((s) => s.name).join(' · ') : '—'
   const contract = contractStateFromDate(raw.contract_expires_at)
   return {
     id: raw.id,
@@ -3842,16 +3122,36 @@ async function loadAll() {
   }
 }
 
+// Đồng bộ only_trashed cho từng loại theo tab/loại Thùng rác đang chọn.
+function applyViewModes() {
+  const trash = activeTab.value === 'trash'
+  vehiclesViewMode.value = trash && trashType.value === 'vehicles' ? 'trash' : 'active'
+  driversViewMode.value = trash && trashType.value === 'drivers' ? 'trash' : 'active'
+  suppliersViewMode.value = trash && trashType.value === 'suppliers' ? 'trash' : 'active'
+}
+
+function clearSelectionsAndBulk() {
+  selectedVehicle.value = null
+  selectedSupplier.value = null
+  bulkVehicleIds.value = []
+  bulkDriverIds.value = []
+  bulkSupplierIds.value = []
+}
+
 function applyTabFromRoute() {
   const tab = route.query.tab
-  if (tab === 'vehicles' || tab === 'drivers' || tab === 'suppliers') {
+  if (tab === 'vehicles' || tab === 'drivers' || tab === 'suppliers' || tab === 'trash') {
     activeTab.value = tab
   }
+  applyViewModes()
 }
 
 watch(
   () => route.query.tab,
-  () => applyTabFromRoute(),
+  () => {
+    applyTabFromRoute()
+    loadAll()
+  },
 )
 
 onMounted(() => {
@@ -3866,35 +3166,15 @@ onActivated(() => {
 
 function setTab(id) {
   activeTab.value = id
-  selectedVehicle.value = null
-  selectedSupplier.value = null
-  bulkVehicleIds.value = []
-  bulkDriverIds.value = []
-  bulkSupplierIds.value = []
-  if (id !== 'vehicles') vehiclesViewMode.value = 'active'
-  if (id !== 'drivers') driversViewMode.value = 'active'
-  if (id !== 'suppliers') suppliersViewMode.value = 'active'
-}
-
-function setSuppliersViewMode(mode) {
-  suppliersViewMode.value = mode
-  supplierListPage.value = 1
-  selectedSupplier.value = null
-  bulkSupplierIds.value = []
+  clearSelectionsAndBulk()
+  applyViewModes()
   loadAll()
 }
 
-function setDriversViewMode(mode) {
-  driversViewMode.value = mode
-  driverListPage.value = 1
-  bulkDriverIds.value = []
-  loadAll()
-}
-
-function setVehiclesViewMode(mode) {
-  vehiclesViewMode.value = mode
-  selectedVehicle.value = null
-  bulkVehicleIds.value = []
+function setTrashType(type) {
+  trashType.value = type
+  clearSelectionsAndBulk()
+  applyViewModes()
   loadAll()
 }
 
@@ -3918,6 +3198,58 @@ function labelVehicleStatus(s) {
     inactive: t('resources.status_inactive'),
   }
   return map[s] ?? s
+}
+
+// ---- Card view-models (trip-style record cards) ----
+function compliancePill(label, doc) {
+  const hint = insuranceHint(doc)
+  return { label: hint ? `${label} ${hint}` : label, class: compliancePillClass(doc) }
+}
+
+function vehicleCardPills(v) {
+  return [
+    compliancePill(t('resources.tag_ins'), v.insurance),
+    compliancePill(t('resources.tag_reg'), v.inspection),
+    compliancePill('Phí ĐB', v.road_fee),
+  ]
+}
+
+function vehicleCardFields(v) {
+  return [
+    { label: t('resources.col_type_capacity'), value: v.typeLabel },
+    { label: t('resources.col_driver'), value: v.driverName || t('resources.unassigned') },
+    { label: t('resources.col_owner'), value: v.owner_name || '—' },
+    { label: t('resources.col_insurance_exp'), value: fmtVehicleTableDate(v.insurance_expires_at) },
+    { label: t('resources.col_inspection_exp'), value: fmtVehicleTableDate(v.inspection_expires_at) },
+    { label: t('resources.col_year_mfg'), value: v.year_manufactured ?? '—' },
+  ]
+}
+
+function driverCardPills(d) {
+  if (!d.license_expires_at) return []
+  return [compliancePill(t('driver_detail.license_expires'), d.licenseExpiry)]
+}
+
+function driverCardFields(d) {
+  return [
+    { label: t('resources.col_user_email'), value: d.email || '—' },
+    { label: t('resources.col_employee_code'), value: d.employeeCode || '—', mono: true },
+    { label: t('driver_detail.license_class'), value: d.license_class || '—' },
+    { label: t('resources.col_phone'), value: d.phone || '—' },
+    { label: t('driver_detail.availability'), value: labelDriverAvailability(d.availability_status) },
+  ]
+}
+
+function supplierCardPills(s) {
+  return [compliancePill(t('resources.tag_contract'), s.contract)]
+}
+
+function supplierCardFields(s) {
+  return [
+    { label: t('resources.col_solutions_services'), value: s.serviceSummary },
+    { label: t('resources.col_contact'), value: s.contact || '—' },
+    { label: t('resources.col_contract'), value: s.contract_number || '—' },
+  ]
 }
 
 function statusBadgeClass(s) {
@@ -3961,7 +3293,7 @@ function insuranceHint(doc) {
 
 function complianceDocLine(doc) {
   if (doc.state === 'none') return t('resources.contract_date_unset')
-  if (!doc.until) return 'â€”'
+  if (!doc.until) return '—'
   if (doc.state === 'ok') return t('resources.valid_until', { date: doc.until })
   if (doc.state === 'soon') return t('resources.exp_in_days', { n: doc.days })
   return t('resources.expired_on', { date: doc.until })
@@ -4025,7 +3357,7 @@ function labelDriverAvailability(s) {
   if (s === 'available') return t('driver_detail.avail_available')
   if (s === 'busy') return t('driver_detail.avail_busy')
   if (s === 'offline') return t('driver_detail.avail_offline')
-  return 'â€”'
+  return '—'
 }
 
 function driverRowInitials(name) {
@@ -4264,8 +3596,8 @@ function isPdfAttachment(a) {
 }
 
 /**
- * Chuẩn hóa URL file public disk: API có thỒ trả về `APP_URL` khác host (localhost vs 127.0.0.1 / c�"ng),
- * khiến fetch sai origin. V�:i `/storage/...` luôn dùng origin trang hoặc (dev) VITE_APP_URL.
+ * Chuẩn hóa URL file public disk: API có thể trả về `APP_URL` khác host (localhost vs 127.0.0.1 / cổng),
+ * khiến fetch sai origin. Với `/storage/...` luôn dùng origin trang hoặc (dev) VITE_APP_URL.
  */
 function resolveAttachmentAbsoluteUrl(a) {
   const u = a?.url
@@ -4640,7 +3972,7 @@ async function submitProviderForm() {
 
 function driverAssignOptionLabel(d) {
   const sub = d.employeeCode || d.email
-  return sub ? `${d.name} â€” ${sub}` : d.name
+  return sub ? `${d.name} — ${sub}` : d.name
 }
 
 function setAddDriverMode(mode) {

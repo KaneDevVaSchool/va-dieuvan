@@ -448,13 +448,18 @@
                   </div>
                   <div class="min-w-0 flex-1">
                     <div class="flex flex-wrap items-center gap-2">
-                      <RouterLink
-                        :to="{ name: 'requestDetail', params: { id: String(r.id) } }"
-                        class="font-mono text-lg font-bold tracking-tight text-slate-900 underline decoration-slate-300 underline-offset-2 hover:text-va-800 hover:decoration-va-400 dark:text-slate-100"
-                        :data-testid="`requests-card-link-${r.id}`"
-                      >
-                        {{ displayRequestCode(r) }}
-                      </RouterLink>
+                      <div class="min-w-0">
+                        <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                          {{ t('requests_page.col_id') }}
+                        </p>
+                        <RouterLink
+                          :to="{ name: 'requestDetail', params: { id: String(r.id) } }"
+                          class="mt-0.5 inline-block font-mono text-lg font-bold tracking-tight text-slate-900 underline decoration-slate-300 underline-offset-2 hover:text-va-800 hover:decoration-va-400 dark:text-slate-100"
+                          :data-testid="`requests-card-link-${r.id}`"
+                        >
+                          {{ displayRequestCode(r) }}
+                        </RouterLink>
+                      </div>
                       <span
                         class="rounded-full px-2.5 py-0.5 text-xs font-semibold"
                         :class="requestTypeBadgeClass(r.trip_type)"
