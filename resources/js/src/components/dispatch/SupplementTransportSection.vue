@@ -1,6 +1,7 @@
 <template>
   <div class="mb-0">
     <div
+      v-if="!embedded"
       class="flex items-center gap-1 rounded-t-2xl border-b border-slate-200/70 bg-slate-50 px-3 py-2.5 dark:border-slate-800 dark:bg-slate-900/40"
       :class="expanded ? '' : 'rounded-b-2xl border-b-0'"
     >
@@ -472,6 +473,8 @@ const props = defineProps<{
   indentBody?: boolean
   canQuickCreate?: boolean
   disabled?: boolean
+  /** Nhúng trong block radio "Nguồn lực bổ sung" — ẩn header chevron tự-collapse, luôn mở */
+  embedded?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -481,7 +484,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-const expanded = ref(false)
+const expanded = ref(Boolean(props.embedded))
 const nameDraft = ref('')
 const plateDraft = ref('')
 const priceDraft = ref('')

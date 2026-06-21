@@ -223,6 +223,7 @@
                         :trip-id="trip.id"
                         :schedule-date-key-for-list="scheduleDateKeyForList"
                         :needed-seats="neededSeats"
+                        :passenger-count="dispatchPassengerCount"
                         :suitable-vehicles-count="suitableVehiclesCount"
                         :busy-vehicle-ids="busyVehicleIdList"
                         :busy-driver-ids="busyDriverIdList"
@@ -560,73 +561,6 @@
                     />
                 </div>
 
-                <!-- TAB 6 · ACTIVITY LOG -->
-                <div v-show="activeTab === 'activity'">
-                    <section
-                        class="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-950/40"
-                        :aria-label="t('trip_detail.sections.activity_stream')"
-                    >
-                        <h2
-                            class="text-[11px] font-bold uppercase tracking-wide text-slate-500"
-                        >
-                            {{ t("trip_detail.sections.activity_stream") }}
-                        </h2>
-                        <ol v-if="timeline.length" class="mt-4">
-                            <li
-                                v-for="(ev, i) in timeline"
-                                :key="ev.key"
-                                class="relative flex gap-3 pb-5 last:pb-0"
-                            >
-                                <span
-                                    v-if="i < timeline.length - 1"
-                                    class="absolute left-3.5 top-8 h-[calc(100%-1rem)] w-px bg-slate-200 dark:bg-slate-700"
-                                    aria-hidden="true"
-                                />
-                                <span
-                                    class="relative z-[1] flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-[12px] font-semibold"
-                                    :class="timelineToneClass(ev.tone)"
-                                    aria-hidden="true"
-                                >
-                                    {{ ev.icon }}
-                                </span>
-                                <div class="min-w-0 flex-1 pt-0.5">
-                                    <div
-                                        class="flex flex-wrap items-baseline justify-between gap-x-2"
-                                    >
-                                        <p
-                                            class="text-sm font-semibold text-slate-900 dark:text-slate-100"
-                                        >
-                                            {{ ev.title }}
-                                        </p>
-                                        <p
-                                            class="text-xs tabular-nums text-slate-400"
-                                        >
-                                            {{ fmt(ev.at) }}
-                                        </p>
-                                    </div>
-                                    <p
-                                        v-if="ev.subtitle"
-                                        class="mt-0.5 whitespace-pre-wrap text-sm text-slate-600 dark:text-slate-300"
-                                    >
-                                        {{ ev.subtitle }}
-                                    </p>
-                                    <p
-                                        v-if="ev.actor"
-                                        class="mt-0.5 text-xs italic text-slate-400"
-                                    >
-                                        {{ ev.actor }}
-                                    </p>
-                                </div>
-                            </li>
-                        </ol>
-                        <p
-                            v-else
-                            class="mt-3 text-sm text-slate-500 dark:text-slate-400"
-                        >
-                            {{ t("trip_detail.notes.empty") }}
-                        </p>
-                    </section>
-                </div>
             </div>
 
             <Teleport to="body">
@@ -2266,6 +2200,13 @@ const neededSeats = computed(() => {
     return guests > 0 ? guests : 1;
 });
 
+/** Số hành khách hiển thị ở summary bar điều phối (0 nếu chưa rõ). */
+const dispatchPassengerCount = computed(() => {
+    const n = unifiedPassengerCount.value;
+    if (n > 0) return n;
+    return passengerRowsDisplay.value.length;
+});
+
 const suitableVehiclesCount = computed(() => {
     return vehicles.value.filter(
         (v) => (v.seat_count ?? 0) >= neededSeats.value,
@@ -2806,59 +2747,6 @@ const noteEvents = computed(() => {
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 });
 
-function eventIcon(type) {
-    if (type === "status_change") return "↻";
-    if (type === "note") return "✎";
-    if (type === "assign") return "⛟";
-    return "•";
-}
-
-function eventTimelineTone(type) {
-    if (type === "status_change") return "status";
-    if (type === "note") return "note";
-    if (type === "assign") return "assign";
-    return "other";
-}
-
-function eventTimelineToneFor(e) {
-    if (isDriverTripCancellationEvent(e, trip.value)) return "driver_reject";
-    return eventTimelineTone(e?.type);
-}
-
-function timelineToneClass(tone) {
-    const map = {
-        create: "border-indigo-200/90 bg-indigo-50 text-indigo-800 dark:border-indigo-800/80 dark:bg-indigo-950/60 dark:text-indigo-200",
-        status: "border-teal-200/90 bg-teal-50 text-teal-900 dark:border-teal-800/80 dark:bg-teal-950/60 dark:text-teal-200",
-        note: "border-violet-200/90 bg-violet-50 text-violet-900 dark:border-violet-800/80 dark:bg-violet-950/60 dark:text-violet-200",
-        assign: "border-amber-200/90 bg-amber-50 text-amber-950 dark:border-amber-800/80 dark:bg-amber-950/60 dark:text-amber-100",
-        driver_reject:
-            "border-rose-300/90 bg-rose-50 text-rose-950 dark:border-rose-700/80 dark:bg-rose-950/70 dark:text-rose-100",
-        other: "border-slate-200/90 bg-slate-50 text-slate-800 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200",
-    };
-    return map[tone] ?? map.other;
-}
-
-function eventTitle(e) {
-    if (e.type === "status_change") {
-        const from = e?.data?.from;
-        const to = e?.data?.to;
-        const toLabel =
-            to === "cancelled" && isDriverTripCancellationEvent(e, trip.value)
-                ? t("trip_detail.driver_rejected.status_label")
-                : to
-                  ? labelTripStatus(to)
-                  : "";
-        if (from && to)
-            return t("trip_detail.timeline.status_change", {
-                from: labelTripStatus(from),
-                to: toLabel,
-            });
-        return t("trip_detail.timeline.status_change_short");
-    }
-    if (e.type === "note") return t("trip_detail.timeline.dispatcher_note");
-    return e.type || t("trip_detail.timeline.event");
-}
-
 const timelineWorkflowStatus = computed(() => {
     const s = workflowStatusForDisplay.value ?? trip.value?.status;
     const m = {
@@ -2905,40 +2793,6 @@ const activityLogs = computed(() => {
         }
     }
     return logs;
-});
-
-const timeline = computed(() => {
-    const items = [];
-    if (trip.value?.created_at) {
-        items.push({
-            key: `trip_created_${trip.value.id}`,
-            icon: "+",
-            tone: "create",
-            title: t("trip_detail.timeline.trip_created"),
-            subtitle: trip.value?.dispatch_request?.trip_type
-                ? t("trip_detail.timeline.trip_created_subtitle", {
-                      type: tripTypeLabel.value,
-                  })
-                : "",
-            actor: t("trip_detail.timeline.system"),
-            at: trip.value.created_at,
-        });
-    }
-    const ev = trip.value?.events ?? [];
-    ev.forEach((e) => {
-        items.push({
-            key: `ev_${e.id}`,
-            icon: eventIcon(e.type),
-            tone: eventTimelineToneFor(e),
-            title: eventTitle(e),
-            subtitle: (e.message ?? "").trim(),
-            actor: e.creator?.name ?? "",
-            at: e.created_at,
-        });
-    });
-    return items
-        .filter((x) => x.at)
-        .sort((a, b) => new Date(b.at) - new Date(a.at));
 });
 
 async function doReschedule() {
@@ -3445,7 +3299,6 @@ const tabs = computed(() => [
         count: attachmentsList.value.length,
     },
     { key: "expenses", label: t("trip_detail.tabs.expenses") },
-    { key: "activity", label: t("trip_detail.tabs.activity") },
 ]);
 
 /** Tổng hợp xe/tài xế/ghế đã phân công (gộp chặng + cấp chuyến, không trùng id). */

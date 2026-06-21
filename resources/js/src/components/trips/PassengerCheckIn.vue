@@ -316,8 +316,18 @@
                         <!-- Passenger row -->
                         <tr
                             v-else
-                            class="cursor-pointer transition hover:bg-slate-50 dark:hover:bg-slate-800/40"
-                            :class="rowClass(item.row)"
+                            class="transition hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                            :class="[
+                                rowClass(item.row),
+                                item.row.editable && item.row.editMeta
+                                    ? 'cursor-text'
+                                    : 'cursor-pointer',
+                            ]"
+                            :title="
+                                item.row.editable && item.row.editMeta
+                                    ? t('trip_detail.passengers.row_click_edit_hint')
+                                    : undefined
+                            "
                             @click="onRowContentClick(item.row)"
                         >
                             <td v-if="opsMode" class="px-2 py-2.5 align-middle" @click.stop>
@@ -518,61 +528,85 @@
 
                             <!-- Actions -->
                             <td v-if="showActionsCol" class="px-3 py-2.5 text-right align-top whitespace-nowrap" @click.stop>
-                                <div v-if="editingKey !== item.row.passengerKey" class="flex items-center justify-end gap-1">
-                                    <template v-if="opsMode">
-                                        <button
-                                            type="button"
-                                            class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm transition hover:bg-emerald-100 disabled:opacity-40 dark:border-emerald-800/50 dark:bg-emerald-950/40 dark:text-emerald-300"
-                                            :disabled="busyKey === item.row.passengerKey || statusOf(item.row.passengerKey) === 'onboard'"
-                                            :aria-label="t('trip_detail.passengers.action_onboard')"
-                                            :title="t('trip_detail.passengers.action_onboard')"
-                                            @click="applyStatus(item.row, 'onboard')"
-                                        >
-                                            <ArrowRightOnRectangleIcon class="h-4 w-4" aria-hidden="true" />
-                                        </button>
-                                        <button
-                                            type="button"
-                                            class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-teal-200 bg-teal-50 text-teal-700 shadow-sm transition hover:bg-teal-100 disabled:opacity-40 dark:border-teal-800/50 dark:bg-teal-950/40 dark:text-teal-300"
-                                            :disabled="busyKey === item.row.passengerKey || statusOf(item.row.passengerKey) === 'dropped_off'"
-                                            :aria-label="t('trip_detail.passengers.action_dropoff')"
-                                            :title="t('trip_detail.passengers.action_dropoff')"
-                                            @click="applyStatus(item.row, 'dropped_off')"
-                                        >
-                                            <ArrowLeftOnRectangleIcon class="h-4 w-4" aria-hidden="true" />
-                                        </button>
-                                        <a
-                                            v-if="telHref(item.row.contact)"
-                                            :href="telHref(item.row.contact) || undefined"
-                                            class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
-                                            :aria-label="t('trip_detail.passengers.tel_call')"
-                                            :title="t('trip_detail.passengers.tel_call')"
-                                        >
-                                            <PhoneIcon class="h-4 w-4" aria-hidden="true" />
-                                        </a>
-                                    </template>
+                                <AppRowActionsMenu
+                                    v-if="editingKey !== item.row.passengerKey && hasPassengerRowMenu(item.row)"
+                                    align="end"
+                                    root-class="text-right"
+                                    :aria-label="t('trip_detail.passengers.row_actions_aria', { name: item.row.name })"
+                                    :trigger-sr-only="t('trip_detail.passengers.dt_col_actions')"
+                                    :disabled="busyKey === item.row.passengerKey"
+                                    :data-testid="`trip-passenger-actions-${item.row.passengerKey}`"
+                                >
+                                    <button
+                                        v-if="opsMode"
+                                        type="button"
+                                        role="menuitem"
+                                        class="menu-item text-emerald-800 dark:text-emerald-300"
+                                        data-testid="trip-passenger-action-onboard"
+                                        :disabled="busyKey === item.row.passengerKey || statusOf(item.row.passengerKey) === 'onboard'"
+                                        @click="applyStatus(item.row, 'onboard')"
+                                    >
+                                        <ArrowRightOnRectangleIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                                        {{ t("trip_detail.passengers.action_onboard") }}
+                                    </button>
+                                    <button
+                                        v-if="opsMode"
+                                        type="button"
+                                        role="menuitem"
+                                        class="menu-item text-teal-800 dark:text-teal-300"
+                                        data-testid="trip-passenger-action-dropoff"
+                                        :disabled="busyKey === item.row.passengerKey || statusOf(item.row.passengerKey) === 'dropped_off'"
+                                        @click="applyStatus(item.row, 'dropped_off')"
+                                    >
+                                        <ArrowLeftOnRectangleIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                                        {{ t("trip_detail.passengers.action_dropoff") }}
+                                    </button>
+                                    <a
+                                        v-if="opsMode && telHref(item.row.contact)"
+                                        :href="telHref(item.row.contact) || undefined"
+                                        role="menuitem"
+                                        class="menu-item"
+                                        data-testid="trip-passenger-action-call"
+                                    >
+                                        <PhoneIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                                        {{ t("trip_detail.passengers.tel_call") }}
+                                    </a>
+                                    <button
+                                        v-if="opsMode"
+                                        type="button"
+                                        role="menuitem"
+                                        class="menu-item"
+                                        data-testid="trip-passenger-action-detail"
+                                        @click="openDrawer(item.row)"
+                                    >
+                                        <EyeIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                                        {{ t("trip_detail.passengers.action_view_detail") }}
+                                    </button>
                                     <button
                                         v-if="item.row.editable && item.row.editMeta"
                                         type="button"
-                                        class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+                                        role="menuitem"
+                                        class="menu-item"
+                                        data-testid="trip-passenger-action-edit"
                                         :disabled="listBusy"
-                                        :aria-label="t('trip_detail.passengers.dt_edit')"
-                                        :title="t('trip_detail.passengers.dt_edit')"
                                         @click="startEdit(item.row)"
                                     >
-                                        <PencilSquareIcon class="h-4 w-4" aria-hidden="true" />
+                                        <PencilSquareIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                                        {{ t("trip_detail.passengers.dt_edit") }}
                                     </button>
                                     <button
                                         v-if="item.row.editable && item.row.editMeta"
                                         type="button"
-                                        class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200/90 bg-white text-rose-600 shadow-sm transition hover:border-rose-200 hover:bg-rose-50 disabled:opacity-40 dark:border-slate-600 dark:bg-slate-900 dark:text-rose-400"
+                                        role="menuitem"
+                                        class="menu-item text-rose-600 dark:text-rose-400"
+                                        data-testid="trip-passenger-action-delete"
                                         :disabled="listBusy"
-                                        :aria-label="t('trip_detail.passengers.dt_delete')"
-                                        :title="t('trip_detail.passengers.dt_delete')"
                                         @click="deleteRow(item.row)"
                                     >
-                                        <TrashIcon class="h-4 w-4" aria-hidden="true" />
+                                        <TrashIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                                        {{ t("trip_detail.passengers.dt_delete") }}
                                     </button>
-                                </div>
+                                </AppRowActionsMenu>
                             </td>
                         </tr>
                     </template>
@@ -923,6 +957,7 @@ import {
     ArrowRightOnRectangleIcon,
     CheckIcon,
     ChevronDownIcon,
+    EyeIcon,
     PencilSquareIcon,
     PhoneIcon,
     TrashIcon,
@@ -954,6 +989,7 @@ import {
 } from "../../composables/usePassengerStatus";
 import { confirmAction } from "../../composables/useConfirm";
 import EmptyValue from "../ui/EmptyValue.vue";
+import AppRowActionsMenu from "../ui/AppRowActionsMenu.vue";
 import { isEmptyDisplay } from "../../util/displayValue";
 
 const WheelchairGlyph = {
@@ -1164,6 +1200,11 @@ const listKind = computed((): "passenger" | "business" | "cargo" => {
 });
 
 const showActionsCol = computed(() => opsMode.value || props.canEditList);
+
+function hasPassengerRowMenu(row: PassengerRow): boolean {
+    if (opsMode.value) return true;
+    return !!(row.editable && row.editMeta);
+}
 
 /* ── Counts / KPI / progress ─────────────────────────────────────────── */
 
@@ -1410,12 +1451,14 @@ function dropoffTimeLabel(key: string) {
 /* ── Row click ───────────────────────────────────────────────────────── */
 
 function onRowContentClick(row: PassengerRow) {
-    if (listBusy.value || editingKey.value === row.passengerKey) return;
-    if (opsMode.value) {
-        openDrawer(row);
+    if (listBusy.value) return;
+    if (editingKey.value === row.passengerKey) return;
+    if (row.editable && row.editMeta) {
+        if (editingKey.value) cancelEdit();
+        startEdit(row);
         return;
     }
-    if (row.editable && row.editMeta) startEdit(row);
+    if (opsMode.value) openDrawer(row);
 }
 
 /* ── Status mutations ────────────────────────────────────────────────── */
@@ -1630,5 +1673,8 @@ function exportCsv(): void {
 <style scoped>
 .inp {
     @apply w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 shadow-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-500/25 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100;
+}
+.menu-item {
+    @apply flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800;
 }
 </style>

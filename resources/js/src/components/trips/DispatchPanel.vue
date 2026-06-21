@@ -21,17 +21,73 @@
                 </p>
             </div>
 
-            <!-- Capacity shortfall -->
+            <!-- Summary bar: cần · đã phân bổ · thiếu/dư (scan 3 giây) -->
             <div
-                v-if="capacityBannerText"
-                class="flex gap-2.5 rounded-2xl bg-[#FAEEDA]/95 px-3 py-2.5 text-[13px] font-normal leading-relaxed text-[#854F0B] shadow-sm shadow-amber-900/10 dark:bg-amber-950/30 dark:text-[#F2C07D]"
+                v-if="!coordinationActionsLocked"
+                class="grid grid-cols-2 gap-px overflow-hidden rounded-2xl shadow-sm sm:grid-cols-4"
+                :class="
+                    seatsMet
+                        ? 'bg-emerald-200/60 dark:bg-emerald-900/40'
+                        : 'bg-amber-200/60 dark:bg-amber-900/40'
+                "
                 role="status"
+                data-testid="dispatch-summary-bar"
             >
-                <ExclamationTriangleIcon
-                    class="mt-0.5 h-4 w-4 shrink-0 text-[#EF9F27]"
-                    aria-hidden="true"
-                />
-                <span class="min-w-0 leading-snug">{{ capacityBannerText }}</span>
+                <div
+                    class="px-3 py-2.5"
+                    :class="seatsMet ? 'bg-emerald-50 dark:bg-emerald-950/40' : 'bg-[#FAEEDA] dark:bg-amber-950/30'"
+                >
+                    <div class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                        {{ t('trip_detail.coordination.summary_passengers') }}
+                    </div>
+                    <div class="mt-0.5 text-[15px] font-bold tabular-nums text-slate-900 dark:text-slate-100">
+                        {{ t('trip_detail.coordination.summary_people_n', { n: passengerCount }) }}
+                    </div>
+                </div>
+                <div
+                    class="px-3 py-2.5"
+                    :class="seatsMet ? 'bg-emerald-50 dark:bg-emerald-950/40' : 'bg-[#FAEEDA] dark:bg-amber-950/30'"
+                >
+                    <div class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                        {{ t('trip_detail.coordination.summary_seats_needed') }}
+                    </div>
+                    <div class="mt-0.5 text-[15px] font-bold tabular-nums text-slate-900 dark:text-slate-100">
+                        {{ neededSeats }}
+                    </div>
+                </div>
+                <div
+                    class="px-3 py-2.5"
+                    :class="seatsMet ? 'bg-emerald-50 dark:bg-emerald-950/40' : 'bg-[#FAEEDA] dark:bg-amber-950/30'"
+                >
+                    <div class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                        {{ t('trip_detail.coordination.summary_allocated') }}
+                    </div>
+                    <div class="mt-0.5 text-[15px] font-bold tabular-nums text-slate-900 dark:text-slate-100">
+                        {{ allocatedSeats }}
+                    </div>
+                </div>
+                <div
+                    class="px-3 py-2.5"
+                    :class="seatsMet ? 'bg-emerald-50 dark:bg-emerald-950/40' : 'bg-[#FAEEDA] dark:bg-amber-950/30'"
+                >
+                    <div
+                        class="text-[10px] font-semibold uppercase tracking-wide"
+                        :class="seatsMet ? 'text-emerald-700 dark:text-emerald-400' : 'text-[#854F0B] dark:text-[#F2C07D]'"
+                    >
+                        {{ seatsMet ? t('trip_detail.coordination.summary_surplus') : t('trip_detail.coordination.summary_short') }}
+                    </div>
+                    <div
+                        class="mt-0.5 flex items-center gap-1 text-[15px] font-bold tabular-nums"
+                        :class="seatsMet ? 'text-emerald-700 dark:text-emerald-300' : 'text-[#854F0B] dark:text-[#F2C07D]'"
+                    >
+                        <ExclamationTriangleIcon
+                            v-if="!seatsMet"
+                            class="size-3.5 shrink-0"
+                            aria-hidden="true"
+                        />
+                        {{ seatsMet ? surplusSeats : shortfallSeats }}
+                    </div>
+                </div>
             </div>
 
             <div
@@ -88,6 +144,7 @@
                     :hide-internal-driver-section="coordinationActionsLocked"
                     :disabled="coordinationActionsLocked"
                     @update:resources="$emit('update:resources', $event)"
+                    @update:capacity="onCapacityUpdate"
                     @create-vendor="$emit('create-vendor')"
                 />
             </div>
@@ -154,29 +211,73 @@
                 </div>
             </CollapsiblePanelSection>
 
+            <!-- Section 4 · Kiểm tra năng lực — nơi DUY NHẤT hiện cảnh báo -->
             <div
-                v-if="assignMsg"
-                class="rounded-xl px-3 py-2 text-[13px] font-medium leading-snug shadow-sm"
-                :class="
-                    assignFeedbackKind === 'success'
-                        ? 'bg-emerald-50 text-emerald-950 dark:bg-emerald-950/35 dark:text-emerald-50'
-                        : assignFeedbackKind === 'error'
-                          ? 'bg-rose-50 text-rose-950 dark:bg-rose-950/40 dark:text-rose-50'
-                          : 'bg-slate-100 text-slate-800 dark:bg-slate-800/70 dark:text-slate-100'
-                "
+                v-if="!coordinationActionsLocked"
+                class="rounded-2xl border border-slate-200/80 bg-white px-3 py-2.5 shadow-sm dark:border-slate-800 dark:bg-slate-900/50"
+                role="status"
+                data-testid="dispatch-validation-card"
+            >
+                <div class="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">
+                    {{ t('trip_detail.coordination.validation_section_title') }}
+                </div>
+                <ul class="space-y-1">
+                    <li class="flex items-center gap-2 text-[13px]">
+                        <component
+                            :is="capacity.hasVehicle ? CheckCircleIcon : ExclamationTriangleIcon"
+                            class="size-4 shrink-0"
+                            :class="capacity.hasVehicle ? 'text-emerald-500' : 'text-[#EF9F27]'"
+                            aria-hidden="true"
+                        />
+                        <span :class="capacity.hasVehicle ? 'text-slate-700 dark:text-slate-200' : 'text-[#854F0B] dark:text-[#F2C07D]'">
+                            {{ capacity.hasVehicle ? t('trip_detail.coordination.validation_has_vehicle') : t('trip_detail.coordination.validation_no_vehicle') }}
+                        </span>
+                    </li>
+                    <li class="flex items-center gap-2 text-[13px]">
+                        <component
+                            :is="capacity.hasDriver ? CheckCircleIcon : ExclamationTriangleIcon"
+                            class="size-4 shrink-0"
+                            :class="capacity.hasDriver ? 'text-emerald-500' : 'text-[#EF9F27]'"
+                            aria-hidden="true"
+                        />
+                        <span :class="capacity.hasDriver ? 'text-slate-700 dark:text-slate-200' : 'text-[#854F0B] dark:text-[#F2C07D]'">
+                            {{ capacity.hasDriver ? t('trip_detail.coordination.validation_has_driver') : t('trip_detail.coordination.validation_no_driver') }}
+                        </span>
+                    </li>
+                    <li class="flex items-center gap-2 text-[13px]">
+                        <component
+                            :is="seatsMet ? CheckCircleIcon : ExclamationTriangleIcon"
+                            class="size-4 shrink-0"
+                            :class="seatsMet ? 'text-emerald-500' : 'text-[#EF9F27]'"
+                            aria-hidden="true"
+                        />
+                        <span :class="seatsMet ? 'text-slate-700 dark:text-slate-200' : 'text-[#854F0B] dark:text-[#F2C07D]'">
+                            {{ seatsMet ? t('trip_detail.coordination.validation_seats_ok') : t('trip_detail.coordination.validation_seats_short', { n: shortfallSeats }) }}
+                        </span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Toast thành công sau khi gán -->
+            <div
+                v-if="assignMsg && assignFeedbackKind === 'success'"
+                class="rounded-xl bg-emerald-50 px-3 py-2 text-[13px] font-medium leading-snug text-emerald-950 shadow-sm dark:bg-emerald-950/35 dark:text-emerald-50"
+                role="status"
+            >
+                {{ assignMsg }}
+            </div>
+            <div
+                v-else-if="assignMsg && assignFeedbackKind === 'error'"
+                class="rounded-xl bg-rose-50 px-3 py-2 text-[13px] font-medium leading-snug text-rose-950 shadow-sm dark:bg-rose-950/40 dark:text-rose-50"
                 role="alert"
             >
                 {{ assignMsg }}
             </div>
 
-            <CollapsiblePanelSection
-                :title="t('trip_detail.coordination.internal_notes')"
-                :summary-collapsed="notesCollapsedSummary"
-                :persist-key="collapseStorageKey('notes')"
-                :default-expanded="Boolean(coordinationNotes?.trim()?.length)"
-            >
+            <!-- Section 5 · Ghi chú (phẳng, không collapse) -->
+            <div>
                 <label
-                    class="sr-only"
+                    class="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400"
                     for="dispatch-internal-notes-field"
                 >
                     {{ t("trip_detail.coordination.internal_notes") }}
@@ -192,7 +293,7 @@
                     :disabled="coordinationActionsLocked"
                     @input="onCoordNotesInput"
                 />
-            </CollapsiblePanelSection>
+            </div>
 
             <p
                 v-if="!canAssign && !canUpdateStatus"
@@ -209,12 +310,28 @@
             style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom))"
             data-testid="dispatch-assign-footer"
         >
+            <div class="mb-2 flex items-center justify-between gap-3">
+                <div class="flex items-baseline gap-1.5">
+                    <span class="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                        {{ t('trip_detail.coordination.summary_allocated') }}
+                    </span>
+                    <span class="text-[14px] font-bold tabular-nums text-slate-900 dark:text-slate-100">
+                        {{ allocatedSeats }}/{{ neededSeats }}
+                    </span>
+                </div>
+                <span
+                    v-if="!seatsMet"
+                    class="rounded-full bg-[#FAEEDA] px-2.5 py-0.5 text-[11px] font-semibold tabular-nums text-[#854F0B] dark:bg-amber-950/45 dark:text-[#F2C07D]"
+                >
+                    {{ t('trip_detail.coordination.summary_short') }} {{ shortfallSeats }}
+                </span>
+            </div>
             <button
                 type="button"
                 class="w-full rounded-xl bg-[#8B1A1A] px-3 py-2.5 text-[12px] font-semibold text-white shadow-md shadow-[#8B1A1A]/25 outline-none hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-45 dark:shadow-[#8B1A1A]/30"
                 :disabled="assigning || !assignReady"
                 data-testid="dispatch-confirm-assign"
-                @click="emit('assign')"
+                @click="onConfirmAssignClick"
             >
                 <span
                     v-if="assigning"
@@ -227,6 +344,49 @@
             </button>
         </div>
 
+        <!-- Modal xác nhận khi còn thiếu chỗ -->
+        <Teleport to="body">
+            <div
+                v-if="showShortConfirm"
+                class="fixed inset-0 z-[330] flex items-end justify-center bg-black/45 p-0 sm:items-center sm:p-4"
+                role="dialog"
+                aria-modal="true"
+                :aria-label="t('trip_detail.coordination.confirm_short_title')"
+                @click.self="showShortConfirm = false"
+            >
+                <div class="w-full max-w-sm overflow-hidden rounded-t-2xl bg-white shadow-2xl sm:rounded-2xl dark:bg-slate-900">
+                    <div class="flex items-start gap-2.5 px-4 pt-4">
+                        <ExclamationTriangleIcon class="mt-0.5 size-5 shrink-0 text-[#EF9F27]" aria-hidden="true" />
+                        <div>
+                            <h2 class="text-[14px] font-semibold text-slate-900 dark:text-slate-100">
+                                {{ t('trip_detail.coordination.confirm_short_title') }}
+                            </h2>
+                            <p class="mt-1 text-[13px] leading-relaxed text-slate-600 dark:text-slate-300">
+                                {{ t('trip_detail.coordination.confirm_short_body', { n: shortfallSeats }) }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex gap-2 px-4 pb-4">
+                        <button
+                            type="button"
+                            class="flex-1 rounded-xl bg-slate-100 px-3 py-2.5 text-[12px] font-semibold text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                            @click="showShortConfirm = false"
+                        >
+                            {{ t('trip_detail.coordination.confirm_cancel') }}
+                        </button>
+                        <button
+                            type="button"
+                            class="flex-1 rounded-xl bg-[#8B1A1A] px-3 py-2.5 text-[12px] font-semibold text-white shadow-md shadow-[#8B1A1A]/25 hover:brightness-105"
+                            data-testid="dispatch-confirm-short-continue"
+                            @click="onShortConfirmContinue"
+                        >
+                            {{ t('trip_detail.coordination.confirm_continue') }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
+
     </section>
 </template>
 
@@ -234,6 +394,7 @@
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import {
+    CheckCircleIcon,
     ExclamationTriangleIcon,
     InformationCircleIcon,
 } from "@heroicons/vue/24/outline";
@@ -259,6 +420,8 @@ const props = withDefaults(
     tripId: number | null;
     scheduleDateKeyForList: string;
     neededSeats: number;
+    /** Số hành khách của chuyến — hiển thị ở summary bar */
+    passengerCount: number;
     suitableVehiclesCount: number;
     busyVehicleIds: number[];
     busyDriverIds: number[];
@@ -311,12 +474,50 @@ function collapseStorageKey(segment: string): string | null {
     return `va-trip-${String(id)}-dispatch-${segment}`;
 }
 
-const notesCollapsedSummary = computed(() => {
-    const n = props.coordinationNotes?.trim()?.length ?? 0;
-    if (!n)
-        return t("trip_detail.coordination.notes_collapsed_empty");
-    return t("trip_detail.coordination.notes_chars_summary", { n });
+type CapacityState = {
+    allocatedSeats: number;
+    hasVehicle: boolean;
+    hasDriver: boolean;
+};
+
+const capacity = ref<CapacityState>({
+    allocatedSeats: 0,
+    hasVehicle: false,
+    hasDriver: false,
 });
+
+function onCapacityUpdate(payload: CapacityState) {
+    capacity.value = {
+        allocatedSeats: Number(payload?.allocatedSeats) || 0,
+        hasVehicle: Boolean(payload?.hasVehicle),
+        hasDriver: Boolean(payload?.hasDriver),
+    };
+}
+
+const allocatedSeats = computed(() => capacity.value.allocatedSeats);
+const seatsMet = computed(() => allocatedSeats.value >= props.neededSeats);
+const shortfallSeats = computed(() =>
+    Math.max(0, props.neededSeats - allocatedSeats.value),
+);
+const surplusSeats = computed(() =>
+    Math.max(0, allocatedSeats.value - props.neededSeats),
+);
+
+const showShortConfirm = ref(false);
+
+function onConfirmAssignClick() {
+    if (props.assigning || !props.assignReady) return;
+    if (shortfallSeats.value > 0) {
+        showShortConfirm.value = true;
+        return;
+    }
+    emit("assign");
+}
+
+function onShortConfirmContinue() {
+    showShortConfirm.value = false;
+    emit("assign");
+}
 
 function formatSupplementLine(it: SupplementItem): string {
     const lab = String(it.label ?? "").trim();

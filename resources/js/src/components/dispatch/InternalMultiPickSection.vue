@@ -11,32 +11,32 @@
         >
           <component :is="icon" class="size-3.5" aria-hidden="true" />
         </div>
-        <div class="min-w-0 flex-1">
-          <div class="text-[12px] font-semibold text-slate-800 dark:text-slate-100">{{ title }}</div>
-          <p v-if="subtitle" class="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
-            {{ subtitle }}
-          </p>
+        <div class="flex min-w-0 flex-1 items-center gap-1.5">
+          <div class="truncate text-[12px] font-semibold text-slate-800 dark:text-slate-100">{{ title }}</div>
+          <span
+            v-if="modelValue.length"
+            class="shrink-0 rounded-full bg-slate-200/90 px-2 py-0.5 text-[10px] font-bold tabular-nums text-slate-700 dark:bg-slate-700 dark:text-slate-200"
+          >
+            {{ modelValue.length }}
+          </span>
         </div>
-        <span
-          v-if="modelValue.length"
-          class="shrink-0 rounded-full bg-slate-200/90 px-2 py-0.5 text-[10px] font-bold tabular-nums text-slate-700 dark:bg-slate-700 dark:text-slate-200"
+        <button
+          v-if="!isLoading"
+          type="button"
+          class="shrink-0 rounded-lg bg-white px-2.5 py-1.5 text-[11px] font-semibold text-[#8B1A1A] shadow-sm ring-1 ring-[#8B1A1A]/15 transition hover:bg-rose-50/60 disabled:cursor-not-allowed disabled:opacity-45 dark:bg-slate-800/80 dark:text-[#e57373] dark:ring-[#e57373]/20 dark:hover:bg-rose-950/25"
+          :disabled="disabled"
+          :data-testid="`${dataTestid}-open`"
+          @click="openModal"
         >
-          {{ modelValue.length }}
-        </span>
+          {{ pickButtonLabel }}
+        </button>
       </div>
+      <p v-if="subtitle" class="mt-1 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+        {{ subtitle }}
+      </p>
       <div v-if="$slots.toolbar" class="mt-2">
         <slot name="toolbar" />
       </div>
-      <button
-        v-if="!isLoading"
-        type="button"
-        class="mt-2 w-full rounded-xl border border-dashed border-slate-300/90 bg-white px-3 py-2.5 text-left text-[12px] font-semibold text-[#8B1A1A] shadow-sm transition hover:border-[#8B1A1A]/35 hover:bg-rose-50/40 disabled:cursor-not-allowed disabled:opacity-45 dark:border-slate-600 dark:bg-slate-900 dark:text-[#e57373] dark:hover:bg-rose-950/20"
-        :disabled="disabled"
-        :data-testid="`${dataTestid}-open`"
-        @click="openModal"
-      >
-        {{ pickButtonLabel }}
-      </button>
     </div>
 
     <div v-if="isLoading" class="px-3 py-4">
@@ -74,7 +74,7 @@
           :aria-label="t('trip_detail.coordination.supplement_remove_aria')"
           @click="remove(item)"
         >
-          ×
+          {{ t('trip_detail.coordination.remove_label') }}
         </button>
       </li>
     </ul>
@@ -85,6 +85,10 @@
     >
       {{ emptyHint }}
     </p>
+
+    <div v-if="$slots.footer" class="border-t border-slate-200/70 px-3 py-2 dark:border-slate-800">
+      <slot name="footer" />
+    </div>
 
     <Teleport to="body">
       <div
