@@ -733,6 +733,13 @@ const signedVerifyBadgeClass = computed(() => {
 })
 
 // ── Tabs ──
+const hasAnyAction = computed(
+  () =>
+    showD2dDecisionSection.value ||
+    showFillPriceSection.value ||
+    showResetCloneBtn.value,
+)
+
 const workspaceTabs = computed(() => {
   const out = []
   const nav = sectionNavItems.value
