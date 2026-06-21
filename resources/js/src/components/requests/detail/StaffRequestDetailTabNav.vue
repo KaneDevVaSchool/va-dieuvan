@@ -5,7 +5,7 @@
     :aria-label="ariaLabel"
     data-testid="staff-request-tab-nav"
   >
-    <div class="flex gap-0 overflow-x-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex gap-0 overflow-x-auto px-0">
       <button
         v-for="tab in tabs"
         :key="tab.id"

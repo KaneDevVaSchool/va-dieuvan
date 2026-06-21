@@ -46,11 +46,11 @@
 
       <!-- ═══════════ Body ═══════════ -->
       <div class="min-w-0 flex-1">
-        <div class="w-full min-w-0 space-y-4 px-4 py-4 pb-16 sm:px-6 lg:px-8">
+        <div class="w-full min-w-0 space-y-0 pb-16">
           <!-- Alerts -->
           <div
             v-if="req.status === 'rejected'"
-            class="flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 dark:border-rose-900/60 dark:bg-rose-950/40"
+            class="flex items-start gap-3 border-y border-rose-200 bg-rose-50 px-4 py-4 dark:border-rose-900/60 dark:bg-rose-950/40 sm:px-5"
             role="alert"
           >
             <XCircleIcon class="h-7 w-7 shrink-0 text-rose-500 dark:text-rose-400" aria-hidden="true" />
@@ -77,7 +77,7 @@
 
           <div
             v-if="req.cloned_from_summary"
-            class="flex items-center gap-2.5 rounded-xl border border-indigo-200 bg-indigo-50/70 px-4 py-3 text-sm text-indigo-900 dark:border-indigo-900/50 dark:bg-indigo-950/30 dark:text-indigo-200"
+            class="flex items-center gap-2.5 border-y border-indigo-200 bg-indigo-50/70 px-4 py-3 text-sm text-indigo-900 dark:border-indigo-900/50 dark:bg-indigo-950/30 dark:text-indigo-200 sm:px-5"
           >
             <ArrowPathIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
             <span class="min-w-0 flex-1">{{ cloneLineageText }}</span>
@@ -90,7 +90,7 @@
 
           <div
             v-if="costAlertText"
-            class="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200"
+            class="flex items-start gap-2.5 border-y border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200 sm:px-5"
             role="alert"
           >
             <ExclamationTriangleIcon class="mt-0.5 h-5 w-5 shrink-0 text-amber-500 dark:text-amber-400" aria-hidden="true" />
@@ -98,12 +98,12 @@
           </div>
 
           <!-- ─── Tab: Phê duyệt ─── -->
-          <div v-show="activeTab === 'approval'" class="space-y-4">
+          <div v-show="activeTab === 'approval'" class="space-y-0">
             <div
               v-if="hasAnyAction"
-              class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
+              class="overflow-hidden border-y border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
             >
-            <div class="flex items-center gap-2.5 border-b border-slate-100 px-5 py-3 dark:border-slate-800">
+            <div class="flex items-center gap-2.5 border-b border-slate-100 px-4 py-3 dark:border-slate-800 sm:px-5">
               <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                 <BoltIcon class="h-4 w-4" aria-hidden="true" />
               </span>
@@ -183,15 +183,17 @@
             </div>
             </div>
 
-            <PortalStatusTimeline
-              :title="t('portal.timeline_heading')"
-              :steps="timelineSteps"
-              variant="staff"
-            />
+            <div class="border-y border-slate-200 bg-white px-4 py-4 dark:border-slate-800 dark:bg-slate-900 sm:px-5">
+              <PortalStatusTimeline
+                :title="t('portal.timeline_heading')"
+                :steps="timelineSteps"
+                variant="staff"
+              />
+            </div>
 
             <p
               v-if="!hasAnyAction"
-              class="rounded-xl border border-dashed border-slate-200 px-4 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400"
+              class="border-y border-dashed border-slate-200 px-4 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400 sm:px-5"
             >
               {{ t('request_detail.ops_no_actions') }}
             </p>
@@ -199,13 +201,13 @@
 
           <!-- ─── 1-col tab panels ─── -->
           <div :class="cardClass">
-                <div class="p-4 sm:p-6">
+                <div>
                   <!-- ===== Tab: Tổng quan ===== -->
                   <!-- ════ Tab: Tổng quan ════ -->
-                  <div v-show="activeTab === 'form'" class="space-y-4">
+                  <div v-show="activeTab === 'form'" class="space-y-0">
 
                     <!-- Dispatch + cost summary (driver, vehicle, cost) — only when trip exists -->
-                    <div v-if="req.trip" class="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+                    <div v-if="req.trip" class="overflow-hidden border-y border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
                       <div class="flex items-center justify-between gap-2 border-b border-slate-100 px-4 py-2.5 dark:border-slate-800">
                         <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                           {{ t('request_detail.overview_group_dispatch') }}
@@ -240,7 +242,7 @@
                     </div>
 
                     <!-- Single unified request-info card -->
-                    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+                    <div class="overflow-hidden border-y border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
                       <div class="border-b border-slate-100 px-4 py-2.5 dark:border-slate-800">
                         <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                           {{ t('request_detail.hero_card_request_info') }}
@@ -836,7 +838,7 @@ const {
 const { showDeptHeadPanel } = useAssignedDeptHeadDisplay(req)
 
 // ── Style tokens ──
-const cardClass = 'overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900'
+const cardClass = 'overflow-hidden border-y border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900'
 const sectionTitleClass = 'text-sm font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400'
 const btnGhostClass = 'inline-flex items-center rounded-md border border-slate-200 px-2.5 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
 const btnTealClass = 'inline-flex items-center rounded-md bg-teal-600 px-2.5 py-1.5 text-sm font-semibold text-white transition hover:bg-teal-700 disabled:opacity-50'
