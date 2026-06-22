@@ -30,6 +30,7 @@ class TripAssignedToRequesterNotification extends Notification implements Should
         public string $departAt,
         public ?string $driverLabel = null,
         public ?string $vehicleLabel = null,
+        public ?string $servicePrice = null,
         public bool $isUrgent = false,
     ) {
         $this->onQueue(
@@ -70,6 +71,9 @@ class TripAssignedToRequesterNotification extends Notification implements Should
         if ($this->driverLabel) {
             $mail->line('Tài xế: '.$this->driverLabel);
         }
+        if ($this->hasPrice()) {
+            $mail->line('Giá để lại: '.DispatchRequestMailPresenter::moneyVnd($this->servicePrice));
+        }
 
         return $mail
             ->action('Xem chi tiết phiếu', $detailUrl)
@@ -92,6 +96,8 @@ class TripAssignedToRequesterNotification extends Notification implements Should
             'depart_at' => $this->departAt,
             'driver_label' => $this->driverLabel,
             'vehicle_label' => $this->vehicleLabel,
+            'service_price' => $this->hasPrice() ? $this->servicePrice : null,
+            'price_label' => $this->hasPrice() ? DispatchRequestMailPresenter::moneyVnd($this->servicePrice) : null,
             'event' => 'trip.assigned_to_requester',
             'is_urgent' => $this->isUrgent,
             'url' => '/requests/'.$this->dispatchRequestId,
@@ -139,8 +145,16 @@ class TripAssignedToRequesterNotification extends Notification implements Should
         if ($resources !== []) {
             $bits[] = implode(' · ', $resources);
         }
+        if ($this->hasPrice()) {
+            $bits[] = DispatchRequestMailPresenter::moneyVnd($this->servicePrice);
+        }
         $prefix = $bits !== [] ? implode(' · ', $bits).' — ' : '';
 
         return Str::limit($prefix.$this->routeLine(), 180, '…');
+    }
+
+    private function hasPrice(): bool
+    {
+        return $this->servicePrice !== null && (float) $this->servicePrice > 0;
     }
 }

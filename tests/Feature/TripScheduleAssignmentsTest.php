@@ -420,6 +420,7 @@ class TripScheduleAssignmentsTest extends TestCase
             'source_channel' => 'portal',
             'is_urgent' => false,
             'paper_status' => 'pending',
+            'service_price' => 1500000,
             'wizard_snapshot' => [
                 'businessRows' => [
                     ['pickup' => '982/8 Quang Trung', 'dropoff' => 'Cityland Center Hills', 'guests' => '1'],
@@ -447,7 +448,8 @@ class TripScheduleAssignmentsTest extends TestCase
             function (TripAssignedToRequesterNotification $n) use ($dr) {
                 return $n->dispatchRequestId === $dr->id
                     && $n->vehicleLabel === '51B-51301'
-                    && $n->driverLabel === 'Tài Xế A';
+                    && $n->driverLabel === 'Tài Xế A'
+                    && (float) $n->servicePrice === 1500000.0;
             },
         );
     }

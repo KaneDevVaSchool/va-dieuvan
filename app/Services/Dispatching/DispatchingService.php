@@ -349,6 +349,7 @@ class DispatchingService
                 : (string) ($departAt ?? ''),
             driverLabel: $labels['drivers'],
             vehicleLabel: $labels['vehicles'],
+            servicePrice: $dr->service_price !== null ? (string) $dr->service_price : null,
             isUrgent: (bool) ($dr->is_urgent ?? false),
         ));
     }
