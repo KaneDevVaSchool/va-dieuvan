@@ -5,12 +5,11 @@ import {
   AcademicCapIcon,
   HomeIcon,
   ListBulletIcon,
-  PlusCircleIcon,
 } from '@heroicons/vue/24/outline'
 import { usePortalExtracurricularModule } from './usePortalExtracurricularModule'
 
 /**
- * Primary portal navigation — list/create targets follow active module (general vs ngoại khóa).
+ * Primary portal navigation — list targets follow active module (general vs ngoại khóa).
  */
 export function usePortalPrimaryNav() {
   const { t } = useI18n()
@@ -47,19 +46,10 @@ export function usePortalPrimaryNav() {
         to: { name: 'portalExtracurricularHome' },
         isActive: () => isExtracurricularModule.value,
       },
-      {
-        key: 'create',
-        label: t('portal.nav_create'),
-        shortLabel: t('portal.shell.bottom_create'),
-        icon: PlusCircleIcon,
-        to: { name: r.create },
-        isActive: () => route.name === r.create,
-        emphasize: true,
-      },
     ]
   })
 
-  const createTo = computed(() => ({ name: routes.value.create }))
+  const createTo = computed(() => ({ name: 'portalCreate' }))
 
   return { items, createTo }
 }

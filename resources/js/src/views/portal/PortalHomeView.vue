@@ -1,6 +1,6 @@
 <template>
   <div class="mx-auto max-w-7xl space-y-4 px-4 py-4 sm:px-6 sm:py-6">
-    <PortalHomeHero :loading="summaryLoading" :summary="summary" />
+    <PortalHomeHero />
 
     <PortalDispatchSummaryBar
       variant="dashboard"

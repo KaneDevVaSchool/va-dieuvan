@@ -34,27 +34,6 @@
         {{ t('portal.cta_primary') }}
       </RouterLink>
     </div>
-
-    <div
-      v-if="showSnapshots"
-      class="relative mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3"
-      role="list"
-      :aria-label="t('portal.home_snapshot_aria')"
-    >
-      <div
-        v-for="snap in snapshots"
-        :key="snap.key"
-        role="listitem"
-        class="rounded-xl border border-white/10 bg-white/10 px-3 py-2.5 backdrop-blur-sm"
-        :data-testid="`portal-home-snapshot-${snap.key}`"
-      >
-        <p class="text-[10px] font-semibold uppercase tracking-wide text-white/70">{{ snap.label }}</p>
-        <p class="mt-0.5 font-display text-2xl font-bold tabular-nums tracking-tight">
-          {{ snap.loading ? '…' : snap.value }}
-        </p>
-        <p v-if="snap.hint" class="mt-0.5 text-[11px] leading-snug text-white/75">{{ snap.hint }}</p>
-      </div>
-    </div>
   </section>
 </template>
 
@@ -63,11 +42,6 @@ import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../../store'
-
-const props = defineProps({
-  loading: { type: Boolean, default: false },
-  summary: { type: Object, default: null },
-})
 
 const { t, locale } = useI18n()
 const auth = useAuthStore()
@@ -88,56 +62,5 @@ const todayLabel = computed(() => {
   } catch {
     return ''
   }
-})
-
-function fmt(n) {
-  const v = typeof n === 'number' && Number.isFinite(n) ? n : 0
-  return new Intl.NumberFormat('vi-VN').format(v)
-}
-
-const showSnapshots = computed(() => props.loading || props.summary != null)
-
-const completedTrendHint = computed(() => {
-  if (props.loading || !props.summary) return ''
-  const delta = props.summary?.trends?.completed_this_month
-  if (typeof delta !== 'number' || !Number.isFinite(delta) || delta === 0) {
-    return t('portal.home_completed_trend_flat')
-  }
-  if (delta > 0) return t('portal.home_completed_trend_up', { n: fmt(delta) })
-  return t('portal.home_completed_trend_down', { n: fmt(Math.abs(delta)) })
-})
-
-const snapshots = computed(() => {
-  const s = props.summary || {}
-  const n = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : 0)
-  return [
-    {
-      key: 'total',
-      label: t('portal.stat_total'),
-      value: fmt(n(s.total)),
-      hint: '',
-    },
-    {
-      key: 'pending',
-      label: t('portal.kpi_pending_title'),
-      value: fmt(n(s.pending)),
-      hint: t('portal.kpi_pending_sub'),
-    },
-    {
-      key: 'processing',
-      label: t('portal.kpi_processing_title'),
-      value: fmt(n(s.processing)),
-      hint: t('portal.kpi_processing_sub'),
-    },
-    {
-      key: 'completed',
-      label: t('portal.kpi_completed_title'),
-      value: fmt(n(s.completed_this_month)),
-      hint: completedTrendHint.value,
-    },
-  ].map((row) => ({
-    ...row,
-    loading: props.loading,
-  }))
 })
 </script>

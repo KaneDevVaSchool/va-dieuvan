@@ -5,6 +5,7 @@ import { usePortalExtracurricularModule } from './usePortalExtracurricularModule
 
 /**
  * Breadcrumb segments for portal shell header (label + optional route).
+ * Root «Điều vận» omitted — brand link in header already goes to home.
  * @returns {{ segments: import('vue').ComputedRef<Array<{ label: string, to?: object }>>, pageTitle: import('vue').ComputedRef<string> }}
  */
 export function usePortalBreadcrumb() {
@@ -13,28 +14,26 @@ export function usePortalBreadcrumb() {
   const { isExtracurricularModule } = usePortalExtracurricularModule()
 
   const segments = computed(() => {
-    const root = { label: t('portal.shell.breadcrumb_root'), to: { name: 'portalHome' } }
     const name = route.name
 
     if (name === 'portalHome') {
-      return [{ label: t('portal.shell.breadcrumb_root') }]
+      return []
     }
 
     if (name === 'portalRequestList') {
-      return [root, { label: t('portal.shell.breadcrumb_requests') }]
+      return [{ label: t('portal.shell.breadcrumb_requests') }]
     }
 
     if (name === 'portalCreate') {
-      return [root, { label: t('portal.shell.breadcrumb_create') }]
+      return [{ label: t('portal.shell.breadcrumb_create') }]
     }
 
     if (name === 'portalNotifications') {
-      return [root, { label: t('portal.shell.breadcrumb_notifications') }]
+      return [{ label: t('portal.shell.breadcrumb_notifications') }]
     }
 
     if (name === 'portalRequestDetail') {
       return [
-        root,
         { label: t('portal.shell.breadcrumb_requests'), to: { name: 'portalRequestList' } },
         { label: t('portal.shell.breadcrumb_detail') },
       ]
@@ -46,17 +45,16 @@ export function usePortalBreadcrumb() {
         to: { name: 'portalExtracurricularHome' },
       }
       if (name === 'portalExtracurricularHome') {
-        return [root, { label: t('portal.shell.breadcrumb_recurring') }]
+        return [{ label: t('portal.shell.breadcrumb_recurring') }]
       }
       if (name === 'portalExtracurricularList') {
-        return [root, ecRoot, { label: t('portal.shell.breadcrumb_list') }]
+        return [ecRoot, { label: t('portal.shell.breadcrumb_list') }]
       }
       if (name === 'portalExtracurricularCreate') {
-        return [root, ecRoot, { label: t('portal.extracurricular_module.create_heading') }]
+        return [ecRoot, { label: t('portal.extracurricular_module.create_heading') }]
       }
       if (name === 'portalExtracurricularDetail') {
         return [
-          root,
           ecRoot,
           { label: t('portal.shell.breadcrumb_list'), to: { name: 'portalExtracurricularList' } },
           { label: t('portal.shell.breadcrumb_detail') },
@@ -64,12 +62,15 @@ export function usePortalBreadcrumb() {
       }
     }
 
-    return [root]
+    return []
   })
 
   const pageTitle = computed(() => {
+    if (route.name === 'portalHome') {
+      return t('portal.dashboard_heading')
+    }
     const segs = segments.value
-    return segs[segs.length - 1]?.label ?? t('portal.shell.breadcrumb_root')
+    return segs[segs.length - 1]?.label ?? ''
   })
 
   return { segments, pageTitle }
