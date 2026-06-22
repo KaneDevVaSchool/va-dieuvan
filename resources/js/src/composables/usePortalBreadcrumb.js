@@ -20,12 +20,8 @@ export function usePortalBreadcrumb() {
       return []
     }
 
-    if (name === 'portalRequestList') {
-      return [{ label: t('portal.shell.breadcrumb_requests') }]
-    }
-
-    if (name === 'portalCreate') {
-      return [{ label: t('portal.shell.breadcrumb_create') }]
+    if (name === 'portalRequestList' || name === 'portalCreate') {
+      return []
     }
 
     if (name === 'portalNotifications') {
@@ -33,29 +29,21 @@ export function usePortalBreadcrumb() {
     }
 
     if (name === 'portalRequestDetail') {
-      return [
-        { label: t('portal.shell.breadcrumb_requests'), to: { name: 'portalRequestList' } },
-        { label: t('portal.shell.breadcrumb_detail') },
-      ]
+      return [{ label: t('portal.shell.breadcrumb_detail') }]
     }
 
     if (isExtracurricularModule.value) {
-      const ecRoot = {
-        label: t('portal.shell.breadcrumb_recurring'),
-        to: { name: 'portalExtracurricularHome' },
-      }
       if (name === 'portalExtracurricularHome') {
-        return [{ label: t('portal.shell.breadcrumb_recurring') }]
+        return []
       }
       if (name === 'portalExtracurricularList') {
-        return [ecRoot, { label: t('portal.shell.breadcrumb_list') }]
+        return [{ label: t('portal.shell.breadcrumb_list') }]
       }
       if (name === 'portalExtracurricularCreate') {
-        return [ecRoot, { label: t('portal.extracurricular_module.create_heading') }]
+        return [{ label: t('portal.extracurricular_module.create_heading') }]
       }
       if (name === 'portalExtracurricularDetail') {
         return [
-          ecRoot,
           { label: t('portal.shell.breadcrumb_list'), to: { name: 'portalExtracurricularList' } },
           { label: t('portal.shell.breadcrumb_detail') },
         ]
@@ -66,8 +54,18 @@ export function usePortalBreadcrumb() {
   })
 
   const pageTitle = computed(() => {
-    if (route.name === 'portalHome') {
+    const name = route.name
+    if (name === 'portalHome') {
       return t('portal.dashboard_heading')
+    }
+    if (name === 'portalRequestList') {
+      return t('portal.nav_list')
+    }
+    if (name === 'portalCreate') {
+      return t('portal.shell.breadcrumb_create')
+    }
+    if (name === 'portalExtracurricularHome') {
+      return t('portal.nav_extracurricular')
     }
     const segs = segments.value
     return segs[segs.length - 1]?.label ?? ''
