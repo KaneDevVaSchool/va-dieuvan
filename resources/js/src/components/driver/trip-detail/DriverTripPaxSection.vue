@@ -135,9 +135,58 @@
         <div class="min-w-0 flex-1">
           <p class="text-base font-semibold leading-snug text-driver-ink sm:text-lg">{{ p.name }}</p>
           <p class="mt-0.5 text-sm leading-snug text-driver-muted sm:text-base">{{ p.subtitle }}</p>
+          <p
+            v-if="paxKind === 'cargo' && p.deliverySubtitle"
+            class="mt-0.5 text-sm leading-snug text-driver-muted/90 sm:text-base"
+          >
+            {{ p.deliverySubtitle }}
+          </p>
+          <div
+            v-if="paxKind === 'cargo' && (p.senderLine || p.receiverLine)"
+            class="mt-2.5 grid grid-cols-1 gap-2 sm:grid-cols-2"
+          >
+            <div v-if="p.senderLine" class="rounded-xl bg-driver-surface/60 px-3 py-2">
+              <p class="text-[11px] font-semibold uppercase tracking-wide text-driver-muted/70">
+                {{ t('driver_trip_detail.cargo_sender') }}
+              </p>
+              <p class="mt-0.5 break-words text-sm font-medium leading-snug text-driver-ink sm:text-base">
+                {{ p.senderLine }}
+              </p>
+              <a
+                v-if="p.senderPhone"
+                :href="`tel:${p.senderPhone}`"
+                class="mt-1.5 inline-flex min-h-[40px] items-center gap-1.5 rounded-lg bg-emerald-500/15 px-2.5 py-1.5 text-sm font-semibold text-emerald-200"
+                :data-testid="`driver-cargo-sender-call-${i}`"
+                :aria-label="t('driver_trip_detail.call')"
+                @click="haptics.tap()"
+              >
+                <PhoneIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                {{ t('driver_trip_detail.call') }}
+              </a>
+            </div>
+            <div v-if="p.receiverLine" class="rounded-xl bg-driver-surface/60 px-3 py-2">
+              <p class="text-[11px] font-semibold uppercase tracking-wide text-driver-muted/70">
+                {{ t('driver_trip_detail.cargo_receiver') }}
+              </p>
+              <p class="mt-0.5 break-words text-sm font-medium leading-snug text-driver-ink sm:text-base">
+                {{ p.receiverLine }}
+              </p>
+              <a
+                v-if="p.receiverPhone"
+                :href="`tel:${p.receiverPhone}`"
+                class="mt-1.5 inline-flex min-h-[40px] items-center gap-1.5 rounded-lg bg-emerald-500/15 px-2.5 py-1.5 text-sm font-semibold text-emerald-200"
+                :data-testid="`driver-cargo-receiver-call-${i}`"
+                :aria-label="t('driver_trip_detail.call')"
+                @click="haptics.tap()"
+              >
+                <PhoneIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                {{ t('driver_trip_detail.call') }}
+              </a>
+            </div>
+          </div>
         </div>
         <a
-          v-if="p.phone"
+          v-if="paxKind !== 'cargo' && p.phone"
           :href="`tel:${p.phone}`"
           class="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full border border-white/10 bg-driver-surface text-driver-muted active:bg-driver-elevated"
           :aria-label="t('driver_trip_detail.call')"

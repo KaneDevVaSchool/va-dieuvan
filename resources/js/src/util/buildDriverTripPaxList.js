@@ -1,5 +1,6 @@
 import { tripNamedPassengerDisplayCount } from './dispatchRequestPassengers'
 import { isAutoPassengerLabel, passengerDisplayName } from './passengerDisplayName'
+import { cargoPartiesFromRow } from './cargoPartyContact'
 
 export function normalizeTripPassengers(trip) {
   const raw = trip?.trip_passengers ?? trip?.tripPassengers
@@ -74,11 +75,19 @@ export function buildDriverTripPaxList(options) {
     let i = 0
     for (const r of s.cargoRows) {
       if (!isCargoRowFilled(r)) continue
+      const parties = cargoPartiesFromRow(r)
+      const pickupLine = [r.pickup_at, r.pickup_place].filter(Boolean).join(' · ')
+      const deliveryLine = [r.delivery_at, r.delivery_place].filter(Boolean).join(' · ')
       out.push({
         name: r.name?.trim() || t('driver_trip_detail.cargo_item', { n: ++i }),
-        subtitle: [r.pickup_at, r.pickup_place].filter(Boolean).join(' · ') || '—',
-        phone: (r.pickup_contact || r.delivery_contact || '').replace(/\D/g, '') || null,
-        address: null,
+        subtitle: pickupLine || deliveryLine || '—',
+        deliverySubtitle: deliveryLine || null,
+        senderLine: parties.senderLine,
+        receiverLine: parties.receiverLine,
+        senderPhone: parties.senderPhone,
+        receiverPhone: parties.receiverPhone,
+        phone: parties.senderPhone || parties.receiverPhone,
+        address: (r.pickup_place || '').trim() || null,
         time: null,
       })
     }

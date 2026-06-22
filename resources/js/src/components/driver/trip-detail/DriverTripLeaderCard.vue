@@ -5,7 +5,7 @@
     </div>
     <div class="min-w-0 flex-1">
       <p class="text-[11px] font-semibold uppercase tracking-wide text-driver-muted/70">
-        {{ t('driver_trip_detail.leader_title') }}
+        {{ titleText }}
       </p>
       <p class="mt-0.5 break-words text-base font-semibold leading-snug text-driver-ink sm:text-lg">
         {{ leader.name }}
@@ -23,12 +23,20 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { PhoneIcon, UserCircleIcon } from '@heroicons/vue/24/outline'
 
-defineProps({
+const props = defineProps({
   leader: { type: Object, required: true },
 })
 
 const { t } = useI18n()
+
+const titleText = computed(() => {
+  const role = props.leader?.role
+  if (role === 'requester') return t('driver_trip_detail.contact_requester_title')
+  if (role === 'coordinator') return t('driver_trip_detail.contact_coordinator_title')
+  return t('driver_trip_detail.leader_title')
+})
 </script>

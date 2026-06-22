@@ -3,6 +3,9 @@
 namespace App\Services\TransportProgram;
 
 use App\Models\TpProgram;
+use App\Models\TpProgramDay;
+use App\Models\TpTripExecution;
+use Illuminate\Support\Facades\DB;
 
 class ProgramLifecycleService
 {
@@ -36,15 +39,43 @@ class ProgramLifecycleService
     {
         abort_if($program->status === TpProgram::STATUS_CANCELLED, 422, 'Đã hủy rồi.');
 
-        $before = $program->only(['status']);
-        $program->update([
-            'status' => TpProgram::STATUS_CANCELLED,
-            'notes' => trim(($program->notes ?? '')."\nCancelled: ".($reason ?? '')),
-        ]);
-        $this->audit->log($actorId, 'program.cancelled', $program, $program, $before, $program->only(['status']), [
-            'reason' => $reason,
-        ]);
+        return DB::transaction(function () use ($program, $reason, $actorId) {
+            $before = $program->only(['status']);
+            $program->update([
+                'status' => TpProgram::STATUS_CANCELLED,
+                'notes' => trim(($program->notes ?? '')."\nCancelled: ".($reason ?? '')),
+            ]);
 
-        return $program->fresh();
+            $dayReason = trim((string) ($reason ?? ''));
+            if ($dayReason === '') {
+                $dayReason = 'Chương trình đã hủy';
+            }
+
+            TpProgramDay::query()
+                ->where('program_id', $program->id)
+                ->where('day_type', TpProgramDay::DAY_OPERATING)
+                ->update([
+                    'day_type' => TpProgramDay::DAY_CANCELLED,
+                    'cancel_reason' => $dayReason,
+                ]);
+
+            TpTripExecution::query()
+                ->where('program_id', $program->id)
+                ->whereNotIn('status', [
+                    TpTripExecution::STATUS_COMPLETED,
+                    TpTripExecution::STATUS_CANCELLED,
+                ])
+                ->update([
+                    'status' => TpTripExecution::STATUS_CANCELLED,
+                    'cancelled_at' => now(),
+                    'cancel_reason' => $dayReason,
+                ]);
+
+            $this->audit->log($actorId, 'program.cancelled', $program, $program, $before, $program->only(['status']), [
+                'reason' => $reason,
+            ]);
+
+            return $program->fresh();
+        });
     }
 }

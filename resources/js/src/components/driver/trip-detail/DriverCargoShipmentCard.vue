@@ -20,6 +20,16 @@
           <p class="mt-0.5 break-words text-sm font-medium leading-snug text-driver-ink sm:text-base">
             {{ shipment.sender_name || '—' }}
           </p>
+          <a
+            v-if="shipment.sender_phone"
+            :href="`tel:${shipment.sender_phone}`"
+            class="mt-1.5 inline-flex min-h-[40px] items-center gap-1.5 rounded-lg bg-emerald-500/15 px-2.5 py-1.5 text-sm font-semibold text-emerald-200"
+            data-testid="driver-cargo-card-sender-call"
+            :aria-label="t('driver_trip_detail.call')"
+          >
+            <PhoneIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+            {{ t('driver_trip_detail.call') }}
+          </a>
         </div>
         <div class="rounded-xl bg-driver-surface/60 px-3 py-2.5">
           <p class="text-[11px] font-semibold uppercase tracking-wide text-driver-muted/70">
@@ -28,6 +38,16 @@
           <p class="mt-0.5 break-words text-sm font-medium leading-snug text-driver-ink sm:text-base">
             {{ shipment.receiver_name || '—' }}
           </p>
+          <a
+            v-if="shipment.receiver_phone"
+            :href="`tel:${shipment.receiver_phone}`"
+            class="mt-1.5 inline-flex min-h-[40px] items-center gap-1.5 rounded-lg bg-emerald-500/15 px-2.5 py-1.5 text-sm font-semibold text-emerald-200"
+            data-testid="driver-cargo-card-receiver-call"
+            :aria-label="t('driver_trip_detail.call')"
+          >
+            <PhoneIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+            {{ t('driver_trip_detail.call') }}
+          </a>
         </div>
       </div>
 
@@ -116,6 +136,7 @@ import {
   CameraIcon,
   CheckCircleIcon,
   CheckIcon,
+  PhoneIcon,
   PlusIcon,
   TruckIcon,
 } from '@heroicons/vue/24/outline'

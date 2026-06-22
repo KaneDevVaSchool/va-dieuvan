@@ -168,6 +168,14 @@ class TpProgramDay extends Model
         return $query->where('day_type', self::DAY_OPERATING);
     }
 
+    /** Ngày còn hiển thị trên lịch / phân công tài xế (chương trình đang active). */
+    public function scopeDriverScheduleVisible(Builder $query): Builder
+    {
+        return $query
+            ->operating()
+            ->whereHas('program', fn (Builder $q) => $q->where('status', TpProgram::STATUS_ACTIVE));
+    }
+
     public function scopeForDate(Builder $query, string $date): Builder
     {
         return $query->whereDate('scheduled_date', $date);

@@ -113,7 +113,7 @@
         class="divide-y divide-amber-500/20"
       >
         <li
-          v-for="{ trip, dateLine } in bannerRows"
+          v-for="{ trip, dateLine, contact } in bannerRows"
           :key="trip.id"
           class="pending-banner-item flex flex-col gap-3 px-4 py-3.5 sm:px-5"
         >
@@ -209,6 +209,30 @@
               <p v-if="bannerMetaLine(trip)" class="pt-1 text-xs leading-snug text-slate-400">
                 {{ bannerMetaLine(trip) }}
               </p>
+
+              <div
+                v-if="contact"
+                class="mt-2 flex items-center gap-2 rounded-xl bg-amber-950/30 px-3 py-2 ring-1 ring-amber-500/15"
+              >
+                <div class="min-w-0 flex-1">
+                  <p class="text-[10px] font-semibold uppercase tracking-wide text-amber-300/70">
+                    {{ contactRoleLabel(contact.role) }}
+                  </p>
+                  <p class="break-words text-[13px] font-semibold leading-snug text-amber-50">
+                    {{ contact.name }}
+                  </p>
+                </div>
+                <a
+                  v-if="contact.phone"
+                  :href="`tel:${contact.phone}`"
+                  class="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center gap-1.5 rounded-lg bg-emerald-600/90 px-3 text-sm font-semibold text-white ring-1 ring-emerald-400/30 transition hover:bg-emerald-500 active:scale-[0.97]"
+                  :aria-label="t('driver_home.contact_call')"
+                  @click.stop
+                >
+                  <PhoneIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span>{{ t('driver_home.contact_call') }}</span>
+                </a>
+              </div>
             </div>
           </div>
 
@@ -336,10 +360,12 @@
 
 <script setup>
 import { computed, ref, TransitionGroup } from 'vue'
-import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/vue/24/outline'
+import { ChevronDownIcon, ChevronUpIcon, PhoneIcon } from '@heroicons/vue/24/outline'
 import { useI18n } from 'vue-i18n'
 import { formatApiError } from '../../api/http'
+import { isOptimisticLockConflict } from '../../util/tripLock'
 import { useDriverDashboardStore } from '../../store/driverDashboard'
+import { resolveTripLeaderContact } from '../../util/tripLeaderContact'
 import {
   formatDepartForTrip,
   isTripUrgent,
@@ -399,8 +425,15 @@ const bannerRows = computed(() => {
   return sortedPending.value.map((trip) => ({
     trip,
     dateLine: formatDepartForTrip(trip, tag).dateLine,
+    contact: resolveTripLeaderContact(trip),
   }))
 })
+
+function contactRoleLabel(role) {
+  if (role === 'requester') return t('driver_home.contact_requester')
+  if (role === 'coordinator') return t('driver_home.contact_coordinator')
+  return t('driver_home.contact_leader')
+}
 
 const tripListId = 'pending-confirmation-trip-list'
 const listExpanded = ref(true)
@@ -534,7 +567,9 @@ async function submitDeclineConfirmed() {
     }
     closeDeclineModal()
   } catch (e) {
-    declineModalError.value = formatApiError(e)
+    declineModalError.value = isOptimisticLockConflict(e)
+      ? t('driver_home.conflict_refreshed')
+      : formatApiError(e)
     if (e?.response?.status === 429) {
       tripStatusCooldownUntil = Date.now() + 8000
     }
@@ -550,7 +585,10 @@ async function onConfirm(trip) {
   try {
     await dash.confirmTripOptimistic(trip)
   } catch (e) {
-    actionError.value = formatApiError(e)
+    // Store đã tự làm mới danh sách khi xung đột — báo nhẹ nhàng thay vì lỗi kỹ thuật.
+    actionError.value = isOptimisticLockConflict(e)
+      ? t('driver_home.conflict_refreshed')
+      : formatApiError(e)
     if (e?.response?.status === 429) {
       tripStatusCooldownUntil = Date.now() + 8000
     }

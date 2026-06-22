@@ -23,6 +23,8 @@ class DriverTpDayDetailController extends Controller
     {
         $shift = $request->query('shift');
         $shift = in_array($shift, ['morning', 'afternoon'], true) ? $shift : null;
+        $this->assertProgramActive($tpProgramDay);
+        abort_if($tpProgramDay->day_type === TpProgramDay::DAY_CANCELLED, 404, 'Ngày này đã bị hủy.');
         $this->assertCanStartDay($request->user(), $tpProgramDay, $shift);
 
         $tpProgramDay->loadMissing('executions');

@@ -42,6 +42,8 @@
           <DriverRouteTimeline
             :origin-main="leg.originMain"
             :origin-sub="leg.originSub"
+            :waypoint-main="leg.waypointMain"
+            :waypoint-sub="leg.waypointSub"
             :dest-main="leg.destMain"
             :dest-sub="leg.destSub"
             :map-url="leg.mapUrl"
@@ -52,6 +54,8 @@
         v-else
         :origin-main="originMain"
         :origin-sub="originSub"
+        :waypoint-main="waypointMain"
+        :waypoint-sub="waypointSub"
         :dest-main="destMain"
         :dest-sub="destSub"
         :map-url="mapUrl"
@@ -70,6 +74,8 @@ const props = defineProps({
   originSub: { type: String, default: '' },
   destMain: { type: String, default: '' },
   destSub: { type: String, default: '' },
+  waypointMain: { type: String, default: '' },
+  waypointSub: { type: String, default: '' },
   mapUrl: { type: String, default: '' },
   legs: { type: Array, default: () => [] },
   scheduleSummary: { type: String, default: '' },

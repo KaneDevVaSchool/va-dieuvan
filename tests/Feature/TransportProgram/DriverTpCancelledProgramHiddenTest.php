@@ -7,6 +7,7 @@ use App\Models\TpProgram;
 use App\Models\TpProgramDay;
 use App\Models\User;
 use App\Services\TransportProgram\DriverAssignmentService;
+use App\Services\TransportProgram\ProgramLifecycleService;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -54,8 +55,11 @@ class DriverTpCancelledProgramHiddenTest extends TestCase
             ->json('data.items');
         $this->assertCount(1, $before);
 
-        // Hủy chương trình ở mức TpProgram (ngày con vẫn là "operating").
-        $program->update(['status' => TpProgram::STATUS_CANCELLED]);
+        // Hủy chương trình (đồng bộ ngày vận hành → cancelled).
+        app(ProgramLifecycleService::class)->cancel($program, 'Test hủy', null);
+
+        $day->refresh();
+        $this->assertSame(TpProgramDay::DAY_CANCELLED, $day->day_type);
 
         // Sau khi hủy: ngày biến mất khỏi danh sách tài xế.
         $after = $this->getJson('/api/driver/tp-days?date_from='.$date.'&date_to='.$date)

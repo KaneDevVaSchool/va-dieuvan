@@ -1,5 +1,12 @@
 <template>
   <div class="space-y-5">
+    <div
+      v-if="programAssignmentLocked"
+      class="rounded-2xl border border-rose-200 bg-rose-50/80 px-4 py-3 text-sm text-rose-900"
+      data-testid="tp-driver-assign-program-inactive"
+    >
+      Chương trình không còn hoạt động — lịch phân công tài xế đã đóng.
+    </div>
     <!-- ── Program-level drivers ───────────────────────────────────────────────── -->
     <div v-if="hasBothShifts" class="grid gap-4 lg:grid-cols-2">
       <div
@@ -23,7 +30,7 @@
               :exclude-id="card.backupSel"
               exclude-label="đang là sơ cua"
               :loading="loadingDrivers"
-              :disabled="programBusy"
+              :disabled="programBusy || programAssignmentLocked"
               accent="brand"
               placeholder="Chọn tài xế chạy chuyến"
               @update:model-value="(v) => onProgramShiftDriverChange(card.shift, 'default', v)"
@@ -37,7 +44,7 @@
               :exclude-id="card.mainSel"
               exclude-label="đang chạy chuyến"
               :loading="loadingDrivers"
-              :disabled="programBusy"
+              :disabled="programBusy || programAssignmentLocked"
               accent="amber"
               placeholder="Chọn tài xế sơ cua"
               @update:model-value="(v) => onProgramShiftDriverChange(card.shift, 'backup', v)"
@@ -57,7 +64,7 @@
           :exclude-id="backupDriverId"
           exclude-label="đang là sơ cua"
           :loading="loadingDrivers"
-          :disabled="programBusy"
+          :disabled="programBusy || programAssignmentLocked"
           accent="brand"
           placeholder="Chọn tài xế chạy chuyến"
           @update:model-value="(v) => onProgramDriverChange('default', v)"
@@ -73,7 +80,7 @@
           :exclude-id="defaultDriverId"
           exclude-label="đang chạy chuyến"
           :loading="loadingDrivers"
-          :disabled="programBusy"
+          :disabled="programBusy || programAssignmentLocked"
           accent="amber"
           placeholder="Chọn tài xế sơ cua"
           @update:model-value="(v) => onProgramDriverChange('backup', v)"
@@ -170,7 +177,7 @@
         <ArrowPathIcon class="mr-2 h-5 w-5 animate-spin" /> Đang tải…
       </div>
       <div v-else-if="!rows.length" class="py-16 text-center text-sm text-slate-500">
-        Không có ngày vận hành trong tháng này.
+        {{ programAssignmentLocked ? 'Chương trình đã hủy hoặc tạm dừng — không còn lịch phân công.' : 'Không có ngày vận hành trong tháng này.' }}
       </div>
       <div v-else class="overflow-x-auto">
         <table class="w-full min-w-[56rem] text-left text-base">
@@ -504,7 +511,12 @@ function shiftLabelForPicker() {
 }
 
 // ── Rows ─────────────────────────────────────────────────────────────────────
-const rows = computed(() => days.value.filter((d) => d.day_type !== 'cancelled'))
+const programAssignmentLocked = computed(() => props.program?.status !== 'active')
+
+const rows = computed(() => {
+  if (programAssignmentLocked.value) return []
+  return days.value.filter((d) => d.day_type !== 'cancelled')
+})
 
 // ── Main picker ──────────────────────────────────────────────────────────────
 const mainPickerDescription = computed(() => {

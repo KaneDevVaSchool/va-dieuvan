@@ -41,6 +41,8 @@
           :dest-sub="destSub"
           :map-url="mapUrl"
           :legs="driverRouteLegs"
+          :waypoint-main="routeWaypointMain"
+          :waypoint-sub="routeWaypointSub"
           :schedule-summary="scheduleTimeLine"
           :distance-label="statsDistance"
           :passenger-count="paxDisplayTotal"
@@ -49,8 +51,8 @@
         />
 
         <DriverCargoShipmentCard
-          v-if="paxKind === 'cargo' && cargoShipment"
-          :shipment="cargoShipment"
+          v-if="paxKind === 'cargo' && cargoShipmentDisplay"
+          :shipment="cargoShipmentDisplay"
           :busy="cargoBusy"
           :error="cargoError"
           :can-act="canActOnCargo"
@@ -190,6 +192,8 @@ const {
   destSub,
   mapUrl,
   driverRouteLegs,
+  routeWaypointMain,
+  routeWaypointSub,
   routeTripTypeLabel,
   routeNotesPreview,
   tripCosts,
@@ -205,7 +209,7 @@ const {
   rowState,
   paxKind,
   tripLeader,
-  cargoShipment,
+  cargoShipmentDisplay,
   canActOnCargo,
   cargoBusy,
   cargoError,

@@ -44,16 +44,51 @@ export function useDispatchScheduleCards(snapshot, tripType) {
     return joinScheduleParts(formatShortDt(dt), place?.trim?.() ?? place)
   }
 
+  function pushPassengerCards(s, cards, seqRef) {
+    for (const [idx, row] of (s.passengerRows ?? []).entries()) {
+      if (!isPassengerRowFilled(row)) continue
+      seqRef.seq += 1
+      const key = `passenger:${idx}`
+      cards.push({
+        key,
+        variant: 'passenger',
+        rowIndex: idx,
+        labelSeq: seqRef.seq,
+        heading: t('dispatch_wizard.confirm.trip_heading', { n: seqRef.seq }),
+        depart_at: row.depart_at || null,
+        arrive_by: row.return_at || null,
+        pickup: (row.pickup ?? '').trim(),
+        dropoff: (row.dropoff ?? '').trim(),
+        waypoint: (row.waypoint ?? '').trim(),
+        lines: [
+          {
+            label: t('dispatch_wizard.confirm.lbl_out'),
+            value: lineValue(row.depart_at, row.pickup),
+          },
+          {
+            label: t('dispatch_wizard.confirm.lbl_back'),
+            value: lineValue(row.return_at, row.dropoff),
+          },
+          {
+            lineKey: 'guests_per_leg',
+            label: t('trip_detail.schedules.guests_per_leg'),
+            value: String(row.guests ?? '').trim() || '',
+          },
+        ],
+      })
+    }
+  }
+
   const scheduleCards = computed(() => {
     const s = unref(snapshot) ?? {}
     const tt = unref(tripType) ?? ''
     const cards = []
-    let seq = 0
+    const seqRef = { seq: 0 }
 
     if (tt === 'cargo') {
       for (const [idx, row] of (s.cargoRows ?? []).entries()) {
         if (!isCargoRowFilled(row)) continue
-        seq += 1
+        seqRef.seq += 1
         const key = `cargo:${idx}`
         const shipper = [row.pickup_contact?.trim(), row.pickup_contact_phone?.trim()]
           .filter(Boolean)
@@ -85,8 +120,8 @@ export function useDispatchScheduleCards(snapshot, tripType) {
           key,
           variant: 'cargo',
           rowIndex: idx,
-          labelSeq: seq,
-          heading: t('dispatch_wizard.confirm.cargo_trip_heading', { n: seq }),
+          labelSeq: seqRef.seq,
+          heading: t('dispatch_wizard.confirm.cargo_trip_heading', { n: seqRef.seq }),
           depart_at: row.pickup_at || null,
           arrive_by: row.delivery_at || null,
           pickup: (row.pickup_place ?? '').trim(),
@@ -99,44 +134,13 @@ export function useDispatchScheduleCards(snapshot, tripType) {
     }
 
     if (tt !== 'business') {
-      for (const [idx, row] of (s.passengerRows ?? []).entries()) {
-        if (!isPassengerRowFilled(row)) continue
-        seq += 1
-        const key = `passenger:${idx}`
-        cards.push({
-          key,
-          variant: 'passenger',
-          rowIndex: idx,
-          labelSeq: seq,
-          heading: t('dispatch_wizard.confirm.trip_heading', { n: seq }),
-          depart_at: row.depart_at || null,
-          arrive_by: row.return_at || null,
-          pickup: (row.pickup ?? '').trim(),
-          dropoff: (row.dropoff ?? '').trim(),
-          waypoint: (row.waypoint ?? '').trim(),
-          lines: [
-            {
-              label: t('dispatch_wizard.confirm.lbl_out'),
-              value: lineValue(row.depart_at, row.pickup),
-            },
-            {
-              label: t('dispatch_wizard.confirm.lbl_back'),
-              value: lineValue(row.return_at, row.dropoff),
-            },
-            {
-              lineKey: 'guests_per_leg',
-              label: t('trip_detail.schedules.guests_per_leg'),
-              value: String(row.guests ?? '').trim() || '',
-            },
-          ],
-        })
-      }
+      pushPassengerCards(s, cards, seqRef)
     }
 
     if (tt !== 'point_to_point') {
       for (const [idx, row] of (s.businessRows ?? []).entries()) {
         if (!isBusinessRowFilled(row)) continue
-        seq += 1
+        seqRef.seq += 1
         const key = `business:${idx}`
         const lines = [
           {
@@ -163,8 +167,8 @@ export function useDispatchScheduleCards(snapshot, tripType) {
           key,
           variant: 'business',
           rowIndex: idx,
-          labelSeq: seq,
-          heading: t('dispatch_wizard.confirm.business_trip_heading', { n: seq }),
+          labelSeq: seqRef.seq,
+          heading: t('dispatch_wizard.confirm.business_trip_heading', { n: seqRef.seq }),
           depart_at: row.depart_at || null,
           arrive_by: row.return_at || null,
           pickup: (row.pickup ?? '').trim(),
@@ -173,6 +177,11 @@ export function useDispatchScheduleCards(snapshot, tripType) {
           lines,
         })
       }
+    }
+
+    // Chuyến Công tác chỉ có passengerRows (không có businessRows) — vẫn hiển thị lộ trình.
+    if (tt === 'business' && cards.length === 0) {
+      pushPassengerCards(s, cards, seqRef)
     }
 
     return cards

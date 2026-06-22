@@ -26,6 +26,9 @@ import {
 } from '../util/tripDatetime'
 import { tripNamedPassengerDisplayCount } from '../util/dispatchRequestPassengers'
 import { buildDriverTripPaxList } from '../util/buildDriverTripPaxList'
+import { mergeCargoShipmentWithSnapshot } from '../util/cargoPartyContact'
+import { resolveTripLeaderContact } from '../util/tripLeaderContact'
+import { useDispatchScheduleCards } from './useDispatchScheduleCards'
 import { labelTripStatus, labelTripType } from '../util/labels'
 import { parseMoneyVnd } from '../util/money'
 
@@ -117,6 +120,8 @@ export function useDriverTripDetailPage() {
 
   const dr = computed(() => trip.value?.dispatch_request ?? null)
   const snap = computed(() => dr.value?.wizard_snapshot ?? null)
+  const tripTypeRef = computed(() => dr.value?.trip_type ?? '')
+  const { scheduleCards } = useDispatchScheduleCards(snap, tripTypeRef)
 
   const statusBadgeClass = computed(() => {
     const s = trip.value?.status
@@ -279,7 +284,40 @@ export function useDriverTripDetailPage() {
     () => driverOperationalLeg.value?.status ?? trip.value?.status,
   )
 
+  function legFromPlaces(pickup, dropoff, waypoint, key, label, idx, legCount) {
+    const o = splitAddress(pickup || dr.value?.origin)
+    const d = splitAddress(dropoff || dr.value?.destination)
+    const wpRaw = (waypoint || '').trim()
+    const wp = splitAddress(wpRaw)
+    return {
+      key,
+      label: legCount > 1 ? label : '',
+      originMain: o.main,
+      originSub: o.sub,
+      waypointMain: wpRaw ? wp.main : '',
+      waypointSub: wpRaw ? wp.sub : '',
+      destMain: d.main,
+      destSub: d.sub,
+      mapUrl: mapUrlForPair(pickup || dr.value?.origin, dropoff || dr.value?.destination),
+    }
+  }
+
   const driverRouteLegs = computed(() => {
+    const cards = scheduleCards.value
+    if (cards.length) {
+      return cards.map((card, idx) =>
+        legFromPlaces(
+          card.pickup,
+          card.dropoff,
+          card.waypoint,
+          card.key,
+          t('driver_trip_detail.schedule_leg', { n: card.labelSeq ?? idx + 1 }),
+          idx,
+          cards.length,
+        ),
+      )
+    }
+
     const all = trip.value?.schedule_legs ?? []
     if (!Array.isArray(all) || !all.length) return []
     const did = myDriverId.value
@@ -288,20 +326,47 @@ export function useDriverTripDetailPage() {
       const mine = all.filter((l) => Number(l.assignment?.driver_id) === did)
       if (mine.length) legs = mine
     }
-    if (legs.length <= 1) return []
-    return legs.map((leg, idx) => {
-      const o = splitAddress(leg.pickup || dr.value?.origin)
-      const d = splitAddress(leg.dropoff || dr.value?.destination)
-      return {
-        key: leg.key,
-        label: t('driver_trip_detail.schedule_leg', { n: leg.label_seq ?? idx + 1 }),
-        originMain: o.main,
-        originSub: o.sub,
-        destMain: d.main,
-        destSub: d.sub,
-        mapUrl: mapUrlForPair(leg.pickup, leg.dropoff),
-      }
-    })
+    return legs.map((leg, idx) =>
+      legFromPlaces(
+        leg.pickup,
+        leg.dropoff,
+        '',
+        leg.key,
+        t('driver_trip_detail.schedule_leg', { n: leg.label_seq ?? idx + 1 }),
+        idx,
+        legs.length,
+      ),
+    )
+  })
+
+  const routeWaypointMain = computed(() => {
+    if (driverRouteLegs.value.length) return ''
+    const s = snap.value
+    const tt = tripTypeRef.value
+    const rows =
+      tt === 'business'
+        ? [...(s?.businessRows ?? []), ...(s?.passengerRows ?? [])]
+        : [...(s?.passengerRows ?? []), ...(s?.businessRows ?? [])]
+    for (const r of rows) {
+      const w = String(r?.waypoint ?? '').trim()
+      if (w) return splitAddress(w).main
+    }
+    return ''
+  })
+
+  const routeWaypointSub = computed(() => {
+    if (driverRouteLegs.value.length) return ''
+    const s = snap.value
+    const tt = tripTypeRef.value
+    const rows =
+      tt === 'business'
+        ? [...(s?.businessRows ?? []), ...(s?.passengerRows ?? [])]
+        : [...(s?.passengerRows ?? []), ...(s?.businessRows ?? [])]
+    for (const r of rows) {
+      const w = String(r?.waypoint ?? '').trim()
+      if (w) return splitAddress(w).sub
+    }
+    return ''
   })
 
   const tripCosts = computed(() => {
@@ -513,32 +578,21 @@ export function useDriverTripDetailPage() {
     return 'other'
   })
 
-  // Trưởng đoàn cho chuyến Công tác: ưu tiên người phụ trách trong dòng BM03,
-  // sau đó tới người điều phối/phụ trách ở form (coordinator).
-  const tripLeader = computed(() => {
-    if (dr.value?.trip_type !== 'business') return null
-    const s = snap.value
-    if (!s) return null
-
-    const rows = [...(s.businessRows ?? []), ...(s.passengerRows ?? [])]
-    for (const r of rows) {
-      const name = String(r?.person_in_charge ?? '').trim()
-      if (name) {
-        const phone = String(r?.phone ?? '').replace(/\D/g, '') || null
-        return { name, phone }
-      }
-    }
-
-    const coordName = String(s.form?.coordinator_name ?? '').trim()
-    if (coordName) {
-      const phone = String(s.form?.coordinator_phone ?? '').replace(/\D/g, '') || null
-      return { name: coordName, phone }
-    }
-
-    return null
-  })
+  // Trưởng đoàn / người liên hệ: trưởng đoàn (Công tác) → điều phối → người yêu cầu.
+  // Dùng chung util với banner xác nhận để hành vi nhất quán.
+  const tripLeader = computed(() => resolveTripLeaderContact(trip.value))
 
   const cargoShipment = computed(() => trip.value?.cargo_shipment ?? null)
+
+  const firstCargoSnapRow = computed(() => {
+    const rows = snap.value?.cargoRows ?? []
+    if (!Array.isArray(rows)) return null
+    return rows.find((r) => isCargoRowFilled(r)) ?? null
+  })
+
+  const cargoShipmentDisplay = computed(() =>
+    mergeCargoShipmentWithSnapshot(cargoShipment.value, firstCargoSnapRow.value),
+  )
 
   // Tài xế ghi nhận nhận/giao + ảnh khi chuyến chưa bị hủy.
   const canActOnCargo = computed(
@@ -806,6 +860,8 @@ export function useDriverTripDetailPage() {
     destSub,
     mapUrl,
     driverRouteLegs,
+    routeWaypointMain,
+    routeWaypointSub,
     routeTripTypeLabel,
     routeNotesPreview,
     tripCosts,
@@ -821,7 +877,7 @@ export function useDriverTripDetailPage() {
     rowState,
     paxKind,
     tripLeader,
-    cargoShipment,
+    cargoShipmentDisplay,
     canActOnCargo,
     setCargoStatus,
     uploadCargoPod,

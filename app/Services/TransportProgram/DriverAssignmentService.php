@@ -40,6 +40,8 @@ class DriverAssignmentService
         $day->loadMissing('program');
         $program = $day->program;
         abort_unless($program, 404);
+        abort_unless($program->status === TpProgram::STATUS_ACTIVE, 422, 'Chương trình không còn hoạt động.');
+        abort_if($day->day_type === TpProgramDay::DAY_CANCELLED, 422, 'Ngày này đã bị hủy.');
         $resolvedShift = $this->shiftDrivers->normalizeShift($shift, $program);
         $previousMainId = $this->shiftDrivers->effectiveMainDriverId($day, $resolvedShift);
         $this->assertNoConflict($day, $driverId, $resolvedShift);
@@ -82,6 +84,8 @@ class DriverAssignmentService
         $day->loadMissing('program');
         $program = $day->program;
         abort_unless($program, 404);
+        abort_unless($program->status === TpProgram::STATUS_ACTIVE, 422, 'Chương trình không còn hoạt động.');
+        abort_if($day->day_type === TpProgramDay::DAY_CANCELLED, 422, 'Ngày này đã bị hủy.');
         $resolvedShift = $this->shiftDrivers->normalizeShift($shift, $program);
         $previousBackupId = $this->shiftDrivers->effectiveBackupDriverId($day, $resolvedShift);
 
@@ -208,9 +212,9 @@ class DriverAssignmentService
 
         $others = TpProgramDay::query()
             ->with('program')
+            ->driverScheduleVisible()
             ->whereDate('scheduled_date', $day->scheduled_date)
             ->where('id', '!=', $day->id)
-            ->where('day_type', TpProgramDay::DAY_OPERATING)
             ->get();
 
         foreach ($others as $other) {

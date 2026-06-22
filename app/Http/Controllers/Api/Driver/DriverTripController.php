@@ -45,7 +45,7 @@ class DriverTripController extends Controller
             ->whereHas('dispatchRequest')
             ->with([
                 'dispatchRequest:id,created_at,trip_type,origin,destination,passenger_count,student_count_actual,is_urgent,depart_at,arrive_by,notes,wizard_snapshot,requester_id',
-                'dispatchRequest.requester:id,name',
+                'dispatchRequest.requester:id,name,phone',
                 'tripPassengers',
                 'record:id,trip_id,distance_km',
                 'vehicle:id,license_plate,type,seat_count',
@@ -170,6 +170,7 @@ class DriverTripController extends Controller
 
         return [
             'id' => $trip->id,
+            'lock_version' => (int) $trip->lock_version,
             'driver_id' => $trip->driver_id,
             'vehicle_id' => $trip->vehicle_id,
             'vehicle' => $trip->relationLoaded('vehicle') && $trip->vehicle
@@ -203,6 +204,7 @@ class DriverTripController extends Controller
             'requester_name' => $dr?->relationLoaded('requester') && $dr->requester
                 ? (string) $dr->requester->name
                 : null,
+            'contact' => $this->resolveTripContact($dr),
             'dispatch_request' => $dr ? [
                 'id' => $dr->id,
                 'trip_type' => $dr->trip_type,
@@ -216,7 +218,7 @@ class DriverTripController extends Controller
                 'is_urgent' => (bool) $dr->is_urgent,
                 'notes' => $dr->notes,
                 'requester' => $dr->relationLoaded('requester') && $dr->requester
-                    ? ['name' => (string) $dr->requester->name]
+                    ? ['name' => (string) $dr->requester->name, 'phone' => $dr->requester->phone]
                     : null,
             ] : null,
             'schedule_legs' => $this->legsForDriver($trip, $driverId),
@@ -257,6 +259,79 @@ class DriverTripController extends Controller
             'dropoff' => $leg['dropoff'] ?? '',
             'status' => $leg['status'] ?? $trip->status,
         ], $pool);
+    }
+
+    /**
+     * Liên hệ hiển thị cho tài xế: ưu tiên trưởng đoàn (chuyến Công tác) lấy từ
+     * wizard_snapshot, sau đó người điều phối, cuối cùng fallback người yêu cầu.
+     *
+     * @return array{name: string, phone: ?string, role: string}|null
+     */
+    private function resolveTripContact(?DispatchRequest $dr): ?array
+    {
+        if (! $dr instanceof DispatchRequest) {
+            return null;
+        }
+
+        $snap = is_array($dr->wizard_snapshot) ? $dr->wizard_snapshot : [];
+
+        if ($dr->trip_type === 'business') {
+            $form = is_array($snap['form'] ?? null) ? $snap['form'] : [];
+            $coordName = trim((string) ($form['coordinator_name'] ?? ''));
+            if ($coordName !== '') {
+                return [
+                    'name' => $coordName,
+                    'phone' => $this->normalizePhone($form['coordinator_phone'] ?? null),
+                    'role' => 'leader',
+                ];
+            }
+
+            $rows = array_merge(
+                is_array($snap['businessRows'] ?? null) ? $snap['businessRows'] : [],
+                is_array($snap['passengerRows'] ?? null) ? $snap['passengerRows'] : [],
+            );
+            foreach ($rows as $row) {
+                if (! is_array($row)) {
+                    continue;
+                }
+                $name = trim((string) ($row['person_in_charge'] ?? ''));
+                if ($name !== '' && ! $this->isAutoPassengerLabel($name)) {
+                    return [
+                        'name' => $name,
+                        'phone' => $this->normalizePhone($row['phone'] ?? null),
+                        'role' => 'leader',
+                    ];
+                }
+            }
+        }
+
+        if ($dr->relationLoaded('requester') && $dr->requester) {
+            $name = trim((string) $dr->requester->name);
+            if ($name !== '') {
+                return [
+                    'name' => $name,
+                    'phone' => $this->normalizePhone($dr->requester->phone),
+                    'role' => 'requester',
+                ];
+            }
+        }
+
+        return null;
+    }
+
+    private function normalizePhone(mixed $raw): ?string
+    {
+        $digits = preg_replace('/\D+/', '', (string) ($raw ?? ''));
+
+        return ($digits === '' || $digits === null) ? null : $digits;
+    }
+
+    private function isAutoPassengerLabel(string $name): bool
+    {
+        return (bool) preg_match(
+            '/^(Khách|Hành khách|Guest|Passengers?|Đoàn công tác|Đoàn|Group)\s*[#№]?\s*\d+$/iu',
+            trim($name),
+        );
     }
 
     private function tripTypeCode(?string $tripType): string

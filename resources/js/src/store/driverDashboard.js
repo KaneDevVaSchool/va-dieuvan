@@ -32,6 +32,14 @@ const CACHE_SCHEMA = 2
 const STALE_MS = 30_000
 const SILENT_REFETCH_DEBOUNCE_MS = 700
 
+/**
+ * Promise của lần tải dashboard đang chạy (store là singleton). Dùng để gộp các
+ * lời gọi chồng nhau (visible-poll + pull-to-refresh + silent refetch) về một
+ * request, tránh race ghi đè state và giảm tải mạng.
+ * @type {Promise<void> | null}
+ */
+let dashboardFetchInFlight = null
+
 function t(key, params = undefined) {
   return params ? i18n.global.t(key, params) : i18n.global.t(key)
 }
@@ -484,7 +492,22 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
       }, SILENT_REFETCH_DEBOUNCE_MS)
     },
 
-    async fetchDashboard({ silent = false, force = false } = {}) {
+    async fetchDashboard(opts = {}) {
+      // Lời gọi không-force gộp vào request đang chạy; lời gọi force luôn tải thật
+      // (pull-to-refresh, retry sau xung đột) để không bị gộp nhầm vào lần skip-stale.
+      if (!opts.force && dashboardFetchInFlight) {
+        return dashboardFetchInFlight
+      }
+      const p = this._runFetchDashboard(opts)
+      dashboardFetchInFlight = p
+      try {
+        return await p
+      } finally {
+        if (dashboardFetchInFlight === p) dashboardFetchInFlight = null
+      }
+    },
+
+    async _runFetchDashboard({ silent = false, force = false } = {}) {
       if (!force && this.lastFetchedAt && Date.now() - this.lastFetchedAt < STALE_MS) {
         dashPerfSkipStale()
         return
@@ -588,14 +611,20 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
     },
 
     async updateTripStatusWithLockRetry(tripId, tripRow, fields) {
-      const build = (row) => withTripLockVersion(fields, row ?? tripRow)
       try {
-        return await updateTripStatus(tripId, build(tripRow))
+        return await updateTripStatus(tripId, withTripLockVersion(fields, tripRow))
       } catch (e) {
         if (!isOptimisticLockConflict(e)) throw e
         await this.refreshTripsQuiet()
         const fresh = this.tripSnapshot(tripId) ?? tripRow
-        return await updateTripStatus(tripId, build(fresh))
+        // Nếu snapshot mới có lock_version thật → gửi kèm; nếu thiếu (payload list cũ
+        // chưa có lock_version) → bỏ hẳn để backend tự dùng version trong DB, tránh
+        // gửi 0 và kẹt 409 vĩnh viễn.
+        const payload =
+          fresh != null && fresh.lock_version != null
+            ? withTripLockVersion(fields, fresh)
+            : { ...fields }
+        return await updateTripStatus(tripId, payload)
       }
     },
 
@@ -619,11 +648,15 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
       }
       const backup = this.tripSnapshot(dispatchTripId)
       this.patchTripInList(dispatchTripId, { status: 'driver_confirmed' })
+      const confirmFields = { status: 'driver_confirmed' }
+      // Chuyến nhiều chặng (sáng/chiều) được banner tách theo leg → phải gửi schedule_key
+      // để backend không trả 422 "gửi schedule_key khi đổi trạng thái".
+      if (trip.schedule_leg_key) confirmFields.schedule_key = trip.schedule_leg_key
       try {
         const updated = await this.updateTripStatusWithLockRetry(
           dispatchTripId,
           trip,
-          { status: 'driver_confirmed' },
+          confirmFields,
         )
         this.patchTripInList(
           dispatchTripId,
@@ -646,11 +679,10 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
       if (dispatchTripId == null || dispatchTripId === '') return
       const backup = this.tripSnapshot(dispatchTripId)
       this.removeTrip(dispatchTripId)
+      const declineFields = { status: 'cancelled', message }
+      if (trip.schedule_leg_key) declineFields.schedule_key = trip.schedule_leg_key
       try {
-        const updated = await this.updateTripStatusWithLockRetry(dispatchTripId, trip, {
-          status: 'cancelled',
-          message,
-        })
+        const updated = await this.updateTripStatusWithLockRetry(dispatchTripId, trip, declineFields)
         if (updated?.id != null) {
           this.patchTripInList(
             dispatchTripId,
