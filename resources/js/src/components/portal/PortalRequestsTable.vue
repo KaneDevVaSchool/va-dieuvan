@@ -46,19 +46,27 @@
                 >
                   {{ tripTypeLabel(req) }}
                 </span>
-                <span v-else class="text-slate-400">—</span>
+                <span v-else class="italic text-slate-400">{{ emptyText.tripType('') }}</span>
               </td>
               <td class="hidden whitespace-nowrap px-4 py-3 lg:table-cell">
-                <p class="text-slate-700">{{ createdFmt(req) }}</p>
+                <p :class="req.created_at ? 'text-slate-700' : 'italic text-slate-400'">{{ createdFmt(req) }}</p>
               </td>
               <td class="hidden max-w-[12rem] px-4 py-3 lg:table-cell">
-                <p class="truncate text-base text-slate-800" :title="formatPortalPlace(req.origin)">
-                  {{ formatPortalPlace(req.origin) }}
+                <p
+                  class="truncate text-base"
+                  :class="placeCellClass(req.origin)"
+                  :title="emptyText.origin(req.origin)"
+                >
+                  {{ emptyText.origin(req.origin) }}
                 </p>
               </td>
               <td class="hidden max-w-[12rem] px-4 py-3.5 lg:table-cell">
-                <p class="truncate text-base text-slate-800" :title="formatPortalPlace(req.destination)">
-                  {{ formatPortalPlace(req.destination) }}
+                <p
+                  class="truncate text-base"
+                  :class="placeCellClass(req.destination)"
+                  :title="emptyText.destination(req.destination)"
+                >
+                  {{ emptyText.destination(req.destination) }}
                 </p>
               </td>
               <td class="min-w-[10rem] px-4 py-3.5 lg:hidden">
@@ -68,13 +76,22 @@
                 <p v-if="departFmt(req)" class="whitespace-nowrap font-medium text-slate-800">
                   {{ departFmt(req) }}
                 </p>
-                <p v-else class="text-slate-400">—</p>
+                <p v-else class="italic text-slate-400">{{ emptyText.departAt('') }}</p>
               </td>
               <td class="px-4 py-3">
                 <StatusBadge :status="req.status" size="sm" />
               </td>
               <td class="hidden px-4 py-3 xl:table-cell">
-                <span class="truncate text-slate-700">{{ dispatcherName(req) }}</span>
+                <span
+                  class="truncate"
+                  :class="
+                    emptyText.portalFieldHasValue(req.trip?.dispatcher?.name)
+                      ? 'text-slate-700'
+                      : 'italic text-slate-400'
+                  "
+                >
+                  {{ dispatcherName(req) }}
+                </span>
               </td>
               <td class="px-4 py-3">
                 <span
@@ -131,17 +148,21 @@
             <dl class="mt-3 space-y-2 text-base">
               <div class="grid grid-cols-[4.5rem_1fr] gap-x-2 gap-y-0.5">
                 <dt class="text-sm font-medium text-slate-500">{{ t('portal.table_origin') }}</dt>
-                <dd class="font-medium text-slate-800">{{ formatPortalPlace(req.origin) }}</dd>
+                <dd class="font-medium" :class="placeCellClass(req.origin)">
+                  {{ emptyText.origin(req.origin) }}
+                </dd>
               </div>
               <div class="grid grid-cols-[4.5rem_1fr] gap-x-2 gap-y-0.5">
                 <dt class="text-sm font-medium text-slate-500">{{ t('portal.table_destination') }}</dt>
-                <dd class="font-medium text-slate-800">{{ formatPortalPlace(req.destination) }}</dd>
+                <dd class="font-medium" :class="placeCellClass(req.destination)">
+                  {{ emptyText.destination(req.destination) }}
+                </dd>
               </div>
               <div class="grid grid-cols-[4.5rem_1fr] gap-x-2 gap-y-0.5">
                 <dt class="text-sm font-medium text-slate-500">{{ t('portal.table_time') }}</dt>
                 <dd class="font-medium text-slate-800">
                   <span v-if="departFmt(req)">{{ departFmt(req) }}</span>
-                  <span v-else class="text-slate-400">—</span>
+                  <span v-else class="italic text-slate-400">{{ emptyText.departAt('') }}</span>
                   <span v-if="req.arrive_by" class="mt-0.5 block text-sm font-normal text-slate-500">
                     {{ arriveFmt(req) }}
                   </span>
@@ -167,7 +188,8 @@ import { BoltIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
 import StatusBadge from '../ui/StatusBadge.vue'
 import { portalDetailRouteForRequest } from '../../composables/usePortalExtracurricularModule'
 import { formatPortalDepartLine, formatPortalTimeHm } from '../../util/portalDatetime.js'
-import { formatDispatchRequestRefCode, formatPortalPlace } from '../../util/portalRequestFormat.js'
+import { formatDispatchRequestRefCode } from '../../util/portalRequestFormat.js'
+import { usePortalRequestEmptyText } from '../../composables/usePortalRequestEmptyText.js'
 
 const props = defineProps({
   requests: { type: Array, required: true },
@@ -175,17 +197,24 @@ const props = defineProps({
 })
 
 const { t, locale } = useI18n()
+const emptyText = usePortalRequestEmptyText()
 
 const localeKey = computed(() => (locale.value === 'en' ? 'en' : 'vi'))
+
+function placeCellClass(value) {
+  return emptyText.portalFieldHasValue(value) ? 'text-slate-800' : 'italic text-slate-400'
+}
 
 function refCode(req) {
   return formatDispatchRequestRefCode(req)
 }
 
 function routeLine(req) {
-  const o = formatPortalPlace(req.origin)
-  const d = formatPortalPlace(req.destination)
-  if (o !== '—' || d !== '—') return `${o} → ${d}`
+  const o = emptyText.portalFieldHasValue(req.origin)
+  const d = emptyText.portalFieldHasValue(req.destination)
+  if (o || d) {
+    return `${emptyText.origin(req.origin)} → ${emptyText.destination(req.destination)}`
+  }
   return t('portal.card_no_route')
 }
 
@@ -227,13 +256,13 @@ function arriveFmt(req) {
 }
 
 function createdFmt(req) {
-  if (!req.created_at) return '—'
+  if (!req.created_at) return emptyText.createdAt('')
   return formatPortalDepartLine(req.created_at, localeKey.value)
 }
 
 function dispatcherName(req) {
   const n = req.trip?.dispatcher?.name
-  return n && String(n).trim() ? String(n).trim() : '—'
+  return n && String(n).trim() ? String(n).trim() : emptyText.dispatcher('')
 }
 
 function slaIsRisk(req) {

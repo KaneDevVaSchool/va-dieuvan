@@ -8,14 +8,15 @@
       @quick-filter="onKpiQuickFilter"
     />
 
-    <PortalExtracurricularStatusTabs v-if="isExtracurricularModule" v-model="ecWorkflowTab" />
-
     <div class="overflow-visible rounded-xl border border-slate-200/80 bg-white shadow-sm">
       <PortalRequestsListToolbar
         v-model:search-input="searchInput"
         v-model:quick-filter="quickFilter"
-        v-model:filter-drawer-open="filterDrawerOpen"
         v-model:export-open="exportOpen"
+        v-model:show-filter-panel-dd="showFilterPanelDd"
+        :filter-control-defs="filterControlDefsLabeled"
+        :quick-filter-options="isExtracurricularModule ? ecQuickFilterOptions : null"
+        :visible-filters="visibleFilters"
         :active-filter-count="activeFilterCount"
         :show-suggest="showSearchSuggest"
         :search-suggest-loading="searchSuggestLoading"
@@ -26,7 +27,9 @@
         @search-blur="onSearchBlur"
         @search-enter="commitSearchSuggest"
         @search-suggest-pick="pickSearchSuggestion"
-        @open-filter="filterDrawerOpen = true"
+        @toggle-filter-panel="toggleFilterPanel"
+        @close-filter-panel="closeFilterPanel"
+        @reset-filters="resetFilters"
         @export-csv="exportCurrentCsv"
         @export-excel="exportCurrentCsv"
       >
@@ -36,8 +39,9 @@
         </template>
       </PortalRequestsListToolbar>
 
-      <PortalListFilterDrawer
-        :open="filterDrawerOpen"
+      <PortalRequestsFilterRow
+        v-if="hasFilterRow"
+        :visible-filters="visibleFilters"
         v-model:filter-status="filterStatus"
         v-model:filter-trip-type="filterTripType"
         v-model:filter-urgent="filterUrgent"
@@ -46,15 +50,14 @@
         v-model:date-from="dateFrom"
         v-model:date-to="dateTo"
         :show-extracurricular-filter="!isExtracurricularModule"
+        :show-trip-type-filter="!isExtracurricularModule"
+        :show-urgent-filter="!isExtracurricularModule"
         :filter-options="filterOptions"
         :sort-options="sortOptions"
         :trip-type-options="tripTypeOptions"
         :urgent-options="urgentOptions"
         :extracurricular-options="extracurricularOptions"
-        :active-filter-count="activeFilterCount"
-        @close="filterDrawerOpen = false"
-        @reset="resetFilters"
-        @apply="applyDrawerFilters"
+        @filter-change="onAdvancedFilterChange"
       />
 
       <PortalRequestSkeleton
@@ -252,13 +255,14 @@ import PortalRequestSkeleton from '../../components/portal/PortalRequestSkeleton
 import PortalRequestsTable from '../../components/portal/PortalRequestsTable.vue'
 import PortalDispatchSummaryBar from '../../components/portal/PortalDispatchSummaryBar.vue'
 import PortalRequestsListToolbar from '../../components/portal/PortalRequestsListToolbar.vue'
-import PortalListFilterDrawer from '../../components/portal/PortalListFilterDrawer.vue'
-import PortalExtracurricularStatusTabs from '../../components/portal/PortalExtracurricularStatusTabs.vue'
+import PortalRequestsFilterRow from '../../components/portal/PortalRequestsFilterRow.vue'
+import { useVisibleFilterControls } from '../../composables/useVisibleFilterControls'
 import ExtracurricularRequestsDataTable from '../../components/requests/ExtracurricularRequestsDataTable.vue'
 import ExtracurricularRequestsCalendar from '../../components/portal/extracurricular/ExtracurricularRequestsCalendar.vue'
 import ExtracurricularScheduleTable from '../../components/portal/extracurricular/ExtracurricularScheduleTable.vue'
 import { usePortalExtracurricularModule } from '../../composables/usePortalExtracurricularModule'
 import { formatDispatchRequestRefCode } from '../../util/portalRequestFormat.js'
+import { usePortalRequestEmptyText } from '../../composables/usePortalRequestEmptyText.js'
 
 const PER_PAGE_OPTIONS = [5, 10, 15, 20]
 const PER_PAGE_KEY = 'portal-list-per-page'
@@ -274,6 +278,7 @@ function readStoredPerPage() {
 }
 
 const { t } = useI18n()
+const emptyText = usePortalRequestEmptyText()
 const route = useRoute()
 const router = useRouter()
 const { isExtracurricularModule, routes: portalRoutes } = usePortalExtracurricularModule()
@@ -290,11 +295,17 @@ const summary = ref(null)
 const summaryLoading = ref(true)
 const kpiActiveKey = ref('')
 const quickFilter = ref('all')
-const filterDrawerOpen = ref(false)
 const exportOpen = ref(false)
 const slaRiskOnly = ref(false)
-const ecWorkflowTab = ref('all')
 const suppressQuickFilterReload = ref(false)
+
+const ecQuickFilterOptions = computed(() => [
+  { value: 'all', label: t('portal.shell.ec_tab_all') },
+  { value: 'draft', label: t('portal.shell.ec_tab_draft') },
+  { value: 'pending', label: t('portal.shell.ec_tab_pending') },
+  { value: 'processing', label: t('portal.shell.ec_tab_active') },
+  { value: 'done', label: t('portal.shell.ec_tab_done') },
+])
 
 const summaryVariant = computed(() =>
   isExtracurricularModule.value ? 'extracurricular' : 'list',
@@ -334,7 +345,72 @@ const showSearchSuggest = computed(
   () => searchDropdownOpen.value && String(searchInput.value ?? '').trim().length >= 1,
 )
 
-// â”€â”€ Filter chip visibility (persisted) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const portalFilterControls = isExtracurricularModule.value
+  ? [
+      { key: 'status', label: t('portal.filter_label_status'), default: true },
+      { key: 'sort', label: t('portal.filter_label_sort'), default: false },
+      { key: 'date_range', label: t('portal.filter_label_date_range'), default: false },
+    ]
+  : [
+      { key: 'status', label: t('portal.filter_label_status'), default: false },
+      { key: 'sort', label: t('portal.filter_label_sort'), default: false },
+      { key: 'trip_type', label: t('portal.filter_label_trip_type'), default: false },
+      { key: 'urgent', label: t('portal.filter_label_urgent'), default: false },
+      { key: 'extracurricular', label: t('portal.filter_label_extracurricular'), default: false },
+      { key: 'date_range', label: t('portal.filter_label_date_range'), default: false },
+    ]
+
+const {
+  visibleFilters,
+  hasFilterRow,
+  showFilterPanelDd,
+  openFilterPanel,
+  closeFilterPanel,
+  filterControlDefs,
+} = useVisibleFilterControls(
+  portalFilterControls,
+  isExtracurricularModule.value ? 'portal-ec-requests-filter-vis.v1' : 'portal-requests-filter-vis.v1',
+)
+
+const filterControlDefsLabeled = computed(() =>
+  filterControlDefs.map((fd) => ({
+    ...fd,
+    label:
+      {
+        status: t('portal.filter_label_status'),
+        sort: t('portal.filter_label_sort'),
+        trip_type: t('portal.filter_label_trip_type'),
+        urgent: t('portal.filter_label_urgent'),
+        extracurricular: t('portal.filter_label_extracurricular'),
+        date_range: t('portal.filter_label_date_range'),
+      }[fd.key] ?? fd.label,
+  })),
+)
+
+function toggleFilterPanel() {
+  exportOpen.value = false
+  openFilterPanel(() => {
+    exportOpen.value = false
+  })
+}
+
+function syncQuickFilterFromStatus() {
+  suppressQuickFilterReload.value = true
+  const s = filterStatus.value
+  if (s === 'all') quickFilter.value = 'all'
+  else if (s === 'draft') quickFilter.value = 'draft'
+  else if (s === 'pending') quickFilter.value = 'pending'
+  else if (s === 'processing') quickFilter.value = 'processing'
+  else if (s === 'completed') quickFilter.value = 'done'
+  else quickFilter.value = 'all'
+  suppressQuickFilterReload.value = false
+}
+
+function onAdvancedFilterChange() {
+  syncQuickFilterFromStatus()
+  reloadFromStart()
+}
+
 const filterOptions = computed(() => [
   { key: 'all', label: t('portal.filter_all') },
   { key: 'pending', label: t('portal.filter_pending') },
@@ -500,23 +576,6 @@ function onKpiQuickFilter(payload) {
     quickFilter.value = 'all'
   }
 
-  if (isExtracurricularModule.value) {
-    const tabMap = {
-      plans: 'all',
-      in_progress: 'processing',
-      completed: 'completed',
-      overdue: 'pending',
-      pending: 'pending',
-      processing: 'processing',
-    }
-    if (tabMap[key]) ecWorkflowTab.value = tabMap[key]
-  }
-
-  reloadFromStart()
-}
-
-function applyDrawerFilters() {
-  filterDrawerOpen.value = false
   reloadFromStart()
 }
 
@@ -544,26 +603,11 @@ watch(quickFilter, (v) => {
   if (suppressQuickFilterReload.value) return
   slaRiskOnly.value = false
   kpiActiveKey.value = ''
-  ecWorkflowTab.value = 'all'
   if (v === 'all') filterStatus.value = 'all'
+  else if (v === 'draft') filterStatus.value = 'draft'
   else if (v === 'pending') filterStatus.value = 'pending'
   else if (v === 'processing') filterStatus.value = 'processing'
   else if (v === 'done') filterStatus.value = 'completed'
-  reloadFromStart()
-})
-
-watch(ecWorkflowTab, (tab) => {
-  slaRiskOnly.value = false
-  kpiActiveKey.value = ''
-  quickFilter.value = 'all'
-  const map = {
-    all: 'all',
-    draft: 'draft',
-    pending: 'pending',
-    processing: 'processing',
-    completed: 'completed',
-  }
-  filterStatus.value = map[tab] || 'all'
   reloadFromStart()
 })
 
@@ -597,9 +641,11 @@ const pageNumbers = computed(() => {
 let suggestTimer = null
 
 function suggestRouteLine(req) {
-  const o = (req.origin || '').trim()
-  const d = (req.destination || '').trim()
-  if (o || d) return `${o || '…'} → ${d || '…'}`.trim()
+  const o = emptyText.portalFieldHasValue(req.origin)
+  const d = emptyText.portalFieldHasValue(req.destination)
+  if (o || d) {
+    return `${emptyText.origin(req.origin)} → ${emptyText.destination(req.destination)}`
+  }
   return t('portal.card_no_route')
 }
 
@@ -686,7 +732,7 @@ function flushSearch(term = searchInput.value) {
 }
 
 function pickSearchSuggestion(req) {
-  flushSearch(String(req.id))
+  flushSearch(formatDispatchRequestRefCode(req) || String(req.id))
 }
 
 function commitSearchSuggest() {
@@ -774,7 +820,6 @@ function resetFilters() {
   slaRiskOnly.value = false
   quickFilter.value = 'all'
   kpiActiveKey.value = ''
-  ecWorkflowTab.value = 'all'
   reloadFromStart()
 }
 
@@ -919,6 +964,7 @@ onMounted(() => {
     filterStatus.value = qFilter
     if (qFilter === 'processing') quickFilter.value = 'processing'
     else if (qFilter === 'pending') quickFilter.value = 'pending'
+    else if (qFilter === 'draft') quickFilter.value = 'draft'
     else if (qFilter === 'completed') quickFilter.value = 'done'
     suppressQuickFilterReload.value = false
   }

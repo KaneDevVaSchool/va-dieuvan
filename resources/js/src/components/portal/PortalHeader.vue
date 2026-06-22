@@ -1,20 +1,19 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowRightStartOnRectangleIcon,
-  Bars3Icon,
   BellIcon,
   ChevronDownIcon,
   PlusIcon,
-  XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import Button from '../ui/Button.vue'
 import UserAvatar from '../branding/UserAvatar.vue'
 import PortalGlobalSearch from './shell/PortalGlobalSearch.vue'
+import PortalPrimaryNav from './shell/PortalPrimaryNav.vue'
 import { usePortalBreadcrumb } from '../../composables/usePortalBreadcrumb'
-import { usePortalExtracurricularModule } from '../../composables/usePortalExtracurricularModule'
+import { usePortalPrimaryNav } from '../../composables/usePortalPrimaryNav'
 import { useAuthStore } from '../../store'
 import { useAuthLogout } from '../../composables/useAuthLogout'
 import { fetchPortalNotifications } from '../../api/notifications'
@@ -23,24 +22,16 @@ import { setLocale } from '../../i18n'
 
 const { t, locale } = useI18n()
 const route = useRoute()
-const router = useRouter()
 const auth = useAuthStore()
 const { performLogout } = useAuthLogout()
 const { segments, pageTitle } = usePortalBreadcrumb()
-const { routes: portalRoutes } = usePortalExtracurricularModule()
+const { createTo } = usePortalPrimaryNav()
 
 const menuOpen = ref(false)
-const mobileNavOpen = ref(false)
 const userMenuRef = ref(null)
 const loggingOut = ref(false)
 const unreadBadge = ref(0)
 let unreadPollTimer = null
-
-const createLabel = computed(() =>
-  portalRoutes.value.create === 'portalExtracurricularCreate'
-    ? t('portal.extracurricular_module.cta_create')
-    : t('portal.shell.create_request'),
-)
 
 function onLocale(lang) {
   setLocale(lang)
@@ -64,7 +55,6 @@ function onDocPointerDown(e) {
 watch(
   () => route.fullPath,
   () => {
-    mobileNavOpen.value = false
     refreshUnreadBadge()
   },
 )
@@ -93,7 +83,6 @@ async function onLogout() {
   }
   loggingOut.value = true
   menuOpen.value = false
-  mobileNavOpen.value = false
   try {
     sessionStorage.removeItem('portal_form_dirty')
     await performLogout()
@@ -102,10 +91,6 @@ async function onLogout() {
   }
 }
 
-function navTo(name) {
-  mobileNavOpen.value = false
-  router.push({ name })
-}
 </script>
 
 <template>
@@ -117,38 +102,28 @@ function navTo(name) {
     data-testid="portal-shell-header"
   >
     <div class="mx-auto flex h-12 max-w-7xl items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:px-6">
-      <!-- Mobile menu -->
-      <button
-        type="button"
-        class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 md:hidden"
-        :aria-label="t('portal.shell.menu_open')"
-        :aria-expanded="mobileNavOpen"
-        data-testid="portal-mobile-menu"
-        @click="mobileNavOpen = !mobileNavOpen"
-      >
-        <Bars3Icon v-if="!mobileNavOpen" class="h-6 w-6" aria-hidden="true" />
-        <XMarkIcon v-else class="h-6 w-6" aria-hidden="true" />
-      </button>
-
-      <!-- Brand -->
       <RouterLink
         :to="{ name: 'portalHome' }"
-        class="hidden shrink-0 items-center md:inline-flex"
+        class="inline-flex shrink-0 items-center md:gap-2"
         :aria-label="t('portal.shell.breadcrumb_root')"
+        data-testid="portal-header-brand"
       >
         <span
-          class="flex h-8 w-8 items-center justify-center rounded-md bg-va-800 text-xs font-bold tracking-tight text-white ring-1 ring-va-900/20"
+          class="flex h-9 w-9 items-center justify-center rounded-lg bg-va-800 text-xs font-bold tracking-tight text-white ring-1 ring-va-900/20 sm:h-8 sm:w-8 sm:rounded-md"
         >
           VA
         </span>
+        <span class="hidden text-sm font-semibold text-slate-800 md:inline">{{ t('portal.nav_title') }}</span>
       </RouterLink>
 
-      <!-- Breadcrumb (tablet+) / mobile title -->
+      <PortalPrimaryNav />
+
+      <!-- Breadcrumb (context on lg+) / mobile title -->
       <nav
         class="min-w-0 flex-1"
         :aria-label="t('portal.shell.breadcrumb_aria')"
       >
-        <ol class="hidden min-w-0 items-center gap-1 text-sm md:flex">
+        <ol class="hidden min-w-0 items-center gap-1 text-sm lg:flex">
           <li v-for="(seg, idx) in segments" :key="idx" class="flex min-w-0 items-center gap-1">
             <span v-if="idx > 0" class="shrink-0 text-slate-300" aria-hidden="true">/</span>
             <RouterLink
@@ -167,20 +142,20 @@ function navTo(name) {
             </span>
           </li>
         </ol>
-        <p class="truncate text-sm font-semibold text-slate-900 md:hidden">{{ pageTitle }}</p>
+        <p class="truncate text-sm font-semibold text-slate-900 lg:hidden">{{ pageTitle }}</p>
       </nav>
 
       <PortalGlobalSearch />
 
-      <div class="flex shrink-0 items-center gap-1 sm:gap-2">
+      <div class="flex shrink-0 items-center gap-0.5 sm:gap-2">
         <RouterLink
-          :to="{ name: portalRoutes.create }"
+          :to="createTo"
           class="hidden sm:inline-flex"
           data-testid="portal-header-create"
         >
           <Button variant="primary" class="!min-h-10 gap-1.5 whitespace-nowrap">
             <PlusIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-            <span class="hidden lg:inline">{{ createLabel }}</span>
+            <span class="hidden lg:inline">{{ t('portal.shell.create_request') }}</span>
             <span class="lg:hidden">{{ t('portal.shell.create_short') }}</span>
           </Button>
         </RouterLink>
@@ -222,7 +197,7 @@ function navTo(name) {
           <div
             v-if="menuOpen"
             role="menu"
-            class="absolute right-0 z-50 mt-1 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white py-2 shadow-lg ring-1 ring-slate-900/5"
+            class="absolute right-0 z-50 mt-1 w-[min(100vw-1.5rem,14rem)] overflow-hidden rounded-xl border border-slate-200 bg-white py-2 shadow-lg ring-1 ring-slate-900/5 sm:w-56"
           >
             <div class="border-b border-slate-100 px-3 pb-2 pt-1">
               <p v-if="auth.user?.name" class="truncate text-sm font-semibold text-slate-900">{{ auth.user.name }}</p>
@@ -264,45 +239,6 @@ function navTo(name) {
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- Mobile nav sheet -->
-    <div
-      v-if="mobileNavOpen"
-      class="border-t border-slate-100 bg-white px-4 py-3 md:hidden"
-      role="dialog"
-      :aria-label="t('portal.shell.menu_open')"
-    >
-      <ul class="space-y-1 text-sm font-semibold">
-        <li>
-          <button type="button" class="w-full rounded-lg px-3 py-2.5 text-left hover:bg-slate-50" @click="navTo('portalHome')">
-            {{ t('portal.nav_home') }}
-          </button>
-        </li>
-        <li>
-          <button type="button" class="w-full rounded-lg px-3 py-2.5 text-left hover:bg-slate-50" @click="navTo('portalRequestList')">
-            {{ t('portal.nav_list') }}
-          </button>
-        </li>
-        <li>
-          <button
-            type="button"
-            class="w-full rounded-lg px-3 py-2.5 text-left hover:bg-slate-50"
-            @click="navTo('portalExtracurricularList')"
-          >
-            {{ t('portal.nav_extracurricular') }}
-          </button>
-        </li>
-        <li>
-          <button
-            type="button"
-            class="w-full rounded-lg px-3 py-2.5 text-left text-va-800 hover:bg-va-50"
-            @click="navTo(portalRoutes.create)"
-          >
-            {{ createLabel }}
-          </button>
-        </li>
-      </ul>
     </div>
   </header>
 </template>

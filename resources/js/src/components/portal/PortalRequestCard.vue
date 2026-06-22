@@ -37,17 +37,22 @@ import { useI18n } from 'vue-i18n'
 import { ChevronRightIcon } from '@heroicons/vue/24/outline'
 import StatusBadge from '../ui/StatusBadge.vue'
 
+import { usePortalRequestEmptyText } from '../../composables/usePortalRequestEmptyText.js'
+
 const props = defineProps({
   req: { type: Object, required: true },
   to: { type: Object, default: null },
 })
 
 const { t } = useI18n()
+const emptyText = usePortalRequestEmptyText()
 
 const summaryLine = computed(() => {
-  const o = (props.req.origin || '').trim()
-  const d = (props.req.destination || '').trim()
-  if (o || d) return `${o || '…'} → ${d || '…'}`.trim()
+  const o = emptyText.portalFieldHasValue(props.req.origin)
+  const d = emptyText.portalFieldHasValue(props.req.destination)
+  if (o || d) {
+    return `${emptyText.origin(props.req.origin)} → ${emptyText.destination(props.req.destination)}`
+  }
   return t('portal.card_no_route')
 })
 

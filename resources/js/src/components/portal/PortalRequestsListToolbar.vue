@@ -1,34 +1,39 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ChevronDownIcon } from '@heroicons/vue/24/outline'
+import { ChevronDownIcon, FunnelIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import DatagridToolbarSearch from '../shared/ui/DatagridToolbarSearch.vue'
 import DatagridToolbarActionButton from '../shared/ui/DatagridToolbarActionButton.vue'
 import DatagridSegmentedControl from '../shared/ui/DatagridSegmentedControl.vue'
+import FilterVisibilityDropdown from '../shared/ui/FilterVisibilityDropdown.vue'
 
 const props = defineProps({
   searchInput: { type: String, default: '' },
   quickFilter: { type: String, default: 'all' },
-  filterDrawerOpen: { type: Boolean, default: false },
-  activeFilterCount: { type: Number, default: 0 },
   exportOpen: { type: Boolean, default: false },
   showSuggest: { type: Boolean, default: false },
   searchSuggestLoading: { type: Boolean, default: false },
   searchSuggestions: { type: Array, default: () => [] },
   searchSuggestFocus: { type: Number, default: -1 },
+  showFilterPanelDd: { type: Boolean, default: false },
+  filterControlDefs: { type: Array, default: () => [] },
+  visibleFilters: { type: Object, required: true },
+  activeFilterCount: { type: Number, default: 0 },
+  /** Override default quick status segments (e.g. extracurricular module). */
+  quickFilterOptions: { type: Array, default: null },
 })
 
 const emit = defineEmits([
   'update:searchInput',
   'update:quickFilter',
-  'update:filterDrawerOpen',
   'update:exportOpen',
+  'update:showFilterPanelDd',
   'search-input',
-  'search-focus',
-  'search-blur',
   'search-enter',
   'search-suggest-pick',
-  'open-filter',
+  'toggle-filter-panel',
+  'close-filter-panel',
+  'reset-filters',
   'export-csv',
   'export-excel',
 ])
@@ -36,12 +41,15 @@ const emit = defineEmits([
 const { t } = useI18n()
 const exportRef = ref(null)
 
-const quickOptions = computed(() => [
-  { value: 'all', label: t('portal.shell.quick_all') },
-  { value: 'pending', label: t('portal.filter_pending') },
-  { value: 'processing', label: t('portal.shell.quick_processing') },
-  { value: 'done', label: t('portal.shell.quick_done') },
-])
+const quickOptions = computed(() => {
+  if (props.quickFilterOptions?.length) return props.quickFilterOptions
+  return [
+    { value: 'all', label: t('portal.shell.quick_all') },
+    { value: 'pending', label: t('portal.filter_pending') },
+    { value: 'processing', label: t('portal.shell.quick_processing') },
+    { value: 'done', label: t('portal.shell.quick_done') },
+  ]
+})
 
 function onDocPointerDown(e) {
   if (exportRef.value && !exportRef.value.contains(e.target)) {
@@ -53,6 +61,7 @@ onMounted(() => document.addEventListener('pointerdown', onDocPointerDown, true)
 onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocPointerDown, true))
 
 function toggleExport() {
+  emit('close-filter-panel')
   emit('update:exportOpen', !props.exportOpen)
 }
 </script>
@@ -102,23 +111,63 @@ function toggleExport() {
       </div>
 
       <div class="flex shrink-0 items-center gap-2">
-        <DatagridToolbarActionButton
-          icon="filter"
-          :active="filterDrawerOpen"
-          test-id="portal-toolbar-filter"
-          @click="emit('open-filter')"
+        <FilterVisibilityDropdown
+          :open="showFilterPanelDd"
+          :title="t('portal.filter_show_controls_title')"
+          :hint="t('portal.filter_show_controls_hint')"
+          @close="emit('close-filter-panel')"
         >
-          {{ t('portal.shell.toolbar_filter') }}
-          <span
-            v-if="activeFilterCount > 0"
-            class="ml-1 inline-flex min-w-[1.125rem] items-center justify-center rounded-full bg-va-800 px-1 text-[10px] font-bold text-white"
+          <template #trigger>
+            <DatagridToolbarActionButton
+              icon="filter"
+              :active="showFilterPanelDd"
+              test-id="portal-toolbar-filter"
+              @click="emit('toggle-filter-panel')"
+            >
+              {{ t('portal.shell.toolbar_filter') }}
+            </DatagridToolbarActionButton>
+          </template>
+          <li
+            v-for="fd in filterControlDefs"
+            :key="'portal-filter-vis-' + fd.key"
+            class="flex items-start gap-2"
           >
-            {{ activeFilterCount > 9 ? '9+' : activeFilterCount }}
-          </span>
-        </DatagridToolbarActionButton>
+            <input
+              :id="`portal-filter-vis-${fd.key}`"
+              v-model="visibleFilters[fd.key]"
+              type="checkbox"
+              class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-va-800 focus:ring-va-700/30"
+              :data-testid="`portal-filter-vis-${fd.key}`"
+            />
+            <label
+              :for="`portal-filter-vis-${fd.key}`"
+              class="cursor-pointer text-sm leading-snug text-slate-700"
+            >
+              {{ fd.label }}
+            </label>
+          </li>
+        </FilterVisibilityDropdown>
+
+        <button
+          v-if="activeFilterCount > 0"
+          type="button"
+          class="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-slate-800"
+          :title="t('portal.filter_clear_all')"
+          :aria-label="t('portal.filter_clear_all')"
+          data-testid="portal-toolbar-reset-filters"
+          @click="emit('reset-filters')"
+        >
+          <FunnelIcon class="h-5 w-5" aria-hidden="true" />
+          <XMarkIcon class="h-3 w-3 text-rose-500" aria-hidden="true" />
+        </button>
 
         <div ref="exportRef" class="relative">
-          <DatagridToolbarActionButton icon="export" :active="exportOpen" test-id="portal-toolbar-export" @click="toggleExport">
+          <DatagridToolbarActionButton
+            icon="export"
+            :active="exportOpen"
+            test-id="portal-toolbar-export"
+            @click="toggleExport"
+          >
             {{ t('portal.shell.toolbar_export') }}
             <ChevronDownIcon class="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
           </DatagridToolbarActionButton>
@@ -149,7 +198,7 @@ function toggleExport() {
         </div>
       </div>
 
-      <div class="ml-auto flex w-full shrink-0 basis-full lg:w-auto lg:basis-auto">
+      <div class="ml-auto flex w-full shrink-0 basis-full lg:w-auto lg:basis-auto [&_button]:min-h-10 [&_button]:px-2.5 sm:[&_button]:min-h-0">
         <DatagridSegmentedControl
           :model-value="quickFilter"
           :options="quickOptions"

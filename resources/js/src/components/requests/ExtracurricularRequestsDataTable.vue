@@ -191,17 +191,30 @@ import { useExtracurricularInlineStudentCount } from '../../composables/useExtra
 import { useAuthStore } from '../../store'
 import { submitPortalRecurringInstance, submitStudentCount } from '../../api/requests'
 import { formatApiError } from '../../api/http'
+import { formatDispatchRequestRefCode } from '../../util/portalRequestFormat.js'
 import { confirmAction } from '../../composables/useConfirm'
+
+const props = defineProps({
+  requests: { type: Array, required: true },
+  variant: { type: String, default: 'portal' },
+  detailRouteName: { type: String, default: 'portalRequestDetail' },
+})
+
+const emit = defineEmits(['refresh', 'clone'])
 
 const RequestIdCell = defineComponent({
   name: 'RequestIdCell',
   props: { req: { type: Object, required: true } },
-  setup(props) {
+  setup(cellProps) {
     const { t } = useI18n()
-    return () =>
-      h('div', { class: 'flex flex-wrap items-center gap-1.5' }, [
-        h('span', { class: 'font-mono text-sm font-bold text-slate-900' }, `#${props.req.id}`),
-        props.req.dispatch_request_template_id
+    return () => {
+      const code =
+        props.variant === 'portal'
+          ? formatDispatchRequestRefCode(cellProps.req) || `#${cellProps.req.id}`
+          : `#${cellProps.req.id}`
+      return h('div', { class: 'flex flex-wrap items-center gap-1.5' }, [
+        h('span', { class: 'font-mono text-sm font-bold text-slate-900' }, code),
+        cellProps.req.dispatch_request_template_id
           ? h(
               'span',
               {
@@ -215,16 +228,9 @@ const RequestIdCell = defineComponent({
             )
           : null,
       ])
+    }
   },
 })
-
-const props = defineProps({
-  requests: { type: Array, required: true },
-  variant: { type: String, default: 'portal' },
-  detailRouteName: { type: String, default: 'portalRequestDetail' },
-})
-
-const emit = defineEmits(['refresh', 'clone'])
 
 const { t, locale } = useI18n()
 const router = useRouter()

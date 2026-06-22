@@ -17,29 +17,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.1'
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install Composer dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
-
       - name: Install npm dependencies
         run: npm ci
+        env:
+          HUSKY: '0'
 
       - name: Build frontend assets
         run: npm run build
         env:
           NODE_ENV: production
+          HUSKY: '0'
 
-      - name: Deploy via SSH
+      - name: Sync application code on server
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.DEPLOY_HOST }}
@@ -49,14 +44,33 @@ jobs:
           script: |
             set -e
             cd ${{ secrets.DEPLOY_PATH }}
-
             echo "→ Pulling latest code..."
             git pull origin main
-
-            echo "→ Installing dependencies..."
+            echo "→ Installing PHP dependencies..."
             composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
-            npm ci
-            npm run build
+
+      - name: Upload frontend build to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          source: public/build/
+          target: ${{ secrets.DEPLOY_PATH }}/public/
+          overwrite: true
+          rm: true
+
+      - name: Finalize deployment
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          script: |
+            set -e
+            cd ${{ secrets.DEPLOY_PATH }}
 
             echo "→ Running migrations..."
             php artisan migrate --force

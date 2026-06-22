@@ -1,10 +1,11 @@
 <template>
-  <section class="rounded-2xl bg-slate-50/80 p-5">
+  <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
     <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">{{ t('portal.quick_actions_title') }}</h2>
     <div class="mt-4 grid gap-3">
       <RouterLink
         :to="{ name: 'portalRequestList', query: { filter: 'pending' } }"
-        class="group flex min-h-[56px] items-center gap-3 rounded-2xl bg-white px-4 py-3.5 text-left shadow-sm transition hover:bg-amber-50/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600"
+        class="group flex min-h-[56px] items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 px-4 py-3.5 text-left transition hover:border-amber-200 hover:bg-amber-50/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600"
+        data-testid="portal-quick-pending"
       >
         <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-50">
           <ClockIcon class="h-6 w-6 text-amber-600" aria-hidden="true" />

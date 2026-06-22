@@ -52,7 +52,7 @@
 
       <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <nav
-          class="portal-detail-tabs sticky top-[calc(env(safe-area-inset-top,0px)+4.5rem)] z-20 flex gap-1 overflow-x-auto overscroll-x-contain border-b border-slate-200 bg-slate-50 px-2 py-2 snap-x snap-mandatory sm:px-3 lg:static lg:flex-wrap lg:overflow-visible lg:snap-none"
+          class="portal-detail-tabs sticky top-[calc(env(safe-area-inset-top,0px)+var(--portal-header,3rem))] z-20 flex gap-1 overflow-x-auto overscroll-x-contain border-b border-slate-200 bg-slate-50 px-2 py-2 snap-x snap-mandatory sm:px-3 lg:static lg:top-auto lg:flex-wrap lg:overflow-visible lg:snap-none"
           role="tablist"
           :aria-label="t('portal.detail_tablist_aria')"
         >
@@ -77,7 +77,7 @@
 
         <div class="p-4 sm:p-6">
           <div
-            v-show="activeTab === 'overview'"
+            v-if="activeTab === 'overview'"
             id="portal-tab-panel-overview"
             role="tabpanel"
             class="space-y-4"
@@ -90,12 +90,14 @@
             />
 
             <PortalRequestActionCenter
-              :waiting-on-label="actionCenter.waitingOnLabel"
-              :due-label="actionCenter.dueLabel"
+              :waiting-role-label="actionCenter.waitingRoleLabel"
+              :waiting-person-name="actionCenter.waitingPersonName"
+              :waiting-person-detail="actionCenter.waitingPersonDetail"
               :sla-label="actionCenter.slaLabel"
               :next-action-text="actionCenter.nextActionText"
               :hours-until-depart="actionCenter.hoursUntilDepart"
               :urgent-threshold-hours="req.threshold_hours ?? 24"
+              :dispatch-strip="actionCenter.dispatchStrip"
             />
 
             <div
@@ -123,7 +125,7 @@
           </div>
 
           <div
-            v-show="activeTab === 'progress'"
+            v-if="activeTab === 'progress'"
             id="portal-tab-panel-progress"
             role="tabpanel"
           >
@@ -136,7 +138,7 @@
           </div>
 
           <div
-            v-show="activeTab === 'details'"
+            v-if="activeTab === 'details'"
             id="portal-tab-panel-details"
             role="tabpanel"
           >
@@ -151,7 +153,7 @@
           </div>
 
           <div
-            v-show="activeTab === 'form' && showExtracurricularBm03"
+            v-if="activeTab === 'form' && showExtracurricularBm03"
             id="portal-tab-panel-form"
             role="tabpanel"
           >
@@ -163,7 +165,7 @@
           </div>
 
           <div
-            v-show="activeTab === 'manage' && showRecurringExtras"
+            v-if="activeTab === 'manage' && showRecurringExtras"
             id="portal-tab-panel-manage"
             role="tabpanel"
             class="space-y-4"
@@ -213,7 +215,7 @@
           </div>
 
           <div
-            v-show="activeTab === 'pdf' && req.status === 'approved'"
+            v-if="activeTab === 'pdf' && req.status === 'approved'"
             id="portal-tab-panel-pdf"
             role="tabpanel"
             class="space-y-3"
@@ -276,7 +278,7 @@
           </div>
 
           <div
-            v-show="activeTab === 'docs' && showSignedDocSection"
+            v-if="activeTab === 'docs' && showSignedDocSection"
             id="portal-tab-panel-docs"
             role="tabpanel"
             class="space-y-4"
@@ -577,15 +579,9 @@ onBeforeUnmount(() => {
   revokeSignedPreviewUrl()
 })
 
-const originText = computed(() => {
-  const o = (req.value?.origin || '').trim()
-  return o || '—'
-})
+const originText = computed(() => (req.value?.origin || '').trim())
 
-const destinationText = computed(() => {
-  const d = (req.value?.destination || '').trim()
-  return d || '—'
-})
+const destinationText = computed(() => (req.value?.destination || '').trim())
 
 const purposeLine = computed(() => (req.value?.purpose || '').trim())
 

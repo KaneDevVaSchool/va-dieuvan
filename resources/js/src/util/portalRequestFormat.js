@@ -17,7 +17,7 @@ export function formatDispatchRequestRefCode(req) {
 /** @param {string|null|undefined} value */
 export function formatPortalPlace(value) {
   const s = String(value ?? '').trim()
-  return s || '—'
+  return s
 }
 
 /**

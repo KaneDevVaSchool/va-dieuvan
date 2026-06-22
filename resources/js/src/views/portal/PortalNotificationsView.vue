@@ -1,7 +1,6 @@
 <template>
   <div>
-    <section class="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:py-10">
-      <!-- Page header -->
+    <section class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:py-10">
       <div>
         <h1 class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
           {{ t('portal.notifications_page_title_v2') }}
@@ -9,84 +8,39 @@
         <p class="mt-2 text-sm text-slate-600">{{ t('portal.notifications_page_lead_v2') }}</p>
       </div>
 
-      <!-- Toolbar: tabs + search + mark all -->
-      <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-        <div
-          class="inline-flex shrink-0 rounded-xl border border-slate-200 bg-slate-100/80 p-1"
-          role="tablist"
-        >
-          <button
-            type="button"
-            role="tab"
-            :aria-selected="activeTab === 'all'"
-            class="rounded-lg px-4 py-2 text-sm font-semibold transition"
-            :class="
-              activeTab === 'all'
-                ? 'bg-white text-va-800 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            "
-            @click="setTab('all')"
-          >
-            {{ t('portal.notifications_tab_all') }}
-          </button>
-          <button
-            type="button"
-            role="tab"
-            :aria-selected="activeTab === 'unread'"
-            class="relative rounded-lg px-4 py-2 text-sm font-semibold transition"
-            :class="
-              activeTab === 'unread'
-                ? 'bg-white text-va-800 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            "
-            @click="setTab('unread')"
-          >
-            {{ t('portal.notifications_tab_unread') }}
-            <span
-              v-if="unreadTotal > 0"
-              class="ml-1.5 inline-flex min-h-[18px] min-w-[18px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold leading-none text-white"
-            >
-              {{ unreadTotal > 99 ? '99+' : unreadTotal }}
-            </span>
-          </button>
-        </div>
+      <PortalNotificationsSummaryBar
+        class="mt-6"
+        :loading="loading"
+        :total="summaryTotal"
+        :unread="unreadTotal"
+        :active-tab="activeTab"
+        @quick-filter="setTab"
+      />
 
-        <div class="flex min-w-0 flex-1 flex-wrap items-center gap-2 sm:justify-end">
-          <label class="relative min-w-0 flex-1 sm:max-w-xs">
-            <span class="sr-only">{{ t('portal.notifications_search_placeholder') }}</span>
-            <MagnifyingGlassIcon
-              class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-              aria-hidden="true"
-            />
-            <input
-              v-model="searchInput"
-              type="search"
-              autocomplete="off"
-              :placeholder="t('portal.notifications_search_placeholder')"
-              class="h-10 w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-va-300 focus:outline-none focus:ring-2 focus:ring-va-700/20"
-            />
-          </label>
-          <button
-            type="button"
-            class="inline-flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-va-200 hover:bg-va-50 disabled:opacity-50"
-            :disabled="markingAll || loading || unreadTotal === 0"
-            @click="markAll"
-          >
-            <CheckIcon class="h-4 w-4 text-va-800" aria-hidden="true" />
-            <span class="hidden sm:inline">{{ t('portal.notifications_mark_all') }}</span>
-          </button>
-        </div>
-      </div>
+      <PortalNotificationsToolbar
+        class="mt-5"
+        v-model:search-input="searchInput"
+        v-model:active-tab="activeTab"
+        :unread-total="unreadTotal"
+        :marking-all="markingAll"
+        :mark-all-disabled="loading || unreadTotal === 0"
+        @mark-all="markAll"
+      />
 
       <p v-if="error" class="mt-6 text-sm text-rose-600">{{ error }}</p>
 
-      <div v-else-if="loading" class="mt-8 space-y-3">
-        <div v-for="i in 5" :key="i" class="animate-pulse rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-          <div class="flex gap-3">
-            <div class="h-10 w-10 shrink-0 rounded-full bg-slate-200" />
-            <div class="min-w-0 flex-1 space-y-2">
-              <div class="h-4 w-2/3 rounded bg-slate-200" />
-              <div class="h-3 w-full rounded bg-slate-100" />
+      <div v-else-if="loading" class="mt-6 space-y-4">
+        <div
+          v-for="i in 5"
+          :key="i"
+          class="min-h-[11rem] animate-pulse rounded-2xl border border-slate-100 bg-white p-6 shadow-sm"
+        >
+          <div class="flex gap-4">
+            <div class="h-12 w-12 shrink-0 rounded-xl bg-slate-200" />
+            <div class="min-w-0 flex-1 space-y-3">
+              <div class="h-5 w-2/3 rounded bg-slate-200" />
+              <div class="h-16 w-full rounded-xl bg-slate-100" />
+              <div class="h-3 w-1/3 rounded bg-slate-100" />
             </div>
           </div>
         </div>
@@ -96,69 +50,23 @@
         {{ t('portal.notifications_empty') }}
       </p>
 
-      <div v-else class="mt-8 space-y-8">
+      <div v-else class="mt-6 space-y-8">
         <template v-for="group in groupedSections" :key="group.key">
           <section v-if="group.items.length">
             <h2 class="mb-3 text-xs font-bold uppercase tracking-wider text-slate-400">
               {{ group.label }}
             </h2>
-            <ul class="space-y-2">
-              <li
+            <ul class="space-y-4">
+              <PortalNotificationCard
                 v-for="n in group.items"
                 :key="n.id"
-                class="rounded-2xl border bg-white shadow-sm transition"
-                :class="
-                  n.read
-                    ? 'border-slate-100'
-                    : 'border-va-100/80 bg-gradient-to-r from-va-50/40 to-white'
-                "
-              >
-                <component
-                  :is="rowLinkComponent(n)"
-                  v-bind="rowLinkBind(n)"
-                  class="flex gap-3 px-4 py-4 sm:px-5"
-                  @click="onRowClick(n)"
-                >
-                  <span
-                    class="mt-2 h-2 w-2 shrink-0 rounded-full"
-                    :class="n.read ? 'bg-transparent' : 'bg-va-700'"
-                    aria-hidden="true"
-                  />
-                  <span
-                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-                    :class="visualFor(n).iconBg"
-                    aria-hidden="true"
-                  >
-                    <component :is="visualFor(n).icon" class="h-5 w-5" :class="visualFor(n).iconColor" />
-                  </span>
-                  <div class="min-w-0 flex-1">
-                    <div class="flex items-start justify-between gap-2">
-                      <p class="text-sm font-semibold text-slate-900">
-                        {{ n.data?.title ?? n.type }}
-                      </p>
-                      <time class="shrink-0 text-xs text-slate-400" :datetime="n.created_at">
-                        {{ formatRelativeTime(n.created_at) }}
-                      </time>
-                    </div>
-                    <p v-if="n.data?.body" class="mt-1 text-sm leading-snug text-slate-600">
-                      {{ n.data.body }}
-                    </p>
-                    <span
-                      v-if="visualFor(n).badgeLabel"
-                      class="mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold"
-                      :class="visualFor(n).badgeClass"
-                    >
-                      <component
-                        :is="visualFor(n).badgeIcon"
-                        v-if="visualFor(n).badgeIcon"
-                        class="h-3 w-3"
-                        aria-hidden="true"
-                      />
-                      {{ visualFor(n).badgeLabel }}
-                    </span>
-                  </div>
-                </component>
-              </li>
+                :notification="n"
+                :visual="visualFor(n)"
+                :relative-time="formatRelativeTime(n.created_at)"
+                :link-component="rowLinkComponent(n)"
+                :link-bind="rowLinkBind(n)"
+                @click="onRowClick"
+              />
             </ul>
           </section>
         </template>
@@ -169,6 +77,7 @@
         type="button"
         class="mt-8 flex w-full min-h-[48px] items-center justify-center rounded-2xl border border-slate-200 bg-white text-sm font-semibold text-slate-800 shadow-sm transition hover:border-va-200 hover:bg-va-50 disabled:opacity-50"
         :disabled="loadingMore"
+        data-testid="portal-notifications-load-more"
         @click="loadMore"
       >
         {{ loadingMore ? t('portal.loading_more') : t('portal.notifications_load_more') }}
@@ -186,9 +95,7 @@ import {
   ArrowUturnLeftIcon,
   BellIcon,
   CheckCircleIcon,
-  CheckIcon,
   ClockIcon,
-  MagnifyingGlassIcon,
   PaperAirplaneIcon,
   TruckIcon,
 } from '@heroicons/vue/24/outline'
@@ -198,6 +105,10 @@ import {
   markPortalNotificationRead,
 } from '../../api/notifications'
 import { formatApiError } from '../../api/http'
+import PortalNotificationsSummaryBar from '../../components/portal/PortalNotificationsSummaryBar.vue'
+import PortalNotificationsToolbar from '../../components/portal/PortalNotificationsToolbar.vue'
+import PortalNotificationCard from '../../components/portal/PortalNotificationCard.vue'
+import { refCodeFromPortalNotification, routeFromPortalNotification } from '../../util/portalNotificationRoute'
 
 const { t, locale } = useI18n()
 
@@ -218,16 +129,37 @@ watch(searchInput, (v) => {
   clearTimeout(searchDebounce)
   searchDebounce = window.setTimeout(() => {
     debouncedSearch.value = String(v ?? '').trim()
-  }, 300)
+  }, 350)
 })
+
+watch(activeTab, (tab, prev) => {
+  if (prev !== undefined && tab !== prev) {
+    loadFirst()
+  }
+})
+
+const summaryTotal = computed(() => pagination.value?.total ?? items.value.length)
 
 const filteredItems = computed(() => {
   let list = items.value
   const q = debouncedSearch.value
   if (q) {
+    const lower = q.toLowerCase()
     list = list.filter((n) => {
       const id = String(n.data?.dispatch_request_id ?? '')
-      return id.includes(q) || (n.data?.title ?? '').toLowerCase().includes(q.toLowerCase())
+      const ref = refCodeFromPortalNotification(n)
+      const { origin, destination } = routeFromPortalNotification(n)
+      const hay = [
+        id,
+        ref,
+        n.data?.title ?? '',
+        n.data?.body ?? '',
+        origin,
+        destination,
+      ]
+        .join(' ')
+        .toLowerCase()
+      return id.includes(q) || ref.toLowerCase().includes(lower) || hay.includes(lower)
     })
   }
   return list
@@ -272,7 +204,7 @@ function visualFor(n) {
   if (type.includes('reject') || type.includes('return') || status === 'rejected') {
     return {
       icon: ArrowUturnLeftIcon,
-      iconBg: 'bg-amber-100',
+      iconBg: 'bg-amber-100 ring-amber-200/80',
       iconColor: 'text-amber-700',
       badgeLabel: t('portal.notifications_badge_returned'),
       badgeClass: 'bg-amber-50 text-amber-800 ring-1 ring-amber-200/60',
@@ -282,7 +214,7 @@ function visualFor(n) {
   if (type.includes('complet') || status === 'completed') {
     return {
       icon: TruckIcon,
-      iconBg: 'bg-emerald-100',
+      iconBg: 'bg-emerald-100 ring-emerald-200/80',
       iconColor: 'text-emerald-700',
       badgeLabel: t('portal.notifications_badge_dispatched_done'),
       badgeClass: 'bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200/60',
@@ -292,7 +224,7 @@ function visualFor(n) {
   if (type.includes('dispatch') || status === 'approved') {
     return {
       icon: TruckIcon,
-      iconBg: 'bg-sky-100',
+      iconBg: 'bg-sky-100 ring-sky-200/80',
       iconColor: 'text-sky-700',
       badgeLabel: t('portal.notifications_badge_dispatched'),
       badgeClass: 'bg-sky-50 text-sky-800 ring-1 ring-sky-200/60',
@@ -302,7 +234,7 @@ function visualFor(n) {
   if (type.includes('approv')) {
     return {
       icon: CheckCircleIcon,
-      iconBg: 'bg-emerald-100',
+      iconBg: 'bg-emerald-100 ring-emerald-200/80',
       iconColor: 'text-emerald-700',
       badgeLabel: t('portal.notifications_badge_approved'),
       badgeClass: 'bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200/60',
@@ -312,7 +244,7 @@ function visualFor(n) {
   if (type.includes('submit') || type.includes('creat') || type.includes('new')) {
     return {
       icon: PaperAirplaneIcon,
-      iconBg: 'bg-slate-100',
+      iconBg: 'bg-slate-100 ring-slate-200/80',
       iconColor: 'text-slate-600',
       badgeLabel: t('portal.notifications_badge_pending'),
       badgeClass: 'bg-slate-100 text-slate-700 ring-1 ring-slate-200/60',
@@ -321,7 +253,7 @@ function visualFor(n) {
   }
   return {
     icon: BellIcon,
-    iconBg: 'bg-slate-100',
+    iconBg: 'bg-slate-100 ring-slate-200/80',
     iconColor: 'text-slate-500',
     badgeLabel: '',
     badgeClass: '',
@@ -364,7 +296,10 @@ function rowLinkComponent(n) {
 function rowLinkBind(n) {
   const id = n.data?.dispatch_request_id
   if (!id) return {}
-  return { to: { name: 'portalRequestDetail', params: { id: String(id) } } }
+  return {
+    to: { name: 'portalRequestDetail', params: { id: String(id) } },
+    'data-testid': `portal-notification-link-${id}`,
+  }
 }
 
 async function onRowClick(n) {
@@ -424,7 +359,6 @@ async function loadMore() {
 function setTab(tab) {
   if (activeTab.value === tab) return
   activeTab.value = tab
-  loadFirst()
 }
 
 async function markAll() {

@@ -13,7 +13,7 @@
 ```
 PHP >= 8.1
 MySQL >= 8.0
-Node.js >= 18 (để build assets)
+Node.js >= 18 (chỉ cần khi build assets thủ công trên server; deploy GitHub Actions build sẵn và upload `public/build`)
 Nginx hoặc Apache
 Redis (optional, cho cache/queue tốt hơn)
 Supervisor (để chạy queue workers)
@@ -24,9 +24,9 @@ Supervisor (để chạy queue workers)
 ```bash
 # Install dependencies
 composer install --no-dev --optimize-autoloader
-npm ci
 
-# Build frontend assets
+# Build frontend assets (HUSKY=0 skips git hooks on server)
+HUSKY=0 npm ci
 npm run build
 
 # Laravel optimization

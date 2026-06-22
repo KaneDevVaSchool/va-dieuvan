@@ -45,9 +45,14 @@
             </span>
           </div>
           <dl class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
-            <div v-if="createdFmt" class="flex gap-1.5">
+            <div class="flex gap-1.5">
               <dt class="text-slate-500">{{ t('portal.detail_hero.created') }}</dt>
-              <dd class="font-medium text-slate-800">{{ createdFmt }}</dd>
+              <dd
+                class="font-medium"
+                :class="createdFmt ? 'text-slate-800' : 'italic text-slate-400'"
+              >
+                {{ createdFmt || t('portal.list_empty.created_at') }}
+              </dd>
             </div>
             <div v-if="requesterName" class="flex gap-1.5">
               <dt class="text-slate-500">{{ t('portal.requester') }}</dt>
@@ -97,7 +102,7 @@ const { t } = useI18n()
 
 const isUrgent = computed(() => !!props.req?.is_urgent)
 
-const refCode = computed(() => formatDispatchRequestRefCode(props.req) || '—')
+const refCode = computed(() => formatDispatchRequestRefCode(props.req) || t('portal.list_empty.ref_code'))
 
 const requesterName = computed(() => {
   const r = props.req

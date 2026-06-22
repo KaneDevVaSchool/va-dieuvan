@@ -16,7 +16,7 @@
         "commit:lint": "lint-staged",
         "commit:push": "node scripts/commit.mjs --push",
         "suggest:commit": "node scripts/suggest-commit-message.mjs",
-        "prepare": "husky"
+        "prepare": "node scripts/prepare-husky.mjs"
     },
     "lint-staged": {
         "*.php": "php vendor/bin/pint"

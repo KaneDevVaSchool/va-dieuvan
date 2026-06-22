@@ -12,9 +12,16 @@
         <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-600/90">
           {{ t('portal.origin') }}
         </p>
-        <p class="mt-1.5 flex items-start gap-2 text-lg font-bold leading-snug text-slate-900 sm:text-xl">
-          <MapPinIcon class="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" aria-hidden="true" />
-          <span class="min-w-0">{{ origin }}</span>
+        <p
+          class="mt-1.5 flex items-start gap-2 text-lg font-bold leading-snug sm:text-xl"
+          :class="originIsEmpty ? 'italic text-slate-400' : 'text-slate-900'"
+        >
+          <MapPinIcon
+            class="mt-0.5 h-5 w-5 shrink-0"
+            :class="originIsEmpty ? 'text-slate-300' : 'text-emerald-600'"
+            aria-hidden="true"
+          />
+          <span class="min-w-0">{{ originDisplay }}</span>
         </p>
       </div>
 
@@ -30,26 +37,34 @@
         <p class="text-[10px] font-bold uppercase tracking-wider text-rose-600/90">
           {{ t('portal.destination') }}
         </p>
-        <p class="mt-1.5 flex items-start gap-2 text-lg font-bold leading-snug text-slate-900 sm:text-xl">
-          <MapPinIcon class="mt-0.5 h-5 w-5 shrink-0 text-rose-600" aria-hidden="true" />
-          <span class="min-w-0">{{ destination }}</span>
+        <p
+          class="mt-1.5 flex items-start gap-2 text-lg font-bold leading-snug sm:text-xl"
+          :class="destinationIsEmpty ? 'italic text-slate-400' : 'text-slate-900'"
+        >
+          <MapPinIcon
+            class="mt-0.5 h-5 w-5 shrink-0"
+            :class="destinationIsEmpty ? 'text-slate-300' : 'text-rose-600'"
+            aria-hidden="true"
+          />
+          <span class="min-w-0">{{ destinationDisplay }}</span>
         </p>
       </div>
     </div>
 
     <div
-      v-if="tripTypeLabel || departAt || mapsHref"
       class="flex flex-col gap-3 border-t border-slate-100 bg-slate-50/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5"
     >
       <div class="flex flex-wrap gap-2">
-        <div
-          v-if="departAt"
-          class="rounded-xl border border-va-200/80 bg-va-50/70 px-3 py-2"
-        >
+        <div class="rounded-xl border border-va-200/80 bg-va-50/70 px-3 py-2">
           <p class="text-[10px] font-bold uppercase tracking-wider text-va-600/80">
             {{ t('portal.detail_journey.depart_label') }}
           </p>
-          <p class="mt-0.5 text-sm font-semibold tabular-nums text-va-900">{{ departAt }}</p>
+          <p
+            class="mt-0.5 text-sm font-semibold tabular-nums"
+            :class="departAt ? 'text-va-900' : 'italic text-slate-400'"
+          >
+            {{ departAt || emptyText.departAt('') }}
+          </p>
         </div>
         <div
           v-if="tripTypeLabel"
@@ -59,6 +74,12 @@
             {{ t('portal.detail_journey.trip_type_label') }}
           </p>
           <p class="mt-0.5 text-sm font-semibold text-slate-800">{{ tripTypeLabel }}</p>
+        </div>
+        <div v-else class="rounded-xl border border-slate-200/80 bg-white px-3 py-2">
+          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            {{ t('portal.detail_journey.trip_type_label') }}
+          </p>
+          <p class="mt-0.5 text-sm italic text-slate-400">{{ emptyText.tripType('') }}</p>
         </div>
       </div>
       <a
@@ -86,19 +107,27 @@ import {
   MapPinIcon,
 } from '@heroicons/vue/24/outline'
 
+import { usePortalRequestEmptyText } from '../../composables/usePortalRequestEmptyText.js'
+
 const props = defineProps({
-  origin: { type: String, default: '—' },
-  destination: { type: String, default: '—' },
+  origin: { type: String, default: '' },
+  destination: { type: String, default: '' },
   departAt: { type: String, default: '' },
   tripTypeLabel: { type: String, default: '' },
 })
 
 const { t } = useI18n()
+const emptyText = usePortalRequestEmptyText()
+
+const originDisplay = computed(() => emptyText.routeJourneyOrigin(props.origin))
+const destinationDisplay = computed(() => emptyText.routeJourneyDestination(props.destination))
+const originIsEmpty = computed(() => !emptyText.portalFieldHasValue(props.origin))
+const destinationIsEmpty = computed(() => !emptyText.portalFieldHasValue(props.destination))
 
 const mapsHref = computed(() => {
   const o = (props.origin || '').trim()
   const d = (props.destination || '').trim()
-  if (!o || !d || o === '—' || d === '—') return ''
+  if (!emptyText.portalFieldHasValue(o) || !emptyText.portalFieldHasValue(d)) return ''
   const u = new URL('https://www.google.com/maps/dir/')
   u.searchParams.set('api', '1')
   u.searchParams.set('origin', o)

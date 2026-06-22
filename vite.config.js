@@ -98,12 +98,18 @@ export default defineConfig({
         }),
     ],
     build: {
+        sourcemap: false,
+        reportCompressedSize: false,
+        cssMinify: 'esbuild',
+        target: 'es2020',
         rollupOptions: {
             output: {
                 manualChunks(id) {
                     if (!id.includes('node_modules')) return;
                     // Heavy charting library — split off so driver shell never loads it
                     if (id.includes('echarts') || id.includes('zrender')) return 'echarts';
+                    if (id.includes('exceljs')) return 'exceljs';
+                    if (id.includes('leaflet')) return 'leaflet';
                     // Workbox runtime (separate from the precache manifest)
                     if (id.includes('workbox')) return 'workbox';
                     // Core framework pieces — minimal, loaded on every page

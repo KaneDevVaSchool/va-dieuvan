@@ -196,7 +196,7 @@ function onCardAction(card) {
 </template>
 
 <style scoped>
-@media (max-width: 767px) {
+@media (max-width: 639px) {
   .portal-kpi-scroll {
     overflow-x: auto;
     scroll-snap-type: x mandatory;

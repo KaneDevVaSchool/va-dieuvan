@@ -1,5 +1,8 @@
 <template>
-  <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+  <section
+    class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm"
+    data-testid="portal-notifications-panel"
+  >
     <div class="flex items-start justify-between gap-2">
       <h2 class="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
         {{ t('portal.notifications_panel_title') }}

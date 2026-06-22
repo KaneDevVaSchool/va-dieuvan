@@ -24,14 +24,14 @@
             <th scope="row" class="portal-info-th">{{ t('portal.origin') }}</th>
             <td class="portal-info-td">
               <span v-if="originDisplay" class="font-medium text-slate-900">{{ originDisplay }}</span>
-              <span v-else class="italic text-slate-400">{{ t('portal.info_cards.empty_route') }}</span>
+              <span v-else class="italic text-slate-400">{{ t('portal.info_cards.empty_origin') }}</span>
             </td>
           </tr>
           <tr>
             <th scope="row" class="portal-info-th">{{ t('portal.destination') }}</th>
             <td class="portal-info-td">
               <span v-if="destinationDisplay" class="font-medium text-slate-900">{{ destinationDisplay }}</span>
-              <span v-else class="italic text-slate-400">{{ t('portal.info_cards.empty_route') }}</span>
+              <span v-else class="italic text-slate-400">{{ t('portal.info_cards.empty_destination') }}</span>
             </td>
           </tr>
           <tr class="bg-amber-50/50">
@@ -174,8 +174,8 @@ import { portalRequestPassengerCount } from '../../util/portalRequestFormat.js'
 
 const props = defineProps({
   req: { type: Object, required: true },
-  origin: { type: String, default: '—' },
-  destination: { type: String, default: '—' },
+  origin: { type: String, default: '' },
+  destination: { type: String, default: '' },
   timelineSteps: { type: Array, default: () => [] },
   purpose: { type: String, default: '' },
   notes: { type: String, default: '' },
@@ -263,7 +263,7 @@ const historyEntries = computed(() => {
   const r = props.req
   if (r?.status === 'rejected' && r.rejection_reason) {
     entries.push({
-      at: formatPart(r.updated_at, { full: true }) || '—',
+      at: formatPart(r.updated_at, { full: true }) || t('portal.info_cards.empty_time'),
       title: t('portal.rejected_title'),
       actor: String(r.rejection_reason).slice(0, 120),
     })

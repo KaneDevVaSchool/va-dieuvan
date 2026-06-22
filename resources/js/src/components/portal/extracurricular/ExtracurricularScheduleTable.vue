@@ -14,88 +14,117 @@
       class="xc-portal-group-card"
     >
       <div class="xc-portal-group-header flex flex-col gap-0">
-      <div
-        class="flex items-center justify-between gap-3 px-4 py-3.5 text-sm font-semibold text-va-900"
-      >
-        <button
-          type="button"
-          class="flex min-w-0 flex-1 items-center gap-2 rounded-lg text-left transition hover:bg-va-50/60 focus:outline-none focus:ring-2 focus:ring-va-500/30"
-          :aria-expanded="isGroupOpen(group.key)"
-          :aria-label="t('portal.extracurricular_list.collapse_hint')"
-          @click="toggleGroup(group.key)"
-        >
-          <ChevronRightIcon
-            class="h-4 w-4 shrink-0 text-va-800 transition"
-            :class="{ 'rotate-90': isGroupOpen(group.key) }"
-            aria-hidden="true"
-          />
-          <span class="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-2">
-            <span class="truncate">{{ group.label }}</span>
-          </span>
-        </button>
-
         <div
-          v-if="props.groupBy === 'plan'"
-          class="flex min-w-0 max-w-[min(100%,28rem)] flex-1 flex-wrap items-center justify-end gap-2"
-          @click.stop
+          class="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between"
         >
-          <template v-if="editingTemplateId === templateIdForGroup(group)">
-            <input
-              :ref="setPlanLabelInputRef"
-              v-model="planLabelDraft"
-              type="text"
-              maxlength="255"
-              class="min-w-[8rem] flex-1 rounded-lg border border-va-300 bg-white px-2 py-1 text-sm font-semibold text-va-900 shadow-sm focus:border-va-700 focus:outline-none focus:ring-2 focus:ring-va-700/30"
-              :aria-label="t('portal.extracurricular_list.plan_name_edit_label')"
-              @keydown.enter.prevent="savePlanLabel(group)"
-              @keydown.escape.prevent="cancelPlanLabelEdit"
-            />
+          <div class="flex min-w-0 flex-1 items-start gap-2">
             <button
               type="button"
-              class="shrink-0 rounded-lg bg-va-800 px-2.5 py-1 text-xs font-semibold text-white hover:bg-va-800 disabled:opacity-60"
-              :disabled="planLabelSaving"
-              @click="savePlanLabel(group)"
+              class="mt-0.5 shrink-0 rounded-lg p-1 text-va-800 transition hover:bg-va-50/60 focus:outline-none focus:ring-2 focus:ring-va-500/30"
+              :aria-expanded="isGroupOpen(group.key)"
+              :aria-label="t('portal.extracurricular_list.collapse_hint')"
+              data-testid="portal-ec-group-toggle"
+              @click="toggleGroup(group.key)"
             >
-              {{ planLabelSaving ? t('portal.extracurricular_list.plan_name_save_busy') : t('portal.extracurricular_list.plan_name_save') }}
+              <ChevronRightIcon
+                class="h-4 w-4 transition"
+                :class="{ 'rotate-90': isGroupOpen(group.key) }"
+                aria-hidden="true"
+              />
             </button>
-            <button
-              type="button"
-              class="shrink-0 rounded-lg px-2 py-1 text-xs font-medium text-va-900 hover:bg-va-100/80"
-              :disabled="planLabelSaving"
-              @click="cancelPlanLabelEdit"
-            >
-              {{ t('portal.extracurricular_list.plan_name_cancel') }}
-            </button>
-          </template>
-          <button
-            v-else-if="templateIdForGroup(group)"
-            type="button"
-            class="shrink-0 rounded-md p-1.5 text-va-800 hover:bg-va-100/80"
-            :title="t('portal.extracurricular_list.plan_name_edit')"
-            :aria-label="t('portal.extracurricular_list.plan_name_edit')"
-            @click="startPlanLabelEdit(group)"
-          >
-            <PencilSquareIcon class="h-4 w-4" aria-hidden="true" />
-          </button>
-          <p
-            v-if="planLabelError && editingTemplateId === templateIdForGroup(group)"
-            class="w-full text-xs font-normal text-red-700"
-          >
-            {{ planLabelError }}
-          </p>
-        </div>
 
-        <button
-          type="button"
-          class="shrink-0 text-xs font-medium text-va-900/90 hover:underline focus:outline-none focus:ring-2 focus:ring-va-700/30 rounded"
-          @click="toggleGroup(group.key)"
-        >
-          {{ t('portal.extracurricular_list.group_summary', { count: group.items.length }) }}
-          <span v-if="group.pendingHs > 0" class="ml-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-900">
-            {{ group.pendingHs }} {{ t('portal.extracurricular_list.pending_hs_short') }}
-          </span>
-        </button>
-      </div>
+            <div class="min-w-0 flex-1">
+              <template
+                v-if="props.groupBy === 'plan' && editingTemplateId === templateIdForGroup(group)"
+              >
+                <div class="space-y-2" @click.stop>
+                  <input
+                    :ref="setPlanLabelInputRef"
+                    v-model="planLabelDraft"
+                    type="text"
+                    maxlength="255"
+                    class="input h-10 w-full text-sm font-semibold text-va-900"
+                    :placeholder="t('portal.extracurricular_create.plan_name_ph')"
+                    :aria-label="t('portal.extracurricular_list.plan_name_edit_label')"
+                    data-testid="portal-ec-plan-name-input"
+                    @keydown.enter.prevent="savePlanLabel(group)"
+                    @keydown.escape.prevent="cancelPlanLabelEdit"
+                  />
+                  <div class="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      class="inline-flex h-9 shrink-0 items-center rounded-lg bg-va-800 px-3 text-xs font-semibold text-white hover:bg-va-900 disabled:opacity-60"
+                      :disabled="planLabelSaving"
+                      data-testid="portal-ec-plan-name-save"
+                      @click="savePlanLabel(group)"
+                    >
+                      {{
+                        planLabelSaving
+                          ? t('portal.extracurricular_list.plan_name_save_busy')
+                          : t('portal.extracurricular_list.plan_name_save')
+                      }}
+                    </button>
+                    <button
+                      type="button"
+                      class="inline-flex h-9 shrink-0 items-center rounded-lg px-3 text-xs font-medium text-va-900 ring-1 ring-slate-200 hover:bg-va-100/80 disabled:opacity-60"
+                      :disabled="planLabelSaving"
+                      data-testid="portal-ec-plan-name-cancel"
+                      @click="cancelPlanLabelEdit"
+                    >
+                      {{ t('portal.extracurricular_list.plan_name_cancel') }}
+                    </button>
+                  </div>
+                  <p
+                    v-if="planLabelError"
+                    class="text-xs font-normal text-red-700"
+                  >
+                    {{ planLabelError }}
+                  </p>
+                </div>
+              </template>
+              <template v-else-if="props.groupBy === 'plan' && templateIdForGroup(group)">
+                <button
+                  type="button"
+                  class="group/title flex max-w-full items-center gap-2 rounded-lg py-0.5 text-left text-sm font-semibold text-va-900 transition hover:bg-va-50/60 focus:outline-none focus:ring-2 focus:ring-va-500/30"
+                  data-testid="portal-ec-plan-name-edit-trigger"
+                  @click.stop="startPlanLabelEdit(group)"
+                >
+                  <span
+                    class="truncate"
+                    :class="planGroupTitleIsUnnamed(group) ? 'text-slate-500 italic font-medium' : ''"
+                  >
+                    {{ group.label }}
+                  </span>
+                  <PencilSquareIcon
+                    class="h-4 w-4 shrink-0 text-va-700/70 opacity-0 transition group-hover/title:opacity-100 group-focus/title:opacity-100"
+                    aria-hidden="true"
+                  />
+                </button>
+                <p class="mt-0.5 text-[11px] font-normal text-slate-500">
+                  {{ t('portal.extracurricular_list.plan_name_edit_hint') }}
+                </p>
+              </template>
+              <p v-else class="text-sm font-semibold text-va-900">
+                <span class="truncate">{{ group.label }}</span>
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="shrink-0 self-start text-xs font-medium text-va-900/90 hover:underline focus:outline-none focus:ring-2 focus:ring-va-700/30 rounded sm:self-center"
+            data-testid="portal-ec-group-summary"
+            @click="toggleGroup(group.key)"
+          >
+            {{ t('portal.extracurricular_list.group_summary', { count: group.items.length }) }}
+            <span
+              v-if="group.pendingHs > 0"
+              class="ml-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-900"
+            >
+              {{ group.pendingHs }} {{ t('portal.extracurricular_list.pending_hs_short') }}
+            </span>
+          </button>
+        </div>
 
       <div
         v-if="packageBudgetUsageForGroup(group)"
@@ -126,143 +155,32 @@
       </div>
       </div>
 
-      <div v-show="isGroupOpen(group.key)" class="hidden border-t border-va-100/80 md:block">
-        <div class="xc-portal-table-scroll">
-          <table class="xc-portal-table">
-            <thead>
-              <tr>
-                <th>{{ t('portal.extracurricular_table.col_request') }}</th>
-                <th>{{ t('portal.extracurricular_table.col_depart') }}</th>
-                <th class="min-w-[10rem]">{{ t('portal.extracurricular_table.col_route') }}</th>
-                <th>{{ t('portal.extracurricular_table.col_status') }}</th>
-                <th class="xc-portal-tabular text-center">{{ t('portal.extracurricular_table.col_plan') }}</th>
-                <th
-                  v-if="groupHasFilledTripCost(group)"
-                  class="whitespace-nowrap text-right"
-                >
-                  {{ t('portal.extracurricular_table.col_trip_cost') }}
-                </th>
-                <th class="min-w-[11rem]">{{ t('portal.extracurricular_table.col_actual') }}</th>
-                <th class="xc-portal-col-actions text-right">{{ t('portal.extracurricular_table.col_actions') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-            <tr
-              v-for="req in group.items"
-              :key="req.id"
-            >
-              <td class="whitespace-nowrap">
-                <span class="font-mono text-sm font-bold text-slate-900">#{{ req.id }}</span>
-                <StudentCountTrackingBadge
-                  class="mt-1"
-                  :tracking-key="row.studentCountTrackingKey(req)"
-                  i18n-prefix="portal.extracurricular_table"
-                />
-              </td>
-              <td class="xc-portal-tabular whitespace-nowrap text-slate-600">{{ departFmt(req) }}</td>
-              <td class="font-medium text-slate-800">{{ routeLine(req) }}</td>
-              <td>
-                <StatusBadge :status="req.status" size="sm" />
-              </td>
-              <td class="xc-portal-tabular text-center font-medium text-slate-700">
-                {{ row.planStudentCount(req) ?? '—' }}
-              </td>
-              <td
-                v-if="groupHasFilledTripCost(group)"
-                class="whitespace-nowrap text-right text-sm tabular-nums text-slate-700"
-              >
-                <template v-if="reqHasFilledTripCost(req)">
-                  <span class="font-semibold text-slate-900">{{ tripCostDisplayForReq(req) }}</span>
-                  <span class="mt-0.5 block text-[10px] font-medium uppercase tracking-wide text-teal-700">
-                    {{ t('portal.extracurricular_table.cost_filled_dispatch') }}
-                  </span>
-                </template>
-              </td>
-              <td>
-                <StudentCountCell
-                  :req="req"
-                  :draft="draftFor(req.id)"
-                  :saving="savingId === req.id"
-                  :error="errors[req.id]"
-                  :can-edit="row.canEditStudentCount(req)"
-                  :lock-hint="lockHintFor(req)"
-                  :show-submit="false"
-                  :save-label-key="'portal.extracurricular_table.update_count'"
-                  :save-busy-label-key="'portal.extracurricular_table.update_count_busy'"
-                  @update:draft="setDraft(req.id, $event)"
-                  @save="saveCount(req)"
-                />
-              </td>
-              <td class="xc-portal-col-actions text-right">
-                <ExtracurricularRowActions
-                  :req="req"
-                  variant="portal"
-                  :detail-route-name="detailRouteName"
-                  :show-complete-bm03="row.needsPortalBm03Completion(req)"
-                  :can-complete-bm03="row.canOpenPortalBm03Completion(req)"
-                  :complete-disabled-hint="completeBm03HintFor(req)"
-                  :show-clone="false"
-                  @open-detail="openDetail(req)"
-                />
-              </td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div v-show="isGroupOpen(group.key)" class="space-y-3 border-t border-va-100/80 bg-slate-50/30 p-3 md:hidden">
-        <article
+      <div
+        v-show="isGroupOpen(group.key)"
+        class="grid grid-cols-1 gap-3 border-t border-va-100/80 bg-slate-50/30 p-3 sm:grid-cols-2 xl:grid-cols-3"
+      >
+        <PortalExtracurricularScheduleRequestCard
           v-for="req in group.items"
-          :key="'m-' + req.id"
-          class="xc-portal-mobile-row p-3.5"
-        >
-          <div class="flex flex-wrap items-start justify-between gap-2">
-            <div class="min-w-0">
-              <span class="font-mono text-sm font-bold text-slate-900">#{{ req.id }}</span>
-              <StatusBadge class="mt-1" :status="req.status" size="sm" />
-            </div>
-            <ExtracurricularRowActions
-              :req="req"
-              variant="portal"
-              :detail-route-name="detailRouteName"
-              :show-complete-bm03="row.needsPortalBm03Completion(req)"
-              :can-complete-bm03="row.canOpenPortalBm03Completion(req)"
-              :complete-disabled-hint="completeBm03HintFor(req)"
-              :show-clone="false"
-              @open-detail="openDetail(req)"
-            />
-          </div>
-          <p class="mt-1 text-sm text-slate-800">{{ routeLine(req) }}</p>
-          <p class="text-xs text-slate-500">{{ departFmt(req) }}</p>
-          <div class="mt-2 flex items-center justify-between text-xs">
-            <span class="text-slate-500">{{ t('portal.extracurricular_table.col_plan') }}</span>
-            <span class="font-semibold tabular-nums">{{ row.planStudentCount(req) ?? '—' }}</span>
-          </div>
-          <div
-            v-if="reqHasFilledTripCost(req)"
-            class="mt-1 flex items-center justify-between text-xs"
-          >
-            <span class="text-slate-500">{{ t('portal.extracurricular_table.col_trip_cost_filled') }}</span>
-            <span class="font-semibold tabular-nums text-slate-800">{{ tripCostDisplayForReq(req) }}</span>
-          </div>
-          <div class="mt-2">
-            <StudentCountCell
-              :req="req"
-              :draft="draftFor(req.id)"
-              :saving="savingId === req.id"
-              :error="errors[req.id]"
-              :can-edit="row.canEditStudentCount(req)"
-              :lock-hint="lockHintFor(req)"
-              :show-submit="false"
-              mobile
-              :save-label-key="'portal.extracurricular_table.update_count'"
-              :save-busy-label-key="'portal.extracurricular_table.update_count_busy'"
-              @update:draft="setDraft(req.id, $event)"
-              @save="saveCount(req)"
-            />
-          </div>
-        </article>
+          :key="req.id"
+          :req="req"
+          :detail-route-name="detailRouteName"
+          :route-line="routeLine(req)"
+          :depart-label="departFmt(req)"
+          :plan-count="row.planStudentCount(req)"
+          :trip-cost-display="reqHasFilledTripCost(req) ? tripCostDisplayForReq(req) : ''"
+          :tracking-key="row.studentCountTrackingKey(req)"
+          :draft="draftFor(req.id)"
+          :saving="savingId === req.id"
+          :error="errors[req.id]"
+          :can-edit="row.canEditStudentCount(req)"
+          :lock-hint="lockHintFor(req)"
+          :show-complete-bm03="row.needsPortalBm03Completion(req)"
+          :can-complete-bm03="row.canOpenPortalBm03Completion(req)"
+          :complete-disabled-hint="completeBm03HintFor(req)"
+          @open-detail="openDetail"
+          @update:draft="setDraft(req.id, $event)"
+          @save="saveCount(req)"
+        />
       </div>
     </section>
   </div>
@@ -276,13 +194,11 @@ import { ChevronRightIcon, PencilSquareIcon } from '@heroicons/vue/24/outline'
 import { updatePortalDispatchPlanLabel } from '../../../api/requests'
 import { formatApiError } from '../../../api/http'
 import { formatVnd } from '../../../util/labels'
-import StatusBadge from '../../ui/StatusBadge.vue'
-import StudentCountCell from '../../requests/extracurricular/StudentCountCell.vue'
-import StudentCountTrackingBadge from '../../requests/extracurricular/StudentCountTrackingBadge.vue'
+import { confirmAction } from '../../../composables/useConfirm'
+import PortalExtracurricularScheduleRequestCard from './PortalExtracurricularScheduleRequestCard.vue'
 import { useAuthStore } from '../../../store'
 import { useExtracurricularRequestRow } from '../../../composables/useExtracurricularRequestRow'
 import { useExtracurricularInlineStudentCount } from '../../../composables/useExtracurricularInlineStudentCount'
-import ExtracurricularRowActions from '../../requests/extracurricular/ExtracurricularRowActions.vue'
 
 const props = defineProps({
   requests: { type: Array, default: () => [] },
@@ -292,6 +208,7 @@ const props = defineProps({
 
 const editingTemplateId = ref(null)
 const planLabelDraft = ref('')
+const planLabelOriginal = ref('')
 const planLabelSaving = ref(false)
 const planLabelError = ref('')
 const planLabelInputRef = ref(null)
@@ -440,6 +357,10 @@ function rawPlanLabelFromReq(req) {
   return String(pkgLabel || '').trim()
 }
 
+function planGroupTitleIsUnnamed(group) {
+  return group?.label === t('portal.recurring_plan.plan_name_unnamed')
+}
+
 function startPlanLabelEdit(group) {
   const tid = templateIdForGroup(group)
   if (!tid) return
@@ -450,8 +371,9 @@ function startPlanLabelEdit(group) {
   editingTemplateId.value = tid
   const raw =
     group?.items?.map((r) => rawPlanLabelFromReq(r)).find((s) => s) ||
-    (group.label === t('portal.recurring_plan.plan_name_unnamed') ? '' : String(group.label || '').trim())
+    (planGroupTitleIsUnnamed(group) ? '' : String(group.label || '').trim())
   planLabelDraft.value = raw
+  planLabelOriginal.value = raw
   focusPlanLabelInput()
 }
 
@@ -468,9 +390,22 @@ function focusPlanLabelInput() {
   })
 }
 
-function cancelPlanLabelEdit() {
+async function cancelPlanLabelEdit() {
+  if (planLabelSaving.value) return
+  const draft = planLabelDraft.value.trim()
+  const original = planLabelOriginal.value.trim()
+  if (draft !== original) {
+    const ok = await confirmAction({
+      title: t('portal.extracurricular_list.plan_name_cancel_confirm_title'),
+      message: t('portal.extracurricular_list.plan_name_cancel_confirm_message'),
+      confirmLabel: t('portal.extracurricular_list.plan_name_discard'),
+      cancelLabel: t('portal.extracurricular_list.plan_name_keep_editing'),
+    })
+    if (!ok) return
+  }
   editingTemplateId.value = null
   planLabelDraft.value = ''
+  planLabelOriginal.value = ''
   planLabelError.value = ''
 }
 
