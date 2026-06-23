@@ -405,6 +405,8 @@
         "point_end": "Arrival",
         "point_waypoint": "Stop",
         "schedule_leg": "Itinerary {n}",
+        "schedule_leg_collapse": "Collapse itinerary",
+        "schedule_leg_expand": "View route",
         "planned": "Planned {t}",
         "trip_notes_title": "Trip notes",
         "warn_title": "{n}-minute warning",

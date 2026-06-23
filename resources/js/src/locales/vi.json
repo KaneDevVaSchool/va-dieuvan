@@ -455,6 +455,8 @@
         "point_end": "Điểm đến",
         "point_waypoint": "Điểm dừng",
         "schedule_leg": "Lịch trình {n}",
+        "schedule_leg_collapse": "Thu gọn lịch trình",
+        "schedule_leg_expand": "Xem lộ trình",
         "planned": "Dự kiến {t}",
         "trip_notes_title": "Ghi chú chuyến đi",
         "warn_title": "Cảnh báo {n} phút",
