@@ -3159,7 +3159,7 @@
         "pricing_apply_success": "Đã áp dụng gợi ý bảng giá vào phiếu.",
         "open_maps_route": "Mở Google Maps",
         "clone_lineage_heading": "Phiếu nhân bản từ phiếu gốc",
-        "clone_lineage_body": "Nguồn: phiếu #{id}",
+        "clone_lineage_body": "Nguồn: phiếu {code}",
         "clone_lineage_open_source": "Mở phiếu gốc",
         "audit_timeline_heading": "Nhật ký thao tác",
         "audit_timeline_loading": "Đang tải nhật ký…",

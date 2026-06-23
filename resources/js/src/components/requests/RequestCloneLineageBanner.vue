@@ -5,7 +5,7 @@
   >
     <p class="font-semibold">{{ t('request_detail.clone_lineage_heading') }}</p>
     <p class="mt-1 text-indigo-900/90">
-      {{ t('request_detail.clone_lineage_body', { id: summary.id }) }}
+      {{ t('request_detail.clone_lineage_body', { code: sourceRefCode }) }}
       <span v-if="summary.origin || summary.destination" class="block mt-0.5 text-indigo-800/80">
         {{ summary.origin || '—' }} → {{ summary.destination || '—' }}
       </span>
@@ -23,6 +23,8 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { formatDispatchRequestRefCode } from '../../util/portalRequestFormat'
+
 const props = defineProps({
   summary: { type: Object, default: null },
   /** 'staff' | 'dept' */
@@ -30,6 +32,12 @@ const props = defineProps({
 })
 
 const { t } = useI18n()
+
+const sourceRefCode = computed(() => {
+  const s = props.summary
+  if (!s) return ''
+  return formatDispatchRequestRefCode(s) || String(s.id ?? '')
+})
 
 const detailTo = computed(() => {
   if (!props.summary?.id) return '/requests'

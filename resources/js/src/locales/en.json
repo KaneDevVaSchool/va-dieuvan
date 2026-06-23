@@ -3715,7 +3715,7 @@
         "pricing_apply_success": "Pricing suggestion applied to request.",
         "open_maps_route": "Open in Google Maps",
         "clone_lineage_heading": "Cloned from another request",
-        "clone_lineage_body": "Source request #{id}",
+        "clone_lineage_body": "Source request {code}",
         "clone_lineage_open_source": "Open source request",
         "audit_timeline_heading": "Activity log",
         "audit_timeline_loading": "Loading activity…",

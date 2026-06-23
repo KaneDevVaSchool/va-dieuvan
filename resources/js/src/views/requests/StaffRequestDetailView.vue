@@ -408,6 +408,7 @@ import { formatVndCurrency as formatVndMoney, parseMoneyVnd, VND_CURRENCY_SUFFIX
 import { labelTripStatus } from '../../util/labels'
 import { rdEmptyLabel } from '../../util/requestDetailEmpty'
 import { dispatchRequestDisplayPassengerCount } from '../../util/dispatchRequestPassengers'
+import { formatDispatchRequestRefCode } from '../../util/portalRequestFormat'
 
 const { t, locale } = useI18n()
 
@@ -560,7 +561,9 @@ const distanceText = computed(() => {
 })
 const cloneLineageText = computed(() => {
   const s = req.value?.cloned_from_summary
-  return s ? t('request_detail.clone_lineage_body', { id: s.id ?? '' }) : ''
+  if (!s) return ''
+  const code = formatDispatchRequestRefCode(s) || String(s.id ?? '')
+  return t('request_detail.clone_lineage_body', { code })
 })
 const costAlertText = computed(() => {
   const a = req.value?.dispatch_package_cost_alert
