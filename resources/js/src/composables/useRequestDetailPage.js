@@ -16,10 +16,10 @@ import {
   getDispatchRequest,
   markPaperReceived,
   revertPaperReceived,
-  cloneDispatchRequest,
   patchPassengerCount,
   getDispatchRequestAuditLogs,
 } from '../api/requests'
+import { confirmAndCloneDispatchRequest } from './useDispatchRequestClone'
 import { formatApiError } from '../api/http'
 import { saveAs } from 'file-saver'
 import { labelTripType } from '../util/labels'
@@ -550,7 +550,8 @@ export function useRequestDetailPage() {
     if (!req.value?.id || resetCloneBusy.value) return
     resetCloneBusy.value = true
     try {
-      const dr = await cloneDispatchRequest(req.value.id)
+      const dr = await confirmAndCloneDispatchRequest(req.value, t)
+      if (!dr?.id) return
       await router.push({ name: 'dispatchRequestNew', query: { replace: String(dr.id) } })
     } catch (e) {
       showAppError(formatApiError(e, t('request_detail.reset_clone_fail')))

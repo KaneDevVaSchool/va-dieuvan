@@ -846,6 +846,14 @@ class DispatchRequestController extends Controller
         $new->paper_status = 'pending';
         $new->paper_received_at = null;
         $new->paper_reference = null;
+        $new->assigned_dept_head_id = null;
+        $new->signing_workflow_status = null;
+        $new->current_signed_version_id = null;
+        $new->signed_at = null;
+        $new->signed_by = null;
+        $new->signature_detected = null;
+        $new->signature_verified = null;
+        $new->verification_status = null;
         $new->is_urgent = $finalUrgent;
         $new->urgent_trigger = $urgentTrigger;
         $new->urgent_reason = $finalUrgent ? $dispatchRequest->urgent_reason : null;

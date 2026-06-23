@@ -319,8 +319,8 @@ import {
   XCircleIcon,
 } from '@heroicons/vue/24/outline'
 import { saveAs } from 'file-saver'
+import { confirmAndCloneDispatchRequest } from '../../composables/useDispatchRequestClone'
 import {
-  cloneDispatchRequest,
   exportPortalDispatchRequestPdf,
   getPortalDispatchRequest,
   patchPassengerCount,
@@ -801,7 +801,8 @@ async function onResetCloneRequest() {
   if (!req.value?.id || resetCloneBusy.value) return
   resetCloneBusy.value = true
   try {
-    const dr = await cloneDispatchRequest(req.value.id)
+    const dr = await confirmAndCloneDispatchRequest(req.value, t)
+    if (!dr?.id) return
     await router.push({ name: portalRoutes.value.create, query: { replace: String(dr.id) } })
   } catch (e) {
     window.alert(formatApiError(e, t('request_detail.reset_clone_fail')))

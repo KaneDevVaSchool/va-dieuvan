@@ -80,7 +80,10 @@
             class="flex items-center gap-2.5 border-y border-indigo-200 bg-indigo-50/70 px-4 py-3 text-sm text-indigo-900 dark:border-indigo-900/50 dark:bg-indigo-950/30 dark:text-indigo-200 sm:px-5"
           >
             <ArrowPathIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-            <span class="min-w-0 flex-1">{{ cloneLineageText }}</span>
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold">{{ t('request_detail.clone_lineage_heading') }}</p>
+              <p class="mt-0.5">{{ cloneLineageText }}</p>
+            </div>
             <RouterLink
               v-if="req.cloned_from_summary.id"
               :to="`/requests/${req.cloned_from_summary.id}`"

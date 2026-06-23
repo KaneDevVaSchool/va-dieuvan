@@ -1,22 +1,50 @@
 /** Hậu tố hiển thị tiền tệ (fill-price, phiếu). */
 export const VND_CURRENCY_SUFFIX = 'VNĐ'
 
-/** Chuẩn hóa số nguyên VNĐ từ API (decimal), number, hoặc chuỗi form (1.500.000). */
+const VND_GROUPED_PATTERN = /^\d{1,3}(\.\d{3})+$/
+const VND_DECIMAL_PATTERN = /^\d+\.\d+$/
+
+const viVndDigitFormatter = new Intl.NumberFormat('vi-VN')
+
+function parseDigitsOnly(s) {
+  const digits = String(s ?? '').replace(/\./g, '').replace(/,/g, '').replace(/\D/g, '')
+  if (!digits) return 0
+  const n = Number(digits)
+  return Number.isFinite(n) ? n : 0
+}
+
+/**
+ * Chuẩn hóa số nguyên VNĐ từ API (decimal), number, hoặc chuỗi form (1.500.000).
+ * Không coi «200.000» là số thập phân 200 — khớp parseMoney PHP (DispatchRequestPdfPresenter).
+ */
 export function normalizeMoneyAmount(v) {
   if (v == null || v === '') return 0
   if (typeof v === 'number' && Number.isFinite(v)) return Math.round(v)
 
   const s = String(v).trim().replace(/\s/g, '')
-  const western = s.replace(/,/g, '')
-  if (/^\d+\.\d+$/.test(western)) {
-    const n = Number(western)
+  if (!s) return 0
+
+  const normalized = s.replace(/,/g, '')
+
+  if (VND_GROUPED_PATTERN.test(normalized)) {
+    return parseDigitsOnly(normalized)
+  }
+
+  if (/^\d+$/.test(normalized)) {
+    const n = Number(normalized)
+    return Number.isFinite(n) ? n : 0
+  }
+
+  if (VND_DECIMAL_PATTERN.test(normalized)) {
+    const frac = normalized.slice(normalized.indexOf('.') + 1)
+    if (frac.length === 3) {
+      return parseDigitsOnly(normalized)
+    }
+    const n = Number(normalized)
     return Number.isFinite(n) ? Math.round(n) : 0
   }
 
-  const digits = s.replace(/\./g, '').replace(/,/g, '').replace(/\D/g, '')
-  if (!digits) return 0
-  const n = Number(digits)
-  return Number.isFinite(n) ? n : 0
+  return parseDigitsOnly(s)
 }
 
 /** Parse số tiền từ chuỗi form (VN: có thể có dấu . phân cách nghìn). */
@@ -34,7 +62,7 @@ export function formatVndCurrency(n, suffix = 'đ') {
 export function formatVndWhileTyping(raw) {
   const digits = String(raw ?? '').replace(/\D/g, '')
   if (!digits) return ''
-  return Number(digits).toLocaleString('vi-VN')
+  return viVndDigitFormatter.format(Number(digits))
 }
 
 const VND_MONEY_ALLOWED_KEYS = new Set([

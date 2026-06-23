@@ -248,7 +248,8 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { cloneDispatchRequest, getPortalRequestsSummary, listPortalRequests } from '../../api/requests'
+import { confirmAndCloneDispatchRequest } from '../../composables/useDispatchRequestClone'
+import { getPortalRequestsSummary, listPortalRequests } from '../../api/requests'
 import { formatApiError } from '../../api/http'
 import PortalEmptyState from '../../components/portal/PortalEmptyState.vue'
 import PortalRequestSkeleton from '../../components/portal/PortalRequestSkeleton.vue'
@@ -911,7 +912,8 @@ async function onCloneFromList(req) {
   if (!req?.id) return
   extracurricularTableRef.value?.setCloneBusy?.(req.id, true)
   try {
-    const dr = await cloneDispatchRequest(req.id)
+    const dr = await confirmAndCloneDispatchRequest(req, t)
+    if (!dr?.id) return
     await router.push({ name: portalRoutes.value.create, query: { replace: String(dr.id) } })
   } catch (e) {
     fetchError.value = formatApiError(e, t('request_detail.reset_clone_fail'))

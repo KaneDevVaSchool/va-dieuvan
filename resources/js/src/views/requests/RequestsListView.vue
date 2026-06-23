@@ -876,11 +876,11 @@ import DatagridToolbarActionButton from '../../components/shared/ui/DatagridTool
 import DatagridFilterField from '../../components/shared/ui/DatagridFilterField.vue'
 import FilterVisibilityDropdown from '../../components/shared/ui/FilterVisibilityDropdown.vue'
 import FilterDatePicker from '../../components/shared/ui/FilterDatePicker.vue'
+import { confirmAndCloneDispatchRequest } from '../../composables/useDispatchRequestClone'
 import {
   bulkForceDeleteRequests,
   bulkRestoreRequests,
   bulkSoftDeleteRequests,
-  cloneDispatchRequest,
   listRequests,
 } from '../../api/requests'
 import ExtracurricularRequestsDataTable from '../../components/requests/ExtracurricularRequestsDataTable.vue'
@@ -1887,7 +1887,8 @@ async function onExtracurricularClone(req) {
   if (!req?.id) return
   extracurricularTableRef.value?.setCloneBusy?.(req.id, true)
   try {
-    const dr = await cloneDispatchRequest(req.id)
+    const dr = await confirmAndCloneDispatchRequest(req, t)
+    if (!dr?.id) return
     await router.push({ name: 'dispatchRequestNew', query: { replace: String(dr.id) } })
   } catch (e) {
     showAppErrorFromApi(e, t('request_detail.reset_clone_fail'))
