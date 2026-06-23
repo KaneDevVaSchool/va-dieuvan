@@ -10,11 +10,13 @@ function chosenLabel(u) {
 }
 
 /**
- * Gán trưởng đơn vị khi tạo phiếu trên portal (bước Người đề nghị & Thời gian).
+ * Gán trưởng đơn vị khi tạo phiếu (portal hoặc app điều vận).
  * @param {{ value: object }} form — reactive form (`dept_head_user_id`, `dept_head_label`)
  * @param {import('vue').MaybeRefOrGetter<boolean>} [needsDeptHead] — bắt buộc chọn trưởng ĐV (portal, không D2D)
+ * @param {{ searchDeptHeads?: (opts: { q?: string }) => Promise<unknown[]> }} [options]
  */
-export function usePortalDeptHeadSearch(form, needsDeptHead) {
+export function usePortalDeptHeadSearch(form, needsDeptHead, options = {}) {
+  const searchDeptHeads = options.searchDeptHeads ?? searchPortalDeptHeads
   const { t } = useI18n()
 
   const deptHeadQ = ref('')
@@ -67,7 +69,7 @@ export function usePortalDeptHeadSearch(form, needsDeptHead) {
     deptHeadLoading.value = true
     deptHeadDropdownOpen.value = true
     try {
-      const rows = await searchPortalDeptHeads({ q })
+      const rows = await searchDeptHeads({ q })
       deptHeadResults.value = Array.isArray(rows) ? rows : []
       deptHeadSearchError.value = ''
     } catch (e) {

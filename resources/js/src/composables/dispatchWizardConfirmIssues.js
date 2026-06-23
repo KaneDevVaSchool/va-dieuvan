@@ -5,6 +5,7 @@ import {
   isPassengerRouteFilled,
   isBusinessRowFilled,
   isCargoRowFilled,
+  showCoordinatorPanelForTripType,
 } from './dispatchWizardConstants'
 
 /** @typedef {'general' | 'purpose' | 'attach' | 'schedule'} ConfirmSection */
@@ -127,7 +128,12 @@ export function buildConfirmReviewIssues(ctx) {
   if (!f.requester_name?.trim()) add('general', t('dispatch_wizard.confirm.issue_requester_name'))
   if (!f.requester_email?.trim()) add('general', t('dispatch_wizard.confirm.issue_requester_email'))
   else if (!ctx.isPlausibleEmail(f.requester_email)) add('general', t('dispatch_wizard.confirm.issue_requester_email'))
-  if (ctx.coordinatorEmailFormatInvalid) add('general', t('dispatch_wizard.validate.coord_email'))
+  if (
+    ctx.coordinatorEmailFormatInvalid &&
+    showCoordinatorPanelForTripType(f.trip_type)
+  ) {
+    add('general', t('dispatch_wizard.validate.coord_email'))
+  }
   if (!f.purpose?.trim()) add('purpose', t('dispatch_wizard.confirm.issue_purpose'))
   if (!ctx.wantsRecurringTemplate) {
     if (!f.proposed_date || !f.date_needed) add('general', t('dispatch_wizard.confirm.issue_dates'))
@@ -230,7 +236,7 @@ export function navigateToFirstInvalidWizardStep(ctx) {
     !f.purpose?.trim() ||
     !f.proposed_date ||
     !f.date_needed ||
-    ctx.coordinatorEmailFormatInvalid ||
+    (showCoordinatorPanelForTripType(f.trip_type) && ctx.coordinatorEmailFormatInvalid) ||
     ctx.step2DateOrderInvalid ||
     (f.is_urgent && !f.urgent_reason?.trim())
   ) {

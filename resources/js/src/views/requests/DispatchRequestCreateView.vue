@@ -599,7 +599,7 @@
             </div>
 
             <!-- Người phối hợp -->
-            <div class="dw-portal-panel dw-form-stack">
+            <div v-if="showCoordinatorPanel" class="dw-portal-panel dw-form-stack">
               <p class="dw-portal-panel-title">{{ t('dispatch_wizard.create.sec_coordinator') }}</p>
 
               <div class="relative">
@@ -1140,6 +1140,7 @@ import ConfirmSummary from './dispatch-wizard/ConfirmSummary.vue'
 import RecurringConfigSection from '../../components/recurring/RecurringConfigSection.vue'
 import PortalStepper from '../../components/portal/PortalStepper.vue'
 import PortalTripTypeGrid from '../../components/portal/PortalTripTypeGrid.vue'
+import { showCoordinatorPanelForTripType } from '../../composables/dispatchWizardConstants'
 
 const TRIP_TYPES = ['door_to_door', 'point_to_point', 'business', 'cargo']
 
@@ -1283,6 +1284,8 @@ function onTripTypeClick(value) {
 // --- Bước 2: tab con ---
 const STEP2_SUB_IDS = ['requester', 'time', 'purpose', 'coordination']
 
+const showCoordinatorPanel = computed(() => showCoordinatorPanelForTripType(form.value.trip_type))
+
 const step2Sub = ref('requester')
 const maxReachedStep2Sub = ref(0)
 
@@ -1314,6 +1317,7 @@ function portalStep2SubComplete(subId) {
   if (subId === 'purpose') {
     return !!form.value.purpose?.trim()
   }
+  if (!showCoordinatorPanel.value) return true
   return !coordinatorEmailFormatInvalid.value
 }
 
@@ -1368,6 +1372,8 @@ watch(
     form.value.purpose,
     step2RequesterEmailInvalid.value,
     step2DateOrderInvalid.value,
+    showCoordinatorPanel.value,
+    coordinatorEmailFormatInvalid.value,
   ],
   () => {
     if (step.value !== 1) return

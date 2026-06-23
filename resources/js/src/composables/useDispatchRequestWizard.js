@@ -21,10 +21,11 @@ import {
   getPortalFormTemplates,
   patchDispatchRequestWizard,
   searchUsersForPortalForm,
+  searchPortalDeptHeads,
   updatePortalFormTemplate,
 } from '../api/requests'
 import { getDispatchFormSettings } from '../api/dispatchSettings'
-import { searchUsersForDispatchForm } from '../api/operational'
+import { searchDeptHeadsForDispatchForm, searchUsersForDispatchForm } from '../api/operational'
 import { formatApiError } from '../api/http'
 import { parseMoneyVnd } from '../util/money'
 import { newIdempotencyKey } from '../util/idempotency'
@@ -48,6 +49,7 @@ import {
   draftActiveStorageKey,
   MAX_SAVED_DRAFTS,
   todayISODate,
+  showCoordinatorPanelForTripType,
 } from './dispatchWizardConstants'
 import { dispatchScheduleRowErrors } from './dispatchScheduleRowErrors'
 import {
@@ -387,7 +389,9 @@ export function useDispatchRequestWizard(options = {}) {
   // Trưởng đơn vị: hiện ô gán với mọi loại trừ "đưa đón". Portal bắt buộc chọn; staff tùy chọn.
   const deptHeadEnabled = computed(() => form.value.trip_type !== 'door_to_door')
   const portalNeedsDeptHead = computed(() => isPortal && deptHeadEnabled.value)
-  const portalDeptHeadSearch = usePortalDeptHeadSearch(form, portalNeedsDeptHead)
+  const portalDeptHeadSearch = usePortalDeptHeadSearch(form, portalNeedsDeptHead, {
+    searchDeptHeads: isPortal ? searchPortalDeptHeads : searchDeptHeadsForDispatchForm,
+  })
 
   /** Bước 3: form thẻ — không cho Next khi có lỗi inline hoặc danh sách rỗng (đồng bộ từ DispatchWizardStep3). */
   const detailStepSchedulesValid = ref(true)
@@ -1042,11 +1046,14 @@ export function useDispatchRequestWizard(options = {}) {
   const canGoNext = computed(() => {
     if (step.value === 0) return !!form.value.trip_type
     if (step.value === 1) {
+      const coordinatorOk =
+        !showCoordinatorPanelForTripType(form.value.trip_type) ||
+        !coordinatorEmailFormatInvalid.value
       const base =
         !!form.value.requester_name?.trim() &&
         !!form.value.requester_email?.trim() &&
         !requesterEmailFormatInvalid.value &&
-        !coordinatorEmailFormatInvalid.value &&
+        coordinatorOk &&
         !!form.value.purpose?.trim() &&
         (!form.value.is_urgent || !!form.value.urgent_reason?.trim())
       const deptOk =

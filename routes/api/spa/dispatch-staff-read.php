@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\Admin\UserListController;
 use App\Http\Controllers\Api\Admin\UserRoleController;
 use App\Http\Controllers\Api\Admin\UserSearchController;
 use App\Http\Controllers\Api\Audit\AuditLogController;
+use App\Http\Controllers\Api\DeptHeadSearchForDispatchFormController;
 use App\Http\Controllers\Api\Operational\DriverComplianceDocumentController;
 use App\Http\Controllers\Api\Operational\DriverWorkloadController;
 use App\Http\Controllers\Api\Operational\VehicleComplianceDocumentController;
@@ -40,6 +41,7 @@ Route::get('/drivers/{driver}/compliance-audit', [DriverComplianceDocumentContro
 Route::get('/transport-providers', [OperationalResourceController::class, 'transportProviders']);
 Route::get('/users/for-driver-assignment', UserSearchForDriverAssignmentController::class);
 Route::get('/users/for-dispatch-form', UserSearchForDispatchFormController::class);
+Route::get('/users/dept-heads', DeptHeadSearchForDispatchFormController::class);
 
 Route::controller(RequestController::class)->group(function () {
     Route::get('/requests', 'index');

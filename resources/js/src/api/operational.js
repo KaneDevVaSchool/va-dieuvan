@@ -213,6 +213,16 @@ export async function searchUsersForDispatchForm(q) {
   return data.data
 }
 
+/** Trưởng đơn vị (form tạo phiếu trên app điều vận /mng). @param {{ q?: string, pick?: number|string }} opts */
+export async function searchDeptHeadsForDispatchForm(opts = {}) {
+  const params = {}
+  if (opts.q != null && String(opts.q).trim() !== '') params.q = String(opts.q).trim()
+  if (opts.pick != null && opts.pick !== '') params.pick = opts.pick
+  const { data } = await http.get('/users/dept-heads', { params })
+  const rows = data?.data
+  return Array.isArray(rows) ? rows : []
+}
+
 /** @param {number} userId */
 export async function createDriverFromUser(userId) {
   const { data } = await http.post('/drivers/from-user', { user_id: userId })
