@@ -4,6 +4,7 @@ import { useAuthStore } from '../store'
 import { dispatchRequestDisplayPassengerCount } from '../util/dispatchRequestPassengers'
 import { formatVndCurrency, parseMoneyVnd, VND_CURRENCY_SUFFIX } from '../util/money'
 import { rdEmptyLabel, formatVndOrRdEmpty, isRdLegacyDash } from '../util/requestDetailEmpty'
+import { wizardItineraryRows } from './useRequestApprovalLegLines'
 
 /**
  * Copy trạng thái + mini-stepper cho tab Phê duyệt (staff).
@@ -140,6 +141,38 @@ export function useStaffRequestApprovalWorkspace(reqRef, ctxRef) {
         extraFee: extraFmt && !isRdLegacyDash(extraFmt) ? extraFmt : rdEmptyLabel(t, 'extra_fee'),
         passengers,
         total: fromSummary.totalFmt,
+      }
+    }
+
+    const itinRows = wizardItineraryRows(r)
+    const isCargo = r.trip_type === 'cargo'
+    if (itinRows.length > 1) {
+      let unitSum = 0
+      let extraSum = 0
+      for (const row of itinRows) {
+        if (isCargo) {
+          unitSum += parseMoneyVnd(row?.cost)
+        } else {
+          unitSum += parseMoneyVnd(row?.unit_price)
+          extraSum += parseMoneyVnd(row?.extra_fee)
+        }
+      }
+      const rowTotal = unitSum + extraSum
+      const totalRaw =
+        rowTotal > 0
+          ? rowTotal
+          : r.service_price != null
+            ? parseMoneyVnd(r.service_price)
+            : null
+      return {
+        unitPrice: unitSum > 0 ? formatAmount(unitSum) : rdEmptyLabel(t, 'unit_price'),
+        extraFee:
+          extraSum > 0 ? formatAmount(extraSum) : rdEmptyLabel(t, 'extra_fee'),
+        passengers,
+        total:
+          totalRaw != null && totalRaw > 0
+            ? formatAmount(totalRaw)
+            : rdEmptyLabel(t, 'money_total'),
       }
     }
 

@@ -1010,7 +1010,7 @@ const canReconcileCost = computed(() => auth.hasPermission("trip.cost.reconcile"
 const dispatchRequestRef = computed(() => trip.value?.dispatch_request ?? null);
 const { costEstimate: tripCostEstimate } = useRequestCostEstimate(dispatchRequestRef);
 
-/** Doanh thu dự kiến = giá dịch vụ điều vận (service_price). */
+/** Chi phí dự kiến = giá dịch vụ điều vận (service_price). */
 const tripExpectedRevenue = computed(() => {
     const p = trip.value?.dispatch_request?.service_price;
     const n = Number(p);

@@ -2182,7 +2182,7 @@
         "group_driver_salary": "Driver salary",
         "group_food": "Meals",
         "group_hotel": "Lodging",
-        "kpi_revenue": "Expected revenue",
+        "kpi_revenue": "Expected cost",
         "kpi_budget": "Cost budget",
         "kpi_actual": "Actual cost",
         "kpi_variance": "Variance",
@@ -4279,7 +4279,7 @@
             "vehicles": "Vehicles",
             "drivers": "Drivers",
             "schedule": "Schedule",
-            "revenue": "Est. Revenue"
+            "revenue": "Est. cost"
         },
         "kpi_stats_eyebrow": "STATISTICS",
         "kpi_strip_aria": "Trip overview statistics",
@@ -4346,9 +4346,9 @@
             "countdown_hours": "{h}h {m}m left",
             "countdown_minutes": "{m} min left",
             "finance_section": "Estimates",
-            "finance_empty": "No distance or revenue estimate yet",
+            "finance_empty": "No distance or cost estimate yet",
             "est_distance": "Estimated distance",
-            "est_cost": "Estimated revenue",
+            "est_cost": "Estimated cost",
             "duration_hours": "{n} hours",
             "employee_code": "Employee ID: {code}",
             "pax_count": "Passengers (request): {n}",
@@ -4359,7 +4359,7 @@
             "distance_from_record": "From the trip distance record.",
             "distance_not_recorded": "No km recorded yet — update after completion or enter on trip record.",
             "cost_from_wizard": "Estimate from the request wizard / form.",
-            "cost_no_estimate": "No pricing lines in snapshot — see actual revenue below."
+            "cost_no_estimate": "No pricing lines in snapshot — see actual costs below."
         },
         "schedules": {
             "title": "Itineraries",

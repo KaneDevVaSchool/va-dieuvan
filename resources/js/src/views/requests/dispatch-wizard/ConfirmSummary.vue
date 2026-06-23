@@ -82,12 +82,12 @@
             </div>
             <div class="summary-field">
               <dt>{{ t('dispatch_wizard.confirm.requester') }}</dt>
-              <dd>{{ form.requester_name?.trim() || '—' }}</dd>
+              <dd>{{ form.requester_name?.trim() || t('dispatch_wizard.confirm.empty_not_entered') }}</dd>
             </div>
             <div class="summary-field">
               <dt>{{ t('dispatch_wizard.confirm.email_phone') }}</dt>
               <dd class="break-words">
-                {{ form.requester_email?.trim() || '—' }}
+                {{ form.requester_email?.trim() || t('dispatch_wizard.confirm.empty_not_entered') }}
                 <span v-if="form.requester_phone?.trim()" class="text-slate-600">
                   · {{ form.requester_phone }}</span>
               </dd>
@@ -110,14 +110,20 @@
             >
               <dt>{{ t('dispatch_wizard.confirm.coord_block') }}</dt>
               <dd>
-                {{ form.coordinator_name?.trim() || '—' }}
+                {{ form.coordinator_name?.trim() || t('dispatch_wizard.confirm.empty_not_entered') }}
                 <span v-if="form.coordinator_email?.trim()" class="block text-slate-600">{{ form.coordinator_email }}</span>
                 <span v-if="form.coordinator_phone?.trim()" class="text-slate-600">{{ form.coordinator_phone }}</span>
               </dd>
             </div>
-            <div v-if="form.trip_type === 'point_to_point' && form.targets?.length" class="summary-field">
+            <div v-if="form.trip_type === 'point_to_point'" class="summary-field">
               <dt>{{ t('dispatch_wizard.confirm.targets_block') }}</dt>
-              <dd>{{ form.targets.join(', ') }}</dd>
+              <dd>
+                {{
+                  form.targets?.length
+                    ? form.targets.join(', ')
+                    : t('dispatch_wizard.confirm.empty_targets')
+                }}
+              </dd>
             </div>
           </dl>
         </SummarySection>
@@ -128,10 +134,12 @@
           :has-issues="confirmSectionHasIssues('purpose')"
           :issue-hint="t('dispatch_wizard.confirm.section_issue_hint')"
         >
-          <p class="summary-text-block whitespace-pre-wrap">{{ form.purpose?.trim() || '—' }}</p>
+          <p class="summary-text-block whitespace-pre-wrap">
+            {{ form.purpose?.trim() || t('dispatch_wizard.confirm.empty_purpose') }}
+          </p>
           <dl v-if="form.trip_type === 'point_to_point'" class="mt-3 divide-y divide-slate-200/70 border-t border-slate-200/70 pt-1">
             <div class="summary-field">
-              <dt>{{ t('dispatch_wizard.create.purpose_tab_aria') }}</dt>
+              <dt>{{ t('dispatch_wizard.confirm.purpose_category') }}</dt>
               <dd>
                 {{
                   form.point_purpose_kind === 'extracurricular'
@@ -171,12 +179,11 @@
     </template>
   </div>
 
-  <!-- Sticky actions (chỉ trước khi gửi thành công) -->
-  <Teleport to="body">
-    <div
-      v-if="showStickyBar"
-      class="fixed inset-x-0 bottom-0 z-[120] bg-white/95 px-4 py-3 shadow-[0_-12px_40px_rgba(15,23,42,0.1)] backdrop-blur-md supports-[padding:max(0px)]:pb-[max(0.75rem,env(safe-area-inset-bottom))]"
-    >
+  <!-- Sticky actions trong vùng cuộn main — tránh đè sidebar (không fixed full viewport) -->
+  <div
+    v-if="showStickyBar"
+    class="sticky bottom-0 z-20 -mx-5 mt-6 border-t border-slate-200/80 bg-white/95 px-5 py-3 shadow-[0_-12px_40px_rgba(15,23,42,0.1)] backdrop-blur-md sm:-mx-8 sm:px-8 supports-[padding:max(0px)]:pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+  >
       <div class="mx-auto flex max-w-5xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <button
           type="button"
@@ -204,8 +211,7 @@
           </button>
         </div>
       </div>
-    </div>
-  </Teleport>
+  </div>
 </template>
 
 <script setup>
@@ -260,6 +266,19 @@ const {
 
 const showStickyBar = computed(() => step.value === 3 && !created.value)
 
+const empty = {
+  notEntered: () => t('dispatch_wizard.confirm.empty_not_entered'),
+  notSelected: () => t('dispatch_wizard.confirm.empty_not_selected'),
+  dates: () => t('dispatch_wizard.confirm.empty_dates'),
+  datetime: () => t('dispatch_wizard.confirm.empty_datetime'),
+  place: () => t('dispatch_wizard.confirm.empty_place'),
+  pic: () => t('dispatch_wizard.confirm.empty_pic'),
+  purpose: () => t('dispatch_wizard.confirm.empty_purpose'),
+  tripType: () => t('dispatch_wizard.confirm.empty_trip_type'),
+  guests: () => t('dispatch_wizard.confirm.empty_guests'),
+  cargoName: () => t('dispatch_wizard.confirm.empty_cargo_name'),
+}
+
 function goPrevStep() {
   if (step.value > 0) step.value--
 }
@@ -269,8 +288,14 @@ const localeTag = computed(() => (locale.value === 'en' ? 'en-US' : 'vi-VN'))
 const tripTypeLabel = computed(() => {
   const tt = form.value.trip_type
   const opt = tripTypeOptions.value?.find((o) => o.value === tt)
-  return opt?.label ?? tt ?? '—'
+  return opt?.label ?? (tt ? tt : empty.tripType())
 })
+
+function formatDatePlaceLine(dtRaw, placeRaw) {
+  const dt = formatShortDt(dtRaw)
+  const place = placeRaw?.trim() || empty.place()
+  return `${dt} — ${place}`
+}
 
 const createdRefCode = computed(
   () => formatDispatchRequestRefCode(created.value) || `#${created.value?.id ?? ''}`,
@@ -281,13 +306,13 @@ const usageDatesDisplay = computed(() => {
     const start = formatIsoDate(form.value.recurrence_start_date)
     const dep = String(form.value.recurrence_depart_time || '').trim().slice(0, 5)
     const ret = String(form.value.recurrence_return_time || '').trim().slice(0, 5)
-    const times = dep && ret ? `${dep} – ${ret}` : dep || ret || '—'
+    const times = dep && ret ? `${dep} – ${ret}` : dep || ret || empty.notSelected()
     const days = (e1WeekdayOptions.value || [])
       .filter((wd) => form.value.e1_weekdays?.[wd.k])
       .map((wd) => wd.label)
       .join(', ')
     const endMode = form.value.recurrence_end_mode || 'date'
-    let end = '—'
+    let end = empty.notSelected()
     if (endMode === 'date') {
       end = formatIsoDate(form.value.recurrence_end_date)
     } else if (form.value.recurrence_repeat_count) {
@@ -298,14 +323,16 @@ const usageDatesDisplay = computed(() => {
     return t('portal.extracurricular_create.summary_schedule', {
       start,
       times,
-      days: days || '—',
+      days: days || empty.notSelected(),
       end,
     })
   }
   const a = formatIsoDate(form.value.proposed_date)
   const b =
     formattedRequestedDateTime.value?.trim() || formatIsoDate(form.value.date_needed)
-  if (a === '—' && b === '—') return '—'
+  if (!form.value.proposed_date && !form.value.date_needed && !formattedRequestedDateTime.value?.trim()) {
+    return empty.dates()
+  }
   return `${a} → ${b}`
 })
 
@@ -317,36 +344,36 @@ const urgencyLabel = computed(() => {
 
 const requestStatusLabel = computed(() => {
   const s = created.value?.status
-  if (!s) return '—'
+  if (!s) return empty.notSelected()
   const key = `dispatch_wizard.request_status.${s}`
   const translated = t(key)
   return translated !== key ? translated : s
 })
 
 function formatIsoDate(iso) {
-  if (!iso) return '—'
+  if (!iso) return empty.dates()
   try {
     const [y, m, d] = String(iso).split('-').map(Number)
     const dt = new Date(y, (m || 1) - 1, d || 1)
-    if (Number.isNaN(dt.getTime())) return '—'
+    if (Number.isNaN(dt.getTime())) return empty.dates()
     return new Intl.DateTimeFormat(localeTag.value, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
     }).format(dt)
   } catch {
-    return '—'
+    return empty.dates()
   }
 }
 
 function formatShortDt(val) {
-  if (!val) return '—'
+  if (!val) return empty.datetime()
   // Đồng bộ định dạng dd/mm/yyyy h:mm AM/PM với bước Chi tiết
   const ampm = formatDatetimeLocalAmPm(val)
   if (ampm) return ampm
   try {
     const d = new Date(val)
-    if (Number.isNaN(d.getTime())) return '—'
+    if (Number.isNaN(d.getTime())) return empty.datetime()
     return new Intl.DateTimeFormat(localeTag.value, {
       day: '2-digit',
       month: '2-digit',
@@ -354,7 +381,7 @@ function formatShortDt(val) {
       minute: '2-digit',
     }).format(d)
   } catch {
-    return '—'
+    return empty.datetime()
   }
 }
 
@@ -376,11 +403,11 @@ const scheduleCards = computed(() => {
       const lines = [
         {
           label: t('dispatch_wizard.s3.cargo_name'),
-          value: row.name?.trim() || '—',
+          value: row.name?.trim() || empty.cargoName(),
         },
         {
           label: t('dispatch_wizard.confirm.lbl_pickup'),
-          value: `${formatShortDt(row.pickup_at)} — ${row.pickup_place?.trim() || '—'}`,
+          value: formatDatePlaceLine(row.pickup_at, row.pickup_place),
         },
       ]
       if (shipper) {
@@ -388,7 +415,7 @@ const scheduleCards = computed(() => {
       }
       lines.push({
         label: t('dispatch_wizard.confirm.lbl_delivery'),
-        value: `${formatShortDt(row.delivery_at)} — ${row.delivery_place?.trim() || '—'}`,
+        value: formatDatePlaceLine(row.delivery_at, row.delivery_place),
       })
       if (receiver) {
         lines.push({ label: t('dispatch_wizard.s3.receiver_col'), value: receiver })
@@ -425,14 +452,14 @@ function passengerCard(row, n, key) {
   const lines = [
     {
       label: t('dispatch_wizard.confirm.lbl_out'),
-      value: `${formatShortDt(row.depart_at)} — ${row.pickup?.trim() || '—'}`,
+      value: formatDatePlaceLine(row.depart_at, row.pickup),
     },
     {
       label: t('dispatch_wizard.confirm.lbl_back'),
-      value: `${formatShortDt(row.return_at)} — ${row.dropoff?.trim() || '—'}`,
+      value: formatDatePlaceLine(row.return_at, row.dropoff),
     },
-    { label: t('dispatch_wizard.confirm.guests_line'), value: String(row.guests ?? '').trim() || '—' },
-    { label: t('dispatch_wizard.confirm.pic_line'), value: row.person_in_charge?.trim() || '—' },
+    { label: t('dispatch_wizard.confirm.guests_line'), value: String(row.guests ?? '').trim() || empty.guests() },
+    { label: t('dispatch_wizard.confirm.pic_line'), value: row.person_in_charge?.trim() || empty.pic() },
     {
       label: t('dispatch_wizard.confirm.cost_line'),
       value: formatCurrency(rowLineTotal(row)),
@@ -446,11 +473,11 @@ function businessCard(row, n, key) {
   const lines = [
     {
       label: t('dispatch_wizard.confirm.lbl_out'),
-      value: `${formatShortDt(row.depart_at)} — ${row.pickup?.trim() || '—'}`,
+      value: formatDatePlaceLine(row.depart_at, row.pickup),
     },
     {
       label: t('dispatch_wizard.confirm.lbl_back'),
-      value: `${formatShortDt(row.return_at)} — ${row.dropoff?.trim() || '—'}`,
+      value: formatDatePlaceLine(row.return_at, row.dropoff),
     },
   ]
   if (row.waypoint?.trim()) {
@@ -460,7 +487,7 @@ function businessCard(row, n, key) {
     })
   }
   lines.push(
-    { label: t('dispatch_wizard.confirm.guests_line'), value: String(row.guests ?? '').trim() || '—' },
+    { label: t('dispatch_wizard.confirm.guests_line'), value: String(row.guests ?? '').trim() || empty.guests() },
     {
       label: t('dispatch_wizard.confirm.cost_line'),
       value: formatCurrency(rowLineTotal(row)),

@@ -49,20 +49,31 @@
       />
       <div
         v-else
-        class="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-slate-200/80 bg-slate-200/80 dark:border-slate-800 dark:bg-slate-800 sm:grid-cols-4"
+        class="overflow-hidden rounded-lg border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900"
       >
         <div
-          v-for="cell in decisionCells"
-          :key="cell.key"
-          class="bg-white px-3 py-3 dark:bg-slate-900 sm:px-4"
+          class="grid grid-cols-2 gap-px bg-slate-200/80 dark:bg-slate-800 sm:grid-cols-4"
         >
-          <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            {{ cell.label }}
-          </p>
-          <p class="mt-1 text-base font-semibold tabular-nums text-slate-900 dark:text-slate-100">
-            {{ cell.value }}
-          </p>
+          <div
+            v-for="cell in decisionCells"
+            :key="cell.key"
+            class="bg-white px-3 py-3 dark:bg-slate-900 sm:px-4"
+          >
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              {{ cell.label }}
+            </p>
+            <p class="mt-1 text-base font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+              {{ cell.value }}
+            </p>
+          </div>
         </div>
+        <CostEstimateLegBreakdown
+          v-if="approvalLegLines.length"
+          :lines="approvalLegLines"
+          variant="embedded"
+          test-id="staff-request-approval-leg-breakdown"
+          row-test-id-prefix="staff-request-approval-leg-row"
+        />
       </div>
     </section>
 
@@ -222,7 +233,9 @@ import Button from '../../ui/Button.vue'
 import Modal from '../../ui/Modal.vue'
 import FillPricePanel from '../workspace/FillPricePanel.vue'
 import ApprovalMiniStepper from './ApprovalMiniStepper.vue'
+import CostEstimateLegBreakdown from '../../costs/CostEstimateLegBreakdown.vue'
 import { useStaffRequestApprovalWorkspace } from '../../../composables/useStaffRequestApprovalWorkspace'
+import { useRequestApprovalLegLines } from '../../../composables/useRequestApprovalLegLines'
 
 const props = defineProps({
   req: { type: Object, default: null },
@@ -280,6 +293,8 @@ const {
   stepFraction,
   readOnlyMetrics,
 } = useStaffRequestApprovalWorkspace(reqRef, workspaceCtx)
+
+const { approvalLegLines } = useRequestApprovalLegLines(reqRef)
 
 const decisionCells = computed(() => [
   { key: 'unit', label: t('request_detail.ops_lbl_unit_price'), value: readOnlyMetrics.value.unitPrice },

@@ -3723,7 +3723,7 @@
             "vehicles": "Phương tiện",
             "drivers": "Tài xế",
             "schedule": "Lịch trình",
-            "revenue": "Doanh thu dự kiến"
+            "revenue": "Chi phí dự kiến"
         },
         "kpi_stats_eyebrow": "THỐNG KÊ",
         "kpi_strip_aria": "Thống kê tổng quan chuyến đi",
@@ -3790,9 +3790,9 @@
             "countdown_hours": "Còn {h}h {m}p",
             "countdown_minutes": "Còn {m} phút",
             "finance_section": "Ước tính",
-            "finance_empty": "Chưa có km / doanh thu ước tính",
+            "finance_empty": "Chưa có km / chi phí ước tính",
             "est_distance": "Quãng đường ước tính",
-            "est_cost": "Doanh thu ước tính",
+            "est_cost": "Chi phí ước tính",
             "duration_hours": "{n} giờ",
             "employee_code": "Mã NV: {code}",
             "pax_count": "Số khách theo yêu cầu: {n}",
@@ -3803,7 +3803,7 @@
             "distance_from_record": "Theo bản ghi hành trình (trip record).",
             "distance_not_recorded": "Chưa có km ghi nhận — cập nhật sau khi hoàn thành hoặc nhập tay ở hồ sơ chuyến.",
             "cost_from_wizard": "Ước tính từ biểu mẫu / wizard khi tạo yêu cầu.",
-            "cost_no_estimate": "Không có dòng giá trong snapshot — xem mục doanh thu thực tế bên dưới."
+            "cost_no_estimate": "Không có dòng giá trong snapshot — xem mục chi phí thực tế bên dưới."
         },
         "schedules": {
             "title": "Các lịch trình",
@@ -4707,7 +4707,7 @@
         "group_driver_salary": "Lương tài xế",
         "group_food": "Ăn uống",
         "group_hotel": "Khách sạn",
-        "kpi_revenue": "Doanh thu dự kiến",
+        "kpi_revenue": "Chi phí dự kiến",
         "kpi_budget": "Dự toán chi phí",
         "kpi_actual": "Chi phí thực tế",
         "kpi_variance": "Chênh lệch",

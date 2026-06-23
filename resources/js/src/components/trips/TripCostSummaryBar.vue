@@ -7,7 +7,6 @@ import {
   ChartBarIcon,
   ClockIcon,
   ScaleIcon,
-  ArrowTrendingUpIcon,
 } from '@heroicons/vue/24/outline'
 import KpiSummaryStrip from '../shared/ui/KpiSummaryStrip.vue'
 
@@ -17,8 +16,6 @@ const props = defineProps<{
   actualTotal: number
   variance: number
   variancePct: number | null
-  profit: number
-  profitMargin: number | null
   pendingCount: number
   pendingTotal: number
   budgetUsedPct: number | null
@@ -90,17 +87,6 @@ const cards = computed(() => {
             : t('cost_center.save_pct', { pct: Math.abs(Math.round(vPct)) }),
     },
     {
-      key: 'profit',
-      label: t('cost_center.kpi_profit'),
-      tone: props.profit < 0 ? ('rose' as const) : ('emerald' as const),
-      icon: ArrowTrendingUpIcon,
-      display: props.revenue > 0 ? fmtMoney(props.profit) : '—',
-      sub:
-        props.profitMargin != null && props.revenue > 0
-          ? t('cost_center.margin_pct', { pct: Math.round(props.profitMargin) })
-          : undefined,
-    },
-    {
       key: 'pending',
       label: t('cost_center.kpi_pending'),
       tone: 'amber' as const,
@@ -124,7 +110,7 @@ function onCardAction(card: { filter?: { status: string } }) {
     class="!mb-4"
     compact
     :cards="cards"
-    grid-class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6"
+    grid-class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
     :aria-label="t('cost_center.kpi_strip_aria')"
     :eyebrow="t('cost_center.kpi_stats_eyebrow')"
     :title="t('cost_center.kpi_strip_title')"

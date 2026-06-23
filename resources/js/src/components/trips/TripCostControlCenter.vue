@@ -6,8 +6,6 @@
       :actual-total="fin.actualTotal.value"
       :variance="fin.variance.value"
       :variance-pct="fin.variancePct.value"
-      :profit="fin.profit.value"
-      :profit-margin="fin.profitMargin.value"
       :pending-count="fin.pendingCount.value"
       :pending-total="fin.pendingTotal.value"
       :budget-used-pct="fin.budgetUsedPct.value"
