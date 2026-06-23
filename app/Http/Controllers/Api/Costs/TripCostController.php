@@ -19,6 +19,7 @@ use App\Models\TripCost;
 use App\Models\User;
 use App\Services\Auditing\AuditLogger;
 use App\Services\Costs\BusinessPersonnelCostLinesQuery;
+use App\Services\Costs\WizardSnapshotCostEstimator;
 use App\Services\Costs\WizardSnapshotCostLinesQuery;
 use App\Services\RecurringDispatch\RecurringBudgetAlertService;
 use App\Support\DriverAssignableVehicles;
@@ -260,7 +261,7 @@ class TripCostController extends Controller
         return $this->created($cost);
     }
 
-    public function show(ShowTripCostRequest $request, TripCost $tripCost)
+    public function show(ShowTripCostRequest $request, TripCost $tripCost, WizardSnapshotCostLinesQuery $wizardLines)
     {
         $tripCost->load([
             'attachments' => fn ($q) => $q->orderByDesc('id'),
@@ -276,7 +277,31 @@ class TripCostController extends Controller
 
         abort_unless(TripCostAccess::userCanView($request->user(), $tripCost), 403);
 
-        return $this->ok($tripCost);
+        $payload = $tripCost->toArray();
+
+        if ($tripCost->type === WizardSnapshotCostEstimator::PROVISION_TYPE && $tripCost->trip !== null) {
+            $rawLines = $wizardLines->estimateLinesForTrip($tripCost->trip);
+            $payload['estimate_lines'] = array_values(array_map(static function (array $line): array {
+                $pickup = trim((string) ($line['pickup'] ?? ''));
+                $dropoff = trim((string) ($line['dropoff'] ?? ''));
+                $legRoute = ($pickup !== '' || $dropoff !== '')
+                    ? trim("{$pickup} → {$dropoff}", ' →')
+                    : null;
+
+                return [
+                    'line_key' => $line['line_key'] ?? null,
+                    'leg_seq' => isset($line['leg_seq']) ? (int) $line['leg_seq'] : null,
+                    'estimate_kind' => $line['estimate_kind'] ?? null,
+                    'description' => $line['description'] ?? null,
+                    'leg_route' => $legRoute,
+                    'unit_price' => (float) ($line['unit_price'] ?? 0),
+                    'extra_fee' => (float) ($line['extra_fee'] ?? 0),
+                    'amount' => (float) ($line['amount'] ?? 0),
+                ];
+            }, $rawLines));
+        }
+
+        return $this->ok($payload);
     }
 
     public function updateByDriver(UpdateTripCostByDriverRequest $request, TripCost $tripCost)

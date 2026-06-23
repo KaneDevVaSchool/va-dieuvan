@@ -1,7 +1,7 @@
 <template>
   <Modal
     :open="open"
-    wide
+    extra-wide
     :title="modalTitle"
     :description="modalSubtitle"
     @close="emit('close')"
@@ -160,6 +160,88 @@
               </div>
             </dl>
           </template>
+        </div>
+      </section>
+
+      <!-- Chi phí từng chặng (dự toán phiếu) -->
+      <section
+        v-if="estimateLineRows.length"
+        class="rounded-2xl border border-slate-200/90 bg-white dark:border-slate-700 dark:bg-slate-900/30"
+        aria-labelledby="cost-detail-leg-costs-heading"
+        data-testid="cost-detail-leg-costs"
+      >
+        <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+          <h3 id="cost-detail-leg-costs-heading" class="text-sm font-bold text-slate-900 dark:text-slate-100">
+            {{ t('costs_page.detail_section_leg_costs') }}
+          </h3>
+          <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            {{ t('costs_page.detail_leg_costs_hint') }}
+          </p>
+        </div>
+        <div class="overflow-x-auto px-4 py-4 sm:px-5">
+          <table class="w-full min-w-[640px] border-collapse text-sm">
+            <thead>
+              <tr class="border-b border-slate-200 text-left dark:border-slate-700">
+                <th scope="col" class="pb-2 pr-3 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  {{ t('costs_page.detail_leg_col_leg') }}
+                </th>
+                <th scope="col" class="pb-2 pr-3 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  {{ t('costs_page.col_description') }}
+                </th>
+                <th scope="col" class="pb-2 pr-3 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  {{ t('costs_page.col_unit_price') }}
+                </th>
+                <th scope="col" class="pb-2 pr-3 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  {{ t('costs_page.col_extra_fee') }}
+                </th>
+                <th scope="col" class="pb-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  {{ t('costs_page.col_payment') }}
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+              <tr
+                v-for="row in estimateLineRows"
+                :key="row.key"
+                class="align-top"
+                :data-testid="`cost-detail-leg-row-${row.key}`"
+              >
+                <td class="py-3 pr-3 whitespace-nowrap">
+                  <span
+                    class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                    :class="row.leg_seq ? 'bg-amber-50 text-amber-900 ring-1 ring-amber-200/80 dark:bg-amber-950/40 dark:text-amber-100 dark:ring-amber-800/50' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'"
+                  >
+                    {{ row.leg_label }}
+                  </span>
+                </td>
+                <td class="py-3 pr-3 min-w-[12rem]">
+                  <p class="font-medium text-slate-900 dark:text-slate-100">{{ row.description }}</p>
+                  <p v-if="row.leg_route && row.leg_route !== row.description" class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                    {{ row.leg_route }}
+                  </p>
+                </td>
+                <td class="py-3 pr-3 text-right tabular-nums text-slate-800 dark:text-slate-200">
+                  {{ row.unit_price_display }}
+                </td>
+                <td class="py-3 pr-3 text-right tabular-nums text-slate-800 dark:text-slate-200">
+                  {{ row.extra_fee_display }}
+                </td>
+                <td class="py-3 text-right font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+                  {{ formatVnd(row.amount) }}
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="border-t border-slate-200 dark:border-slate-700">
+                <td colspan="4" class="pt-3 pr-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  {{ t('costs_page.detail_leg_total_label') }}
+                </td>
+                <td class="pt-3 text-right text-base font-bold tabular-nums text-teal-800 dark:text-teal-300">
+                  {{ formatVnd(estimateLinesTotal) }}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
         </div>
       </section>
 
@@ -497,6 +579,35 @@ const tripFleetMode = computed(() => {
   if (vehicleId) return 'internal'
   return 'unspecified'
 })
+
+const estimateLineRows = computed(() => {
+  const lines = cost.value?.estimate_lines
+  if (!Array.isArray(lines) || !lines.length) return []
+  return lines.map((line, index) => {
+    const legSeq = line?.leg_seq != null && Number(line.leg_seq) > 0 ? Number(line.leg_seq) : null
+    const unit = Number(line?.unit_price ?? 0)
+    const extra = Number(line?.extra_fee ?? 0)
+    const amount = Number(line?.amount ?? unit + extra)
+    const description = String(line?.description ?? '').trim() || t('costs_page.empty_not_available')
+    const legRoute = String(line?.leg_route ?? '').trim()
+    return {
+      key: String(line?.line_key ?? `line-${index}`),
+      leg_seq: legSeq,
+      leg_label: legSeq
+        ? t('trip_detail.passengers.leg_seq', { n: legSeq })
+        : t('costs_page.detail_leg_trip_wide'),
+      description,
+      leg_route: legRoute,
+      amount,
+      unit_price_display: unit > 0 ? formatVnd(unit) : t('costs_page.empty_not_available'),
+      extra_fee_display: extra > 0 ? formatVnd(extra) : t('costs_page.empty_not_available'),
+    }
+  })
+})
+
+const estimateLinesTotal = computed(() =>
+  estimateLineRows.value.reduce((sum, row) => sum + (Number(row.amount) || 0), 0),
+)
 
 function fleetModeLabel(mode) {
   const map = {

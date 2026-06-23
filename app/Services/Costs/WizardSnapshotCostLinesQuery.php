@@ -91,6 +91,23 @@ class WizardSnapshotCostLinesQuery
     }
 
     /**
+     * Dòng dự toán cho một chuyến (kể cả đã provision trip_cost wizard_estimate).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function estimateLinesForTrip(Trip $trip): array
+    {
+        $trip->loadMissing([
+            'dispatchRequest:id,trip_type,requester_id,wizard_snapshot,origin,destination,depart_at',
+            'dispatchRequest.requester:id,name',
+            'transportProvider:id,name,type',
+            'vehicle:id,license_plate',
+        ]);
+
+        return $this->linesForTrip($trip);
+    }
+
+    /**
      * @return array<int, array<string, mixed>>
      */
     private function linesForTrip(Trip $trip): array
