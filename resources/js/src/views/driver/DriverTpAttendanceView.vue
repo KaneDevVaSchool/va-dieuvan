@@ -110,7 +110,8 @@
           <button
             type="button"
             class="w-full rounded-2xl bg-driver-accent py-4 text-center text-lg font-bold text-driver-bg transition active:scale-[0.99] disabled:opacity-50"
-            :disabled="busy"
+            :disabled="busy || !canConfirmSlot"
+            data-testid="driver-tp-confirm-slot"
             @click="confirm"
           >
             Xác nhận chuyến
@@ -126,13 +127,13 @@
               </svg>
               Đã xác nhận chuyến
             </div>
-            <button type="button" class="text-sm text-emerald-200/60 underline disabled:opacity-50" :disabled="busy" @click="unconfirm">Bỏ</button>
+            <button type="button" class="text-sm text-emerald-200/60 underline disabled:opacity-50" :disabled="busy || shiftExecutionStarted" @click="unconfirm">Bỏ</button>
           </div>
           <button
             v-if="!blockingInProgressShift"
             type="button"
             class="w-full rounded-2xl bg-driver-accent py-4 text-center text-lg font-bold text-driver-bg transition active:scale-[0.99] disabled:opacity-50"
-            :disabled="busy"
+            :disabled="busy || !canStartSlot"
             data-testid="driver-tp-start-trip"
             @click="start"
           >
@@ -280,11 +281,26 @@
             </div>
           </div>
 
+          <p
+            v-if="pendingStudentsCount > 0"
+            class="mt-2 text-center text-sm text-amber-200/90"
+            data-testid="driver-tp-complete-pending-hint"
+          >
+            {{ t('driver_tp_attendance.complete_hint_pending', { count: pendingStudentsCount }) }}
+          </p>
+          <p
+            v-else-if="boardedStudentsCount > 0"
+            class="mt-2 text-center text-sm text-sky-200/80"
+            data-testid="driver-tp-complete-boarded-hint"
+          >
+            {{ t('driver_tp_attendance.complete_hint_boarded', { count: boardedStudentsCount }) }}
+          </p>
+
           <button
             type="button"
             class="mb-[max(0.5rem,env(safe-area-inset-bottom))] mt-3 w-full rounded-2xl bg-sky-500 py-3.5 text-center text-base font-bold text-white transition active:scale-[0.99] disabled:opacity-50 sm:py-4 sm:text-lg"
             data-testid="driver-tp-complete-trip"
-            :disabled="busy"
+            :disabled="busy || pendingStudentsCount > 0 || !online || offlineActionQueue.length > 0 || syncingOffline"
             @click="complete"
           >
             Hoàn thành chuyến
@@ -351,8 +367,10 @@ import {
   driverAbsent,
   driverUndoAbsent,
   driverUpdateStudentNotes,
+  driverSync,
 } from '../../api/transportProgram'
-import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
+import { showAppError, showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
+import { tpExecutionStatusBlocksConfirmStart } from '../../composables/useTpDriverSlotActions'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -363,10 +381,25 @@ const day = ref(null)
 const execution = ref(null)
 const online = ref(typeof navigator !== 'undefined' ? navigator.onLine : true)
 const pendingCount = ref(0)
+/** @type {import('vue').Ref<Array<{ action: string, student_id: number, client_timestamp: string, absence_type?: string }>>} */
+const offlineActionQueue = ref([])
+const syncingOffline = ref(false)
 const expandedNoteStudentId = ref(null)
 const noteDraft = ref('')
 const noteSaving = ref(false)
 const actingStudentId = ref(null)
+
+const pendingStudentsCount = computed(() => {
+  const logs = execution.value?.student_logs
+  if (!Array.isArray(logs)) return 0
+  return logs.filter((l) => l.final_status === 'pending').length
+})
+
+const boardedStudentsCount = computed(() => {
+  const logs = execution.value?.student_logs
+  if (!Array.isArray(logs)) return 0
+  return logs.filter((l) => l.final_status === 'boarded').length
+})
 
 // Ca của tuyến con mà tài xế đang xem (morning | afternoon | null cho single-slot).
 const shift = computed(() => {
@@ -392,6 +425,17 @@ const blockingShiftLabel = computed(() => {
   if (blockingInProgressShift.value === 'afternoon') return t('driver_home.shift_afternoon')
   return ''
 })
+
+const shiftExecutionStarted = computed(() => {
+  if (execution.value?.status && execution.value.status !== 'cancelled') return true
+  return tpExecutionStatusBlocksConfirmStart(day.value?.execution_status)
+})
+
+const canConfirmSlot = computed(() => !shiftExecutionStarted.value && !slotConfirmedAt.value)
+
+const canStartSlot = computed(
+  () => !!slotConfirmedAt.value && !shiftExecutionStarted.value && !blockingInProgressShift.value,
+)
 
 function openBlockingShift() {
   if (!blockingInProgressShift.value) return
@@ -463,8 +507,27 @@ async function start() {
 }
 
 async function complete() {
+  if (!online.value || offlineActionQueue.value.length > 0) {
+    showAppError(t('driver_tp_attendance.complete_blocked_offline'), t('driver_tp_attendance.complete_blocked_title'))
+    return
+  }
+  if (pendingStudentsCount.value > 0) {
+    showAppError(
+      t('driver_tp_attendance.complete_blocked_pending', { count: pendingStudentsCount.value }),
+      t('driver_tp_attendance.complete_blocked_title'),
+    )
+    return
+  }
   busy.value = true
   try {
+    if (online.value) await refreshExecutionSnapshot()
+    if (pendingStudentsCount.value > 0) {
+      showAppError(
+        t('driver_tp_attendance.complete_blocked_pending', { count: pendingStudentsCount.value }),
+        t('driver_tp_attendance.complete_blocked_title'),
+      )
+      return
+    }
     execution.value = await driverCompleteTrip(execution.value.id, true)
     showAppSuccess('Đã hoàn thành chuyến.')
   } catch (err) {
@@ -488,6 +551,21 @@ async function act(type, s) {
 
   actingStudentId.value = s.student_id
   const ts = new Date().toISOString()
+  if (!online.value) {
+    if (type === 'undo-absent') {
+      showAppError(t('driver_tp_attendance.action_requires_online'), t('driver_tp_attendance.complete_blocked_title'))
+      actingStudentId.value = null
+      return
+    }
+    applyLocal(type, s)
+    const queued = buildOfflineAction(type, s.student_id, ts)
+    if (queued) {
+      offlineActionQueue.value.push(queued)
+      pendingCount.value = offlineActionQueue.value.length
+    }
+    actingStudentId.value = null
+    return
+  }
   applyLocal(type, s)
   try {
     const execId = execution.value.id
@@ -495,14 +573,10 @@ async function act(type, s) {
     else if (type === 'alight') await driverAlight(execId, s.student_id, ts)
     else if (type === 'absent') await driverAbsent(execId, s.student_id, { absence_type: 'no_notice', client_timestamp: ts })
     else if (type === 'undo-absent') await driverUndoAbsent(execId, s.student_id)
-    if (online.value) await refreshTotals()
+    await refreshExecutionSnapshot()
   } catch (err) {
-    if (online.value) {
-      if (log && prevStatus != null) log.final_status = prevStatus
-      showAppErrorFromApi(err)
-    } else {
-      pendingCount.value++
-    }
+    if (log && prevStatus != null) log.final_status = prevStatus
+    showAppErrorFromApi(err)
   } finally {
     actingStudentId.value = null
   }
@@ -524,15 +598,56 @@ function canBoardStudent(status) {
   return status === 'pending' || status === 'absent'
 }
 
-async function refreshTotals() {
+function buildOfflineAction(type, studentId, ts) {
+  if (type === 'board') return { action: 'board', student_id: studentId, client_timestamp: ts }
+  if (type === 'alight') return { action: 'alight', student_id: studentId, client_timestamp: ts }
+  if (type === 'absent') {
+    return { action: 'absent', student_id: studentId, client_timestamp: ts, absence_type: 'no_notice' }
+  }
+  return null
+}
+
+async function flushOfflineQueue() {
+  if (!online.value || !execution.value?.id || offlineActionQueue.value.length === 0 || syncingOffline.value) {
+    return
+  }
+  syncingOffline.value = true
+  const execId = execution.value.id
+  const batch = [...offlineActionQueue.value]
+  try {
+    const result = await driverSync(execId, batch)
+    offlineActionQueue.value = []
+    pendingCount.value = 0
+    await load()
+    if (result?.conflicts?.length) {
+      showAppError(
+        t('driver_tp_attendance.sync_conflicts', { count: result.conflicts.length }),
+        t('driver_tp_attendance.sync_conflicts_title'),
+      )
+    }
+  } catch (err) {
+    showAppErrorFromApi(err)
+  } finally {
+    syncingOffline.value = false
+  }
+}
+
+function onConnectivityChange() {
+  setOnline()
+  if (online.value) void flushOfflineQueue()
+}
+
+async function refreshExecutionSnapshot() {
   try {
     const fresh = await driverGetDay(route.params.dayId, shift.value)
-    const ex = fresh?.execution
-    if (!ex || !execution.value) return
-    execution.value.total_boarded = ex.total_boarded
-    execution.value.total_absent = ex.total_absent
-    execution.value.total_expected = ex.total_expected
+    if (fresh?.execution) {
+      execution.value = fresh.execution
+    }
   } catch { /* ignore */ }
+}
+
+async function refreshTotals() {
+  await refreshExecutionSnapshot()
 }
 
 function goBack() {
@@ -614,8 +729,8 @@ function logClass(s) {
 
 onMounted(() => {
   load()
-  window.addEventListener('online', setOnline)
-  window.addEventListener('offline', setOnline)
+  window.addEventListener('online', onConnectivityChange)
+  window.addEventListener('offline', onConnectivityChange)
 })
 watch(
   () => [route.params.dayId, route.query.shift],
@@ -624,7 +739,7 @@ watch(
   },
 )
 onUnmounted(() => {
-  window.removeEventListener('online', setOnline)
-  window.removeEventListener('offline', setOnline)
+  window.removeEventListener('online', onConnectivityChange)
+  window.removeEventListener('offline', onConnectivityChange)
 })
 </script>

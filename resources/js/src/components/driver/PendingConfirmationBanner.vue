@@ -245,7 +245,7 @@
               <button
                 type="button"
                 class="inline-flex min-h-[48px] min-w-0 flex-1 items-center justify-center rounded-lg bg-emerald-600 px-3 text-sm font-bold text-white shadow shadow-black/30 transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-45 sm:min-w-[7rem]"
-                :disabled="busyId != null"
+                :disabled="busyId != null || !tpDriverTripCanConfirm(trip)"
                 @click="onConfirm(trip)"
               >
                 {{ t('driver_home.btn_confirm') }}
@@ -377,6 +377,7 @@ import {
   tripTypeBadgeClass,
   tripTypeBadgeText,
 } from '../../composables/useDriverTripDisplay'
+import { tpDriverTripCanConfirm } from '../../composables/useTpDriverSlotActions'
 
 let tripStatusCooldownUntil = 0
 
@@ -580,6 +581,7 @@ async function submitDeclineConfirmed() {
 
 async function onConfirm(trip) {
   if (busyId.value != null || Date.now() < tripStatusCooldownUntil) return
+  if (!tpDriverTripCanConfirm(trip)) return
   busyId.value = trip.id
   actionError.value = ''
   try {

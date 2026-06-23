@@ -21,6 +21,7 @@ import {
   tpItemsToCalendarSlots,
   tpItemsToDriverTrips,
 } from '../composables/driverScheduleExpand'
+import { tpDriverTripCanConfirm, tpDriverTripCanStart } from '../composables/useTpDriverSlotActions'
 import { driverConfirmDay, driverListDays, driverReportBusyDay, driverStartTrip } from '../api/transportProgram'
 import {
   isTpTripVisibleInTodaySchedule,
@@ -631,6 +632,7 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
     async confirmTripOptimistic(trip) {
       const dispatchTripId = trip.trip_id ?? trip.id
       if (dispatchTripId == null || dispatchTripId === '') return
+      if (trip._tp?.day_id && !tpDriverTripCanConfirm(trip)) return
       if (trip._tp?.day_id) {
         const { day_id: dayId, shift, multi_slot: multiSlot } = trip._tp
         const shiftArg = multiSlot ? shift || null : null
@@ -719,11 +721,13 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
       if (tripId == null || this.startBusyTripId != null) return
       const tpTrip = this.dashboardMergedTrips.find((x) => x.id === tripId && x._tp?.day_id)
       if (tpTrip?._tp?.day_id) {
+        if (!tpDriverTripCanStart(tpTrip)) return
         this.startBusyTripId = tripId
         const { day_id: dayId, shift, multi_slot: multiSlot } = tpTrip._tp
         const shiftArg = multiSlot ? shift || null : null
         try {
           await driverStartTrip(dayId, null, shiftArg)
+          this.patchTpListItem(dayId, shiftArg, { execution_status: 'in_progress' })
           showAppSuccess(t('driver_home.toast_start_ok'), t('driver_home.toast_action_title'))
           this.scheduleSilentRefetch()
         } catch (e) {
@@ -743,7 +747,10 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
         const updated = await this.updateTripStatusWithLockRetry(
           tripId,
           backup ?? this.tripSnapshot(tripId),
-          { status: 'in_progress' },
+          {
+            status: 'in_progress',
+            ...(backup?.schedule_leg_key ? { schedule_key: backup.schedule_leg_key } : {}),
+          },
         )
         this.patchTripInList(
           tripId,

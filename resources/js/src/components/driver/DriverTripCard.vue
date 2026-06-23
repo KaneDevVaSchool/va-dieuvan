@@ -101,7 +101,7 @@
           type="button"
           class="inline-flex min-h-12 items-center justify-center rounded-xl bg-[#22c55e] px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-black/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
           :class="primaryActionClass"
-          :disabled="busy"
+          :disabled="busy || !canStartAction"
           data-testid="driver-trip-card-start"
           @click.stop="onStart"
         >
@@ -114,7 +114,8 @@
             <button
               type="button"
               class="inline-flex items-center justify-center rounded-xl bg-[#22c55e] px-3 py-2.5 text-sm font-bold text-white shadow-md shadow-black/25 disabled:cursor-not-allowed disabled:opacity-50"
-              :disabled="busy"
+              :disabled="busy || !canConfirmAction"
+              data-testid="driver-trip-card-confirm"
               @click.stop="onConfirm"
             >
               {{ t('driver_home.btn_confirm') }}
@@ -159,6 +160,7 @@ import {
 } from '../../composables/useDriverTripDisplay'
 import { dispatchRequestDisplayPassengerCount } from '../../util/dispatchRequestPassengers'
 import { useHaptics } from '../../composables/useHaptics'
+import { tpDriverTripCanConfirm, tpDriverTripCanStart } from '../../composables/useTpDriverSlotActions'
 
 const props = defineProps({
   trip: { type: Object, required: true },
@@ -329,6 +331,10 @@ const CheckMini = {
       )
   },
 }
+
+const canConfirmAction = computed(() => tpDriverTripCanConfirm(tripRaw.value))
+
+const canStartAction = computed(() => tpDriverTripCanStart(tripRaw.value))
 
 const statusIcon = computed(() => {
   const m = cardMode.value

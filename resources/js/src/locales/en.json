@@ -144,7 +144,15 @@
         "note_cancel": "Cancel",
         "note_saved": "Note saved.",
         "blocking_shift_message": "Complete the {shift} shift before starting this one.",
-        "blocking_shift_open": "Open {shift} shift"
+        "blocking_shift_open": "Open {shift} shift",
+        "complete_blocked_pending": "{count} student(s) still need attendance (board, alight, or mark absent).",
+        "complete_blocked_title": "Cannot complete run yet",
+        "complete_hint_pending": "{count} student(s) pending — finish attendance before completing the run.",
+        "complete_hint_boarded": "Completing will auto-mark {count} boarded student(s) as alighted.",
+        "complete_blocked_offline": "You need a network connection and synced attendance before completing the run.",
+        "action_requires_online": "This action requires an internet connection.",
+        "sync_conflicts_title": "Attendance sync",
+        "sync_conflicts": "{count} action(s) conflicted with the server — please review each student."
     },
     "driver_home": {
         "hello": "Hello,",
@@ -641,6 +649,7 @@
         "vehicle_type_unknown": "Type unknown",
         "vehicles_loading": "Loading vehicles…",
         "vehicles_empty": "No vehicles in your scope — contact dispatch to assign a default vehicle.",
+        "err_vehicle_required": "Please select a vehicle to assign this cost.",
         "step_amount_title": "Type and amount",
         "step_amount_hint": "Enter the amount on the receipt (VND).",
         "step_desc_title": "Short note",

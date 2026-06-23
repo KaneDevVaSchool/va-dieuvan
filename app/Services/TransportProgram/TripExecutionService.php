@@ -23,12 +23,22 @@ class TripExecutionService
 
     public function complete(TpTripExecution $execution, bool $confirmPendingBoard, ?int $actorId): TpTripExecution
     {
+        abort_unless(
+            $execution->status === TpTripExecution::STATUS_IN_PROGRESS,
+            422,
+            'Chuyến không còn đang chạy — không thể hoàn thành.',
+        );
+
         $pending = $execution->studentLogs()->where('final_status', TpTripStudentLog::FINAL_PENDING)->count();
-        abort_if($pending > 0, 422, 'Còn học sinh chưa xử lý.');
+        abort_if(
+            $pending > 0,
+            422,
+            "Còn {$pending} học sinh chưa xử lý — bấm Lên xe, Xuống xe hoặc Vắng cho từng em trước khi hoàn thành chuyến.",
+        );
 
         $boarded = $execution->studentLogs()->where('final_status', TpTripStudentLog::FINAL_BOARDED)->count();
         if ($boarded > 0 && ! $confirmPendingBoard) {
-            abort(422, 'Còn học sinh đã lên xe chưa xuống — cần xác nhận.');
+            abort(422, 'Còn học sinh đã lên xe chưa xuống — gửi confirm_pending_board=true để tự xuống xe khi hoàn thành.');
         }
 
         if ($boarded > 0 && $confirmPendingBoard) {

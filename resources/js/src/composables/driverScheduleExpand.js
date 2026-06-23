@@ -106,6 +106,8 @@ export function tpItemsToDriverTrips(tpItems) {
         list_key: listKey,
         program_id: row.program_id,
         execution_id: row.execution_id ?? null,
+        execution_status: execStatus ?? null,
+        slot_confirmed_at: row.confirmed_at ?? null,
       },
       trip_number: row.program_code ? String(row.program_code) : 'CPĐD',
       type: 'TP',

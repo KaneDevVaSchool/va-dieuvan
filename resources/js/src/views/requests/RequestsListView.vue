@@ -468,7 +468,8 @@
                         </p>
                         <RouterLink
                           :to="{ name: 'requestDetail', params: { id: String(r.id) } }"
-                          class="mt-0.5 inline-block font-mono text-lg font-bold tracking-tight text-slate-900 underline decoration-slate-300 underline-offset-2 hover:text-va-800 hover:decoration-va-400 dark:text-slate-100"
+                          class="mt-0.5 inline-flex items-center rounded-lg px-2.5 py-1 font-mono text-base font-bold tracking-tight transition hover:opacity-90 sm:text-lg"
+                          :class="requestCodeBadgeClass(r)"
                           :data-testid="`requests-card-link-${r.id}`"
                         >
                           {{ displayRequestCode(r) }}
@@ -1593,6 +1594,15 @@ function requestTypeBadgeClass(tt) {
   return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200'
 }
 
+/** Nền màu theo loại chuyến — thay viền trái card (urgent / cần cập nhật giá). */
+function requestCodeBadgeClass(r) {
+  const base = requestTypeBadgeClass(r.trip_type)
+  if (r.is_urgent || requestNeedsCostUpdate(r)) {
+    return `${base} ring-2 ring-amber-400/90 ring-offset-1 dark:ring-amber-500/70`
+  }
+  return base
+}
+
 function passengerSummary(r) {
   const n = dispatchRequestDisplayPassengerCount(r)
   if (n > 0) return t('requests_page.passengers', { n })
@@ -1615,12 +1625,6 @@ function requestCardClass(r) {
   if (isTrashTab.value) {
     if (r.is_urgent) return 'border-amber-300 bg-amber-50/40 dark:border-amber-900/60'
     return 'border-slate-200/90 bg-slate-50/70 dark:border-slate-700'
-  }
-  if (requestNeedsCostUpdate(r)) {
-    return 'border-l-4 border-l-amber-500 border-y-slate-200/90 border-r-slate-200/90 dark:border-y-slate-700 dark:border-r-slate-700'
-  }
-  if (r.is_urgent) {
-    return 'border-l-4 border-l-amber-500 border-y-slate-200/90 border-r-slate-200/90 dark:border-y-slate-700 dark:border-r-slate-700'
   }
   return 'border-slate-200/90 dark:border-slate-700'
 }

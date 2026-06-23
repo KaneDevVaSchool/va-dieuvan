@@ -286,6 +286,14 @@ async function submit() {
     errorMsg.value = t('driver_trip_detail.cost_err_amount')
     return
   }
+  if (linkMode.value === 'none' && !String(form.value.vehicle_id || '').trim()) {
+    errorMsg.value = t('driver_costs.err_vehicle_required')
+    return
+  }
+  if (linkMode.value === 'trip' && !String(form.value.trip_id || '').trim()) {
+    errorMsg.value = t('driver_costs.step_trip_hint')
+    return
+  }
   saving.value = true
   errorMsg.value = ''
   try {
@@ -312,8 +320,13 @@ async function submit() {
     } else {
       await router.replace({ name: 'driverCosts' })
     }
-  } catch {
-    errorMsg.value = t('driver_trip_detail.cost_err_submit')
+  } catch (err) {
+    const msg = err?.response?.data?.message
+    if (typeof msg === 'string' && msg.includes('chọn xe')) {
+      errorMsg.value = t('driver_costs.err_vehicle_required')
+    } else {
+      errorMsg.value = t('driver_trip_detail.cost_err_submit')
+    }
   } finally {
     saving.value = false
   }

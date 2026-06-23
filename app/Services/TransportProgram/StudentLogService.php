@@ -91,7 +91,11 @@ class StudentLogService
 
     public function markAbsent(TpTripStudentLog $log, string $type, ?string $notes, ?int $actorId, ?string $clientTs = null): TpTripStudentLog
     {
-        abort_unless(in_array($log->final_status, [TpTripStudentLog::FINAL_PENDING, TpTripStudentLog::FINAL_BOARDED], true), 422);
+        abort_unless(
+            in_array($log->final_status, [TpTripStudentLog::FINAL_PENDING, TpTripStudentLog::FINAL_BOARDED], true),
+            422,
+            'Không thể ghi vắng ở trạng thái hiện tại của học sinh.',
+        );
 
         $wasPending = $log->final_status === TpTripStudentLog::FINAL_PENDING;
         $wasBoarded = $log->final_status === TpTripStudentLog::FINAL_BOARDED;
@@ -157,8 +161,8 @@ class StudentLogService
 
     public function undoAbsent(TpTripStudentLog $log, ?int $actorId): TpTripStudentLog
     {
-        abort_unless($log->final_status === TpTripStudentLog::FINAL_ABSENT, 422);
-        abort_unless($log->execution->status === 'in_progress', 422);
+        abort_unless($log->final_status === TpTripStudentLog::FINAL_ABSENT, 422, 'Chỉ hủy vắng khi học sinh đang ở trạng thái vắng.');
+        abort_unless($log->execution->status === 'in_progress', 422, 'Chuyến không còn đang chạy — không thể hủy vắng.');
 
         $log->update([
             'final_status' => TpTripStudentLog::FINAL_PENDING,
