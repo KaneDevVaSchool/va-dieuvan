@@ -110,6 +110,57 @@
           </button>
         </div>
 
+        <template v-if="hasCostLegs">
+          <label class="text-sm font-medium text-driver-muted sm:text-base">{{ t('driver_trip_detail.cost_leg') }}</label>
+          <div class="relative mt-1.5">
+            <select
+              :value="costForm.leg_key"
+              class="flex min-h-[48px] w-full appearance-none rounded-xl border border-white/10 bg-driver-surface px-3 py-3 pr-11 text-base text-driver-ink focus:outline-none focus:ring-2 focus:ring-[#7fdcc8]/50 sm:text-lg"
+              data-testid="driver-cost-leg-select"
+              @change="$emit('update:costForm', { ...costForm, leg_key: $event.target.value })"
+            >
+              <option value="">{{ t('driver_trip_detail.cost_leg_all') }}</option>
+              <option v-for="l in costLegOptions" :key="l.key" :value="l.key">
+                {{ l.label }}<template v-if="l.route"> · {{ l.route }}</template>
+              </option>
+            </select>
+            <ChevronDownIcon class="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-driver-muted/70" aria-hidden="true" />
+          </div>
+
+          <button
+            type="button"
+            class="mt-2 flex min-h-[44px] w-full items-center justify-between gap-2 rounded-xl bg-driver-elevated px-3 py-2.5 text-left text-sm font-medium text-driver-muted sm:text-base"
+            :aria-expanded="legRouteOpen"
+            @click="legRouteOpen = !legRouteOpen"
+          >
+            <span class="flex items-center gap-2">
+              <MapPinIcon class="h-4 w-4 shrink-0 text-driver-muted/80" aria-hidden="true" />
+              {{ t('driver_trip_detail.cost_leg_route') }}
+            </span>
+            <ChevronDownIcon class="h-5 w-5 shrink-0 text-driver-muted/70 transition-transform" :class="legRouteOpen ? 'rotate-180' : ''" aria-hidden="true" />
+          </button>
+          <div v-if="legRouteOpen" class="mt-1.5 rounded-xl border border-white/[0.06] bg-driver-surface/60 px-3 py-2.5">
+            <template v-if="selectedCostLeg">
+              <div class="space-y-2 text-sm text-driver-ink sm:text-base">
+                <div class="flex items-start gap-2">
+                  <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-emerald-400" aria-hidden="true" />
+                  <span class="min-w-0">{{ selectedCostLeg.originMain || '—' }}<span v-if="selectedCostLeg.originSub" class="block text-xs text-driver-muted/80">{{ selectedCostLeg.originSub }}</span></span>
+                </div>
+                <div v-if="selectedCostLeg.waypointMain" class="flex items-start gap-2">
+                  <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-amber-400" aria-hidden="true" />
+                  <span class="min-w-0">{{ selectedCostLeg.waypointMain }}<span v-if="selectedCostLeg.waypointSub" class="block text-xs text-driver-muted/80">{{ selectedCostLeg.waypointSub }}</span></span>
+                </div>
+                <div class="flex items-start gap-2">
+                  <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-rose-400" aria-hidden="true" />
+                  <span class="min-w-0">{{ selectedCostLeg.destMain || '—' }}<span v-if="selectedCostLeg.destSub" class="block text-xs text-driver-muted/80">{{ selectedCostLeg.destSub }}</span></span>
+                </div>
+              </div>
+            </template>
+            <p v-else class="text-sm text-driver-muted/85 sm:text-base">{{ t('driver_trip_detail.cost_leg_all_hint') }}</p>
+          </div>
+          <div class="my-3 h-px bg-white/[0.06]" />
+        </template>
+
         <label class="text-sm font-medium text-driver-muted sm:text-base">{{ t('driver_trip_detail.cost_type') }}</label>
         <div class="relative mt-1.5">
           <select
@@ -167,11 +218,13 @@
 </template>
 
 <script setup>
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowRightIcon,
   ChevronDownIcon,
   MapIcon,
+  MapPinIcon,
   XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import { formatVndWhileTyping } from '../../../util/money'
@@ -187,9 +240,16 @@ const props = defineProps({
   kmSaving: { type: Boolean, default: false },
   costForm: { type: Object, required: true },
   costTypes: { type: Array, default: () => [] },
+  costLegOptions: { type: Array, default: () => [] },
   costError: { type: String, default: '' },
   costSaving: { type: Boolean, default: false },
 })
+
+const legRouteOpen = ref(false)
+const hasCostLegs = computed(() => (props.costLegOptions?.length ?? 0) > 1)
+const selectedCostLeg = computed(
+  () => props.costLegOptions.find((l) => l.key === props.costForm?.leg_key) ?? null,
+)
 
 const emit = defineEmits([
   'close-km',

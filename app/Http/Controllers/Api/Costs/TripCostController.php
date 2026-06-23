@@ -229,6 +229,9 @@ class TripCostController extends Controller
         unset($data['trip_id']);
 
         $this->resolveVehicleForCostSubmission($user, $data, $trip);
+        $data['leg_key'] = $trip !== null
+            ? $this->resolveLegKeyForTrip($trip, $data['leg_key'] ?? null)
+            : null;
 
         $cost = TripCost::create([
             ...$data,

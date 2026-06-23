@@ -96,6 +96,7 @@
 
         <DriverTripCostsSection
           :trip-costs="tripCosts"
+          :cost-leg-options="costLegOptions"
           :costs-approved-total="costsApprovedTotal"
           :costs-pending-total="costsPendingTotal"
           :can-add-cost="canAddCost"
@@ -135,6 +136,7 @@
       :km-saving="kmSaving"
       :cost-form="costForm"
       :cost-types="costTypes"
+      :cost-leg-options="costLegOptions"
       :cost-error="costError"
       :cost-saving="costSaving"
       @close-km="kmModalOpen = false"
@@ -238,6 +240,7 @@ const {
   submitKmModal,
   openCostModal,
   submitCost,
+  costLegOptions,
   toggleStudent,
   isNextIndex,
   onEndTrip,

@@ -66,6 +66,7 @@
             </div>
             <div class="min-w-0 flex-1">
               <p class="text-base font-semibold leading-snug text-driver-ink sm:text-lg">
+                <span v-if="legLabelOf(c)" class="mr-1 inline-flex items-center rounded-full bg-amber-400/15 px-1.5 py-0.5 text-xs font-semibold text-amber-300 ring-1 ring-amber-400/25">{{ legLabelOf(c) }}</span>
                 {{ costTypeLabel(c.type) }}
                 <span v-if="costDescription(c)" class="font-normal text-driver-muted"> · {{ costDescription(c) }}</span>
               </p>
@@ -102,6 +103,7 @@ import TripCostApprovalBadge from './TripCostApprovalBadge.vue'
 
 const props = defineProps({
   tripCosts: { type: Array, default: () => [] },
+  costLegOptions: { type: Array, default: () => [] },
   costsApprovedTotal: { type: Number, default: 0 },
   costsPendingTotal: { type: Number, default: 0 },
   canAddCost: { type: Boolean, default: false },
@@ -118,6 +120,16 @@ const canOpenCostEntry = computed(() => props.canAddCost || props.showPostTripCo
 defineEmits(['open-modal'])
 
 const { t } = useI18n()
+
+const legLabelByKey = computed(() => {
+  const m = new Map()
+  for (const l of props.costLegOptions ?? []) m.set(l.key, l.label)
+  return m
+})
+function legLabelOf(cost) {
+  const key = String(cost?.leg_key ?? '')
+  return key ? (legLabelByKey.value.get(key) ?? '') : ''
+}
 
 function costDescription(cost) {
   const type = String(cost?.type ?? '').trim().toLowerCase()

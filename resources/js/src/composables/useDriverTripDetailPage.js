@@ -60,7 +60,7 @@ export function useDriverTripDetailPage() {
   const costModalOpen = ref(false)
   const costSaving = ref(false)
   const costError = ref('')
-  const costForm = ref({ type: 'fuel', amount: '', description: '' })
+  const costForm = ref({ type: 'fuel', amount: '', description: '', leg_key: '' })
 
   const expandedStudentIdx = ref(null)
   const isPaused = ref(false)
@@ -339,6 +339,26 @@ export function useDriverTripDetailPage() {
     )
   })
 
+  /** Tùy chọn chặng cho form thêm chi phí (chỉ khi chuyến >1 chặng). */
+  const costLegOptions = computed(() => {
+    const legs = driverRouteLegs.value
+    if (!Array.isArray(legs) || legs.length <= 1) return []
+    return legs.map((leg, idx) => {
+      const route = [leg.originMain, leg.destMain].filter(Boolean).join(' → ')
+      return {
+        key: leg.key,
+        label: leg.label || t('driver_trip_detail.schedule_leg', { n: idx + 1 }),
+        route,
+        originMain: leg.originMain,
+        originSub: leg.originSub,
+        waypointMain: leg.waypointMain,
+        waypointSub: leg.waypointSub,
+        destMain: leg.destMain,
+        destSub: leg.destSub,
+      }
+    })
+  })
+
   const routeWaypointMain = computed(() => {
     if (driverRouteLegs.value.length) return ''
     const s = snap.value
@@ -493,7 +513,7 @@ export function useDriverTripDetailPage() {
   function openCostModal() {
     if (!canOpenCostModal.value) return
     costError.value = ''
-    costForm.value = { type: 'fuel', amount: '', description: '' }
+    costForm.value = { type: 'fuel', amount: '', description: '', leg_key: '' }
     costModalOpen.value = true
   }
 
@@ -505,11 +525,13 @@ export function useDriverTripDetailPage() {
       costError.value = t('driver_trip_detail.cost_err_amount')
       return
     }
+    const legKey = costLegOptions.value.length > 1 ? String(costForm.value.leg_key ?? '').trim() : ''
     const payload = {
       type: costForm.value.type,
       amount: num,
       description: costForm.value.description?.trim() || null,
       currency: 'VND',
+      leg_key: legKey || undefined,
     }
     const idem = `driver-cost-${id}-${Date.now()}`
     costSaving.value = true
@@ -903,6 +925,7 @@ export function useDriverTripDetailPage() {
     submitKmModal,
     openCostModal,
     submitCost,
+    costLegOptions,
     toggleStudent,
     studentInitials,
     isNextIndex,
