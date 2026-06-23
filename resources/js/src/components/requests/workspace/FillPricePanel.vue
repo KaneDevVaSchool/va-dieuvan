@@ -6,6 +6,16 @@
   >
     <!-- Workspace: grid 4 cột — không lặp hành trình -->
     <div v-if="workspaceMode" class="space-y-2">
+      <!-- Nhiều chặng: lưới gộp là TỔNG, phải nhập giá từng chặng qua modal -->
+      <div
+        v-if="rows.length > 1"
+        class="flex items-start gap-2 rounded-lg border border-amber-200/80 bg-amber-50/70 px-3 py-2.5 text-xs font-medium text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-100"
+        role="alert"
+        data-testid="fill-price-workspace-multi-leg-banner"
+      >
+        <ExclamationTriangleIcon class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+        <span>{{ t('request_detail.approval_ws_multi_leg_banner', { n: rows.length }) }}</span>
+      </div>
       <div
         class="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-slate-200/80 bg-slate-200/80 dark:border-slate-800 dark:bg-slate-800 sm:grid-cols-4"
       >
@@ -49,10 +59,11 @@
       <button
         v-if="rows.length > 1"
         type="button"
-        class="text-xs font-semibold text-va-700 underline-offset-2 hover:underline dark:text-va-400"
+        class="flex w-full items-center justify-center gap-2 rounded-lg border border-va-300 bg-va-50 px-3 py-2.5 text-sm font-semibold text-va-700 transition hover:bg-va-100 dark:border-va-800 dark:bg-va-950/40 dark:text-va-300 dark:hover:bg-va-900/40"
         data-testid="fill-price-workspace-multi-row"
         @click="emit('open-multi-row')"
       >
+        <PencilSquareIcon class="h-4 w-4" aria-hidden="true" />
         {{ t('request_detail.approval_ws_edit_multi_row', { n: rows.length }) }}
       </button>
     </div>
@@ -93,8 +104,13 @@
           :aria-label="t('request_detail.ops_row_badge_aria', { n: idx + 1 })"
         >{{ idx + 1 }}</span>
         <div class="min-w-0 flex-1">
-          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            {{ t('request_detail.ops_itinerary_row_label') }}
+          <p
+            class="text-[10px] font-bold uppercase tracking-wider"
+            :class="rows.length > 1 ? 'text-va-600 dark:text-va-400' : 'text-slate-400 dark:text-slate-500'"
+          >
+            {{ rows.length > 1
+              ? t('request_detail.ops_itinerary_leg_label', { n: idx + 1, total: rows.length })
+              : t('request_detail.ops_itinerary_row_label') }}
           </p>
           <p class="mt-0.5 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">{{ rowHeading(row, idx) }}</p>
         </div>
@@ -313,7 +329,7 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { dispatchRequestDisplayPassengerCount } from '../../../util/dispatchRequestPassengers'
-import { CurrencyDollarIcon } from '@heroicons/vue/24/outline'
+import { CurrencyDollarIcon, ExclamationTriangleIcon, PencilSquareIcon } from '@heroicons/vue/24/outline'
 import Button from '../../ui/Button.vue'
 import FillPriceFieldLabel from './FillPriceFieldLabel.vue'
 import ItineraryRowInfoGrid from './ItineraryRowInfoGrid.vue'
