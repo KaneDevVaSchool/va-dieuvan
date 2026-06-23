@@ -787,100 +787,15 @@
     </Transition>
   </Teleport>
 
-  <!-- Modal: Kết quả gửi -->
-  <Teleport to="body">
-    <Transition
-      enter-active-class="transition duration-200 ease-out"
-      enter-from-class="opacity-0"
-      enter-to-class="opacity-100"
-      leave-active-class="transition duration-150 ease-in"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
-    >
-      <div
-        v-if="submitResultModalOpen"
-        class="fixed inset-0 z-[202] flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-[3px]"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="submit-result-modal-title"
-        @click.self="closeSubmitResultModal"
-      >
-        <div
-          class="w-full max-w-[420px] overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl shadow-slate-900/20 ring-1 ring-black/5"
-          @click.stop
-        >
-          <div
-            class="border-b border-slate-100 px-5 pb-4 pt-5"
-            :class="
-              submitResultOk
-                ? 'bg-gradient-to-br from-emerald-50 via-white to-slate-50/80'
-                : 'bg-gradient-to-br from-rose-50 via-white to-slate-50/80'
-            "
-          >
-            <div class="flex gap-4">
-              <div
-                class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl shadow-inner"
-                :class="
-                  submitResultOk
-                    ? 'bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-700 shadow-emerald-900/5'
-                    : 'bg-gradient-to-br from-rose-100 to-rose-50 text-rose-700 shadow-rose-900/5'
-                "
-              >
-                <CheckCircleIcon v-if="submitResultOk" class="h-6 w-6" aria-hidden="true" />
-                <XCircleIcon v-else class="h-6 w-6" aria-hidden="true" />
-              </div>
-              <div class="min-w-0 pt-0.5">
-                <h3 id="submit-result-modal-title" class="text-base font-semibold leading-snug text-slate-900">
-                  {{
-                    submitResultOk
-                      ? t('dispatch_wizard.confirm.submit_modal_success_title')
-                      : t('dispatch_wizard.confirm.submit_modal_fail_title')
-                  }}
-                </h3>
-                <p v-if="submitResultOk" class="mt-2 text-sm leading-relaxed text-slate-600">
-                  {{ t('dispatch_wizard.confirm.submit_modal_success_body', { id: created?.id ?? '—' }) }}
-                </p>
-                <p v-else class="mt-2 text-sm leading-relaxed text-slate-600">
-                  {{ submitResultDetail || t('dispatch_wizard.confirm.submit_modal_fail_body') }}
-                </p>
-                <p
-                  v-if="submitResultOk && submitResultDetail"
-                  class="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium leading-relaxed text-amber-950 ring-1 ring-amber-100"
-                >
-                  {{ submitResultDetail }}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div class="flex flex-col gap-2 bg-slate-50/90 px-4 py-4 sm:flex-row sm:flex-wrap sm:justify-end sm:gap-3">
-            <template v-if="submitResultOk && created?.id">
-              <button
-                type="button"
-                class="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-va-800/25 focus:ring-offset-2 sm:w-auto"
-                @click="navigateToSubmittedRequestDetail"
-              >
-                {{ t('dispatch_wizard.confirm.submit_modal_view_request') }}
-              </button>
-              <button
-                type="button"
-                class="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-va-800/25 focus:ring-offset-2 sm:w-auto"
-                @click="closeSubmitModalAndStartNewDraft"
-              >
-                {{ t('dispatch_wizard.confirm.submit_modal_new_request') }}
-              </button>
-            </template>
-            <button
-              type="button"
-              class="inline-flex w-full items-center justify-center rounded-xl bg-va-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-va-900 focus:outline-none focus:ring-2 focus:ring-va-800/30 focus:ring-offset-2 sm:w-auto"
-              @click="closeSubmitResultModal"
-            >
-              {{ t('dispatch_wizard.confirm.submit_modal_close') }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </Transition>
-  </Teleport>
+  <DispatchSubmitResultModal
+    :open="submitResultModalOpen"
+    :ok="submitResultOk"
+    :detail="submitResultDetail"
+    :created="created"
+    @close="closeSubmitResultModal"
+    @view-request="navigateToSubmittedRequestDetail"
+    @new-request="closeSubmitModalAndStartNewDraft"
+  />
 
   <!-- Modal: Thư viện nháp -->
   <Teleport to="body">
@@ -1122,7 +1037,6 @@ import { computed, defineAsyncComponent, onMounted, onUnmounted, provide, ref, w
 import { useI18n } from 'vue-i18n'
 import {
   ArrowRightIcon,
-  CheckCircleIcon,
   ChevronDownIcon,
   ClipboardDocumentListIcon,
   CloudArrowUpIcon,
@@ -1131,12 +1045,12 @@ import {
   InformationCircleIcon,
   PaperClipIcon,
   TrashIcon,
-  XCircleIcon,
   XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import { useDispatchRequestWizard } from '../../composables/useDispatchRequestWizard'
 import { DISPATCH_WIZARD_KEY } from './dispatch-wizard/injectionKeys'
 import ConfirmSummary from './dispatch-wizard/ConfirmSummary.vue'
+import DispatchSubmitResultModal from './dispatch-wizard/DispatchSubmitResultModal.vue'
 import RecurringConfigSection from '../../components/recurring/RecurringConfigSection.vue'
 import PortalStepper from '../../components/portal/PortalStepper.vue'
 import PortalTripTypeGrid from '../../components/portal/PortalTripTypeGrid.vue'

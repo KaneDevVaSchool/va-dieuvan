@@ -22,7 +22,7 @@
       <div class="rounded-xl bg-slate-50/90 px-5 py-5 sm:flex sm:items-start sm:justify-between sm:gap-6">
         <div class="min-w-0 space-y-2">
           <p class="text-sm font-semibold text-slate-900">
-            {{ t('dispatch_wizard.confirm.success_meta', { id: created.id }) }}
+            {{ t('dispatch_wizard.confirm.success_meta', { code: createdRefCode }) }}
           </p>
           <span
             class="inline-flex w-fit items-center rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-slate-800 shadow-sm shadow-slate-900/[0.04]"
@@ -223,6 +223,7 @@ import {
 } from '../../../composables/dispatchWizardConstants'
 import { parseMoneyVnd } from '../../../util/money'
 import { formatDatetimeLocalAmPm } from '../../../util/datetime'
+import { formatDispatchRequestRefCode } from '../../../util/portalRequestFormat'
 import { buildStaffPrefixedPath as staffPath } from '../../../config/dispatchWebBase'
 
 const { t, locale } = useI18n()
@@ -270,6 +271,10 @@ const tripTypeLabel = computed(() => {
   const opt = tripTypeOptions.value?.find((o) => o.value === tt)
   return opt?.label ?? tt ?? '—'
 })
+
+const createdRefCode = computed(
+  () => formatDispatchRequestRefCode(created.value) || `#${created.value?.id ?? ''}`,
+)
 
 const usageDatesDisplay = computed(() => {
   if (wantsRecurringTemplate.value) {
