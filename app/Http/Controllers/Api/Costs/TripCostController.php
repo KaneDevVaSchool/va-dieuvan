@@ -36,7 +36,7 @@ class TripCostController extends Controller
 {
     use ApiResponses;
 
-    public function index(ListAllTripCostsRequest $request)
+    public function index(ListAllTripCostsRequest $request, WizardSnapshotCostLinesQuery $wizardLines)
     {
         $data = $request->validated();
         $user = $request->user();
@@ -105,8 +105,12 @@ class TripCostController extends Controller
         $perPage = (int) ($data['per_page'] ?? 20);
         $results = $q->paginate($perPage);
 
+        /** @var array<int, TripCost> $items */
+        $items = $results->items();
+        $this->attachWizardEstimateLinesToCosts($items, $wizardLines);
+
         return $this->ok([
-            'items' => $results->items(),
+            'items' => $items,
             'meta' => [
                 'current_page' => $results->currentPage(),
                 'per_page' => $results->perPage(),
@@ -281,24 +285,7 @@ class TripCostController extends Controller
 
         if ($tripCost->type === WizardSnapshotCostEstimator::PROVISION_TYPE && $tripCost->trip !== null) {
             $rawLines = $wizardLines->estimateLinesForTrip($tripCost->trip);
-            $payload['estimate_lines'] = array_values(array_map(static function (array $line): array {
-                $pickup = trim((string) ($line['pickup'] ?? ''));
-                $dropoff = trim((string) ($line['dropoff'] ?? ''));
-                $legRoute = ($pickup !== '' || $dropoff !== '')
-                    ? trim("{$pickup} → {$dropoff}", ' →')
-                    : null;
-
-                return [
-                    'line_key' => $line['line_key'] ?? null,
-                    'leg_seq' => isset($line['leg_seq']) ? (int) $line['leg_seq'] : null,
-                    'estimate_kind' => $line['estimate_kind'] ?? null,
-                    'description' => $line['description'] ?? null,
-                    'leg_route' => $legRoute,
-                    'unit_price' => (float) ($line['unit_price'] ?? 0),
-                    'extra_fee' => (float) ($line['extra_fee'] ?? 0),
-                    'amount' => (float) ($line['amount'] ?? 0),
-                ];
-            }, $rawLines));
+            $payload['estimate_lines'] = $wizardLines->formatLinesForApi($rawLines);
         }
 
         return $this->ok($payload);
@@ -529,6 +516,32 @@ class TripCostController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * @param  array<int, TripCost>  $costs
+     */
+    private function attachWizardEstimateLinesToCosts(array $costs, WizardSnapshotCostLinesQuery $wizardLines): void
+    {
+        /** @var array<int, array<int, array<string, mixed>>> $cacheByTripId */
+        $cacheByTripId = [];
+
+        foreach ($costs as $cost) {
+            if ($cost->type !== WizardSnapshotCostEstimator::PROVISION_TYPE || $cost->trip_id === null) {
+                continue;
+            }
+
+            $tripId = (int) $cost->trip_id;
+            if (! array_key_exists($tripId, $cacheByTripId)) {
+                if (! $cost->relationLoaded('trip') || $cost->trip === null) {
+                    $cost->load('trip');
+                }
+                $raw = $cost->trip !== null ? $wizardLines->estimateLinesForTrip($cost->trip) : [];
+                $cacheByTripId[$tripId] = $wizardLines->formatLinesForApi($raw);
+            }
+
+            $cost->setAttribute('estimate_lines', $cacheByTripId[$tripId]);
+        }
     }
 
     /**

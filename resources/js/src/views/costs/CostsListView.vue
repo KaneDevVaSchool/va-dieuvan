@@ -483,6 +483,14 @@
             </p>
           </div>
 
+          <CostEstimateLegBreakdown
+            v-if="c.estimate_lines?.length"
+            :lines="c.estimate_lines"
+            variant="embedded"
+            :test-id="`cost-card-leg-breakdown-${c.id}`"
+            :row-test-id-prefix="`cost-card-leg-row-${c.id}`"
+          />
+
           <!-- Footer -->
           <div class="flex flex-col gap-3 border-t border-slate-100 px-3 py-3 dark:border-slate-800 sm:px-5 sm:py-3.5 md:flex-row md:items-center md:justify-between">
             <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-slate-400 sm:text-sm">
@@ -1525,6 +1533,7 @@ import { listTrips } from '../../api/trips'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { formatCostNoteCode, formatTripCode, formatVnd, formatVndDigitsInput, labelTripType } from '../../util/labels'
 import StaffCostDetailModal from '../../components/costs/StaffCostDetailModal.vue'
+import CostEstimateLegBreakdown from '../../components/costs/CostEstimateLegBreakdown.vue'
 import AppRowActionsMenu from '../../components/ui/AppRowActionsMenu.vue'
 import { showAppErrorFromApi } from '../../composables/appMessage'
 import { useAuthStore } from '../../store'

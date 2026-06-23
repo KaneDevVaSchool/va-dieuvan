@@ -230,6 +230,32 @@ class WizardSnapshotCostLinesQuery
     }
 
     /**
+     * @param  array<int, array<string, mixed>>  $rawLines
+     * @return array<int, array<string, mixed>>
+     */
+    public function formatLinesForApi(array $rawLines): array
+    {
+        return array_values(array_map(static function (array $line): array {
+            $pickup = trim((string) ($line['pickup'] ?? ''));
+            $dropoff = trim((string) ($line['dropoff'] ?? ''));
+            $legRoute = ($pickup !== '' || $dropoff !== '')
+                ? trim("{$pickup} → {$dropoff}", ' →')
+                : null;
+
+            return [
+                'line_key' => $line['line_key'] ?? null,
+                'leg_seq' => isset($line['leg_seq']) ? (int) $line['leg_seq'] : null,
+                'estimate_kind' => $line['estimate_kind'] ?? null,
+                'description' => $line['description'] ?? null,
+                'leg_route' => $legRoute,
+                'unit_price' => (float) ($line['unit_price'] ?? 0),
+                'extra_fee' => (float) ($line['extra_fee'] ?? 0),
+                'amount' => (float) ($line['amount'] ?? 0),
+            ];
+        }, $rawLines));
+    }
+
+    /**
      * Gắn số thứ tự chặng (leg_seq) cho từng dòng theo lịch trình khi chuyến có >1 chặng.
      * Các dòng phụ thu cấp form (bốc xếp, cầu đường…) là chi phí toàn chuyến → không gắn chặng.
      *
