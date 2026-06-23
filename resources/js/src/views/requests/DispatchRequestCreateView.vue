@@ -367,6 +367,62 @@
                 }}
               </p>
             </div>
+
+            <!-- Gán trưởng đơn vị (tùy chọn cho nhân viên) -->
+            <div v-if="deptHeadEnabled" class="relative">
+              <label class="dw-label" for="staff-dept-head">
+                <span>{{ t('request_detail.assign_dept_head_label') }}</span>
+                <span
+                  class="inline-flex cursor-help text-slate-400 hover:text-slate-600"
+                  :title="t('portal.create.assign_dept_head_tooltip')"
+                >
+                  <InformationCircleIcon class="h-4 w-4" aria-hidden="true" />
+                </span>
+              </label>
+              <input
+                id="staff-dept-head"
+                v-model="deptHeadQ"
+                type="search"
+                role="combobox"
+                autocomplete="off"
+                :aria-expanded="deptHeadDropdownOpen && deptHeadQ.trim().length >= 2"
+                aria-controls="staff-dept-head-list"
+                :placeholder="t('request_detail.assign_dept_head_combo_ph')"
+                class="dw-input"
+                @input="scheduleDeptHeadSearch"
+                @focus="onDeptHeadSearchFocus"
+                @blur="onDeptHeadSearchBlur"
+              />
+              <div
+                v-if="deptHeadLoading"
+                class="absolute right-3 top-[2.625rem] h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-va-800"
+              />
+              <ul
+                v-if="deptHeadDropdownOpen && deptHeadQ.trim().length >= 2"
+                id="staff-dept-head-list"
+                class="dw-combobox__menu"
+                role="listbox"
+              >
+                <li v-if="deptHeadLoading" class="dw-combobox__empty">
+                  {{ t('request_detail.assign_dept_head_loading') }}
+                </li>
+                <template v-else-if="deptHeadResults.length">
+                  <li v-for="u in deptHeadResults" :key="u.id">
+                    <button
+                      type="button"
+                      class="dw-combobox__option"
+                      @mousedown.prevent="pickDeptHead(u)"
+                    >
+                      <span class="font-medium text-slate-900">{{ u.name }}</span>
+                      <span class="truncate text-xs text-slate-500">{{ u.email }}</span>
+                    </button>
+                  </li>
+                </template>
+                <li v-else class="dw-combobox__empty">{{ t('request_detail.assign_dept_head_no_match') }}</li>
+              </ul>
+              <p v-if="deptHeadSearchError" class="dw-field-error">{{ deptHeadSearchError }}</p>
+              <p v-else class="dw-field-hint">{{ t('request_detail.assign_dept_head_combo_hint') }}</p>
+            </div>
           </div>
 
           <!-- Panel: Mục đích -->
@@ -1180,6 +1236,16 @@ const {
   submitResultOk,
   submitResultDetail,
   closeSubmitResultModal,
+  deptHeadEnabled,
+  deptHeadQ,
+  deptHeadResults,
+  deptHeadLoading,
+  deptHeadDropdownOpen,
+  deptHeadSearchError,
+  scheduleDeptHeadSearch,
+  onDeptHeadSearchFocus,
+  onDeptHeadSearchBlur,
+  pickDeptHead,
 } = wizard
 
 const urgentExplainTooltip = computed(() =>

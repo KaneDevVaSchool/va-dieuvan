@@ -126,7 +126,7 @@
                   icon="export"
                   :disabled="exporting"
                   test-id="tp-student-toolbar-export"
-                  @click.prevent
+                  @click="toggleExportMenu"
                 >
                   {{ t('tp_student_page.toolbar_export') }}
                 </DatagridToolbarActionButton>
@@ -400,6 +400,7 @@ import FilterVisibilityDropdown from '../../components/shared/ui/FilterVisibilit
 import TpStudentSummaryBar from '../../components/transportProgram/TpStudentSummaryBar.vue'
 import TpStudentListFilters from '../../components/transportProgram/TpStudentListFilters.vue'
 import { useDetailsAutoClose, useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
+import { useExportDetailsMenu } from '../../composables/useExportDetailsMenu.js'
 import { useTpStudentListColumns, TP_STUDENT_COL_DEFAULTS } from '../../composables/useTpStudentListColumns.js'
 import AppRowActionsMenu from '../../components/ui/AppRowActionsMenu.vue'
 import TpStudentFormModal from '../../components/transportProgram/TpStudentFormModal.vue'
@@ -488,7 +489,7 @@ const { colOn, setColumn, columnToggleOptions } = useTpStudentListColumns()
 const filterControlVisible = reactive(loadFilterControlVisibility())
 const showFilterPanelDd = ref(false)
 const showColPanelDd = ref(false)
-const exportMenuRef = ref(null)
+const { exportMenuRef, toggleExportMenu, closeExportMenu } = useExportDetailsMenu()
 const datagridRef = ref(null)
 useDetailsAutoClose(exportMenuRef)
 useDetailsAutoCloseWithin(datagridRef)
@@ -782,6 +783,7 @@ function goEnroll(s) {
 }
 async function exportList() {
   if (exporting.value) return
+  closeExportMenu()
   exporting.value = true
   try {
     await exportStudentsList({

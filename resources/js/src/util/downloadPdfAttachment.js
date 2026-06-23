@@ -83,6 +83,50 @@ export async function fetchAttachmentBlob(attachmentId) {
   return blob
 }
 
+async function blobLooksLikeZipOffice(blob) {
+  const n = Math.min(4, blob.size)
+  if (n < 2) return false
+  const buf = new Uint8Array(await blob.slice(0, n).arrayBuffer())
+  return buf[0] === 0x50 && buf[1] === 0x4b
+}
+
+/**
+ * Reject blob responses that are JSON/HTML errors disguised as downloads.
+ * @param {import('axios').AxiosResponse<Blob>} res
+ */
+export async function assertAxiosBlobIsOfficeZip(res) {
+  const blob = res.data
+  if (!(blob instanceof Blob) || blob.size === 0) {
+    throw Object.assign(new Error('empty_response'), { code: 'EMPTY_BLOB' })
+  }
+  const ct = String(res.headers?.['content-type'] || '').toLowerCase()
+  if (ct.includes('application/json') || ct.includes('text/html')) {
+    try {
+      const text = await blob.text()
+      let message = 'Tải tệp thất bại.'
+      try {
+        const parsed = JSON.parse(text)
+        if (typeof parsed?.message === 'string' && parsed.message) {
+          message = parsed.message
+        }
+      } catch {
+        /* ignore */
+      }
+      const err = new Error(message)
+      err.response = { status: res.status, data: { message }, headers: res.headers, config: res.config }
+      throw err
+    } catch (e) {
+      if (e?.response) throw e
+      throw new Error('Tải tệp thất bại.')
+    }
+  }
+  if (!(await blobLooksLikeZipOffice(blob))) {
+    const err = new Error('Phản hồi không phải tệp Excel hợp lệ.')
+    err.response = { status: res.status, data: { message: err.message }, headers: res.headers, config: res.config }
+    throw err
+  }
+}
+
 export async function normalizeAxiosBlobError(err) {
   const res = err?.response
   if (!res || !(res.data instanceof Blob)) return err

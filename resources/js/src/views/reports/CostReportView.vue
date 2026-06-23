@@ -23,6 +23,7 @@
       :show-filter-panel="showFilterPanelDd"
       :loading="loading"
       :exporting="exporting"
+      :can-export="canExport"
       @export-xlsx="doExportXlsx"
       @export-pdf="doExportPdf"
       @reset-filters="resetFilters"
@@ -141,14 +142,14 @@
                 </li>
               </FilterVisibilityDropdown>
             </div>
-            <div class="ml-auto flex shrink-0 flex-wrap items-center gap-2">
+            <div v-if="canExport" class="ml-auto flex shrink-0 flex-wrap items-center gap-2">
               <details ref="exportMenuRef" class="group relative">
                 <summary class="list-none [&::-webkit-details-marker]:hidden">
                   <DatagridToolbarActionButton
                     icon="export"
                     :disabled="!!exporting"
                     test-id="cost-report-toolbar-export"
-                    @click.prevent
+                    @click="toggleExportMenu"
                   >
                     {{ t('cost_report.toolbar_export') }}
                   </DatagridToolbarActionButton>
@@ -239,7 +240,7 @@
       </div>
     </section>
 
-    <p v-if="exportError" class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-200">
+    <p v-if="exportError" class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-200" data-testid="cost-report-export-error">
       {{ exportError }}
     </p>
   </div>
@@ -256,12 +257,17 @@ import DatagridToolbarActionButton from '../../components/shared/ui/DatagridTool
 import FilterVisibilityDropdown from '../../components/shared/ui/FilterVisibilityDropdown.vue'
 import DashboardEChart from '../../components/dashboard/DashboardEChart.vue'
 import { useDetailsAutoClose, useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
+import { useExportDetailsMenu } from '../../composables/useExportDetailsMenu.js'
 import { labelReportProvider } from '../../composables/useCostReportPresentation'
 import { getTripCostReport, downloadTripCostXlsx, downloadTripCostPdf } from '../../api/reports'
 import { formatVnd, labelTripType } from '../../util/labels'
 import { showAppErrorFromApi } from '../../composables/appMessage'
+import { formatApiError } from '../../api/http'
+import { useAuthStore } from '../../store'
 
 const { t, te } = useI18n()
+const auth = useAuthStore()
+const canExport = computed(() => auth.hasPermission('report.export'))
 
 const TRIP_TYPE_SLUGS = ['point_to_point', 'cargo', 'business', 'door_to_door']
 const FLEET_MODES = ['internal', 'vendor_hire', 'taxi', 'unspecified']
@@ -369,7 +375,7 @@ const showColPanelDd = ref(false)
 const detailPage = ref(1)
 const detailPerPage = ref(DEFAULT_DETAIL_PER_PAGE)
 
-const exportMenuRef = ref(null)
+const { exportMenuRef, toggleExportMenu, closeExportMenu } = useExportDetailsMenu()
 const detailTableToolbarRef = ref(null)
 useDetailsAutoClose(exportMenuRef)
 useDetailsAutoCloseWithin(detailTableToolbarRef)
@@ -635,14 +641,19 @@ watch(detailLastPage, (last) => {
   if (detailPage.value > last) detailPage.value = last
 })
 
+function closeExportMenus() {
+  closeExportMenu()
+}
+
 async function doExportXlsx() {
   if (exporting.value) return
   exportError.value = ''
+  closeExportMenus()
   exporting.value = 'xlsx'
   try {
     await downloadTripCostXlsx(buildApiParams())
   } catch (e) {
-    exportError.value = e?.response?.data?.message ?? t('cost_report.export_error')
+    exportError.value = formatApiError(e, t('cost_report.export_error'))
   } finally {
     exporting.value = null
   }
@@ -651,11 +662,12 @@ async function doExportXlsx() {
 async function doExportPdf() {
   if (exporting.value) return
   exportError.value = ''
+  closeExportMenus()
   exporting.value = 'pdf'
   try {
     await downloadTripCostPdf(buildApiParams())
   } catch (e) {
-    exportError.value = e?.response?.data?.message ?? t('cost_report.export_error')
+    exportError.value = formatApiError(e, t('cost_report.export_error'))
   } finally {
     exporting.value = null
   }

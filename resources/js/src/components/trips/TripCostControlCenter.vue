@@ -261,6 +261,19 @@
           @dragover.prevent
           @drop.prevent="onDropPending"
         >
+          <div v-if="hasLegs" class="mb-3">
+            <span class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t('cost_center.leg_label') }}</span>
+            <select
+              v-model="selectedLegKey"
+              class="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-white"
+              data-testid="cost-leg-select"
+            >
+              <option value="">{{ t('cost_center.leg_all') }}</option>
+              <option v-for="l in legOptions" :key="l.key" :value="l.key">
+                {{ l.label }}<template v-if="l.route"> · {{ l.route }}</template>
+              </option>
+            </select>
+          </div>
           <div class="flex flex-wrap gap-1.5" role="radiogroup" :aria-label="t('cost_center.quick_type')">
             <button
               v-for="opt in QUICK_TYPES"
@@ -371,8 +384,14 @@
                   {{ groupLabelOf(c.type) }}
                 </span>
               </td>
-              <td class="max-w-[14rem] truncate px-3 py-2.5 text-slate-600 dark:text-slate-300">
-                {{ c.description?.trim() || '—' }}
+              <td class="max-w-[14rem] px-3 py-2.5 text-slate-600 dark:text-slate-300">
+                <span
+                  v-if="hasLegs && legLabelOf(c)"
+                  class="mr-1.5 inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-200"
+                >
+                  {{ legLabelOf(c) }}
+                </span>
+                <span class="truncate align-middle">{{ c.description?.trim() || '—' }}</span>
               </td>
               <td class="px-3 py-2.5 text-slate-600 dark:text-slate-300">{{ c.creator?.name || '—' }}</td>
               <td class="whitespace-nowrap px-3 py-2.5 tabular-nums text-slate-500">{{ fmtDate(c.created_at) }}</td>
@@ -430,7 +449,13 @@
             <span class="text-sm font-bold tabular-nums text-slate-900 dark:text-white">{{ fmtMoney(c.amount) }}</span>
           </div>
           <div class="mt-1 flex items-center justify-between gap-2 text-[11px] text-slate-500">
-            <span class="inline-flex rounded-full px-1.5 py-0.5 font-semibold uppercase" :class="statusClass(c.status)">{{ statusLabel(c.status) }}</span>
+            <div class="flex items-center gap-1.5">
+              <span
+                v-if="hasLegs && legLabelOf(c)"
+                class="inline-flex rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 font-semibold text-amber-800 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-200"
+              >{{ legLabelOf(c) }}</span>
+              <span class="inline-flex rounded-full px-1.5 py-0.5 font-semibold uppercase" :class="statusClass(c.status)">{{ statusLabel(c.status) }}</span>
+            </div>
             <span class="tabular-nums">{{ fmtDate(c.created_at) }}</span>
           </div>
         </div>
@@ -517,6 +542,7 @@ import {
 const props = defineProps<{
   tripId: number
   costs?: TripCostRow[] | null
+  legs?: Array<{ key: string; seq?: number; label: string; route?: string }> | null
   canSubmit: boolean
   canReconcile: boolean
   revenue?: number
@@ -561,6 +587,23 @@ const QUICK_TYPES = [
 
 const rows = computed<TripCostRow[]>(() => props.costs ?? [])
 const currency = computed(() => props.currency || props.costs?.[0]?.currency || 'VND')
+
+// ─── per-leg (chặng) ───
+const legOptions = computed(() => props.legs ?? [])
+const hasLegs = computed(() => legOptions.value.length > 1)
+const legLabelByKey = computed(() => {
+  const m = new Map<string, string>()
+  for (const l of legOptions.value) m.set(l.key, l.label)
+  return m
+})
+function legKeyOf(c: TripCostRow): string {
+  return String((c as { leg_key?: string | null }).leg_key ?? '')
+}
+function legLabelOf(c: TripCostRow): string {
+  const key = legKeyOf(c)
+  return key ? (legLabelByKey.value.get(key) ?? '') : ''
+}
+const selectedLegKey = ref('')
 
 const fin = useTripFinancials(
   rows,
@@ -875,13 +918,21 @@ async function submit() {
   }
   submitting.value = true
   try {
+    const legKey = hasLegs.value ? selectedLegKey.value.trim() : ''
     const created = await submitTripCost(
       props.tripId,
-      { type, amount: n, currency: 'VND', description: description.value.trim() || undefined },
+      {
+        type,
+        amount: n,
+        currency: 'VND',
+        description: description.value.trim() || undefined,
+        leg_key: legKey || undefined,
+      },
       { idempotencyKey: newIdempotencyKey() },
     )
     amount.value = ''
     description.value = ''
+    selectedLegKey.value = ''
     const file = pendingFile.value
     pendingFile.value = null
     emit('updated')

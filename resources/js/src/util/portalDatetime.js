@@ -11,14 +11,14 @@ export function formatPortalDepartLine(iso, locale = 'vi') {
   if (Number.isNaN(d.getTime())) return ''
   const dd = String(d.getDate()).padStart(2, '0')
   const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const yr = d.getFullYear() !== new Date().getFullYear() ? `/${d.getFullYear()}` : ''
+  const yyyy = d.getFullYear()
   const hhmm = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
   if (locale === 'en') {
     const day = d.toLocaleDateString('en-US', { weekday: 'short' })
-    return `${day}, ${dd}/${mm}${yr} · ${hhmm}`
+    return `${day}, ${dd}/${mm}/${yyyy} · ${hhmm}`
   }
   const day = VI_WEEKDAY[d.getDay()]
-  return `${day}, ${dd}/${mm}${yr} · ${hhmm}`
+  return `${day}, ${dd}/${mm}/${yyyy} · ${hhmm}`
 }
 
 /**

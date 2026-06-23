@@ -15,6 +15,7 @@ class SubmitTripCostRequest extends ApiFormRequest
     {
         return [
             'type' => ['required', 'string', 'max:64', 'regex:/^[a-z0-9_\-]+$/i'],
+            'leg_key' => ['nullable', 'string', 'max:64'],
             'amount' => ['required', 'numeric', 'min:0'],
             'currency' => ['nullable', 'string', 'size:3'],
             'description' => ['nullable', 'string', 'max:255'],

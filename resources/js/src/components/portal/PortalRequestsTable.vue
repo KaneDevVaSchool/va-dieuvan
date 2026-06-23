@@ -1,13 +1,15 @@
 <template>
   <div>
     <!-- Tablet / desktop -->
-    <div class="portal-requests-table-wrap hidden overflow-hidden sm:block">
+    <div class="portal-requests-table-wrap hidden sm:block">
       <div class="portal-requests-table-scroll overflow-x-auto">
         <table class="portal-requests-table min-w-full text-left text-sm">
           <thead class="sticky top-0 z-10 bg-slate-50/95 backdrop-blur-sm">
             <tr>
-              <th class="portal-requests-table__sticky-col whitespace-nowrap px-4 py-3">{{ t('portal.table_code') }}</th>
-              <th class="whitespace-nowrap px-4 py-3">{{ t('portal.table_trip_type') }}</th>
+              <th class="portal-requests-table__sticky-col min-w-[10.75rem] whitespace-nowrap px-4 py-3">
+                {{ t('portal.table_code') }}
+              </th>
+              <th class="min-w-[7.5rem] whitespace-nowrap px-4 py-3">{{ t('portal.table_trip_type') }}</th>
               <th class="hidden whitespace-nowrap px-4 py-3 lg:table-cell">{{ t('portal.table_created') }}</th>
               <th class="hidden min-w-[9rem] px-4 py-3 lg:table-cell">{{ t('portal.table_origin') }}</th>
               <th class="hidden min-w-[9rem] px-4 py-3 lg:table-cell">{{ t('portal.table_destination') }}</th>
@@ -26,9 +28,9 @@
               v-for="req in requests"
               :key="req.id"
               class="group/row transition-colors"
-              :class="rowHighlightClass(req)"
+              :class="rowStateClass(req)"
             >
-              <td class="portal-requests-table__sticky-col whitespace-nowrap bg-white px-4 py-3">
+              <td class="portal-requests-table__sticky-col min-w-[10.75rem] whitespace-nowrap px-4 py-3">
                 <div class="inline-flex items-center gap-1.5 font-mono text-sm font-semibold tracking-tight text-slate-900">
                   <BoltIcon
                     v-if="req.is_urgent"
@@ -48,12 +50,14 @@
                 </span>
                 <span v-else class="italic text-slate-400">{{ emptyText.tripType('') }}</span>
               </td>
-              <td class="hidden whitespace-nowrap px-4 py-3 lg:table-cell">
-                <p :class="req.created_at ? 'text-slate-700' : 'italic text-slate-400'">{{ createdFmt(req) }}</p>
+              <td class="hidden whitespace-nowrap px-4 py-3 text-sm lg:table-cell">
+                <p :class="req.created_at ? 'font-medium text-slate-800' : 'italic text-slate-400'">
+                  {{ createdFmt(req) }}
+                </p>
               </td>
               <td class="hidden max-w-[12rem] px-4 py-3 lg:table-cell">
                 <p
-                  class="truncate text-base"
+                  class="truncate text-sm"
                   :class="placeCellClass(req.origin)"
                   :title="emptyText.origin(req.origin)"
                 >
@@ -62,7 +66,7 @@
               </td>
               <td class="hidden max-w-[12rem] px-4 py-3.5 lg:table-cell">
                 <p
-                  class="truncate text-base"
+                  class="truncate text-sm"
                   :class="placeCellClass(req.destination)"
                   :title="emptyText.destination(req.destination)"
                 >
@@ -72,8 +76,8 @@
               <td class="min-w-[10rem] px-4 py-3.5 lg:hidden">
                 <p class="text-base font-medium text-slate-800">{{ routeLine(req) }}</p>
               </td>
-              <td class="px-4 py-3">
-                <p v-if="departFmt(req)" class="whitespace-nowrap font-medium text-slate-800">
+              <td class="whitespace-nowrap px-4 py-3 text-sm">
+                <p v-if="departFmt(req)" class="font-medium text-slate-800">
                   {{ departFmt(req) }}
                 </p>
                 <p v-else class="italic text-slate-400">{{ emptyText.departAt('') }}</p>
@@ -159,6 +163,13 @@
                 </dd>
               </div>
               <div class="grid grid-cols-[4.5rem_1fr] gap-x-2 gap-y-0.5">
+                <dt class="text-sm font-medium text-slate-500">{{ t('portal.table_created') }}</dt>
+                <dd class="text-sm font-medium text-slate-800">
+                  <span v-if="req.created_at">{{ createdFmt(req) }}</span>
+                  <span v-else class="italic text-slate-400">{{ emptyText.createdAt('') }}</span>
+                </dd>
+              </div>
+              <div class="grid grid-cols-[4.5rem_1fr] gap-x-2 gap-y-0.5">
                 <dt class="text-sm font-medium text-slate-500">{{ t('portal.table_time') }}</dt>
                 <dd class="font-medium text-slate-800">
                   <span v-if="departFmt(req)">{{ departFmt(req) }}</span>
@@ -187,7 +198,7 @@ import { RouterLink } from 'vue-router'
 import { BoltIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
 import StatusBadge from '../ui/StatusBadge.vue'
 import { portalDetailRouteForRequest } from '../../composables/usePortalExtracurricularModule'
-import { formatPortalDepartLine, formatPortalTimeHm } from '../../util/portalDatetime.js'
+import { formatPortalDepartLine } from '../../util/portalDatetime.js'
 import { formatDispatchRequestRefCode } from '../../util/portalRequestFormat.js'
 import { usePortalRequestEmptyText } from '../../composables/usePortalRequestEmptyText.js'
 
@@ -235,9 +246,10 @@ function isHighlighted(req) {
   return Number(req?.id) === Number(hid)
 }
 
-function rowHighlightClass(req) {
-  if (isHighlighted(req)) return 'bg-va-50/80'
-  return isPendingApproval(req) ? 'bg-amber-50/50' : ''
+function rowStateClass(req) {
+  if (isHighlighted(req)) return 'portal-requests-table__row--highlight bg-va-50/80'
+  if (isPendingApproval(req)) return 'portal-requests-table__row--pending bg-amber-50/50'
+  return ''
 }
 
 function cardHighlightClass(req) {
@@ -250,9 +262,9 @@ function departFmt(req) {
 }
 
 function arriveFmt(req) {
-  const hm = formatPortalTimeHm(req.arrive_by)
-  if (!hm) return ''
-  return t('portal.time_arrive_by', { time: hm })
+  const line = formatPortalDepartLine(req.arrive_by, localeKey.value)
+  if (!line) return ''
+  return t('portal.time_arrive_by', { time: line })
 }
 
 function createdFmt(req) {
@@ -296,8 +308,8 @@ function slaDotClass(req) {
 <style scoped>
 .portal-requests-table-scroll {
   -webkit-overflow-scrolling: touch;
-  max-height: min(70vh, 42rem);
-  overflow-y: auto;
+  overflow-x: auto;
+  scrollbar-gutter: stable;
 }
 
 .portal-requests-table {
@@ -315,16 +327,38 @@ function slaDotClass(req) {
 .portal-requests-table__sticky-col {
   position: sticky;
   left: 0;
-  z-index: 1;
-  box-shadow: 1px 0 0 rgb(226 232 240);
+  z-index: 3;
+  background-color: rgb(248 250 252);
+  box-shadow: 4px 0 8px -4px rgb(15 23 42 / 0.12);
+}
+
+.portal-requests-table thead .portal-requests-table__sticky-col {
+  z-index: 5;
+}
+
+.portal-requests-table tbody .portal-requests-table__sticky-col {
+  z-index: 2;
+  background-color: rgb(255 255 255);
 }
 
 .portal-requests-table tbody tr:nth-child(even) .portal-requests-table__sticky-col {
-  background-color: rgb(248 250 252 / 0.5);
+  background-color: rgb(248 250 252 / 0.85);
+}
+
+.portal-requests-table tbody tr.portal-requests-table__row--pending .portal-requests-table__sticky-col {
+  background-color: rgb(255 251 235 / 0.85);
+}
+
+.portal-requests-table tbody tr.portal-requests-table__row--highlight .portal-requests-table__sticky-col {
+  background-color: rgb(240 253 250 / 0.9);
 }
 
 .portal-requests-table tbody tr:hover .portal-requests-table__sticky-col {
-  background-color: rgb(240 253 250 / 0.45);
+  background-color: rgb(240 253 250 / 0.75);
+}
+
+.portal-requests-table tbody tr.portal-requests-table__row--pending:hover .portal-requests-table__sticky-col {
+  background-color: rgb(254 243 199 / 0.85);
 }
 
 .portal-requests-table thead th {

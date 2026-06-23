@@ -209,6 +209,36 @@ class WizardSnapshotCostLinesQuery
             ]);
         }
 
+        return $this->tagLegSequence($lines);
+    }
+
+    /**
+     * Gắn số thứ tự chặng (leg_seq) cho từng dòng theo lịch trình khi chuyến có >1 chặng.
+     * Các dòng phụ thu cấp form (bốc xếp, cầu đường…) là chi phí toàn chuyến → không gắn chặng.
+     *
+     * @param  array<int, array<string, mixed>>  $lines
+     * @return array<int, array<string, mixed>>
+     */
+    private function tagLegSequence(array $lines): array
+    {
+        $legKinds = ['passenger_row', 'business_row', 'cargo_row'];
+        $legCount = count(array_filter(
+            $lines,
+            fn ($l) => in_array($l['estimate_kind'] ?? '', $legKinds, true),
+        ));
+
+        if ($legCount <= 1) {
+            return $lines;
+        }
+
+        $seq = 0;
+        foreach ($lines as $i => $line) {
+            if (in_array($line['estimate_kind'] ?? '', $legKinds, true)) {
+                $seq++;
+                $lines[$i]['leg_seq'] = $seq;
+            }
+        }
+
         return $lines;
     }
 
@@ -225,8 +255,8 @@ class WizardSnapshotCostLinesQuery
         $pickup = trim((string) ($row['pickup'] ?? ''));
         $dropoff = trim((string) ($row['dropoff'] ?? ''));
         $route = ($pickup !== '' || $dropoff !== '')
-            ? trim("{$pickup} → {$dropoff}", " →")
-            : trim("{$dr->origin} → {$dr->destination}", " →");
+            ? trim("{$pickup} → {$dropoff}", ' →')
+            : trim("{$dr->origin} → {$dr->destination}", ' →');
 
         $personnel = trim((string) ($row['description'] ?? ''));
         if ($personnel === '') {

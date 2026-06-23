@@ -188,6 +188,7 @@ class TripCostController extends Controller
         FinancialDataLock::assertTripAllowsPassengerAndCostEdits($trip);
 
         $this->resolveVehicleForCostSubmission($user, $data, $trip);
+        $data['leg_key'] = $this->resolveLegKeyForTrip($trip, $data['leg_key'] ?? null);
 
         $cost = TripCost::create([
             ...$data,
@@ -464,6 +465,42 @@ class TripCostController extends Controller
         );
 
         return $this->ok($tripCost);
+    }
+
+    /**
+     * Chuẩn hoá leg_key: chỉ giữ khi chuyến có >1 chặng và key trỏ tới chặng có thật.
+     * Chuyến đơn chặng → null (chi phí toàn chuyến).
+     */
+    private function resolveLegKeyForTrip(Trip $trip, ?string $legKey): ?string
+    {
+        $key = trim((string) ($legKey ?? ''));
+        if ($key === '') {
+            return null;
+        }
+
+        $trip->loadMissing('dispatchRequest');
+        $dr = $trip->dispatchRequest;
+        if ($dr === null) {
+            return null;
+        }
+
+        $defs = app(\App\Services\Dispatching\TripScheduleLegService::class)
+            ->buildLegDefinitionsFromSnapshot(
+                is_array($dr->wizard_snapshot) ? $dr->wizard_snapshot : null,
+                (string) ($dr->trip_type ?? ''),
+            );
+
+        if (count($defs) <= 1) {
+            return null;
+        }
+
+        foreach ($defs as $def) {
+            if ((string) ($def['key'] ?? '') === $key) {
+                return mb_substr($key, 0, 64);
+            }
+        }
+
+        return null;
     }
 
     /**

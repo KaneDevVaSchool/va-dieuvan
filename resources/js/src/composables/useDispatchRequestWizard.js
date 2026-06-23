@@ -384,8 +384,10 @@ export function useDispatchRequestWizard(options = {}) {
   const businessRows = ref([emptyBusinessRow()])
   const cargoRows = ref([emptyCargoRow()])
 
-  const portalNeedsDeptHead = computed(() => isPortal && form.value.trip_type !== 'door_to_door')
-  const portalDeptHeadSearch = isPortal ? usePortalDeptHeadSearch(form, portalNeedsDeptHead) : null
+  // Trưởng đơn vị: hiện ô gán với mọi loại trừ "đưa đón". Portal bắt buộc chọn; staff tùy chọn.
+  const deptHeadEnabled = computed(() => form.value.trip_type !== 'door_to_door')
+  const portalNeedsDeptHead = computed(() => isPortal && deptHeadEnabled.value)
+  const portalDeptHeadSearch = usePortalDeptHeadSearch(form, portalNeedsDeptHead)
 
   /** Bước 3: form thẻ — không cho Next khi có lỗi inline hoặc danh sách rỗng (đồng bộ từ DispatchWizardStep3). */
   const detailStepSchedulesValid = ref(true)
@@ -1404,7 +1406,7 @@ export function useDispatchRequestWizard(options = {}) {
         urgent_reason: form.value.is_urgent ? (form.value.urgent_reason?.trim() || undefined) : undefined,
         wizard_snapshot,
       }
-      if (portalNeedsDeptHead.value) {
+      if (deptHeadEnabled.value && String(form.value.dept_head_user_id ?? '').trim()) {
         payload.dept_head_user_id = Number(form.value.dept_head_user_id)
       }
       Object.keys(payload).forEach((k) => (payload[k] === '' ? delete payload[k] : null))
@@ -2110,21 +2112,18 @@ export function useDispatchRequestWizard(options = {}) {
     closeSubmitModalAndStartNewDraft,
     onCancel,
     portalNeedsDeptHead,
-    ...(portalDeptHeadSearch
-      ? {
-          deptHeadQ: portalDeptHeadSearch.deptHeadQ,
-          deptHeadResults: portalDeptHeadSearch.deptHeadResults,
-          deptHeadLoading: portalDeptHeadSearch.deptHeadLoading,
-          deptHeadDropdownOpen: portalDeptHeadSearch.deptHeadDropdownOpen,
-          deptHeadSearchError: portalDeptHeadSearch.deptHeadSearchError,
-          deptHeadClientError: portalDeptHeadSearch.deptHeadClientError,
-          scheduleDeptHeadSearch: portalDeptHeadSearch.scheduleDeptHeadSearch,
-          onDeptHeadSearchFocus: portalDeptHeadSearch.onDeptHeadSearchFocus,
-          onDeptHeadSearchBlur: portalDeptHeadSearch.onDeptHeadSearchBlur,
-          pickDeptHead: portalDeptHeadSearch.pickDeptHead,
-          validateDeptHeadSelected: portalDeptHeadSearch.validateDeptHeadSelected,
-        }
-      : {}),
+    deptHeadEnabled,
+    deptHeadQ: portalDeptHeadSearch.deptHeadQ,
+    deptHeadResults: portalDeptHeadSearch.deptHeadResults,
+    deptHeadLoading: portalDeptHeadSearch.deptHeadLoading,
+    deptHeadDropdownOpen: portalDeptHeadSearch.deptHeadDropdownOpen,
+    deptHeadSearchError: portalDeptHeadSearch.deptHeadSearchError,
+    deptHeadClientError: portalDeptHeadSearch.deptHeadClientError,
+    scheduleDeptHeadSearch: portalDeptHeadSearch.scheduleDeptHeadSearch,
+    onDeptHeadSearchFocus: portalDeptHeadSearch.onDeptHeadSearchFocus,
+    onDeptHeadSearchBlur: portalDeptHeadSearch.onDeptHeadSearchBlur,
+    pickDeptHead: portalDeptHeadSearch.pickDeptHead,
+    validateDeptHeadSelected: portalDeptHeadSearch.validateDeptHeadSelected,
     // Portal form templates
     ...(isPortal
       ? {

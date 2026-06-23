@@ -2,7 +2,7 @@
   <div
     class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white px-3 py-2 shadow-[0_-4px_16px_rgba(15,23,42,0.06)] lg:hidden supports-[padding:max(0px)]:pb-[max(0.5rem,env(safe-area-inset-bottom))]"
   >
-    <div class="mx-auto max-w-7xl">
+    <div class="w-full min-w-0 px-4 sm:px-6 lg:px-8">
       <button
         type="button"
         class="inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-lg bg-va-800 text-sm font-semibold text-white"

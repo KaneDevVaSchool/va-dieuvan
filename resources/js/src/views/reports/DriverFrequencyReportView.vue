@@ -27,7 +27,6 @@
       :exporting="exporting"
       @export-xlsx="doExportXlsx"
       @export-pdf="doExportPdf"
-      @reload="fetchReport"
       @reset-filters="resetFilters"
       @patch-filter="onPatchFilter"
       @toggle-filter-panel="toggleFilterPanel"
@@ -42,6 +41,15 @@
     >
       {{ t('driver_freq.load_error') }}
     </div>
+
+    <p
+      v-if="exportError"
+      role="alert"
+      class="freq-alert"
+      data-testid="driver-freq-export-error"
+    >
+      {{ exportError }}
+    </p>
 
     <DriverFrequencySummaryBar
       :kpi="kpi"
@@ -106,7 +114,7 @@
                     icon="export"
                     :disabled="!!exporting || loading"
                     test-id="driver-freq-toolbar-export"
-                    @click.prevent
+                    @click="toggleExportMenu"
                   >
                     {{ t('driver_freq.toolbar_export') }}
                   </DatagridToolbarActionButton>
@@ -249,12 +257,14 @@ import DriverFrequencySummaryBar from '../../components/reports/DriverFrequencyS
 import DatagridToolbarSearch from '../../components/shared/ui/DatagridToolbarSearch.vue'
 import DatagridToolbarActionButton from '../../components/shared/ui/DatagridToolbarActionButton.vue'
 import { useDetailsAutoClose, useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
+import { useExportDetailsMenu } from '../../composables/useExportDetailsMenu.js'
 import DashboardEChart from '../../components/dashboard/DashboardEChart.vue'
 import {
   downloadDriverFrequencyPdf,
   downloadDriverFrequencyXlsx,
   getDriverFrequencyReport,
 } from '../../api/reports'
+import { formatApiError } from '../../api/http'
 import { useAuthStore } from '../../store'
 
 const { t } = useI18n()
@@ -333,7 +343,7 @@ const filters = reactive({
 const filterControlVisible = reactive(loadFilterControlVisibility())
 const showFilterPanelDd = ref(false)
 const searchQ = ref('')
-const exportMenuRef = ref(null)
+const { exportMenuRef, toggleExportMenu, closeExportMenu } = useExportDetailsMenu()
 const rankingToolbarRef = ref(null)
 useDetailsAutoClose(exportMenuRef)
 useDetailsAutoCloseWithin(rankingToolbarRef)
@@ -362,6 +372,7 @@ const selectedDriverCode = ref('')
 const reportData = ref(null)
 const loading = ref(false)
 const loadError = ref('')
+const exportError = ref('')
 const exporting = ref('')
 
 const driversList = computed(() => reportData.value?.drivers ?? [])
@@ -710,22 +721,28 @@ function onFilterChange() {
 }
 
 async function doExportXlsx() {
+  if (exporting.value) return
+  exportError.value = ''
+  closeExportMenu()
   exporting.value = 'xlsx'
   try {
     await downloadDriverFrequencyXlsx(buildApiParams())
-  } catch {
-    // normalizeAxiosBlobError surfaces message in toast elsewhere if configured
+  } catch (e) {
+    exportError.value = formatApiError(e, t('driver_freq.export_error'))
   } finally {
     exporting.value = ''
   }
 }
 
 async function doExportPdf() {
+  if (exporting.value) return
+  exportError.value = ''
+  closeExportMenu()
   exporting.value = 'pdf'
   try {
     await downloadDriverFrequencyPdf(buildApiParams())
-  } catch {
-    // ignore
+  } catch (e) {
+    exportError.value = formatApiError(e, t('driver_freq.export_error'))
   } finally {
     exporting.value = ''
   }

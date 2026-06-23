@@ -16,9 +16,18 @@ const props = defineProps({
   active: { type: Boolean, default: false },
   disabled: { type: Boolean, default: false },
   testId: { type: String, default: '' },
+  /** When true, click bubbles to parent (e.g. summary toggles details). */
+  bubbleClick: { type: Boolean, default: false },
 })
 
-defineEmits(['click'])
+const emit = defineEmits(['click'])
+
+function onClick(event) {
+  if (!props.bubbleClick) {
+    event.stopPropagation()
+  }
+  emit('click', event)
+}
 
 const IconComp = computed(() => {
   if (props.icon === 'columns') return ViewColumnsIcon
@@ -38,7 +47,7 @@ const IconComp = computed(() => {
     "
     :disabled="disabled"
     :data-testid="testId || `datagrid-toolbar-${icon}`"
-    @click.stop="$emit('click', $event)"
+    @click="onClick"
   >
     <component :is="IconComp" class="h-[15px] w-[15px] shrink-0 opacity-80" aria-hidden="true" />
     <span><slot /></span>

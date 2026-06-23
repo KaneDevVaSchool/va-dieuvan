@@ -131,6 +131,15 @@ const showMoneyGrid = computed(
                 {{ categoryLabel(row.category) }}
               </span>
               <span
+                v-if="row.leg_label"
+                class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-200"
+                :title="row.leg_route || undefined"
+                :data-testid="`cost-report-leg-${row.id}`"
+              >
+                {{ row.leg_label }}
+                <span v-if="row.leg_route" class="hidden font-normal text-amber-700/80 dark:text-amber-300/70 sm:inline">· {{ row.leg_route }}</span>
+              </span>
+              <span
                 v-if="isEstimate"
                 class="rounded-md border border-violet-200/80 bg-violet-50/90 px-2 py-0.5 text-[11px] font-semibold text-violet-800 dark:border-violet-800/50 dark:bg-violet-950/40 dark:text-violet-200"
               >

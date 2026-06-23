@@ -29,18 +29,19 @@
 
       <p v-if="error" class="mt-6 text-sm text-rose-600">{{ error }}</p>
 
-      <div v-else-if="loading" class="mt-6 space-y-4">
+      <div v-else-if="loading" class="mt-6 space-y-3">
         <div
           v-for="i in 5"
           :key="i"
-          class="min-h-[11rem] animate-pulse rounded-2xl border border-slate-100 bg-white p-6 shadow-sm"
+          class="flex animate-pulse overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm"
         >
-          <div class="flex gap-4">
-            <div class="h-12 w-12 shrink-0 rounded-xl bg-slate-200" />
-            <div class="min-w-0 flex-1 space-y-3">
-              <div class="h-5 w-2/3 rounded bg-slate-200" />
-              <div class="h-16 w-full rounded-xl bg-slate-100" />
-              <div class="h-3 w-1/3 rounded bg-slate-100" />
+          <div class="w-1 shrink-0 bg-slate-100" />
+          <div class="flex flex-1 gap-3 px-3 py-3.5 sm:px-4 sm:py-4">
+            <div class="h-10 w-10 shrink-0 rounded-lg bg-slate-200" />
+            <div class="min-w-0 flex-1 space-y-2">
+              <div class="h-4 w-2/3 rounded bg-slate-200" />
+              <div class="h-3 w-1/2 rounded bg-slate-100" />
+              <div class="h-9 w-full rounded-lg bg-slate-50" />
             </div>
           </div>
         </div>
@@ -50,13 +51,13 @@
         {{ t('portal.notifications_empty') }}
       </p>
 
-      <div v-else class="mt-6 space-y-8">
+      <div v-else class="mt-6 space-y-6">
         <template v-for="group in groupedSections" :key="group.key">
           <section v-if="group.items.length">
-            <h2 class="mb-3 text-xs font-bold uppercase tracking-wider text-slate-400">
+            <h2 class="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">
               {{ group.label }}
             </h2>
-            <ul class="space-y-4">
+            <ul class="space-y-2.5">
               <PortalNotificationCard
                 v-for="n in group.items"
                 :key="n.id"

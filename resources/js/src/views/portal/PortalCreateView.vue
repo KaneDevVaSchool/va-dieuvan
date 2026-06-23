@@ -1,6 +1,6 @@
 <template>
   <div
-    class="dispatch-wizard portal-create mx-auto max-w-3xl space-y-5 px-4 py-5 text-slate-900 supports-[padding:max(0px)]:pl-[max(1rem,env(safe-area-inset-left))] supports-[padding:max(0px)]:pr-[max(1rem,env(safe-area-inset-right))] sm:px-6 sm:py-6 lg:max-w-4xl lg:py-7"
+    class="dispatch-wizard portal-create w-full min-w-0 space-y-5 px-4 py-5 text-slate-900 supports-[padding:max(0px)]:pl-[max(1rem,env(safe-area-inset-left))] supports-[padding:max(0px)]:pr-[max(1rem,env(safe-area-inset-right))] sm:px-6 sm:py-6 lg:px-8 lg:py-7"
     :class="step === 3 && !created ? 'pb-28 sm:pb-24' : 'pb-10'"
     :aria-label="
       form.is_urgent && !loading ? t('dispatch_wizard.create.form_priority_frame_aria') : undefined
@@ -1580,19 +1580,29 @@ onMounted(() => {
 })
 
 // --- Bước 2 portal: tab con (không hiển thị toàn bộ form một lần) ---
-const STEP2_SUB_IDS = ['requester', 'time', 'purpose', 'coordination']
+const STEP2_SUB_IDS_ALL = ['requester', 'time', 'purpose', 'coordination']
+
+/** Loại chuyến không cần trưởng đoàn phụ trách → ẩn tab Phối hợp. */
+const TRIP_TYPES_WITHOUT_COORDINATION = ['business', 'cargo']
+
+/** Chuyến Công tác & Hàng hóa (portal): không bắt buộc trưởng đoàn / tab Phối hợp. */
+const step2SubIds = computed(() =>
+  TRIP_TYPES_WITHOUT_COORDINATION.includes(form.value.trip_type)
+    ? STEP2_SUB_IDS_ALL.filter((id) => id !== 'coordination')
+    : STEP2_SUB_IDS_ALL,
+)
 
 const step2Sub = ref('requester')
 const maxReachedStep2Sub = ref(0)
 
 const step2SubTabs = computed(() =>
-  STEP2_SUB_IDS.map((id) => ({
+  step2SubIds.value.map((id) => ({
     id,
     label: t(`dispatch_wizard.create.step2_sub_${id}`),
   })),
 )
 
-const step2SubIndex = computed(() => STEP2_SUB_IDS.indexOf(step2Sub.value))
+const step2SubIndex = computed(() => step2SubIds.value.indexOf(step2Sub.value))
 
 function portalStep2SubComplete(subId) {
   if (subId === 'requester') {
@@ -1621,12 +1631,12 @@ function portalStep2SubComplete(subId) {
 
 const portalCanGoNext = computed(() => {
   if (step.value !== 1) return canGoNext.value
-  if (step2SubIndex.value === STEP2_SUB_IDS.length - 1) return canGoNext.value
+  if (step2SubIndex.value === step2SubIds.value.length - 1) return canGoNext.value
   return portalStep2SubComplete(step2Sub.value)
 })
 
 function setStep2Sub(id) {
-  const idx = STEP2_SUB_IDS.indexOf(id)
+  const idx = step2SubIds.value.indexOf(id)
   if (idx === -1 || idx > maxReachedStep2Sub.value) return
   step2Sub.value = id
 }
@@ -1647,9 +1657,10 @@ function portalNextStep() {
     return
   }
   const idx = step2SubIndex.value
-  if (idx < STEP2_SUB_IDS.length - 1) {
+  const subs = step2SubIds.value
+  if (idx < subs.length - 1) {
     maxReachedStep2Sub.value = Math.max(maxReachedStep2Sub.value, idx + 1)
-    step2Sub.value = STEP2_SUB_IDS[idx + 1]
+    step2Sub.value = subs[idx + 1]
     return
   }
   nextStep()
@@ -1657,7 +1668,7 @@ function portalNextStep() {
 
 function portalPrevStep() {
   if (step.value === 1 && step2SubIndex.value > 0) {
-    step2Sub.value = STEP2_SUB_IDS[step2SubIndex.value - 1]
+    step2Sub.value = step2SubIds.value[step2SubIndex.value - 1]
     return
   }
   prevStep()
@@ -1677,6 +1688,7 @@ watch(
     form.value.proposed_date,
     form.value.date_needed,
     form.value.purpose,
+    form.value.trip_type,
     step2RequesterEmailInvalid.value,
     step2DateOrderInvalid.value,
     form.value.dept_head_user_id,
@@ -1686,8 +1698,19 @@ watch(
     let max = 0
     if (portalStep2SubComplete('requester')) max = 1
     if (max >= 1 && portalStep2SubComplete('time')) max = 2
-    if (max >= 2 && portalStep2SubComplete('purpose')) max = 3
+    if (max >= 2 && portalStep2SubComplete('purpose')) {
+      max = step2SubIds.value.includes('coordination') ? 3 : 2
+    }
     maxReachedStep2Sub.value = Math.max(maxReachedStep2Sub.value, max)
+  },
+)
+
+watch(
+  () => form.value.trip_type,
+  (tt) => {
+    if (TRIP_TYPES_WITHOUT_COORDINATION.includes(tt) && step2Sub.value === 'coordination') {
+      step2Sub.value = 'purpose'
+    }
   },
 )
 

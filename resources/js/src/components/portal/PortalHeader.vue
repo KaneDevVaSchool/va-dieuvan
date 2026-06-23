@@ -101,7 +101,7 @@ async function onLogout() {
            supports-[padding:max(0px)]:pr-[env(safe-area-inset-right)]"
     data-testid="portal-shell-header"
   >
-    <div class="mx-auto flex h-12 max-w-7xl items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:px-6">
+    <div class="flex h-12 w-full min-w-0 items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:px-8">
       <RouterLink
         :to="{ name: 'portalHome' }"
         class="inline-flex shrink-0 items-center md:gap-2"

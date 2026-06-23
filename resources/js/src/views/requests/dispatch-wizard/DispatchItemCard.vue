@@ -247,7 +247,7 @@
       <h4 class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
         {{ t('dispatch_wizard.s3.cargo_cost_heading') }}
       </h4>
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div class="grid grid-cols-1 gap-3">
         <BaseInput
           :class="costFieldClass"
           inputmode="numeric"
@@ -257,12 +257,6 @@
           :placeholder="t('dispatch_wizard.s3.vnd_ph')"
           :disabled="lockCargoRowMoney"
           @update:model-value="(v) => vndRow(row, 'cost', v)"
-        />
-        <BaseInput
-          :label="t('dispatch_wizard.s3.transport_note')"
-          :model-value="row.transport_note"
-          :placeholder="t('dispatch_wizard.s3.trans_ph')"
-          @update:model-value="(v) => (row.transport_note = v)"
         />
       </div>
     </section>

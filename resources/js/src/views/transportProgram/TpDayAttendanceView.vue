@@ -238,7 +238,7 @@
                     icon="export"
                     :disabled="exportingExcel"
                     test-id="tp-attendance-toolbar-export"
-                    @click.prevent
+                    @click="toggleExportMenu"
                   >
                     {{ exportingExcel ? t('tp_attendance_page.export_excel_busy') : t('tp_attendance_page.export_excel') }}
                   </DatagridToolbarActionButton>
@@ -512,6 +512,7 @@ import { slotsForProgram } from '../../composables/tpProgramSlots'
 import { confirmAction } from '../../composables/useConfirm'
 import { useAuthStore } from '../../store'
 import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
+import { useExportDetailsMenu } from '../../composables/useExportDetailsMenu.js'
 import { useTpDayLiveUpdates } from '../../composables/useTpDayLiveUpdates.js'
 
 const ATTENDANCE_FILTER_CONTROLS = [
@@ -567,7 +568,7 @@ const {
 } = useVisibleFilterControls(ATTENDANCE_FILTER_CONTROLS, 'va-tp-attendance-datagrid-filters.v1')
 
 const datagridRef = ref(null)
-const exportMenuRef = ref(null)
+const { exportMenuRef, toggleExportMenu, closeExportMenu } = useExportDetailsMenu()
 const showColPanelDd = ref(false)
 useDetailsAutoCloseWithin(datagridRef)
 
@@ -969,7 +970,7 @@ function rowsForExport(mode) {
 }
 
 async function runExport(mode) {
-  exportMenuRef.value?.removeAttribute?.('open')
+  closeExportMenu()
   const rows = rowsForExport(mode)
   if (!rows.length) return
   exportingExcel.value = true

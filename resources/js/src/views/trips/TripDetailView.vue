@@ -553,6 +553,7 @@
                     <TripCostControlCenter
                         :trip-id="trip.id"
                         :costs="trip.costs ?? []"
+                        :legs="costLegOptions"
                         :can-submit="canSubmitQuickCost"
                         :can-reconcile="canReconcileCost"
                         :revenue="tripExpectedRevenue"
@@ -1020,6 +1021,22 @@ const tripExpectedRevenue = computed(() => {
 const tripCostBudget = computed(() => {
     const est = tripCostEstimate.value;
     return est && Number(est.total) > 0 ? Number(est.total) : 0;
+});
+
+/** Danh sách chặng cho phép gán chi phí theo lịch trình (chỉ khi chuyến >1 chặng). */
+const costLegOptions = computed(() => {
+    const legs = scheduleLegs.value;
+    if (!Array.isArray(legs) || legs.length <= 1) return [];
+    return legs.map((l) => {
+        const pickup = String(l.pickup ?? "").trim();
+        const dropoff = String(l.dropoff ?? "").trim();
+        return {
+            key: l.key,
+            seq: l.label_seq,
+            label: t("trip_detail.route_journey.segment", { n: l.label_seq }),
+            route: [pickup, dropoff].filter(Boolean).join(" → "),
+        };
+    });
 });
 
 const canRescheduleTrip = computed(() => {
@@ -3324,9 +3341,14 @@ const kpiAssigned = computed(() => {
         if (Number.isFinite(n)) dIds.add(n);
     };
 
-    const tr = trip.value;
-    addVehicle(tr?.vehicle?.id ?? tr?.vehicle_id, tr?.vehicle?.seat_count);
-    addDriver(tr?.driver?.id ?? tr?.driver_id);
+    // Nguồn chính: danh sách phân công nội bộ (gồm nhiều xe/tài xế) — khớp
+    // với panel "Phân công hiện tại". Có fallback về trip.vehicle/driver bên trong.
+    for (const v of coordinationAssignmentVehicles.value) {
+        addVehicle(v.id, v.seat_count);
+    }
+    for (const d of coordinationAssignmentDrivers.value) {
+        addDriver(d.id);
+    }
     for (const leg of scheduleLegs.value) {
         const a = leg?.assignment;
         if (!a) continue;

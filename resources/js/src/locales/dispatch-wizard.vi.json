@@ -203,7 +203,7 @@
             "phone_ph": "Ví dụ: 0901234567",
             "email_invalid": "Nhập đúng định dạng email.",
             "unit": "Đơn vị / phòng ban",
-            "unit_ph": "Tự điền khi chọn nhân sự",
+            "unit_ph": "Cập nhật khi chọn nhân sự (nếu có)",
             "sec_time": "Thời gian",
             "proposed_date": "Ngày đề xuất",
             "proposed_date_title": "Ngày lập đề xuất thực tế. Bấm vào ô để mở lịch.",

@@ -63,7 +63,7 @@
                 icon="export"
                 :disabled="!!exporting || loading"
                 test-id="driver-freq-filters-export"
-                @click.prevent
+                @click="toggleExportMenu"
               >
                 {{ t('driver_freq.toolbar_export') }}
               </DatagridToolbarActionButton>
@@ -77,7 +77,7 @@
                 class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
                 data-testid="driver-freq-filters-export-xlsx"
                 :disabled="!!exporting || loading"
-                @click="$emit('export-xlsx')"
+                @click="onExportXlsx"
               >
                 {{ t('driver_freq.btn_export_xlsx') }}
               </button>
@@ -86,23 +86,12 @@
                 class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
                 data-testid="driver-freq-filters-export-pdf"
                 :disabled="!!exporting || loading"
-                @click="$emit('export-pdf')"
+                @click="onExportPdf"
               >
                 {{ t('driver_freq.btn_export_pdf') }}
               </button>
             </div>
           </details>
-
-          <button
-            type="button"
-            class="df-freq-refresh"
-            :disabled="loading"
-            data-testid="driver-freq-reload"
-            @click="$emit('reload')"
-          >
-            <span v-if="loading" class="inline-block size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-            <template v-else>{{ t('driver_freq.btn_refresh') }}</template>
-          </button>
         </div>
       </div>
     </div>
@@ -190,6 +179,7 @@ import DatagridToolbarActionButton from '../shared/ui/DatagridToolbarActionButto
 import DatagridFilterField from '../shared/ui/DatagridFilterField.vue'
 import FilterVisibilityDropdown from '../shared/ui/FilterVisibilityDropdown.vue'
 import { useDetailsAutoClose, useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
+import { useExportDetailsMenu } from '../../composables/useExportDetailsMenu.js'
 
 defineProps({
   filters: { type: Object, required: true },
@@ -206,10 +196,9 @@ defineProps({
   exporting: { type: String, default: null },
 })
 
-defineEmits([
+const emit = defineEmits([
   'export-xlsx',
   'export-pdf',
-  'reload',
   'reset-filters',
   'patch-filter',
   'toggle-filter-panel',
@@ -218,17 +207,21 @@ defineEmits([
 ])
 
 const { t } = useI18n()
+const { exportMenuRef, toggleExportMenu, closeExportMenu } = useExportDetailsMenu()
 const rootRef = ref(null)
-const exportMenuRef = ref(null)
 useDetailsAutoCloseWithin(rootRef)
 useDetailsAutoClose(exportMenuRef)
+
+function onExportXlsx() {
+  closeExportMenu()
+  emit('export-xlsx')
+}
+
+function onExportPdf() {
+  closeExportMenu()
+  emit('export-pdf')
+}
 
 const FILTER_CONTROL_CLASS =
   'input h-10 w-full text-sm rounded-lg border border-slate-200 bg-white px-3 text-slate-900 shadow-sm focus:border-va-700 focus:outline-none focus:ring-2 focus:ring-va-700/15 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100'
 </script>
-
-<style scoped>
-.df-freq-refresh {
-  @apply inline-flex h-10 shrink-0 items-center justify-center rounded-lg bg-teal-800 px-4 text-sm font-medium text-white transition hover:bg-teal-900 focus:outline-none focus:ring-2 focus:ring-teal-600/30 disabled:opacity-50 dark:bg-teal-700 dark:hover:bg-teal-600;
-}
-</style>

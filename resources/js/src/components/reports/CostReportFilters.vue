@@ -57,13 +57,13 @@
             <XMarkIcon class="h-3 w-3 text-rose-500" aria-hidden="true" />
           </button>
 
-          <details ref="exportMenuRef" class="group relative">
+          <details v-if="canExport" ref="exportMenuRef" class="group relative">
             <summary class="list-none [&::-webkit-details-marker]:hidden">
               <DatagridToolbarActionButton
                 icon="export"
                 :disabled="!!exporting"
                 test-id="cost-report-filters-export"
-                @click.prevent
+                @click="toggleExportMenu"
               >
                 {{ t('cost_report.toolbar_export') }}
               </DatagridToolbarActionButton>
@@ -77,7 +77,7 @@
                 class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
                 data-testid="cost-report-filters-export-xlsx"
                 :disabled="!!exporting"
-                @click="$emit('export-xlsx')"
+                @click="onExportXlsx"
               >
                 {{ t('cost_report.btn_export_xlsx') }}
               </button>
@@ -86,7 +86,7 @@
                 class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
                 data-testid="cost-report-filters-export-pdf"
                 :disabled="!!exporting"
-                @click="$emit('export-pdf')"
+                @click="onExportPdf"
               >
                 {{ t('cost_report.btn_export_pdf') }}
               </button>
@@ -173,6 +173,7 @@ import DatagridFilterField from '../shared/ui/DatagridFilterField.vue'
 import FilterVisibilityDropdown from '../shared/ui/FilterVisibilityDropdown.vue'
 import FilterDatePicker from '../shared/ui/FilterDatePicker.vue'
 import { useDetailsAutoClose, useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
+import { useExportDetailsMenu } from '../../composables/useExportDetailsMenu.js'
 
 defineProps({
   filters: { type: Object, required: true },
@@ -185,9 +186,10 @@ defineProps({
   showFilterPanel: { type: Boolean, default: false },
   loading: { type: Boolean, default: false },
   exporting: { type: String, default: null },
+  canExport: { type: Boolean, default: true },
 })
 
-defineEmits([
+const emit = defineEmits([
   'export-xlsx',
   'export-pdf',
   'reset-filters',
@@ -198,10 +200,20 @@ defineEmits([
 ])
 
 const { t } = useI18n()
+const { exportMenuRef, toggleExportMenu, closeExportMenu } = useExportDetailsMenu()
 const rootRef = ref(null)
-const exportMenuRef = ref(null)
 useDetailsAutoCloseWithin(rootRef)
 useDetailsAutoClose(exportMenuRef)
+
+function onExportXlsx() {
+  closeExportMenu()
+  emit('export-xlsx')
+}
+
+function onExportPdf() {
+  closeExportMenu()
+  emit('export-pdf')
+}
 
 const FILTER_CONTROL_CLASS =
   'input h-10 w-full text-sm rounded-lg border border-slate-200 bg-white px-3 text-slate-900 shadow-sm focus:border-va-700 focus:outline-none focus:ring-2 focus:ring-va-700/15 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100'

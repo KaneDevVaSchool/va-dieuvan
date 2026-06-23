@@ -3,12 +3,11 @@
 namespace App\Services\Reports\Export;
 
 use App\Services\Reports\TripCostReportService;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 /**
@@ -19,22 +18,29 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
  */
 class TripCostReportXlsxWriter
 {
-    private const VA_RED    = 'FF9A0036';
-    private const VA_LIGHT  = 'FFFDF2F5';
+    private const VA_RED = 'FF9A0036';
+
+    private const VA_LIGHT = 'FFFDF2F5';
+
     private const HEADER_BG = 'FF3A3A5C';
-    private const ZEBRA_BG  = 'FFFAFAFA';
-    private const TOTAL_BG  = 'FFF5F5F5';
-    private const SIG_BG    = 'FFEDEDED';
+
+    private const ZEBRA_BG = 'FFFAFAFA';
+
+    private const TOTAL_BG = 'FFF5F5F5';
+
+    private const SIG_BG = 'FFEDEDED';
+
     private const MONEY_FMT = '#,##0';
-    private const COLS      = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'];
+
+    private const COLS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'];
 
     /**
      * Ghi toàn bộ workbook vào file tạm, trả về đường dẫn file tạm.
      *
-     * @param  array<int, array<string, mixed>>  $allRows   Tất cả rows (từ TripCostReportService::rows)
-     * @param  array{from?:string, to?:string}   $filters
-     * @param  string|null  $exportedBy   Tên người xuất (tuỳ chọn)
-     * @param  string|null  $unitName     Tên đơn vị (tuỳ chọn)
+     * @param  array<int, array<string, mixed>>  $allRows  Tất cả rows (từ TripCostReportService::rows)
+     * @param  array{from?:string, to?:string}  $filters
+     * @param  string|null  $exportedBy  Tên người xuất (tuỳ chọn)
+     * @param  string|null  $unitName  Tên đơn vị (tuỳ chọn)
      */
     public function writeTempFile(
         array $allRows,
@@ -42,7 +48,7 @@ class TripCostReportXlsxWriter
         ?string $exportedBy = null,
         ?string $unitName = null,
     ): string {
-        $spreadsheet = new Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $spreadsheet->getProperties()
             ->setTitle('Báo cáo doanh thu chuyến')
             ->setCreator('VA Điều Vận')
@@ -66,7 +72,7 @@ class TripCostReportXlsxWriter
         $spreadsheet->setActiveSheetIndex(0);
 
         $tmpPath = tempnam(sys_get_temp_dir(), 'cost_rpt_');
-        $writer  = IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
         $writer->save($tmpPath);
         $spreadsheet->disconnectWorksheets();
 
@@ -105,7 +111,7 @@ class TripCostReportXlsxWriter
         $ws->mergeCells('C2:K2');
         $ws->setCellValue('C2', $title);
         $this->applyStyle($ws, 'C2:K2', [
-            'font'      => ['bold' => true, 'size' => 14, 'color' => ['argb' => self::VA_RED]],
+            'font' => ['bold' => true, 'size' => 14, 'color' => ['argb' => self::VA_RED]],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
         ]);
 
@@ -114,29 +120,29 @@ class TripCostReportXlsxWriter
         $ws->mergeCells('C3:K3');
         $ws->setCellValue('C3', 'Hệ Thống Điều Vận Nội Bộ  ·  Vietnam America Schools');
         $this->applyStyle($ws, 'C3:K3', [
-            'font'      => ['italic' => true, 'size' => 9, 'color' => ['argb' => 'FF555555']],
+            'font' => ['italic' => true, 'size' => 9, 'color' => ['argb' => 'FF555555']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
         ]);
 
         // ── ROW 4: export meta ──
         $ws->getRowDimension(4)->setRowHeight(15);
         $exportDate = now()->format('d/m/Y');
-        $fromLabel  = ! empty($filters['from']) ? date('d/m/Y', strtotime($filters['from'])) : '—';
-        $toLabel    = ! empty($filters['to']) ? date('d/m/Y', strtotime($filters['to'])) : '—';
-        $dateRange  = ($filters['from'] ?? null) || ($filters['to'] ?? null)
+        $fromLabel = ! empty($filters['from']) ? date('d/m/Y', strtotime($filters['from'])) : '—';
+        $toLabel = ! empty($filters['to']) ? date('d/m/Y', strtotime($filters['to'])) : '—';
+        $dateRange = ($filters['from'] ?? null) || ($filters['to'] ?? null)
             ? "Kỳ: {$fromLabel} → {$toLabel}"
             : '';
 
         $ws->mergeCells('A4:C4');
-        $ws->setCellValue('A4', "Ngày xuất: {$exportDate}" . ($dateRange ? "   {$dateRange}" : ''));
+        $ws->setCellValue('A4', "Ngày xuất: {$exportDate}".($dateRange ? "   {$dateRange}" : ''));
         $this->applyStyle($ws, 'A4:C4', ['font' => ['size' => 8, 'color' => ['argb' => 'FF444444']]]);
 
         $ws->mergeCells('D4:G4');
-        $ws->setCellValue('D4', 'Người xuất:  ' . ($exportedBy ?? '_______________________________'));
+        $ws->setCellValue('D4', 'Người xuất:  '.($exportedBy ?? '_______________________________'));
         $this->applyStyle($ws, 'D4:G4', ['font' => ['size' => 8, 'color' => ['argb' => 'FF444444']]]);
 
         $ws->mergeCells('H4:K4');
-        $ws->setCellValue('H4', 'Đơn vị:  ' . ($unitName ?? '_______________________________'));
+        $ws->setCellValue('H4', 'Đơn vị:  '.($unitName ?? '_______________________________'));
         $this->applyStyle($ws, 'H4:K4', ['font' => ['size' => 8, 'color' => ['argb' => 'FF444444']]]);
 
         // ── ROW 5: thin separator ──
@@ -165,10 +171,10 @@ class TripCostReportXlsxWriter
             $ws->setCellValue("{$col}{$headerRow}", $label);
         }
         $this->applyStyle($ws, "A{$headerRow}:K{$headerRow}", [
-            'font'      => ['bold' => true, 'size' => 9, 'color' => ['argb' => 'FFFFFFFF']],
-            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => self::HEADER_BG]],
+            'font' => ['bold' => true, 'size' => 9, 'color' => ['argb' => 'FFFFFFFF']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => self::HEADER_BG]],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER, 'wrapText' => false],
-            'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FF555577']]],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FF555577']]],
         ]);
         // Right-align money headers
         foreach (['H', 'I', 'J'] as $col) {
@@ -179,10 +185,10 @@ class TripCostReportXlsxWriter
 
         // ── Data rows ──
         $dataStartRow = $headerRow + 1;
-        $n            = count($rows);
+        $n = count($rows);
 
         foreach ($rows as $i => $row) {
-            $r    = $dataStartRow + $i;
+            $r = $dataStartRow + $i;
             $even = ($i % 2 === 1);
             $ws->getRowDimension($r)->setRowHeight(16);
 
@@ -190,13 +196,15 @@ class TripCostReportXlsxWriter
             $ws->setCellValue("B{$r}", $row['unit'] ?? '—');
             $ws->setCellValue("C{$r}", TripCostReportService::TRIP_TYPE_LABELS[$row['category'] ?? ''] ?? ($row['category'] ?? '—'));
             $ws->setCellValue("D{$r}", $row['submitter'] ?? '—');
-            $ws->setCellValue("E{$r}", $row['description'] ?? '—');
+            $legLabel = trim((string) ($row['leg_label'] ?? ''));
+            $descCell = (string) ($row['description'] ?? '—');
+            $ws->setCellValue("E{$r}", $legLabel !== '' ? "[{$legLabel}] {$descCell}" : $descCell);
             $ws->setCellValue("F{$r}", $row['fleet_source'] ?? '—');
             $ws->setCellValue("G{$r}", $row['provider'] ?: '—');
 
             $up = $row['unit_price'];
             $ef = $row['extra_fee'];
-            $amt= (float) ($row['amount'] ?? 0);
+            $amt = (float) ($row['amount'] ?? 0);
 
             $ws->setCellValue("H{$r}", $up !== null ? (float) $up : '');
             $ws->setCellValue("I{$r}", $ef !== null ? (float) $ef : '');
@@ -211,8 +219,8 @@ class TripCostReportXlsxWriter
 
             $rowBg = $even ? self::ZEBRA_BG : 'FFFFFFFF';
             $this->applyStyle($ws, "A{$r}:K{$r}", [
-                'font'    => ['size' => 9],
-                'fill'    => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $rowBg]],
+                'font' => ['size' => 9],
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $rowBg]],
                 'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_HAIR, 'color' => ['argb' => 'FFD0D0D0']]],
                 'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
             ]);
@@ -226,9 +234,15 @@ class TripCostReportXlsxWriter
         $ws->mergeCells("A{$totalRow}:G{$totalRow}");
         $ws->setCellValue("A{$totalRow}", 'TỔNG CỘNG');
 
-        $sumUp  = array_sum(array_column($rows, 'unit_price'));
-        $sumEf  = array_sum(array_column($rows, 'extra_fee'));
-        $sumAmt = array_sum(array_column($rows, 'amount'));
+        $sumUp = (float) array_sum(array_map(
+            fn ($r) => $r['unit_price'] !== null ? (float) $r['unit_price'] : 0,
+            $rows,
+        ));
+        $sumEf = (float) array_sum(array_map(
+            fn ($r) => $r['extra_fee'] !== null ? (float) $r['extra_fee'] : 0,
+            $rows,
+        ));
+        $sumAmt = (float) array_sum(array_map(fn ($r) => (float) ($r['amount'] ?? 0), $rows));
 
         $ws->setCellValue("H{$totalRow}", $sumUp > 0 ? $sumUp : '');
         $ws->setCellValue("I{$totalRow}", $sumEf > 0 ? $sumEf : '');
@@ -240,11 +254,11 @@ class TripCostReportXlsxWriter
         }
 
         $this->applyStyle($ws, "A{$totalRow}:K{$totalRow}", [
-            'font'    => ['bold' => true, 'size' => 9],
-            'fill'    => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => self::TOTAL_BG]],
+            'font' => ['bold' => true, 'size' => 9],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => self::TOTAL_BG]],
             'borders' => [
-                'outline'   => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['argb' => 'FF888888']],
-                'allBorders'=> ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFB0B0B0']],
+                'outline' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['argb' => 'FF888888']],
+                'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFB0B0B0']],
             ],
             'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
         ]);
@@ -271,10 +285,10 @@ class TripCostReportXlsxWriter
         }
 
         $this->applyStyle($ws, "A{$sigHeaderRow}:K{$sigHeaderRow}", [
-            'font'      => ['bold' => true, 'size' => 9, 'color' => ['argb' => 'FF333333']],
-            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => self::SIG_BG]],
+            'font' => ['bold' => true, 'size' => 9, 'color' => ['argb' => 'FF333333']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => self::SIG_BG]],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
-            'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFAAAAAA']]],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFAAAAAA']]],
         ]);
 
         // ── Signature space rows ──
@@ -285,7 +299,7 @@ class TripCostReportXlsxWriter
             $ws->mergeCells("H{$emptyR}:K{$emptyR}");
             $this->applyStyle($ws, "A{$emptyR}:K{$emptyR}", [
                 'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]],
-                'fill'    => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFFFFFFF']],
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFFFFFFF']],
             ]);
         }
 
@@ -305,9 +319,9 @@ class TripCostReportXlsxWriter
         }
 
         $this->applyStyle($ws, "A{$signLabelRow}:K{$signLabelRow}", [
-            'font'      => ['italic' => true, 'size' => 8, 'color' => ['argb' => 'FF888888']],
+            'font' => ['italic' => true, 'size' => 8, 'color' => ['argb' => 'FF888888']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-            'borders'   => ['bottomBorder' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]],
+            'borders' => ['bottomBorder' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFCCCCCC']]],
         ]);
     }
 
@@ -320,9 +334,9 @@ class TripCostReportXlsxWriter
 
         if (isset($styleArr['font'])) {
             $f = $styleArr['font'];
-            isset($f['bold'])   && $style->getFont()->setBold($f['bold']);
+            isset($f['bold']) && $style->getFont()->setBold($f['bold']);
             isset($f['italic']) && $style->getFont()->setItalic($f['italic']);
-            isset($f['size'])   && $style->getFont()->setSize($f['size']);
+            isset($f['size']) && $style->getFont()->setSize($f['size']);
             if (isset($f['color']['argb'])) {
                 $style->getFont()->getColor()->setARGB($f['color']['argb']);
             }
@@ -339,8 +353,8 @@ class TripCostReportXlsxWriter
         if (isset($styleArr['alignment'])) {
             $al = $styleArr['alignment'];
             isset($al['horizontal']) && $style->getAlignment()->setHorizontal($al['horizontal']);
-            isset($al['vertical'])   && $style->getAlignment()->setVertical($al['vertical']);
-            isset($al['wrapText'])   && $style->getAlignment()->setWrapText($al['wrapText']);
+            isset($al['vertical']) && $style->getAlignment()->setVertical($al['vertical']);
+            isset($al['wrapText']) && $style->getAlignment()->setWrapText($al['wrapText']);
         }
 
         if (isset($styleArr['borders'])) {

@@ -1,6 +1,6 @@
 import { http } from './http'
 import { saveAs } from 'file-saver'
-import { normalizeAxiosBlobError } from '../util/downloadPdfAttachment'
+import { assertAxiosBlobIsOfficeZip, normalizeAxiosBlobError } from '../util/downloadPdfAttachment'
 
 export async function getSummary(params = {}) {
   const { data } = await http.get('/reports/summary', { params })
@@ -28,8 +28,8 @@ export async function downloadTripCostXlsx(params = {}) {
     await normalizeAxiosBlobError(e)
     throw e
   }
+  await assertAxiosBlobIsOfficeZip(res)
   const blob = res.data
-  if (!(blob instanceof Blob) || blob.size === 0) throw new Error('empty_response')
   const filename = `chi-phi-chuyen_${new Date().toISOString().slice(0, 10)}.xlsx`
   saveAs(blob, filename)
 }
@@ -74,8 +74,8 @@ export async function downloadDriverFrequencyXlsx(params = {}) {
     await normalizeAxiosBlobError(e)
     throw e
   }
+  await assertAxiosBlobIsOfficeZip(res)
   const blob = res.data
-  if (!(blob instanceof Blob) || blob.size === 0) throw new Error('empty_response')
   const filename = `tan-suat-tai-xe_${new Date().toISOString().slice(0, 10)}.xlsx`
   saveAs(blob, filename)
 }

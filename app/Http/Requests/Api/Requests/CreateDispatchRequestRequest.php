@@ -29,6 +29,7 @@ class CreateDispatchRequestRequest extends ApiFormRequest
             'is_urgent' => ['nullable', 'boolean'],
             'urgent_reason' => ['nullable', 'string', 'max:500'],
             'requester_id' => ['nullable', 'integer', 'min:1'],
+            'dept_head_user_id' => ['nullable', 'integer', 'min:1'],
             'wizard_snapshot' => ['nullable', 'array'],
         ];
     }

@@ -13,6 +13,7 @@ class TripCost extends Model
 
     protected $fillable = [
         'trip_id',
+        'leg_key',
         'vehicle_id',
         'created_by',
         'confirmed_by',

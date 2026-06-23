@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ChevronDownIcon, FunnelIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { FunnelIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import DatagridToolbarSearch from '../shared/ui/DatagridToolbarSearch.vue'
 import DatagridToolbarActionButton from '../shared/ui/DatagridToolbarActionButton.vue'
 import DatagridSegmentedControl from '../shared/ui/DatagridSegmentedControl.vue'
@@ -169,7 +169,6 @@ function toggleExport() {
             @click="toggleExport"
           >
             {{ t('portal.shell.toolbar_export') }}
-            <ChevronDownIcon class="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
           </DatagridToolbarActionButton>
           <div
             v-if="exportOpen"

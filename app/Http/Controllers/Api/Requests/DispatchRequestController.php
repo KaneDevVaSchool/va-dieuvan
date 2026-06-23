@@ -30,6 +30,7 @@ use App\Services\Auditing\AuditLogger;
 use App\Services\DispatchRequests\DispatchRequestApprovalService;
 use App\Services\DispatchRequests\DispatchRequestPdfPresenter;
 use App\Services\Notifications\DispatchStaffNotificationRecipients;
+use App\Support\DispatchRequestDeptHeadAssignment;
 use App\Support\DispatchWizardPassengerCount;
 use App\Support\Messages;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -113,8 +114,12 @@ class DispatchRequestController extends Controller
 
         $urgentReasonTrim = isset($data['urgent_reason']) ? trim((string) $data['urgent_reason']) : '';
 
+        $deptHeadId = DispatchRequestDeptHeadAssignment::resolveValidatedId($data['dept_head_user_id'] ?? null);
+        unset($data['dept_head_user_id']);
+
         $dispatchRequest = DispatchRequest::create([
             ...$data,
+            'assigned_dept_head_id' => $deptHeadId,
             'requester_id' => $requesterId,
             'status' => 'pending',
             'source_channel' => $data['source_channel'] ?? 'portal',

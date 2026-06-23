@@ -247,7 +247,7 @@
                     <td>{{ $row['unit'] ?? '—' }}</td>
                     <td>{{ \App\Services\Reports\TripCostReportService::TRIP_TYPE_LABELS[$row['category'] ?? ''] ?? ($row['category'] ?? '—') }}</td>
                     <td>{{ $row['submitter'] ?? '—' }}</td>
-                    <td>{{ $row['description'] ?? '—' }}</td>
+                    <td>@if(!empty($row['leg_label']))<strong>[{{ $row['leg_label'] }}]</strong> @endif{{ $row['description'] ?? '—' }}</td>
                     <td>{{ $row['fleet_source'] ?? '—' }}</td>
                     <td>{{ $row['provider'] ?: '—' }}</td>
                     <td class="tr">
