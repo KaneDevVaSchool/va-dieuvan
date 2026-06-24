@@ -65,14 +65,25 @@ export function dispatchRequestEffectivePassengerCount(dr) {
  */
 export function dispatchRequestDisplayPassengerCount(dr) {
   if (!dr) return 0
+  const tt = String(dr.trip_type ?? '').trim()
+  if (tt === 'cargo') return 0
   const actual = dr.student_count_actual
   if (actual != null && actual !== '') {
     const n = Number(actual)
     if (Number.isFinite(n) && n > 0) return Math.round(n)
   }
-  const fromSnapshot = wizardSnapshotGuestTotal(dr?.wizard_snapshot, dr?.trip_type ?? '')
+  const fromSnapshot = wizardSnapshotGuestTotal(dr?.wizard_snapshot, tt)
   if (fromSnapshot > 0) return fromSnapshot
   return dispatchRequestEffectivePassengerCount(dr)
+}
+
+/**
+ * Tổng số lượng hàng (qty) trên chuyến hàng hoá — không dùng cho số khách.
+ * @param {{ wizard_snapshot?: object, trip_type?: string } | null | undefined} dr
+ */
+export function dispatchRequestCargoQtyTotal(dr) {
+  if (!dr || String(dr.trip_type ?? '').trim() !== 'cargo') return 0
+  return wizardSnapshotGuestTotal(dr.wizard_snapshot, 'cargo')
 }
 
 /**

@@ -145,7 +145,31 @@ class DriverTripController extends Controller
     private function serializeTrip(Trip $trip, ?int $driverId): array
     {
         $dr = $trip->dispatchRequest;
+        $scheduleLegs = $this->legsForDriver($trip, $driverId);
         $depart = $trip->depart_at;
+        $status = (string) $trip->status;
+        $arriveBy = $dr?->arrive_by;
+        $pickupLocation = $dr?->origin;
+        $dropoffLocation = $dr?->destination;
+
+        if (count($scheduleLegs) >= 1) {
+            $primaryLeg = $scheduleLegs[0];
+            if (! empty($primaryLeg['depart_at'])) {
+                $depart = Carbon::parse((string) $primaryLeg['depart_at']);
+            }
+            if (! empty($primaryLeg['arrive_by'])) {
+                $arriveBy = Carbon::parse((string) $primaryLeg['arrive_by']);
+            }
+            if (! empty($primaryLeg['pickup'])) {
+                $pickupLocation = (string) $primaryLeg['pickup'];
+            }
+            if (! empty($primaryLeg['dropoff'])) {
+                $dropoffLocation = (string) $primaryLeg['dropoff'];
+            }
+            if (! empty($primaryLeg['status'])) {
+                $status = (string) $primaryLeg['status'];
+            }
+        }
 
         $durationMinutes = null;
         if ($trip->started_at && $trip->completed_at) {
@@ -154,7 +178,8 @@ class DriverTripController extends Controller
         }
 
         $passengerCount = DispatchWizardPassengerCount::displayFromDispatchRequest($dr);
-        if ($passengerCount <= 0 && $trip->relationLoaded('tripPassengers')) {
+        $tripType = (string) ($dr?->trip_type ?? '');
+        if ($passengerCount <= 0 && $tripType !== 'cargo' && $trip->relationLoaded('tripPassengers')) {
             $passengerCount = $trip->tripPassengers->count();
         }
 
@@ -165,8 +190,6 @@ class DriverTripController extends Controller
         $requestCode = $dr instanceof DispatchRequest
             ? DispatchRequestMailPresenter::referenceCode($dr)
             : null;
-
-        $arriveBy = $dr?->arrive_by;
 
         return [
             'id' => $trip->id,
@@ -187,14 +210,14 @@ class DriverTripController extends Controller
             'trip_type_label' => $dr?->trip_type
                 ? DispatchRequestMailPresenter::tripTypeLabelVi((string) $dr->trip_type)
                 : null,
-            'status' => $trip->status,
+            'status' => $status,
             'depart_at' => $depart ? $depart->toIso8601String() : null,
             'depart_date' => $depart ? $depart->format('Y-m-d') : null,
             'pickup_time' => $depart ? $depart->format('H:i') : null,
             'pickup_date' => $depart ? $depart->format('d/m/Y') : null,
             'arrive_time' => $arriveBy ? $arriveBy->format('H:i') : null,
-            'pickup_location' => $dr?->origin,
-            'dropoff_location' => $dr?->destination,
+            'pickup_location' => $pickupLocation,
+            'dropoff_location' => $dropoffLocation,
             'is_urgent' => (bool) ($dr?->is_urgent),
             'arrive_by' => $arriveBy ? $arriveBy->toIso8601String() : null,
             'passenger_count' => $passengerCount,
@@ -221,7 +244,7 @@ class DriverTripController extends Controller
                     ? ['name' => (string) $dr->requester->name, 'phone' => $dr->requester->phone]
                     : null,
             ] : null,
-            'schedule_legs' => $this->legsForDriver($trip, $driverId),
+            'schedule_legs' => $scheduleLegs,
         ];
     }
 

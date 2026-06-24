@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Attachments\DestroyAttachmentRequest;
 use App\Http\Requests\Api\Attachments\RunAttachmentOcrRequest;
 use App\Http\Requests\Api\Attachments\UploadAttachmentRequest;
+use App\Http\Resources\SignedDocumentVersionResource;
+use App\Jobs\ProcessAttachmentOcrJob;
 use App\Models\Attachment;
 use App\Models\CargoShipment;
 use App\Models\DispatchRequest;
@@ -15,8 +17,6 @@ use App\Models\Trip;
 use App\Models\TripCost;
 use App\Models\VehicleComplianceDocument;
 use App\Services\Auditing\AuditLogger;
-use App\Jobs\ProcessAttachmentOcrJob;
-use App\Http\Resources\SignedDocumentVersionResource;
 use App\Services\Ocr\PaperOcrStubService;
 use App\Services\SignedDocuments\SignedDocumentUploadService;
 use App\Support\FinancialDataLock;
@@ -399,7 +399,7 @@ class AttachmentController extends Controller
         }
 
         if ($parent instanceof CargoShipment) {
-            if ($user->can('cargo.manage')) {
+            if ($user->can('cargo.manage') || $user->can('trip.view_all')) {
                 return;
             }
             abort(403);

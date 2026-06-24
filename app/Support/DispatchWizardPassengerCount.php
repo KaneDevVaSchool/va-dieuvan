@@ -89,6 +89,11 @@ final class DispatchWizardPassengerCount
             return 0;
         }
 
+        $tripType = (string) ($dr->trip_type ?? '');
+        if ($tripType === 'cargo') {
+            return 0;
+        }
+
         $actual = $dr->student_count_actual ?? null;
         if ($actual !== null && $actual !== '') {
             $n = (int) $actual;
@@ -98,7 +103,6 @@ final class DispatchWizardPassengerCount
         }
 
         $snap = $dr->wizard_snapshot ?? null;
-        $tripType = (string) ($dr->trip_type ?? '');
         if (is_array($snap) && $snap !== []) {
             $fromSnap = self::sumFromSnapshot($snap, $tripType);
             if ($fromSnap !== null && $fromSnap > 0) {

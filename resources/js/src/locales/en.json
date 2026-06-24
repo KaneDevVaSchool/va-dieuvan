@@ -3293,6 +3293,8 @@
         "cost_line": "Revenue",
         "card_docs": "Delivery receipts & attachments",
         "doc_download": "Download",
+        "doc_open_preview": "View receipt image",
+        "doc_download_failed": "Could not download the attachment. Please try again.",
         "depart_prefix": "Scheduled departure:",
         "schedule_time_range": "{start} to {end}",
         "assign_title": "Assign driver & vehicle (trip)",
@@ -4273,6 +4275,7 @@
             "aria": "Trip detail sections",
             "info": "Trip Information",
             "passengers": "Passengers",
+            "cargo": "Cargo",
             "dispatch": "Dispatch",
             "documents": "Documents",
             "expenses": "Expenses"

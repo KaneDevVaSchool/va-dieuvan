@@ -23,7 +23,7 @@
 
             <!-- Summary bar: cần · đã phân bổ · thiếu/dư (scan 3 giây) -->
             <div
-                v-if="!coordinationActionsLocked"
+                v-if="!coordinationActionsLocked && !isCargoTrip"
                 class="grid grid-cols-2 gap-px overflow-hidden rounded-2xl shadow-sm sm:grid-cols-4"
                 :class="
                     seatsMet
@@ -439,9 +439,12 @@ const props = withDefaults(
     scheduleAssignTabs?: { key: string; label: string; assigned: boolean }[];
     activeScheduleKey?: string;
     assignProgressLabel?: string;
+    /** Chuyến hàng hoá — không hiển thị thanh cần ghế / hành khách */
+    isCargoTrip?: boolean;
 }>(),
     {
         coordinationActionsLocked: false,
+        isCargoTrip: false,
         assignmentVehicles: () => [],
         assignmentDrivers: () => [],
         supplementAssignments: null,

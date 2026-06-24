@@ -214,6 +214,105 @@
         </div>
       </div>
     </div>
+
+    <!-- Decline / busy modal -->
+    <div
+      v-if="declineModalOpen"
+      class="fixed inset-0 z-[80] flex items-end justify-center bg-black/60 px-3 pb-[max(1rem,env(safe-area-inset-bottom))] pt-12 sm:items-center sm:p-6"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="driver-trip-decline-modal-title"
+      data-testid="driver-trip-decline-modal"
+      @click.self="$emit('close-decline')"
+    >
+      <div
+        class="w-full max-w-md rounded-3xl bg-driver-card p-5 shadow-2xl ring-1 ring-white/10"
+        @click.stop
+      >
+        <h2 id="driver-trip-decline-modal-title" class="text-lg font-bold text-driver-ink sm:text-xl">
+          {{ declineModalTitle }}
+        </h2>
+        <p v-if="declineTripSummary" class="mt-2 text-sm text-driver-muted sm:text-base">
+          {{ declineTripSummary }}
+        </p>
+
+        <template v-if="declineStep === 'reason'">
+          <p class="mt-4 text-sm text-driver-muted sm:text-base">
+            {{ declineModalSubtitle }}
+          </p>
+          <label
+            class="mt-3 block text-xs font-semibold uppercase tracking-wide text-driver-accent/80"
+          >
+            {{ declineModalReasonLabel }}
+          </label>
+          <textarea
+            :value="declineReason"
+            rows="4"
+            class="mt-2 w-full resize-y rounded-xl border border-white/10 bg-driver-surface px-3 py-2.5 text-base text-driver-ink placeholder:text-driver-muted/50 focus:border-driver-accent/50 focus:outline-none focus:ring-2 focus:ring-driver-accent/25 sm:text-lg"
+            :placeholder="t('driver_home.pending_decline_reason_placeholder')"
+            autocomplete="off"
+            data-testid="driver-trip-decline-reason"
+            @input="$emit('update:declineReason', $event.target.value)"
+          />
+        </template>
+
+        <template v-else>
+          <p class="mt-4 text-sm font-semibold text-amber-200/95 sm:text-base">
+            {{ declineModalConfirmTitle }}
+          </p>
+          <p class="mt-1 text-sm text-driver-muted sm:text-base">
+            {{ declineModalConfirmHint }}
+          </p>
+          <div class="mt-3 rounded-xl bg-driver-surface px-3 py-2.5 text-sm text-driver-ink sm:text-base">
+            {{ declineReason.trim() }}
+          </div>
+        </template>
+
+        <p v-if="declineModalError" class="mt-3 text-sm font-medium text-rose-400 sm:text-base" role="alert">
+          {{ declineModalError }}
+        </p>
+
+        <div class="mt-5 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+          <button
+            type="button"
+            class="order-last min-h-[48px] w-full rounded-xl bg-transparent px-4 text-sm font-semibold text-driver-muted hover:bg-white/5 sm:order-first sm:w-auto"
+            :disabled="declineBusy"
+            data-testid="driver-trip-decline-back"
+            @click="
+              declineStep === 'confirm'
+                ? $emit('update:declineStep', 'reason')
+                : $emit('close-decline')
+            "
+          >
+            {{
+              declineStep === 'confirm'
+                ? t('driver_home.pending_decline_back')
+                : t('driver_home.pending_decline_cancel')
+            }}
+          </button>
+          <button
+            v-if="declineStep === 'reason'"
+            type="button"
+            class="min-h-[48px] w-full rounded-xl bg-driver-accent px-4 text-sm font-bold text-driver-bg shadow-md active:scale-[0.99] sm:w-auto sm:min-w-[9rem]"
+            :disabled="declineBusy"
+            data-testid="driver-trip-decline-next"
+            @click="$emit('decline-next')"
+          >
+            {{ t('driver_home.pending_decline_next') }}
+          </button>
+          <button
+            v-else
+            type="button"
+            class="min-h-[48px] w-full rounded-xl bg-rose-600 px-4 text-sm font-bold text-white shadow-md hover:bg-rose-500 active:scale-[0.99] sm:w-auto sm:min-w-[9rem]"
+            :disabled="declineBusy"
+            data-testid="driver-trip-decline-submit"
+            @click="$emit('decline-submit')"
+          >
+            {{ declineModalConfirmBtn }}
+          </button>
+        </div>
+      </div>
+    </div>
   </Teleport>
 </template>
 
@@ -232,6 +331,13 @@ import { formatVndWhileTyping } from '../../../util/money'
 const props = defineProps({
   kmModalOpen: { type: Boolean, default: false },
   costModalOpen: { type: Boolean, default: false },
+  declineModalOpen: { type: Boolean, default: false },
+  declineStep: { type: String, default: 'reason' },
+  declineReason: { type: String, default: '' },
+  declineModalError: { type: String, default: '' },
+  declineTripSummary: { type: String, default: '' },
+  declineIsBusyFlow: { type: Boolean, default: false },
+  declineBusy: { type: Boolean, default: false },
   startKmDisplay: { type: String, default: '' },
   endKm: { type: String, default: '' },
   kmNote: { type: String, default: '' },
@@ -251,9 +357,33 @@ const selectedCostLeg = computed(
   () => props.costLegOptions.find((l) => l.key === props.costForm?.leg_key) ?? null,
 )
 
+const declineModalTitle = computed(() =>
+  props.declineIsBusyFlow ? t('driver_home.busy_title') : t('driver_home.pending_decline_title'),
+)
+const declineModalSubtitle = computed(() =>
+  props.declineIsBusyFlow ? t('driver_home.busy_subtitle') : t('driver_home.pending_decline_subtitle'),
+)
+const declineModalReasonLabel = computed(() =>
+  props.declineIsBusyFlow ? t('driver_home.busy_reason_label') : t('driver_home.pending_decline_reason_label'),
+)
+const declineModalConfirmTitle = computed(() =>
+  props.declineIsBusyFlow ? t('driver_home.busy_confirm_title') : t('driver_home.pending_decline_confirm_title'),
+)
+const declineModalConfirmHint = computed(() =>
+  props.declineIsBusyFlow ? t('driver_home.busy_confirm_hint') : t('driver_home.pending_decline_confirm_hint'),
+)
+const declineModalConfirmBtn = computed(() =>
+  props.declineIsBusyFlow ? t('driver_home.busy_confirm_btn') : t('driver_home.pending_decline_confirm_btn'),
+)
+
 const emit = defineEmits([
   'close-km',
   'close-cost',
+  'close-decline',
+  'decline-next',
+  'decline-submit',
+  'update:declineReason',
+  'update:declineStep',
   'submit-km',
   'submit-cost',
   'update:endKm',

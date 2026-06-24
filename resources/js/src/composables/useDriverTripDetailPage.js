@@ -1,6 +1,8 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { formatApiError } from '../api/http'
+import { getDriverSummary } from '../api/driver'
 import { addTripEvent, getTrip, updateTripStatus, upsertTripRecord } from '../api/trips'
 import {
   mergeTripRowFromApi,
@@ -31,8 +33,11 @@ import { resolveTripLeaderContact } from '../util/tripLeaderContact'
 import { useDispatchScheduleCards } from './useDispatchScheduleCards'
 import { labelTripStatus, labelTripType } from '../util/labels'
 import { parseMoneyVnd } from '../util/money'
+import { tpDriverTripCanConfirm, tpDriverTripCanStart } from './useTpDriverSlotActions'
 
 const PASSENGER_PICKUP_EVENT = 'passenger_pickup'
+const PENDING_CONFIRM_STATUSES = ['pending', 'assigned', 'incident']
+export const DRIVER_DECLINE_REASON_MIN = 10
 
 /** Ẩn nhập KM trên màn tài xế; kết thúc chuyến không mở modal odometer */
 export const DRIVER_KM_SECTION_ENABLED = false
@@ -40,6 +45,7 @@ export const DRIVER_KM_SECTION_ENABLED = false
 export function useDriverTripDetailPage() {
   const { t, te, locale } = useI18n()
   const route = useRoute()
+  const router = useRouter()
   const driverDashboardStore = useDriverDashboardStore()
   const { bootDriverOutboundNotifications } = useDriverWebPushBoot()
   const { start: startTripDetailVisiblePoll } = useDriverVisiblePoll(() => refresh(), { intervalMs: 55_000 })
@@ -67,6 +73,11 @@ export function useDriverTripDetailPage() {
 
   const cargoBusy = ref(false)
   const cargoError = ref('')
+
+  const declineModalOpen = ref(false)
+  const declineStep = ref('reason')
+  const declineReason = ref('')
+  const declineModalError = ref('')
 
   function costTypeLabel(type) {
     const k = `driver_trip_detail.cost_type_${String(type || 'other')}`
@@ -229,9 +240,12 @@ export function useDriverTripDetailPage() {
   }
 
   const myDriverId = computed(() => {
-    const fromTrip = trip.value?.driver?.id ?? trip.value?.driver_id
-    const n = Number(fromTrip)
-    return Number.isFinite(n) && n > 0 ? n : null
+    const fromStore = driverDashboardStore.myDriverId
+    if (fromStore != null && fromStore !== '') {
+      const n = Number(fromStore)
+      if (Number.isFinite(n) && n > 0) return n
+    }
+    return null
   })
 
   const multiScheduleLegTrip = computed(() => (trip.value?.schedule_legs?.length ?? 0) > 1)
@@ -283,6 +297,34 @@ export function useDriverTripDetailPage() {
   const driverLegStatus = computed(
     () => driverOperationalLeg.value?.status ?? trip.value?.status,
   )
+
+  const dashboardTripRow = computed(() => {
+    if (!trip.value) return null
+    const row = { ...trip.value, trip_id: trip.value.id }
+    const legKey = driverOperationalLeg.value?.key
+    if (legKey) row.schedule_leg_key = legKey
+    return row
+  })
+
+  const canShowPendingActions = computed(() => {
+    if (!trip.value) return false
+    const st = String(driverLegStatus.value ?? '').toLowerCase()
+    return PENDING_CONFIRM_STATUSES.includes(st)
+  })
+
+  const canConfirmTrip = computed(() => {
+    if (!canShowPendingActions.value) return false
+    return tpDriverTripCanConfirm(dashboardTripRow.value)
+  })
+
+  const declineIsBusyFlow = computed(() => dashboardTripRow.value?._tp != null)
+
+  const declineTripSummary = computed(() => {
+    const parts = [scheduleTimeLine.value, `${originMain.value} → ${destMain.value}`].filter(
+      (p) => p && p !== '—',
+    )
+    return parts.join(' · ')
+  })
 
   function legFromPlaces(pickup, dropoff, waypoint, key, label, idx, legCount) {
     const o = splitAddress(pickup || dr.value?.origin)
@@ -696,12 +738,18 @@ export function useDriverTripDetailPage() {
 
   /** Số khách hiển thị (thống kê, tiêu đề, thanh đón) — khớp staff TripDetailView. */
   const paxDisplayTotal = computed(() => {
+    if (paxKind.value === 'cargo') return paxList.value.length
     const eff = effectivePassengerCount.value
     if (eff > 0) return eff
     return paxList.value.length
   })
 
-  const statsStudentCount = computed(() => paxDisplayTotal.value)
+  const showPassengerStat = computed(() => paxKind.value !== 'cargo')
+
+  const statsStudentCount = computed(() => {
+    if (!showPassengerStat.value) return null
+    return paxDisplayTotal.value
+  })
 
   const statsDistance = computed(() => {
     const rec = trip.value?.record
@@ -751,9 +799,81 @@ export function useDriverTripDetailPage() {
 
   const canStart = computed(() => {
     if (!trip.value) return false
-    const st = driverLegStatus.value
-    return ['assigned', 'driver_confirmed', 'pending', 'approved'].includes(st)
+    const st = String(driverLegStatus.value ?? '').toLowerCase()
+    if (!['driver_confirmed', 'approved'].includes(st)) return false
+    return tpDriverTripCanStart(dashboardTripRow.value)
   })
+
+  function openDeclineModal() {
+    declineReason.value = ''
+    declineStep.value = 'reason'
+    declineModalError.value = ''
+    declineModalOpen.value = true
+  }
+
+  function closeDeclineModal() {
+    declineModalOpen.value = false
+    declineStep.value = 'reason'
+    declineReason.value = ''
+    declineModalError.value = ''
+  }
+
+  function goDeclineConfirmStep() {
+    declineModalError.value = ''
+    const s = declineReason.value.trim()
+    if (s.length < DRIVER_DECLINE_REASON_MIN) {
+      declineModalError.value = t('driver_home.pending_decline_reason_required', {
+        n: DRIVER_DECLINE_REASON_MIN,
+      })
+      return
+    }
+    declineStep.value = 'confirm'
+  }
+
+  async function confirmTrip() {
+    const row = dashboardTripRow.value
+    if (!row || actionBusy.value || !canConfirmTrip.value) return
+    actionBusy.value = true
+    loadError.value = ''
+    try {
+      await driverDashboardStore.confirmTripOptimistic(row)
+      await refresh()
+    } catch (e) {
+      loadError.value = formatApiError(e, t('driver_trip_detail.status_err'))
+    } finally {
+      actionBusy.value = false
+    }
+  }
+
+  async function submitDeclineConfirmed() {
+    const row = dashboardTripRow.value
+    if (!row || actionBusy.value) return
+    const reason = declineReason.value.trim()
+    if (reason.length < DRIVER_DECLINE_REASON_MIN) {
+      declineModalError.value = t('driver_home.pending_decline_reason_required', {
+        n: DRIVER_DECLINE_REASON_MIN,
+      })
+      declineStep.value = 'reason'
+      return
+    }
+    actionBusy.value = true
+    declineModalError.value = ''
+    try {
+      if (declineIsBusyFlow.value) {
+        await driverDashboardStore.reportBusyTpDayOptimistic(row, reason)
+      } else {
+        await driverDashboardStore.declineTripOptimistic(row, reason)
+      }
+      closeDeclineModal()
+      await router.push({ name: 'driverSchedule' })
+    } catch (e) {
+      declineModalError.value = isOptimisticLockConflict(e)
+        ? t('driver_trip_detail.status_err')
+        : formatApiError(e, t('driver_trip_detail.status_err'))
+    } finally {
+      actionBusy.value = false
+    }
+  }
 
   const canEndTrip = computed(() => driverLegStatus.value === 'in_progress')
 
@@ -782,6 +902,19 @@ export function useDriverTripDetailPage() {
     }
   }
 
+  async function ensureMyDriverId() {
+    if (driverDashboardStore.myDriverId != null) return
+    try {
+      const sum = await getDriverSummary()
+      const id = sum?.driver?.id
+      if (id != null) {
+        driverDashboardStore.myDriverId = Number(id)
+      }
+    } catch {
+      /* optional */
+    }
+  }
+
   async function load() {
     const id = tripId.value
     if (id == null) {
@@ -792,6 +925,7 @@ export function useDriverTripDetailPage() {
     loading.value = true
     loadError.value = ''
     try {
+      await ensureMyDriverId()
       trip.value = await getTrip(id)
     } catch {
       loadError.value = t('driver_home.load_error')
@@ -906,14 +1040,28 @@ export function useDriverTripDetailPage() {
     paxList,
     displayedPaxList,
     statsStudentCount,
+    showPassengerStat,
     paxDisplayTotal,
     statsDistance,
     statsDuration,
     showPickupBar,
     pickedCount,
     canMarkPickup,
+    canShowPendingActions,
+    canConfirmTrip,
     canStart,
     canEndTrip,
+    declineModalOpen,
+    declineStep,
+    declineReason,
+    declineModalError,
+    declineTripSummary,
+    declineIsBusyFlow,
+    openDeclineModal,
+    closeDeclineModal,
+    goDeclineConfirmStep,
+    confirmTrip,
+    submitDeclineConfirmed,
     DRIVER_KM_SECTION_ENABLED,
     costTypeLabel,
     costStatusLabel,

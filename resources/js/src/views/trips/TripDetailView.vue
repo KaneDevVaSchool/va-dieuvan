@@ -74,6 +74,7 @@
                 <TripDetailSummaryBar
                     :summary="tripOverviewSummary"
                     :schedule-leg-count="scheduleCount"
+                    :hide-passenger-metrics="isCargoTrip"
                 />
 
                 <!-- TIMELINE — compact horizontal -->
@@ -199,6 +200,7 @@
                         v-if="scheduleCount > 1"
                         :segments="routeJourneyView.segments"
                         :selected-key="selectedScheduleKey || activeAssignLegKey"
+                        :show-passengers="!isCargoTrip"
                         @select-segment="onSchedulePanelKeyChange"
                     />
                 </div>
@@ -238,6 +240,7 @@
                         :show-assign-footer="showCoordinationAssignFooter"
                         :assign-ready="assignReady"
                         :assigning="assigning"
+                        :is-cargo-trip="isCargoTrip"
                         :schedule-assign-tabs="scheduleAssignTabs"
                         :active-schedule-key="activeAssignLegKey"
                         :assign-progress-label="assignProgressLabel"
@@ -1370,6 +1373,10 @@ const tripTypeForSnap = computed(
     () => trip.value?.dispatch_request?.trip_type ?? "",
 );
 
+const isCargoTrip = computed(
+    () => tripTypeForSnap.value === "cargo",
+);
+
 const { scheduleCards, scheduleCount } = useDispatchScheduleCards(
     snap,
     tripTypeForSnap,
@@ -1385,6 +1392,7 @@ const unifiedPassengerCount = computed(() => {
 /** Lịch trình: đồng bộ số khách chặng/tổng với unified (vd. CLB định kỳ student_count_actual). */
 const scheduleCardsForPanel = computed(() => {
     const cards = scheduleCards.value;
+    if (isCargoTrip.value) return cards;
     const effective = unifiedPassengerCount.value;
     if (!effective || cards.length !== 1) return cards;
     return cards.map((card) => ({
@@ -1815,6 +1823,38 @@ function snapshotForLegKey(key) {
     };
 }
 
+/** Phân công gửi API: ưu tiên form đang nhập, fallback dữ liệu đã lưu trên chuyến. */
+function legDispatchPayloadForAssign(key) {
+    const ui =
+        key === activeAssignLegKey.value
+            ? dispatchResources.value
+            : legResourcesByKey.value[key];
+    if (ui?.readyForSubmit) {
+        return ui;
+    }
+    const snap = snapshotForLegKey(key);
+    if (!snap) {
+        return null;
+    }
+    const hasAssign =
+        snap.driverId != null ||
+        snap.vehicleId != null ||
+        snap.transportProviderId != null ||
+        String(snap.externalDriverRef ?? "").trim() !== "" ||
+        String(snap.externalVehicleRef ?? "").trim() !== "";
+    if (!hasAssign) {
+        return null;
+    }
+    return {
+        vehicle_id: snap.vehicleId,
+        driver_id: snap.driverId,
+        transport_provider_id: snap.transportProviderId,
+        external_vehicle_ref: snap.externalVehicleRef || null,
+        external_driver_ref: snap.externalDriverRef || null,
+        supplementTransports: snap.supplementTransports ?? null,
+    };
+}
+
 function onSchedulePanelKeyChange(key) {
     selectedScheduleKey.value = key;
     if (multiScheduleMode.value && key) {
@@ -2211,6 +2251,7 @@ const specialNeedsSummary = computed(() => {
 });
 
 const neededSeats = computed(() => {
+    if (isCargoTrip.value) return 1;
     const n = unifiedPassengerCount.value;
     if (n > 0) return n;
     const guests = passengerRowsDisplay.value.length;
@@ -3072,7 +3113,7 @@ async function onApproveTransfer() {
                     const legP =
                         card.key === activeAssignLegKey.value
                             ? p
-                            : legResourcesByKey.value[card.key];
+                            : legDispatchPayloadForAssign(card.key);
                     return {
                         key: card.key,
                         vehicle_id: legP?.vehicle_id ?? null,
@@ -3302,12 +3343,22 @@ const tripStatusWorkflowNote = ref("");
 /* ───────────── Redesign: full-width tab layout + KPI summary ───────────── */
 const activeTab = ref("info");
 
-const tabs = computed(() => [
+const tabs = computed(() => {
+    const cargoListCount = isCargoTrip.value
+        ? passengerRowsDisplay.value.length
+        : 0;
+    return [
     { key: "info", label: t("trip_detail.tabs.info") },
     {
         key: "passengers",
-        label: t("trip_detail.tabs.passengers"),
-        count: unifiedPassengerCount.value,
+        label: isCargoTrip.value
+            ? t("trip_detail.tabs.cargo")
+            : t("trip_detail.tabs.passengers"),
+        count: isCargoTrip.value
+            ? cargoListCount > 0
+                ? cargoListCount
+                : undefined
+            : unifiedPassengerCount.value,
     },
     { key: "dispatch", label: t("trip_detail.tabs.dispatch") },
     {
@@ -3316,7 +3367,8 @@ const tabs = computed(() => [
         count: attachmentsList.value.length,
     },
     { key: "expenses", label: t("trip_detail.tabs.expenses") },
-]);
+];
+});
 
 /** Tổng hợp xe/tài xế/ghế đã phân công (gộp chặng + cấp chuyến, không trùng id). */
 const kpiAssigned = computed(() => {

@@ -17,6 +17,7 @@ const props = defineProps({
    */
   segments: { type: Array, default: () => [] },
   selectedKey: { type: String, default: '' },
+  showPassengers: { type: Boolean, default: true },
 })
 
 const emit = defineEmits(['select-segment'])
@@ -253,7 +254,7 @@ function arriveTimeDisplay(seg) {
                   {{ seg.durationLabel }}
                 </dd>
               </div>
-              <div>
+              <div v-if="showPassengers">
                 <dt
                   class="text-[10px] font-medium uppercase tracking-wide text-slate-400"
                 >

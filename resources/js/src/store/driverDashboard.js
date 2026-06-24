@@ -260,19 +260,9 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
   }),
 
   getters: {
+    /** Danh sách đã lọc quyền ở API; không lọc thêm theo `trips.driver_id` (chỉ chặng đầu). */
     rawTrips(state) {
-      const items = state.rawListItems
-      const id = state.myDriverId
-      if (id == null) {
-        return items.slice()
-      }
-      const matched = items.filter(
-        (x) => x.driver_id != null && Number(x.driver_id) === Number(id),
-      )
-      if (matched.length > 0) {
-        return matched
-      }
-      return items.slice()
+      return state.rawListItems.slice()
     },
 
     tpAsDriverTrips() {

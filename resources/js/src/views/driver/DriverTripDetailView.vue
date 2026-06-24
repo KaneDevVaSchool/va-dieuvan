@@ -10,6 +10,7 @@
       :schedule-date-line="scheduleDateLine"
       :schedule-time-line="scheduleTimeLine"
       :stats-student-count="statsStudentCount"
+      :show-passenger-stat="showPassengerStat"
       :stats-distance="statsDistance"
       :stats-duration="statsDuration"
       :warning-banner="warningBanner"
@@ -117,10 +118,15 @@
       :picked-count="pickedCount"
       :pax-total="paxDisplayTotal"
       :is-paused="isPaused"
+      :show-pending-actions="canShowPendingActions"
+      :can-confirm="canConfirmTrip"
+      :decline-is-busy-flow="declineIsBusyFlow"
       :can-start="canStart"
       :can-end-trip="canEndTrip"
       :action-busy="actionBusy"
       @toggle-pause="isPaused = !isPaused"
+      @confirm-trip="confirmTrip"
+      @decline-trip="openDeclineModal"
       @start-trip="startTrip"
       @end-trip="onEndTrip"
     />
@@ -128,6 +134,13 @@
     <DriverTripDetailModals
       :km-modal-open="kmModalOpen"
       :cost-modal-open="costModalOpen"
+      :decline-modal-open="declineModalOpen"
+      :decline-step="declineStep"
+      :decline-reason="declineReason"
+      :decline-modal-error="declineModalError"
+      :decline-trip-summary="declineTripSummary"
+      :decline-is-busy-flow="declineIsBusyFlow"
+      :decline-busy="actionBusy"
       :start-km-display="formatKmInput(startKmModel)"
       :end-km="endKmModel"
       :km-note="kmNoteModel"
@@ -141,6 +154,11 @@
       :cost-saving="costSaving"
       @close-km="kmModalOpen = false"
       @close-cost="costModalOpen = false"
+      @close-decline="closeDeclineModal"
+      @decline-next="goDeclineConfirmStep"
+      @decline-submit="submitDeclineConfirmed"
+      @update:decline-reason="declineReason = $event"
+      @update:decline-step="declineStep = $event"
       @submit-km="submitKmModal"
       @submit-cost="submitCost"
       @update:end-km="onModalEndKm"
@@ -221,13 +239,27 @@ const {
   displayedPaxList,
   paxDisplayTotal,
   statsStudentCount,
+  showPassengerStat,
   statsDistance,
   statsDuration,
   showPickupBar,
   pickedCount,
   canMarkPickup,
+  canShowPendingActions,
+  canConfirmTrip,
   canStart,
   canEndTrip,
+  declineModalOpen,
+  declineStep,
+  declineReason,
+  declineModalError,
+  declineTripSummary,
+  declineIsBusyFlow,
+  openDeclineModal,
+  closeDeclineModal,
+  goDeclineConfirmStep,
+  confirmTrip,
+  submitDeclineConfirmed,
   actionBusy,
   eventPosting,
   costTypeLabel,

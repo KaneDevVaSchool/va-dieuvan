@@ -68,8 +68,14 @@
           }}</span>
         </div>
         <TripScheduleCard :schedule-date-line="scheduleDateLine" :schedule-time-line="scheduleTimeLine" />
-        <div class="mt-3 grid grid-cols-3 divide-x divide-white/15 rounded-2xl bg-white/10 py-3">
-          <div class="flex flex-col items-center gap-0.5 px-2">
+        <div
+          class="mt-3 grid divide-x divide-white/15 rounded-2xl bg-white/10 py-3"
+          :class="showPassengerStat ? 'grid-cols-3' : 'grid-cols-2'"
+        >
+          <div
+            v-if="showPassengerStat"
+            class="flex flex-col items-center gap-0.5 px-2"
+          >
             <UserGroupIcon class="h-5 w-5 text-[#7fdcc8] sm:h-6 sm:w-6" aria-hidden="true" />
             <span class="text-xs text-driver-muted/80 sm:text-sm">{{ t('driver_trip_detail.stats_students') }}</span>
             <span class="text-lg font-bold tabular-nums text-driver-ink sm:text-xl">{{ statsStudentCount }}</span>
@@ -120,6 +126,7 @@ const props = defineProps({
   scheduleDateLine: { type: String, default: '' },
   scheduleTimeLine: { type: String, default: '' },
   statsStudentCount: { type: [Number, String], default: 0 },
+  showPassengerStat: { type: Boolean, default: true },
   statsDistance: { type: String, default: '' },
   statsDuration: { type: String, default: '' },
   warningBanner: { type: Object, default: null },

@@ -24,6 +24,30 @@
       </button>
     </div>
 
+    <div
+      v-if="showPendingActions"
+      class="mb-2 grid min-h-[52px] grid-cols-2 gap-2"
+    >
+      <button
+        type="button"
+        :disabled="actionBusy || !canConfirm"
+        class="inline-flex min-h-[52px] items-center justify-center rounded-2xl bg-emerald-500 px-3 text-base font-bold text-white shadow-md transition-transform disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.98] sm:text-lg"
+        data-testid="driver-trip-detail-confirm"
+        @click="onConfirm"
+      >
+        {{ t('driver_home.btn_confirm') }}
+      </button>
+      <button
+        type="button"
+        :disabled="actionBusy"
+        class="inline-flex min-h-[52px] items-center justify-center rounded-2xl border-2 border-rose-500/70 bg-transparent px-3 text-base font-bold text-rose-400 transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 sm:text-lg"
+        data-testid="driver-trip-detail-decline"
+        @click="onDecline"
+      >
+        {{ declineIsBusyFlow ? t('driver_home.btn_busy') : t('driver_home.btn_decline') }}
+      </button>
+    </div>
+
     <button
       v-if="canStart"
       type="button"
@@ -65,12 +89,15 @@ defineProps({
   pickedCount: { type: Number, default: 0 },
   paxTotal: { type: Number, default: 0 },
   isPaused: { type: Boolean, default: false },
+  showPendingActions: { type: Boolean, default: false },
+  canConfirm: { type: Boolean, default: false },
+  declineIsBusyFlow: { type: Boolean, default: false },
   canStart: { type: Boolean, default: false },
   canEndTrip: { type: Boolean, default: false },
   actionBusy: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['toggle-pause', 'start-trip', 'end-trip'])
+const emit = defineEmits(['toggle-pause', 'start-trip', 'end-trip', 'confirm-trip', 'decline-trip'])
 
 const { t } = useI18n()
 const haptics = useHaptics()
@@ -86,6 +113,14 @@ function onEnd() {
 function onTogglePause() {
   haptics.tap()
   emit('toggle-pause')
+}
+function onConfirm() {
+  haptics.impact()
+  emit('confirm-trip')
+}
+function onDecline() {
+  haptics.tap()
+  emit('decline-trip')
 }
 </script>
 

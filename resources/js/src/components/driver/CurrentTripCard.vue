@@ -100,10 +100,10 @@
                 </div>
                 <p class="text-base font-semibold">{{ requesterName }}</p>
                 <span
-                    v-if="passengerCount"
+                    v-if="passengerCount != null"
                     class="ml-auto shrink-0 text-sm text-white/60"
                 >
-                    {{ passengerCount }} khách
+                    {{ t("driver_home.pending_passengers", { n: passengerCount }) }}
                 </span>
             </div>
         </div>
@@ -151,7 +151,7 @@
 <script setup>
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
-import { RouterLink } from "vue-router";
+import { dispatchRequestDisplayPassengerCount } from "../../util/dispatchRequestPassengers";
 
 const props = defineProps({
     trip: { type: Object, default: null },
@@ -210,9 +210,16 @@ const requesterInitials = computed(() => {
 });
 
 const passengerCount = computed(() => {
-    const list = props.trip?.dispatch_request?.named_passengers;
-    if (Array.isArray(list)) return list.length;
-    return props.trip?.dispatch_request?.passenger_count || null;
+    const dr = props.trip?.dispatch_request;
+    if (String(dr?.trip_type ?? "").trim() === "cargo") return null;
+    if (dr) {
+        const fromUtil = dispatchRequestDisplayPassengerCount(dr);
+        if (fromUtil > 0) return fromUtil;
+    }
+    const list = dr?.named_passengers;
+    if (Array.isArray(list) && list.length) return list.length;
+    const n = dr?.passenger_count ?? props.trip?.passenger_count;
+    return n != null && Number(n) > 0 ? Number(n) : null;
 });
 
 const status = computed(() =>

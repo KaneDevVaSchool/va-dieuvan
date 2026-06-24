@@ -508,4 +508,133 @@ class TripScheduleAssignmentsTest extends TestCase
 
         Notification::assertNotSentTo($requester, TripAssignedToRequesterNotification::class);
     }
+
+    public function test_afternoon_leg_driver_sees_trip_in_driver_history_api(): void
+    {
+        $this->seed(RbacSeeder::class);
+
+        $userMorning = User::factory()->create(['is_active' => true]);
+        $userMorning->assignRole('driver');
+        $driverMorning = Driver::query()->create([
+            'user_id' => $userMorning->id,
+            'full_name' => 'Morning Driver',
+            'phone' => '0900000101',
+            'status' => 'active',
+        ]);
+
+        $userAfternoon = User::factory()->create(['is_active' => true]);
+        $userAfternoon->assignRole('driver');
+        $driverAfternoon = Driver::query()->create([
+            'user_id' => $userAfternoon->id,
+            'full_name' => 'Afternoon Driver',
+            'phone' => '0900000102',
+            'status' => 'active',
+        ]);
+
+        $vehicle = Vehicle::query()->create([
+            'license_plate' => '51A-LEGS',
+            'type' => 'bus',
+            'seat_count' => 16,
+            'status' => 'ready',
+        ]);
+
+        $day = '2026-09-10';
+        $snap = [
+            'businessRows' => [
+                [
+                    'depart_at' => "{$day}T08:00:00+07:00",
+                    'pickup' => 'Điểm A',
+                    'return_at' => "{$day}T10:00:00+07:00",
+                    'dropoff' => 'Điểm B',
+                    'guests' => '1',
+                ],
+                [
+                    'depart_at' => "{$day}T14:00:00+07:00",
+                    'pickup' => 'Điểm C',
+                    'return_at' => "{$day}T16:00:00+07:00",
+                    'dropoff' => 'Điểm D',
+                    'guests' => '1',
+                ],
+            ],
+        ];
+
+        $dr = DispatchRequest::create([
+            'requester_id' => User::factory()->create()->id,
+            'trip_type' => 'business',
+            'origin' => 'Điểm A',
+            'destination' => 'Điểm D',
+            'depart_at' => Carbon::parse("{$day} 08:00:00"),
+            'arrive_by' => Carbon::parse("{$day} 16:00:00"),
+            'status' => 'approved',
+            'source_channel' => 'portal',
+            'is_urgent' => false,
+            'paper_status' => 'pending',
+            'wizard_snapshot' => $snap,
+        ]);
+
+        $trip = Trip::create([
+            'dispatch_request_id' => $dr->id,
+            'status' => 'assigned',
+            'depart_at' => Carbon::parse("{$day} 08:00:00"),
+            'arrive_by' => Carbon::parse("{$day} 16:00:00"),
+            'driver_id' => $driverMorning->id,
+            'vehicle_id' => $vehicle->id,
+            'lock_version' => 0,
+            'schedule_assignments' => [
+                [
+                    'key' => 'business:0',
+                    'driver_id' => $driverMorning->id,
+                    'vehicle_id' => $vehicle->id,
+                    'depart_at' => "{$day}T08:00:00+07:00",
+                    'arrive_by' => "{$day}T10:00:00+07:00",
+                ],
+                [
+                    'key' => 'business:1',
+                    'driver_id' => $driverAfternoon->id,
+                    'vehicle_id' => $vehicle->id,
+                    'depart_at' => "{$day}T14:00:00+07:00",
+                    'arrive_by' => "{$day}T16:00:00+07:00",
+                ],
+            ],
+        ]);
+
+        $this->assertTrue(TripVisibility::userCanViewTrip($userAfternoon, $trip));
+
+        $otherDr = DispatchRequest::create([
+            'requester_id' => User::factory()->create()->id,
+            'trip_type' => 'point_to_point',
+            'origin' => 'Solo',
+            'destination' => 'Trip',
+            'depart_at' => Carbon::parse("{$day} 09:00:00"),
+            'status' => 'approved',
+            'source_channel' => 'portal',
+            'is_urgent' => false,
+            'paper_status' => 'pending',
+            'wizard_snapshot' => ['passengerRows' => [['pickup' => 'Solo', 'dropoff' => 'Trip', 'guests' => '1']]],
+        ]);
+        Trip::create([
+            'dispatch_request_id' => $otherDr->id,
+            'status' => 'assigned',
+            'depart_at' => Carbon::parse("{$day} 09:00:00"),
+            'driver_id' => $driverAfternoon->id,
+            'vehicle_id' => $vehicle->id,
+            'lock_version' => 0,
+        ]);
+
+        $response = $this->actingAs($userAfternoon, 'sanctum')
+            ->getJson('/api/driver/trips?'.http_build_query([
+                'date_from' => $day,
+                'date_to' => $day,
+            ]));
+
+        $response->assertOk();
+        $ids = collect($response->json('data.items'))->pluck('id')->all();
+        $this->assertContains($trip->id, $ids);
+
+        $row = collect($response->json('data.items'))->firstWhere('id', $trip->id);
+        $this->assertSame('Điểm C', $row['pickup_location']);
+        $this->assertSame('Điểm D', $row['dropoff_location']);
+        $this->assertCount(1, $row['schedule_legs']);
+        $this->assertSame('business:1', $row['schedule_legs'][0]['key']);
+    }
 }

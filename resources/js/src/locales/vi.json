@@ -2737,6 +2737,8 @@
         "cost_line": "Doanh thu",
         "card_docs": "Biên nhận & tài liệu giao hàng",
         "doc_download": "Tải xuống",
+        "doc_open_preview": "Xem ảnh biên nhận",
+        "doc_download_failed": "Không tải được tệp đính kèm. Vui lòng thử lại.",
         "depart_prefix": "Khởi hành dự kiến:",
         "schedule_time_range": "{start} đến {end}",
         "assign_title": "Phân công tài xế & xe (chuyến)",
@@ -3717,6 +3719,7 @@
             "aria": "Các mục chi tiết chuyến",
             "info": "Thông tin chuyến",
             "passengers": "Hành khách",
+            "cargo": "Hàng hóa",
             "dispatch": "Điều phối",
             "documents": "Tài liệu",
             "expenses": "Chi phí"

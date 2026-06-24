@@ -437,7 +437,11 @@ const destLine = computed(() => {
 const passengerCount = computed(() => {
   const tr = tripRaw.value
   const dr = drOf(tr)
-  if (dr) return dispatchRequestDisplayPassengerCount(dr)
+  if (String(dr?.trip_type ?? '').trim() === 'cargo') return 0
+  if (dr) {
+    const fromUtil = dispatchRequestDisplayPassengerCount(dr)
+    if (fromUtil > 0) return fromUtil
+  }
   const n = Number(tr.passenger_count)
   return Number.isFinite(n) && n > 0 ? n : 0
 })

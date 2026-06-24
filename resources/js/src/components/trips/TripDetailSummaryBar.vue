@@ -17,6 +17,8 @@ const props = defineProps({
     required: true,
   },
   scheduleLegCount: { type: Number, default: 1 },
+  /** Chuyến hàng hoá — ẩn thẻ hành khách và số ghế. */
+  hidePassengerMetrics: { type: Boolean, default: false },
 })
 
 const { t } = useI18n()
@@ -38,7 +40,7 @@ const cards = computed(() => {
   const revenue =
     typeof s.revenue === 'string' && s.revenue.trim() ? s.revenue.trim() : ''
 
-  return [
+  const all = [
     {
       key: 'passengers',
       label: t('trip_detail.summary.passengers'),
@@ -114,13 +116,24 @@ const cards = computed(() => {
       filter: null,
     },
   ]
+
+  if (props.hidePassengerMetrics) {
+    return all.filter((c) => c.key !== 'passengers' && c.key !== 'seats')
+  }
+  return all
 })
+
+const gridClass = computed(() =>
+  props.hidePassengerMetrics
+    ? 'grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4'
+    : 'grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6',
+)
 </script>
 
 <template>
   <KpiSummaryStrip
     :cards="cards"
-    grid-class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6"
+    :grid-class="gridClass"
     :aria-label="t('trip_detail.kpi_strip_aria')"
     :eyebrow="t('trip_detail.kpi_stats_eyebrow')"
     :title="t('trip_detail.kpi_strip_overview')"

@@ -546,30 +546,61 @@
                   :key="att.id"
                   class="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800/40"
                 >
-                  <DocumentIcon class="h-8 w-8 shrink-0 text-slate-500" aria-hidden="true" />
+                  <button
+                    v-if="isPodImage(att) && att.id"
+                    type="button"
+                    class="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg ring-1 ring-slate-200/90 dark:ring-slate-600"
+                    :data-testid="'cargo-pod-preview-' + att.id"
+                    :aria-label="t('cargo_detail.doc_open_preview')"
+                    @click="openPodPreview(att)"
+                  >
+                    <img
+                      v-if="podImageSrc(att)"
+                      :src="podImageSrc(att)"
+                      :alt="att.original_name || t('cargo_page.open_pod')"
+                      loading="lazy"
+                      decoding="async"
+                      class="h-full w-full object-cover"
+                      @error="onPodImageError(att)"
+                    />
+                    <span
+                      v-else
+                      class="flex h-full w-full items-center justify-center bg-slate-200/80 dark:bg-slate-700/80"
+                      aria-hidden="true"
+                    >
+                      <ArrowPathIcon class="h-5 w-5 animate-spin text-slate-500" />
+                    </span>
+                  </button>
+                  <DocumentIcon v-else class="h-8 w-8 shrink-0 text-slate-500" aria-hidden="true" />
                   <div class="min-w-0 flex-1">
-                    <a
-                      v-if="att.url"
-                      :href="att.url"
-                      target="_blank"
-                      rel="noopener"
-                      class="block truncate text-sm font-medium text-teal-700 underline hover:text-teal-900 dark:text-teal-400"
+                    <button
+                      v-if="att.id"
+                      type="button"
+                      class="block max-w-full truncate text-left text-sm font-medium text-teal-700 underline hover:text-teal-900 dark:text-teal-400"
+                      :data-testid="'cargo-pod-open-' + att.id"
+                      @click="isPodImage(att) ? openPodPreview(att) : downloadPod(att)"
                     >
                       {{ att.original_name || t('cargo_page.open_pod') }}
-                    </a>
+                    </button>
                     <span v-else class="block truncate text-sm text-slate-700 dark:text-slate-300">{{ att.original_name }}</span>
                     <span class="text-[11px] text-slate-500">{{ formatBytes(att.size_bytes) }}</span>
                   </div>
-                  <a
-                    v-if="att.url"
-                    :href="att.url"
-                    target="_blank"
-                    rel="noopener"
-                    class="shrink-0 rounded-lg p-2 text-slate-500 hover:bg-white hover:text-teal-700 dark:hover:bg-slate-700 dark:hover:text-teal-300"
+                  <button
+                    v-if="att.id"
+                    type="button"
+                    class="shrink-0 rounded-lg p-2 text-slate-500 hover:bg-white hover:text-teal-700 disabled:opacity-50 dark:hover:bg-slate-700 dark:hover:text-teal-300"
+                    :disabled="podDownloadBusyId === att.id"
+                    :data-testid="'cargo-pod-download-' + att.id"
                     :aria-label="t('cargo_detail.doc_download')"
+                    @click="downloadPod(att)"
                   >
-                    <ArrowDownTrayIcon class="h-5 w-5" aria-hidden="true" />
-                  </a>
+                    <ArrowPathIcon
+                      v-if="podDownloadBusyId === att.id"
+                      class="h-5 w-5 animate-spin"
+                      aria-hidden="true"
+                    />
+                    <ArrowDownTrayIcon v-else class="h-5 w-5" aria-hidden="true" />
+                  </button>
                 </li>
               </ul>
               <p v-else class="text-sm text-slate-500 dark:text-slate-400">{{ t('cargo_page.no_pod') }}</p>
@@ -587,6 +618,39 @@
         </aside>
       </div>
     </template>
+
+    <Teleport to="body">
+      <div
+        v-if="podPreviewOpen"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-sm print:hidden"
+        role="dialog"
+        aria-modal="true"
+        data-testid="cargo-pod-preview-modal"
+        @click.self="closePodPreview"
+      >
+        <div class="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-slate-900">
+          <div class="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 dark:border-slate-700">
+            <span class="min-w-0 truncate text-sm font-semibold text-slate-900 dark:text-slate-100">{{ podPreviewName }}</span>
+            <button
+              type="button"
+              class="shrink-0 rounded-lg px-2 py-1 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+              data-testid="cargo-pod-preview-close"
+              @click="closePodPreview"
+            >
+              {{ t('cargo_detail.map_modal_close') }}
+            </button>
+          </div>
+          <div class="flex min-h-0 flex-1 items-center justify-center bg-slate-100 p-4 dark:bg-slate-950">
+            <img
+              v-if="podPreviewSrc"
+              :src="podPreviewSrc"
+              :alt="podPreviewName"
+              class="max-h-[75vh] max-w-full rounded-lg object-contain shadow-md"
+            />
+          </div>
+        </div>
+      </div>
+    </Teleport>
 
     <Teleport to="body">
       <div
@@ -662,7 +726,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -707,6 +771,12 @@ import {
   tripPlannedEndMs,
 } from '../../util/tripScheduleConflict'
 import { confirmAction } from '../../composables/useConfirm'
+import { showAppErrorFromApi } from '../../composables/appMessage'
+import {
+  downloadBinaryAttachmentFromApi,
+  fetchAttachmentBlob,
+  normalizeAxiosBlobError,
+} from '../../util/downloadPdfAttachment'
 
 const route = useRoute()
 const { t, te, locale } = useI18n()
@@ -724,6 +794,13 @@ const costsForbidden = ref(false)
 const mapExpanded = ref(false)
 const statusSaving = ref(false)
 const statusError = ref('')
+
+const blobUrlByAttachmentId = ref(new Map())
+const hydratingAttachmentIds = ref(new Set())
+const podPreviewOpen = ref(false)
+const podPreviewSrc = ref('')
+const podPreviewName = ref('')
+const podDownloadBusyId = ref(null)
 
 const TRIP_ASSIGN_CONFLICT_STATUSES = ['assigned', 'driver_confirmed', 'in_progress']
 const canAssignTrip = computed(() => auth.hasPermission('trip.assign'))
@@ -1401,10 +1478,105 @@ async function loadCosts(tripId) {
   }
 }
 
+function looksLikePodImage(mime, name) {
+  const m = String(mime || '').toLowerCase()
+  if (m.startsWith('image/')) return true
+  return /\.(jpe?g|png|gif|webp|bmp|heic|heif)(\?|$)/i.test(String(name || ''))
+}
+
+function isPodImage(att) {
+  return looksLikePodImage(att?.mime_type, att?.original_name)
+}
+
+async function hydratePodAttachmentBlob(attachmentId) {
+  const id = Number(attachmentId)
+  if (!Number.isFinite(id) || id < 1) return
+  if (blobUrlByAttachmentId.value.has(id) || hydratingAttachmentIds.value.has(id)) return
+  hydratingAttachmentIds.value.add(id)
+  try {
+    const blob = await fetchAttachmentBlob(id)
+    const objectUrl = URL.createObjectURL(blob)
+    const next = new Map(blobUrlByAttachmentId.value)
+    next.set(id, objectUrl)
+    blobUrlByAttachmentId.value = next
+  } catch {
+    /* thumbnail stays on placeholder */
+  } finally {
+    hydratingAttachmentIds.value.delete(id)
+  }
+}
+
+function syncPodAttachmentBlobCache() {
+  const ids = new Set(
+    (shipment.value?.attachments ?? []).map((a) => a?.id).filter((x) => x != null && Number(x) > 0),
+  )
+  const next = new Map()
+  for (const [id, url] of blobUrlByAttachmentId.value) {
+    if (ids.has(id)) next.set(id, url)
+    else URL.revokeObjectURL(url)
+  }
+  blobUrlByAttachmentId.value = next
+  for (const att of shipment.value?.attachments ?? []) {
+    if (att?.id && isPodImage(att)) {
+      void hydratePodAttachmentBlob(att.id)
+    }
+  }
+}
+
+function podImageSrc(att) {
+  const id = att?.id
+  if (id == null) return ''
+  return blobUrlByAttachmentId.value.get(id) || ''
+}
+
+function onPodImageError(att) {
+  if (att?.id) void hydratePodAttachmentBlob(att.id)
+}
+
+function closePodPreview() {
+  podPreviewOpen.value = false
+  podPreviewSrc.value = ''
+  podPreviewName.value = ''
+}
+
+async function openPodPreview(att) {
+  if (!att?.id) return
+  podPreviewName.value = att.original_name || t('cargo_page.open_pod')
+  try {
+    let src = blobUrlByAttachmentId.value.get(att.id)
+    if (!src) {
+      const blob = await fetchAttachmentBlob(att.id)
+      src = URL.createObjectURL(blob)
+      const next = new Map(blobUrlByAttachmentId.value)
+      next.set(att.id, src)
+      blobUrlByAttachmentId.value = next
+    }
+    podPreviewSrc.value = src
+    podPreviewOpen.value = true
+  } catch (e) {
+    await normalizeAxiosBlobError(e)
+    showAppErrorFromApi(e, t('cargo_detail.doc_download_failed'))
+  }
+}
+
+async function downloadPod(att) {
+  if (!att?.id || podDownloadBusyId.value === att.id) return
+  podDownloadBusyId.value = att.id
+  try {
+    await downloadBinaryAttachmentFromApi(att.id, att.original_name || 'download')
+  } catch (e) {
+    await normalizeAxiosBlobError(e)
+    showAppErrorFromApi(e, t('cargo_detail.doc_download_failed'))
+  } finally {
+    podDownloadBusyId.value = null
+  }
+}
+
 async function reloadShipment() {
   const id = route.params.id
   const data = await getCargoShipment(id)
   shipment.value = data
+  syncPodAttachmentBlobCache()
   const tid = shipment.value?.trip_id
   if (tid) await loadCosts(tid)
   await loadTripForAssign()
@@ -1470,6 +1642,13 @@ watch(assignVehicles, () => {
 
 onMounted(() => {
   load()
+})
+
+onUnmounted(() => {
+  for (const url of blobUrlByAttachmentId.value.values()) {
+    URL.revokeObjectURL(url)
+  }
+  blobUrlByAttachmentId.value = new Map()
 })
 
 watch(

@@ -65,8 +65,9 @@ export function tripRequesterLine(trip) {
 /** @param {(key: string, vars?: object) => string} t */
 export function tripPassengerLine(trip, t) {
   const dr = dispatchReqOf(trip)
+  if (String(dr?.trip_type ?? '').trim() === 'cargo') return ''
   const n = dr?.passenger_count ?? trip?.passenger_count
-  if (n != null && n !== '') return t('driver_home.pending_passengers', { n })
+  if (n != null && n !== '' && Number(n) > 0) return t('driver_home.pending_passengers', { n })
   return ''
 }
 
