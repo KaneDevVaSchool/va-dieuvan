@@ -62,6 +62,42 @@
       </div>
     </div>
 
+    <RouterLink
+      v-if="linkedTrip?.id"
+      :to="`/trips/${linkedTrip.id}`"
+      class="group flex items-center gap-3 border-b border-teal-100/90 bg-gradient-to-r from-teal-50/95 via-white to-white px-4 py-2.5 transition hover:from-teal-50 hover:to-teal-50/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-teal-600 dark:border-teal-900/40 dark:from-teal-950/35 dark:via-slate-900 dark:to-slate-900 dark:hover:from-teal-950/50 sm:px-6 lg:px-8"
+      :aria-label="linkedTripAriaLabel"
+      data-testid="staff-request-hero-linked-trip"
+    >
+      <span
+        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-600/10 text-teal-700 ring-1 ring-teal-600/15 transition group-hover:bg-teal-600/15 dark:bg-teal-500/10 dark:text-teal-300 dark:ring-teal-500/20"
+        aria-hidden="true"
+      >
+        <TruckIcon class="h-[1.125rem] w-[1.125rem]" />
+      </span>
+      <span class="min-w-0 flex-1">
+        <span class="block text-[10px] font-semibold uppercase tracking-wider text-teal-700/80 dark:text-teal-400/90">
+          {{ t('request_detail.ops_linked_trip') }}
+        </span>
+        <span class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+          <span class="font-mono text-sm font-bold tracking-tight text-slate-900 dark:text-white sm:text-base">
+            {{ linkedTripCode }}
+          </span>
+          <StatusBadge v-if="linkedTrip.status" :status="linkedTrip.status" />
+        </span>
+        <span
+          v-if="linkedTripHint"
+          class="mt-0.5 block truncate text-[11px] font-medium text-slate-500 dark:text-slate-400"
+        >
+          {{ linkedTripHint }}
+        </span>
+      </span>
+      <span class="flex shrink-0 items-center gap-1 text-xs font-semibold text-teal-700 transition group-hover:text-teal-900 dark:text-teal-400 dark:group-hover:text-teal-200">
+        <span class="hidden sm:inline">{{ t('request_detail.ops_open_trip_detail') }}</span>
+        <ChevronRightIcon class="h-4 w-4 shrink-0 transition group-hover:translate-x-0.5" aria-hidden="true" />
+      </span>
+    </RouterLink>
+
     <div class="px-4 sm:px-6 lg:px-8">
       <!-- ── Row 1: ID + Status + Priority ── -->
       <div
@@ -200,11 +236,14 @@ import {
   ArrowRightIcon,
   BoltIcon,
   CheckBadgeIcon,
+  ChevronRightIcon,
+  TruckIcon,
 } from '@heroicons/vue/24/outline'
+import { formatTripCode } from '../../../util/labels'
 import { useI18n } from 'vue-i18n'
 import StatusBadge from '../../ui/StatusBadge.vue'
 
-defineProps({
+const props = defineProps({
   backTo: { type: [String, Object], required: true },
   backAriaLabel: { type: String, required: true },
   requestRefCode: { type: String, required: true },
@@ -226,10 +265,25 @@ defineProps({
   pdfExportDisabled: { type: Boolean, default: false },
   showApproveActions: { type: Boolean, default: false },
   d2dActing: { type: Boolean, default: false },
+  linkedTrip: { type: Object, default: null },
 })
 
 defineEmits(['export-pdf', 'approve', 'reject'])
 
 const { t } = useI18n()
 const empty = computed(() => t('request_detail.ops_no_data'))
+
+const linkedTripCode = computed(() => formatTripCode(props.linkedTrip?.id))
+
+const linkedTripHint = computed(() => {
+  const trip = props.linkedTrip
+  if (!trip) return ''
+  const plate = String(trip.vehicle?.license_plate ?? '').trim()
+  const driver = trip.driver?.full_name || trip.driver?.name
+  return [plate, driver].filter(Boolean).join(' · ')
+})
+
+const linkedTripAriaLabel = computed(() =>
+  t('request_detail.hero_linked_trip_aria', { code: linkedTripCode.value }),
+)
 </script>

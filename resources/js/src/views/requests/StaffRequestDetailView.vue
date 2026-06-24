@@ -32,6 +32,7 @@
         :pdf-export-disabled="pdfExportDisabled"
         :show-approve-actions="showD2dDecisionSection"
         :d2d-acting="d2dActing"
+        :linked-trip="req.trip || null"
         @export-pdf="downloadRequestPdf"
         @approve="onD2dApproveClick"
         @reject="openD2dReject"

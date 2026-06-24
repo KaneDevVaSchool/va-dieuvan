@@ -3825,6 +3825,7 @@
         "ops_no_linked_trip": "No linked trip yet.",
         "ops_open_trip_detail": "Open trip",
         "ops_linked_trip": "Linked trip",
+        "hero_linked_trip_aria": "Open trip {code}",
         "ops_no_actions": "No actions to handle right now.",
         "ops_tab_route": "Trip details",
         "trip_tab_section_plan": "Dispatch plan",

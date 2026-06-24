@@ -3269,6 +3269,7 @@
         "ops_no_linked_trip": "Chưa có chuyến liên kết.",
         "ops_open_trip_detail": "Mở chi tiết chuyến",
         "ops_linked_trip": "Chuyến liên kết",
+        "hero_linked_trip_aria": "Mở chi tiết chuyến {code}",
         "ops_no_actions": "Không có hành động cần xử lý lúc này.",
         "ops_tab_route": "Chi tiết chuyến",
         "trip_tab_section_plan": "Kế hoạch điều vận",

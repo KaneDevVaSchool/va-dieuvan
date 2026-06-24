@@ -32,6 +32,7 @@
         :pdf-export-disabled="pdfExportDisabled"
         :show-approve-actions="showHeroApproveActions"
         :d2d-acting="heroActionBusy"
+        :linked-trip="req.trip || null"
         @export-pdf="downloadRequestPdf"
         @approve="onHeroApprove"
         @reject="onHeroReject"
