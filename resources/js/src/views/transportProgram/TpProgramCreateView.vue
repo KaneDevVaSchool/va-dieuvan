@@ -1,7 +1,7 @@
 <template>
   <div class="w-full">
-    <!-- Sticky top bar -->
-    <div class="sticky top-0 z-30 -mx-3 mb-6 border-b border-slate-200 bg-white/90 px-3 py-3 backdrop-blur sm:-mx-4 sm:px-4 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8">
+    <!-- Top bar -->
+    <div class="-mx-3 mb-6 border-b border-slate-200 bg-white px-3 py-3 sm:-mx-4 sm:px-4 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8">
       <div class="flex items-center justify-between gap-3">
         <nav class="flex min-w-0 items-center gap-1.5 text-sm">
           <button
@@ -25,7 +25,7 @@
     </div>
 
     <!-- Step progress indicator -->
-    <div class="mx-auto mb-8 max-w-6xl px-2 sm:px-4 lg:max-w-[calc(42rem+2rem+20rem)]">
+    <div class="mb-8 w-full px-3 sm:px-4 md:px-6 lg:px-8">
       <ol class="flex items-start">
         <li
           v-for="(step, idx) in STEPS"
@@ -74,7 +74,7 @@
       </ol>
     </div>
 
-    <div class="mx-auto grid max-w-6xl gap-6 px-2 pb-28 sm:px-4 lg:grid-cols-[minmax(0,42rem)_minmax(260px,1fr)] lg:items-start lg:gap-8 lg:max-w-[calc(42rem+2rem+20rem)]">
+    <div class="grid w-full gap-6 px-3 pb-10 sm:px-4 md:px-6 lg:px-8 xl:grid-cols-[minmax(0,1fr)_minmax(280px,20rem)] xl:items-start xl:gap-8">
       <!-- Step panels (trái — giữ nguyên nội dung) -->
       <div class="min-w-0">
 
@@ -338,271 +338,305 @@
       </section>
 
       <!-- ── STEP 3: Xe & Nhân sự ───────────────────────── -->
-      <section v-show="currentStep === 2" class="space-y-5">
-        <!-- Sức chứa & Xe -->
-        <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <header class="flex items-center gap-3 border-b border-slate-100 px-5 py-4">
-            <span class="grid h-10 w-10 place-items-center rounded-xl bg-teal-50 text-teal-600">
-              <UserGroupIcon class="h-5 w-5" />
-            </span>
-            <div>
-              <h2 class="text-base font-semibold text-slate-900">Sức chứa &amp; Xe</h2>
-              <p class="text-sm text-slate-500">Thông tin xe và số chỗ tối đa</p>
-            </div>
-          </header>
-          <div class="space-y-4 p-5">
-            <div>
-              <label class="mb-1 block text-sm font-medium text-slate-600">
-                Chọn xe <span class="font-normal text-slate-400">(từ Quản lý nguồn lực)</span>
-              </label>
-              <div v-if="loadingVehicles" class="flex items-center gap-2 py-2.5 text-sm text-slate-500">
+      <section v-show="currentStep === 2" class="space-y-6">
+        <div class="grid gap-6 2xl:grid-cols-2">
+          <!-- Xe -->
+          <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <header class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
+              <div class="flex items-center gap-3">
+                <span class="grid h-10 w-10 place-items-center rounded-xl bg-teal-50 text-teal-600">
+                  <TruckIcon class="h-5 w-5" />
+                </span>
+                <div>
+                  <h2 class="text-base font-semibold text-slate-900">Danh sách xe</h2>
+                  <p class="text-sm text-slate-500">Chọn một hoặc nhiều xe — xe đầu tiên là xe mặc định</p>
+                </div>
+              </div>
+              <span
+                v-if="selectedVehicles.length"
+                class="rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-800"
+              >
+                Đã chọn {{ selectedVehicles.length }}
+              </span>
+            </header>
+            <div class="space-y-4 p-5">
+              <div v-if="loadingVehicles" class="flex items-center gap-2 py-6 text-sm text-slate-500">
                 <ArrowPathIcon class="h-4 w-4 animate-spin" /> Đang tải danh sách xe…
               </div>
-              <select
-                v-else-if="vehicles.length"
-                v-model="form.vehicle_id"
-                :class="selectClass"
-                @change="onVehicleChange"
-              >
-                <option value="">— Chưa chọn xe —</option>
-                <option v-for="v in vehicleOptions" :key="v.id" :value="v.id">{{ vehicleOptionLabel(v) }}</option>
-              </select>
               <div
-                v-else
-                class="flex items-center gap-2.5 rounded-lg border border-dashed border-slate-200 bg-slate-50/60 px-3.5 py-3 text-sm text-slate-500"
+                v-else-if="!vehicles.length"
+                class="flex items-center gap-2.5 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-4 text-sm text-slate-500"
               >
                 <ExclamationCircleIcon class="h-5 w-5 shrink-0 text-slate-400" />
                 <span>
-                  Chưa có xe nào trong hệ thống.
+                  Chưa có xe nào.
                   <a :href="vehiclesHref" target="_blank" rel="noopener" class="font-medium text-va-800 hover:underline">Thêm xe</a>
                   rồi quay lại chọn.
                 </span>
               </div>
-              <p v-if="vehicles.length" class="mt-1 text-xs text-slate-400">
-                Xe lấy từ
-                <a :href="vehiclesHref" target="_blank" rel="noopener" class="font-medium text-va-800 hover:underline">Quản lý nguồn lực</a>.
-                Biển số &amp; sức chứa tự điền theo xe.
-              </p>
-            </div>
-
-            <div>
-              <label class="mb-1 block text-sm font-medium text-slate-600">
-                Sức chứa tối đa <span class="text-rose-500">*</span>
-              </label>
-              <div class="relative">
-                <input
-                  v-model.number="form.max_capacity"
-                  type="number"
-                  min="1"
-                  :class="[
-                    'w-full rounded-lg border bg-white py-3 pl-3.5 pr-16 text-base outline-none transition focus:ring',
-                    errors.max_capacity
-                      ? 'border-rose-300 ring-rose-200 focus:border-rose-400'
-                      : 'border-slate-200 ring-va-800/20 focus:border-va-800/40',
-                  ]"
-                  @input="errors.max_capacity = ''"
-                />
-                <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">chỗ</span>
-              </div>
-              <p v-if="errors.max_capacity" class="mt-1 flex items-center gap-1 text-sm text-rose-600">
-                <ExclamationCircleIcon class="h-4 w-4" /> {{ errors.max_capacity }}
-              </p>
-              <p v-else class="mt-1 text-xs text-slate-400">Mặc định theo số chỗ của xe, có thể điều chỉnh.</p>
-            </div>
-
-            <div class="flex items-center gap-3 rounded-xl border border-teal-200 bg-teal-50/60 px-4 py-3">
-              <span class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-white text-teal-600 shadow-sm">
-                <TruckIcon class="h-5 w-5" />
-              </span>
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-2">
-                  <span class="truncate text-sm font-semibold text-slate-800">
-                    {{ form.vehicle_type || 'Chưa chọn xe' }}
-                    <span v-if="form.plate_number" class="font-normal text-slate-500">· {{ form.plate_number }}</span>
-                  </span>
-                  <span
-                    v-if="selectedVehicle && vehicleStatusLabel(selectedVehicle.status)"
-                    :class="['shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium', vehicleStatusBadge(selectedVehicle.status)]"
-                  >{{ vehicleStatusLabel(selectedVehicle.status) }}</span>
+              <template v-else>
+                <div class="relative">
+                  <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    v-model="vehicleSearch"
+                    type="search"
+                    placeholder="Tìm biển số, loại xe…"
+                    class="w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm outline-none ring-va-800/20 transition focus:border-va-800/40 focus:ring"
+                    data-testid="tp-create-vehicle-search"
+                  />
                 </div>
-                <div class="text-xs text-teal-700">Tối đa {{ form.max_capacity || 0 }} chỗ ngồi</div>
+                <div class="grid max-h-[min(28rem,50vh)] grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2 lg:grid-cols-3">
+                  <label
+                    v-for="v in filteredVehicleOptions"
+                    :key="v.id"
+                    :class="[
+                      'flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition',
+                      isVehicleSelected(v.id)
+                        ? 'border-teal-300 bg-teal-50/80 ring-1 ring-teal-200/80'
+                        : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/80',
+                    ]"
+                    :data-testid="`tp-create-vehicle-${v.id}`"
+                  >
+                    <input
+                      type="checkbox"
+                      :checked="isVehicleSelected(v.id)"
+                      class="mt-1 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-700 focus:ring-teal-600/30"
+                      @change="toggleVehicle(v.id)"
+                    />
+                    <span class="min-w-0 flex-1">
+                      <span class="flex flex-wrap items-center gap-1.5">
+                        <span class="text-sm font-semibold text-slate-900">{{ v.license_plate || `Xe #${v.id}` }}</span>
+                        <span
+                          v-if="isPrimaryVehicle(v.id)"
+                          class="rounded-full bg-teal-700 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white"
+                        >Mặc định</span>
+                        <span
+                          v-else-if="isVehicleSelected(v.id)"
+                          class="rounded-full border border-teal-200 bg-white px-2 py-0.5 text-[10px] font-medium text-teal-800"
+                        >Phụ</span>
+                        <span
+                          v-if="vehicleStatusLabel(v.status)"
+                          :class="['rounded-full px-2 py-0.5 text-[10px] font-medium', vehicleStatusBadge(v.status)]"
+                        >{{ vehicleStatusLabel(v.status) }}</span>
+                      </span>
+                      <span class="mt-0.5 block text-xs text-slate-500">
+                        {{ v.type || '—' }}<span v-if="v.seat_count"> · {{ v.seat_count }} chỗ</span>
+                      </span>
+                    </span>
+                  </label>
+                  <p v-if="!filteredVehicleOptions.length" class="col-span-full py-4 text-center text-sm text-slate-400">
+                    Không có xe khớp tìm kiếm.
+                  </p>
+                </div>
+                <p class="text-xs text-slate-400">
+                  Nguồn:
+                  <a :href="vehiclesHref" target="_blank" rel="noopener" class="font-medium text-va-800 hover:underline">Quản lý nguồn lực</a>.
+                  Bỏ chọn hết rồi chọn lại để đổi xe mặc định, hoặc bỏ chọn xe đầu trong danh sách đã chọn.
+                </p>
+              </template>
+
+              <div>
+                <label class="mb-1 block text-sm font-medium text-slate-600">
+                  Sức chứa tối đa (chương trình) <span class="text-rose-500">*</span>
+                </label>
+                <div class="relative max-w-md">
+                  <input
+                    v-model.number="form.max_capacity"
+                    type="number"
+                    min="1"
+                    :class="[
+                      'w-full rounded-lg border bg-white py-3 pl-3.5 pr-16 text-base outline-none transition focus:ring',
+                      errors.max_capacity
+                        ? 'border-rose-300 ring-rose-200 focus:border-rose-400'
+                        : 'border-slate-200 ring-va-800/20 focus:border-va-800/40',
+                    ]"
+                    data-testid="tp-create-max-capacity"
+                    @input="errors.max_capacity = ''"
+                  />
+                  <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">chỗ</span>
+                </div>
+                <p v-if="errors.max_capacity" class="mt-1 flex items-center gap-1 text-sm text-rose-600">
+                  <ExclamationCircleIcon class="h-4 w-4" /> {{ errors.max_capacity }}
+                </p>
+                <p v-else class="mt-1 text-xs text-slate-400">
+                  <template v-if="totalVehicleSeats">
+                    Gợi ý {{ totalVehicleSeats }} chỗ (tổng số chỗ các xe đã chọn). Có thể chỉnh nếu không dùng hết.
+                  </template>
+                  <template v-else>Mặc định theo xe đã chọn; có thể điều chỉnh thủ công.</template>
+                </p>
               </div>
+            </div>
+          </div>
+
+          <!-- Tài xế -->
+          <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <header class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
+              <div class="flex items-center gap-3">
+                <span class="grid h-10 w-10 place-items-center rounded-xl bg-amber-50 text-amber-600">
+                  <IdentificationIcon class="h-5 w-5" />
+                </span>
+                <div>
+                  <h2 class="text-base font-semibold text-slate-900">Danh sách tài xế</h2>
+                  <p class="text-sm text-slate-500">Chọn nhiều tài xế — một người làm chính, còn lại dự phòng</p>
+                </div>
+              </div>
+              <span
+                v-if="selectedDriverCount"
+                class="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-900"
+              >
+                {{ selectedDriverCount }} tài xế
+              </span>
+            </header>
+            <div class="space-y-4 p-5">
+              <div v-if="loadingDrivers" class="flex items-center gap-2 py-6 text-sm text-slate-500">
+                <ArrowPathIcon class="h-4 w-4 animate-spin" /> Đang tải danh sách tài xế…
+              </div>
+              <template v-else>
+                <div class="relative">
+                  <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    v-model="driverSearch"
+                    type="search"
+                    placeholder="Tìm tên tài xế, GPLX…"
+                    class="w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm outline-none ring-va-800/20 transition focus:border-va-800/40 focus:ring"
+                    data-testid="tp-create-driver-search"
+                  />
+                </div>
+                <p v-if="errors.driver" class="text-sm text-rose-600">{{ errors.driver }}</p>
+                <div class="grid max-h-[min(28rem,50vh)] grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2 lg:grid-cols-3">
+                  <div
+                    v-for="d in filteredDrivers"
+                    :key="d.id"
+                    :class="[
+                      'flex flex-col rounded-xl border p-3 transition',
+                      isDriverSelected(d.id)
+                        ? 'border-va-800/30 bg-va-800/[0.04] ring-1 ring-va-800/10'
+                        : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/80',
+                    ]"
+                    :data-testid="`tp-create-driver-${d.id}`"
+                  >
+                    <label class="flex cursor-pointer items-start gap-3">
+                      <input
+                        type="checkbox"
+                        :checked="isDriverSelected(d.id)"
+                        class="mt-1 h-4 w-4 shrink-0 rounded border-slate-300 text-va-800 focus:ring-va-800/30"
+                        @change="toggleDriverSelected(d.id)"
+                      />
+                      <DriverAvatar :driver="d" small />
+                      <span class="min-w-0 flex-1">
+                        <span class="block truncate text-sm font-semibold text-slate-900">{{ d.full_name }}</span>
+                        <span class="block truncate text-xs text-slate-500">GPLX: {{ d.license_class || '—' }}</span>
+                        <span :class="['mt-1 inline-block', availabilityBadgeClass(d.availability_status)]">
+                          {{ availabilityLabel(d.availability_status) }}
+                        </span>
+                      </span>
+                    </label>
+                    <button
+                      v-if="isDriverSelected(d.id)"
+                      type="button"
+                      :class="[
+                        'mt-3 w-full rounded-lg px-2 py-1.5 text-xs font-semibold transition',
+                        isMainDriver(d.id)
+                          ? 'bg-va-800 text-white'
+                          : 'border border-slate-200 bg-white text-slate-600 hover:border-va-800/30 hover:text-va-800',
+                      ]"
+                      :data-testid="`tp-create-driver-main-${d.id}`"
+                      @click="setAsMainDriver(d.id)"
+                    >
+                      {{ isMainDriver(d.id) ? 'Tài xế chính' : 'Đặt làm chính' }}
+                    </button>
+                  </div>
+                  <p v-if="!filteredDrivers.length" class="col-span-full py-4 text-center text-sm text-slate-400">
+                    {{ drivers.length ? 'Không có tài xế khớp tìm kiếm.' : 'Không có tài xế khả dụng.' }}
+                  </p>
+                </div>
+              </template>
             </div>
           </div>
         </div>
 
-        <!-- Tài xế & Nhân sự -->
+        <!-- Người phụ trách -->
         <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
           <header class="flex items-center gap-3 border-b border-slate-100 px-5 py-4">
-            <span class="grid h-10 w-10 place-items-center rounded-xl bg-amber-50 text-amber-600">
-              <IdentificationIcon class="h-5 w-5" />
+            <span class="grid h-10 w-10 place-items-center rounded-xl bg-slate-100 text-slate-600">
+              <UserGroupIcon class="h-5 w-5" />
             </span>
             <div>
-              <h2 class="text-base font-semibold text-slate-900">Tài xế &amp; Nhân sự</h2>
-              <p class="text-sm text-slate-500">Phân công tài xế và người giám sát</p>
+              <h2 class="text-base font-semibold text-slate-900">Người phụ trách / Giám sát</h2>
+              <p class="text-sm text-slate-500">Tùy chọn — liên hệ điều vận chương trình</p>
             </div>
           </header>
-          <div class="space-y-5 p-5">
-            <div v-if="loadingDrivers" class="flex items-center gap-2 py-3 text-sm text-slate-500">
-              <ArrowPathIcon class="h-4 w-4 animate-spin" /> Đang tải danh sách tài xế…
+          <div class="p-5">
+            <div
+              v-if="selectedResponsibleUser"
+              class="flex max-w-xl items-center gap-3 rounded-xl border border-va-800/30 bg-va-800/5 px-4 py-3"
+            >
+              <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-va-800/10 text-[11px] font-bold text-va-800">
+                {{ userInitials(selectedResponsibleUser.name) }}
+              </span>
+              <div class="min-w-0 flex-1">
+                <div class="truncate text-sm font-semibold text-slate-900">{{ selectedResponsibleUser.name }}</div>
+                <div class="truncate text-xs text-slate-500">
+                  {{ selectedResponsibleUser.department_name || selectedResponsibleUser.email || '' }}
+                </div>
+              </div>
+              <button
+                type="button"
+                class="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+                data-testid="tp-create-clear-responsible"
+                @click="clearResponsibleUser"
+              >
+                Xóa
+              </button>
             </div>
-            <template v-else>
-              <!-- Tài xế chính -->
-              <div>
-                <label class="mb-1.5 block text-sm font-medium text-slate-600">
-                  Tài xế chính <span class="text-rose-500">*</span>
-                </label>
-                <div
-                  v-if="mainDriver"
-                  class="flex items-center gap-3 rounded-xl border border-va-800/30 bg-va-800/5 px-4 py-3"
-                >
-                  <DriverAvatar :driver="mainDriver" />
-                  <div class="min-w-0 flex-1">
-                    <div class="truncate text-sm font-semibold text-slate-900">{{ mainDriver.full_name }}</div>
-                    <div class="truncate text-xs text-slate-500">
-                      GPLX: {{ mainDriver.license_class || '—' }} ·
-                      <span :class="availabilityTextClass(mainDriver.availability_status)">{{ availabilityLabel(mainDriver.availability_status) }}</span>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    class="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
-                    @click="changingMain = !changingMain"
-                  >
-                    Thay đổi
-                  </button>
-                </div>
-                <div v-else class="rounded-xl border border-dashed border-slate-200 px-4 py-3 text-sm text-slate-400">
-                  Chưa chọn tài xế chính.
-                  <button type="button" class="font-medium text-va-800 hover:underline" @click="changingMain = true">Chọn ngay</button>
-                </div>
-                <p v-if="errors.driver" class="mt-1 text-sm text-rose-600">{{ errors.driver }}</p>
 
-                <div v-if="changingMain" class="mt-2 max-h-56 space-y-1 overflow-y-auto rounded-xl border border-slate-200 p-1">
+            <div v-else class="relative max-w-xl">
+              <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                v-model="userQuery"
+                type="text"
+                placeholder="Tìm theo tên hoặc email…"
+                autocomplete="off"
+                class="w-full rounded-lg border border-slate-200 bg-white py-3 pl-9 pr-9 text-base outline-none ring-va-800/20 transition focus:border-va-800/40 focus:ring"
+                data-testid="tp-create-responsible-search"
+                @input="onUserQueryInput"
+                @focus="onUserQueryFocus"
+                @blur="onUserQueryBlur"
+              />
+              <div v-if="userSearchLoading" class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                <ArrowPathIcon class="h-4 w-4 animate-spin text-slate-400" />
+              </div>
+
+              <div
+                v-if="userDropdownOpen && (userResults.length || (userQuery.length >= 2 && !userSearchLoading))"
+                class="absolute left-0 right-0 top-[calc(100%+4px)] z-50 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg"
+              >
+                <template v-if="userResults.length">
                   <button
-                    v-for="d in drivers"
-                    :key="d.id"
+                    v-for="u in userResults"
+                    :key="u.id"
                     type="button"
-                    :class="[
-                      'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left transition',
-                      String(d.id) === String(mainDriverId) ? 'bg-va-800/10' : 'hover:bg-slate-50',
-                    ]"
-                    @click="pickMain(d.id)"
+                    class="flex w-full items-center gap-3 px-4 py-2.5 text-left transition hover:bg-slate-50"
+                    @mousedown.prevent="pickResponsibleUser(u)"
                   >
-                    <DriverAvatar :driver="d" small />
-                    <span class="min-w-0 flex-1">
-                      <span class="block truncate text-sm font-medium text-slate-800">{{ d.full_name }}</span>
-                      <span class="block truncate text-xs text-slate-400">GPLX: {{ d.license_class || '—' }}</span>
+                    <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-va-800/10 text-[10px] font-bold text-va-800">
+                      {{ userInitials(u.name) }}
                     </span>
-                    <span :class="availabilityBadgeClass(d.availability_status)">{{ availabilityLabel(d.availability_status) }}</span>
-                  </button>
-                  <p v-if="!drivers.length" class="px-3 py-2 text-sm text-slate-400">Không có tài xế khả dụng.</p>
-                </div>
-              </div>
-
-              <!-- Tài xế phụ -->
-              <div>
-                <label class="mb-1.5 block text-sm font-medium text-slate-600">Tài xế phụ / dự phòng</label>
-                <div class="divide-y divide-slate-100 rounded-xl border border-slate-200">
-                  <label
-                    v-for="d in secondaryCandidates"
-                    :key="d.id"
-                    class="flex cursor-pointer items-center gap-3 px-4 py-2.5 transition hover:bg-slate-50"
-                  >
-                    <input
-                      type="checkbox"
-                      :checked="form.secondary_driver_ids.includes(d.id)"
-                      class="h-4 w-4 shrink-0 rounded border-slate-300 text-va-800 focus:ring-va-800/30"
-                      @change="toggleSecondary(d.id)"
-                    />
-                    <DriverAvatar :driver="d" small muted />
-                    <span class="min-w-0 flex-1">
-                      <span class="block truncate text-sm font-medium text-slate-700">{{ d.full_name }}</span>
-                      <span class="block truncate text-xs text-slate-400">GPLX: {{ d.license_class || '—' }}</span>
-                    </span>
-                    <span :class="availabilityBadgeClass(d.availability_status)">{{ availabilityLabel(d.availability_status) }}</span>
-                  </label>
-                  <p v-if="!secondaryCandidates.length" class="px-4 py-3 text-sm text-slate-400">Không còn tài xế nào khác.</p>
-                </div>
-              </div>
-
-              <!-- Người phụ trách / Giám sát — autocomplete -->
-              <div>
-                <label class="mb-1 block text-sm font-medium text-slate-600">Người phụ trách / Giám sát</label>
-
-                <!-- Đã chọn -->
-                <div
-                  v-if="selectedResponsibleUser"
-                  class="flex items-center gap-3 rounded-xl border border-va-800/30 bg-va-800/5 px-4 py-3"
-                >
-                  <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-va-800/10 text-[11px] font-bold text-va-800">
-                    {{ userInitials(selectedResponsibleUser.name) }}
-                  </span>
-                  <div class="min-w-0 flex-1">
-                    <div class="truncate text-sm font-semibold text-slate-900">{{ selectedResponsibleUser.name }}</div>
-                    <div class="truncate text-xs text-slate-500">
-                      {{ selectedResponsibleUser.department_name || selectedResponsibleUser.email || '' }}
+                    <div class="min-w-0 flex-1">
+                      <div class="truncate text-sm font-medium text-slate-800">{{ u.name }}</div>
+                      <div v-if="u.department_name || u.email" class="truncate text-xs text-slate-400">
+                        {{ u.department_name || u.email }}
+                      </div>
                     </div>
-                  </div>
-                  <button
-                    type="button"
-                    class="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
-                    @click="clearResponsibleUser"
-                  >
-                    Xóa
                   </button>
-                </div>
-
-                <!-- Ô tìm kiếm -->
-                <div v-else class="relative">
-                  <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <input
-                    v-model="userQuery"
-                    type="text"
-                    placeholder="Tìm theo tên hoặc email…"
-                    autocomplete="off"
-                    class="w-full rounded-lg border border-slate-200 bg-white py-3 pl-9 pr-9 text-base outline-none ring-va-800/20 transition focus:border-va-800/40 focus:ring"
-                    @input="onUserQueryInput"
-                    @focus="onUserQueryFocus"
-                    @blur="onUserQueryBlur"
-                  />
-                  <div v-if="userSearchLoading" class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-                    <ArrowPathIcon class="h-4 w-4 animate-spin text-slate-400" />
-                  </div>
-
-                  <!-- Dropdown kết quả -->
-                  <div
-                    v-if="userDropdownOpen && (userResults.length || (userQuery.length >= 2 && !userSearchLoading))"
-                    class="absolute left-0 right-0 top-[calc(100%+4px)] z-50 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg"
-                  >
-                    <template v-if="userResults.length">
-                      <button
-                        v-for="u in userResults"
-                        :key="u.id"
-                        type="button"
-                        class="flex w-full items-center gap-3 px-4 py-2.5 text-left transition hover:bg-slate-50"
-                        @mousedown.prevent="pickResponsibleUser(u)"
-                      >
-                        <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-va-800/10 text-[10px] font-bold text-va-800">
-                          {{ userInitials(u.name) }}
-                        </span>
-                        <div class="min-w-0 flex-1">
-                          <div class="truncate text-sm font-medium text-slate-800">{{ u.name }}</div>
-                          <div v-if="u.department_name || u.email" class="truncate text-xs text-slate-400">
-                            {{ u.department_name || u.email }}
-                          </div>
-                        </div>
-                      </button>
-                    </template>
-                    <p v-else class="px-4 py-3 text-sm text-slate-400">Không tìm thấy người dùng nào.</p>
-                  </div>
-
-                  <p v-if="userQuery.length > 0 && userQuery.length < 2" class="mt-1 text-xs text-slate-400">
-                    Nhập ít nhất 2 ký tự để tìm kiếm.
-                  </p>
-                </div>
+                </template>
+                <p v-else class="px-4 py-3 text-sm text-slate-400">Không tìm thấy người dùng nào.</p>
               </div>
-            </template>
+
+              <p v-if="userQuery.length > 0 && userQuery.length < 2" class="mt-1 text-xs text-slate-400">
+                Nhập ít nhất 2 ký tự để tìm kiếm.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -679,8 +713,14 @@
             </div>
             <div class="flex items-start justify-between gap-3 py-3">
               <dt class="shrink-0 font-medium text-slate-500">Xe</dt>
-              <dd class="text-slate-700">
-                {{ form.vehicle_type || 'Chưa chọn' }}<span v-if="form.plate_number"> · {{ form.plate_number }}</span>
+              <dd class="min-w-0 text-right text-slate-700">
+                <template v-if="selectedVehicles.length">
+                  <span v-for="(v, i) in selectedVehicles" :key="v.id">
+                    <span v-if="i"> · </span>
+                    {{ v.license_plate || v.type || `#${v.id}` }}<span v-if="i === 0" class="text-xs text-teal-700"> (mặc định)</span>
+                  </span>
+                </template>
+                <span v-else>—</span>
               </dd>
             </div>
             <div class="flex items-start justify-between gap-3 py-3">
@@ -690,6 +730,10 @@
             <div class="flex items-start justify-between gap-3 py-3">
               <dt class="shrink-0 font-medium text-slate-500">Tài xế chính</dt>
               <dd class="text-slate-700">{{ mainDriver?.full_name || '—' }}</dd>
+            </div>
+            <div v-if="form.secondary_driver_ids.length" class="flex items-start justify-between gap-3 py-3">
+              <dt class="shrink-0 font-medium text-slate-500">Tài xế dự phòng</dt>
+              <dd class="min-w-0 text-right text-slate-700">{{ secondaryDriverNames }}</dd>
             </div>
             <div class="flex items-start justify-between gap-3 py-3">
               <dt class="shrink-0 font-medium text-slate-500">Người phụ trách</dt>
@@ -706,7 +750,7 @@
       </div>
 
       <!-- Hướng dẫn (phải) -->
-      <aside class="min-w-0 lg:sticky lg:top-24 lg:self-start" aria-labelledby="tp-create-guide-title">
+      <aside class="min-w-0" aria-labelledby="tp-create-guide-title">
         <div class="rounded-2xl border border-sky-200/80 bg-gradient-to-br from-sky-50/95 via-white to-white p-4 shadow-sm ring-1 ring-sky-900/[0.04] sm:p-5">
           <div class="flex items-start gap-3">
             <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-sky-100 text-sky-600">
@@ -738,9 +782,9 @@
       </aside>
     </div>
 
-    <!-- Sticky footer navigation -->
-    <div class="sticky bottom-0 z-30 -mx-3 border-t border-slate-200 bg-white/95 px-3 py-3 backdrop-blur sm:-mx-4 sm:px-4 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8">
-      <div class="mx-auto flex max-w-2xl items-center justify-between gap-3 px-2 sm:px-4">
+    <!-- Footer navigation -->
+    <div class="-mx-3 mt-6 border-t border-slate-200 bg-white px-3 py-3 sm:-mx-4 sm:px-4 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8">
+      <div class="flex w-full items-center justify-between gap-3 px-3 sm:px-4 md:px-6 lg:px-8">
         <button
           v-if="currentStep > 0"
           type="button"
@@ -836,8 +880,9 @@ const STEP_GUIDES = [
   {
     title: 'Bước 3 — Xe & nhân sự',
     tips: [
-      'Chọn xe từ Quản lý nguồn lực — biển số và sức chứa tự điền; có thể giảm số chỗ tối đa nếu không muốn full xe.',
-      'Tài xế chính là bắt buộc; tài xế phụ giúp thay ca hoặc dự phòng.',
+      'Chọn một hoặc nhiều xe — xe đầu tiên trong danh sách là xe mặc định trên chương trình.',
+      'Sức chứa gợi ý bằng tổng số chỗ các xe đã chọn; có thể giảm nếu không ghép hết xe mỗi ngày.',
+      'Chọn nhiều tài xế: một người «chính», các người còn lại là dự phòng / thay ca.',
       'Người phụ trách/giám sát: nhân sự trường theo dõi chương trình (tìm theo tên hoặc email).',
     ],
     note: 'Chưa có xe trong hệ thống? Mở Quản lý nguồn lực ở tab mới, thêm xe rồi quay lại trang này.',
@@ -926,7 +971,7 @@ const form = reactive({
   afternoon_departure: '17:00',
   afternoon_arrival: '18:00',
 
-  vehicle_id: '',
+  vehicle_ids: [],
   vehicle_type: '',
   plate_number: '',
   max_capacity: 45,
@@ -967,6 +1012,9 @@ const VEHICLE_STATUS = {
   broken: { label: 'Hỏng', order: 3, badge: 'bg-rose-50 text-rose-500' },
 }
 
+const vehicleSearch = ref('')
+const driverSearch = ref('')
+
 const vehicleOptions = computed(() =>
   [...vehicles.value].sort(
     (a, b) =>
@@ -975,9 +1023,72 @@ const vehicleOptions = computed(() =>
   ),
 )
 
-const selectedVehicle = computed(
-  () => vehicles.value.find((v) => String(v.id) === String(form.vehicle_id)) || null,
+const filteredVehicleOptions = computed(() => {
+  const q = vehicleSearch.value.trim().toLowerCase()
+  if (!q) return vehicleOptions.value
+  return vehicleOptions.value.filter((v) => {
+    const hay = [
+      v.license_plate,
+      v.type,
+      v.seat_count != null ? String(v.seat_count) : '',
+      vehicleStatusLabel(v.status),
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+    return hay.includes(q)
+  })
+})
+
+const selectedVehicles = computed(() =>
+  form.vehicle_ids
+    .map((id) => vehicles.value.find((v) => String(v.id) === String(id)))
+    .filter(Boolean),
 )
+
+const primaryVehicle = computed(() => selectedVehicles.value[0] || null)
+
+const totalVehicleSeats = computed(() =>
+  selectedVehicles.value.reduce((sum, v) => sum + (Number(v.seat_count) || 0), 0),
+)
+
+function isVehicleSelected(id) {
+  return form.vehicle_ids.some((x) => String(x) === String(id))
+}
+
+function isPrimaryVehicle(id) {
+  return form.vehicle_ids.length > 0 && String(form.vehicle_ids[0]) === String(id)
+}
+
+function syncPrimaryVehicleFields() {
+  const v = primaryVehicle.value
+  if (!v) {
+    form.vehicle_type = ''
+    form.plate_number = ''
+    return
+  }
+  form.vehicle_type = v.type || ''
+  form.plate_number = v.license_plate || ''
+}
+
+function syncCapacityFromVehicles() {
+  const total = totalVehicleSeats.value
+  if (total > 0) {
+    form.max_capacity = total
+    errors.max_capacity = ''
+  }
+}
+
+function toggleVehicle(id) {
+  const idx = form.vehicle_ids.findIndex((x) => String(x) === String(id))
+  if (idx >= 0) {
+    form.vehicle_ids.splice(idx, 1)
+  } else {
+    form.vehicle_ids.push(id)
+  }
+  syncPrimaryVehicleFields()
+  syncCapacityFromVehicles()
+}
 
 function vehicleStatusLabel(s) { return VEHICLE_STATUS[s]?.label || '' }
 function vehicleStatusBadge(s) { return VEHICLE_STATUS[s]?.badge || 'bg-slate-100 text-slate-500' }
@@ -990,33 +1101,77 @@ function vehicleOptionLabel(v) {
   return st ? `${base} — ${st}` : base
 }
 
-function onVehicleChange() {
-  const v = selectedVehicle.value
-  if (!v) { form.vehicle_type = ''; form.plate_number = ''; return }
-  form.vehicle_type = v.type || ''
-  form.plate_number = v.license_plate || ''
-  if (v.seat_count) { form.max_capacity = v.seat_count; errors.max_capacity = '' }
-}
-
 // ── Drivers ───────────────────────────────────────────────────────────────────
 const mainDriverId = ref('')
-const changingMain = ref(false)
+
+const filteredDrivers = computed(() => {
+  const q = driverSearch.value.trim().toLowerCase()
+  const list = [...drivers.value]
+  if (!q) return list
+  return list.filter((d) => {
+    const hay = [d.full_name, d.license_class, availabilityLabel(d.availability_status)]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+    return hay.includes(q)
+  })
+})
 
 const mainDriver = computed(() => drivers.value.find((d) => String(d.id) === String(mainDriverId.value)) || null)
-const secondaryCandidates = computed(() => drivers.value.filter((d) => String(d.id) !== String(mainDriverId.value)))
 
-function pickMain(id) {
-  mainDriverId.value = id
-  changingMain.value = false
-  errors.driver = ''
-  const i = form.secondary_driver_ids.indexOf(id)
-  if (i >= 0) form.secondary_driver_ids.splice(i, 1)
+const selectedDriverCount = computed(
+  () => (mainDriverId.value ? 1 : 0) + form.secondary_driver_ids.length,
+)
+
+const secondaryDriverNames = computed(() =>
+  form.secondary_driver_ids
+    .map((id) => drivers.value.find((d) => String(d.id) === String(id))?.full_name)
+    .filter(Boolean)
+    .join(', ') || '—',
+)
+
+function isMainDriver(id) {
+  return String(mainDriverId.value) === String(id)
 }
 
-function toggleSecondary(id) {
-  const i = form.secondary_driver_ids.indexOf(id)
-  if (i >= 0) form.secondary_driver_ids.splice(i, 1)
-  else form.secondary_driver_ids.push(id)
+function isDriverSelected(id) {
+  return isMainDriver(id) || form.secondary_driver_ids.some((x) => String(x) === String(id))
+}
+
+function setAsMainDriver(id) {
+  if (!isDriverSelected(id)) {
+    toggleDriverSelected(id)
+    return
+  }
+  const prevMain = mainDriverId.value
+  const secIdx = form.secondary_driver_ids.findIndex((x) => String(x) === String(id))
+  if (secIdx >= 0) form.secondary_driver_ids.splice(secIdx, 1)
+  if (prevMain && String(prevMain) !== String(id)) {
+    if (!form.secondary_driver_ids.some((x) => String(x) === String(prevMain))) {
+      form.secondary_driver_ids.push(prevMain)
+    }
+  }
+  mainDriverId.value = id
+  errors.driver = ''
+}
+
+function toggleDriverSelected(id) {
+  if (isMainDriver(id)) {
+    mainDriverId.value = ''
+    if (form.secondary_driver_ids.length) {
+      mainDriverId.value = form.secondary_driver_ids.shift()
+    }
+  } else {
+    const secIdx = form.secondary_driver_ids.findIndex((x) => String(x) === String(id))
+    if (secIdx >= 0) {
+      form.secondary_driver_ids.splice(secIdx, 1)
+    } else if (!mainDriverId.value) {
+      mainDriverId.value = id
+    } else {
+      form.secondary_driver_ids.push(id)
+    }
+  }
+  errors.driver = mainDriverId.value ? '' : errors.driver
 }
 
 function availabilityLabel(s) { return { available: 'Rảnh', busy: 'Bận', offline: 'Không có' }[s] || '—' }
@@ -1147,7 +1302,8 @@ function buildPayload() {
     end_date: form.end_date,
     runs_on: form.runs_on,
     default_driver_id: mainDriverId.value ? Number(mainDriverId.value) : null,
-    default_vehicle_id: form.vehicle_id ? Number(form.vehicle_id) : null,
+    backup_driver_id: form.secondary_driver_ids[0] != null ? Number(form.secondary_driver_ids[0]) : null,
+    default_vehicle_id: form.vehicle_ids[0] != null ? Number(form.vehicle_ids[0]) : null,
     responsible_user_id: form.responsible_user_id ? Number(form.responsible_user_id) : null,
     notes: form.notes || null,
     settings: {
@@ -1155,7 +1311,12 @@ function buildPayload() {
       program_type: form.program_type,
       morning: { enabled: form.morning_enabled, departure: form.morning_departure, arrival: form.morning_arrival },
       afternoon: { enabled: form.afternoon_enabled, departure: form.afternoon_departure, arrival: form.afternoon_arrival },
-      vehicle: { type: form.vehicle_type || null, plate_number: form.plate_number || null, max_capacity: Number(form.max_capacity || 0) },
+      vehicle: {
+        type: form.vehicle_type || null,
+        plate_number: form.plate_number || null,
+        max_capacity: Number(form.max_capacity || 0),
+        vehicle_ids: form.vehicle_ids.map((id) => Number(id)),
+      },
       secondary_driver_ids: form.secondary_driver_ids.map((id) => Number(id)),
     },
   }
@@ -1188,7 +1349,7 @@ onMounted(async () => {
 
   loadingDrivers.value = true
   try {
-    const res = await listDrivers({ per_page: 100 })
+    const res = await listDrivers({ per_page: 200 })
     drivers.value = res?.items ?? []
     const firstAvailable = drivers.value.find((d) => d.availability_status === 'available') || drivers.value[0]
     if (firstAvailable) mainDriverId.value = firstAvailable.id

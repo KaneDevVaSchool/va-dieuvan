@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto max-w-5xl space-y-4">
+  <div class="w-full min-w-0 space-y-4 md:space-y-5">
 
     <!-- ── Header ─────────────────────────────────────────────────── -->
     <div class="flex flex-wrap items-start justify-between gap-3">
@@ -74,10 +74,10 @@
          BƯỚC 0 — TẢI LÊN + CẤU HÌNH
     ══════════════════════════════════════════════════════════════════ -->
     <template v-if="step === 0">
-      <div class="grid gap-4 lg:grid-cols-5">
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-start">
 
         <!-- Upload + client preview -->
-        <div class="space-y-4 lg:col-span-3">
+        <div class="min-w-0 flex-1 space-y-4">
           <div class="rounded-xl border border-slate-200 bg-white p-4">
             <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
               <div>
@@ -158,7 +158,7 @@
         </div>
 
         <!-- Config sidebar -->
-        <div class="space-y-4 lg:col-span-2">
+        <div class="w-full shrink-0 space-y-4 lg:w-80 xl:w-96">
           <div class="rounded-xl border border-va-200 bg-va-50/40 p-4">
             <div class="text-[11px] font-semibold uppercase tracking-wide text-va-700/80">Chương trình đích</div>
             <select
@@ -217,9 +217,9 @@
         </p>
       </div>
 
-      <div class="grid gap-4 xl:grid-cols-2">
+      <div class="grid gap-4 lg:grid-cols-2">
         <!-- Mapping selects: highlight state -->
-        <div class="grid gap-2 sm:grid-cols-2">
+        <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
           <div v-for="field in mappableFields" :key="field.key">
             <label class="mb-0.5 block text-[11px] font-semibold uppercase tracking-wide" :class="field.required && !mapping[field.key] ? 'text-rose-600' : 'text-slate-500'">
               {{ field.label }}{{ field.required ? ' *' : '' }}
@@ -371,7 +371,7 @@
                 v-model="rowSearch"
                 type="search"
                 placeholder="Tìm họ tên, mã…"
-                class="h-8 w-40 rounded-md border border-slate-200 bg-white pl-7 pr-2 text-sm placeholder:text-slate-400 focus:border-va-500 focus:outline-none focus:ring-1 focus:ring-va-500/30"
+                class="h-8 w-full min-w-[10rem] max-w-xs rounded-md border border-slate-200 bg-white pl-7 pr-2 text-sm placeholder:text-slate-400 focus:border-va-500 focus:outline-none focus:ring-1 focus:ring-va-500/30 sm:max-w-sm"
               />
             </div>
             <!-- Rows per page -->

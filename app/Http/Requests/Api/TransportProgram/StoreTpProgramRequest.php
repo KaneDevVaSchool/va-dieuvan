@@ -32,6 +32,7 @@ class StoreTpProgramRequest extends ApiFormRequest
             'extra_dates' => ['nullable', 'array'],
             'extra_dates.*' => ['date'],
             'default_driver_id' => ['nullable', 'integer', 'exists:drivers,id'],
+            'backup_driver_id' => ['nullable', 'integer', 'exists:drivers,id'],
             'default_vehicle_id' => ['nullable', 'integer', 'exists:vehicles,id'],
             'cost_per_trip' => ['nullable', 'numeric', 'min:0'],
             'cost_currency' => ['nullable', 'string', 'size:3'],
