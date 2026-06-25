@@ -3,7 +3,7 @@
     <h2 v-if="hint" class="text-base font-semibold text-slate-900 sm:text-lg">{{ hint }}</h2>
     <p v-if="doubleTapHint" class="mt-0.5 text-xs text-slate-500 sm:text-sm">{{ doubleTapHint }}</p>
     <div
-      class="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2"
+      class="mt-4 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4"
       role="listbox"
       :aria-label="hint"
     >
@@ -12,26 +12,31 @@
         :key="tt"
         type="button"
         role="option"
-        class="group relative flex items-start gap-3 rounded-2xl border p-3 text-left outline-none transition focus-visible:ring-2 focus-visible:ring-va-800/30 sm:p-3.5"
+        class="group relative flex aspect-square w-full flex-col items-center justify-center gap-2.5 rounded-2xl border p-4 text-center outline-none transition focus-visible:ring-2 focus-visible:ring-va-800/30 sm:gap-3 sm:p-5"
         :class="tripType === tt ? styleFor(tt).selectedCard : styleFor(tt).idleCard"
         :aria-selected="tripType === tt"
         :data-testid="`trip-type-${tt}`"
         @click="$emit('select', tt)"
       >
+        <CheckCircleIcon
+          v-if="tripType === tt"
+          class="absolute right-2.5 top-2.5 h-5 w-5 shrink-0 text-va-700 sm:right-3 sm:top-3"
+          aria-hidden="true"
+        />
         <span
-          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 sm:h-11 sm:w-11"
+          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ring-1 sm:h-14 sm:w-14"
           :class="styleFor(tt).iconWrap"
         >
           <component
             :is="tripTypeIcon(tt)"
-            class="h-5 w-5 shrink-0 stroke-[1.75] sm:h-6 sm:w-6"
+            class="h-7 w-7 shrink-0 stroke-[1.75] sm:h-8 sm:w-8"
             :class="styleFor(tt).iconClass"
             aria-hidden="true"
           />
         </span>
-        <span class="min-w-0 flex-1">
-          <span class="flex flex-wrap items-center gap-1.5">
-            <span class="text-sm font-semibold leading-tight text-slate-900 sm:text-[15px]">{{
+        <span class="flex min-h-0 w-full flex-col items-center gap-1 px-0.5">
+          <span class="flex flex-wrap items-center justify-center gap-1.5">
+            <span class="text-sm font-semibold leading-tight text-slate-900 sm:text-base">{{
               t(`dispatch_wizard.trip_type.${tt}.label`)
             }}</span>
             <span
@@ -40,15 +45,11 @@
             >
               {{ slaBadge(tt) }}
             </span>
-            <CheckCircleIcon
-              v-if="tripType === tt"
-              class="h-4 w-4 shrink-0 text-va-700"
-              aria-hidden="true"
-            />
           </span>
-          <span class="mt-0.5 block text-xs leading-relaxed text-slate-500">{{
-            t(`dispatch_wizard.trip_type.${tt}.hint`)
-          }}</span>
+          <span
+            class="line-clamp-4 text-[11px] leading-snug text-slate-500 sm:line-clamp-5 sm:text-xs sm:leading-relaxed"
+            >{{ t(`dispatch_wizard.trip_type.${tt}.hint`) }}</span
+          >
         </span>
       </button>
     </div>

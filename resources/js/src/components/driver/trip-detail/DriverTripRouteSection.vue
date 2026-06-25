@@ -43,12 +43,22 @@
             @click="toggleLeg(leg, idx)"
           >
             <div class="min-w-0 flex-1">
-              <p
-                v-if="leg.label"
-                class="text-xs font-semibold uppercase tracking-wider text-[#7fdcc8]/90"
-              >
-                {{ leg.label }}
-              </p>
+              <div class="flex items-center gap-2">
+                <p
+                  v-if="leg.label"
+                  class="text-xs font-semibold uppercase tracking-wider text-[#7fdcc8]/90"
+                >
+                  {{ leg.label }}
+                </p>
+                <span
+                  v-if="multiLeg && leg.hasActions && leg.statusLabel"
+                  class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                  :class="leg.statusBadgeClass"
+                  :data-testid="`driver-route-leg-status-${idx}`"
+                >
+                  {{ leg.statusLabel }}
+                </span>
+              </div>
               <p
                 v-if="!isLegExpanded(leg, idx)"
                 class="mt-0.5 truncate text-sm text-driver-muted"
@@ -76,6 +86,64 @@
               :dest-sub="leg.destSub"
               :map-url="leg.mapUrl"
             />
+          </div>
+
+          <div
+            v-if="multiLeg && leg.hasActions"
+            class="mt-2"
+            :data-testid="`driver-route-leg-actions-${idx}`"
+          >
+            <div v-if="leg.canConfirm" class="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                :disabled="legActionBusyKey === leg.key"
+                class="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-emerald-500 px-3 text-sm font-bold text-white shadow-sm transition-transform disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.98]"
+                :data-testid="`driver-route-leg-confirm-${idx}`"
+                @click="emitLeg('confirm-leg', leg)"
+              >
+                {{ t('driver_home.btn_confirm') }}
+              </button>
+              <button
+                type="button"
+                :disabled="legActionBusyKey === leg.key"
+                class="inline-flex min-h-[44px] items-center justify-center rounded-xl border-2 border-rose-500/70 bg-transparent px-3 text-sm font-bold text-rose-400 transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                :data-testid="`driver-route-leg-decline-${idx}`"
+                @click="emitLeg('decline-leg', leg)"
+              >
+                {{ t('driver_home.btn_decline') }}
+              </button>
+            </div>
+            <button
+              v-else-if="leg.canStart"
+              type="button"
+              :disabled="legActionBusyKey === leg.key"
+              class="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 text-sm font-bold text-white shadow-sm transition-transform disabled:opacity-50 active:scale-[0.98]"
+              :data-testid="`driver-route-leg-start-${idx}`"
+              @click="emitLeg('start-leg', leg)"
+            >
+              <PlayIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+              {{ t('driver_trip_detail.btn_start_trip') }}
+            </button>
+            <button
+              v-else-if="leg.canEnd"
+              type="button"
+              :disabled="legActionBusyKey === leg.key"
+              class="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-driver-bg px-4 text-sm font-bold text-white shadow-sm transition-transform disabled:opacity-50 active:scale-[0.98]"
+              :data-testid="`driver-route-leg-end-${idx}`"
+              @click="emitLeg('end-leg', leg)"
+            >
+              <FlagIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+              {{ t('driver_trip_detail.btn_end_trip') }}
+            </button>
+            <p
+              v-else-if="leg.isTerminal"
+              class="rounded-xl border px-3 py-2 text-center text-sm font-medium"
+              :class="leg.status === 'completed'
+                ? 'border-emerald-500/35 bg-emerald-950/35 text-emerald-100'
+                : 'border-rose-500/35 bg-rose-950/30 text-rose-100'"
+            >
+              {{ leg.statusLabel }}
+            </p>
           </div>
         </div>
       </template>
@@ -117,7 +185,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ChevronDownIcon, MapIcon } from '@heroicons/vue/24/outline'
+import { ChevronDownIcon, FlagIcon, MapIcon, PlayIcon } from '@heroicons/vue/24/outline'
 import DriverRouteTimeline from './DriverRouteTimeline.vue'
 
 const props = defineProps({
@@ -134,9 +202,18 @@ const props = defineProps({
   passengerCount: { type: Number, default: 0 },
   tripTypeLabel: { type: String, default: '' },
   notesPreview: { type: String, default: '' },
+  multiLeg: { type: Boolean, default: false },
+  legActionBusyKey: { type: String, default: '' },
 })
 
+const emit = defineEmits(['confirm-leg', 'decline-leg', 'start-leg', 'end-leg'])
+
 const { t } = useI18n()
+
+function emitLeg(event, leg) {
+  if (!leg?.key || props.legActionBusyKey) return
+  emit(event, leg.key)
+}
 
 /** @type {import('vue').Ref<Record<string, boolean>>} */
 const expandedByKey = ref({})

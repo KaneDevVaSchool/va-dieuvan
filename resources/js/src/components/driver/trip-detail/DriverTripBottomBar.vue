@@ -25,7 +25,7 @@
     </div>
 
     <div
-      v-if="showPendingActions"
+      v-if="showPendingActions && !multiLeg"
       class="mb-2 grid min-h-[52px] grid-cols-2 gap-2"
     >
       <button
@@ -49,7 +49,7 @@
     </div>
 
     <button
-      v-if="canStart"
+      v-if="canStart && !multiLeg"
       type="button"
       :disabled="actionBusy"
       class="mb-2 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3.5 text-base font-bold text-white shadow-md transition-transform disabled:opacity-50 active:scale-[0.98] active:opacity-90 sm:text-lg"
@@ -59,7 +59,7 @@
       {{ t('driver_trip_detail.btn_start_trip') }}
     </button>
     <button
-      v-else-if="canEndTrip"
+      v-else-if="canEndTrip && !multiLeg"
       type="button"
       :disabled="actionBusy"
       class="mb-2 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-driver-bg px-4 py-3.5 text-base font-bold text-white shadow-md transition-transform disabled:opacity-50 active:scale-[0.98] active:opacity-90 sm:text-lg"
@@ -85,6 +85,7 @@ import { useHaptics } from '../../../composables/useHaptics'
 
 defineProps({
   tripStatus: { type: String, default: '' },
+  multiLeg: { type: Boolean, default: false },
   showPickupBar: { type: Boolean, default: false },
   pickedCount: { type: Number, default: 0 },
   paxTotal: { type: Number, default: 0 },

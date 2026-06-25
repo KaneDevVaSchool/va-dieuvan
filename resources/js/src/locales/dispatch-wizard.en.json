@@ -335,7 +335,7 @@
             "trip_back": "Return",
             "guests": "Guests",
             "owner": "Person in charge",
-            "owner_name": "Full name",
+            "owner_name": "Group leader",
             "owner_phone": "Phone (optional)",
             "time_depart_out": "Departure time",
             "time_depart_return": "Return departure time",

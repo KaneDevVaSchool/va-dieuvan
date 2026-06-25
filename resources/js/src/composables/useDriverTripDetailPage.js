@@ -29,6 +29,7 @@ import {
 import { tripNamedPassengerDisplayCount } from '../util/dispatchRequestPassengers'
 import { buildDriverTripPaxList } from '../util/buildDriverTripPaxList'
 import {
+  buildDriverOperationalLegs,
   buildDriverTripStatusFields,
   resolveDriverOperationalLeg,
   tripHasMultipleScheduleLegs,
@@ -83,6 +84,8 @@ export function useDriverTripDetailPage() {
   const declineStep = ref('reason')
   const declineReason = ref('')
   const declineModalError = ref('')
+  const declineLegKey = ref('')
+  const legActionBusyKey = ref('')
 
   function costTypeLabel(type) {
     const k = `driver_trip_detail.cost_type_${String(type || 'other')}`
@@ -259,18 +262,21 @@ export function useDriverTripDetailPage() {
     resolveDriverOperationalLeg(trip.value, myDriverId.value),
   )
 
-  function buildStatusPayload(status, tripSnap = trip.value) {
-    const fields = buildDriverTripStatusFields(status, tripSnap ?? trip.value, myDriverId.value)
+  function buildStatusPayload(status, tripSnap = trip.value, scheduleKey = null) {
+    const base = tripSnap ?? trip.value
+    // Ghi đè chặng đích khi gọi thao tác theo lịch trình cụ thể.
+    const target = scheduleKey ? { ...base, schedule_leg_key: scheduleKey } : base
+    const fields = buildDriverTripStatusFields(status, target, myDriverId.value)
     return withTripLockVersion(fields, tripSnap)
   }
 
-  async function mutateTripStatus(status) {
+  async function mutateTripStatus(status, scheduleKey = null) {
     const id = tripId.value
     if (id == null) return
     const updated = await runWithOptimisticLockRetry({
       getTrip: () => trip.value,
       refreshTrip: refresh,
-      execute: (snap) => updateTripStatus(id, buildStatusPayload(status, snap ?? trip.value)),
+      execute: (snap) => updateTripStatus(id, buildStatusPayload(status, snap ?? trip.value, scheduleKey)),
     })
     if (updated && typeof updated === 'object') {
       patchTripFromApi(trip, updated)
@@ -303,6 +309,13 @@ export function useDriverTripDetailPage() {
   const declineIsBusyFlow = computed(() => dashboardTripRow.value?._tp != null)
 
   const declineTripSummary = computed(() => {
+    if (multiScheduleLegTrip.value && declineLegKey.value) {
+      const leg = operationalLegs.value.find((l) => l.key === declineLegKey.value)
+      if (leg) {
+        const route = [leg.originMain, leg.destMain].filter((p) => p && p !== '—').join(' → ')
+        return [leg.label, route].filter(Boolean).join(' · ')
+      }
+    }
     const parts = [scheduleTimeLine.value, `${originMain.value} → ${destMain.value}`].filter(
       (p) => p && p !== '—',
     )
@@ -380,6 +393,57 @@ export function useDriverTripDetailPage() {
         waypointSub: leg.waypointSub,
         destMain: leg.destMain,
         destSub: leg.destSub,
+      }
+    })
+  })
+
+  function legStatusBadgeClass(status) {
+    const s = String(status ?? '').toLowerCase()
+    if (s === 'in_progress') return 'bg-teal-500/20 text-teal-300 ring-1 ring-teal-400/30'
+    if (s === 'completed') return 'bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-400/30'
+    if (s === 'cancelled') return 'bg-rose-500/20 text-rose-300 ring-1 ring-rose-400/30'
+    if (s === 'driver_confirmed' || s === 'approved') {
+      return 'bg-amber-500/20 text-amber-300 ring-1 ring-amber-400/30'
+    }
+    return 'bg-sky-500/20 text-sky-200 ring-1 ring-sky-400/30'
+  }
+
+  function legStatusLabel(status) {
+    const st = String(status ?? '').toLowerCase()
+    const map = {
+      pending: 'leg_status_pending',
+      assigned: 'leg_status_pending',
+      incident: 'leg_status_pending',
+      driver_confirmed: 'leg_status_confirmed',
+      approved: 'leg_status_confirmed',
+      in_progress: 'leg_status_running',
+      completed: 'leg_status_completed',
+      cancelled: 'leg_status_cancelled',
+    }
+    const k = map[st]
+    return k ? t(`driver_trip_detail.${k}`) : labelTripStatus(status)
+  }
+
+  /** Chặng tài xế kèm trạng thái + cờ thao tác — đổ vào thẻ lịch trình (chuyến >1 lịch trình). */
+  const operationalLegs = computed(() => {
+    const routeLegs = driverRouteLegs.value
+    if (!routeLegs.length) return []
+    const statusByKey = new Map()
+    for (const l of buildDriverOperationalLegs(trip.value, myDriverId.value)) {
+      if (l.key) statusByKey.set(l.key, l)
+    }
+    return routeLegs.map((leg) => {
+      const s = statusByKey.get(leg.key) ?? null
+      return {
+        ...leg,
+        status: s?.status ?? '',
+        statusLabel: s ? legStatusLabel(s.status) : '',
+        statusBadgeClass: s ? legStatusBadgeClass(s.status) : '',
+        canConfirm: s?.canConfirm ?? false,
+        canStart: s?.canStart ?? false,
+        canEnd: s?.canEnd ?? false,
+        isTerminal: s?.isTerminal ?? false,
+        hasActions: !!s,
       }
     })
   })
@@ -790,7 +854,8 @@ export function useDriverTripDetailPage() {
     return tpDriverTripCanStart(dashboardTripRow.value)
   })
 
-  function openDeclineModal() {
+  function openDeclineModal(legKey = null) {
+    declineLegKey.value = typeof legKey === 'string' ? legKey : ''
     declineReason.value = ''
     declineStep.value = 'reason'
     declineModalError.value = ''
@@ -802,6 +867,61 @@ export function useDriverTripDetailPage() {
     declineStep.value = 'reason'
     declineReason.value = ''
     declineModalError.value = ''
+    declineLegKey.value = ''
+  }
+
+  /** Row mang `schedule_leg_key` để store/đổi trạng thái nhắm đúng 1 lịch trình. */
+  function rowForLeg(legKey) {
+    if (!trip.value) return null
+    const row = { ...trip.value, trip_id: trip.value.id }
+    if (legKey) row.schedule_leg_key = legKey
+    return row
+  }
+
+  async function confirmLeg(legKey) {
+    if (!legKey || legActionBusyKey.value) return
+    const row = rowForLeg(legKey)
+    if (!row) return
+    legActionBusyKey.value = legKey
+    loadError.value = ''
+    try {
+      await driverDashboardStore.confirmTripOptimistic(row)
+      await refresh()
+    } catch (e) {
+      loadError.value = formatApiError(e, t('driver_trip_detail.status_err'))
+    } finally {
+      legActionBusyKey.value = ''
+    }
+  }
+
+  async function startLeg(legKey) {
+    if (!legKey || legActionBusyKey.value) return
+    legActionBusyKey.value = legKey
+    try {
+      await mutateTripStatus('in_progress', legKey)
+      await refresh()
+      void driverDashboardStore.refreshTripsQuiet()
+    } catch (e) {
+      if (isOptimisticLockConflict(e)) await refresh()
+      loadError.value = t('driver_trip_detail.status_err')
+    } finally {
+      legActionBusyKey.value = ''
+    }
+  }
+
+  async function endLeg(legKey) {
+    if (!legKey || legActionBusyKey.value) return
+    legActionBusyKey.value = legKey
+    try {
+      await mutateTripStatus('completed', legKey)
+      await refresh()
+      void driverDashboardStore.refreshTripsQuiet()
+    } catch (e) {
+      if (isOptimisticLockConflict(e)) await refresh()
+      loadError.value = t('driver_trip_detail.status_err')
+    } finally {
+      legActionBusyKey.value = ''
+    }
   }
 
   function goDeclineConfirmStep() {
@@ -832,7 +952,8 @@ export function useDriverTripDetailPage() {
   }
 
   async function submitDeclineConfirmed() {
-    const row = dashboardTripRow.value
+    const isLegFlow = multiScheduleLegTrip.value && !!declineLegKey.value
+    const row = isLegFlow ? rowForLeg(declineLegKey.value) : dashboardTripRow.value
     if (!row || actionBusy.value) return
     const reason = declineReason.value.trim()
     if (reason.length < DRIVER_DECLINE_REASON_MIN) {
@@ -845,13 +966,20 @@ export function useDriverTripDetailPage() {
     actionBusy.value = true
     declineModalError.value = ''
     try {
-      if (declineIsBusyFlow.value) {
+      if (!isLegFlow && declineIsBusyFlow.value) {
         await driverDashboardStore.reportBusyTpDayOptimistic(row, reason)
       } else {
         await driverDashboardStore.declineTripOptimistic(row, reason)
       }
       closeDeclineModal()
-      await router.push({ name: 'driverSchedule' })
+      if (isLegFlow) {
+        // Còn lịch trình khác chưa kết thúc → ở lại; hết mới về lịch.
+        await refresh()
+        const allDone = operationalLegs.value.every((l) => !l.hasActions || l.isTerminal)
+        if (allDone) await router.push({ name: 'driverSchedule' })
+      } else {
+        await router.push({ name: 'driverSchedule' })
+      }
     } catch (e) {
       declineModalError.value = isOptimisticLockConflict(e)
         ? t('driver_trip_detail.status_err')
@@ -1002,6 +1130,12 @@ export function useDriverTripDetailPage() {
     destSub,
     mapUrl,
     driverRouteLegs,
+    multiScheduleLegTrip,
+    operationalLegs,
+    legActionBusyKey,
+    confirmLeg,
+    startLeg,
+    endLeg,
     routeWaypointMain,
     routeWaypointSub,
     routeTripTypeLabel,

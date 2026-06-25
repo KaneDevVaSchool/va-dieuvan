@@ -41,7 +41,9 @@
           :dest-main="destMain"
           :dest-sub="destSub"
           :map-url="mapUrl"
-          :legs="driverRouteLegs"
+          :legs="operationalLegs"
+          :multi-leg="multiScheduleLegTrip"
+          :leg-action-busy-key="legActionBusyKey"
           :waypoint-main="routeWaypointMain"
           :waypoint-sub="routeWaypointSub"
           :schedule-summary="scheduleTimeLine"
@@ -49,6 +51,10 @@
           :passenger-count="paxDisplayTotal"
           :trip-type-label="routeTripTypeLabel"
           :notes-preview="routeNotesPreview"
+          @confirm-leg="confirmLeg"
+          @decline-leg="openDeclineModal"
+          @start-leg="startLeg"
+          @end-leg="endLeg"
         />
 
         <DriverCargoShipmentCard
@@ -114,6 +120,7 @@
 
     <DriverTripBottomBar
       :trip-status="trip?.status"
+      :multi-leg="multiScheduleLegTrip"
       :show-pickup-bar="showPickupBar"
       :picked-count="pickedCount"
       :pax-total="paxDisplayTotal"
@@ -211,7 +218,12 @@ const {
   destMain,
   destSub,
   mapUrl,
-  driverRouteLegs,
+  multiScheduleLegTrip,
+  operationalLegs,
+  legActionBusyKey,
+  confirmLeg,
+  startLeg,
+  endLeg,
   routeWaypointMain,
   routeWaypointSub,
   routeTripTypeLabel,

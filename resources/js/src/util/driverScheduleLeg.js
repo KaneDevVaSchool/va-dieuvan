@@ -3,6 +3,7 @@
  */
 
 const TERMINAL_LEG_STATUSES = new Set(['completed', 'cancelled', 'incident'])
+const PENDING_LEG_STATUSES = new Set(['pending', 'assigned', 'incident'])
 
 /**
  * @param {object | null | undefined} trip
@@ -11,6 +12,59 @@ const TERMINAL_LEG_STATUSES = new Set(['completed', 'cancelled', 'incident'])
 export function tripHasMultipleScheduleLegs(trip) {
   const legs = trip?.schedule_legs
   return Array.isArray(legs) && legs.length > 1
+}
+
+/**
+ * Lọc các chặng tài xế đang thao tác (của riêng mình nếu khớp driver_id, ngược lại toàn bộ).
+ * @param {object | null | undefined} trip
+ * @param {number | null | undefined} myDriverId
+ * @returns {Array<object>}
+ */
+export function driverScheduleLegPool(trip, myDriverId = null) {
+  const all = trip?.schedule_legs
+  if (!Array.isArray(all) || !all.length) return []
+  const did =
+    myDriverId != null && myDriverId !== '' && !Number.isNaN(Number(myDriverId))
+      ? Number(myDriverId)
+      : null
+  if (did != null) {
+    const mine = all.filter((l) => Number(l.assignment?.driver_id) === did)
+    if (mine.length) return mine
+  }
+  return all
+}
+
+/**
+ * Cờ thao tác cho một chặng dựa trên trạng thái vận hành của chặng đó.
+ * @param {string | null | undefined} status
+ * @returns {{ canConfirm: boolean, canStart: boolean, canEnd: boolean, isTerminal: boolean }}
+ */
+export function driverLegActionFlags(status) {
+  const st = String(status ?? '').toLowerCase()
+  return {
+    canConfirm: PENDING_LEG_STATUSES.has(st),
+    canStart: st === 'driver_confirmed' || st === 'approved',
+    canEnd: st === 'in_progress',
+    isTerminal: st === 'completed' || st === 'cancelled',
+  }
+}
+
+/**
+ * Danh sách chặng kèm trạng thái + cờ thao tác cho UI thẻ lịch trình tài xế.
+ * @param {object | null | undefined} trip
+ * @param {number | null | undefined} myDriverId
+ * @returns {Array<{ key: string, status: string, canConfirm: boolean, canStart: boolean, canEnd: boolean, isTerminal: boolean }>}
+ */
+export function buildDriverOperationalLegs(trip, myDriverId = null) {
+  const pool = driverScheduleLegPool(trip, myDriverId)
+  return pool.map((leg) => {
+    const status = String(leg?.status ?? trip?.status ?? '')
+    return {
+      key: leg?.key != null ? String(leg.key) : '',
+      status,
+      ...driverLegActionFlags(status),
+    }
+  })
 }
 
 /**

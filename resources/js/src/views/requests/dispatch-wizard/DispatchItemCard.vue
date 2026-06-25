@@ -503,11 +503,9 @@ const errs = computed(() => {
     departTime: r.time_required ? timeMsg : '',
     returnTime: r.return_time
       ? t('dispatch_wizard.s3.val_return_order')
-      : r.return_time_required
-        ? t('dispatch_wizard.s3.val_return_time_required')
-        : r.time_required
-          ? timeMsg
-          : '',
+      : r.time_required
+        ? timeMsg
+        : '',
     returnPlace: r.return_place ? t('dispatch_wizard.s3.val_return_place_required') : '',
     passengers: r.passengers ? t('dispatch_wizard.s3.val_guests_min') : '',
   }
