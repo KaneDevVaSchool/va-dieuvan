@@ -1,7 +1,7 @@
 <template>
   <div
-    class="dispatch-wizard portal-create w-full max-w-none space-y-5 px-4 py-5 text-slate-900 supports-[padding:max(0px)]:pl-[max(1rem,env(safe-area-inset-left))] supports-[padding:max(0px)]:pr-[max(1rem,env(safe-area-inset-right))] sm:px-6 sm:py-6 lg:py-7"
-    :class="step === 3 && !created ? 'pb-28 sm:pb-24' : 'pb-10'"
+    class="dispatch-wizard portal-create w-full max-w-none space-y-4 px-4 py-4 text-slate-900 supports-[padding:max(0px)]:pl-[max(1rem,env(safe-area-inset-left))] supports-[padding:max(0px)]:pr-[max(1rem,env(safe-area-inset-right))] sm:px-6 sm:py-5 lg:py-6"
+    :class="showWizardActionBar ? 'dw-has-action-bar' : 'pb-10'"
     :aria-label="
       form.is_urgent && !loading ? t('dispatch_wizard.create.form_priority_frame_aria') : undefined
     "
@@ -122,8 +122,8 @@
       @select="goStepFromStepper"
     />
 
-    <div>
-      <!-- Main card -->
+    <div class="dw-wizard-layout">
+      <div class="min-w-0">
       <section class="dw-portal-surface">
         <!-- Step 1 -->
         <div v-show="step === 0">
@@ -149,36 +149,14 @@
             <p class="dw-portal-step-lead">{{ t('dispatch_wizard.create.step2_lead') }}</p>
           </div>
 
+          <div class="dw-step2-quad">
+          <!-- Người đề nghị -->
+          <section class="dw-step2-cell">
+          <h3 class="dw-step2-cell__title">{{ t('dispatch_wizard.create.sec_requester') }}</h3>
           <div
-            class="dw-portal-subtabs"
-            role="tablist"
-            :aria-label="t('dispatch_wizard.create.step2_sub_nav_aria')"
-          >
-            <button
-              v-for="(tab, idx) in step2SubTabs"
-              :key="tab.id"
-              type="button"
-              role="tab"
-              class="dw-portal-subtab"
-              :aria-selected="step2Sub === tab.id"
-              :aria-controls="`staff-step2-panel-${tab.id}`"
-              :tabindex="step2Sub === tab.id ? 0 : -1"
-              :disabled="idx > maxReachedStep2Sub"
-              @click="setStep2Sub(tab.id)"
-            >
-              <span class="dw-portal-subtab__num" aria-hidden="true">{{ idx + 1 }}</span>
-              <span class="dw-portal-subtab__label">{{ tab.label }}</span>
-            </button>
-          </div>
-
-          <!-- Panel: Người đề nghị -->
-          <div
-            v-show="step2Sub === 'requester'"
             id="staff-step2-panel-requester"
-            role="tabpanel"
             class="dw-portal-panel dw-form-stack"
           >
-            <p class="dw-portal-panel-title">{{ t('dispatch_wizard.create.sec_requester') }}</p>
 
             <div class="relative">
               <label class="dw-label">
@@ -272,15 +250,15 @@
               <input v-model="form.requester_unit" type="text" :placeholder="t('dispatch_wizard.create.unit_ph')" class="dw-input mt-1" />
             </label>
           </div>
+          </section>
 
-          <!-- Panel: Thời gian -->
+          <!-- Thời gian -->
+          <section class="dw-step2-cell">
+          <h3 class="dw-step2-cell__title">{{ t('dispatch_wizard.create.sec_time') }}</h3>
           <div
-            v-show="step2Sub === 'time'"
             id="staff-step2-panel-time"
-            role="tabpanel"
             class="dw-portal-panel dw-form-stack"
           >
-            <p class="dw-portal-panel-title">{{ t('dispatch_wizard.create.sec_time') }}</p>
 
             <div class="dw-form-grid-2">
               <label class="block">
@@ -424,15 +402,15 @@
               <p v-else class="dw-field-hint">{{ t('request_detail.assign_dept_head_combo_hint') }}</p>
             </div>
           </div>
+          </section>
 
-          <!-- Panel: Mục đích -->
+          <!-- Mục đích -->
+          <section class="dw-step2-cell">
+          <h3 class="dw-step2-cell__title">{{ t('dispatch_wizard.create.sec_purpose') }}</h3>
           <div
-            v-show="step2Sub === 'purpose'"
             id="staff-step2-panel-purpose"
-            role="tabpanel"
             class="dw-portal-panel dw-form-stack"
           >
-            <p class="dw-portal-panel-title">{{ t('dispatch_wizard.create.sec_purpose') }}</p>
 
             <div
               v-if="form.trip_type === 'point_to_point'"
@@ -548,17 +526,15 @@
               </select>
             </div>
           </div>
+          </section>
 
-          <!-- Panel: Phối hợp -->
+          <!-- Phối hợp -->
+          <section class="dw-step2-cell">
+          <h3 class="dw-step2-cell__title">{{ t('dispatch_wizard.create.sec_targets') }}</h3>
           <div
-            v-show="step2Sub === 'coordination'"
             id="staff-step2-panel-coordination"
-            role="tabpanel"
-            class="dw-portal-panel-stack"
+            class="dw-portal-panel dw-form-stack"
           >
-            <!-- Đối tượng phân bổ -->
-            <div class="dw-portal-panel dw-form-stack">
-              <p class="dw-portal-panel-title">{{ t('dispatch_wizard.create.sec_targets') }}</p>
 
               <div v-if="form.targets.length" class="flex flex-wrap gap-1.5">
                 <span
@@ -588,7 +564,7 @@
               </div>
 
               <p v-if="form.targets.length" class="dw-field-hint">
-                {{ t('dispatch_wizard.create.targets_selected', { n: form.targets.length }) }}
+                {{ t('dispatch_wizard.create.targets_selected_one', { name: form.targets[0] }) }}
               </p>
               <p
                 v-else-if="form.trip_type === 'point_to_point'"
@@ -597,103 +573,7 @@
                 {{ t('dispatch_wizard.create.targets_warn') }}
               </p>
             </div>
-
-            <!-- Người phối hợp -->
-            <div v-if="showCoordinatorPanel" class="dw-portal-panel dw-form-stack">
-              <p class="dw-portal-panel-title">{{ t('dispatch_wizard.create.sec_coordinator') }}</p>
-
-              <div class="relative">
-                <label class="dw-label">
-                  <span>{{ t('dispatch_wizard.create.coord_search_label') }}</span>
-                  <span
-                    class="inline-flex cursor-help text-slate-400 hover:text-slate-600"
-                    :title="t('dispatch_wizard.create.coord_search_title')"
-                  >
-                    <InformationCircleIcon class="h-4 w-4" aria-hidden="true" />
-                  </span>
-                </label>
-                <input
-                  v-model="coordinatorSearchQ"
-                  type="search"
-                  autocomplete="off"
-                  role="combobox"
-                  :aria-expanded="coordinatorDropdownOpen && coordinatorSearchQ.trim().length >= 2"
-                  aria-controls="dw-coordinator-search-list"
-                  :placeholder="t('dispatch_wizard.create.coord_search_ph')"
-                  class="dw-input"
-                  @input="scheduleCoordinatorSearch"
-                  @focus="onCoordinatorSearchFocus"
-                  @blur="onCoordinatorSearchBlur"
-                />
-                <div
-                  v-if="coordinatorSearchLoading"
-                  class="absolute right-3 top-[2.625rem] h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-va-800"
-                />
-                <ul
-                  v-if="coordinatorDropdownOpen && coordinatorSearchQ.trim().length >= 2"
-                  id="dw-coordinator-search-list"
-                  class="dw-combobox__menu"
-                  role="listbox"
-                >
-                  <li v-if="coordinatorSearchLoading" class="dw-combobox__empty">{{ t('dispatch_wizard.create.searching') }}</li>
-                  <template v-else-if="coordinatorSearchResults.length">
-                    <li v-for="u in coordinatorSearchResults" :key="u.id">
-                      <button
-                        type="button"
-                        class="dw-combobox__option"
-                        @mousedown.prevent="pickCoordinator(u)"
-                      >
-                        <span class="font-medium text-slate-900">{{ u.name }}</span>
-                        <span class="truncate text-xs text-slate-500">{{ u.email }}</span>
-                      </button>
-                    </li>
-                  </template>
-                  <li v-else class="dw-combobox__empty">{{ t('dispatch_wizard.create.no_staff') }}</li>
-                </ul>
-                <p v-if="coordinatorSearchError" class="dw-field-error">{{ coordinatorSearchError }}</p>
-              </div>
-
-              <label class="block">
-                <span class="dw-label-text">{{ t('dispatch_wizard.create.full_name') }}</span>
-                <input
-                  v-model="form.coordinator_name"
-                  type="text"
-                  class="dw-input mt-1"
-                  :placeholder="t('dispatch_wizard.create.coord_name_ph')"
-                />
-              </label>
-
-              <div class="dw-form-grid-2">
-                <div>
-                  <label class="block">
-                    <span class="dw-label-text">{{ t('dispatch_wizard.create.coord_email_label') }}</span>
-                    <input
-                      v-model="form.coordinator_email"
-                      type="email"
-                      :class="['dw-input mt-1', step2CoordinatorEmailInvalid ? 'dw-input--invalid' : '']"
-                      :placeholder="t('dispatch_wizard.create.coord_email_ph')"
-                      @blur="onCoordinatorEmailBlur"
-                    />
-                  </label>
-                  <p v-if="step2CoordinatorEmailInvalid" class="dw-field-error">
-                    {{ t('dispatch_wizard.create.coord_email_invalid') }}
-                  </p>
-                </div>
-                <label class="block">
-                  <span class="dw-label-text">{{ t('dispatch_wizard.create.coord_phone') }}</span>
-                  <input
-                    v-model="form.coordinator_phone"
-                    type="text"
-                    inputmode="numeric"
-                    autocomplete="tel"
-                    :placeholder="t('dispatch_wizard.create.coord_phone_ph')"
-                    class="dw-input mt-1"
-                    maxlength="11"
-                    @input="onCoordinatorPhoneInput"
-                  />
-                </label>
-              </div>
-            </div>
+          </section>
           </div>
         </div>
 
@@ -702,29 +582,30 @@
 
         <!-- Step 4 -->
         <ConfirmSummary v-if="step === 3" />
-
-        <!-- Nav buttons -->
-        <div v-if="step !== 3" class="dw-portal-footer">
-          <button
-            type="button"
-            class="dw-portal-btn-ghost"
-            :disabled="step === 0"
-            @click="portalPrevStep"
-          >
-            {{ t('dispatch_wizard.create.back') }}
-          </button>
-          <button
-            v-if="step < 3"
-            type="button"
-            class="dw-portal-btn-primary"
-            :disabled="!portalCanGoNext"
-            @click="portalNextStep"
-          >
-            {{ t('dispatch_wizard.create.next') }}
-          </button>
-        </div>
       </section>
+      </div>
+      <div class="dw-wizard-summary">
+        <DispatchWizardLiveSummary v-if="step <= 3 && !created" />
+      </div>
     </div>
+
+    <Teleport to="body">
+      <DispatchWizardActionBar
+        v-if="showWizardActionBar"
+        :back-disabled="step === 0"
+        :can-go-next="portalCanGoNext"
+        :show-next="step < 3"
+        :show-submit="step === 3 && !created"
+        :submit-disabled="headerPrimaryDisabled"
+        :loading="loading"
+        :next-label="t('dispatch_wizard.create.next')"
+        :submit-label="headerPrimaryLabel"
+        @back="portalPrevStep"
+        @next="portalNextStep"
+        @save-draft="saveDraft"
+        @submit="primaryAction"
+      />
+    </Teleport>
   </div>
 
   <!-- Modal: Xoá nháp -->
@@ -961,61 +842,19 @@
                 :data-testid="`staff-target-option-${opt}`"
               >
                 <input
-                  type="checkbox"
-                  class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
-                  :checked="form.targets.includes(opt)"
-                  @change="toggleTargetCheckbox(opt, $event.target.checked)"
+                  type="radio"
+                  name="dw-staff-target-option"
+                  class="mt-0.5 h-4 w-4 shrink-0 border-slate-300 text-teal-600 focus:ring-teal-500/30"
+                  :checked="form.targets[0] === opt"
+                  @click="selectSingleTarget(opt)"
                 />
                 <span class="leading-snug">{{ opt }}</span>
               </label>
             </div>
-            <div class="mt-4 border-t border-slate-100 pt-4">
-              <label class="mb-1.5 block text-xs font-medium text-slate-600" for="dw-staff-target-custom-input">
-                {{ t('dispatch_wizard.create.targets_add_custom') }}
-              </label>
-              <div class="flex gap-2">
-                <input
-                  id="dw-staff-target-custom-input"
-                  v-model="customTargetInput"
-                  type="text"
-                  class="dw-input min-w-0 flex-1"
-                  :placeholder="t('dispatch_wizard.create.targets_custom_ph')"
-                  maxlength="100"
-                  data-testid="staff-targets-custom-input"
-                  @keydown.enter.prevent="addCustomTarget"
-                />
-                <button
-                  type="button"
-                  class="shrink-0 rounded-xl bg-va-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-va-700 active:scale-95 disabled:opacity-50"
-                  :disabled="!customTargetInput.trim()"
-                  data-testid="staff-targets-custom-add"
-                  @click="addCustomTarget"
-                >
-                  {{ t('dispatch_wizard.create.targets_add_custom') }}
-                </button>
-              </div>
-              <div v-if="selectedCustomTargets.length" class="mt-3 flex flex-wrap gap-1.5">
-                <span
-                  v-for="chip in selectedCustomTargets"
-                  :key="chip"
-                  class="dw-portal-chip"
-                >
-                  {{ chip }}
-                  <button
-                    type="button"
-                    class="dw-portal-chip__remove"
-                    :data-testid="`staff-target-custom-remove-${chip}`"
-                    @click="removeTarget(chip)"
-                  >
-                    <XMarkIcon class="h-3.5 w-3.5" aria-hidden="true" />
-                  </button>
-                </span>
-              </div>
-            </div>
           </div>
           <div class="border-t border-slate-100 bg-slate-50/90 px-4 py-3 sm:flex sm:items-center sm:justify-between sm:gap-3">
             <p v-if="form.targets.length" class="mb-2 text-xs text-slate-600 sm:mb-0">
-              {{ t('dispatch_wizard.create.targets_selected', { n: form.targets.length }) }}
+              {{ t('dispatch_wizard.create.targets_selected_one', { name: form.targets[0] }) }}
             </p>
             <button
               type="button"
@@ -1045,7 +884,6 @@ import {
   InformationCircleIcon,
   PaperClipIcon,
   TrashIcon,
-  XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import { useDispatchRequestWizard } from '../../composables/useDispatchRequestWizard'
 import { DISPATCH_WIZARD_KEY } from './dispatch-wizard/injectionKeys'
@@ -1054,7 +892,8 @@ import DispatchSubmitResultModal from './dispatch-wizard/DispatchSubmitResultMod
 import RecurringConfigSection from '../../components/recurring/RecurringConfigSection.vue'
 import PortalStepper from '../../components/portal/PortalStepper.vue'
 import PortalTripTypeGrid from '../../components/portal/PortalTripTypeGrid.vue'
-import { showCoordinatorPanelForTripType } from '../../composables/dispatchWizardConstants'
+import DispatchWizardLiveSummary from './dispatch-wizard/DispatchWizardLiveSummary.vue'
+import DispatchWizardActionBar from './dispatch-wizard/DispatchWizardActionBar.vue'
 
 const TRIP_TYPES = ['door_to_door', 'point_to_point', 'business', 'cargo']
 
@@ -1088,34 +927,21 @@ const {
   requesterSearchLoading,
   requesterDropdownOpen,
   requesterSearchError,
-  coordinatorSearchQ,
-  coordinatorSearchResults,
-  coordinatorSearchLoading,
-  coordinatorDropdownOpen,
-  coordinatorSearchError,
   step2DateOrderInvalid,
   step2RequesterEmailInvalid,
   requesterEmailFormatInvalid,
-  coordinatorEmailFormatInvalid,
   draftSaveFlash,
   draftSaveError,
-  step2CoordinatorEmailInvalid,
   requestedDateTime,
   e1WeekdayOptions,
   toggleE1Weekday,
   openDatePickerFromInput,
   onRequesterPhoneInput,
-  onCoordinatorPhoneInput,
   onRequesterEmailBlur,
-  onCoordinatorEmailBlur,
   scheduleRequesterSearch,
   onRequesterSearchFocus,
   onRequesterSearchBlur,
   pickRequester,
-  scheduleCoordinatorSearch,
-  onCoordinatorSearchFocus,
-  onCoordinatorSearchBlur,
-  pickCoordinator,
   onBasisFileChange,
   onBasisDrop,
   clearBasisFile,
@@ -1171,6 +997,8 @@ const urgentExplainTooltip = computed(() =>
 
 const stepperSteps = computed(() => steps.value.map((s) => ({ key: s.id, label: s.title })))
 
+const showWizardActionBar = computed(() => step.value !== 3 || !created.value)
+
 // --- Draft dropdown ---
 const draftMenuOpen = ref(false)
 const draftMenuEl = ref(null)
@@ -1195,115 +1023,21 @@ function onTripTypeClick(value) {
   form.value.trip_type = value
 }
 
-// --- Bước 2: tab con ---
-const STEP2_SUB_IDS = ['requester', 'time', 'purpose', 'coordination']
-
-const showCoordinatorPanel = computed(() => showCoordinatorPanelForTripType(form.value.trip_type))
-
-const step2Sub = ref('requester')
-const maxReachedStep2Sub = ref(0)
-
-const step2SubTabs = computed(() =>
-  STEP2_SUB_IDS.map((id) => ({
-    id,
-    label: t(`dispatch_wizard.create.step2_sub_${id}`),
-  })),
-)
-
-const step2SubIndex = computed(() => STEP2_SUB_IDS.indexOf(step2Sub.value))
-
-function portalStep2SubComplete(subId) {
-  if (subId === 'requester') {
-    return (
-      !!form.value.requester_name?.trim() &&
-      !!form.value.requester_email?.trim() &&
-      !requesterEmailFormatInvalid.value
-    )
-  }
-  if (subId === 'time') {
-    return (
-      !!form.value.proposed_date &&
-      !!form.value.date_needed &&
-      !step2DateOrderInvalid.value &&
-      (!form.value.is_urgent || !!form.value.urgent_reason?.trim())
-    )
-  }
-  if (subId === 'purpose') {
-    return !!form.value.purpose?.trim()
-  }
-  if (!showCoordinatorPanel.value) return true
-  return !coordinatorEmailFormatInvalid.value
-}
-
-const portalCanGoNext = computed(() => {
-  if (step.value !== 1) return canGoNext.value
-  if (step2SubIndex.value === STEP2_SUB_IDS.length - 1) return canGoNext.value
-  return portalStep2SubComplete(step2Sub.value)
-})
-
-function setStep2Sub(id) {
-  const idx = STEP2_SUB_IDS.indexOf(id)
-  if (idx === -1 || idx > maxReachedStep2Sub.value) return
-  step2Sub.value = id
-}
+const portalCanGoNext = computed(() => canGoNext.value)
 
 function portalNextStep() {
-  if (step.value !== 1) {
-    nextStep()
-    return
-  }
-  if (!portalCanGoNext.value) return
-  const idx = step2SubIndex.value
-  if (idx < STEP2_SUB_IDS.length - 1) {
-    maxReachedStep2Sub.value = Math.max(maxReachedStep2Sub.value, idx + 1)
-    step2Sub.value = STEP2_SUB_IDS[idx + 1]
-    return
-  }
+  if (!canGoNext.value) return
   nextStep()
 }
 
 function portalPrevStep() {
-  if (step.value === 1 && step2SubIndex.value > 0) {
-    step2Sub.value = STEP2_SUB_IDS[step2SubIndex.value - 1]
-    return
-  }
   prevStep()
 }
-
-watch(step, (v, oldV) => {
-  if (v === 1 && oldV === 0) {
-    step2Sub.value = 'requester'
-    maxReachedStep2Sub.value = 0
-  }
-})
-
-watch(
-  () => [
-    form.value.requester_name,
-    form.value.requester_email,
-    form.value.proposed_date,
-    form.value.date_needed,
-    form.value.purpose,
-    step2RequesterEmailInvalid.value,
-    step2DateOrderInvalid.value,
-    showCoordinatorPanel.value,
-    coordinatorEmailFormatInvalid.value,
-  ],
-  () => {
-    if (step.value !== 1) return
-    let max = 0
-    if (portalStep2SubComplete('requester')) max = 1
-    if (max >= 1 && portalStep2SubComplete('time')) max = 2
-    if (max >= 2 && portalStep2SubComplete('purpose')) max = 3
-    maxReachedStep2Sub.value = Math.max(maxReachedStep2Sub.value, max)
-  },
-)
 
 // --- Modal chọn đối tượng phân bổ ---
 const targetPickerModalOpen = ref(false)
 const targetModalFilterQ = ref('')
 const targetModalFilterEl = ref(null)
-const customTargetInput = ref('')
 
 function normalizeTargetSearch(s) {
   return String(s)
@@ -1319,10 +1053,6 @@ const targetModalOptions = computed(() => {
   return targetOptions.filter((opt) => normalizeTargetSearch(opt).includes(q))
 })
 
-const selectedCustomTargets = computed(() =>
-  form.value.targets.filter((name) => !targetOptions.includes(name)),
-)
-
 function openTargetPickerModal() {
   targetPickerModalOpen.value = true
   window.requestAnimationFrame(() => {
@@ -1333,31 +1063,12 @@ function openTargetPickerModal() {
 function closeTargetPickerModal() {
   targetPickerModalOpen.value = false
   targetModalFilterQ.value = ''
-  customTargetInput.value = ''
 }
 
-function toggleTargetCheckbox(val, checked) {
+/** Chỉ cho phép chọn 1 đối tượng phân bổ; bấm lại để bỏ chọn. */
+function selectSingleTarget(val) {
   if (!val) return
-  const list = form.value.targets
-  const idx = list.indexOf(val)
-  if (checked) {
-    if (idx === -1) list.push(val)
-  } else if (idx !== -1) {
-    list.splice(idx, 1)
-  }
-}
-
-function addCustomTarget() {
-  const val = customTargetInput.value.trim()
-  if (!val || form.value.targets.includes(val)) return
-  form.value.targets.push(val)
-  customTargetInput.value = ''
-}
-
-function removeTarget(val) {
-  const list = form.value.targets
-  const idx = list.indexOf(val)
-  if (idx !== -1) list.splice(idx, 1)
+  form.value.targets = form.value.targets[0] === val ? [] : [val]
 }
 </script>
 

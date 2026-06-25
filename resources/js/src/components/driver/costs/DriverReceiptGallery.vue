@@ -1,8 +1,17 @@
 <template>
   <section class="space-y-4" :aria-label="title">
     <div class="flex items-center justify-between gap-3">
-      <h2 class="text-lg font-bold text-driver-ink sm:text-xl">{{ title }}</h2>
-      <span v-if="!readonly && canMutate" class="text-xs font-medium text-driver-muted sm:text-sm">
+      <h2
+        class="text-driver-ink"
+        :class="compactSection ? 'text-base font-semibold' : 'text-lg font-bold sm:text-xl'"
+      >
+        {{ title }}
+      </h2>
+      <span
+        v-if="!readonly && canMutate"
+        class="text-driver-muted"
+        :class="compactSection ? 'text-xs' : 'text-xs font-medium sm:text-sm'"
+      >
         {{ hintMutate }}
       </span>
     </div>
@@ -245,6 +254,7 @@ const props = defineProps({
   deleteFailMsg: { type: String, required: true },
   moveUp: { type: String, default: '' },
   moveDown: { type: String, default: '' },
+  compactSection: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['updated'])

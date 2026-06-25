@@ -1,10 +1,10 @@
 <template>
   <nav
-    class="rounded-xl border border-slate-200/90 bg-white/90 p-2 shadow-md shadow-va-900/[0.04] backdrop-blur-sm sm:p-3"
+    class="rounded-xl border border-slate-200/80 bg-white/95 p-2 shadow-sm sm:p-2.5"
     :aria-label="stepsNavLabel"
   >
-    <p class="mb-2 text-center text-xs font-medium text-slate-500 sm:hidden">
-      Bước {{ current + 1 }}/{{ steps.length }}
+    <p class="mb-2 text-center text-[11px] font-medium text-slate-500 sm:hidden">
+      {{ steps[current]?.label }}
     </p>
     <ol
       class="flex items-stretch gap-0"
@@ -12,13 +12,13 @@
       <li
         v-for="(s, i) in steps"
         :key="s.key"
-        :class="i === current ? 'flex flex-1 min-w-0 flex-col' : 'hidden sm:flex sm:flex-1 sm:min-w-0 sm:shrink-0 sm:flex-col'"
+        class="flex min-w-0 flex-1 flex-col"
       >
         <div class="flex items-center">
           <button
             v-if="interactive"
             type="button"
-            class="group flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left antialiased outline-none transition focus:outline-none focus-visible:outline-none sm:flex-col sm:items-center sm:gap-2 sm:px-2 sm:py-2"
+            class="group flex w-full items-center justify-center gap-1.5 rounded-lg px-1 py-1.5 text-left antialiased outline-none transition focus:outline-none focus-visible:outline-none sm:flex-col sm:items-center sm:gap-1.5 sm:px-2 sm:py-2"
             :class="
               i > maxReachedStep
                 ? 'cursor-not-allowed opacity-45'
@@ -33,7 +33,7 @@
             @click="i <= maxReachedStep && $emit('select', i)"
           >
             <span
-              class="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold shadow-sm sm:h-9 sm:w-9 sm:text-sm"
+              class="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold shadow-sm sm:h-8 sm:w-8 sm:text-xs"
               :class="
                 current === i
                   ? 'bg-va-800 text-white ring-4 ring-va-100'
@@ -48,7 +48,7 @@
               <span v-else>{{ i + 1 }}</span>
             </span>
             <span
-              class="min-w-0 flex-1 text-xs font-semibold leading-snug sm:text-center sm:text-sm sm:leading-snug"
+              class="hidden min-w-0 flex-1 text-xs font-semibold leading-snug sm:block sm:text-center sm:text-[13px] sm:leading-snug"
               :class="current === i ? 'text-slate-900' : current > i ? 'text-slate-800' : 'text-slate-500'"
             >
               {{ s.label }}
@@ -56,7 +56,7 @@
           </button>
           <div
             v-else
-            class="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left antialiased sm:flex-col sm:items-center sm:gap-2 sm:px-2 sm:py-2"
+            class="flex w-full items-center justify-center gap-1.5 rounded-lg px-1 py-1.5 text-left antialiased sm:flex-col sm:items-center sm:gap-1.5 sm:px-2 sm:py-2"
             :class="
               current === i
                 ? 'border border-va-200/50 bg-va-50/70 text-slate-900 shadow-sm'
@@ -67,7 +67,7 @@
             role="presentation"
           >
             <span
-              class="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold shadow-sm sm:h-9 sm:w-9 sm:text-sm"
+              class="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold shadow-sm sm:h-8 sm:w-8 sm:text-xs"
               :class="
                 current === i
                   ? 'bg-va-800 text-white ring-4 ring-va-100'
@@ -80,7 +80,7 @@
               <span v-else>{{ i + 1 }}</span>
             </span>
             <span
-              class="min-w-0 flex-1 text-xs font-semibold leading-snug sm:text-center sm:text-sm sm:leading-snug"
+              class="hidden min-w-0 flex-1 text-xs font-semibold leading-snug sm:block sm:text-center sm:text-[13px] sm:leading-snug"
               :class="current === i ? 'text-slate-900' : current > i ? 'text-slate-800' : 'text-slate-500'"
             >
               {{ s.label }}
@@ -88,7 +88,7 @@
           </div>
           <div
             v-if="i < steps.length - 1"
-            class="mx-0.5 hidden h-0.5 w-5 shrink-0 rounded-full sm:block md:w-8 lg:w-11"
+            class="mx-0.5 h-0.5 w-3 shrink-0 rounded-full sm:w-5 md:w-8 lg:w-10"
             :class="current > i ? 'bg-gradient-to-r from-emerald-400 to-slate-200' : 'bg-slate-200'"
             aria-hidden="true"
           />

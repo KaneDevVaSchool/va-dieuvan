@@ -8,14 +8,14 @@
   >
     <!-- ── Row 0: Back + Actions ── -->
     <div
-      class="flex items-center justify-between gap-4 border-b px-4 py-2 sm:px-6 lg:px-8"
+      class="flex flex-col gap-2 border-b px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:py-2 sm:px-6 lg:px-8"
       :class="urgentAccent
         ? 'border-rose-100/80 dark:border-rose-900/30'
         : 'border-slate-100 dark:border-slate-800'"
     >
       <RouterLink
         :to="backTo"
-        class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 transition hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+        class="inline-flex min-h-11 items-center gap-1.5 self-start text-sm font-medium text-slate-500 transition hover:text-slate-800 sm:min-h-0 sm:text-xs dark:text-slate-400 dark:hover:text-slate-200"
         :aria-label="backAriaLabel"
         data-testid="staff-request-back-link"
       >
@@ -23,10 +23,10 @@
         {{ t('request_detail.hero_back_list') }}
       </RouterLink>
 
-      <div class="flex shrink-0 items-center gap-2">
+      <div class="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:shrink-0">
         <button
           type="button"
-          class="inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-xs font-semibold transition"
+          class="inline-flex min-h-11 items-center gap-1.5 rounded-lg border px-3 text-sm font-semibold transition sm:min-h-8 sm:rounded-md sm:text-xs"
           :class="pdfExportDisabled
             ? 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-600'
             : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300 dark:hover:bg-slate-700'"
@@ -35,13 +35,13 @@
           data-testid="staff-request-export-pdf"
           @click="$emit('export-pdf')"
         >
-          <ArrowDownTrayIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-          {{ pdfBusy ? t('request_detail.pdf_export_loading') : t('request_detail.export_pdf') }}
+          <ArrowDownTrayIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+          <span class="max-sm:sr-only">{{ pdfBusy ? t('request_detail.pdf_export_loading') : t('request_detail.export_pdf') }}</span>
         </button>
         <template v-if="showApproveActions">
           <button
             type="button"
-            class="inline-flex h-8 items-center gap-1.5 rounded-md bg-emerald-600 px-3 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60"
+            class="inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60 sm:min-h-8 sm:rounded-md sm:text-xs"
             :disabled="d2dActing"
             data-testid="staff-request-approve"
             @click="$emit('approve')"
@@ -51,7 +51,7 @@
           </button>
           <button
             type="button"
-            class="inline-flex h-8 items-center rounded-md border border-rose-200 px-3 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 disabled:opacity-60 dark:border-rose-800/60 dark:text-rose-300 dark:hover:bg-rose-950/40"
+            class="inline-flex min-h-11 items-center rounded-lg border border-rose-200 px-3.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 disabled:opacity-60 sm:min-h-8 sm:rounded-md sm:text-xs dark:border-rose-800/60 dark:text-rose-300 dark:hover:bg-rose-950/40"
             :disabled="d2dActing"
             data-testid="staff-request-reject"
             @click="$emit('reject')"
@@ -138,10 +138,10 @@
 
       <!-- ── Row 2: Route ── -->
       <div
-        class="grid grid-cols-[1fr_auto_1fr] items-stretch border-b"
+        class="flex flex-col gap-2 border-b sm:grid sm:grid-cols-[1fr_auto_1fr] sm:items-stretch"
         :class="urgentAccent ? 'border-rose-100/80 dark:border-rose-900/30' : 'border-slate-100 dark:border-slate-800'"
       >
-        <div class="py-3 pr-4">
+        <div class="py-3 sm:pr-4">
           <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
             {{ t('request_detail.lbl_origin') }}
           </p>
@@ -149,10 +149,11 @@
             {{ origin || empty }}
           </p>
         </div>
-        <div class="flex items-center px-3 py-3" aria-hidden="true">
-          <ArrowRightIcon class="h-4 w-4 shrink-0 text-slate-300 dark:text-slate-600" />
+        <div class="flex justify-center py-0 sm:items-center sm:px-3 sm:py-3" aria-hidden="true">
+          <ArrowRightIcon class="hidden h-4 w-4 shrink-0 text-slate-300 sm:block dark:text-slate-600" />
+          <ArrowDownIcon class="h-4 w-4 shrink-0 text-slate-300 sm:hidden dark:text-slate-600" />
         </div>
-        <div class="py-3 pl-4">
+        <div class="py-3 sm:pl-4">
           <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
             {{ t('request_detail.lbl_destination') }}
           </p>
@@ -230,6 +231,7 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import {
+  ArrowDownIcon,
   ArrowDownTrayIcon,
   ArrowLeftIcon,
   ArrowPathIcon,

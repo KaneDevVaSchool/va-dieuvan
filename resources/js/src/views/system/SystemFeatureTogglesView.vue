@@ -3,7 +3,6 @@ import { computed, onActivated, onMounted, reactive, ref, watch } from 'vue'
 import {
   PlusIcon,
   XMarkIcon,
-  FunnelIcon,
 } from '@heroicons/vue/24/outline'
 import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
@@ -377,16 +376,7 @@ onActivated(() => load())
                 <label :for="'ft-filter-vis-' + fd.key" class="cursor-pointer text-sm text-slate-700 dark:text-slate-300">{{ fd.label }}</label>
               </li>
             </FilterVisibilityDropdown>
-            <button
-              type="button"
-              class="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-sm text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
-              :title="t('system_pages.clear_filters')"
-              data-testid="feature-toggles-reset-filters"
-              @click="resetFilters"
-            >
-              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-              <XMarkIcon class="h-3 w-3 text-rose-500" aria-hidden="true" />
-            </button>
+
           </div>
         </div>
       </div>

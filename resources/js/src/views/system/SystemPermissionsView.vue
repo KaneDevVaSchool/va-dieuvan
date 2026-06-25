@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onActivated, onMounted, reactive, ref, watch } from 'vue'
-import { PlusIcon, XMarkIcon, FunnelIcon } from '@heroicons/vue/24/outline'
+import { PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { useI18n } from 'vue-i18n'
 import { PERMISSION_MODULES, groupPermissions, getModuleId } from '../../config/permissionModules.js'
 import { SEED_PERMISSION_PRESETS } from '../../config/systemSeedOptions'
@@ -404,10 +404,6 @@ onActivated(() => load())
                 <label :for="'perm-filter-vis-' + fd.key" class="cursor-pointer text-sm text-slate-700 dark:text-slate-300">{{ fd.label }}</label>
               </li>
             </FilterVisibilityDropdown>
-            <button type="button" class="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-sm text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800" :title="t('system_pages.clear_filters')" data-testid="system-permissions-reset-filters" @click="resetFilters">
-              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-              <XMarkIcon class="h-3 w-3 text-rose-500" aria-hidden="true" />
-            </button>
           </div>
         </div>
       </div>

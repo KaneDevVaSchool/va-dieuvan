@@ -207,18 +207,6 @@
                 </li>
               </FilterVisibilityDropdown>
 
-              <button
-                type="button"
-                class="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-sm text-slate-500 hover:bg-slate-50"
-                :title="t('tp_attendance_page.filter_clear_all')"
-                :disabled="activeFilterCount === 0"
-                data-testid="tp-attendance-reset-filters"
-                @click="resetFilters()"
-              >
-                <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-                <XMarkIcon class="h-3 w-3 text-rose-500" aria-hidden="true" />
-              </button>
-
               <Button
                 variant="secondary"
                 class="!h-10 shrink-0 gap-1.5 !px-3 !text-sm"
@@ -232,18 +220,18 @@
             </div>
 
             <div class="ml-auto flex shrink-0 items-center gap-2">
-              <details ref="exportMenuRef" class="group relative">
-                <summary class="list-none [&::-webkit-details-marker]:hidden">
-                  <DatagridToolbarActionButton
-                    icon="export"
-                    :disabled="exportingExcel"
-                    test-id="tp-attendance-toolbar-export"
-                    @click="toggleExportMenu"
-                  >
-                    {{ exportingExcel ? t('tp_attendance_page.export_excel_busy') : t('tp_attendance_page.export_excel') }}
-                  </DatagridToolbarActionButton>
-                </summary>
+              <div ref="exportMenuRef" class="relative">
+                <DatagridToolbarActionButton
+                  icon="export"
+                  :active="showExportMenu"
+                  :disabled="exportingExcel"
+                  test-id="tp-attendance-toolbar-export"
+                  @click="toggleExportMenu"
+                >
+                  {{ exportingExcel ? t('tp_attendance_page.export_excel_busy') : t('tp_attendance_page.export_excel') }}
+                </DatagridToolbarActionButton>
                 <div
+                  v-if="showExportMenu"
                   class="absolute right-0 top-[calc(100%+8px)] z-[110] min-w-[200px] rounded-xl border border-slate-200 bg-white py-1 shadow-lg"
                   @click.stop
                 >
@@ -263,7 +251,7 @@
                     {{ t('tp_attendance_page.export_scope_selected') }}
                   </button>
                 </div>
-              </details>
+              </div>
             </div>
           </div>
         </div>
@@ -470,9 +458,7 @@ import {
   ChevronRightIcon,
   ClockIcon,
   ExclamationTriangleIcon,
-  FunnelIcon,
   LockClosedIcon,
-  XMarkIcon,
 } from '@heroicons/vue/24/outline'
 
 import Button from '../../components/ui/Button.vue'
@@ -568,7 +554,7 @@ const {
 } = useVisibleFilterControls(ATTENDANCE_FILTER_CONTROLS, 'va-tp-attendance-datagrid-filters.v1')
 
 const datagridRef = ref(null)
-const { exportMenuRef, toggleExportMenu, closeExportMenu } = useExportDetailsMenu()
+const { exportMenuRef, showExportMenu, toggleExportMenu, closeExportMenu } = useExportDetailsMenu()
 const showColPanelDd = ref(false)
 useDetailsAutoCloseWithin(datagridRef)
 

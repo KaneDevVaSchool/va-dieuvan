@@ -1,12 +1,12 @@
 <template>
   <section
-    class="overflow-hidden rounded-lg border border-slate-200/90 bg-white dark:border-slate-800 dark:bg-slate-900/90"
+    :class="rootClass"
     :aria-label="title"
     :data-testid="`staff-request-trip-section-${sectionKey}`"
   >
     <header
-      class="flex items-center gap-2 border-b border-slate-100 px-4 py-3 dark:border-slate-800"
-      :class="headerTintClass"
+      class="flex items-center gap-2"
+      :class="headerClass"
     >
       <button
         v-if="collapsible"
@@ -22,19 +22,19 @@
           aria-hidden="true"
         />
       </button>
-      <h3 class="min-w-0 flex-1 truncate text-sm font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-200">
+      <h3 :class="titleClass">
         {{ title }}
       </h3>
       <span
         v-if="badge"
-        class="max-w-[8rem] shrink-0 truncate rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
-        :class="badgeClass"
+        class="max-w-[8rem] shrink-0 truncate rounded px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-slate-600 dark:text-slate-300"
+        :class="variant === 'stack' ? badgeClass : 'bg-slate-100 dark:bg-slate-800'"
       >
         {{ badge }}
       </span>
       <slot name="header-actions" />
     </header>
-    <div v-show="!collapsible || open" class="px-4 py-4">
+    <div v-show="!collapsible || open" :class="bodyClass">
       <slot />
     </div>
   </section>
@@ -43,6 +43,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { ChevronDownIcon } from '@heroicons/vue/24/outline'
+import { RD_SECTION_EYEBROW } from '../../../util/requestDetailTypography'
 
 const props = defineProps({
   sectionKey: { type: String, required: true },
@@ -52,6 +53,12 @@ const props = defineProps({
     type: String,
     default: 'slate',
     validator: (v) => ['brand', 'sky', 'emerald', 'amber', 'violet', 'rose', 'slate'].includes(v),
+  },
+  /** `embedded` — single card interior (overview-style). `stack` — separate bordered cards. */
+  variant: {
+    type: String,
+    default: 'embedded',
+    validator: (v) => ['embedded', 'stack'].includes(v),
   },
   defaultOpen: { type: Boolean, default: true },
   collapsible: { type: Boolean, default: false },
@@ -92,6 +99,27 @@ const toneMap = {
   },
 }
 
-const headerTintClass = computed(() => toneMap[props.tone].header)
+const rootClass = computed(() =>
+  props.variant === 'stack'
+    ? 'overflow-hidden rounded-lg border border-slate-200/90 bg-white dark:border-slate-800 dark:bg-slate-900/90'
+    : 'border-b border-slate-100 last:border-b-0 dark:border-slate-800',
+)
+
+const headerClass = computed(() =>
+  props.variant === 'stack'
+    ? ['border-b border-slate-100 px-4 py-3 dark:border-slate-800', toneMap[props.tone].header]
+    : 'border-b border-slate-100 px-4 py-2.5 dark:border-slate-800 sm:px-5',
+)
+
+const titleClass = computed(() =>
+  props.variant === 'stack'
+    ? 'min-w-0 flex-1 truncate text-sm font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-200'
+    : `min-w-0 flex-1 truncate ${RD_SECTION_EYEBROW}`,
+)
+
+const bodyClass = computed(() =>
+  props.variant === 'stack' ? 'px-4 py-4' : 'px-4 py-3 sm:px-5 sm:py-4',
+)
+
 const badgeClass = computed(() => toneMap[props.tone].badge)
 </script>

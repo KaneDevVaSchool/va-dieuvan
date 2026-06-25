@@ -28,6 +28,11 @@ import {
 } from '../util/tripDatetime'
 import { tripNamedPassengerDisplayCount } from '../util/dispatchRequestPassengers'
 import { buildDriverTripPaxList } from '../util/buildDriverTripPaxList'
+import {
+  buildDriverTripStatusFields,
+  resolveDriverOperationalLeg,
+  tripHasMultipleScheduleLegs,
+} from '../util/driverScheduleLeg'
 import { mergeCargoShipmentWithSnapshot } from '../util/cargoPartyContact'
 import { resolveTripLeaderContact } from '../util/tripLeaderContact'
 import { useDispatchScheduleCards } from './useDispatchScheduleCards'
@@ -248,37 +253,15 @@ export function useDriverTripDetailPage() {
     return null
   })
 
-  const multiScheduleLegTrip = computed(() => (trip.value?.schedule_legs?.length ?? 0) > 1)
+  const multiScheduleLegTrip = computed(() => tripHasMultipleScheduleLegs(trip.value))
 
-  const driverOperationalLeg = computed(() => {
-    const all = trip.value?.schedule_legs ?? []
-    if (!Array.isArray(all) || !all.length) return null
-    const did = myDriverId.value
-    let pool = all
-    if (did) {
-      const mine = all.filter((l) => Number(l.assignment?.driver_id) === did)
-      if (mine.length) pool = mine
-    } else if (all.length === 1) {
-      pool = all
-    } else {
-      return null
-    }
-
-    const inProgress = pool.find((l) => l.status === 'in_progress')
-    if (inProgress) return inProgress
-
-    const waiting = pool.find(
-      (l) => !['completed', 'cancelled', 'incident'].includes(String(l.status ?? '')),
-    )
-    return waiting ?? pool[0] ?? null
-  })
+  const driverOperationalLeg = computed(() =>
+    resolveDriverOperationalLeg(trip.value, myDriverId.value),
+  )
 
   function buildStatusPayload(status, tripSnap = trip.value) {
-    const payload = { status }
-    if (multiScheduleLegTrip.value && driverOperationalLeg.value?.key) {
-      payload.schedule_key = driverOperationalLeg.value.key
-    }
-    return withTripLockVersion(payload, tripSnap)
+    const fields = buildDriverTripStatusFields(status, tripSnap ?? trip.value, myDriverId.value)
+    return withTripLockVersion(fields, tripSnap)
   }
 
   async function mutateTripStatus(status) {
@@ -794,7 +777,10 @@ export function useDriverTripDetailPage() {
   }
 
   const canMarkPickup = computed(
-    () => trip.value?.status === 'in_progress' && paxKind.value === 'student' && paxList.value.length > 0,
+    () =>
+      String(driverLegStatus.value ?? '').toLowerCase() === 'in_progress' &&
+      paxKind.value === 'student' &&
+      paxList.value.length > 0,
   )
 
   const canStart = computed(() => {

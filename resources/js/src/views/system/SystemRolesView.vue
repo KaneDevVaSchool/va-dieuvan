@@ -3,8 +3,6 @@ import { computed, onActivated, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
-  FunnelIcon,
-  XMarkIcon,
   PlusIcon,
   ShieldCheckIcon,
   SparklesIcon,
@@ -308,10 +306,6 @@ onActivated(() => load())
                 <label :for="'role-filter-vis-' + fd.key" class="cursor-pointer text-sm text-slate-700 dark:text-slate-300">{{ fd.label }}</label>
               </li>
             </FilterVisibilityDropdown>
-            <button type="button" class="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-sm text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800" :title="t('system_pages.clear_filters')" data-testid="system-roles-reset-filters" @click="clearRoleSearch">
-              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-              <XMarkIcon class="h-3 w-3 text-rose-500" aria-hidden="true" />
-            </button>
           </div>
         </div>
       </div>

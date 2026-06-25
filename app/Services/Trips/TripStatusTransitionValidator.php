@@ -7,7 +7,7 @@ final class TripStatusTransitionValidator
     /** @var array<string, list<string>> */
     private const ALLOWED = [
         'pending' => ['cancelled'],
-        'approved' => ['cancelled'],
+        'approved' => ['assigned', 'driver_confirmed', 'in_progress', 'cancelled'],
         'assigned' => ['driver_confirmed', 'in_progress', 'cancelled', 'incident'],
         'driver_confirmed' => ['in_progress', 'cancelled', 'incident'],
         'in_progress' => ['completed', 'cancelled', 'incident'],

@@ -179,9 +179,10 @@
               </div>
               <div class="flex shrink-0 flex-wrap gap-1 sm:flex-col sm:items-end">
                 <button
-                  v-if="isPreviewableMime(a.mime_type)"
+                  v-if="isAttachmentPreviewable(a)"
                   type="button"
                   class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                  data-testid="attachment-preview-btn"
                   @click="$emit('preview', a)"
                 >
                   <EyeIcon class="h-4 w-4" aria-hidden="true" />
@@ -305,7 +306,7 @@
             </div>
             <DocsFileActions
               :attachment="a"
-              :can-preview="isPreviewableMime(a.mime_type)"
+              :can-preview="isAttachmentPreviewable(a)"
               :can-delete="canDeleteAttachment"
               :deleting="deletingId === a.id"
               @preview="$emit('preview', a)"
@@ -383,7 +384,7 @@ import { CheckIcon } from '@heroicons/vue/24/solid'
 import FileUpload from '../ui/FileUpload.vue'
 import DocsFileActions from './DocsFileActions.vue'
 import RequestSignedDocumentStatus from './RequestSignedDocumentStatus.vue'
-import { useDispatchRequestDocs } from '../../composables/useDispatchRequestDocs'
+import { useDispatchRequestDocs, isAttachmentPreviewable } from '../../composables/useDispatchRequestDocs'
 
 const props = defineProps({
   req: { type: Object, default: null },
@@ -433,7 +434,7 @@ const heroHeadingId = 'request-docs-hero-heading'
 const ocrTextOpen = reactive({})
 
 const reqRef = computed(() => props.req)
-const { fmtFileSize, attachmentKindLabel, isOcrStub, isPreviewableMime } = useDispatchRequestDocs(reqRef)
+const { fmtFileSize, attachmentKindLabel, isOcrStub } = useDispatchRequestDocs(reqRef)
 
 const heroFiles = computed(() => {
   const signed = props.signedPaperAttachments ?? []

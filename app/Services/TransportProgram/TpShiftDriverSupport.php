@@ -51,16 +51,19 @@ class TpShiftDriverSupport
             return null;
         }
 
+        // Ưu tiên: override ca theo ngày → override chung theo ngày → default ca → default chung.
+        // Override theo ngày (kể cả cột chung `driver_id`) PHẢI thắng tài xế mặc định của
+        // chương trình; nếu không, tài xế được phân theo ngày sẽ không xác nhận được trên /drive.
         if ($shift === 'morning') {
             return $day->morning_driver_id
-                ?? $this->settingsDriverId($program, 'morning', 'default_driver_id')
                 ?? $day->driver_id
+                ?? $this->settingsDriverId($program, 'morning', 'default_driver_id')
                 ?? $program->default_driver_id;
         }
         if ($shift === 'afternoon') {
             return $day->afternoon_driver_id
-                ?? $this->settingsDriverId($program, 'afternoon', 'default_driver_id')
                 ?? $day->driver_id
+                ?? $this->settingsDriverId($program, 'afternoon', 'default_driver_id')
                 ?? $program->default_driver_id;
         }
 
@@ -77,14 +80,14 @@ class TpShiftDriverSupport
 
         if ($shift === 'morning') {
             return $day->morning_backup_driver_id
-                ?? $this->settingsDriverId($program, 'morning', 'backup_driver_id')
                 ?? $day->backup_driver_id
+                ?? $this->settingsDriverId($program, 'morning', 'backup_driver_id')
                 ?? $program->backup_driver_id;
         }
         if ($shift === 'afternoon') {
             return $day->afternoon_backup_driver_id
-                ?? $this->settingsDriverId($program, 'afternoon', 'backup_driver_id')
                 ?? $day->backup_driver_id
+                ?? $this->settingsDriverId($program, 'afternoon', 'backup_driver_id')
                 ?? $program->backup_driver_id;
         }
 
@@ -128,7 +131,7 @@ class TpShiftDriverSupport
         if (! $driverId) {
             return null;
         }
-        $driver = Driver::query()->find($driverId);
+        $driver = Driver::query()->with('user:id,name,avatar_url')->find($driverId);
         if (! $driver || $driver->trashed()) {
             return null;
         }

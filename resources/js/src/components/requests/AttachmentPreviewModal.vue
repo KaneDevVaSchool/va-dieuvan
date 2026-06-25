@@ -62,6 +62,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { http } from '../../api/http'
 import { normalizeAxiosBlobError } from '../../util/downloadPdfAttachment'
+import { attachmentMime } from '../../composables/useDispatchRequestDocs'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -78,9 +79,17 @@ const loading = ref(false)
 const error = ref('')
 const blobUrl = ref('')
 
-const mime = computed(() => String(props.attachment?.mime_type || '').toLowerCase())
-const isPdf = computed(() => mime.value.includes('pdf') || /\.pdf$/i.test(props.attachment?.original_name || ''))
-const isImage = computed(() => mime.value.startsWith('image/'))
+const mime = computed(() => attachmentMime(props.attachment))
+const isPdf = computed(() => {
+  const m = mime.value
+  const name = props.attachment?.original_name || ''
+  return m.includes('pdf') || /\.pdf$/i.test(name)
+})
+const isImage = computed(() => {
+  const m = mime.value
+  const name = props.attachment?.original_name || ''
+  return m.startsWith('image/') || /\.(jpe?g|png|gif|webp|bmp|heic)$/i.test(name)
+})
 
 function revokeUrl() {
   if (blobUrl.value) {

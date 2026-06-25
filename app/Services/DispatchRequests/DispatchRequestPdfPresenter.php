@@ -269,7 +269,7 @@ final class DispatchRequestPdfPresenter
             'puPlace' => $puPlace,
             'delTime' => self::fmtPdfShortDatetime($r['return_at'] ?? null),
             'delPlace' => $delPlace,
-            'puContact' => self::nzString($r['person_in_charge'] ?? null),
+            'puContact' => self::formatPdfPicContact($r),
             'unitPrice' => self::fmtPdfVndSuffix($r['unit_price'] ?? null),
             'extraFee' => self::fmtPdfVndSuffix($r['extra_fee'] ?? null),
             'inotes' => self::nzString($r['notes'] ?? null),
@@ -326,6 +326,23 @@ final class DispatchRequestPdfPresenter
         }
 
         return trim($s);
+    }
+
+    /**
+     * @param  array<string, mixed>  $r
+     */
+    private static function formatPdfPicContact(array $r): string
+    {
+        $name = self::nzString(isset($r['person_in_charge']) ? (string) $r['person_in_charge'] : null);
+        $phone = self::nzString(isset($r['person_in_charge_phone']) ? (string) $r['person_in_charge_phone'] : null);
+        if ($name === '' && $phone === '') {
+            return '';
+        }
+        if ($name !== '' && $phone !== '') {
+            return $name.' · '.$phone;
+        }
+
+        return $name !== '' ? $name : $phone;
     }
 
     private static function fmtPdfPhone(mixed $v): string

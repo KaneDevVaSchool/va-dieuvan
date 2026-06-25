@@ -83,7 +83,7 @@ export function usePassengerManager() {
         if (filled.length) {
             seeds = filled.map((r) => ({
                 name: String(r.person_in_charge ?? "").trim(),
-                phone: "",
+                phone: String(r.person_in_charge_phone ?? "").trim(),
                 note: String(r.notes ?? "").trim(),
             }));
         }

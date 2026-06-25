@@ -160,6 +160,7 @@ import {
 } from '../../composables/useDriverTripDisplay'
 import { dispatchRequestDisplayPassengerCount } from '../../util/dispatchRequestPassengers'
 import { useHaptics } from '../../composables/useHaptics'
+import { resolveDispatchTripApiId } from '../../util/driverScheduleLeg'
 import { tpDriverTripCanConfirm, tpDriverTripCanStart } from '../../composables/useTpDriverSlotActions'
 
 const props = defineProps({
@@ -179,7 +180,7 @@ const haptics = useHaptics()
 
 function onStart() {
   haptics.impact()
-  emit('start', props.trip.id)
+  emit('start', props.trip)
 }
 function onConfirm() {
   haptics.success()
@@ -481,7 +482,7 @@ function goDetail() {
     router.push({ path: `/driver/tp-days/${tp.day_id}`, query })
     return
   }
-  router.push(`/driver/trips/${tripRaw.value.id}`)
+  router.push(`/driver/trips/${resolveDispatchTripApiId(tripRaw.value) ?? tripRaw.value.id}`)
 }
 
 function onRootClick() {

@@ -1,19 +1,27 @@
-import { ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 
-/** Toolbar export dropdown: details + DatagridToolbarActionButton (manual toggle; button inside summary does not open natively). */
+/** Toolbar export dropdown: relative wrapper + DatagridToolbarActionButton (no details/summary). */
 export function useExportDetailsMenu() {
   const exportMenuRef = ref(null)
+  const showExportMenu = ref(false)
 
-  function toggleExportMenu(event) {
-    event?.preventDefault?.()
-    event?.stopPropagation?.()
-    const el = exportMenuRef.value
-    if (el) el.open = !el.open
+  function toggleExportMenu() {
+    showExportMenu.value = !showExportMenu.value
   }
 
   function closeExportMenu() {
-    exportMenuRef.value?.removeAttribute?.('open')
+    showExportMenu.value = false
   }
 
-  return { exportMenuRef, toggleExportMenu, closeExportMenu }
+  function onDocClick(event) {
+    const el = exportMenuRef.value
+    if (showExportMenu.value && el && !el.contains(event.target)) {
+      showExportMenu.value = false
+    }
+  }
+
+  onMounted(() => document.addEventListener('click', onDocClick, true))
+  onUnmounted(() => document.removeEventListener('click', onDocClick, true))
+
+  return { exportMenuRef, showExportMenu, toggleExportMenu, closeExportMenu }
 }

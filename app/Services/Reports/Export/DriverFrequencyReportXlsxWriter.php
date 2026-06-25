@@ -8,7 +8,6 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 /**
@@ -38,7 +37,7 @@ class DriverFrequencyReportXlsxWriter
      */
     public function writeTempFile(array $payload, array $filters = [], ?string $exportedBy = null): string
     {
-        $spreadsheet = new Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $spreadsheet->getProperties()
             ->setTitle('Báo cáo tần suất tài xế & xe')
             ->setCreator('VA Điều Vận')
@@ -81,7 +80,9 @@ class DriverFrequencyReportXlsxWriter
     {
         $year = (int) ($payload['year'] ?? ($filters['year'] ?? now()->year));
         $periodLine = 'Kỳ báo cáo: Năm '.$year;
-        if (! empty($filters['quarter'])) {
+        if (! empty($filters['month'])) {
+            $periodLine .= ' · Tháng '.((int) $filters['month']);
+        } elseif (! empty($filters['quarter'])) {
             $qMap = ['q1' => 'Quý 1', 'q2' => 'Quý 2', 'q3' => 'Quý 3', 'q4' => 'Quý 4'];
             $periodLine .= ' · '.($qMap[$filters['quarter']] ?? strtoupper((string) $filters['quarter']));
         }
@@ -89,11 +90,14 @@ class DriverFrequencyReportXlsxWriter
             $map = DriverFrequencyReportService::TRIP_TYPE_LABELS;
             $periodLine .= ' · '.($map[$filters['trip_type']] ?? $filters['trip_type']);
         }
+        if (! empty($filters['vehicle_plate'])) {
+            $periodLine .= ' · Biển số '.$filters['vehicle_plate'];
+        }
 
         return [
-            'periodLine'    => $periodLine,
-            'exportDate'    => now()->format('d/m/Y'),
-            'exportedBy'    => $exportedBy ?? '_______________________________',
+            'periodLine' => $periodLine,
+            'exportDate' => now()->format('d/m/Y'),
+            'exportedBy' => $exportedBy ?? '_______________________________',
             'approvalBlank' => '_______________________________',
         ];
     }
@@ -165,7 +169,7 @@ class DriverFrequencyReportXlsxWriter
             $ws->setCellValue("A{$r}", 'Không có dữ liệu trong kỳ đã chọn.');
             $this->applyStyle($ws, "A{$r}:K{$r}", [
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-                'font'      => ['italic' => true, 'color' => ['argb' => 'FF888888']],
+                'font' => ['italic' => true, 'color' => ['argb' => 'FF888888']],
             ]);
         }
 
@@ -297,14 +301,14 @@ class DriverFrequencyReportXlsxWriter
         $ws->mergeCells('C2:I2');
         $ws->setCellValue('C2', 'TỔNG HỢP XÉT THƯỞNG CUỐI NĂM');
         $this->applyStyle($ws, 'C2:I2', [
-            'font'      => ['bold' => true, 'size' => 14, 'color' => ['argb' => self::VA_RED]],
+            'font' => ['bold' => true, 'size' => 14, 'color' => ['argb' => self::VA_RED]],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
         ]);
 
         $ws->mergeCells('C3:I3');
         $ws->setCellValue('C3', 'Hệ Thống Điều Vận Nội Bộ  ·  Vietnam America Schools');
         $this->applyStyle($ws, 'C3:I3', [
-            'font'      => ['italic' => true, 'size' => 9, 'color' => ['argb' => 'FF555555']],
+            'font' => ['italic' => true, 'size' => 9, 'color' => ['argb' => 'FF555555']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
         ]);
 
@@ -336,10 +340,10 @@ class DriverFrequencyReportXlsxWriter
             $ws->setCellValue($col.$headerRow, $label);
         }
         $this->applyStyle($ws, 'A'.$headerRow.':I'.$headerRow, [
-            'font'      => ['bold' => true, 'size' => 9, 'color' => ['argb' => 'FFFFFFFF']],
-            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => self::HEADER_BG]],
+            'font' => ['bold' => true, 'size' => 9, 'color' => ['argb' => 'FFFFFFFF']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => self::HEADER_BG]],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER, 'wrapText' => true],
-            'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FF555577']]],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FF555577']]],
         ]);
 
         $drivers = $payload['drivers'] ?? [];
@@ -398,18 +402,18 @@ class DriverFrequencyReportXlsxWriter
         $ws->mergeCells("C2:{$lastCol}2");
         $ws->setCellValue('C2', $title);
         $this->applyStyle($ws, "C2:{$lastCol}2", [
-            'font'      => ['bold' => true, 'size' => 14, 'color' => ['argb' => self::VA_RED]],
+            'font' => ['bold' => true, 'size' => 14, 'color' => ['argb' => self::VA_RED]],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
         ]);
 
         $ws->mergeCells("C3:{$lastCol}3");
         $ws->setCellValue('C3', 'Hệ Thống Điều Vận Nội Bộ  ·  Vietnam America Schools');
         $this->applyStyle($ws, "C3:{$lastCol}3", [
-            'font'      => ['italic' => true, 'size' => 9, 'color' => ['argb' => 'FF555555']],
+            'font' => ['italic' => true, 'size' => 9, 'color' => ['argb' => 'FF555555']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
         ]);
 
-        $ws->mergeCells("A5:D5");
+        $ws->mergeCells('A5:D5');
         $ws->setCellValue('A5', $meta['periodLine'].'   |   Ngày xuất: '.$meta['exportDate']);
         $this->applyStyle($ws, 'A5:D5', ['font' => ['size' => 8, 'color' => ['argb' => 'FF444444']]]);
 
@@ -417,7 +421,7 @@ class DriverFrequencyReportXlsxWriter
             $ws->mergeCells('E5:G5');
             $ws->setCellValue('E5', 'Người xuất:  '.$meta['exportedBy']);
             $ws->mergeCells("J5:{$lastCol}5");
-            $ws->setCellValue("J5", 'Phê duyệt:  '.$meta['approvalBlank']);
+            $ws->setCellValue('J5', 'Phê duyệt:  '.$meta['approvalBlank']);
         } else {
             $ws->mergeCells("E5:{$lastCol}5");
             $ws->setCellValue('E5', 'Người xuất:  '.$meta['exportedBy']);
@@ -441,10 +445,10 @@ class DriverFrequencyReportXlsxWriter
             $ws->setCellValue($col.$row, $label);
         }
         $this->applyStyle($ws, $firstCol.$row.':'.$lastCol.$row, [
-            'font'      => ['bold' => true, 'size' => 9, 'color' => ['argb' => 'FFFFFFFF']],
-            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => self::HEADER_BG]],
+            'font' => ['bold' => true, 'size' => 9, 'color' => ['argb' => 'FFFFFFFF']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => self::HEADER_BG]],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER, 'wrapText' => true],
-            'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FF555577']]],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FF555577']]],
         ]);
     }
 
@@ -452,8 +456,8 @@ class DriverFrequencyReportXlsxWriter
     {
         $bg = $zebra ? self::ZEBRA_BG : 'FFFFFFFF';
         $this->applyStyle($ws, $range, [
-            'font'    => ['size' => 9],
-            'fill'    => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $bg]],
+            'font' => ['size' => 9],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $bg]],
             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_HAIR, 'color' => ['argb' => 'FFD0D0D0']]],
             'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
         ]);
@@ -523,10 +527,10 @@ class DriverFrequencyReportXlsxWriter
         $ws->setCellValue("{$firstCol}{$sigHeader}", 'Người lập');
         $ws->setCellValue($this->advanceCol($mid, 1).$sigHeader, 'Phê duyệt');
         $this->applyStyle($ws, "{$firstCol}{$sigHeader}:{$lastCol}{$sigHeader}", [
-            'font'      => ['bold' => true, 'size' => 9],
-            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => self::SIG_BG]],
+            'font' => ['bold' => true, 'size' => 9],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => self::SIG_BG]],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-            'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFAAAAAA']]],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FFAAAAAA']]],
         ]);
 
         foreach (range($sigHeader + 1, $sigHeader + 3) as $r) {
@@ -544,7 +548,7 @@ class DriverFrequencyReportXlsxWriter
         $ws->setCellValue("{$firstCol}{$labelRow}", '(Ký và ghi rõ họ tên)');
         $ws->setCellValue($this->advanceCol($mid, 1).$labelRow, '(Ký và ghi rõ họ tên)');
         $this->applyStyle($ws, "{$firstCol}{$labelRow}:{$lastCol}{$labelRow}", [
-            'font'      => ['italic' => true, 'size' => 8, 'color' => ['argb' => 'FF888888']],
+            'font' => ['italic' => true, 'size' => 8, 'color' => ['argb' => 'FF888888']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
         ]);
     }

@@ -2,27 +2,28 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
-  ChartBarIcon,
-  CheckCircleIcon,
-  ClockIcon,
-  CubeIcon,
+  BoltIcon,
   ClipboardDocumentListIcon,
+  ClockIcon,
+  ExclamationTriangleIcon,
 } from '@heroicons/vue/24/outline'
 import KpiSummaryStrip from '../shared/ui/KpiSummaryStrip.vue'
 
 const props = defineProps({
   stats: { type: Object, required: true },
   loading: { type: Boolean, default: false },
-  activeTripType: { type: String, default: '' },
+  /** '' | 'overdue' | 'urgent' | 'today' */
+  activeQueueFilter: { type: String, default: '' },
 })
 
 const emit = defineEmits(['quick-filter'])
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 function displayCount(n) {
   if (props.loading) return '…'
-  return new Intl.NumberFormat('vi-VN').format(n ?? 0)
+  const loc = locale.value === 'en' ? 'en-GB' : 'vi-VN'
+  return new Intl.NumberFormat(loc).format(n ?? 0)
 }
 
 function sharePct(part, total) {
@@ -31,17 +32,15 @@ function sharePct(part, total) {
 }
 
 const activeCardKey = computed(() => {
-  if (props.activeTripType === 'cargo') return 'cargo'
-  if (!props.activeTripType) return 'queue'
-  return ''
+  const f = props.activeQueueFilter
+  if (f === 'overdue' || f === 'urgent' || f === 'today') return f
+  return 'queue'
 })
 
 const cards = computed(() => {
   const s = props.stats
   const queue = s.pending_count ?? 0
-  const today = s.pending_today ?? 0
-  const cargo = s.cargo ?? 0
-  const rate = s.approval_rate_30d
+  const overdue = s.overdue_count ?? 0
 
   return [
     {
@@ -50,50 +49,40 @@ const cards = computed(() => {
       tone: 'brand',
       icon: ClipboardDocumentListIcon,
       display: displayCount(queue),
-      sub: t('dept.pending_kpi_queue_sub'),
+      sub: t('dept.inbox_kpi_queue_sub'),
+      progress: queue > 0 ? sharePct(overdue, queue) : null,
+      progressTotal: queue,
+      filter: { kind: 'kpi', value: '' },
+    },
+    {
+      key: 'overdue',
+      label: t('dept.inbox_kpi_overdue'),
+      tone: 'rose',
+      icon: ExclamationTriangleIcon,
+      display: displayCount(overdue),
+      sub: t('dept.inbox_kpi_overdue_sub'),
       progress: null,
-      filter: { kind: 'trip_type', value: '' },
+      filter: { kind: 'kpi', value: 'overdue' },
+    },
+    {
+      key: 'urgent',
+      label: t('dept.inbox_kpi_urgent'),
+      tone: 'amber',
+      icon: BoltIcon,
+      display: displayCount(s.urgent_pending_count),
+      sub: t('dept.inbox_kpi_urgent_sub'),
+      progress: null,
+      filter: { kind: 'kpi', value: 'urgent' },
     },
     {
       key: 'today',
       label: t('dept.pending_kpi_today'),
       tone: 'sky',
       icon: ClockIcon,
-      display: displayCount(today),
+      display: displayCount(s.pending_today),
       sub: t('dept.kpi_pending_sub'),
       progress: null,
-      filter: null,
-    },
-    {
-      key: 'month',
-      label: t('dept.kpi_approved_month'),
-      tone: 'emerald',
-      icon: CheckCircleIcon,
-      display: displayCount(s.approved_this_month ?? 0),
-      sub: t('dept.pending_kpi_goto_approved'),
-      progress: null,
-      filter: { kind: 'navigate', to: 'approved' },
-    },
-    {
-      key: 'rate',
-      label: t('dept.kpi_rate'),
-      tone: 'amber',
-      icon: ChartBarIcon,
-      display: rate != null ? `${rate}%` : '—',
-      sub: t('dept.kpi_rate_sub'),
-      progress: null,
-      filter: null,
-    },
-    {
-      key: 'cargo',
-      label: t('dept.approved_kpi_cargo'),
-      tone: 'violet',
-      icon: CubeIcon,
-      display: displayCount(cargo),
-      sub: queue ? t('dept.kpi_share_of_total', { pct: sharePct(cargo, queue) }) : '',
-      progress: sharePct(cargo, queue),
-      progressTotal: queue,
-      filter: { kind: 'trip_type', value: 'cargo' },
+      filter: { kind: 'kpi', value: 'today' },
     },
   ]
 })
@@ -107,9 +96,10 @@ function onCardAction(card) {
 <template>
   <KpiSummaryStrip
     :cards="cards"
+    grid-class="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4"
     :aria-label="t('dept.pending_kpi_strip_aria')"
     :eyebrow="t('dept.approved_kpi_eyebrow')"
-    :title="t('dept.pending_kpi_strip_title')"
+    :title="t('dept.inbox_kpi_title')"
     :hint="t('dept.approved_kpi_strip_hint')"
     :active-card-key="activeCardKey"
     @card-action="onCardAction"

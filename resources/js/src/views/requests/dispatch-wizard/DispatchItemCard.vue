@@ -1,101 +1,117 @@
 <template>
-  <div class="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-    <div class="flex flex-wrap items-center justify-between gap-2">
-      <span class="text-sm font-semibold text-slate-500">
-        {{ t('dispatch_wizard.s3.card_schedule', { n: index + 1 }) }}
-      </span>
-      <div class="flex flex-wrap gap-2">
+  <article class="dw-route-card">
+    <header class="dw-route-card__head">
+      <div class="min-w-0 flex-1">
+        <h4 class="dw-route-card__title">
+          {{ t('dispatch_wizard.s3.route_card_title', { n: index + 1 }) }}
+        </h4>
+        <p class="dw-route-card__route truncate">{{ routeEndpointsLabel }}</p>
+        <p v-if="routeTimesLabel" class="dw-route-card__times">{{ routeTimesLabel }}</p>
+      </div>
+      <div class="dw-route-card__actions">
         <button
           type="button"
-          class="inline-flex min-h-[32px] items-center gap-1 rounded border border-slate-300 px-2 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+          class="inline-flex min-h-[28px] items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+          data-testid="dispatch-schedule-duplicate"
           @click="$emit('duplicate')"
         >
-          <DocumentDuplicateIcon class="h-3.5 w-3.5 shrink-0 sm:hidden" aria-hidden="true" />
-          <span class="hidden sm:inline">{{ t('dispatch_wizard.s3.card_duplicate') }}</span>
-          <span class="sr-only sm:hidden">{{ t('dispatch_wizard.s3.card_duplicate') }}</span>
+          <DocumentDuplicateIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          <span>{{ t('dispatch_wizard.s3.card_duplicate') }}</span>
         </button>
         <button
+          v-if="variant !== 'cargo'"
           type="button"
-          class="inline-flex min-h-[32px] items-center gap-1 rounded border border-slate-300 px-2 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+          class="inline-flex min-h-[28px] items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
           :disabled="index === 0"
+          data-testid="dispatch-schedule-copy-above"
           @click="$emit('autofill')"
         >
-          <ArrowUpIcon class="h-3.5 w-3.5 shrink-0 sm:hidden" aria-hidden="true" />
+          <ArrowUpIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           <span class="hidden sm:inline">{{ t('dispatch_wizard.s3.card_copy_above') }}</span>
-          <span class="sr-only sm:hidden">{{ t('dispatch_wizard.s3.card_copy_above') }}</span>
         </button>
         <button
           type="button"
-          class="inline-flex min-h-[32px] items-center gap-1 rounded border border-rose-200 px-2 py-1 text-xs font-medium text-rose-600 transition hover:bg-rose-50"
+          class="inline-flex min-h-[28px] items-center gap-1 rounded-lg border border-rose-200 bg-white px-2 py-1 text-xs font-medium text-rose-700 transition hover:bg-rose-50"
+          data-testid="dispatch-schedule-remove"
           @click="$emit('remove')"
         >
-          <TrashIcon class="h-3.5 w-3.5 shrink-0 sm:hidden" aria-hidden="true" />
-          <span class="hidden sm:inline">{{ t('dispatch_wizard.s3.card_remove') }}</span>
-          <span class="sr-only sm:hidden">{{ t('dispatch_wizard.s3.card_remove') }}</span>
+          <TrashIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          <span>{{ t('dispatch_wizard.s3.card_remove') }}</span>
         </button>
       </div>
-    </div>
+    </header>
 
-    <!-- Cargo: thông tin hàng hóa -->
-    <section
-      v-if="variant === 'cargo'"
-      class="rounded-lg border border-slate-200/80 bg-slate-50/60 p-3"
-    >
-      <h4 class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-        {{ t('dispatch_wizard.s3.cargo_info_heading') }}
-      </h4>
-      <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div class="dw-route-card__body">
+      <div
+        v-if="variant === 'passenger'"
+        class="col-span-full grid grid-cols-1 gap-2 sm:grid-cols-2"
+        role="group"
+        :aria-label="t('dispatch_wizard.s3.owner')"
+      >
         <BaseInput
-          class="col-span-2"
-          :label="t('dispatch_wizard.s3.cargo_name')"
-          :model-value="row.name"
-          :placeholder="t('dispatch_wizard.s3.cargo_name_ph')"
-          @update:model-value="(v) => (row.name = v)"
+          data-testid="dispatch-schedule-pic-name"
+          :label="t('dispatch_wizard.s3.owner_name')"
+          :model-value="row.person_in_charge"
+          :placeholder="t('dispatch_wizard.s3.pic_ph')"
+          @update:model-value="(v) => (row.person_in_charge = v)"
         />
         <BaseInput
-          :label="t('dispatch_wizard.s3.qty')"
-          :model-value="row.qty"
-          :placeholder="t('dispatch_wizard.s3.qty_ph')"
-          @update:model-value="(v) => (row.qty = v)"
-        />
-        <BaseInput
-          :label="t('dispatch_wizard.s3.weight')"
-          :model-value="row.weight"
-          :placeholder="t('dispatch_wizard.s3.weight_ph')"
-          @update:model-value="(v) => (row.weight = v)"
-        />
-        <BaseInput
-          class="col-span-2"
-          :label="t('dispatch_wizard.s3.dim')"
-          :model-value="row.dimensions"
-          :placeholder="t('dispatch_wizard.s3.dim_ph')"
-          @update:model-value="(v) => (row.dimensions = v)"
-        />
-        <BaseInput
-          class="col-span-2"
-          :label="t('dispatch_wizard.s3.item_notes')"
-          :model-value="row.item_notes"
-          :placeholder="t('dispatch_wizard.s3.item_notes_ph')"
-          @update:model-value="(v) => (row.item_notes = v)"
+          data-testid="dispatch-schedule-pic-phone"
+          :label="t('dispatch_wizard.s3.owner_phone')"
+          inputmode="numeric"
+          autocomplete="tel"
+          maxlength="11"
+          :model-value="row.person_in_charge_phone ?? ''"
+          :placeholder="t('dispatch_wizard.create.phone_ph')"
+          @update:model-value="(v) => (row.person_in_charge_phone = v)"
         />
       </div>
-    </section>
 
-    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-      <fieldset class="flex flex-col gap-2 rounded-lg border border-sky-100 bg-sky-50/50 p-3">
-        <legend class="px-1 text-xs font-semibold text-sky-700">
-          {{ tripOutLegend }}
-        </legend>
+      <div v-if="variant === 'cargo'" class="col-span-full space-y-2">
+        <p class="dw-route-leg__label">{{ t('dispatch_wizard.s3.cargo_info_heading') }}</p>
+        <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <BaseInput
+            class="col-span-2 sm:col-span-1"
+            :label="t('dispatch_wizard.s3.cargo_name')"
+            :model-value="row.name"
+            :placeholder="t('dispatch_wizard.s3.cargo_name_ph')"
+            @update:model-value="(v) => (row.name = v)"
+          />
+          <BaseInput
+            :label="t('dispatch_wizard.s3.qty')"
+            :model-value="row.qty"
+            :placeholder="t('dispatch_wizard.s3.qty_ph')"
+            @update:model-value="(v) => (row.qty = v)"
+          />
+          <BaseInput
+            :label="t('dispatch_wizard.s3.weight')"
+            :model-value="row.weight"
+            :placeholder="t('dispatch_wizard.s3.weight_ph')"
+            @update:model-value="(v) => (row.weight = v)"
+          />
+          <BaseInput
+            class="col-span-2"
+            :label="t('dispatch_wizard.s3.dim')"
+            :model-value="row.dimensions"
+            :placeholder="t('dispatch_wizard.s3.dim_ph')"
+            @update:model-value="(v) => (row.dimensions = v)"
+          />
+        </div>
+      </div>
+
+      <div class="dw-route-leg">
+        <p class="dw-route-leg__label">{{ tripOutLegend }}</p>
         <div class="flex flex-col gap-1">
           <template v-if="index === 0">
-            <span class="text-xs font-medium text-slate-700">{{ t('dispatch_wizard.s3.time') }}</span>
+            <span class="text-xs font-medium text-slate-700">{{ timeOutLabel }}</span>
             <input
               :value="formattedTripStart"
               type="text"
               readonly
               tabindex="-1"
+              :aria-label="timeOutLabel"
               :class="[
-                'rounded-lg border px-3 py-2 text-sm shadow-sm',
+                'rounded-lg border px-3 py-2 text-sm',
                 errs.departTime
                   ? 'border-rose-300 bg-rose-50/50 text-slate-900 ring-1 ring-rose-200'
                   : 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-800',
@@ -106,7 +122,7 @@
           </template>
           <BaseDateTime
             v-else
-            :label="t('dispatch_wizard.s3.time')"
+            :label="timeOutLabel"
             :model-value="outboundDepartModel"
             :error="errs.departTime"
             :hint="outboundTimeHint"
@@ -115,6 +131,7 @@
         </div>
         <BaseInput
           :label="placeOutLabel"
+          :hint="placeOutHint"
           :model-value="pickupModel"
           :placeholder="pickupPh"
           @update:model-value="setPickup"
@@ -136,15 +153,13 @@
             @update:model-value="(v) => (row.pickup_contact_phone = v)"
           />
         </div>
-      </fieldset>
+      </div>
 
-      <fieldset class="flex flex-col gap-2 rounded-lg border border-emerald-100 bg-emerald-50/40 p-3">
-        <legend class="px-1 text-xs font-semibold text-emerald-700">
-          {{ tripBackLegend }}
-        </legend>
+      <div class="dw-route-leg">
+        <p class="dw-route-leg__label">{{ tripBackLegend }}</p>
         <div class="flex flex-col gap-1">
           <BaseDateTime
-            :label="t('dispatch_wizard.s3.time')"
+            :label="timeBackLabel"
             :model-value="returnModel"
             :error="errs.returnTime"
             :hint="returnTimeHint"
@@ -156,6 +171,7 @@
         </div>
         <BaseInput
           :label="placeBackLabel"
+          :hint="placeBackHint"
           :model-value="dropoffModel"
           :placeholder="dropoffPh"
           :error="errs.returnPlace"
@@ -178,19 +194,19 @@
             @update:model-value="(v) => (row.delivery_contact_phone = v)"
           />
         </div>
-      </fieldset>
-    </div>
+      </div>
 
-    <template v-if="variant === 'business'">
-      <BaseInput
-        :label="t('dispatch_wizard.s3.waypoint_col')"
-        :model-value="row.waypoint"
-        :placeholder="t('dispatch_wizard.s3.waypoint_ph')"
-        @update:model-value="(v) => (row.waypoint = v)"
-      />
-    </template>
+      <template v-if="variant === 'business'">
+        <BaseInput
+          class="col-span-full"
+          :label="t('dispatch_wizard.s3.waypoint_col')"
+          :model-value="row.waypoint"
+          :placeholder="t('dispatch_wizard.s3.waypoint_ph')"
+          @update:model-value="(v) => (row.waypoint = v)"
+        />
+      </template>
 
-    <div v-if="variant !== 'cargo'" :class="detailGridClass">
+      <div v-if="variant !== 'cargo'" class="col-span-full" :class="detailGridClass">
       <BaseInput
         :class="guestsInputClass"
         type="number"
@@ -200,15 +216,6 @@
         :placeholder="t('dispatch_wizard.s3.guests_ph')"
         :error="errs.passengers"
         @update:model-value="(v) => (row.guests = v)"
-      />
-
-      <BaseInput
-        v-if="variant === 'passenger'"
-        :class="picInputClass"
-        :label="t('dispatch_wizard.s3.owner')"
-        :model-value="row.person_in_charge"
-        :placeholder="t('dispatch_wizard.s3.pic_ph')"
-        @update:model-value="(v) => (row.person_in_charge = v)"
       />
 
       <template v-if="!isPortalUser">
@@ -242,25 +249,21 @@
       />
     </div>
 
-    <!-- Cargo: chi phí & ghi chú vận chuyển -->
-    <section v-else class="rounded-lg border border-slate-200/80 p-3">
-      <h4 class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-        {{ t('dispatch_wizard.s3.cargo_cost_heading') }}
-      </h4>
-      <div class="grid grid-cols-1 gap-3">
-        <BaseInput
-          :class="costFieldClass"
-          inputmode="numeric"
-          autocomplete="off"
-          :label="t('dispatch_wizard.s3.cost')"
-          :model-value="row.cost"
-          :placeholder="t('dispatch_wizard.s3.vnd_ph')"
-          :disabled="lockCargoRowMoney"
-          @update:model-value="(v) => vndRow(row, 'cost', v)"
-        />
-      </div>
-    </section>
-  </div>
+    <!-- Cargo: chi phí -->
+    <div v-else class="col-span-full">
+      <BaseInput
+        :class="costFieldClass"
+        inputmode="numeric"
+        autocomplete="off"
+        :label="t('dispatch_wizard.s3.cost')"
+        :model-value="row.cost"
+        :placeholder="t('dispatch_wizard.s3.vnd_ph')"
+        :disabled="lockCargoRowMoney"
+        @update:model-value="(v) => vndRow(row, 'cost', v)"
+      />
+    </div>
+    </div>
+  </article>
 </template>
 
 <script setup>
@@ -296,20 +299,18 @@ const wizard = inject(DISPATCH_WIZARD_KEY, null)
 
 const isPortalUser = computed(() => Boolean(wizard?.isPortal))
 
-const detailGridClass = computed(() =>
-  isPortalUser.value
-    ? 'grid grid-cols-2 gap-4'
-    : 'grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 lg:gap-x-3 lg:gap-y-3',
-)
-
-const guestsInputClass = computed(() => {
-  if (!isPortalUser.value) return 'col-span-2 sm:col-span-1'
-  return 'col-span-1'
+const detailGridClass = computed(() => {
+  if (isPortalUser.value) {
+    return props.variant === 'passenger'
+      ? 'grid grid-cols-1 gap-3'
+      : 'grid grid-cols-2 gap-4'
+  }
+  return 'grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 lg:gap-x-3 lg:gap-y-3'
 })
 
-const picInputClass = computed(() => {
-  if (!isPortalUser.value) return 'col-span-2 sm:col-span-2'
-  return 'col-span-1'
+const guestsInputClass = computed(() => {
+  if (isPortalUser.value) return 'max-w-[11rem]'
+  return 'col-span-2 sm:col-span-1'
 })
 
 const lockDetailPricing = computed(() => isPortalUser.value && props.variant !== 'cargo')
@@ -342,17 +343,35 @@ const tripBackLegend = computed(() =>
     : t('dispatch_wizard.s3.trip_back'),
 )
 
-const placeOutLabel = computed(() =>
-  props.variant === 'cargo'
-    ? t('dispatch_wizard.s3.cargo_pickup_place')
-    : t('dispatch_wizard.s3.place'),
+const placeOutLabel = computed(() => {
+  if (props.variant === 'cargo') return t('dispatch_wizard.s3.cargo_pickup_place')
+  if (props.variant === 'passenger') return t('dispatch_wizard.s3.place_depart_out')
+  return t('dispatch_wizard.s3.place')
+})
+
+const placeBackLabel = computed(() => {
+  if (props.variant === 'cargo') return t('dispatch_wizard.s3.cargo_delivery_place')
+  if (props.variant === 'passenger') return t('dispatch_wizard.s3.place_depart_return')
+  return t('dispatch_wizard.s3.place')
+})
+
+const placeOutHint = computed(() =>
+  props.variant === 'passenger' ? t('dispatch_wizard.s3.place_depart_out_hint') : '',
 )
 
-const placeBackLabel = computed(() =>
-  props.variant === 'cargo'
-    ? t('dispatch_wizard.s3.cargo_delivery_place')
-    : t('dispatch_wizard.s3.place'),
+const placeBackHint = computed(() =>
+  props.variant === 'passenger' ? t('dispatch_wizard.s3.place_depart_return_hint') : '',
 )
+
+const timeOutLabel = computed(() => {
+  if (props.variant === 'passenger') return t('dispatch_wizard.s3.time_depart_out')
+  return t('dispatch_wizard.s3.time')
+})
+
+const timeBackLabel = computed(() => {
+  if (props.variant === 'passenger') return t('dispatch_wizard.s3.time_depart_return')
+  return t('dispatch_wizard.s3.time')
+})
 
 const formattedTripStart = computed(() => wizard?.formattedRequestedDateTime?.value ?? '')
 
@@ -379,6 +398,24 @@ const returnModel = computed(() =>
 const outboundTimeHint = computed(() => formatDatetimeLocalAmPm(outboundDepartModel.value))
 
 const returnTimeHint = computed(() => formatDatetimeLocalAmPm(String(returnModel.value ?? '')))
+
+const routeEndpointsLabel = computed(() => {
+  const a = (pickupModel.value || '').trim() || '—'
+  const b = (dropoffModel.value || '').trim() || '—'
+  return `${a} → ${b}`
+})
+
+const routeTimesLabel = computed(() => {
+  const out =
+    props.index === 0
+      ? String(formattedTripStart.value || '').trim()
+      : String(outboundTimeHint.value || '').trim()
+  const ret = String(returnTimeHint.value || '').trim()
+  if (!out && !ret) return ''
+  if (!ret) return out
+  if (!out) return ret
+  return `${out} → ${ret}`
+})
 
 const tripDurationLabel = computed(() => {
   const startRaw = outboundDepartRaw.value

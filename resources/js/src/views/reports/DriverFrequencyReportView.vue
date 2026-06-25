@@ -17,6 +17,7 @@
       :filter-control-visible="filterControlVisible"
       :filter-control-defs="filterControlDefs"
       :year-options="YEAR_OPTIONS"
+      :month-options="monthOptions"
       :driver-options="filterOptions.drivers"
       :vehicle-options="filterOptions.vehicles"
       :trip-type-options="tripTypeOptions"
@@ -25,9 +26,10 @@
       :loading="loading"
       :can-export="canExport"
       :exporting="exporting"
-      @export-xlsx="doExportXlsx"
-      @export-pdf="doExportPdf"
-      @reset-filters="resetFilters"
+      @export-xlsx="doExportXlsx(false)"
+      @export-pdf="doExportPdf(false)"
+      @export-xlsx-all="doExportXlsx(true)"
+      @export-pdf-all="doExportPdf(true)"
       @patch-filter="onPatchFilter"
       @toggle-filter-panel="toggleFilterPanel"
       @close-filter-panel="closeFilterPanel"
@@ -108,18 +110,18 @@
               />
             </div>
             <div v-if="canExport" class="ml-auto flex shrink-0 items-center gap-2">
-              <details ref="exportMenuRef" class="group relative">
-                <summary class="list-none [&::-webkit-details-marker]:hidden">
-                  <DatagridToolbarActionButton
-                    icon="export"
-                    :disabled="!!exporting || loading"
-                    test-id="driver-freq-toolbar-export"
-                    @click="toggleExportMenu"
-                  >
-                    {{ t('driver_freq.toolbar_export') }}
-                  </DatagridToolbarActionButton>
-                </summary>
+              <div ref="exportMenuRef" class="relative">
+                <DatagridToolbarActionButton
+                  icon="export"
+                  :active="showExportMenu"
+                  :disabled="!!exporting || loading"
+                  test-id="driver-freq-toolbar-export"
+                  @click="toggleExportMenu"
+                >
+                  {{ t('driver_freq.toolbar_export') }}
+                </DatagridToolbarActionButton>
                 <div
+                  v-if="showExportMenu"
                   class="absolute right-0 top-[calc(100%+8px)] z-[110] min-w-[200px] rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-600 dark:bg-slate-900"
                   @click.stop
                 >
@@ -142,7 +144,7 @@
                     {{ t('driver_freq.btn_export_pdf') }}
                   </button>
                 </div>
-              </details>
+              </div>
             </div>
           </div>
         </div>
@@ -256,7 +258,7 @@ import DriverFrequencyFilters from '../../components/reports/DriverFrequencyFilt
 import DriverFrequencySummaryBar from '../../components/reports/DriverFrequencySummaryBar.vue'
 import DatagridToolbarSearch from '../../components/shared/ui/DatagridToolbarSearch.vue'
 import DatagridToolbarActionButton from '../../components/shared/ui/DatagridToolbarActionButton.vue'
-import { useDetailsAutoClose, useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
+import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 import { useExportDetailsMenu } from '../../composables/useExportDetailsMenu.js'
 import DashboardEChart from '../../components/dashboard/DashboardEChart.vue'
 import {
@@ -289,13 +291,21 @@ const YEAR_OPTIONS = [new Date().getFullYear(), new Date().getFullYear() - 1, ne
 
 const TRIP_TYPE_SLUGS = ['point_to_point', 'business', 'door_to_door', 'cargo']
 
-const FILTER_CONTROL_IDS = ['year', 'quarter', 'driverId', 'vehiclePlate', 'tripType']
-const DF_FILTER_VIS_KEY = 'driver-freq-report-filter-vis.v2'
+const FILTER_CONTROL_IDS = ['year', 'quarter', 'month', 'driverId', 'vehiclePlate', 'tripType']
+const DF_FILTER_VIS_KEY = 'driver-freq-report-filter-vis.v3'
+
+const monthOptions = computed(() =>
+  Array.from({ length: 12 }, (_, i) => ({
+    value: String(i + 1),
+    label: t('driver_freq.month_option', { n: i + 1 }),
+  })),
+)
 
 function loadFilterControlVisibility() {
   const defaults = {
     year: true,
     quarter: false,
+    month: false,
     driverId: false,
     vehiclePlate: false,
     tripType: false,
@@ -335,6 +345,7 @@ const CHART_SPLIT_LINE = { lineStyle: { color: '#f1f5f9', type: 'dashed' } }
 const filters = reactive({
   year: new Date().getFullYear(),
   quarter: '',
+  month: '',
   driverId: '',
   vehiclePlate: '',
   tripType: '',
@@ -343,14 +354,14 @@ const filters = reactive({
 const filterControlVisible = reactive(loadFilterControlVisibility())
 const showFilterPanelDd = ref(false)
 const searchQ = ref('')
-const { exportMenuRef, toggleExportMenu, closeExportMenu } = useExportDetailsMenu()
+const { exportMenuRef, showExportMenu, toggleExportMenu, closeExportMenu } = useExportDetailsMenu()
 const rankingToolbarRef = ref(null)
-useDetailsAutoClose(exportMenuRef)
 useDetailsAutoCloseWithin(rankingToolbarRef)
 
 const filterControlDefs = computed(() => [
   { id: 'year', label: t('driver_freq.filter_vis_year') },
   { id: 'quarter', label: t('driver_freq.filter_vis_quarter') },
+  { id: 'month', label: t('driver_freq.filter_vis_month') },
   { id: 'driverId', label: t('driver_freq.filter_vis_driverId') },
   { id: 'vehiclePlate', label: t('driver_freq.filter_vis_vehiclePlate') },
   { id: 'tripType', label: t('driver_freq.filter_vis_tripType') },
@@ -409,6 +420,11 @@ const yearDeltaLabel = computed(() => {
 })
 
 function onPatchFilter(patch) {
+  if (patch.month) {
+    patch.quarter = ''
+  } else if (patch.quarter) {
+    patch.month = ''
+  }
   Object.assign(filters, patch)
   onFilterChange()
 }
@@ -430,16 +446,6 @@ function onToggleFilterControl(id, checked) {
   }
 }
 
-function resetFilters() {
-  filters.quarter = ''
-  filters.driverId = ''
-  filters.vehiclePlate = ''
-  filters.tripType = ''
-  searchQ.value = ''
-  showFilterPanelDd.value = false
-  onFilterChange()
-}
-
 function tripTypeCounts(driver) {
   return driver.typesExport ?? driver.types ?? [0, 0, 0, 0]
 }
@@ -453,6 +459,7 @@ function onTimeClass(pct) {
 function buildApiParams() {
   const params = { year: filters.year }
   if (filters.quarter) params.quarter = filters.quarter
+  if (filters.month) params.month = filters.month
   if (filters.driverId) params.driver_id = filters.driverId
   if (filters.vehiclePlate) params.vehicle_plate = filters.vehiclePlate
   if (filters.tripType) params.trip_type = filters.tripType
@@ -720,13 +727,17 @@ function onFilterChange() {
   selectedDriverCode.value = ''
 }
 
-async function doExportXlsx() {
+function exportParams(all) {
+  return all ? { all: 1, year: filters.year } : buildApiParams()
+}
+
+async function doExportXlsx(all = false) {
   if (exporting.value) return
   exportError.value = ''
   closeExportMenu()
-  exporting.value = 'xlsx'
+  exporting.value = all ? 'xlsx-all' : 'xlsx'
   try {
-    await downloadDriverFrequencyXlsx(buildApiParams())
+    await downloadDriverFrequencyXlsx(exportParams(all))
   } catch (e) {
     exportError.value = formatApiError(e, t('driver_freq.export_error'))
   } finally {
@@ -734,13 +745,13 @@ async function doExportXlsx() {
   }
 }
 
-async function doExportPdf() {
+async function doExportPdf(all = false) {
   if (exporting.value) return
   exportError.value = ''
   closeExportMenu()
-  exporting.value = 'pdf'
+  exporting.value = all ? 'pdf-all' : 'pdf'
   try {
-    await downloadDriverFrequencyPdf(buildApiParams())
+    await downloadDriverFrequencyPdf(exportParams(all))
   } catch (e) {
     exportError.value = formatApiError(e, t('driver_freq.export_error'))
   } finally {

@@ -106,32 +106,21 @@
                 </label>
               </li>
             </FilterVisibilityDropdown>
-
-            <button
-              type="button"
-              class="inline-flex h-10 shrink-0 items-center gap-1 rounded-lg px-2 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-slate-800 dark:hover:bg-slate-800"
-              :title="t('tp_student_page.filter_clear_all')"
-              data-testid="tp-student-reset-filters"
-              @click="clearFilters"
-            >
-              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-              <XMarkIcon class="h-3 w-3 text-rose-500" aria-hidden="true" />
-            </button>
           </div>
 
           <div class="ml-auto flex shrink-0 flex-wrap items-center gap-2">
-            <details ref="exportMenuRef" class="group relative">
-              <summary class="list-none [&::-webkit-details-marker]:hidden">
-                <DatagridToolbarActionButton
-                  icon="export"
-                  :disabled="exporting"
-                  test-id="tp-student-toolbar-export"
-                  @click="toggleExportMenu"
-                >
-                  {{ t('tp_student_page.toolbar_export') }}
-                </DatagridToolbarActionButton>
-              </summary>
+            <div ref="exportMenuRef" class="relative">
+              <DatagridToolbarActionButton
+                icon="export"
+                :active="showExportMenu"
+                :disabled="exporting"
+                test-id="tp-student-toolbar-export"
+                @click="toggleExportMenu"
+              >
+                {{ t('tp_student_page.toolbar_export') }}
+              </DatagridToolbarActionButton>
               <div
+                v-if="showExportMenu"
                 class="absolute right-0 top-[calc(100%+8px)] z-[110] min-w-[200px] rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-600 dark:bg-slate-900"
                 @click.stop
               >
@@ -145,22 +134,7 @@
                   {{ exporting ? t('tp_student_page.btn_export_busy') : t('tp_student_page.btn_export') }}
                 </button>
               </div>
-            </details>
-
-            <label class="inline-flex shrink-0 items-center gap-1.5">
-              <span class="sr-only">{{ t('tp_student_page.per_page') }}</span>
-              <select
-                v-model.number="filters.per_page"
-                class="input h-10 min-w-[4.5rem] rounded-lg border border-slate-200 bg-white px-2 text-sm dark:border-slate-600 dark:bg-slate-950"
-                :aria-label="t('tp_student_page.per_page')"
-                data-testid="tp-student-per-page"
-              >
-                <option :value="15">15</option>
-                <option :value="25">25</option>
-                <option :value="50">50</option>
-                <option :value="100">100</option>
-              </select>
-            </label>
+            </div>
           </div>
         </div>
 
@@ -389,7 +363,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   PlusIcon, ArrowPathIcon, ArrowUpTrayIcon,
-  XMarkIcon, FunnelIcon, PencilSquareIcon,
+  PencilSquareIcon,
   TrashIcon, AcademicCapIcon,
   ChevronRightIcon,
 } from '@heroicons/vue/24/outline'
@@ -399,7 +373,7 @@ import DatagridToolbarActionButton from '../../components/shared/ui/DatagridTool
 import FilterVisibilityDropdown from '../../components/shared/ui/FilterVisibilityDropdown.vue'
 import TpStudentSummaryBar from '../../components/transportProgram/TpStudentSummaryBar.vue'
 import TpStudentListFilters from '../../components/transportProgram/TpStudentListFilters.vue'
-import { useDetailsAutoClose, useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
+import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 import { useExportDetailsMenu } from '../../composables/useExportDetailsMenu.js'
 import { useTpStudentListColumns, TP_STUDENT_COL_DEFAULTS } from '../../composables/useTpStudentListColumns.js'
 import AppRowActionsMenu from '../../components/ui/AppRowActionsMenu.vue'
@@ -489,9 +463,8 @@ const { colOn, setColumn, columnToggleOptions } = useTpStudentListColumns()
 const filterControlVisible = reactive(loadFilterControlVisibility())
 const showFilterPanelDd = ref(false)
 const showColPanelDd = ref(false)
-const { exportMenuRef, toggleExportMenu, closeExportMenu } = useExportDetailsMenu()
+const { exportMenuRef, showExportMenu, toggleExportMenu, closeExportMenu } = useExportDetailsMenu()
 const datagridRef = ref(null)
-useDetailsAutoClose(exportMenuRef)
 useDetailsAutoCloseWithin(datagridRef)
 
 const filterControlDefs = computed(() => [
@@ -707,7 +680,6 @@ watch(
     filters.student_status,
     filters.gender,
     filters.pickup_point,
-    filters.per_page,
   ],
   () => {
     filters.page = 1

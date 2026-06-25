@@ -163,16 +163,6 @@
 
             <div class="ml-auto flex shrink-0 items-center gap-2">
               <button
-                type="button"
-                class="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-slate-800 dark:hover:bg-slate-800"
-                :title="t('costs_page.filter_clear_all')"
-                data-testid="costs-reset-filters"
-                @click="resetFilters"
-              >
-                <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-                <XMarkIcon class="h-3 w-3 text-rose-500" aria-hidden="true" />
-              </button>
-              <button
                 v-if="showAddCostButton"
                 type="button"
                 class="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg bg-va-800 px-3.5 text-sm font-semibold text-white shadow-sm ring-1 ring-black/5 transition hover:bg-va-900 focus:outline-none focus:ring-2 focus:ring-va-800/35 dark:ring-white/10"
@@ -661,19 +651,6 @@
                   </label>
                 </li>
               </FilterVisibilityDropdown>
-            </div>
-            <div class="ml-auto flex shrink-0 items-center gap-2">
-              <button
-                v-if="bpActiveFilterCount > 0"
-                type="button"
-                class="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-slate-800 dark:hover:bg-slate-800"
-                :title="t('costs_page.filter_clear')"
-                data-testid="costs-bp-reset-filters"
-                @click="resetBpFilters"
-              >
-                <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-                <XMarkIcon class="h-3 w-3 text-rose-500" aria-hidden="true" />
-              </button>
             </div>
           </div>
         </div>
@@ -1503,7 +1480,6 @@ import {
   BriefcaseIcon,
   CheckCircleIcon,
   EyeIcon,
-  FunnelIcon,
   MapPinIcon,
   PlusCircleIcon,
   TruckIcon,

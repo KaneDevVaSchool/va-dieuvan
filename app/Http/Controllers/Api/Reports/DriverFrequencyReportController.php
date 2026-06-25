@@ -38,13 +38,13 @@ class DriverFrequencyReportController extends Controller
             abort(403);
         }
 
-        $filters = array_filter($request->validated(), fn ($v) => $v !== null && $v !== '');
+        $filters = $this->resolveExportFilters($request);
         $user = $request->user();
         $payload = $this->service->report($user, $filters);
         $exportedBy = $user->name ?? null;
 
         $tmpPath = $this->xlsxWriter->writeTempFile($payload, $filters, $exportedBy);
-        $filename = 'tan-suat-tai-xe_' . now()->format('Ymd_His') . '.xlsx';
+        $filename = 'tan-suat-tai-xe_'.now()->format('Ymd_His').'.xlsx';
 
         return response()->download($tmpPath, $filename, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -60,21 +60,44 @@ class DriverFrequencyReportController extends Controller
             abort(403);
         }
 
-        $filters = array_filter($request->validated(), fn ($v) => $v !== null && $v !== '');
+        $exportAll = $request->boolean('all');
+        $filters = $this->resolveExportFilters($request);
         $user = $request->user();
         $payload = $this->service->report($user, $filters);
         $exportedBy = $user->name ?? null;
 
+        $filterLabels = $exportAll
+            ? ['Phạm vi: Cả năm '.($filters['year'] ?? now()->year).' (tất cả)']
+            : $this->buildFilterSummary($filters);
+
         $pdf = Pdf::loadView('pdf.driver-frequency-report', [
-            'payload'      => $payload,
-            'filters'      => $filters,
-            'exportedBy'   => $exportedBy,
-            'filterLabels' => $this->buildFilterSummary($filters),
+            'payload' => $payload,
+            'filters' => $filters,
+            'exportedBy' => $exportedBy,
+            'filterLabels' => $filterLabels,
         ])->setPaper('a4', 'landscape');
 
-        $filename = 'tan-suat-tai-xe_' . now()->format('Ymd_His') . '.pdf';
+        $filename = 'tan-suat-tai-xe_'.now()->format('Ymd_His').'.pdf';
 
         return $pdf->download($filename);
+    }
+
+    /**
+     * Bộ lọc thực dùng cho xuất file: "Xuất tất cả" chỉ giữ năm, bỏ các bộ lọc con.
+     *
+     * @return array<string, mixed>
+     */
+    private function resolveExportFilters(DriverFrequencyReportRequest $request): array
+    {
+        $validated = $request->validated();
+        $exportAll = $request->boolean('all');
+        unset($validated['all']);
+
+        if ($exportAll) {
+            return ['year' => (int) ($validated['year'] ?? now()->year)];
+        }
+
+        return array_filter($validated, fn ($v) => $v !== null && $v !== '');
     }
 
     /** @return list<string> */
@@ -84,6 +107,10 @@ class DriverFrequencyReportController extends Controller
 
         if (! empty($filters['year'])) {
             $labels[] = 'Năm: '.$filters['year'];
+        }
+
+        if (! empty($filters['month'])) {
+            $labels[] = 'Tháng: '.((int) $filters['month']);
         }
 
         $quarterMap = [

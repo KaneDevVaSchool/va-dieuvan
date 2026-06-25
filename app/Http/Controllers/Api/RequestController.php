@@ -51,6 +51,7 @@ class RequestController extends Controller
             'depart_desc' => $q->orderByDesc('depart_at')->orderByDesc('id'),
             'depart_asc' => $q->orderBy('depart_at')->orderBy('id'),
             'id_desc' => $q->orderByDesc('id'),
+            'approval_inbox' => $this->applyApprovalInboxSort($q),
             default => $q->orderByDesc('created_at')->orderByDesc('id'),
         };
 
@@ -205,12 +206,54 @@ class RequestController extends Controller
         $decided30 = $approved30 + $rejected30;
         $approvalRate30d = $decided30 > 0 ? (int) round(($approved30 / $decided30) * 100) : null;
 
+        $slaHours = max(1, (int) config('dispatch.dept_approval_reminder_after_hours', 24));
+        $slaCutoff = now()->subHours($slaHours);
+
+        $overdueCount = (int) (clone $base)
+            ->where('status', 'price_filled')
+            ->whereNotNull('price_filled_at')
+            ->where('price_filled_at', '<=', $slaCutoff)
+            ->count();
+
+        $urgentPendingCount = (int) (clone $base)
+            ->where('status', 'price_filled')
+            ->where('is_urgent', true)
+            ->count();
+
+        $approvedTotal = (int) (clone $base)->where('status', 'approved')->count();
+        $rejectedTotal = (int) (clone $base)->where('status', 'rejected')->count();
+
         return $this->ok([
             'pending_count' => $pendingCount,
             'pending_today' => $pendingToday,
             'approved_this_month' => $approvedThisMonth,
             'approval_rate_30d' => $approvalRate30d,
+            'overdue_count' => $overdueCount,
+            'urgent_pending_count' => $urgentPendingCount,
+            'approved_total' => $approvedTotal,
+            'rejected_total' => $rejectedTotal,
+            'dept_approval_sla_hours' => $slaHours,
         ]);
+    }
+
+    private function applyApprovalInboxSort(Builder $q): Builder
+    {
+        $slaHours = max(1, (int) config('dispatch.dept_approval_reminder_after_hours', 24));
+        $slaCutoff = now()->subHours($slaHours)->toDateTimeString();
+
+        return $q
+            ->orderByRaw(
+                'CASE
+                    WHEN status = ? AND price_filled_at IS NOT NULL AND price_filled_at <= ? THEN 0
+                    WHEN status = ? AND is_urgent = 1 THEN 1
+                    WHEN status = ? THEN 2
+                    ELSE 3
+                END',
+                ['price_filled', $slaCutoff, 'price_filled', 'price_filled'],
+            )
+            ->orderByDesc('price_filled_at')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
     }
 
     public function bulkDestroy(BulkSoftDeleteDispatchRequestsRequest $request)

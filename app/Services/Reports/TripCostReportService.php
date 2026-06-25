@@ -119,6 +119,25 @@ class TripCostReportService
             ));
         }
 
+        // Đơn vị / phòng ban (lấy từ relation requester.department, không phải cột) → lọc in-memory.
+        if (! empty($filters['unit'])) {
+            $wantUnit = $filters['unit'];
+            $merged = array_values(array_filter(
+                $merged,
+                fn ($r) => ($r['unit'] ?? '') === $wantUnit,
+            ));
+        }
+
+        // Khoảng số tiền (thành tiền) — áp dụng sau khi gộp recorded + estimate.
+        if (isset($filters['min_amount']) && $filters['min_amount'] !== '') {
+            $min = (float) $filters['min_amount'];
+            $merged = array_values(array_filter($merged, fn ($r) => (float) ($r['amount'] ?? 0) >= $min));
+        }
+        if (isset($filters['max_amount']) && $filters['max_amount'] !== '') {
+            $max = (float) $filters['max_amount'];
+            $merged = array_values(array_filter($merged, fn ($r) => (float) ($r['amount'] ?? 0) <= $max));
+        }
+
         usort($merged, fn ($a, $b) => strcmp($b['sort_date'] ?? '', $a['sort_date'] ?? ''));
 
         return array_values($merged);

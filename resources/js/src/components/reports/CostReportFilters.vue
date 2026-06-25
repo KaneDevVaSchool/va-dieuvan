@@ -46,32 +46,24 @@
             </li>
           </FilterVisibilityDropdown>
 
-          <button
-            type="button"
-            class="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-slate-800 dark:hover:bg-slate-800"
-            :title="t('dashboard_analytics.filter_clear_all')"
-            data-testid="cost-report-reset-filters"
-            @click="$emit('reset-filters')"
-          >
-            <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-            <XMarkIcon class="h-3 w-3 text-rose-500" aria-hidden="true" />
-          </button>
-
-          <details v-if="canExport" ref="exportMenuRef" class="group relative">
-            <summary class="list-none [&::-webkit-details-marker]:hidden">
-              <DatagridToolbarActionButton
-                icon="export"
-                :disabled="!!exporting"
-                test-id="cost-report-filters-export"
-                @click="toggleExportMenu"
-              >
-                {{ t('cost_report.toolbar_export') }}
-              </DatagridToolbarActionButton>
-            </summary>
+          <div v-if="canExport" ref="exportMenuRef" class="relative">
+            <DatagridToolbarActionButton
+              icon="export"
+              :active="showExportMenu"
+              :disabled="!!exporting"
+              test-id="cost-report-filters-export"
+              @click="toggleExportMenu"
+            >
+              {{ t('cost_report.toolbar_export') }}
+            </DatagridToolbarActionButton>
             <div
-              class="absolute right-0 top-[calc(100%+8px)] z-[110] min-w-[200px] rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-600 dark:bg-slate-900"
+              v-if="showExportMenu"
+              class="absolute right-0 top-[calc(100%+8px)] z-[110] min-w-[210px] rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-600 dark:bg-slate-900"
               @click.stop
             >
+              <p class="px-3 pb-1 pt-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                {{ t('cost_report.export_group_filtered') }}
+              </p>
               <button
                 type="button"
                 class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
@@ -90,15 +82,37 @@
               >
                 {{ t('cost_report.btn_export_pdf') }}
               </button>
+              <div class="my-1 border-t border-slate-100 dark:border-slate-700" />
+              <p class="px-3 pb-1 pt-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                {{ t('cost_report.export_group_all') }}
+              </p>
+              <button
+                type="button"
+                class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                data-testid="cost-report-filters-export-xlsx-all"
+                :disabled="!!exporting"
+                @click="onExportXlsxAll"
+              >
+                {{ t('cost_report.btn_export_xlsx_all') }}
+              </button>
+              <button
+                type="button"
+                class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                data-testid="cost-report-filters-export-pdf-all"
+                :disabled="!!exporting"
+                @click="onExportPdfAll"
+              >
+                {{ t('cost_report.btn_export_pdf_all') }}
+              </button>
             </div>
-          </details>
+          </div>
         </div>
       </div>
     </div>
 
     <div
       v-if="hasVisibleBarFilters"
-      class="grid grid-cols-1 gap-3 border-t border-slate-100 px-5 py-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 dark:border-slate-700"
+      class="grid grid-cols-1 gap-3 border-t border-slate-100 px-4 py-4 sm:grid-cols-2 sm:px-5 md:grid-cols-3 xl:grid-cols-6 dark:border-slate-700"
     >
       <DatagridFilterField v-if="filterControlVisible.date" class="sm:col-span-2 xl:col-span-2">
         <FilterDatePicker
@@ -147,6 +161,20 @@
         </select>
       </DatagridFilterField>
 
+      <DatagridFilterField v-if="filterControlVisible.cost_type">
+        <select
+          :value="filters.type"
+          :class="FILTER_CONTROL_CLASS"
+          :aria-label="t('cost_report.filter_cost_type')"
+          data-testid="cost-report-filter-cost-type"
+          @change="$emit('patch-filter', { type: $event.target.value })"
+        >
+          <option v-for="opt in costTypeOptions" :key="opt.value || '_all'" :value="opt.value">
+            {{ opt.value === '' ? t('cost_report.filter_cost_type') : opt.label }}
+          </option>
+        </select>
+      </DatagridFilterField>
+
       <DatagridFilterField v-if="filterControlVisible.fleet_mode">
         <select
           :value="filters.fleet_mode"
@@ -160,19 +188,74 @@
           </option>
         </select>
       </DatagridFilterField>
+
+      <DatagridFilterField v-if="filterControlVisible.provider">
+        <select
+          :value="filters.provider"
+          :class="FILTER_CONTROL_CLASS"
+          :aria-label="t('cost_report.filter_provider')"
+          data-testid="cost-report-filter-provider"
+          @change="$emit('patch-filter', { provider: $event.target.value })"
+        >
+          <option v-for="opt in providerOptions" :key="opt.value || '_all'" :value="opt.value">
+            {{ opt.value === '' ? t('cost_report.filter_provider') : opt.label }}
+          </option>
+        </select>
+      </DatagridFilterField>
+
+      <DatagridFilterField v-if="filterControlVisible.unit">
+        <select
+          :value="filters.unit"
+          :class="FILTER_CONTROL_CLASS"
+          :aria-label="t('cost_report.filter_unit')"
+          data-testid="cost-report-filter-unit"
+          @change="$emit('patch-filter', { unit: $event.target.value })"
+        >
+          <option v-for="opt in unitOptions" :key="opt.value || '_all'" :value="opt.value">
+            {{ opt.value === '' ? t('cost_report.filter_unit') : opt.label }}
+          </option>
+        </select>
+      </DatagridFilterField>
+
+      <DatagridFilterField v-if="filterControlVisible.amount" class="sm:col-span-2">
+        <div class="flex items-center gap-2">
+          <input
+            :value="filters.min_amount"
+            type="number"
+            min="0"
+            inputmode="numeric"
+            :class="FILTER_CONTROL_CLASS"
+            :placeholder="t('cost_report.filter_amount_min_ph')"
+            :aria-label="t('cost_report.filter_amount_min_ph')"
+            data-testid="cost-report-filter-min-amount"
+            @input="$emit('patch-filter', { min_amount: $event.target.value })"
+          />
+          <span class="shrink-0 text-slate-400">—</span>
+          <input
+            :value="filters.max_amount"
+            type="number"
+            min="0"
+            inputmode="numeric"
+            :class="FILTER_CONTROL_CLASS"
+            :placeholder="t('cost_report.filter_amount_max_ph')"
+            :aria-label="t('cost_report.filter_amount_max_ph')"
+            data-testid="cost-report-filter-max-amount"
+            @input="$emit('patch-filter', { max_amount: $event.target.value })"
+          />
+        </div>
+      </DatagridFilterField>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import { FunnelIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { useI18n } from 'vue-i18n'
 import DatagridToolbarActionButton from '../shared/ui/DatagridToolbarActionButton.vue'
 import DatagridFilterField from '../shared/ui/DatagridFilterField.vue'
 import FilterVisibilityDropdown from '../shared/ui/FilterVisibilityDropdown.vue'
 import FilterDatePicker from '../shared/ui/FilterDatePicker.vue'
-import { useDetailsAutoClose, useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
+import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 import { useExportDetailsMenu } from '../../composables/useExportDetailsMenu.js'
 
 defineProps({
@@ -180,8 +263,11 @@ defineProps({
   filterControlVisible: { type: Object, required: true },
   filterControlDefs: { type: Array, required: true },
   tripTypeOptions: { type: Array, required: true },
+  costTypeOptions: { type: Array, default: () => [] },
   statusOptions: { type: Array, required: true },
   fleetOptions: { type: Array, required: true },
+  providerOptions: { type: Array, default: () => [] },
+  unitOptions: { type: Array, default: () => [] },
   hasVisibleBarFilters: { type: Boolean, default: false },
   showFilterPanel: { type: Boolean, default: false },
   loading: { type: Boolean, default: false },
@@ -192,7 +278,8 @@ defineProps({
 const emit = defineEmits([
   'export-xlsx',
   'export-pdf',
-  'reset-filters',
+  'export-xlsx-all',
+  'export-pdf-all',
   'patch-filter',
   'toggle-filter-panel',
   'close-filter-panel',
@@ -200,10 +287,9 @@ const emit = defineEmits([
 ])
 
 const { t } = useI18n()
-const { exportMenuRef, toggleExportMenu, closeExportMenu } = useExportDetailsMenu()
+const { exportMenuRef, showExportMenu, toggleExportMenu, closeExportMenu } = useExportDetailsMenu()
 const rootRef = ref(null)
 useDetailsAutoCloseWithin(rootRef)
-useDetailsAutoClose(exportMenuRef)
 
 function onExportXlsx() {
   closeExportMenu()
@@ -213,6 +299,16 @@ function onExportXlsx() {
 function onExportPdf() {
   closeExportMenu()
   emit('export-pdf')
+}
+
+function onExportXlsxAll() {
+  closeExportMenu()
+  emit('export-xlsx-all')
+}
+
+function onExportPdfAll() {
+  closeExportMenu()
+  emit('export-pdf-all')
 }
 
 const FILTER_CONTROL_CLASS =

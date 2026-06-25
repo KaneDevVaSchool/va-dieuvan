@@ -143,6 +143,7 @@ import { useHaptics } from '../../composables/useHaptics'
 import { usePullToRefresh } from '../../composables/usePullToRefresh'
 import { useAuthStore, useDriverDashboardStore } from '../../store/index'
 import { dashPerfMounted } from '../../util/devDriverDashboardPerf'
+import { driverTripListRowKey } from '../../util/driverScheduleLeg'
 import { playNotificationChime } from '../../util/notificationChime'
 import DriverHeader from '../../components/driver/DriverHeader.vue'
 import UpcomingTripBanner from '../../components/driver/UpcomingTripBanner.vue'
@@ -179,7 +180,7 @@ const SEEN_PENDING_INIT_KEY = 'va_driver_pending_seen_init'
 const SEEN_PENDING_IDS_KEY = 'va_driver_pending_ids_seen'
 
 function pendingTripKey(trip) {
-  return trip?.id != null ? String(trip.id) : ''
+  return driverTripListRowKey(trip)
 }
 
 function loadSeenPendingIds() {
@@ -330,9 +331,9 @@ const { start: startDriverVisiblePoll } = useDriverVisiblePoll(() =>
   dash.fetchDashboard({ silent: true, force: false }),
 )
 
-async function onStartTrip(tripId) {
+async function onStartTrip(tripRef) {
   try {
-    await dash.startTripOptimistic(tripId)
+    await dash.startTripOptimistic(tripRef)
   } catch {
     /* modal từ store */
   }

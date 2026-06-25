@@ -1,6 +1,25 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+/** @param {object|null|undefined} attachment */
+export function attachmentMime(attachment) {
+  return String(attachment?.mime_type || attachment?.mime || '').toLowerCase()
+}
+
+/** @param {object|null|undefined} attachment */
+export function isAttachmentPreviewable(attachment) {
+  if (!attachment) return false
+  const mime = attachmentMime(attachment)
+  if (mime.startsWith('image/') || mime.includes('pdf')) return true
+  const name = String(attachment.original_name || '')
+  return /\.(jpe?g|png|gif|webp|bmp|heic|pdf)$/i.test(name)
+}
+
+export function isPreviewableMime(mime) {
+  const m = String(mime || '').toLowerCase()
+  return m.startsWith('image/') || m.includes('pdf')
+}
+
 /**
  * @param {import('vue').Ref<object|null>|import('vue').ComputedRef<object|null>} reqRef
  */
@@ -131,11 +150,6 @@ export function useDispatchRequestDocs(reqRef) {
   function isOcrStub(attachment) {
     const engine = attachment?.ocr_meta?.engine
     return engine === 'stub' || engine === undefined
-  }
-
-  function isPreviewableMime(mime) {
-    const m = String(mime || '').toLowerCase()
-    return m.startsWith('image/') || m.includes('pdf')
   }
 
   return {

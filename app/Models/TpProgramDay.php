@@ -189,7 +189,7 @@ class TpProgramDay extends Model
         }
         $driver = $this->relationLoaded('driver') && $this->driver_id
             ? $this->driver
-            : Driver::query()->find($driverId);
+            : Driver::query()->with('user:id,name,avatar_url')->find($driverId);
 
         if (! $driver || $driver->trashed()) {
             return null;
@@ -197,6 +197,7 @@ class TpProgramDay extends Model
         if ($driver->employment_status === 'inactive') {
             return null;
         }
+        $driver->loadMissing('user:id,name,avatar_url');
 
         return $driver;
     }
@@ -209,7 +210,7 @@ class TpProgramDay extends Model
         }
         $driver = $this->relationLoaded('backupDriver') && $this->backup_driver_id
             ? $this->backupDriver
-            : Driver::query()->find($driverId);
+            : Driver::query()->with('user:id,name,avatar_url')->find($driverId);
 
         if (! $driver || $driver->trashed()) {
             return null;
@@ -217,6 +218,7 @@ class TpProgramDay extends Model
         if ($driver->employment_status === 'inactive') {
             return null;
         }
+        $driver->loadMissing('user:id,name,avatar_url');
 
         return $driver;
     }

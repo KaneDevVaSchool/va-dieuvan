@@ -74,6 +74,7 @@ class ListRequestsRequest extends ApiFormRequest
                 'depart_desc',
                 'depart_asc',
                 'id_desc',
+                'approval_inbox',
             ])],
         ];
     }

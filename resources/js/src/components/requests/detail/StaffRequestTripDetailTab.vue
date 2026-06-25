@@ -1,18 +1,13 @@
 <template>
-  <div class="space-y-5 px-4 py-4 pb-2 sm:px-5" data-testid="staff-request-trip-detail-tab">
+  <div class="min-w-0" data-testid="staff-request-trip-detail-tab">
     <StaffRequestTripCollapseSection
       section-key="plan"
       :title="t('request_detail.trip_tab_section_plan')"
-      tone="brand"
     >
-      <dl class="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+      <dl class="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4 sm:gap-x-6">
         <div v-for="stat in planStats" :key="stat.key" class="min-w-0">
-          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-            {{ stat.label }}
-          </dt>
-          <dd class="mt-1.5 truncate text-base font-semibold tabular-nums text-slate-900 dark:text-slate-100">
-            {{ stat.value }}
-          </dd>
+          <dt :class="RD_FIELD_LABEL">{{ stat.label }}</dt>
+          <dd :class="[RD_FIELD_VALUE_TABULAR, 'truncate']">{{ stat.value }}</dd>
         </div>
       </dl>
     </StaffRequestTripCollapseSection>
@@ -21,13 +16,12 @@
       section-key="assignment"
       :title="t('request_detail.trip_tab_section_assignment')"
       :badge="hasAssignment && trip?.status ? assignmentStatus : ''"
-      tone="sky"
     >
       <template #header-actions>
         <RouterLink
           v-if="trip?.id"
           :to="`/trips/${trip.id}`"
-          class="shrink-0 text-sm font-semibold text-va-700 hover:underline dark:text-va-400"
+          class="shrink-0 text-xs font-semibold text-va-700 hover:underline dark:text-va-400"
           data-testid="staff-request-trip-tab-open-trip"
           @click.stop
         >
@@ -37,22 +31,22 @@
 
       <p
         v-if="!hasAssignment"
-        class="py-4 text-center text-base text-slate-500 dark:text-slate-400"
+        class="flex flex-col items-center gap-1.5 py-3 text-center text-sm text-slate-500 dark:text-slate-400"
         data-testid="staff-request-trip-tab-assignment-empty"
       >
-        <ExclamationTriangleIcon class="mx-auto mb-1.5 h-5 w-5 text-amber-500" aria-hidden="true" />
+        <ExclamationTriangleIcon class="h-5 w-5 text-amber-500" aria-hidden="true" />
         {{ t('request_detail.trip_tab_assignment_empty_title') }}
       </p>
 
       <dl
         v-else
-        class="grid grid-cols-2 gap-x-5 gap-y-4 sm:grid-cols-3 lg:grid-cols-5"
+        class="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3 lg:grid-cols-5"
         data-testid="staff-request-trip-tab-assignment-grid"
       >
         <div v-for="cell in assignmentCells" :key="cell.key" class="min-w-0">
-          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ cell.label }}</dt>
+          <dt :class="RD_FIELD_LABEL">{{ cell.label }}</dt>
           <dd
-            class="mt-1 truncate text-base font-semibold leading-snug"
+            class="mt-0.5 truncate text-sm font-semibold leading-snug"
             :class="cell.key === 'status' ? statusValueClass : 'text-slate-900 dark:text-slate-100'"
           >
             {{ cell.value }}
@@ -62,99 +56,27 @@
     </StaffRequestTripCollapseSection>
 
     <StaffRequestTripCollapseSection
-      section-key="passengers"
-      :title="passengerSectionTitle"
-      :badge="passengerRows.length ? String(passengerRows.length) : ''"
-      tone="violet"
-      collapsible
-      :default-open="passengerRows.length > 0 && passengerRows.length <= 8"
-      :expand-label="t('request_detail.trip_tab_expand_section')"
-      :collapse-label="t('request_detail.trip_tab_collapse_section')"
-    >
-      <p
-        v-if="!passengerRows.length"
-        class="text-base italic text-slate-400"
-        data-testid="staff-request-trip-tab-passengers-empty"
-      >
-        {{ t('request_detail.trip_tab_passengers_empty') }}
-      </p>
-
-      <table v-else class="w-full min-w-0 text-left text-base" data-testid="staff-request-trip-tab-passengers-table">
-        <thead>
-          <tr class="border-b border-slate-100 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:border-slate-800">
-            <th scope="col" class="py-2.5 pr-3 font-semibold">{{ t('request_detail.trip_tab_col_name') }}</th>
-            <th scope="col" class="hidden py-2.5 pr-3 font-semibold md:table-cell">{{ t('request_detail.trip_tab_col_department') }}</th>
-            <th scope="col" class="py-2.5 pr-3 font-semibold">{{ t('request_detail.trip_tab_col_role') }}</th>
-            <th scope="col" class="py-2.5 font-semibold">{{ t('request_detail.trip_tab_col_phone') }}</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-50 dark:divide-slate-800/80">
-          <tr v-for="row in passengerRows" :key="row.key">
-            <td class="max-w-[9rem] truncate py-2.5 pr-3 font-medium text-slate-900 dark:text-slate-100">{{ row.name }}</td>
-            <td class="hidden max-w-[8rem] truncate py-2.5 pr-3 text-slate-600 dark:text-slate-400 md:table-cell">{{ row.department }}</td>
-            <td class="max-w-[6rem] truncate py-2.5 pr-3 text-slate-600 dark:text-slate-400">{{ row.role }}</td>
-            <td class="py-2.5 tabular-nums text-slate-700 dark:text-slate-300">{{ row.phone }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </StaffRequestTripCollapseSection>
-
-    <StaffRequestTripCollapseSection
       section-key="execution"
       :title="t('request_detail.trip_tab_section_execution')"
-      tone="emerald"
     >
       <StaffRequestTripExecutionTimeline
         :steps="executionSteps"
         :planned-label="t('request_detail.trip_tab_planned')"
         :actual-label="t('request_detail.trip_tab_actual')"
-        :planned-short="t('request_detail.trip_tab_planned_short')"
-        :actual-short="t('request_detail.trip_tab_actual_short')"
+        :empty-value="emptyLabel"
       />
-    </StaffRequestTripCollapseSection>
-
-    <StaffRequestTripCollapseSection
-      section-key="business"
-      :title="t('request_detail.trip_tab_section_business')"
-      tone="slate"
-    >
-      <div class="grid gap-5 sm:grid-cols-2">
-        <div class="min-w-0">
-          <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ t('request_detail.ops_lbl_purpose') }}</p>
-          <p v-if="purposeText" class="mt-2 text-base leading-relaxed text-slate-800 dark:text-slate-200">{{ purposeText }}</p>
-          <p v-else class="mt-2 text-base italic text-slate-400">{{ rdEmptyLabel(t, 'purpose') }}</p>
-          <div v-if="purposeTargets.length" class="mt-2 flex flex-wrap gap-2">
-            <span
-              v-for="(tg, i) in purposeTargets"
-              :key="i"
-              class="rounded bg-slate-100 px-2.5 py-1 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-300"
-            >{{ tg }}</span>
-          </div>
-        </div>
-        <div class="min-w-0">
-          <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ t('request_detail.ops_lbl_basis') }}</p>
-          <p
-            class="mt-2 whitespace-pre-wrap text-base leading-relaxed text-slate-800 dark:text-slate-200"
-            data-testid="staff-request-trip-tab-basis-block"
-          >
-            <template v-if="basisText">{{ basisText }}</template>
-            <template v-else><span class="italic text-slate-400">{{ rdEmptyLabel(t, 'basis') }}</span></template>
-          </p>
-        </div>
-      </div>
     </StaffRequestTripCollapseSection>
 
     <StaffRequestTripCollapseSection
       section-key="finance"
       :title="t('request_detail.trip_tab_section_finance')"
-      tone="amber"
     >
-      <dl class="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+      <dl class="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4 sm:gap-x-6">
         <div v-for="line in financeLines" :key="line.key" class="min-w-0">
-          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ line.label }}</dt>
+          <dt :class="RD_FIELD_LABEL">{{ line.label }}</dt>
           <dd
-            class="mt-1.5 truncate tabular-nums font-semibold text-slate-900 dark:text-slate-100"
-            :class="line.key === 'total' ? 'text-lg' : 'text-base'"
+            class="truncate"
+            :class="line.key === 'total' ? RD_FIELD_VALUE_TOTAL : RD_FIELD_VALUE_TABULAR"
           >
             {{ line.value }}
           </dd>
@@ -163,16 +85,90 @@
     </StaffRequestTripCollapseSection>
 
     <StaffRequestTripCollapseSection
+      section-key="passengers"
+      :title="passengerSectionTitle"
+      :badge="passengerRows.length ? String(passengerRows.length) : ''"
+      collapsible
+      :default-open="passengerRows.length > 0 && passengerRows.length <= 8"
+      :expand-label="t('request_detail.trip_tab_expand_section')"
+      :collapse-label="t('request_detail.trip_tab_collapse_section')"
+    >
+      <p
+        v-if="!passengerRows.length"
+        class="text-sm"
+        :class="RD_EMPTY"
+        data-testid="staff-request-trip-tab-passengers-empty"
+      >
+        {{ t('request_detail.trip_tab_passengers_empty') }}
+      </p>
+
+      <div v-else class="-mx-1 overflow-x-auto sm:mx-0">
+        <table class="w-full min-w-0 text-left text-sm" data-testid="staff-request-trip-tab-passengers-table">
+          <thead>
+            <tr class="border-b border-slate-100 dark:border-slate-800">
+              <th scope="col" :class="[RD_FIELD_LABEL, 'py-2 pr-3 text-left']">{{ t('request_detail.trip_tab_col_name') }}</th>
+              <th scope="col" :class="[RD_FIELD_LABEL, 'hidden py-2 pr-3 text-left md:table-cell']">{{ t('request_detail.trip_tab_col_department') }}</th>
+              <th scope="col" :class="[RD_FIELD_LABEL, 'py-2 pr-3 text-left']">{{ t('request_detail.trip_tab_col_role') }}</th>
+              <th scope="col" :class="[RD_FIELD_LABEL, 'py-2 text-left']">{{ t('request_detail.trip_tab_col_phone') }}</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-50 dark:divide-slate-800/80">
+            <tr v-for="row in passengerRows" :key="row.key">
+              <td class="max-w-[9rem] truncate py-2 pr-3 font-medium text-slate-900 dark:text-slate-100">{{ row.name }}</td>
+              <td class="hidden max-w-[8rem] truncate py-2 pr-3 text-slate-600 dark:text-slate-400 md:table-cell">{{ row.department }}</td>
+              <td class="max-w-[6rem] truncate py-2 pr-3 text-slate-600 dark:text-slate-400">{{ row.role }}</td>
+              <td class="py-2 tabular-nums text-slate-700 dark:text-slate-300">{{ row.phone }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </StaffRequestTripCollapseSection>
+
+    <StaffRequestTripCollapseSection
+      section-key="business"
+      :title="t('request_detail.trip_tab_section_business')"
+      collapsible
+      :default-open="false"
+      :expand-label="t('request_detail.trip_tab_expand_section')"
+      :collapse-label="t('request_detail.trip_tab_collapse_section')"
+    >
+      <div class="grid gap-4 sm:grid-cols-2 sm:gap-6">
+        <div class="min-w-0">
+          <p :class="RD_FIELD_LABEL">{{ t('request_detail.ops_lbl_purpose') }}</p>
+          <p v-if="purposeText" :class="RD_FIELD_VALUE_BODY">{{ purposeText }}</p>
+          <p v-else :class="[RD_FIELD_VALUE_BODY, RD_EMPTY]">{{ rdEmptyLabel(t, 'purpose') }}</p>
+          <div v-if="purposeTargets.length" class="mt-2 flex flex-wrap gap-1.5">
+            <span
+              v-for="(tg, i) in purposeTargets"
+              :key="i"
+              class="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+            >{{ tg }}</span>
+          </div>
+        </div>
+        <div class="min-w-0">
+          <p :class="RD_FIELD_LABEL">{{ t('request_detail.ops_lbl_basis') }}</p>
+          <p
+            class="whitespace-pre-wrap"
+            :class="RD_FIELD_VALUE_BODY"
+            data-testid="staff-request-trip-tab-basis-block"
+          >
+            <template v-if="basisText">{{ basisText }}</template>
+            <template v-else><span :class="RD_EMPTY">{{ rdEmptyLabel(t, 'basis') }}</span></template>
+          </p>
+        </div>
+      </div>
+    </StaffRequestTripCollapseSection>
+
+    <StaffRequestTripCollapseSection
       section-key="notes"
       :title="t('request_detail.trip_tab_section_notes')"
-      tone="slate"
     >
-      <dl class="grid gap-5 sm:grid-cols-3">
+      <dl class="grid gap-4 sm:grid-cols-3 sm:gap-5">
         <div v-for="note in noteBlocks" :key="note.key" class="min-w-0">
-          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ note.label }}</dt>
+          <dt :class="RD_FIELD_LABEL">{{ note.label }}</dt>
           <dd
-            class="mt-2 whitespace-pre-wrap text-base leading-relaxed"
-            :class="note.text ? 'text-slate-800 dark:text-slate-200' : 'italic text-slate-400'"
+            class="mt-1 whitespace-pre-wrap text-sm leading-relaxed"
+            :class="note.text ? 'text-slate-800 dark:text-slate-200' : RD_EMPTY"
           >
             {{ note.text || rdEmptyLabel(t, 'note') }}
           </dd>
@@ -191,6 +187,13 @@ import StaffRequestTripCollapseSection from './StaffRequestTripCollapseSection.v
 import StaffRequestTripExecutionTimeline from './StaffRequestTripExecutionTimeline.vue'
 import { useStaffRequestTripDetailTab } from '../../../composables/useStaffRequestTripDetailTab'
 import { rdEmptyLabel } from '../../../util/requestDetailEmpty'
+import {
+  RD_EMPTY,
+  RD_FIELD_LABEL,
+  RD_FIELD_VALUE_BODY,
+  RD_FIELD_VALUE_TABULAR,
+  RD_FIELD_VALUE_TOTAL,
+} from '../../../util/requestDetailTypography'
 
 const props = defineProps({
   req: { type: Object, required: true },
@@ -200,6 +203,7 @@ const props = defineProps({
 const { t } = useI18n()
 
 const {
+  emptyLabel,
   planDateNeeded,
   planDuration,
   planVehicleType,

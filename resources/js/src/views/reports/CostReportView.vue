@@ -17,16 +17,20 @@
       :filter-control-visible="filterControlVisible"
       :filter-control-defs="filterControlDefs"
       :trip-type-options="tripTypeOptions"
+      :cost-type-options="costTypeOptions"
       :status-options="statusOptions"
       :fleet-options="fleetOptions"
+      :provider-options="providerOptions"
+      :unit-options="unitOptions"
       :has-visible-bar-filters="hasVisibleBarFilters"
       :show-filter-panel="showFilterPanelDd"
       :loading="loading"
       :exporting="exporting"
       :can-export="canExport"
-      @export-xlsx="doExportXlsx"
-      @export-pdf="doExportPdf"
-      @reset-filters="resetFilters"
+      @export-xlsx="doExportXlsx(false)"
+      @export-pdf="doExportPdf(false)"
+      @export-xlsx-all="doExportXlsx(true)"
+      @export-pdf-all="doExportPdf(true)"
       @patch-filter="onPatchFilter"
       @toggle-filter-panel="toggleFilterPanel"
       @close-filter-panel="closeFilterPanel"
@@ -143,27 +147,30 @@
               </FilterVisibilityDropdown>
             </div>
             <div v-if="canExport" class="ml-auto flex shrink-0 flex-wrap items-center gap-2">
-              <details ref="exportMenuRef" class="group relative">
-                <summary class="list-none [&::-webkit-details-marker]:hidden">
-                  <DatagridToolbarActionButton
-                    icon="export"
-                    :disabled="!!exporting"
-                    test-id="cost-report-toolbar-export"
-                    @click="toggleExportMenu"
-                  >
-                    {{ t('cost_report.toolbar_export') }}
-                  </DatagridToolbarActionButton>
-                </summary>
-                <div
-                  class="absolute right-0 top-[calc(100%+8px)] z-[110] min-w-[200px] rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-600 dark:bg-slate-900"
-                  @click.stop
-                >
+              <div ref="exportMenuRef" class="relative">
+              <DatagridToolbarActionButton
+                icon="export"
+                :active="showExportMenu"
+                :disabled="!!exporting"
+                test-id="cost-report-toolbar-export"
+                @click="toggleExportMenu"
+              >
+                {{ t('cost_report.toolbar_export') }}
+              </DatagridToolbarActionButton>
+              <div
+                v-if="showExportMenu"
+                class="absolute right-0 top-[calc(100%+8px)] z-[110] min-w-[210px] rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-600 dark:bg-slate-900"
+                @click.stop
+              >
+                  <p class="px-3 pb-1 pt-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                    {{ t('cost_report.export_group_filtered') }}
+                  </p>
                   <button
                     type="button"
                     class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
                     data-testid="cost-report-export-xlsx"
                     :disabled="!!exporting"
-                    @click="doExportXlsx"
+                    @click="doExportXlsx(false)"
                   >
                     {{ t('cost_report.btn_export_xlsx') }}
                   </button>
@@ -172,12 +179,34 @@
                     class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
                     data-testid="cost-report-export-pdf"
                     :disabled="!!exporting"
-                    @click="doExportPdf"
+                    @click="doExportPdf(false)"
                   >
                     {{ t('cost_report.btn_export_pdf') }}
                   </button>
+                  <div class="my-1 border-t border-slate-100 dark:border-slate-700" />
+                  <p class="px-3 pb-1 pt-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                    {{ t('cost_report.export_group_all') }}
+                  </p>
+                  <button
+                    type="button"
+                    class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                    data-testid="cost-report-export-xlsx-all"
+                    :disabled="!!exporting"
+                    @click="doExportXlsx(true)"
+                  >
+                    {{ t('cost_report.btn_export_xlsx_all') }}
+                  </button>
+                  <button
+                    type="button"
+                    class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                    data-testid="cost-report-export-pdf-all"
+                    :disabled="!!exporting"
+                    @click="doExportPdf(true)"
+                  >
+                    {{ t('cost_report.btn_export_pdf_all') }}
+                  </button>
                 </div>
-              </details>
+              </div>
             </div>
           </div>
         </div>
@@ -256,7 +285,7 @@ import DatagridToolbarSearch from '../../components/shared/ui/DatagridToolbarSea
 import DatagridToolbarActionButton from '../../components/shared/ui/DatagridToolbarActionButton.vue'
 import FilterVisibilityDropdown from '../../components/shared/ui/FilterVisibilityDropdown.vue'
 import DashboardEChart from '../../components/dashboard/DashboardEChart.vue'
-import { useDetailsAutoClose, useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
+import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 import { useExportDetailsMenu } from '../../composables/useExportDetailsMenu.js'
 import { labelReportProvider } from '../../composables/useCostReportPresentation'
 import { getTripCostReport, downloadTripCostXlsx, downloadTripCostPdf } from '../../api/reports'
@@ -278,7 +307,22 @@ const CHART_PALETTE = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#
 const COST_REPORT_COL_VISIBILITY_KEY = 'va.cost_report.col_visibility_v1'
 const COST_REPORT_FILTER_VIS_KEY = 'va.cost_report.filter_visibility.v2'
 
-const FILTER_CONTROL_IDS = ['date', 'trip_type', 'status', 'fleet_mode']
+const FILTER_CONTROL_IDS = ['date', 'trip_type', 'cost_type', 'status', 'fleet_mode', 'provider', 'unit', 'amount']
+
+const COST_TYPE_OPTIONS = [
+  { value: 'fuel', label: 'Nhiên liệu' },
+  { value: 'toll', label: 'Cầu đường' },
+  { value: 'parking', label: 'Gửi xe' },
+  { value: 'meal', label: 'Ăn uống' },
+  { value: 'wash', label: 'Rửa xe' },
+  { value: 'fine', label: 'Phạt' },
+  { value: 'repair', label: 'Sửa chữa' },
+  { value: 'other', label: 'Khác' },
+]
+
+/** Nhãn tổng hợp do backend sinh ra (không phải giá trị lọc thực) — loại khỏi danh sách chọn. */
+const SYNTHETIC_PROVIDER_LABELS = new Set(['Xe nội bộ'])
+const SYNTHETIC_UNIT_LABELS = new Set(['Không xác định', '—'])
 const COL_IDS = [
   'unit',
   'category',
@@ -361,9 +405,18 @@ const filters = reactive({
   from: '',
   to: '',
   trip_type: '',
+  type: '',
   status: '',
   fleet_mode: '',
+  provider: '',
+  unit: '',
+  min_amount: '',
+  max_amount: '',
 })
+
+/** Danh sách NCC / đơn vị có trong dữ liệu — chụp lại khi không lọc để dropdown không bị co lại. */
+const providerOptionsRaw = ref([])
+const unitOptionsRaw = ref([])
 
 const filterControlVisible = reactive(loadFilterControlVisibility())
 const colVisible = reactive(defaultColVisibility())
@@ -375,16 +428,34 @@ const showColPanelDd = ref(false)
 const detailPage = ref(1)
 const detailPerPage = ref(DEFAULT_DETAIL_PER_PAGE)
 
-const { exportMenuRef, toggleExportMenu, closeExportMenu } = useExportDetailsMenu()
+const { exportMenuRef, showExportMenu, toggleExportMenu, closeExportMenu } = useExportDetailsMenu()
 const detailTableToolbarRef = ref(null)
-useDetailsAutoClose(exportMenuRef)
 useDetailsAutoCloseWithin(detailTableToolbarRef)
 
 const filterControlDefs = computed(() => [
   { id: 'date', label: t('cost_report.filter_date') },
   { id: 'trip_type', label: t('cost_report.filter_trip_type') },
+  { id: 'cost_type', label: t('cost_report.filter_cost_type') },
   { id: 'status', label: t('filter_bar.status') },
   { id: 'fleet_mode', label: t('dashboard_analytics.filter_fleet') },
+  { id: 'provider', label: t('cost_report.filter_provider') },
+  { id: 'unit', label: t('cost_report.filter_unit') },
+  { id: 'amount', label: t('cost_report.filter_amount') },
+])
+
+const costTypeOptions = computed(() => [
+  { value: '', label: t('cost_report.filter_all_option') },
+  ...COST_TYPE_OPTIONS,
+])
+
+const providerOptions = computed(() => [
+  { value: '', label: t('cost_report.filter_all_option') },
+  ...providerOptionsRaw.value.map((v) => ({ value: v, label: v })),
+])
+
+const unitOptions = computed(() => [
+  { value: '', label: t('cost_report.filter_all_option') },
+  ...unitOptionsRaw.value.map((v) => ({ value: v, label: v })),
 ])
 
 const colControlDefs = computed(() => COL_IDS.map((id) => ({ id, label: tableColLabel(id) })))
@@ -532,9 +603,28 @@ function buildApiParams() {
   if (filters.from) p.from = filters.from
   if (filters.to) p.to = filters.to
   if (filters.trip_type) p.trip_type = filters.trip_type
+  if (filters.type) p.type = filters.type
   if (filters.status) p.status = filters.status
   if (filters.fleet_mode) p.fleet_mode = filters.fleet_mode
+  if (filters.provider) p.provider = filters.provider
+  if (filters.unit) p.unit = filters.unit
+  if (filters.min_amount !== '' && filters.min_amount != null) p.min_amount = filters.min_amount
+  if (filters.max_amount !== '' && filters.max_amount != null) p.max_amount = filters.max_amount
   return p
+}
+
+function captureFilterOptions() {
+  // Chỉ cập nhật khi bộ lọc tương ứng đang trống → giữ được danh sách đầy đủ.
+  if (!filters.provider) {
+    providerOptionsRaw.value = (stats.value?.by_provider ?? [])
+      .map((p) => p.label)
+      .filter((label) => label && !SYNTHETIC_PROVIDER_LABELS.has(label))
+  }
+  if (!filters.unit) {
+    unitOptionsRaw.value = (stats.value?.by_unit ?? [])
+      .map((u) => u.label)
+      .filter((label) => label && !SYNTHETIC_UNIT_LABELS.has(label))
+  }
 }
 
 async function reload() {
@@ -543,6 +633,7 @@ async function reload() {
     const res = await getTripCostReport(buildApiParams())
     stats.value = res.stats
     rows.value = res.rows ?? []
+    captureFilterOptions()
     detailPage.value = 1
   } catch (e) {
     showAppErrorFromApi(e, t('cost_report.load_error'))
@@ -584,18 +675,6 @@ function onToggleFilterControl(id, checked) {
 }
 
 function onFilterChange() {
-  detailPage.value = 1
-  reload()
-}
-
-function resetFilters() {
-  filters.from = ''
-  filters.to = ''
-  filters.trip_type = ''
-  filters.status = ''
-  filters.fleet_mode = ''
-  searchQ.value = ''
-  showFilterPanelDd.value = false
   detailPage.value = 1
   reload()
 }
@@ -645,13 +724,17 @@ function closeExportMenus() {
   closeExportMenu()
 }
 
-async function doExportXlsx() {
+function exportParams(all) {
+  return all ? { all: 1 } : buildApiParams()
+}
+
+async function doExportXlsx(all = false) {
   if (exporting.value) return
   exportError.value = ''
   closeExportMenus()
-  exporting.value = 'xlsx'
+  exporting.value = all ? 'xlsx-all' : 'xlsx'
   try {
-    await downloadTripCostXlsx(buildApiParams())
+    await downloadTripCostXlsx(exportParams(all))
   } catch (e) {
     exportError.value = formatApiError(e, t('cost_report.export_error'))
   } finally {
@@ -659,13 +742,13 @@ async function doExportXlsx() {
   }
 }
 
-async function doExportPdf() {
+async function doExportPdf(all = false) {
   if (exporting.value) return
   exportError.value = ''
   closeExportMenus()
-  exporting.value = 'pdf'
+  exporting.value = all ? 'pdf-all' : 'pdf'
   try {
-    await downloadTripCostPdf(buildApiParams())
+    await downloadTripCostPdf(exportParams(all))
   } catch (e) {
     exportError.value = formatApiError(e, t('cost_report.export_error'))
   } finally {

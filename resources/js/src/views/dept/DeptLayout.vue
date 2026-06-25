@@ -150,6 +150,12 @@
         >
           <CheckCircleIcon class="h-5 w-5 shrink-0 opacity-90" aria-hidden="true" />
           <span v-if="!compactNav" class="min-w-0 flex-1 truncate">{{ t('dept.nav_approved') }}</span>
+          <span
+            v-if="!compactNav && summary.approved_total > 0"
+            class="inline-flex min-h-[1.25rem] min-w-[1.25rem] shrink-0 items-center justify-center rounded-full bg-white/20 px-1.5 text-[10px] font-bold tabular-nums leading-none text-white"
+          >
+            {{ summary.approved_total > 99 ? '99+' : summary.approved_total }}
+          </span>
         </RouterLink>
 
         <RouterLink
@@ -160,6 +166,12 @@
         >
           <XCircleIcon class="h-5 w-5 shrink-0 opacity-90" aria-hidden="true" />
           <span v-if="!compactNav" class="min-w-0 flex-1 truncate">{{ t('dept.nav_rejected') }}</span>
+          <span
+            v-if="!compactNav && summary.rejected_total > 0"
+            class="inline-flex min-h-[1.25rem] min-w-[1.25rem] shrink-0 items-center justify-center rounded-full bg-white/20 px-1.5 text-[10px] font-bold tabular-nums leading-none text-white"
+          >
+            {{ summary.rejected_total > 99 ? '99+' : summary.rejected_total }}
+          </span>
         </RouterLink>
 
         <RouterLink
@@ -339,6 +351,8 @@ const summary = ref({
   pending_today: 0,
   approved_this_month: 0,
   approval_rate_30d: null,
+  approved_total: 0,
+  rejected_total: 0,
 })
 
 const loggingOut = ref(false)
@@ -421,6 +435,8 @@ async function loadSummary() {
       pending_today: data.pending_today ?? 0,
       approved_this_month: data.approved_this_month ?? 0,
       approval_rate_30d: data.approval_rate_30d ?? null,
+      approved_total: data.approved_total ?? 0,
+      rejected_total: data.rejected_total ?? 0,
     }
   } catch {
     summary.value = {
@@ -428,6 +444,8 @@ async function loadSummary() {
       pending_today: 0,
       approved_this_month: 0,
       approval_rate_30d: null,
+      approved_total: 0,
+      rejected_total: 0,
     }
   }
 }

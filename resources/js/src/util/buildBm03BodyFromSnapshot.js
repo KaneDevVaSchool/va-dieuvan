@@ -159,8 +159,9 @@ export function buildBm03BodyFromWizardSnapshot(snapshot) {
             );
             passengerRows.forEach((r, i) => {
                 if (!isPassengerRowFilled(r)) return;
+                const picLine = [r.person_in_charge, r.person_in_charge_phone].filter((x) => String(x ?? '').trim()).join(' · ') || '—';
                 lines.push(
-                    `${i + 1}. Đi: ${r.depart_at || "—"} ${r.pickup || "—"} | Về: ${r.return_at || "—"} ${r.dropoff || "—"} | ${r.guests || "0"} khách | NV: ${r.person_in_charge || "—"} | ĐG ${r.unit_price || "0"} + PS ${r.extra_fee || "0"} | ${r.notes || ""}`,
+                    `${i + 1}. Đi: ${r.depart_at || "—"} ${r.pickup || "—"} | Về: ${r.return_at || "—"} ${r.dropoff || "—"} | ${r.guests || "0"} khách | NV: ${picLine} | ĐG ${r.unit_price || "0"} + PS ${r.extra_fee || "0"} | ${r.notes || ""}`,
                 );
             });
             lines.push(`Tổng (ước tính): ${formatCurrency(e1Total)}`);

@@ -43,11 +43,11 @@
     >
       <DriverTripCard
         v-for="trip in trips"
-        :key="trip.id"
+        :key="rowKey(trip)"
         class="w-full min-w-0"
         layout="stacked"
         :trip="trip"
-        :busy="startBusyTripId != null && String(startBusyTripId) === String(trip.id)"
+        :busy="startBusyTripId != null && String(startBusyTripId) === rowKey(trip)"
         data-testid="driver-dash-trip-card"
         @start="emit('start-trip', $event)"
       />
@@ -66,14 +66,14 @@
       >
         <div
           v-for="trip in trips"
-          :key="trip.id"
+          :key="rowKey(trip)"
           class="dash-carousel-card snap-center first:snap-start last:pr-[max(0.75rem,env(safe-area-inset-right))]"
         >
           <DriverTripCard
             class="w-[min(82vw,20rem)] shrink-0 will-change-transform"
             layout="carousel"
             :trip="trip"
-            :busy="startBusyTripId != null && String(startBusyTripId) === String(trip.id)"
+            :busy="startBusyTripId != null && String(startBusyTripId) === rowKey(trip)"
             data-testid="driver-dash-trip-card"
             @start="emit('start-trip', $event)"
           />
@@ -90,6 +90,7 @@ import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import DriverTripCard from '../DriverTripCard.vue'
 import DriverTodayEmptyState from '../DriverTodayEmptyState.vue'
+import { driverTripListRowKey } from '../../../util/driverScheduleLeg'
 
 const props = defineProps({
   trips: { type: Array, required: true },
@@ -103,6 +104,10 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['start-trip'])
+
+function rowKey(trip) {
+  return driverTripListRowKey(trip) || String(trip.id)
+}
 
 const { t } = useI18n()
 

@@ -142,6 +142,28 @@ class TripScheduleLegService
     }
 
     /**
+     * Trạng thái nguồn để validate chuyển bước khi đổi theo một lịch (schedule_key).
+     */
+    public function resolveLegStatusForTransition(Trip $trip, string $scheduleKey): ?string
+    {
+        $trip->loadMissing('dispatchRequest');
+        $defs = $this->buildLegDefinitionsFromSnapshot(
+            is_array($trip->dispatchRequest?->wizard_snapshot) ? $trip->dispatchRequest->wizard_snapshot : null,
+            (string) ($trip->dispatchRequest?->trip_type ?? ''),
+        );
+        if (count($defs) <= 1) {
+            return null;
+        }
+
+        abort_unless($this->legKeyInDefinitions($defs, $scheduleKey), 422, 'Lịch trình không hợp lệ.');
+
+        $assignments = array_values(is_array($trip->schedule_assignments) ? $trip->schedule_assignments : []);
+        $assign = $this->findAssignmentByKey($assignments, $scheduleKey);
+
+        return $this->effectiveLegStatus($assign, (string) $trip->status, true);
+    }
+
+    /**
      * @return array{trip: array<string, mixed>, schedule_assignments: list<array<string, mixed>>|null}
      */
     public function applyStatusChange(Trip $trip, string $newStatus, ?string $scheduleKey): array

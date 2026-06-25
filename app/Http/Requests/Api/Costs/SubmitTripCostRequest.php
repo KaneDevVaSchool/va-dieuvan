@@ -19,6 +19,7 @@ class SubmitTripCostRequest extends ApiFormRequest
             'amount' => ['required', 'numeric', 'min:0'],
             'currency' => ['nullable', 'string', 'size:3'],
             'description' => ['nullable', 'string', 'max:255'],
+            'reported_on' => ['nullable', 'date', 'before_or_equal:today'],
             'receipt_url' => ['nullable', 'string', 'max:2048'],
             'vehicle_id' => ['nullable', 'integer', 'min:1', 'exists:vehicles,id'],
         ];

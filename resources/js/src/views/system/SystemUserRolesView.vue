@@ -4,7 +4,6 @@ import { useI18n } from 'vue-i18n'
 import {
   UserGroupIcon,
   XMarkIcon,
-  FunnelIcon,
 } from '@heroicons/vue/24/outline'
 import { useUserRoleManager } from '../../composables/useUserRoleManager'
 import { useVisibleFilterControls } from '../../composables/useVisibleFilterControls.js'
@@ -329,17 +328,6 @@ onActivated(() => bootstrap())
                 <label :for="'urcol-' + col.id" class="cursor-pointer text-sm text-slate-700 dark:text-slate-300">{{ col.label }}</label>
               </li>
             </FilterVisibilityDropdown>
-
-            <button
-              type="button"
-              class="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-sm text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
-              :title="t('system_pages.clear_filters')"
-              data-testid="user-roles-reset-filters"
-              @click="resetFilters"
-            >
-              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-              <XMarkIcon class="h-3 w-3 text-rose-500" aria-hidden="true" />
-            </button>
           </div>
         </div>
       </div>

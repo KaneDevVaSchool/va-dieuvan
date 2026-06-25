@@ -415,7 +415,7 @@ class TripController extends Controller
      */
     private function normalizePassengerRows(array $rows): array
     {
-        $keys = ['depart_at', 'pickup', 'return_at', 'dropoff', 'guests', 'unit_price', 'extra_fee', 'person_in_charge', 'notes'];
+        $keys = ['depart_at', 'pickup', 'return_at', 'dropoff', 'guests', 'unit_price', 'extra_fee', 'person_in_charge', 'person_in_charge_phone', 'notes'];
         $out = [];
         foreach ($rows as $row) {
             if (! is_array($row)) {

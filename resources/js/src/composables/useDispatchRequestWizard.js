@@ -20,7 +20,6 @@ import {
   getPortalFormTemplate,
   getPortalFormTemplates,
   patchDispatchRequestWizard,
-  searchUsersForPortalForm,
   searchPortalDeptHeads,
   updatePortalFormTemplate,
 } from '../api/requests'
@@ -49,7 +48,6 @@ import {
   draftActiveStorageKey,
   MAX_SAVED_DRAFTS,
   todayISODate,
-  showCoordinatorPanelForTripType,
 } from './dispatchWizardConstants'
 import { dispatchScheduleRowErrors } from './dispatchScheduleRowErrors'
 import {
@@ -192,7 +190,6 @@ export function useDispatchRequestWizard(options = {}) {
       }
     })
     requesterEmailTouched.value = false
-    coordinatorEmailTouched.value = false
   }
 
   const step = ref(0)
@@ -289,7 +286,6 @@ export function useDispatchRequestWizard(options = {}) {
           maxReachedStep: 0,
         })
         if (form.value.requester_name?.trim()) requesterSearchQ.value = form.value.requester_name
-        if (form.value.coordinator_name?.trim()) coordinatorSearchQ.value = form.value.coordinator_name
       }
       templateModalOpen.value = false
       error.value = ''
@@ -361,8 +357,6 @@ export function useDispatchRequestWizard(options = {}) {
   const basisDragOver = ref(false)
   const basisFileError = ref('')
 
-  /** Chỉ hiện lỗi định dạng sau blur (ô email coordinator). Logic chặn bước vẫn dùng `coordinatorEmailFormatInvalid`. */
-  const coordinatorEmailTouched = ref(false)
   /** Chỉ hiện lỗi định dạng sau blur (ô email người đề nghị). Logic chặn bước vẫn dùng `requesterEmailFormatInvalid`. */
   const requesterEmailTouched = ref(false)
 
@@ -373,14 +367,6 @@ export function useDispatchRequestWizard(options = {}) {
   const requesterDropdownOpen = ref(false)
   const requesterSearchError = ref('')
   let requesterBlurTimer = null
-
-  let coordinatorSearchTimer = null
-  const coordinatorSearchQ = ref('')
-  const coordinatorSearchResults = ref([])
-  const coordinatorSearchLoading = ref(false)
-  const coordinatorDropdownOpen = ref(false)
-  const coordinatorSearchError = ref('')
-  let coordinatorBlurTimer = null
 
   const passengerRows = ref([emptyPassengerRow()])
   const businessRows = ref([emptyBusinessRow()])
@@ -531,16 +517,8 @@ export function useDispatchRequestWizard(options = {}) {
     form.value.requester_phone = sanitizeVnPhoneDigits(e?.target?.value)
   }
 
-  function onCoordinatorPhoneInput(e) {
-    form.value.coordinator_phone = sanitizeVnPhoneDigits(e?.target?.value)
-  }
-
   function onRequesterEmailBlur() {
     requesterEmailTouched.value = true
-  }
-
-  function onCoordinatorEmailBlur() {
-    coordinatorEmailTouched.value = true
   }
 
   function scheduleRequesterSearch() {
@@ -593,57 +571,6 @@ export function useDispatchRequestWizard(options = {}) {
     requesterSearchResults.value = []
     requesterDropdownOpen.value = false
     requesterEmailTouched.value = false
-  }
-
-  function scheduleCoordinatorSearch() {
-    coordinatorSearchError.value = ''
-    clearTimeout(coordinatorSearchTimer)
-    coordinatorSearchTimer = setTimeout(runCoordinatorSearch, 350)
-  }
-
-  async function runCoordinatorSearch() {
-    const q = coordinatorSearchQ.value.trim()
-    if (q.length < 2) {
-      coordinatorSearchResults.value = []
-      coordinatorSearchError.value = ''
-      coordinatorDropdownOpen.value = false
-      return
-    }
-    coordinatorSearchLoading.value = true
-    coordinatorDropdownOpen.value = true
-    try {
-      coordinatorSearchResults.value = await (isPortal ? searchUsersForPortalForm : searchUsersForDispatchForm)(q)
-      coordinatorSearchError.value = ''
-      coordinatorDropdownOpen.value = true
-    } catch (e) {
-      coordinatorSearchResults.value = []
-      coordinatorSearchError.value = formatApiError(e, t('dispatch_wizard.search_staff_fail'))
-      coordinatorDropdownOpen.value = true
-    } finally {
-      coordinatorSearchLoading.value = false
-    }
-  }
-
-  function onCoordinatorSearchFocus() {
-    clearTimeout(coordinatorBlurTimer)
-    if (coordinatorSearchQ.value.trim().length >= 2) coordinatorDropdownOpen.value = true
-  }
-
-  function onCoordinatorSearchBlur() {
-    coordinatorBlurTimer = setTimeout(() => {
-      coordinatorDropdownOpen.value = false
-    }, 200)
-  }
-
-  function pickCoordinator(u) {
-    coordinatorSearchError.value = ''
-    form.value.coordinator_name = u.name || ''
-    form.value.coordinator_email = u.email || ''
-    form.value.coordinator_phone = sanitizeVnPhoneDigits(u.phone || '')
-    coordinatorSearchQ.value = u.name || ''
-    coordinatorSearchResults.value = []
-    coordinatorDropdownOpen.value = false
-    coordinatorEmailTouched.value = false
   }
 
   const ALLOWED_BASIS_MIME = new Set([
@@ -1000,17 +927,9 @@ export function useDispatchRequestWizard(options = {}) {
     () => !!form.value.requester_email?.trim() && !isPlausibleEmail(form.value.requester_email),
   )
 
-  const coordinatorEmailFormatInvalid = computed(
-    () => !!form.value.coordinator_email?.trim() && !isPlausibleEmail(form.value.coordinator_email),
-  )
-
   /** Viền/ gợi ý chỉ sau blur. Logic chặn bước dùng *FormatInvalid tương ứng. */
   const step2RequesterEmailInvalid = computed(
     () => requesterEmailTouched.value && requesterEmailFormatInvalid.value,
-  )
-
-  const step2CoordinatorEmailInvalid = computed(
-    () => coordinatorEmailTouched.value && coordinatorEmailFormatInvalid.value,
   )
 
   function recurringStep1Complete() {
@@ -1046,14 +965,10 @@ export function useDispatchRequestWizard(options = {}) {
   const canGoNext = computed(() => {
     if (step.value === 0) return !!form.value.trip_type
     if (step.value === 1) {
-      const coordinatorOk =
-        !showCoordinatorPanelForTripType(form.value.trip_type) ||
-        !coordinatorEmailFormatInvalid.value
       const base =
         !!form.value.requester_name?.trim() &&
         !!form.value.requester_email?.trim() &&
         !requesterEmailFormatInvalid.value &&
-        coordinatorOk &&
         !!form.value.purpose?.trim() &&
         (!form.value.is_urgent || !!form.value.urgent_reason?.trim())
       const deptOk =
@@ -1189,7 +1104,6 @@ export function useDispatchRequestWizard(options = {}) {
       passengerRows: passengerRows.value,
       businessRows: businessRows.value,
       cargoRows: cargoRows.value,
-      coordinatorEmailFormatInvalid: coordinatorEmailFormatInvalid.value,
       step2DateOrderInvalid: step2DateOrderInvalid.value,
       portalNeedsDeptHead: portalNeedsDeptHead.value,
       detailStepSchedulesValid: detailStepSchedulesValid.value,
@@ -1700,9 +1614,7 @@ export function useDispatchRequestWizard(options = {}) {
       activeDraftId.value = draftId
       localStorage.setItem(activeDraftPointerKey(uid), draftId)
       if (form.value.requester_name?.trim()) requesterSearchQ.value = form.value.requester_name
-      if (form.value.coordinator_name?.trim()) coordinatorSearchQ.value = form.value.coordinator_name
       form.value.requester_phone = sanitizeVnPhoneDigits(form.value.requester_phone)
-      form.value.coordinator_phone = sanitizeVnPhoneDigits(form.value.coordinator_phone)
       error.value = ''
       created.value = null
       refreshDraftsList()
@@ -1806,10 +1718,7 @@ export function useDispatchRequestWizard(options = {}) {
     basisFileError.value = ''
     requesterSearchQ.value = ''
     requesterSearchError.value = ''
-    coordinatorSearchQ.value = ''
-    coordinatorSearchError.value = ''
     requesterEmailTouched.value = false
-    coordinatorEmailTouched.value = false
     draftSaveError.value = ''
     draftSaveFlash.value = false
     clearTimeout(draftSaveFlashTimer)
@@ -1934,9 +1843,7 @@ export function useDispatchRequestWizard(options = {}) {
       }
     }
     if (form.value.requester_name?.trim()) requesterSearchQ.value = form.value.requester_name
-    if (form.value.coordinator_name?.trim()) coordinatorSearchQ.value = form.value.coordinator_name
     form.value.requester_phone = sanitizeVnPhoneDigits(form.value.requester_phone)
-    form.value.coordinator_phone = sanitizeVnPhoneDigits(form.value.coordinator_phone)
     if (isPortal) {
       form.value.source_channel = 'portal'
     }
@@ -2031,18 +1938,11 @@ export function useDispatchRequestWizard(options = {}) {
     requesterSearchLoading,
     requesterDropdownOpen,
     requesterSearchError,
-    coordinatorSearchQ,
-    coordinatorSearchResults,
-    coordinatorSearchLoading,
-    coordinatorDropdownOpen,
-    coordinatorSearchError,
     step2DateOrderInvalid,
     step2RequesterEmailInvalid,
     draftSaveError,
     draftSaveFlash,
-    step2CoordinatorEmailInvalid,
     requesterEmailFormatInvalid,
-    coordinatorEmailFormatInvalid,
     passengerRows,
     businessRows,
     cargoRows,
@@ -2054,17 +1954,11 @@ export function useDispatchRequestWizard(options = {}) {
     openDatePickerFromInput,
     toggleE1Weekday,
     onRequesterPhoneInput,
-    onCoordinatorPhoneInput,
     onRequesterEmailBlur,
-    onCoordinatorEmailBlur,
     scheduleRequesterSearch,
     onRequesterSearchFocus,
     onRequesterSearchBlur,
     pickRequester,
-    scheduleCoordinatorSearch,
-    onCoordinatorSearchFocus,
-    onCoordinatorSearchBlur,
-    pickCoordinator,
     onBasisFileChange,
     onBasisDrop,
     clearBasisFile,

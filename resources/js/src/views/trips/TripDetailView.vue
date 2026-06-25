@@ -139,7 +139,7 @@
                     class="-mx-4 border-b border-slate-200 bg-[#F8F9FA] px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 dark:border-slate-800 dark:bg-slate-950"
                 >
                     <nav
-                        class="flex gap-0.5 overflow-x-auto scrollbar-hidden"
+                        class="flex snap-x snap-mandatory gap-0.5 overflow-x-auto scrollbar-hidden"
                         role="tablist"
                         :aria-label="t('trip_detail.tabs.aria')"
                     >
@@ -149,7 +149,7 @@
                             type="button"
                             role="tab"
                             :aria-selected="activeTab === tab.key"
-                            class="relative shrink-0 whitespace-nowrap px-3.5 py-3 text-[13px] font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/40"
+                            class="relative min-h-11 shrink-0 snap-start whitespace-nowrap px-3.5 py-3 text-[13px] font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/40 sm:min-h-0 sm:px-3.5"
                             :class="
                                 activeTab === tab.key
                                     ? 'text-blue-700'
@@ -1529,7 +1529,6 @@ const routeJourneyView = computed(() => {
         return {
             key: card.key,
             seq: card.labelSeq,
-            heading: card.heading || "",
             status,
             statusLabel: labelTripStatus(status),
             tone: legStatusTone(status),

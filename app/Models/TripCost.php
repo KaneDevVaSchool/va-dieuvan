@@ -21,6 +21,7 @@ class TripCost extends Model
         'amount',
         'currency',
         'description',
+        'reported_on',
         'receipt_url',
         'status',
         'rejection_reason',
@@ -29,6 +30,7 @@ class TripCost extends Model
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'reported_on' => 'date:Y-m-d',
         'confirmed_at' => 'datetime',
     ];
 

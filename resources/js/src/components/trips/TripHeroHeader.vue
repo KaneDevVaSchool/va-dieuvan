@@ -5,11 +5,11 @@
   >
     <!-- ── Row 0: Back + Actions ── -->
     <div
-      class="flex items-center justify-between gap-4 border-b border-slate-100 px-4 py-2 dark:border-slate-800 sm:px-6 lg:px-8"
+      class="flex flex-col gap-2 border-b border-slate-100 px-4 py-2.5 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:py-2 sm:px-6 lg:px-8"
     >
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 transition hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+        class="inline-flex min-h-11 items-center gap-1.5 self-start text-sm font-medium text-slate-500 transition hover:text-slate-800 sm:min-h-0 sm:text-xs dark:text-slate-400 dark:hover:text-slate-200"
         :aria-label="$t('trip_detail.header.back_trips')"
         data-testid="trip-detail-back"
         @click="$emit('back')"
@@ -18,10 +18,10 @@
         {{ $t('trip_detail.header.back_trips') }}
       </button>
 
-      <div class="flex shrink-0 items-center gap-2">
+      <div class="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:shrink-0">
         <button
           type="button"
-          class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-slate-500 transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
+          class="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-50 disabled:opacity-50 sm:h-8 sm:w-8 sm:rounded-md dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
           :disabled="refreshing"
           :aria-label="$t('trip_detail.actions.refresh')"
           data-testid="trip-detail-refresh"
@@ -32,7 +32,7 @@
         <button
           v-if="canReject"
           type="button"
-          class="inline-flex h-8 items-center rounded-md border border-rose-200 px-3 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 disabled:opacity-60 dark:border-rose-800/60 dark:text-rose-300 dark:hover:bg-rose-950/40"
+          class="inline-flex min-h-11 items-center rounded-lg border border-rose-200 px-3.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 disabled:opacity-60 sm:min-h-8 sm:rounded-md sm:text-xs dark:border-rose-800/60 dark:text-rose-300 dark:hover:bg-rose-950/40"
           data-testid="trip-detail-reject"
           @click="$emit('reject')"
         >
@@ -41,7 +41,7 @@
         <button
           v-if="canApprove"
           type="button"
-          class="inline-flex h-8 items-center gap-1.5 rounded-md bg-blue-600 px-3 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          class="inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-blue-600 px-3.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-8 sm:rounded-md sm:text-xs"
           :disabled="assignDisabled"
           :aria-label="$t('trip_detail.coordination.approve_transfer')"
           data-testid="trip-detail-approve"
@@ -89,9 +89,9 @@
       <!-- ── Row 2: Route (single leg) ── -->
       <div
         v-if="!showMultiRoute"
-        class="grid grid-cols-[1fr_auto_1fr] items-stretch border-b border-slate-100 dark:border-slate-800"
+        class="flex flex-col gap-2 border-b border-slate-100 py-3 dark:border-slate-800 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:items-stretch sm:gap-0"
       >
-        <div class="py-3 pr-4">
+        <div class="sm:py-3 sm:pr-4">
           <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
             {{ $t('trip_detail.header.lbl_origin') }}
           </p>
@@ -99,10 +99,11 @@
             {{ origin || empty }}
           </p>
         </div>
-        <div class="flex items-center px-3 py-3" aria-hidden="true">
-          <ArrowRightIcon class="h-4 w-4 shrink-0 text-slate-300 dark:text-slate-600" />
+        <div class="flex justify-center py-0 sm:items-center sm:px-3 sm:py-3" aria-hidden="true">
+          <ArrowRightIcon class="hidden h-4 w-4 shrink-0 text-slate-300 sm:block dark:text-slate-600" />
+          <ArrowDownIcon class="h-4 w-4 shrink-0 text-slate-300 sm:hidden dark:text-slate-600" />
         </div>
-        <div class="py-3 pl-4">
+        <div class="sm:py-3 sm:pl-4">
           <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
             {{ $t('trip_detail.header.lbl_destination') }}
           </p>
@@ -249,6 +250,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import {
+  ArrowDownIcon,
   ArrowLeftIcon,
   ArrowPathIcon,
   ArrowRightIcon,

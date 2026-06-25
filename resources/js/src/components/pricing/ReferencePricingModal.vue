@@ -2,6 +2,7 @@
   <Modal
     :open="open"
     extra-wide
+    :z-index="70"
     :title="t('request_detail.pricing_modal_title')"
     :description="t('request_detail.pricing_modal_lead')"
     @close="$emit('close')"

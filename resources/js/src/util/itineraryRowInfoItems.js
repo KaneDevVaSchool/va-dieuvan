@@ -91,12 +91,13 @@ export function itineraryRowInfoItems(row, { tripType, t }) {
     })
   }
   const pic = nz(row.person_in_charge)
-  if (pic && tripType === 'passenger') {
+  const picPhone = nz(row.person_in_charge_phone)
+  if ((pic || picPhone) && tripType === 'passenger') {
     items.push({
       key: 'pic',
       label: t('request_detail.ops_lbl_person_in_charge'),
-      primary: pic,
-      secondary: '',
+      primary: pic || picPhone,
+      secondary: pic && picPhone ? picPhone : '',
       iconKey: 'user',
       tone: 'violet',
     })

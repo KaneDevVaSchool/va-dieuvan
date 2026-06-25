@@ -18,19 +18,17 @@ export function formatItineraryRowDt(v) {
   if (!v) return ''
   const d = new Date(String(v).trim())
   if (Number.isNaN(d.getTime())) return nz(v)
-  return d.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
-}
-
-/** Compact leg time for itinerary cards: `HH:mm DD-MM` */
-export function formatItineraryTimelineDt(v) {
-  if (!v) return ''
-  const d = new Date(String(v).trim())
-  if (Number.isNaN(d.getTime())) return nz(v)
   const hh = String(d.getHours()).padStart(2, '0')
   const mm = String(d.getMinutes()).padStart(2, '0')
   const dd = String(d.getDate()).padStart(2, '0')
   const mo = String(d.getMonth() + 1).padStart(2, '0')
-  return `${hh}:${mm} ${dd}-${mo}`
+  const yyyy = d.getFullYear()
+  return `${hh}:${mm} ${dd}/${mo}/${yyyy}`
+}
+
+/** Compact leg time for itinerary cards — same as row display. */
+export function formatItineraryTimelineDt(v) {
+  return formatItineraryRowDt(v)
 }
 
 /**
@@ -111,8 +109,14 @@ export function itineraryRowSummaryLines(row, { tripType, t, index = 0 }) {
   const guests = nz(row.guests)
   if (guests) lines.push(t('request_detail.ops_row_line_guests', { n: guests }))
   const pic = nz(row.person_in_charge)
-  if (pic && tripType === 'passenger') {
-    lines.push(t('request_detail.ops_row_line_pic', { name: pic }))
+  const picPhone = nz(row.person_in_charge_phone)
+  if ((pic || picPhone) && tripType === 'passenger') {
+    const namePart = pic || '—'
+    lines.push(
+      picPhone
+        ? t('request_detail.ops_row_line_pic_phone', { name: namePart, phone: picPhone })
+        : t('request_detail.ops_row_line_pic', { name: namePart }),
+    )
   }
 
   return lines

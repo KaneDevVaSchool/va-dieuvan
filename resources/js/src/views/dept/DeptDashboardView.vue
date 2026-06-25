@@ -1,29 +1,29 @@
 <template>
-  <div class="w-full space-y-5">
+  <div class="flex min-h-0 w-full flex-col gap-4 xl:gap-5">
     <header class="md:hidden">
       <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
         {{ t('dept.pending_heading', { dept: deptName }) }}
       </h1>
       <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
-        {{ t('dept.pending_subtitle', { count: kpiStats.pending_count }) }}
+        {{ t('dept.inbox_subtitle', { count: kpiStats.pending_count }) }}
       </p>
     </header>
     <p class="mt-0 hidden text-base text-slate-600 dark:text-slate-400 md:block">
-      {{ t('dept.pending_subtitle', { count: kpiStats.pending_count }) }}
+      {{ t('dept.inbox_subtitle', { count: kpiStats.pending_count }) }}
     </p>
 
     <DeptPendingSummaryBar
       :stats="kpiStats"
       :loading="kpiLoading"
-      :active-trip-type="filterTripType"
+      :active-queue-filter="kpiQueueFilter"
       @quick-filter="onKpiQuickFilter"
     />
 
     <div
       ref="pendingDatagridRef"
-      class="overflow-visible rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40"
+      class="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40 xl:max-h-[calc(100dvh-14rem)]"
     >
-      <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+      <div class="shrink-0 border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
         <div class="flex w-full min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
           <div class="min-w-0 w-full basis-full lg:min-w-[10rem] lg:flex-1 lg:basis-auto">
             <DatagridToolbarSearch
@@ -73,19 +73,6 @@
               </li>
             </FilterVisibilityDropdown>
           </div>
-
-          <div class="ml-auto flex shrink-0 items-center">
-            <button
-              type="button"
-              class="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-slate-800 dark:hover:bg-slate-800"
-              :title="t('filter_bar.clear_all')"
-              data-testid="dept-pending-reset-filters"
-              @click="resetFilters"
-            >
-              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-              <XMarkIcon class="h-3 w-3 text-rose-500" aria-hidden="true" />
-            </button>
-          </div>
         </div>
       </div>
 
@@ -107,44 +94,107 @@
         </DatagridFilterField>
       </div>
 
-      <div class="border-t border-slate-100 px-4 py-4 dark:border-slate-700 sm:px-5">
+      <div
+        class="flex min-h-0 min-w-0 flex-1 flex-col border-t border-slate-100 dark:border-slate-700 xl:flex-row"
+      >
         <div
-          v-if="loadError"
-          class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-900/40 dark:bg-rose-950/40 dark:text-rose-100"
+          class="flex min-h-0 min-w-0 flex-col xl:w-[min(26rem,38%)] xl:shrink-0 xl:border-r xl:border-slate-100 xl:dark:border-slate-700"
         >
-          {{ loadError }}
-        </div>
-        <template v-else>
-          <h2 class="sr-only">{{ t('dept.list_pending_title') }}</h2>
-          <p v-if="!loading && !mergedItems.length" class="text-sm text-slate-500">{{ t('dept.empty_pending') }}</p>
-          <div class="space-y-4">
-            <DeptRequestCard
-              v-for="r in mergedItems"
-              :key="r.id"
-              :req="r"
-              :emphasize="r.status === 'price_filled'"
-              :show-actions="r.status === 'price_filled'"
-              :acting="actingId === r.id"
-              @detail="goDetail"
-              @approve="onApprove"
-              @reject="openReject"
-            />
-          </div>
-          <div v-if="loading" class="py-8 text-center text-sm text-slate-500">{{ t('dept.loading') }}</div>
-          <div v-else-if="canLoadMore" class="mt-4 flex justify-center">
-            <button
-              type="button"
-              class="rounded-xl border border-slate-200 bg-white px-6 py-2.5 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
-              :disabled="loadingMore"
-              data-testid="dept-pending-load-more"
-              @click="loadMore"
+          <div class="min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4">
+            <div
+              v-if="loadError"
+              class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-900/40 dark:bg-rose-950/40 dark:text-rose-100"
             >
-              {{ loadingMore ? t('dept.loading') : t('dept.load_more') }}
-            </button>
+              {{ loadError }}
+            </div>
+            <template v-else>
+              <h2 class="sr-only">{{ t('dept.list_pending_title') }}</h2>
+              <p v-if="!loading && !filteredItems.length" class="py-6 text-center text-sm text-slate-500">
+                {{
+                  items.length && inboxFilterActive
+                    ? t('dept.inbox_empty_filter')
+                    : t('dept.empty_pending')
+                }}
+              </p>
+              <button
+                v-if="!loading && !filteredItems.length && inboxFilterActive"
+                type="button"
+                class="mx-auto mt-2 block text-sm font-semibold text-[color:var(--va-brand)] hover:underline"
+                data-testid="dept-inbox-clear-filters"
+                @click="clearInboxFilters"
+              >
+                {{ t('dept.inbox_clear_filters') }}
+              </button>
+              <div v-else class="space-y-2">
+                <DeptApprovalInboxRow
+                  v-for="r in filteredItems"
+                  :key="r.id"
+                  :req="r"
+                  :selected="selectedId === r.id"
+                  :acting="actingId === r.id"
+                  :sla-hours="slaHours"
+                  @select="onSelectRow"
+                  @detail="goDetail"
+                  @approve="openApprove"
+                  @reject="openReject"
+                />
+              </div>
+              <div v-if="loading" class="py-8 text-center text-sm text-slate-500">{{ t('dept.loading') }}</div>
+              <div v-else-if="canLoadMore" class="mt-3 flex justify-center pb-2">
+                <button
+                  type="button"
+                  class="rounded-xl border border-slate-200 bg-white px-6 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                  :disabled="loadingMore"
+                  data-testid="dept-pending-load-more"
+                  @click="loadMore"
+                >
+                  {{ loadingMore ? t('dept.loading') : t('dept.load_more') }}
+                </button>
+              </div>
+            </template>
           </div>
-        </template>
+        </div>
+
+        <div class="hidden min-h-0 min-w-0 flex-1 p-3 xl:flex xl:p-4">
+          <DeptApprovalDetailPanel
+            :request-id="selectedId"
+            :sla-hours="slaHours"
+            :acting="actingId != null && actingId === selectedId"
+            @approve="openApprove"
+            @reject="openReject"
+            @open-full="goDetail"
+          />
+        </div>
       </div>
     </div>
+
+    <Modal
+      :open="approveOpen"
+      :title="t('dept.approve_modal_title')"
+      :description="t('dept.approve_modal_desc')"
+      @close="approveOpen = false"
+    >
+      <div class="space-y-3">
+        <textarea
+          v-model="approveNote"
+          rows="3"
+          class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none ring-[#800020]/20 focus:ring-2 dark:border-slate-600 dark:bg-slate-900"
+          :placeholder="t('dept.approve_note_placeholder')"
+        />
+        <div class="flex justify-end gap-2">
+          <button
+            type="button"
+            class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            @click="approveOpen = false"
+          >
+            {{ t('dept.cancel') }}
+          </button>
+          <Button variant="primary" :loading="approveSubmitting" class="min-h-[44px] px-4" @click="confirmApprove">
+            {{ t('dept.approve_confirm_btn') }}
+          </Button>
+        </div>
+      </div>
+    </Modal>
 
     <Modal
       :open="rejectOpen"
@@ -177,14 +227,14 @@
 </template>
 
 <script setup>
-import { computed, inject, onMounted, ref } from 'vue'
+import { computed, inject, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { FunnelIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '../../store'
 import { deptDecideDispatchRequest, getDeptSummary, listRequests } from '../../api/requests'
 import { formatApiError } from '../../api/http'
-import DeptRequestCard from '../../components/dept/DeptRequestCard.vue'
+import DeptApprovalInboxRow from '../../components/dept/DeptApprovalInboxRow.vue'
+import DeptApprovalDetailPanel from '../../components/dept/DeptApprovalDetailPanel.vue'
 import DeptPendingSummaryBar from '../../components/dept/DeptPendingSummaryBar.vue'
 import Modal from '../../components/ui/Modal.vue'
 import Button from '../../components/ui/Button.vue'
@@ -196,6 +246,7 @@ import { useVisibleFilterControls } from '../../composables/useVisibleFilterCont
 import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 import { labelTripType } from '../../util/labels'
 import { DEPT_FILTER_CONTROL_CLASS, DEPT_FILTER_LABEL_KEYS, DEPT_TRIP_TYPES } from '../../util/deptListPage.js'
+import { matchesDeptInboxKpiFilter } from '../../composables/useDeptApprovalSla.js'
 
 const FILTER_CONTROL_CLASS = DEPT_FILTER_CONTROL_CLASS
 
@@ -210,15 +261,22 @@ const kpiLoading = ref(false)
 const kpiStats = ref({
   pending_count: 0,
   pending_today: 0,
+  overdue_count: 0,
+  urgent_pending_count: 0,
   approved_this_month: 0,
   approval_rate_30d: null,
-  cargo: 0,
+  approved_total: 0,
+  rejected_total: 0,
+  dept_approval_sla_hours: 24,
 })
+
+const slaHours = computed(() => kpiStats.value.dept_approval_sla_hours ?? 24)
 
 const loading = ref(true)
 const loadingMore = ref(false)
 const loadError = ref('')
 const filterTripType = ref('')
+const kpiQueueFilter = ref('')
 const searchInput = ref('')
 const pendingDatagridRef = ref(null)
 useDetailsAutoCloseWithin(pendingDatagridRef)
@@ -230,7 +288,7 @@ const {
   openFilterPanel,
   closeFilterPanel,
   filterControlDefs: filterControlDefsRaw,
-} = useVisibleFilterControls(PENDING_FILTER_CONTROLS, 'va.dept.dashboard.filter_vis_v2')
+} = useVisibleFilterControls(PENDING_FILTER_CONTROLS, 'va.dept.dashboard.filter_vis_v3')
 
 const filterControlDefs = computed(() =>
   filterControlDefsRaw.map((fd) => ({
@@ -247,14 +305,16 @@ const tripTypeFilterOptions = computed(() => [
   })),
 ])
 
-const pagePending = ref(1)
-const pagePriceFilled = ref(1)
-const lastPagePending = ref(1)
-const lastPagePrice = ref(1)
-const itemsPending = ref([])
-const itemsPriceFilled = ref([])
+const page = ref(1)
+const lastPage = ref(1)
+const items = ref([])
+const selectedId = ref(null)
 
 const actingId = ref(null)
+const approveOpen = ref(false)
+const approveNote = ref('')
+const approveTargetId = ref(null)
+const approveSubmitting = ref(false)
 const rejectOpen = ref(false)
 const rejectReason = ref('')
 const rejectTargetId = ref(null)
@@ -268,48 +328,40 @@ const deptName = computed(() => {
   return t('dept.dept_fallback')
 })
 
-function mergeAndFilter() {
-  let list = [...itemsPriceFilled.value, ...itemsPending.value]
+const filteredItems = computed(() => {
+  let list = [...items.value]
   const q = searchInput.value.trim().toLowerCase()
   const tt = filterTripType.value
+  const kf = kpiQueueFilter.value
+  const sla = slaHours.value
   list = list.filter((r) => {
     if (tt && r.trip_type !== tt) return false
+    if (!matchesDeptInboxKpiFilter(r, kf, sla)) return false
     if (!q) return true
     const hay = `${r.origin ?? ''} ${r.destination ?? ''} ${r.notes ?? ''} ${r.id}`.toLowerCase()
     return hay.includes(q)
   })
-  list.sort((a, b) => {
-    const da = a.depart_at ? new Date(a.depart_at).getTime() : 0
-    const db = b.depart_at ? new Date(b.depart_at).getTime() : 0
-    return db - da
-  })
-  const seen = new Set()
-  return list.filter((r) => {
-    if (seen.has(r.id)) return false
-    seen.add(r.id)
-    return true
-  })
-}
+  return list
+})
 
-const mergedItems = computed(() => mergeAndFilter())
+const inboxFilterActive = computed(() => Boolean(kpiQueueFilter.value || filterTripType.value || searchInput.value.trim()))
 
-const canLoadMore = computed(
-  () => pagePending.value < lastPagePending.value || pagePriceFilled.value < lastPagePrice.value,
-)
+const canLoadMore = computed(() => page.value < lastPage.value)
 
 async function reloadKpis() {
   kpiLoading.value = true
   try {
-    const [deptSummary, cargoRes] = await Promise.all([
-      getDeptSummary(),
-      listRequests({ status: 'price_filled', per_page: 1, page: 1, trip_type: 'cargo', sort: 'depart_desc' }),
-    ])
+    const deptSummary = await getDeptSummary()
     kpiStats.value = {
       pending_count: deptSummary.pending_count ?? 0,
       pending_today: deptSummary.pending_today ?? 0,
+      overdue_count: deptSummary.overdue_count ?? 0,
+      urgent_pending_count: deptSummary.urgent_pending_count ?? 0,
       approved_this_month: deptSummary.approved_this_month ?? 0,
       approval_rate_30d: deptSummary.approval_rate_30d ?? null,
-      cargo: cargoRes.meta?.total ?? 0,
+      approved_total: deptSummary.approved_total ?? 0,
+      rejected_total: deptSummary.rejected_total ?? 0,
+      dept_approval_sla_hours: deptSummary.dept_approval_sla_hours ?? 24,
     }
   } catch {
     /* supplementary */
@@ -318,36 +370,41 @@ async function reloadKpis() {
   }
 }
 
-async function fetchPage(status, page, append) {
+async function fetchPage(pageNum, append) {
   const res = await listRequests({
-    status,
-    per_page: 15,
-    page,
-    sort: 'depart_desc',
+    status: 'price_filled',
+    per_page: 25,
+    page: pageNum,
+    sort: 'approval_inbox',
   })
-  if (status === 'pending') {
-    lastPagePending.value = res.meta?.last_page ?? 1
-    if (append) itemsPending.value = itemsPending.value.concat(res.items ?? [])
-    else itemsPending.value = res.items ?? []
-  } else {
-    lastPagePrice.value = res.meta?.last_page ?? 1
-    if (append) itemsPriceFilled.value = itemsPriceFilled.value.concat(res.items ?? [])
-    else itemsPriceFilled.value = res.items ?? []
+  lastPage.value = res.meta?.last_page ?? 1
+  const batch = res.items ?? []
+  if (append) items.value = items.value.concat(batch)
+  else items.value = batch
+}
+
+function removeItem(id) {
+  items.value = items.value.filter((r) => r.id !== id)
+  if (selectedId.value === id) {
+    const next = items.value[0]
+    selectedId.value = next?.id ?? null
+  }
+  kpiStats.value = {
+    ...kpiStats.value,
+    pending_count: Math.max(0, (kpiStats.value.pending_count ?? 1) - 1),
   }
 }
 
 async function initialLoad() {
   loading.value = true
   loadError.value = ''
-  pagePending.value = 1
-  pagePriceFilled.value = 1
+  page.value = 1
   try {
-    await Promise.all([
-      fetchPage('price_filled', 1, false),
-      fetchPage('pending', 1, false),
-      reloadKpis(),
-    ])
+    await Promise.all([fetchPage(1, false), reloadKpis()])
     await deptLoadSummary()
+    if (!selectedId.value && items.value.length) {
+      selectedId.value = items.value[0].id
+    }
   } catch (e) {
     loadError.value = formatApiError(e, t('dept.load_error'))
   } finally {
@@ -358,14 +415,8 @@ async function initialLoad() {
 async function loadMore() {
   loadingMore.value = true
   try {
-    if (pagePriceFilled.value < lastPagePrice.value) {
-      pagePriceFilled.value += 1
-      await fetchPage('price_filled', pagePriceFilled.value, true)
-    }
-    if (pagePending.value < lastPagePending.value) {
-      pagePending.value += 1
-      await fetchPage('pending', pagePending.value, true)
-    }
+    page.value += 1
+    await fetchPage(page.value, true)
   } catch (e) {
     loadError.value = formatApiError(e, t('dept.load_error'))
   } finally {
@@ -374,13 +425,7 @@ async function loadMore() {
 }
 
 function flushSearch() {
-  /* client-side filter via mergedItems */
-}
-
-function resetFilters() {
-  filterTripType.value = ''
-  searchInput.value = ''
-  closeFilterPanel()
+  /* client-side */
 }
 
 function onKpiQuickFilter(payload) {
@@ -388,25 +433,52 @@ function onKpiQuickFilter(payload) {
     router.push({ name: 'deptApproved' })
     return
   }
-  if (payload.kind === 'trip_type') {
-    filterTripType.value = payload.value ?? ''
+  if (payload.kind === 'kpi') {
+    const v = payload.value ?? ''
+    if (v === '') {
+      kpiQueueFilter.value = ''
+      return
+    }
+    kpiQueueFilter.value = kpiQueueFilter.value === v ? '' : v
   }
+}
+
+function clearInboxFilters() {
+  kpiQueueFilter.value = ''
+  filterTripType.value = ''
+  searchInput.value = ''
+  closeFilterPanel()
+}
+
+function onSelectRow(id) {
+  selectedId.value = id
 }
 
 function goDetail(id) {
   router.push({ name: 'deptRequestDetail', params: { id: String(id) } })
 }
 
-async function onApprove(id) {
+function openApprove(id) {
+  approveTargetId.value = id
+  approveNote.value = ''
+  approveOpen.value = true
+}
+
+async function confirmApprove() {
+  const id = approveTargetId.value
+  if (id == null) return
+  approveSubmitting.value = true
   actingId.value = id
   try {
     await deptDecideDispatchRequest(id, { decision: 'approve' })
-    itemsPriceFilled.value = itemsPriceFilled.value.filter((r) => r.id !== id)
+    removeItem(id)
+    approveOpen.value = false
     await reloadKpis()
     await deptLoadSummary()
   } catch (e) {
     loadError.value = formatApiError(e, t('dept.action_error'))
   } finally {
+    approveSubmitting.value = false
     actingId.value = null
   }
 }
@@ -426,9 +498,10 @@ async function confirmReject() {
     return
   }
   rejectSubmitting.value = true
+  actingId.value = id
   try {
     await deptDecideDispatchRequest(id, { decision: 'reject', rejection_reason: reason })
-    itemsPriceFilled.value = itemsPriceFilled.value.filter((r) => r.id !== id)
+    removeItem(id)
     rejectOpen.value = false
     await reloadKpis()
     await deptLoadSummary()
@@ -436,8 +509,19 @@ async function confirmReject() {
     loadError.value = formatApiError(e, t('dept.action_error'))
   } finally {
     rejectSubmitting.value = false
+    actingId.value = null
   }
 }
+
+watch(filteredItems, (list) => {
+  if (!list.length) {
+    selectedId.value = null
+    return
+  }
+  if (!list.some((r) => r.id === selectedId.value)) {
+    selectedId.value = list[0].id
+  }
+})
 
 onMounted(() => {
   initialLoad()

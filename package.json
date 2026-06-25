@@ -8,6 +8,8 @@
         "test:e2e:ui": "playwright test --ui",
         "test:e2e:headed": "playwright test --headed",
         "test:e2e:smoke": "playwright test --grep @smoke",
+        "test:driver-schedule-leg": "node scripts/test-driver-schedule-leg.mjs",
+        "test:pre-deploy-driver-status": "node scripts/test-driver-schedule-leg.mjs && php vendor/bin/phpunit tests/Feature/TripStatusTransitionValidatorTest.php tests/Feature/TripDriverLegStatusUpdateTest.php",
         "test:e2e:report": "playwright show-report tests/screenshots/report",
         "lint": "eslint resources/js --ext .vue,.js,.ts",
         "lint:fix": "eslint resources/js --ext .vue,.js,.ts --fix",

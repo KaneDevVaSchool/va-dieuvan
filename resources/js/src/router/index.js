@@ -165,6 +165,7 @@ const staffChildRoutes = [
             title: "Tạo chương trình",
             subtitle: "Transport Program",
             permission: "tp_program.manage",
+            mainFlush: true,
         },
     },
     {

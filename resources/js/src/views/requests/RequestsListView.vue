@@ -119,24 +119,12 @@
             </div>
           </div>
 
-          <div class="ml-auto flex shrink-0 items-center">
-            <button
-              type="button"
-              class="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-slate-800 dark:hover:bg-slate-800"
-              :title="t('requests_page.filter_clear_all')"
-              data-testid="requests-reset-filters"
-              @click="resetFilters"
-            >
-              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-              <XMarkIcon class="h-3 w-3 text-rose-500" aria-hidden="true" />
-            </button>
-          </div>
         </div>
       </div>
 
       <div
         v-if="hasFilterRow"
-        class="grid grid-cols-1 gap-3 border-t border-slate-100 px-5 py-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 dark:border-slate-700"
+        class="grid grid-cols-1 gap-3 border-t border-slate-100 px-4 py-4 sm:grid-cols-2 sm:px-5 md:grid-cols-3 xl:grid-cols-6 dark:border-slate-700"
       >
         <DatagridFilterField v-if="visibleFilters.trip_type">
           <select
@@ -856,13 +844,11 @@ import {
   ClockIcon,
   ExclamationTriangleIcon,
   EyeIcon,
-  FunnelIcon,
   MapPinIcon,
   PencilSquareIcon,
   PlusIcon,
   TruckIcon,
   UserPlusIcon,
-  XMarkIcon,
   CubeIcon,
   CurrencyDollarIcon,
 } from '@heroicons/vue/24/outline'

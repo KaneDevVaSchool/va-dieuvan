@@ -1,7 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { FunnelIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import DatagridToolbarSearch from '../shared/ui/DatagridToolbarSearch.vue'
 import DatagridToolbarActionButton from '../shared/ui/DatagridToolbarActionButton.vue'
 import DatagridSegmentedControl from '../shared/ui/DatagridSegmentedControl.vue'
@@ -18,7 +17,6 @@ const props = defineProps({
   showFilterPanelDd: { type: Boolean, default: false },
   filterControlDefs: { type: Array, default: () => [] },
   visibleFilters: { type: Object, required: true },
-  activeFilterCount: { type: Number, default: 0 },
   /** Override default quick status segments (e.g. extracurricular module). */
   quickFilterOptions: { type: Array, default: null },
 })
@@ -33,7 +31,6 @@ const emit = defineEmits([
   'search-suggest-pick',
   'toggle-filter-panel',
   'close-filter-panel',
-  'reset-filters',
   'export-csv',
   'export-excel',
 ])
@@ -147,19 +144,6 @@ function toggleExport() {
             </label>
           </li>
         </FilterVisibilityDropdown>
-
-        <button
-          v-if="activeFilterCount > 0"
-          type="button"
-          class="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-slate-800"
-          :title="t('portal.filter_clear_all')"
-          :aria-label="t('portal.filter_clear_all')"
-          data-testid="portal-toolbar-reset-filters"
-          @click="emit('reset-filters')"
-        >
-          <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-          <XMarkIcon class="h-3 w-3 text-rose-500" aria-hidden="true" />
-        </button>
 
         <div ref="exportRef" class="relative">
           <DatagridToolbarActionButton

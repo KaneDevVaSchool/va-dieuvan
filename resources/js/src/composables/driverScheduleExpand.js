@@ -1,3 +1,59 @@
+function expandDispatchTripLegRow(trip, leg, { listRowId = false } = {}) {
+  const departAt = resolveLegDepartIso(trip, leg)
+  const base = {
+    ...trip,
+    trip_id: trip.id,
+    calendar_key: `${trip.id}:${leg.key}`,
+    calendar_kind: 'dispatch',
+    schedule_leg_key: leg.key,
+    status: leg.status ?? trip.status,
+    depart_at: departAt,
+    arrive_by: leg.arrive_by ?? trip.arrive_by,
+    pickup_location: leg.pickup || trip.pickup_location,
+    dropoff_location: leg.dropoff || trip.dropoff_location,
+    calendar_shift: inferShiftFromIso(departAt),
+  }
+  if (listRowId) {
+    base.id = `${trip.id}:${leg.key}`
+  }
+  return base
+}
+
+/**
+ * Tách chuyến điều vận nhiều chặng cho danh sách hôm nay / sắp tới (giữ ca TP nguyên dòng).
+ * @param {object[]} trips
+ * @returns {object[]}
+ */
+export function expandTripsForDriverScheduleList(trips) {
+  if (!Array.isArray(trips)) return []
+  const out = []
+
+  for (const trip of trips) {
+    if (trip?._tp?.day_id) {
+      out.push({
+        ...trip,
+        calendar_key: trip.id ?? trip._tp?.list_key,
+      })
+      continue
+    }
+    const legs = trip?.schedule_legs
+    if (!Array.isArray(legs) || legs.length <= 1) {
+      const shift = trip._tp?.shift || inferShiftFromIso(trip.depart_at)
+      out.push({
+        ...trip,
+        calendar_key: String(trip.id),
+        ...(shift ? { calendar_shift: shift } : {}),
+      })
+      continue
+    }
+    for (const leg of legs) {
+      out.push(expandDispatchTripLegRow(trip, leg, { listRowId: true }))
+    }
+  }
+
+  return out
+}
+
 /**
  * Mở rộng chuyến điều vận gán nhiều lịch (sáng/chiều) thành từng dòng trên lịch tài xế.
  * @param {object[]} trips
@@ -23,24 +79,70 @@ export function expandTripsForDriverCalendar(trips) {
       continue
     }
 
-    const useLegs = legs.length > 1 ? legs : legs
-    for (const leg of useLegs) {
-      const departAt = resolveLegDepartIso(trip, leg)
-      out.push({
-        ...trip,
-        calendar_key: `${trip.id}:${leg.key}`,
-        calendar_kind: 'dispatch',
-        schedule_leg_key: leg.key,
-        status: leg.status ?? trip.status,
-        depart_at: departAt,
-        arrive_by: leg.arrive_by ?? trip.arrive_by,
-        pickup_location: leg.pickup || trip.pickup_location,
-        dropoff_location: leg.dropoff || trip.dropoff_location,
-        calendar_shift: inferShiftFromIso(departAt),
-      })
+    for (const leg of legs) {
+      out.push(expandDispatchTripLegRow(trip, leg, { listRowId: legs.length > 1 }))
     }
   }
 
+  return out
+}
+
+function tripLegStatusNorm(leg) {
+  return String(leg?.status ?? '').trim().toLowerCase()
+}
+
+function tripNeedsDriverConfirmation(trip) {
+  const s = String(trip?.status ?? '').trim().toLowerCase()
+  if (trip?._tp?.day_id) {
+    return s === 'assigned'
+  }
+  if (s === 'assigned') {
+    return true
+  }
+  const legs = trip?.schedule_legs
+  if (Array.isArray(legs) && legs.length > 0) {
+    return legs.some((leg) => tripLegStatusNorm(leg) === 'assigned')
+  }
+  return false
+}
+
+/**
+ * Banner chờ xác nhận — mỗi chặng `assigned` một dòng (điều vận đa lịch).
+ * @param {object[]} trips
+ * @returns {object[]}
+ */
+export function expandTripsForPendingConfirmation(trips) {
+  const out = []
+  if (!Array.isArray(trips)) return out
+
+  for (const trip of trips) {
+    if (trip?._tp?.day_id) {
+      if (tripNeedsDriverConfirmation(trip)) {
+        out.push({
+          ...trip,
+          calendar_key: trip.id ?? trip._tp?.list_key,
+        })
+      }
+      continue
+    }
+    const legs = trip?.schedule_legs
+    if (Array.isArray(legs) && legs.length > 1) {
+      const pendingLegs = legs.filter((leg) => tripLegStatusNorm(leg) === 'assigned')
+      if (pendingLegs.length === 0) {
+        continue
+      }
+      for (const leg of pendingLegs) {
+        out.push(expandDispatchTripLegRow(trip, leg, { listRowId: true }))
+      }
+      continue
+    }
+    if (tripNeedsDriverConfirmation(trip)) {
+      out.push({
+        ...trip,
+        calendar_key: String(trip.id),
+      })
+    }
+  }
   return out
 }
 

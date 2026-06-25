@@ -1,5 +1,5 @@
 <template>
-  <div class="dw-schedule-details flex flex-col gap-6">
+  <div class="dw-schedule-details flex flex-col gap-3">
     <div
       v-if="rows.length === 0"
       class="flex flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200/70 bg-slate-50/80 px-5 py-14 text-center sm:py-16"
@@ -140,7 +140,7 @@ function removeAt(idx) {
 }
 
 function duplicateAt(idx) {
-  duplicateScheduleRow(props.modelValue, idx)
+  duplicateScheduleRow(props.modelValue, idx, props.variant)
   emitRows()
 }
 

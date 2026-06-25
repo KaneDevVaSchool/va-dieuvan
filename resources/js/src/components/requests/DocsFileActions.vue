@@ -5,6 +5,7 @@
       type="button"
       class="flex h-7 w-7 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100"
       :title="t('request_detail.preview_action')"
+      data-testid="attachment-preview-btn"
       @click="$emit('preview')"
     >
       <EyeIcon class="h-3.5 w-3.5" aria-hidden="true" />

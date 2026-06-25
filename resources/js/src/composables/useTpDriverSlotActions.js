@@ -44,7 +44,10 @@ export function tpDriverTripCanConfirm(trip) {
 
 export function tpDriverTripCanStart(trip) {
   const tp = trip?._tp
-  if (!tp?.day_id) return true
+  if (!tp?.day_id) {
+    const st = String(trip?.status ?? '').trim().toLowerCase()
+    return ['driver_confirmed', 'assigned'].includes(st)
+  }
   return tpRowCanStart({
     execution_status: tp.execution_status,
     slot_confirmed_at: tp.slot_confirmed_at,

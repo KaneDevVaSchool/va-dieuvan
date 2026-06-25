@@ -69,8 +69,12 @@
     </div>
 
     <template v-if="!workspaceMode">
+    <div :class="embedded ? 'space-y-3' : 'space-y-4'">
     <!-- Intro banner -->
-    <div class="flex flex-wrap items-start justify-between gap-3 rounded-2xl border border-sky-200/80 bg-gradient-to-r from-sky-50 to-slate-50 px-5 py-4 dark:border-sky-900/40 dark:from-sky-950/30 dark:to-slate-900">
+    <div
+      v-if="!embedded"
+      class="flex flex-wrap items-start justify-between gap-3 rounded-2xl border border-sky-200/80 bg-gradient-to-r from-sky-50 to-slate-50 px-5 py-4 dark:border-sky-900/40 dark:from-sky-950/30 dark:to-slate-900"
+    >
       <div class="flex min-w-0 items-center gap-3">
         <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-600 text-white shadow-sm">
           <CurrencyDollarIcon class="h-5 w-5" aria-hidden="true" />
@@ -92,13 +96,14 @@
     </div>
 
     <!-- Row cards -->
+    <div :class="rows.length > 1 ? 'grid gap-4 xl:grid-cols-2' : 'space-y-4'">
     <div
       v-for="(row, idx) in rows"
       :key="idx"
       class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
     >
       <!-- Card header: route badge + heading -->
-      <div class="flex items-center gap-3 border-b border-slate-100 bg-slate-50/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/50">
+      <div class="flex items-center gap-3 border-b border-slate-100 bg-slate-50/80 px-4 py-2.5 dark:border-slate-800 dark:bg-slate-800/50">
         <span
           class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-sm font-bold text-sky-700 dark:bg-sky-950/50 dark:text-sky-300"
           :aria-label="t('request_detail.ops_row_badge_aria', { n: idx + 1 })"
@@ -116,9 +121,9 @@
         </div>
       </div>
 
-      <!-- Route mini-map -->
+      <!-- Route mini-map (hành khách / công tác; hàng hóa đã có điểm trên lưới thời gian) -->
       <div
-        v-if="rowFrom(row) || rowTo(row)"
+        v-if="!isCargo && (rowFrom(row) || rowTo(row))"
         class="grid grid-cols-[1fr_auto_1fr] border-b border-slate-100 dark:border-slate-800"
       >
         <div class="bg-emerald-50/50 px-4 py-3 dark:bg-emerald-950/15">
@@ -134,31 +139,26 @@
         </div>
       </div>
 
-      <ItineraryRowInfoGrid :row="row" :trip-type="itineraryTripType" />
+      <ItineraryRowInfoGrid
+        :row="row"
+        :trip-type="itineraryTripType"
+        :compact="rows.length > 1 || embedded"
+        :dense="embedded"
+      />
 
-      <!-- Cargo inputs -->
-      <div v-if="isCargo" class="grid gap-4 px-4 py-4 sm:grid-cols-2">
-        <label class="block">
-          <FillPriceFieldLabel
-            :label="t('request_detail.ops_lbl_transport_type')"
-            :tooltip="t('request_detail.ops_transport_type_tooltip')"
-          />
-          <input
-            :value="cargoTransport[idx]"
-            type="text"
-            maxlength="500"
-            class="mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-            :placeholder="t('request_detail.ops_transport_type_ph')"
-            :title="t('request_detail.ops_transport_type_tooltip')"
-            @input="cargoTransport[idx] = String($event.target.value).slice(0, 500)"
-          />
-        </label>
-        <label class="block">
+      <!-- Cargo: chỉ nhập chi phí -->
+      <div
+        v-if="isCargo"
+        class="flex flex-col gap-2 border-t border-slate-100 bg-slate-50/40 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/40 sm:flex-row sm:items-end sm:justify-between sm:gap-4"
+      >
+        <div class="shrink-0 sm:pb-2.5">
           <FillPriceFieldLabel
             :label="t('request_detail.ops_lbl_cost')"
             :tooltip="t('request_detail.ops_cost_tooltip')"
           />
-            <div class="relative mt-1.5">
+        </div>
+        <label class="block w-full min-w-0 sm:max-w-xs sm:flex-1 lg:max-w-sm">
+            <div class="relative">
               <input
                 :value="cargoCost[idx]"
                 type="text"
@@ -184,7 +184,7 @@
       </div>
 
       <!-- Passenger / business pricing inputs -->
-      <div v-else class="space-y-3 px-4 py-4">
+      <div v-else class="space-y-3 px-4 py-3">
         <div class="grid gap-3 sm:grid-cols-2">
           <label class="block">
             <FillPriceFieldLabel
@@ -267,9 +267,10 @@
     <div
       v-if="!actionsInSidebar"
       class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
+      :class="rows.length > 1 ? 'xl:col-span-2' : ''"
     >
       <!-- Total row -->
-      <div class="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 dark:border-slate-800 sm:px-5">
         <span class="text-sm font-semibold text-slate-600 dark:text-slate-300">
           {{ t('request_detail.fill_price_total') }}
         </span>
@@ -280,7 +281,8 @@
       </div>
 
       <!-- Dept head -->
-      <div class="px-5 py-4">
+      <div class="px-4 py-3 sm:px-5 lg:flex lg:items-end lg:justify-between lg:gap-6">
+        <div class="min-w-0 flex-1">
         <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
           {{ t('request_detail.assign_dept_head_preset_label') }}
         </p>
@@ -298,8 +300,9 @@
         >
           <p class="text-sm font-semibold text-amber-900 dark:text-amber-100">{{ t('request_detail.assign_dept_head_missing_staff_title') }}</p>
         </div>
+        </div>
 
-        <div class="mt-4 flex flex-wrap items-center gap-3">
+        <div class="mt-4 flex shrink-0 flex-wrap items-center gap-3 lg:mt-0">
           <Button
             class="!bg-sky-600 hover:!bg-sky-700"
             :loading="acting"
@@ -320,6 +323,8 @@
           <span v-if="message" class="text-sm text-slate-500 dark:text-slate-400">{{ message }}</span>
         </div>
       </div>
+    </div>
+    </div>
     </div>
     </template>
   </section>
@@ -361,6 +366,8 @@ const props = defineProps({
   actionsInSidebar: { type: Boolean, default: false },
   /** Tab Phê duyệt — chỉ lưới giá, không card hành trình */
   workspaceMode: { type: Boolean, default: false },
+  /** Trong modal (ẩn banner trùng tiêu đề). */
+  embedded: { type: Boolean, default: false },
   /** Điền giá xong duyệt luôn (không bắt buộc Trưởng BP trên phiếu) */
   allowAutoApprove: { type: Boolean, default: false },
 })
@@ -443,13 +450,11 @@ function rowTo(row) {
 const unitDraft = ref([])
 const extraDraft = ref([])
 const notesDraft = ref([])
-const cargoTransport = ref([])
 const cargoCost = ref([])
 
 function syncDrafts() {
   const r = rows.value
   if (isCargo.value) {
-    cargoTransport.value = r.map((x) => nz(x?.transport_note))
     cargoCost.value = r.map((x) => formatMoneyDraftDisplay(x?.cost))
   } else {
     unitDraft.value = r.map((x) => formatMoneyDraftDisplay(x?.unit_price))
@@ -705,7 +710,6 @@ function onSave() {
   if (!deptHeadPresetLocked.value && !props.allowAutoApprove) return
   const payloadRows = isCargo.value
     ? rows.value.map((_, i) => ({
-        transport_note: String(cargoTransport.value[i] ?? '').slice(0, 500),
         cost: parseMoneyVnd(cargoCost.value[i] ?? ''),
       }))
     : rows.value.map((_, i) => ({

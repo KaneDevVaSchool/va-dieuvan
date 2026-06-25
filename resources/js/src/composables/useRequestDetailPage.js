@@ -138,6 +138,9 @@ export function useRequestDetailPage() {
   })
 
   const canUploadAttachment = computed(() => auth.hasPermission('attachment.upload'))
+  const canRunOcr = computed(
+    () => auth.hasPermission('attachment.upload') || auth.hasPermission('request.paper.manage'),
+  )
   const canDeleteAttachment = computed(() => auth.hasPermission('attachment.upload'))
   const canManagePaper = computed(() => auth.hasPermission('request.paper.manage'))
   const pdfExportDisabled = computed(() => req.value?.status !== 'approved')
@@ -1051,6 +1054,7 @@ export function useRequestDetailPage() {
     ocrBusy,
     deletingId,
     canUploadAttachment,
+    canRunOcr,
     canDeleteAttachment,
     canManagePaper,
     signedDocumentCurrent,

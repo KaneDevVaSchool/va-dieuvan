@@ -1,14 +1,17 @@
 <template>
   <div
     v-if="items.length"
-    class="grid gap-2 border-b border-slate-100 px-4 py-3 sm:grid-cols-2 dark:border-slate-800"
+    class="grid gap-2 border-b border-slate-100 dark:border-slate-800"
+    :class="[gridClass, dense ? 'px-3 py-2' : 'px-4 py-3']"
   >
     <div
       v-for="item in items"
       :key="item.key"
-      class="flex items-start gap-2.5 rounded-xl border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 dark:border-slate-700/80 dark:bg-slate-800/40"
+      class="flex items-start rounded-xl border border-slate-200/80 bg-slate-50/50 dark:border-slate-700/80 dark:bg-slate-800/40"
+      :class="dense ? 'gap-2 px-2.5 py-2' : 'gap-2.5 px-3 py-2.5'"
     >
       <span
+        v-if="!dense"
         class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
         :class="toneClass[item.tone]"
       >
@@ -18,7 +21,10 @@
         <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
           {{ item.label }}
         </p>
-        <p class="mt-0.5 text-sm font-semibold tabular-nums text-slate-800 dark:text-slate-100">
+        <p
+          class="mt-0.5 font-semibold tabular-nums text-slate-800 dark:text-slate-100"
+          :class="dense ? 'text-xs' : 'text-sm'"
+        >
           {{ item.primary }}
         </p>
         <p
@@ -49,6 +55,10 @@ import { itineraryRowInfoItems } from '../../../util/itineraryRowInfoItems'
 const props = defineProps({
   row: { type: Object, required: true },
   tripType: { type: String, required: true },
+  /** Gọn hơn khi nhiều chặng (modal rộng). */
+  compact: { type: Boolean, default: false },
+  /** Modal nhúng — bỏ icon, giảm padding. */
+  dense: { type: Boolean, default: false },
 })
 
 const { t } = useI18n()
@@ -76,4 +86,11 @@ function iconFor(key) {
 }
 
 const items = computed(() => itineraryRowInfoItems(props.row, { tripType: props.tripType, t }))
+
+const gridClass = computed(() => {
+  const n = items.value.length
+  if (props.compact && n >= 3) return 'grid-cols-1 sm:grid-cols-3'
+  if (n >= 3) return 'sm:grid-cols-2 lg:grid-cols-3'
+  return 'sm:grid-cols-2'
+})
 </script>

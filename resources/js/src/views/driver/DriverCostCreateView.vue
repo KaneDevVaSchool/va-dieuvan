@@ -91,6 +91,19 @@
           </p>
         </div>
 
+        <div v-if="linkMode === 'none'">
+          <label class="text-sm font-semibold text-driver-muted" for="dcc-report-date">{{ t('driver_costs.report_date_title') }}</label>
+          <p class="mt-0.5 text-xs leading-snug text-driver-muted/80">{{ t('driver_costs.report_date_hint') }}</p>
+          <input
+            id="dcc-report-date"
+            v-model="form.reported_on"
+            type="date"
+            :max="todayKey"
+            data-testid="driver-cost-create-report-date"
+            class="mt-1.5 flex min-h-[48px] w-full appearance-none rounded-xl border border-white/10 bg-driver-surface px-3 py-2.5 text-base font-medium text-driver-ink focus:outline-none focus:ring-2 focus:ring-driver-accent/45"
+          />
+        </div>
+
         <div>
           <label class="text-sm font-semibold text-driver-muted" for="dcc-type">{{ t('driver_trip_detail.cost_type') }}</label>
           <div class="relative mt-1.5">
@@ -132,6 +145,21 @@
           />
         </div>
 
+        <div class="border-t border-white/[0.06] pt-4">
+          <DriverCostCreateReceiptPicker
+            ref="receiptPickerRef"
+            :title="t('driver_cost_req.images_title')"
+            :hint="t('driver_cost_req.gallery_hint')"
+            :empty-text="t('driver_costs.create_receipt_empty')"
+            :add-photos="t('driver_cost_req.gallery_add')"
+            :camera-capture="t('driver_cost_req.gallery_camera')"
+            :preview-alt="t('driver_cost_req.gallery_preview')"
+            :remove-aria="t('driver_cost_req.gallery_remove')"
+            :preparing-label="t('driver_cost_req.gallery_uploading')"
+            :prepare-fail="t('driver_cost_req.gallery_upload_fail')"
+          />
+        </div>
+
         <p v-if="errorMsg" class="text-sm text-rose-300">{{ errorMsg }}</p>
 
         <button
@@ -140,7 +168,7 @@
           :disabled="saving || !canSubmit"
           @click="submit"
         >
-          {{ saving ? t('driver_costs.create_saving') : t('driver_costs.create_submit') }}
+          {{ submitLabel }}
         </button>
       </div>
     </div>
@@ -154,7 +182,10 @@ import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeftIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
 import { listDriverTrips, listDriverCostVehicles } from '../../api/driver'
 import { submitStandaloneTripCost } from '../../api/costs'
+import { uploadAttachment } from '../../api/attachments'
+import { showAppSuccess, showAppError } from '../../composables/appMessage'
 import DriverCostTripPicker from '../../components/driver/costs/DriverCostTripPicker.vue'
+import DriverCostCreateReceiptPicker from '../../components/driver/costs/DriverCostCreateReceiptPicker.vue'
 import { isTripEligibleForDriverLinkedCost } from '../../constants/tripStatus'
 import { toLocalDateKey } from '../../util/dates'
 import { formatVndWhileTyping, parseMoneyVnd } from '../../util/money'
@@ -166,15 +197,19 @@ const route = useRoute()
 
 const linkMode = ref('trip')
 
+const todayKey = toLocalDateKey(new Date())
+
 const form = ref({
   trip_id: '',
   vehicle_id: '',
   type: 'toll',
   amount: '',
   description: '',
+  reported_on: todayKey,
 })
 
 const saving = ref(false)
+const uploadingReceipts = ref(false)
 const errorMsg = ref('')
 const tripsLoading = ref(false)
 const vehiclesLoading = ref(false)
@@ -182,6 +217,7 @@ const vehiclesLoading = ref(false)
 const tripOptions = ref([])
 /** @type {import('vue').Ref<object[]>} */
 const vehicleOptions = ref([])
+const receiptPickerRef = ref(null)
 
 const costTypes = computed(() => [
   { value: 'fuel', label: t('driver_trip_detail.cost_type_fuel') },
@@ -197,7 +233,14 @@ const canSubmit = computed(() => {
   if (!Number.isFinite(num) || num <= 0) return false
   if (linkMode.value === 'trip' && !String(form.value.trip_id || '').trim()) return false
   if (linkMode.value === 'none' && !String(form.value.vehicle_id || '').trim()) return false
+  if (receiptPickerRef.value?.hasPendingPrepare?.()) return false
   return true
+})
+
+const submitLabel = computed(() => {
+  if (!saving.value) return t('driver_costs.create_submit')
+  if (uploadingReceipts.value) return t('driver_costs.create_uploading_receipts')
+  return t('driver_costs.create_saving')
 })
 
 function vehicleSelectLabel(vehicle) {
@@ -306,6 +349,8 @@ async function submit() {
     if (linkMode.value === 'none') {
       const vehicleRaw = String(form.value.vehicle_id || '').trim()
       if (vehicleRaw) payload.vehicle_id = Number(vehicleRaw)
+      const reportedOn = String(form.value.reported_on || '').trim()
+      if (reportedOn) payload.reported_on = reportedOn
     }
     if (linkMode.value === 'trip') {
       const tripRaw = String(form.value.trip_id || '').trim()
@@ -315,10 +360,33 @@ async function submit() {
       idempotencyKey: `driver-standalone-cost-${Date.now()}`,
     })
     const id = created?.id
+    const receiptFiles = receiptPickerRef.value?.getReadyFiles?.() ?? []
+    let receiptUploadFailed = 0
+    if (id && receiptFiles.length) {
+      uploadingReceipts.value = true
+      for (const file of receiptFiles) {
+        try {
+          await uploadAttachment({
+            attachable_type: 'trip_cost',
+            attachable_id: id,
+            file,
+          })
+        } catch {
+          receiptUploadFailed += 1
+        }
+      }
+      uploadingReceipts.value = false
+      receiptPickerRef.value?.clearAll?.()
+    }
     if (id) {
       await router.replace({ name: 'driverCostDetail', params: { id: String(id) } })
     } else {
       await router.replace({ name: 'driverCosts' })
+    }
+    if (receiptUploadFailed > 0) {
+      showAppError(t('driver_costs.create_receipt_partial_fail'), t('driver_costs.create_ok_title'))
+    } else {
+      showAppSuccess(t('driver_costs.create_ok'), t('driver_costs.create_ok_title'))
     }
   } catch (err) {
     const msg = err?.response?.data?.message
@@ -329,6 +397,7 @@ async function submit() {
     }
   } finally {
     saving.value = false
+    uploadingReceipts.value = false
   }
 }
 

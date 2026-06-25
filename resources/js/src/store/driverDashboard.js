@@ -18,9 +18,17 @@ import {
 } from '../util/devDriverDashboardPerf'
 import {
   expandTripsForDriverCalendar,
+  expandTripsForDriverScheduleList,
+  expandTripsForPendingConfirmation,
   tpItemsToCalendarSlots,
   tpItemsToDriverTrips,
 } from '../composables/driverScheduleExpand'
+import {
+  buildDriverTripStatusFields,
+  mergeTripRowForStatusAction,
+  resolveDispatchTripApiId,
+  driverTripListRowKey,
+} from '../util/driverScheduleLeg'
 import { tpDriverTripCanConfirm, tpDriverTripCanStart } from '../composables/useTpDriverSlotActions'
 import { driverConfirmDay, driverListDays, driverReportBusyDay, driverStartTrip } from '../api/transportProgram'
 import {
@@ -103,8 +111,9 @@ function addDaysYmd(baseYmd, days) {
 }
 
 function filterUpcomingScheduleTrips(mergedTrips, fromYmd, toYmd) {
+  const expanded = expandTripsForDriverScheduleList(mergedTrips)
   return sortScheduleTrips(
-    mergedTrips.filter((x) => {
+    expanded.filter((x) => {
       const d = tripDepartYmd(x)
       if (d == null || d < fromYmd || d > toYmd) return false
       const s = tripStatusNorm(x)
@@ -177,60 +186,6 @@ function tripDepartMs(trip) {
     if (Number.isFinite(t)) return t
   }
   return NaN
-}
-
-/** Chuyến / ca TP còn chờ tài xế bấm xác nhận. */
-function tripNeedsDriverConfirmation(trip) {
-  const s = tripStatusNorm(trip)
-  if (trip._tp?.day_id) {
-    return s === 'assigned'
-  }
-  if (s === 'assigned') {
-    return true
-  }
-  const legs = trip.schedule_legs
-  if (Array.isArray(legs) && legs.length > 0) {
-    return legs.some((leg) => tripStatusNorm(leg) === 'assigned')
-  }
-  return false
-}
-
-/** Tách từng lịch (sáng/chiều) khi chuyến có nhiều schedule_legs cần xác nhận. */
-function expandTripsForPendingConfirmation(trips) {
-  const out = []
-  for (const trip of trips) {
-    if (trip?._tp?.day_id) {
-      if (tripNeedsDriverConfirmation(trip)) {
-        out.push(trip)
-      }
-      continue
-    }
-    const legs = trip.schedule_legs
-    if (Array.isArray(legs) && legs.length > 1) {
-      const pendingLegs = legs.filter((leg) => tripStatusNorm(leg) === 'assigned')
-      if (pendingLegs.length === 0) {
-        continue
-      }
-      for (const leg of pendingLegs) {
-        out.push({
-          ...trip,
-          id: `${trip.id}:${leg.key}`,
-          trip_id: trip.id,
-          status: leg.status ?? trip.status,
-          depart_at: leg.depart_at ?? trip.depart_at,
-          arrive_by: leg.arrive_by ?? trip.arrive_by,
-          pickup_location: leg.pickup || trip.pickup_location,
-          dropoff_location: leg.dropoff || trip.dropoff_location,
-          schedule_leg_key: leg.key,
-        })
-      }
-      continue
-    }
-    if (tripNeedsDriverConfirmation(trip)) {
-      out.push(trip)
-    }
-  }
-  return out
 }
 
 function normalizedDashboardEndYmd(dashboardDateTo) {
@@ -312,7 +267,8 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
     upcomingBannerTrip() {
       const now = Date.now()
       const limit = now + 120 * 60 * 1000
-      const eligible = this.dashboardMergedTrips.filter((x) => {
+      const expanded = expandTripsForDriverScheduleList(this.dashboardMergedTrips)
+      const eligible = expanded.filter((x) => {
         const s = tripStatusNorm(x)
         if (!['pending', 'assigned', 'driver_confirmed', 'approved'].includes(s)) return false
         const dep = x.depart_at
@@ -620,11 +576,12 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
     },
 
     async confirmTripOptimistic(trip) {
-      const dispatchTripId = trip.trip_id ?? trip.id
+      const dispatchTripId = resolveDispatchTripApiId(trip) ?? trip.trip_id ?? trip.id
       if (dispatchTripId == null || dispatchTripId === '') return
-      if (trip._tp?.day_id && !tpDriverTripCanConfirm(trip)) return
-      if (trip._tp?.day_id) {
-        const { day_id: dayId, shift, multi_slot: multiSlot } = trip._tp
+      const tripRow = mergeTripRowForStatusAction(trip, (id) => this.tripSnapshot(id))
+      if (tripRow._tp?.day_id && !tpDriverTripCanConfirm(tripRow)) return
+      if (tripRow._tp?.day_id) {
+        const { day_id: dayId, shift, multi_slot: multiSlot } = tripRow._tp
         const shiftArg = multiSlot ? shift || null : null
         const confirmedIso = new Date().toISOString()
         this.patchTpListItem(dayId, shift, { confirmed_at: confirmedIso })
@@ -640,14 +597,15 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
       }
       const backup = this.tripSnapshot(dispatchTripId)
       this.patchTripInList(dispatchTripId, { status: 'driver_confirmed' })
-      const confirmFields = { status: 'driver_confirmed' }
-      // Chuyến nhiều chặng (sáng/chiều) được banner tách theo leg → phải gửi schedule_key
-      // để backend không trả 422 "gửi schedule_key khi đổi trạng thái".
-      if (trip.schedule_leg_key) confirmFields.schedule_key = trip.schedule_leg_key
+      const confirmFields = buildDriverTripStatusFields(
+        'driver_confirmed',
+        tripRow,
+        this.myDriverId,
+      )
       try {
         const updated = await this.updateTripStatusWithLockRetry(
           dispatchTripId,
-          trip,
+          tripRow,
           confirmFields,
         )
         this.patchTripInList(
@@ -667,14 +625,17 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
     },
 
     async declineTripOptimistic(trip, message) {
-      const dispatchTripId = trip.trip_id ?? trip.id
+      const dispatchTripId = resolveDispatchTripApiId(trip) ?? trip.trip_id ?? trip.id
       if (dispatchTripId == null || dispatchTripId === '') return
+      const tripRow = mergeTripRowForStatusAction(trip, (id) => this.tripSnapshot(id))
       const backup = this.tripSnapshot(dispatchTripId)
       this.removeTrip(dispatchTripId)
-      const declineFields = { status: 'cancelled', message }
-      if (trip.schedule_leg_key) declineFields.schedule_key = trip.schedule_leg_key
+      const declineFields = {
+        ...buildDriverTripStatusFields('cancelled', tripRow, this.myDriverId),
+        message,
+      }
       try {
-        const updated = await this.updateTripStatusWithLockRetry(dispatchTripId, trip, declineFields)
+        const updated = await this.updateTripStatusWithLockRetry(dispatchTripId, tripRow, declineFields)
         if (updated?.id != null) {
           this.patchTripInList(
             dispatchTripId,
@@ -707,12 +668,19 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
       }
     },
 
-    async startTripOptimistic(tripId) {
-      if (tripId == null || this.startBusyTripId != null) return
-      const tpTrip = this.dashboardMergedTrips.find((x) => x.id === tripId && x._tp?.day_id)
+    async startTripOptimistic(tripRef) {
+      const tripHint =
+        tripRef != null && typeof tripRef === 'object'
+          ? tripRef
+          : { id: tripRef }
+      const busyKey = driverTripListRowKey(tripHint) || tripRef
+      if (busyKey == null || this.startBusyTripId != null) return
+      const tpTrip = this.dashboardMergedTrips.find(
+        (x) => x.id === busyKey && x._tp?.day_id,
+      )
       if (tpTrip?._tp?.day_id) {
         if (!tpDriverTripCanStart(tpTrip)) return
-        this.startBusyTripId = tripId
+        this.startBusyTripId = busyKey
         const { day_id: dayId, shift, multi_slot: multiSlot } = tpTrip._tp
         const shiftArg = multiSlot ? shift || null : null
         try {
@@ -730,27 +698,27 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
         }
         return
       }
-      const backup = this.tripSnapshot(tripId)
-      this.startBusyTripId = tripId
+      const dispatchTripId = resolveDispatchTripApiId(tripHint)
+      if (dispatchTripId == null) return
+      const tripRow = mergeTripRowForStatusAction(tripHint, (id) => this.tripSnapshot(id))
+      const backup = this.tripSnapshot(dispatchTripId)
+      this.startBusyTripId = busyKey
       try {
-        this.patchTripInList(tripId, { status: 'in_progress' })
+        this.patchTripInList(dispatchTripId, { status: 'in_progress' })
         const updated = await this.updateTripStatusWithLockRetry(
-          tripId,
-          backup ?? this.tripSnapshot(tripId),
-          {
-            status: 'in_progress',
-            ...(backup?.schedule_leg_key ? { schedule_key: backup.schedule_leg_key } : {}),
-          },
+          dispatchTripId,
+          tripRow ?? backup ?? this.tripSnapshot(dispatchTripId),
+          buildDriverTripStatusFields('in_progress', tripRow ?? backup, this.myDriverId),
         )
         this.patchTripInList(
-          tripId,
-          mergeTripRowFromApi(this.tripSnapshot(tripId), updated, { status: 'in_progress' }),
+          dispatchTripId,
+          mergeTripRowFromApi(this.tripSnapshot(dispatchTripId), updated, { status: 'in_progress' }),
         )
         showAppSuccess(t('driver_home.toast_start_ok'), t('driver_home.toast_action_title'))
         this.scheduleSilentRefetch()
       } catch (e) {
         if (isOptimisticLockConflict(e)) void this.refreshTripsQuiet()
-        if (backup) this.replaceTripInList(tripId, backup)
+        if (backup) this.replaceTripInList(dispatchTripId, backup)
         else this.refreshTripsQuiet()
         const fallback = t('driver_trip_detail.status_err')
         showAppErrorFromApi(e, typeof fallback === 'string' ? fallback : 'Error')

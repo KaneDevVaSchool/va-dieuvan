@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n'
 const props = defineProps({
   /**
    * @type {Array<{
-   *   key: string, seq: number, heading?: string,
+   *   key: string, seq: number,
    *   status: string, statusLabel: string, tone: string,
    *   origin: string, destination: string, waypoint: string,
    *   scheduleDateShort?: string, arriveDateShort?: string,
@@ -124,12 +124,6 @@ function arriveTimeDisplay(seg) {
               <span class="text-xs font-bold uppercase tracking-wide text-slate-500">
                 {{ t('trip_detail.route_journey.segment', { n: seg.seq }) }}
               </span>
-              <p
-                v-if="seg.heading"
-                class="mt-0.5 truncate text-[11px] font-medium text-slate-600"
-              >
-                {{ seg.heading }}
-              </p>
             </div>
             <span
               class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1"

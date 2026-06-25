@@ -62,7 +62,7 @@
             <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
               {{ cell.label }}
             </p>
-            <p class="mt-1 text-base font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+            <p class="mt-1 text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100">
               {{ cell.value }}
             </p>
           </div>
@@ -211,11 +211,12 @@
     <Modal
       v-if="showFillPriceSection && multiRowModalOpen"
       :open="multiRowModalOpen"
-      wide
+      extra-wide
       :title="t('request_detail.approval_ws_multi_row_title')"
       @close="multiRowModalOpen = false"
     >
       <FillPricePanel
+        embedded
         :req="req"
         :acting="fillPriceActing"
         :message="fillPriceMsg"

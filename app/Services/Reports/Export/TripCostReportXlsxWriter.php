@@ -47,6 +47,7 @@ class TripCostReportXlsxWriter
         array $filters = [],
         ?string $exportedBy = null,
         ?string $unitName = null,
+        ?string $filterSummaryText = null,
     ): string {
         $spreadsheet = new Spreadsheet;
         $spreadsheet->getProperties()
@@ -62,12 +63,12 @@ class TripCostReportXlsxWriter
         // Sheet 1 — all rows
         $ws1 = $spreadsheet->getActiveSheet();
         $ws1->setTitle('Danh sách doanh thu');
-        $this->buildSheet($ws1, $allRows, 'BÁO CÁO CHI PHÍ CHUYẾN', $filters, $exportedBy, $unitName);
+        $this->buildSheet($ws1, $allRows, 'BÁO CÁO CHI PHÍ CHUYẾN', $filters, $exportedBy, $unitName, $filterSummaryText);
 
         // Sheet 2 — business only
         $ws2 = $spreadsheet->createSheet();
         $ws2->setTitle('Doanh thu công tác');
-        $this->buildSheet($ws2, $businessRows, 'CHI PHÍ CÔNG TÁC', $filters, $exportedBy, $unitName);
+        $this->buildSheet($ws2, $businessRows, 'CHI PHÍ CÔNG TÁC', $filters, $exportedBy, $unitName, $filterSummaryText);
 
         $spreadsheet->setActiveSheetIndex(0);
 
@@ -89,6 +90,7 @@ class TripCostReportXlsxWriter
         array $filters,
         ?string $exportedBy,
         ?string $unitName,
+        ?string $filterSummaryText = null,
     ): void {
         // ── Column widths ──
         $ws->getColumnDimension('A')->setWidth(6);
@@ -103,8 +105,19 @@ class TripCostReportXlsxWriter
         $ws->getColumnDimension('J')->setWidth(14);
         $ws->getColumnDimension('K')->setWidth(16);
 
-        // ── ROW 1: empty spacer ──
-        $ws->getRowDimension(1)->setRowHeight(6);
+        // ── ROW 1: tóm tắt bộ lọc đang áp dụng (hoặc spacer mỏng nếu không có) ──
+        $summary = trim((string) ($filterSummaryText ?? ''));
+        if ($summary !== '') {
+            $ws->getRowDimension(1)->setRowHeight(15);
+            $ws->mergeCells('A1:K1');
+            $ws->setCellValue('A1', 'Bộ lọc:  '.$summary);
+            $this->applyStyle($ws, 'A1:K1', [
+                'font' => ['italic' => true, 'size' => 8, 'color' => ['argb' => 'FF666666']],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_LEFT, 'vertical' => Alignment::VERTICAL_CENTER],
+            ]);
+        } else {
+            $ws->getRowDimension(1)->setRowHeight(6);
+        }
 
         // ── ROW 2: main title ──
         $ws->getRowDimension(2)->setRowHeight(24);

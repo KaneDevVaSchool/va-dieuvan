@@ -1,18 +1,18 @@
 <template>
   <nav
-    class="sticky top-0 z-30 shrink-0 border-b border-slate-200/80 bg-white/95 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 supports-[top:env(safe-area-inset-top)]:top-[env(safe-area-inset-top)]"
+    class="shrink-0 border-b border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900"
     role="tablist"
     :aria-label="ariaLabel"
     data-testid="staff-request-tab-nav"
   >
-    <div class="flex gap-0 overflow-x-auto px-4 sm:px-5 lg:px-6">
+    <div class="flex snap-x snap-mandatory gap-0 overflow-x-auto scrollbar-hidden px-4 sm:px-5 lg:px-6">
       <button
         v-for="tab in tabs"
         :key="tab.id"
         type="button"
         role="tab"
         :aria-selected="activeTab === tab.id"
-        class="relative shrink-0 border-b-2 px-4 py-3 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-va-600"
+        class="relative min-h-11 shrink-0 snap-start border-b-2 px-3.5 py-3 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-va-600 sm:px-4"
         :class="
           activeTab === tab.id
             ? 'border-va-700 text-va-800 dark:border-va-400 dark:text-va-300'

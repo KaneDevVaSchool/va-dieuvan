@@ -78,7 +78,7 @@
 
           <div
             v-if="req.cloned_from_summary"
-            class="flex items-center gap-2.5 border-y border-indigo-200 bg-indigo-50/70 px-4 py-3 text-sm text-indigo-900 dark:border-indigo-900/50 dark:bg-indigo-950/30 dark:text-indigo-200 sm:px-5"
+            class="flex flex-col gap-2 border-y border-indigo-200 bg-indigo-50/70 px-4 py-3 text-sm text-indigo-900 dark:border-indigo-900/50 dark:bg-indigo-950/30 dark:text-indigo-200 sm:flex-row sm:items-center sm:gap-2.5 sm:px-5"
           >
             <ArrowPathIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
             <div class="min-w-0 flex-1">
@@ -88,7 +88,7 @@
             <RouterLink
               v-if="req.cloned_from_summary.id"
               :to="`/requests/${req.cloned_from_summary.id}`"
-              class="shrink-0 font-semibold underline decoration-indigo-300 underline-offset-2 hover:decoration-indigo-500"
+              class="shrink-0 font-semibold underline decoration-indigo-300 underline-offset-2 hover:decoration-indigo-500 sm:ml-auto"
             >{{ t('request_detail.clone_lineage_open_source') }}</RouterLink>
           </div>
 
@@ -152,7 +152,7 @@
                   <!-- ===== Tab: Hồ sơ ===== -->
                   <div
                     v-show="activeTab === 'docs'"
-                    class="space-y-4 text-[90%] leading-snug"
+                    class="space-y-4 px-4 py-4 sm:px-5"
                     data-testid="request-tab-docs"
                   >
                     <p v-if="uploadErrLocal || attachErr || ocrErr" class="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
@@ -169,16 +169,14 @@
                         :highlight-id="docsHighlightAttachmentId"
                         :deleting-id="deletingId"
                         :can-delete="canDeleteAttachment"
-                        :can-ocr="canUploadAttachment"
                         :can-upload="canUploadAttachment"
                         :uploading="uploadingGeneral"
                         :fmt-size="fmtSize"
                         :fmt-date="fmt"
-                        :previewable="isPreviewable"
+                        :previewable="isAttachmentPreviewable"
                         @preview="openAttachmentPreview"
                         @download="downloadFile"
                         @delete="removeAttachment"
-                        @ocr="runOcr"
                         @pick="onPickGeneral"
                       />
 
@@ -193,7 +191,7 @@
                         :can-upload="false"
                         :fmt-size="fmtSize"
                         :fmt-date="fmt"
-                        :previewable="isPreviewable"
+                        :previewable="isAttachmentPreviewable"
                         @preview="openAttachmentPreview"
                         @download="downloadFile"
                         @delete="removeAttachment"
@@ -222,15 +220,17 @@
                         :files="paperScans"
                         :deleting-id="deletingId"
                         :can-delete="canDeleteAttachment"
+                        :can-ocr="canRunOcr"
                         :can-upload="canUploadAttachment"
                         :uploading="uploadingScan"
                         :fmt-size="fmtSize"
                         :fmt-date="fmt"
-                        :previewable="isPreviewable"
+                        :previewable="isAttachmentPreviewable"
                         empty-text-key="docs_empty_paper_scan"
                         @preview="openAttachmentPreview"
                         @download="downloadFile"
                         @delete="removeAttachment"
+                        @ocr="runOcr"
                         @pick="onPickScan"
                       >
                         <form
@@ -408,6 +408,7 @@ import StaffRequestApprovalTab from '../../components/requests/detail/StaffReque
 import RejectReasonModal from '../../components/requests/RejectReasonModal.vue'
 import ReferencePricingModal from '../../components/pricing/ReferencePricingModal.vue'
 import { useRequestDetailPage } from '../../composables/useRequestDetailPage'
+import { isAttachmentPreviewable } from '../../composables/useDispatchRequestDocs'
 import { formatVndCurrency as formatVndMoney, parseMoneyVnd, VND_CURRENCY_SUFFIX, vndAmountInWords } from '../../util/money'
 import { labelTripStatus } from '../../util/labels'
 import { rdEmptyLabel } from '../../util/requestDetailEmpty'
@@ -473,6 +474,7 @@ const {
   ocrBusy,
   deletingId,
   canUploadAttachment,
+  canRunOcr,
   canDeleteAttachment,
   canManagePaper,
   signedDocumentCurrent,
@@ -812,9 +814,6 @@ function fmtSize(bytes) {
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`
   return `${(n / (1024 * 1024)).toFixed(1)} MB`
 }
-function isPreviewable(a) {
-  return /image\/|pdf/i.test(String(a?.mime || ''))
-}
 async function onPickGeneral(file) {
   if (!file) return
   uploadErrLocal.value = ''
@@ -886,9 +885,10 @@ const DocGroup = {
       e.target.value = ''
       if (f) emit('pick', f)
     }
-    const actionBtn = (icon, label, handler, tone) =>
+    const actionBtn = (icon, label, handler, tone, testId) =>
       h('button', {
         type: 'button', title: label, 'aria-label': label,
+        ...(testId ? { 'data-testid': testId } : {}),
         class: ['inline-flex h-8 w-8 items-center justify-center rounded-md border transition disabled:opacity-40',
           tone === 'danger'
             ? 'border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-800/60 dark:text-rose-300 dark:hover:bg-rose-950/40'
@@ -921,15 +921,17 @@ const DocGroup = {
               h('div', { class: 'min-w-0 flex-1' }, [
                 h('p', { class: ['font-medium text-slate-800 dark:text-slate-200', props.column ? 'line-clamp-2 text-sm leading-snug' : 'truncate text-sm'] }, a.original_name || rdEmptyLabel(t, 'file_name')),
                 h('p', { class: 'mt-0.5 text-xs tabular-nums text-slate-500 dark:text-slate-400' }, [
-                  props.fmtSize(a.size) ? `${props.fmtSize(a.size)} · ` : '',
+                  props.fmtSize(a.size_bytes ?? a.size) ? `${props.fmtSize(a.size_bytes ?? a.size)} · ` : '',
                   props.fmtDate(a.created_at),
                   a.ocr_status === 'completed' ? ' · OCR ✓' : (a.ocr_status === 'queued' || a.ocr_status === 'processing') ? ' · OCR…' : '',
                 ].join('')),
               ]),
               h('div', { class: ['flex shrink-0 items-center gap-1', props.column ? 'justify-end' : ''] }, [
-                props.previewable(a) ? actionBtn(EyeIcon, t('request_detail.ops_preview'), () => emit('preview', a)) : null,
+                props.previewable(a) ? actionBtn(EyeIcon, t('request_detail.ops_preview'), () => emit('preview', a), undefined, 'attachment-preview-btn') : null,
                 actionBtn(ArrowDownTraySolid, t('request_detail.download_action'), () => emit('download', a)),
-                props.canOcr ? actionBtn(SparklesIcon, t('request_detail.ops_run_ocr'), () => emit('ocr', a.id)) : null,
+                props.canOcr && a.kind === 'paper_scan' && !a.ocr_processed_at
+                  ? actionBtn(SparklesIcon, t('request_detail.ops_run_ocr'), () => emit('ocr', a.id))
+                  : null,
                 props.canDelete ? actionBtn(TrashIcon, t('request_detail.delete_action'), () => emit('delete', a), 'danger') : null,
               ]),
             ]),

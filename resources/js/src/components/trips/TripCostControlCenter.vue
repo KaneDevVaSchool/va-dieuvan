@@ -182,16 +182,6 @@
 
           <div class="ml-auto flex shrink-0 items-center gap-2">
             <button
-              type="button"
-              class="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-slate-800 dark:hover:bg-slate-800"
-              :title="t('cost_center.filter_clear_all')"
-              data-testid="trip-cost-reset-filters"
-              @click="resetGridFilters"
-            >
-              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-              <XMarkIcon class="h-3 w-3 text-rose-500" aria-hidden="true" />
-            </button>
-            <button
               v-if="canSubmit"
               type="button"
               class="inline-flex h-10 shrink-0 items-center rounded-lg px-3 text-xs font-semibold transition"
@@ -515,7 +505,6 @@ import {
   CheckIcon,
   XMarkIcon,
   TrashIcon,
-  FunnelIcon,
 } from '@heroicons/vue/24/outline'
 import Button from '../ui/Button.vue'
 import CostDetailDrawer from './CostDetailDrawer.vue'

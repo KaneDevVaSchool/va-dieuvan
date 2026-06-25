@@ -1,82 +1,128 @@
 <template>
-  <div class="w-full">
-    <!-- Top bar -->
-    <div class="-mx-3 mb-6 border-b border-slate-200 bg-white px-3 py-3 sm:-mx-4 sm:px-4 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8">
-      <div class="flex items-center justify-between gap-3">
-        <nav class="flex min-w-0 items-center gap-1.5 text-sm">
-          <button
-            type="button"
-            class="shrink-0 font-medium text-slate-500 transition hover:text-va-800"
-            @click="goBack"
-          >
-            Chương trình Đưa đón
-          </button>
-          <ChevronRightIcon class="h-4 w-4 shrink-0 text-slate-300" />
-          <span class="truncate font-semibold text-slate-900">Tạo Chương trình mới</span>
-        </nav>
-        <button
-          type="button"
-          class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-          @click="goBack"
-        >
-          <XMarkIcon class="h-4 w-4" /> Hủy
-        </button>
-      </div>
-    </div>
-
-    <!-- Step progress indicator -->
-    <div class="mb-8 w-full px-3 sm:px-4 md:px-6 lg:px-8">
-      <ol class="flex items-start">
-        <li
-          v-for="(step, idx) in STEPS"
-          :key="step.key"
-          class="flex flex-1 flex-col items-center gap-1.5"
-        >
-          <div class="flex w-full items-center">
-            <div
-              :class="[
-                'h-0.5 flex-1 transition-colors duration-300',
-                idx === 0 ? 'invisible' : currentStep >= idx ? 'bg-va-800' : 'bg-slate-200',
-              ]"
-            />
+  <div
+    class="tp-program-create w-full max-w-none min-w-0 text-slate-900"
+    data-testid="tp-program-create-page"
+  >
+    <div
+      class="mx-auto w-full max-w-none space-y-5 px-4 py-4 sm:space-y-6 sm:px-6 sm:py-5 lg:px-8 lg:py-6 supports-[padding:max(0px)]:pl-[max(1rem,env(safe-area-inset-left))] supports-[padding:max(0px)]:pr-[max(1rem,env(safe-area-inset-right))] supports-[padding:max(0px)]:pb-[max(1rem,env(safe-area-inset-bottom))]"
+    >
+      <!-- Top bar -->
+      <div class="border-b border-slate-200 pb-3 sm:pb-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+          <nav class="flex min-w-0 flex-1 items-center gap-1.5 text-sm">
             <button
               type="button"
-              :title="step.label"
-              :class="[
-                'mx-2 grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-bold transition-all duration-200',
-                currentStep === idx
-                  ? 'bg-va-800 text-white shadow-md ring-4 ring-va-800/20'
-                  : currentStep > idx
-                  ? 'cursor-pointer bg-emerald-500 text-white hover:ring-2 hover:ring-emerald-400/40'
-                  : 'cursor-default bg-slate-100 text-slate-400',
-              ]"
-              @click="currentStep > idx ? jumpTo(idx) : undefined"
+              class="shrink-0 font-medium text-slate-500 transition hover:text-va-800"
+              data-testid="tp-create-back"
+              @click="goBack"
             >
-              <CheckIcon v-if="currentStep > idx" class="h-4 w-4" />
-              <span v-else>{{ idx + 1 }}</span>
+              Chương trình Đưa đón
             </button>
-            <div
-              :class="[
-                'h-0.5 flex-1 transition-colors duration-300',
-                idx === STEPS.length - 1 ? 'invisible' : currentStep > idx ? 'bg-va-800' : 'bg-slate-200',
-              ]"
-            />
-          </div>
-          <span
-            :class="[
-              'text-center text-[11px] font-medium leading-tight',
-              currentStep === idx ? 'text-va-800' : currentStep > idx ? 'text-emerald-600' : 'text-slate-400',
-            ]"
+            <ChevronRightIcon class="h-4 w-4 shrink-0 text-slate-300" aria-hidden="true" />
+            <span class="truncate font-semibold text-slate-900">Tạo chương trình mới</span>
+          </nav>
+          <button
+            type="button"
+            class="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+            data-testid="tp-create-cancel"
+            @click="goBack"
           >
-            {{ step.label }}
-          </span>
-        </li>
-      </ol>
-    </div>
+            <XMarkIcon class="h-4 w-4" aria-hidden="true" /> Hủy
+          </button>
+        </div>
+      </div>
 
-    <div class="grid w-full gap-6 px-3 pb-10 sm:px-4 md:px-6 lg:px-8 xl:grid-cols-[minmax(0,1fr)_minmax(280px,20rem)] xl:items-start xl:gap-8">
-      <!-- Step panels (trái — giữ nguyên nội dung) -->
-      <div class="min-w-0">
+      <!-- Step progress -->
+      <div class="w-full" aria-label="Tiến trình tạo chương trình">
+        <p class="mb-2 text-sm font-semibold text-slate-900 sm:hidden">
+          Bước {{ currentStep + 1 }}/{{ STEPS.length }} — {{ STEPS[currentStep].label }}
+        </p>
+        <ol class="flex items-start">
+          <li
+            v-for="(step, idx) in STEPS"
+            :key="step.key"
+            class="flex min-w-0 flex-1 flex-col items-center gap-1 sm:gap-1.5"
+          >
+            <div class="flex w-full items-center">
+              <div
+                :class="[
+                  'h-0.5 flex-1 transition-colors duration-300',
+                  idx === 0 ? 'invisible' : currentStep >= idx ? 'bg-va-800' : 'bg-slate-200',
+                ]"
+              />
+              <button
+                type="button"
+                :title="step.label"
+                :aria-current="currentStep === idx ? 'step' : undefined"
+                :class="[
+                  'mx-1 grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold transition-all duration-200 sm:mx-2 sm:h-9 sm:w-9 sm:text-sm',
+                  currentStep === idx
+                    ? 'bg-va-800 text-white shadow-md ring-4 ring-va-800/20'
+                    : currentStep > idx
+                    ? 'cursor-pointer bg-emerald-500 text-white hover:ring-2 hover:ring-emerald-400/40'
+                    : 'cursor-default bg-slate-100 text-slate-400',
+                ]"
+                @click="currentStep > idx ? jumpTo(idx) : undefined"
+              >
+                <CheckIcon v-if="currentStep > idx" class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span v-else>{{ idx + 1 }}</span>
+              </button>
+              <div
+                :class="[
+                  'h-0.5 flex-1 transition-colors duration-300',
+                  idx === STEPS.length - 1 ? 'invisible' : currentStep > idx ? 'bg-va-800' : 'bg-slate-200',
+                ]"
+              />
+            </div>
+            <span
+              :class="[
+                'hidden text-center text-[11px] font-medium leading-tight sm:block',
+                currentStep === idx ? 'text-va-800' : currentStep > idx ? 'text-emerald-600' : 'text-slate-400',
+              ]"
+            >
+              {{ step.label }}
+            </span>
+          </li>
+        </ol>
+      </div>
+
+      <!-- Hướng dẫn — full width, không sticky -->
+      <aside class="w-full" aria-labelledby="tp-create-guide-title">
+        <div class="rounded-2xl border border-sky-200/80 bg-gradient-to-br from-sky-50/95 via-white to-white p-4 shadow-sm ring-1 ring-sky-900/[0.04] sm:p-5 lg:flex lg:items-start lg:gap-5">
+          <div class="flex items-start gap-3 lg:min-w-[14rem] lg:shrink-0">
+            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-sky-100 text-sky-600">
+              <LightBulbIcon class="h-5 w-5" aria-hidden="true" />
+            </span>
+            <div class="min-w-0 flex-1">
+              <p id="tp-create-guide-title" class="text-xs font-bold uppercase tracking-wide text-sky-950 sm:text-sm">
+                Hướng dẫn
+              </p>
+              <p class="mt-1 text-sm font-semibold text-slate-900">{{ currentStepGuide.title }}</p>
+            </div>
+          </div>
+          <ol class="mt-4 space-y-2 text-[13px] leading-relaxed text-slate-600 lg:mt-0 lg:flex-1 lg:columns-1 xl:columns-2 xl:gap-x-8">
+            <li
+              v-for="(tip, i) in currentStepGuide.tips"
+              :key="i"
+              class="mb-2.5 flex gap-2 break-inside-avoid"
+            >
+              <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-100 text-[10px] font-bold text-sky-800">
+                {{ i + 1 }}
+              </span>
+              <span>{{ tip }}</span>
+            </li>
+          </ol>
+          <p
+            v-if="currentStepGuide.note"
+            class="mt-4 rounded-xl border border-sky-100 bg-sky-50/80 px-3 py-2.5 text-xs leading-relaxed text-sky-900 lg:mt-0 lg:min-w-[12rem] lg:max-w-xs lg:shrink-0 lg:self-center"
+          >
+            {{ currentStepGuide.note }}
+          </p>
+        </div>
+      </aside>
+
+      <!-- Nội dung bước — full width -->
+      <div class="min-w-0 w-full space-y-5 pb-4 sm:space-y-6">
 
       <!-- ── STEP 1: Thông tin cơ bản ──────────────────── -->
       <section v-show="currentStep === 0" class="space-y-5">
@@ -339,7 +385,7 @@
 
       <!-- ── STEP 3: Xe & Nhân sự ───────────────────────── -->
       <section v-show="currentStep === 2" class="space-y-6">
-        <div class="grid gap-6 2xl:grid-cols-2">
+        <div class="grid gap-6 lg:grid-cols-2">
           <!-- Xe -->
           <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
             <header class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
@@ -349,7 +395,7 @@
                 </span>
                 <div>
                   <h2 class="text-base font-semibold text-slate-900">Danh sách xe</h2>
-                  <p class="text-sm text-slate-500">Chọn một hoặc nhiều xe — xe đầu tiên là xe mặc định</p>
+                  <p class="text-sm text-slate-500">Tích chọn một hoặc nhiều xe; đặt một xe làm mặc định</p>
                 </div>
               </div>
               <span
@@ -385,45 +431,62 @@
                     data-testid="tp-create-vehicle-search"
                   />
                 </div>
-                <div class="grid max-h-[min(28rem,50vh)] grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2 lg:grid-cols-3">
-                  <label
+                <div class="grid max-h-[min(28rem,55vh)] grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  <div
                     v-for="v in filteredVehicleOptions"
                     :key="v.id"
                     :class="[
-                      'flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition',
+                      'flex flex-col rounded-xl border p-3 transition',
                       isVehicleSelected(v.id)
                         ? 'border-teal-300 bg-teal-50/80 ring-1 ring-teal-200/80'
                         : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/80',
                     ]"
                     :data-testid="`tp-create-vehicle-${v.id}`"
                   >
-                    <input
-                      type="checkbox"
-                      :checked="isVehicleSelected(v.id)"
-                      class="mt-1 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-700 focus:ring-teal-600/30"
-                      @change="toggleVehicle(v.id)"
-                    />
-                    <span class="min-w-0 flex-1">
-                      <span class="flex flex-wrap items-center gap-1.5">
-                        <span class="text-sm font-semibold text-slate-900">{{ v.license_plate || `Xe #${v.id}` }}</span>
-                        <span
-                          v-if="isPrimaryVehicle(v.id)"
-                          class="rounded-full bg-teal-700 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white"
-                        >Mặc định</span>
-                        <span
-                          v-else-if="isVehicleSelected(v.id)"
-                          class="rounded-full border border-teal-200 bg-white px-2 py-0.5 text-[10px] font-medium text-teal-800"
-                        >Phụ</span>
-                        <span
-                          v-if="vehicleStatusLabel(v.status)"
-                          :class="['rounded-full px-2 py-0.5 text-[10px] font-medium', vehicleStatusBadge(v.status)]"
-                        >{{ vehicleStatusLabel(v.status) }}</span>
+                    <label class="flex cursor-pointer items-start gap-3">
+                      <input
+                        type="checkbox"
+                        :checked="isVehicleSelected(v.id)"
+                        class="mt-1 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-700 focus:ring-teal-600/30"
+                        @change="toggleVehicle(v.id)"
+                      />
+                      <span class="min-w-0 flex-1">
+                        <span class="flex flex-wrap items-center gap-1.5">
+                          <span class="text-sm font-semibold text-slate-900">{{ v.license_plate || `Xe #${v.id}` }}</span>
+                          <span
+                            v-if="isPrimaryVehicle(v.id)"
+                            class="rounded-full bg-teal-700 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white"
+                          >Mặc định</span>
+                          <span
+                            v-else-if="isVehicleSelected(v.id)"
+                            class="rounded-full border border-teal-200 bg-white px-2 py-0.5 text-[10px] font-medium text-teal-800"
+                          >Phụ</span>
+                          <span
+                            v-if="vehicleStatusLabel(v.status)"
+                            :class="['rounded-full px-2 py-0.5 text-[10px] font-medium', vehicleStatusBadge(v.status)]"
+                          >{{ vehicleStatusLabel(v.status) }}</span>
+                        </span>
+                        <span class="mt-0.5 block text-xs text-slate-500">
+                          {{ v.type || 'Chưa rõ loại xe' }}<span v-if="v.seat_count"> · {{ v.seat_count }} chỗ</span>
+                        </span>
                       </span>
-                      <span class="mt-0.5 block text-xs text-slate-500">
-                        {{ v.type || '—' }}<span v-if="v.seat_count"> · {{ v.seat_count }} chỗ</span>
-                      </span>
+                    </label>
+                    <button
+                      v-if="isVehicleSelected(v.id) && !isPrimaryVehicle(v.id)"
+                      type="button"
+                      class="mt-3 w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-teal-300 hover:text-teal-700"
+                      :data-testid="`tp-create-vehicle-default-${v.id}`"
+                      @click="setAsDefaultVehicle(v.id)"
+                    >
+                      Đặt làm xe mặc định
+                    </button>
+                    <span
+                      v-else-if="isPrimaryVehicle(v.id)"
+                      class="mt-3 w-full rounded-lg bg-teal-700 px-2 py-1.5 text-center text-xs font-semibold text-white"
+                    >
+                      Xe mặc định
                     </span>
-                  </label>
+                  </div>
                   <p v-if="!filteredVehicleOptions.length" class="col-span-full py-4 text-center text-sm text-slate-400">
                     Không có xe khớp tìm kiếm.
                   </p>
@@ -431,7 +494,7 @@
                 <p class="text-xs text-slate-400">
                   Nguồn:
                   <a :href="vehiclesHref" target="_blank" rel="noopener" class="font-medium text-va-800 hover:underline">Quản lý nguồn lực</a>.
-                  Bỏ chọn hết rồi chọn lại để đổi xe mặc định, hoặc bỏ chọn xe đầu trong danh sách đã chọn.
+                  Bấm «Đặt làm xe mặc định» trên thẻ xe để chọn xe chính cho chương trình.
                 </p>
               </template>
 
@@ -439,7 +502,7 @@
                 <label class="mb-1 block text-sm font-medium text-slate-600">
                   Sức chứa tối đa (chương trình) <span class="text-rose-500">*</span>
                 </label>
-                <div class="relative max-w-md">
+                <div class="relative w-full max-w-md sm:max-w-lg">
                   <input
                     v-model.number="form.max_capacity"
                     type="number"
@@ -491,6 +554,17 @@
               <div v-if="loadingDrivers" class="flex items-center gap-2 py-6 text-sm text-slate-500">
                 <ArrowPathIcon class="h-4 w-4 animate-spin" /> Đang tải danh sách tài xế…
               </div>
+              <div
+                v-else-if="!drivers.length"
+                class="flex items-center gap-2.5 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-4 text-sm text-slate-500"
+              >
+                <ExclamationCircleIcon class="h-5 w-5 shrink-0 text-slate-400" />
+                <span>
+                  Chưa có tài xế nào khả dụng.
+                  <a :href="driversHref" target="_blank" rel="noopener" class="font-medium text-va-800 hover:underline">Thêm tài xế</a>
+                  rồi quay lại chọn.
+                </span>
+              </div>
               <template v-else>
                 <div class="relative">
                   <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -503,7 +577,7 @@
                   />
                 </div>
                 <p v-if="errors.driver" class="text-sm text-rose-600">{{ errors.driver }}</p>
-                <div class="grid max-h-[min(28rem,50vh)] grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2 lg:grid-cols-3">
+                <div class="grid max-h-[min(28rem,55vh)] grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   <div
                     v-for="d in filteredDrivers"
                     :key="d.id"
@@ -525,7 +599,7 @@
                       <DriverAvatar :driver="d" small />
                       <span class="min-w-0 flex-1">
                         <span class="block truncate text-sm font-semibold text-slate-900">{{ d.full_name }}</span>
-                        <span class="block truncate text-xs text-slate-500">GPLX: {{ d.license_class || '—' }}</span>
+                        <span class="block truncate text-xs text-slate-500">GPLX: {{ d.license_class || 'Chưa cập nhật' }}</span>
                         <span :class="['mt-1 inline-block', availabilityBadgeClass(d.availability_status)]">
                           {{ availabilityLabel(d.availability_status) }}
                         </span>
@@ -569,7 +643,7 @@
           <div class="p-5">
             <div
               v-if="selectedResponsibleUser"
-              class="flex max-w-xl items-center gap-3 rounded-xl border border-va-800/30 bg-va-800/5 px-4 py-3"
+              class="flex w-full items-center gap-3 rounded-xl border border-va-800/30 bg-va-800/5 px-4 py-3 sm:max-w-xl"
             >
               <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-va-800/10 text-[11px] font-bold text-va-800">
                 {{ userInitials(selectedResponsibleUser.name) }}
@@ -590,7 +664,7 @@
               </button>
             </div>
 
-            <div v-else class="relative max-w-xl">
+            <div v-else class="relative w-full sm:max-w-xl">
               <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
                 v-model="userQuery"
@@ -678,7 +752,10 @@
           <dl class="divide-y divide-slate-100 px-5 text-sm">
             <div class="flex items-start justify-between gap-3 py-3">
               <dt class="shrink-0 font-medium text-slate-500">Tên chương trình</dt>
-              <dd class="min-w-0 text-right font-semibold text-slate-900">{{ form.name || '—' }}</dd>
+              <dd class="min-w-0 text-right font-semibold text-slate-900">
+                <span v-if="form.name">{{ form.name }}</span>
+                <span v-else class="font-normal italic text-slate-400">Chưa đặt tên</span>
+              </dd>
             </div>
             <div class="flex items-start justify-between gap-3 py-3">
               <dt class="shrink-0 font-medium text-slate-500">Năm học</dt>
@@ -691,12 +768,20 @@
             <div class="flex items-start justify-between gap-3 py-3">
               <dt class="shrink-0 font-medium text-slate-500">Tuyến đường</dt>
               <dd class="min-w-0 text-right text-slate-700">
-                {{ [form.origin_name, form.destination_name].filter(Boolean).join(' → ') || '—' }}
+                <span v-if="form.origin_name || form.destination_name">
+                  {{ [form.origin_name, form.destination_name].filter(Boolean).join(' → ') }}
+                </span>
+                <span v-else class="italic text-slate-400">Chưa nhập tuyến đường</span>
               </dd>
             </div>
             <div class="flex items-start justify-between gap-3 py-3">
               <dt class="shrink-0 font-medium text-slate-500">Thời gian</dt>
-              <dd class="text-slate-700">{{ form.start_date || '—' }} → {{ form.end_date || '—' }}</dd>
+              <dd class="text-slate-700">
+                <span v-if="form.start_date || form.end_date">
+                  {{ form.start_date || 'Chưa chọn' }} → {{ form.end_date || 'Chưa chọn' }}
+                </span>
+                <span v-else class="italic text-slate-400">Chưa chọn thời gian</span>
+              </dd>
             </div>
             <div class="flex items-start justify-between gap-3 py-3">
               <dt class="shrink-0 font-medium text-slate-500">Lịch chạy</dt>
@@ -708,7 +793,7 @@
                 <span v-if="form.morning_enabled">Sáng {{ form.morning_departure }}</span>
                 <span v-if="form.morning_enabled && form.afternoon_enabled"> · </span>
                 <span v-if="form.afternoon_enabled">Chiều {{ form.afternoon_departure }}</span>
-                <span v-if="!form.morning_enabled && !form.afternoon_enabled">—</span>
+                <span v-if="!form.morning_enabled && !form.afternoon_enabled" class="italic text-slate-400">Chưa bật chuyến nào</span>
               </dd>
             </div>
             <div class="flex items-start justify-between gap-3 py-3">
@@ -720,7 +805,7 @@
                     {{ v.license_plate || v.type || `#${v.id}` }}<span v-if="i === 0" class="text-xs text-teal-700"> (mặc định)</span>
                   </span>
                 </template>
-                <span v-else>—</span>
+                <span v-else class="italic text-slate-400">Chưa chọn xe</span>
               </dd>
             </div>
             <div class="flex items-start justify-between gap-3 py-3">
@@ -729,7 +814,10 @@
             </div>
             <div class="flex items-start justify-between gap-3 py-3">
               <dt class="shrink-0 font-medium text-slate-500">Tài xế chính</dt>
-              <dd class="text-slate-700">{{ mainDriver?.full_name || '—' }}</dd>
+              <dd class="text-slate-700">
+                <span v-if="mainDriver">{{ mainDriver.full_name }}</span>
+                <span v-else class="italic text-slate-400">Chưa chọn tài xế chính</span>
+              </dd>
             </div>
             <div v-if="form.secondary_driver_ids.length" class="flex items-start justify-between gap-3 py-3">
               <dt class="shrink-0 font-medium text-slate-500">Tài xế dự phòng</dt>
@@ -737,7 +825,10 @@
             </div>
             <div class="flex items-start justify-between gap-3 py-3">
               <dt class="shrink-0 font-medium text-slate-500">Người phụ trách</dt>
-              <dd class="text-slate-700">{{ selectedResponsibleUser?.name || '—' }}</dd>
+              <dd class="text-slate-700">
+                <span v-if="selectedResponsibleUser">{{ selectedResponsibleUser.name }}</span>
+                <span v-else class="italic text-slate-400">Chưa phân công</span>
+              </dd>
             </div>
           </dl>
         </div>
@@ -749,60 +840,43 @@
       </section>
       </div>
 
-      <!-- Hướng dẫn (phải) -->
-      <aside class="min-w-0" aria-labelledby="tp-create-guide-title">
-        <div class="rounded-2xl border border-sky-200/80 bg-gradient-to-br from-sky-50/95 via-white to-white p-4 shadow-sm ring-1 ring-sky-900/[0.04] sm:p-5">
-          <div class="flex items-start gap-3">
-            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-sky-100 text-sky-600">
-              <LightBulbIcon class="h-5 w-5" aria-hidden="true" />
-            </span>
-            <div class="min-w-0 flex-1">
-              <p id="tp-create-guide-title" class="text-xs font-bold uppercase tracking-wide text-sky-950 sm:text-sm">
-                Hướng dẫn tạo chương trình
-              </p>
-              <p class="mt-1 text-sm font-semibold text-slate-900">{{ currentStepGuide.title }}</p>
-            </div>
-          </div>
-          <ol class="mt-4 space-y-2.5 text-[13px] leading-relaxed text-slate-600">
-            <li
-              v-for="(tip, i) in currentStepGuide.tips"
-              :key="i"
-              class="flex gap-2"
+      <!-- Footer navigation -->
+      <div class="border-t border-slate-200 pt-4 sm:pt-5">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <button
+            v-if="currentStep > 0"
+            type="button"
+            class="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 sm:w-auto"
+            data-testid="tp-create-prev"
+            @click="prevStep"
+          >
+            <ChevronLeftIcon class="h-4 w-4" aria-hidden="true" /> Quay lại
+          </button>
+          <div v-else class="hidden sm:block" aria-hidden="true" />
+
+          <div
+            class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3"
+            :class="currentStep === 0 ? 'sm:ml-auto' : ''"
+          >
+            <span class="text-center text-sm text-slate-400 sm:text-left">{{ currentStep + 1 }} / {{ STEPS.length }}</span>
+            <Button
+              v-if="currentStep < STEPS.length - 1"
+              class="w-full sm:w-auto"
+              data-testid="tp-create-next"
+              @click="nextStep"
             >
-              <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-100 text-[10px] font-bold text-sky-800">
-                {{ i + 1 }}
-              </span>
-              <span>{{ tip }}</span>
-            </li>
-          </ol>
-          <p v-if="currentStepGuide.note" class="mt-4 rounded-xl border border-sky-100 bg-sky-50/80 px-3 py-2.5 text-xs leading-relaxed text-sky-900">
-            {{ currentStepGuide.note }}
-          </p>
-        </div>
-      </aside>
-    </div>
-
-    <!-- Footer navigation -->
-    <div class="-mx-3 mt-6 border-t border-slate-200 bg-white px-3 py-3 sm:-mx-4 sm:px-4 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8">
-      <div class="flex w-full items-center justify-between gap-3 px-3 sm:px-4 md:px-6 lg:px-8">
-        <button
-          v-if="currentStep > 0"
-          type="button"
-          class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-          @click="prevStep"
-        >
-          <ChevronLeftIcon class="h-4 w-4" /> Quay lại
-        </button>
-        <div v-else />
-
-        <div class="flex items-center gap-3">
-          <span class="text-sm text-slate-400">{{ currentStep + 1 }} / {{ STEPS.length }}</span>
-          <Button v-if="currentStep < STEPS.length - 1" @click="nextStep">
-            Tiếp theo <ChevronRightIcon class="ml-1 h-4 w-4" />
-          </Button>
-          <Button v-else :loading="saving" @click="submit">
-            Lưu &amp; sinh lịch
-          </Button>
+              Tiếp theo <ChevronRightIcon class="ml-1 h-4 w-4" />
+            </Button>
+            <Button
+              v-else
+              class="w-full sm:w-auto"
+              data-testid="tp-create-submit"
+              :loading="saving"
+              @click="submit"
+            >
+              Lưu &amp; sinh lịch
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -845,7 +919,8 @@ const loadingDrivers = ref(false)
 const loadingVehicles = ref(false)
 const drivers = ref([])
 const vehicles = ref([])
-const vehiclesHref = router.resolve({ name: 'resourcesList' }).href
+const vehiclesHref = router.resolve({ name: 'resourcesList', query: { tab: 'vehicles' } }).href
+const driversHref = router.resolve({ name: 'resourcesList', query: { tab: 'drivers' } }).href
 
 // ── Steps ──────────────────────────────────────────────────────────────────────
 const STEPS = [
@@ -880,12 +955,13 @@ const STEP_GUIDES = [
   {
     title: 'Bước 3 — Xe & nhân sự',
     tips: [
-      'Chọn một hoặc nhiều xe — xe đầu tiên trong danh sách là xe mặc định trên chương trình.',
-      'Sức chứa gợi ý bằng tổng số chỗ các xe đã chọn; có thể giảm nếu không ghép hết xe mỗi ngày.',
-      'Chọn nhiều tài xế: một người «chính», các người còn lại là dự phòng / thay ca.',
-      'Người phụ trách/giám sát: nhân sự trường theo dõi chương trình (tìm theo tên hoặc email).',
+      'Tích chọn một hoặc nhiều xe cho chương trình; dùng ô tìm kiếm để lọc nhanh theo biển số hoặc loại xe.',
+      'Bấm «Đặt làm xe mặc định» ngay trên thẻ xe để chọn xe chính; các xe còn lại là xe phụ / dự phòng.',
+      'Sức chứa tự gợi ý bằng tổng số chỗ các xe đã chọn; có thể giảm nếu không ghép hết xe mỗi ngày.',
+      'Tích chọn nhiều tài xế rồi bấm «Đặt làm chính» cho người chạy chính — những người còn lại là dự phòng / thay ca.',
+      'Người phụ trách/giám sát (tùy chọn): nhân sự trường theo dõi chương trình, tìm theo tên hoặc email.',
     ],
-    note: 'Chưa có xe trong hệ thống? Mở Quản lý nguồn lực ở tab mới, thêm xe rồi quay lại trang này.',
+    note: 'Chưa có xe hoặc tài xế? Mở Quản lý nguồn lực ở tab mới, thêm rồi quay lại — danh sách sẽ tự cập nhật khi bạn chọn lại.',
   },
   {
     title: 'Bước 4 — Hoàn tất',
@@ -997,11 +1073,11 @@ const programTypeLabel = computed(() => ({
   round_trip: 'Đưa & Đón (2 chiều)',
   pickup_only: 'Chỉ Đưa đến trường',
   dropoff_only: 'Chỉ Đón về nhà',
-}[form.program_type] || '—'))
+}[form.program_type] || 'Chưa chọn loại'))
 
 const runsOnLabel = computed(() => {
   const map = { mon: 'T2', tue: 'T3', wed: 'T4', thu: 'T5', fri: 'T6', sat: 'T7', sun: 'CN' }
-  return form.runs_on.map((k) => map[k] || k).join(', ') || '—'
+  return form.runs_on.map((k) => map[k] || k).join(', ') || 'Chưa chọn ngày'
 })
 
 // ── Vehicles ──────────────────────────────────────────────────────────────────
@@ -1090,6 +1166,14 @@ function toggleVehicle(id) {
   syncCapacityFromVehicles()
 }
 
+function setAsDefaultVehicle(id) {
+  const idx = form.vehicle_ids.findIndex((x) => String(x) === String(id))
+  if (idx <= 0) return // not selected, or already the default (first) vehicle
+  const [picked] = form.vehicle_ids.splice(idx, 1)
+  form.vehicle_ids.unshift(picked)
+  syncPrimaryVehicleFields()
+}
+
 function vehicleStatusLabel(s) { return VEHICLE_STATUS[s]?.label || '' }
 function vehicleStatusBadge(s) { return VEHICLE_STATUS[s]?.badge || 'bg-slate-100 text-slate-500' }
 
@@ -1127,7 +1211,7 @@ const secondaryDriverNames = computed(() =>
   form.secondary_driver_ids
     .map((id) => drivers.value.find((d) => String(d.id) === String(id))?.full_name)
     .filter(Boolean)
-    .join(', ') || '—',
+    .join(', ') || 'Không có',
 )
 
 function isMainDriver(id) {
@@ -1174,7 +1258,7 @@ function toggleDriverSelected(id) {
   errors.driver = mainDriverId.value ? '' : errors.driver
 }
 
-function availabilityLabel(s) { return { available: 'Rảnh', busy: 'Bận', offline: 'Không có' }[s] || '—' }
+function availabilityLabel(s) { return { available: 'Rảnh', busy: 'Bận', offline: 'Không có' }[s] || 'Chưa rõ' }
 function availabilityTextClass(s) {
   return { available: 'text-emerald-600', busy: 'text-amber-600', offline: 'text-slate-400' }[s] || 'text-slate-400'
 }

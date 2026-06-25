@@ -104,17 +104,6 @@
               <dt>{{ t('dispatch_wizard.create.unit') }}</dt>
               <dd>{{ form.requester_unit }}</dd>
             </div>
-            <div
-              v-if="form.coordinator_name?.trim() || form.coordinator_email?.trim() || form.coordinator_phone?.trim()"
-              class="summary-field"
-            >
-              <dt>{{ t('dispatch_wizard.confirm.coord_block') }}</dt>
-              <dd>
-                {{ form.coordinator_name?.trim() || t('dispatch_wizard.confirm.empty_not_entered') }}
-                <span v-if="form.coordinator_email?.trim()" class="block text-slate-600">{{ form.coordinator_email }}</span>
-                <span v-if="form.coordinator_phone?.trim()" class="text-slate-600">{{ form.coordinator_phone }}</span>
-              </dd>
-            </div>
             <div v-if="form.trip_type === 'point_to_point'" class="summary-field">
               <dt>{{ t('dispatch_wizard.confirm.targets_block') }}</dt>
               <dd>
@@ -447,6 +436,14 @@ const scheduleCards = computed(() => {
   return cards
 })
 
+function formatPicContact(row) {
+  const name = String(row.person_in_charge ?? '').trim()
+  const phone = String(row.person_in_charge_phone ?? '').trim()
+  if (!name && !phone) return empty.pic()
+  if (name && phone) return `${name} · ${phone}`
+  return name || phone
+}
+
 function passengerCard(row, n, key) {
   const heading = t('dispatch_wizard.confirm.trip_heading', { n })
   const lines = [
@@ -459,7 +456,7 @@ function passengerCard(row, n, key) {
       value: formatDatePlaceLine(row.return_at, row.dropoff),
     },
     { label: t('dispatch_wizard.confirm.guests_line'), value: String(row.guests ?? '').trim() || empty.guests() },
-    { label: t('dispatch_wizard.confirm.pic_line'), value: row.person_in_charge?.trim() || empty.pic() },
+    { label: t('dispatch_wizard.confirm.pic_line'), value: formatPicContact(row) },
     {
       label: t('dispatch_wizard.confirm.cost_line'),
       value: formatCurrency(rowLineTotal(row)),

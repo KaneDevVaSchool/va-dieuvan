@@ -36,7 +36,7 @@
           </div>
           <div class="min-w-0 flex-1 pt-0.5">
             <p class="text-base font-extrabold leading-snug text-amber-50 sm:text-lg">
-              {{ t('driver_home.pending_banner_title', { n: pendingCount }) }}
+              {{ bannerTitle }}
             </p>
             <p v-if="pendingCount > 0" class="mt-1 text-sm font-medium text-amber-200/75 sm:text-base">
               {{ bannerSubline }}
@@ -364,6 +364,7 @@ import { ChevronDownIcon, ChevronUpIcon, PhoneIcon } from '@heroicons/vue/24/out
 import { useI18n } from 'vue-i18n'
 import { formatApiError } from '../../api/http'
 import { isOptimisticLockConflict } from '../../util/tripLock'
+import { driverTripListRowKey } from '../../util/driverScheduleLeg'
 import { useDriverDashboardStore } from '../../store/driverDashboard'
 import { resolveTripLeaderContact } from '../../util/tripLeaderContact'
 import {
@@ -464,11 +465,21 @@ function toggleItemDetails(tripId) {
 
 const pendingCount = computed(() => props.trips.length)
 
-const bannerSubline = computed(() => {
+const pendingAllTp = computed(() => {
   const rows = props.trips
-  if (!rows.length) return ''
-  const allTp = rows.every((tr) => tr?._tp?.day_id)
-  if (allTp) return t('driver_home.pending_banner_sub_tp')
+  if (!rows.length) return false
+  return rows.every((tr) => tr?._tp?.day_id)
+})
+
+const bannerTitle = computed(() => {
+  const n = pendingCount.value
+  if (pendingAllTp.value) return t('driver_home.pending_banner_title_tp', { n })
+  return t('driver_home.pending_banner_title', { n })
+})
+
+const bannerSubline = computed(() => {
+  if (!props.trips.length) return ''
+  if (pendingAllTp.value) return t('driver_home.pending_banner_sub_tp')
   return t('driver_home.pending_banner_sub')
 })
 
@@ -557,7 +568,7 @@ function goDeclineConfirmStep() {
 async function submitDeclineConfirmed() {
   const trip = declineTrip.value
   if (!trip || busyId.value != null || Date.now() < tripStatusCooldownUntil) return
-  busyId.value = trip.id
+  busyId.value = driverTripListRowKey(trip) || trip.id
   actionError.value = ''
   declineModalError.value = ''
   try {
@@ -582,7 +593,7 @@ async function submitDeclineConfirmed() {
 async function onConfirm(trip) {
   if (busyId.value != null || Date.now() < tripStatusCooldownUntil) return
   if (!tpDriverTripCanConfirm(trip)) return
-  busyId.value = trip.id
+  busyId.value = driverTripListRowKey(trip) || trip.id
   actionError.value = ''
   try {
     await dash.confirmTripOptimistic(trip)

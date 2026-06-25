@@ -27,11 +27,14 @@ export function appendScheduleRow(rows, variant) {
   rows.push(row)
 }
 
-export function duplicateScheduleRow(rows, index) {
+export function duplicateScheduleRow(rows, index, variant = 'passenger') {
   const raw = rows[index]
   if (!raw) return
-  const clone = { ...raw }
-  clone.id = crypto.randomUUID()
+  let template = {}
+  if (variant === 'cargo') template = emptyCargoRow()
+  else if (variant === 'business') template = emptyBusinessRow()
+  else template = emptyPassengerRow()
+  const clone = { ...template, ...raw, id: crypto.randomUUID() }
   rows.splice(index + 1, 0, clone)
 }
 
@@ -52,6 +55,9 @@ export function autoFillScheduleRowFromPrevious(rows, index, variant) {
   } else {
     row.depart_at = prev.depart_at ?? ''
     row.pickup = prev.pickup ?? ''
-    if (variant === 'passenger') row.person_in_charge = prev.person_in_charge ?? ''
+    if (variant === 'passenger') {
+      row.person_in_charge = prev.person_in_charge ?? ''
+      row.person_in_charge_phone = prev.person_in_charge_phone ?? ''
+    }
   }
 }

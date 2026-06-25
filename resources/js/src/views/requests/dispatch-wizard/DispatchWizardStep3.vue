@@ -211,7 +211,7 @@
       </section>
     </div>
 
-    <!-- Cargo -->
+    <!-- Cargo: phát sinh compact -->
     <div v-else class="dw-step3-stack">
       <article class="dw-step3-section">
         <header class="dw-sec-intro">
@@ -224,9 +224,11 @@
         />
       </article>
 
-      <article class="dw-step3-section space-y-3 bg-slate-50/40 p-4 sm:p-5">
-        <div class="text-xs font-semibold uppercase text-slate-600">{{ t('dispatch_wizard.s3.cargo_panel') }}</div>
-        <label class="block">
+      <section class="dw-step3-section px-4 py-3 sm:px-4 sm:py-4" aria-labelledby="dw-cargo-surcharge-heading">
+        <h3 id="dw-cargo-surcharge-heading" class="dw-sec-intro__title mb-3">
+          {{ t('dispatch_wizard.s3.cargo_panel') }}
+        </h3>
+        <label class="mb-3 block">
           <span class="mb-1 block text-xs font-medium text-slate-600">
             {{ t('dispatch_wizard.s3.cargo_notes_lbl') }}
             <span class="font-normal text-slate-400">{{ t('dispatch_wizard.s3.optional') }}</span>
@@ -234,66 +236,83 @@
           <textarea
             v-model="form.cargo_extra_notes"
             rows="2"
-            class="dw-input min-h-[3.5rem] resize-y"
+            class="dw-input min-h-[2.5rem] resize-y"
             :placeholder="t('dispatch_wizard.s3.cargo_notes_ph')"
           />
         </label>
-        <div class="divide-y divide-slate-100 rounded-xl bg-white/90">
-          <div class="flex flex-col gap-2 px-3 py-3 sm:flex-row sm:items-center sm:gap-4 sm:py-2.5">
-            <label class="flex min-w-0 flex-1 cursor-pointer items-start gap-2.5 sm:items-center">
-              <input
-                v-model="form.need_porters"
-                type="checkbox"
-                class="mt-0.5 shrink-0 rounded border-slate-300 text-va-800 sm:mt-0"
-              />
-              <span class="text-sm leading-snug text-slate-800">{{ t('dispatch_wizard.s3.need_porters') }}</span>
-            </label>
-            <div class="flex min-w-0 flex-wrap items-center gap-2 sm:max-w-[28rem] sm:justify-end">
-              <span class="shrink-0 text-xs font-medium text-slate-600">{{ t('dispatch_wizard.s3.qty_lbl') }}</span>
-              <input
-                v-model="form.porter_qty"
-                type="text"
-                :placeholder="t('dispatch_wizard.s3.porter_qty_ph')"
-                class="dw-cell dw-cell--e21 min-w-[6rem] max-w-[10rem]"
-              />
-              <span class="shrink-0 text-xs font-medium text-slate-600">{{ t('dispatch_wizard.s3.cost_vnd') }}</span>
-              <input
-                :value="form.porter_cost"
-                type="text"
-                inputmode="numeric"
-                autocomplete="off"
-                :placeholder="t('dispatch_wizard.s3.vnd_ph')"
-                class="dw-cell dw-cell--e21 dw-cell--vnd min-w-[10rem] flex-1 sm:max-w-[14rem]"
-                @input="vndForm('porter_cost', $event)"
-              />
-            </div>
-          </div>
-          <div class="flex flex-col gap-2 px-3 py-3 sm:flex-row sm:items-center sm:gap-4 sm:py-2.5">
-            <label class="flex min-w-0 flex-1 cursor-pointer items-start gap-2.5 sm:items-center">
-              <input
-                v-model="form.interprovincial"
-                type="checkbox"
-                class="mt-0.5 shrink-0 rounded border-slate-300 text-va-800 sm:mt-0"
-              />
-              <span class="text-sm leading-snug text-slate-800">{{ t('dispatch_wizard.s3.interprov') }}</span>
-            </label>
-            <div class="flex min-w-0 shrink-0 items-center gap-2 sm:w-[min(100%,20rem)] sm:justify-end">
-              <span class="shrink-0 text-xs font-medium text-slate-600">{{
-                t('dispatch_wizard.s3.interprov_cost')
-              }}</span>
-              <input
-                :value="form.interprovincial_cost"
-                type="text"
-                inputmode="numeric"
-                autocomplete="off"
-                :placeholder="t('dispatch_wizard.s3.vnd_ph_small')"
-                class="dw-cell dw-cell--e21 dw-cell--vnd min-w-[10rem] flex-1 sm:max-w-[14rem]"
-                @input="vndForm('interprovincial_cost', $event)"
-              />
-            </div>
-          </div>
-        </div>
-      </article>
+        <table class="dw-surcharge-table">
+          <thead>
+            <tr>
+              <th class="w-[40%]">{{ t('dispatch_wizard.s3.surcharge_col') }}</th>
+              <th>{{ t('dispatch_wizard.s3.surcharge_detail') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <label class="flex cursor-pointer items-center gap-2">
+                  <input
+                    v-model="form.need_porters"
+                    type="checkbox"
+                    class="h-4 w-4 rounded border-slate-300 text-va-800"
+                  />
+                  <span class="text-sm text-slate-800">{{ t('dispatch_wizard.s3.need_porters') }}</span>
+                </label>
+              </td>
+              <td>
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="text-xs text-slate-500">{{ t('dispatch_wizard.s3.qty_lbl') }}</span>
+                  <input
+                    v-model="form.porter_qty"
+                    type="text"
+                    :placeholder="t('dispatch_wizard.s3.porter_qty_ph')"
+                    class="dw-cell dw-cell--e21 min-w-[5rem] max-w-[7rem]"
+                    :disabled="!form.need_porters"
+                  />
+                  <span class="text-xs text-slate-500">{{ t('dispatch_wizard.s3.cost_vnd') }}</span>
+                  <input
+                    :value="form.porter_cost"
+                    type="text"
+                    inputmode="numeric"
+                    autocomplete="off"
+                    :placeholder="t('dispatch_wizard.s3.vnd_ph')"
+                    class="dw-cell dw-cell--e21 dw-cell--vnd min-w-[8rem] flex-1 sm:max-w-[12rem]"
+                    :disabled="!form.need_porters"
+                    @input="vndForm('porter_cost', $event)"
+                  />
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <label class="flex cursor-pointer items-center gap-2">
+                  <input
+                    v-model="form.interprovincial"
+                    type="checkbox"
+                    class="h-4 w-4 rounded border-slate-300 text-va-800"
+                  />
+                  <span class="text-sm text-slate-800">{{ t('dispatch_wizard.s3.interprov') }}</span>
+                </label>
+              </td>
+              <td>
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="text-xs text-slate-500">{{ t('dispatch_wizard.s3.interprov_cost') }}</span>
+                  <input
+                    :value="form.interprovincial_cost"
+                    type="text"
+                    inputmode="numeric"
+                    autocomplete="off"
+                    :placeholder="t('dispatch_wizard.s3.vnd_ph_small')"
+                    class="dw-cell dw-cell--e21 dw-cell--vnd min-w-[8rem] flex-1 sm:max-w-[14rem]"
+                    :disabled="!form.interprovincial"
+                    @input="vndForm('interprovincial_cost', $event)"
+                  />
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
     </div>
   </div>
 </template>

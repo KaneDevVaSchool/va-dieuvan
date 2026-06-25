@@ -23,12 +23,73 @@
               {{ statusLabel(program.status) }}
             </span>
           </div>
-          <p class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
-            <span class="font-mono">{{ program.code }}</span>
-            <span>· {{ dateRangeText }}</span>
-            <span>· {{ responsibleText }}</span>
-            <span>· {{ routeText }}</span>
-          </p>
+          <div
+            class="mt-2.5 flex flex-wrap items-center gap-2"
+            role="list"
+            :aria-label="t('tp_program_detail.meta_aria')"
+            data-testid="tp-program-meta"
+          >
+            <span
+              role="listitem"
+              class="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-slate-200/80 bg-slate-50/90 px-2.5 py-1 text-xs text-slate-600"
+            >
+              <TagIcon class="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+              <span class="font-mono text-[11px] font-semibold tabular-nums text-slate-800">{{ program.code }}</span>
+            </span>
+
+            <span
+              role="listitem"
+              class="inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-lg border border-slate-200/80 bg-slate-50/90 px-2.5 py-1 text-xs text-slate-600"
+            >
+              <CalendarDaysIcon class="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+              <span class="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                {{ t('tp_program_detail.meta_label_period') }}
+              </span>
+              <span
+                class="min-w-0 truncate tabular-nums font-medium"
+                :class="hasDateRange ? 'text-slate-800' : 'italic text-slate-400'"
+              >
+                {{ dateRangeText }}
+              </span>
+            </span>
+
+            <span
+              role="listitem"
+              class="inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-lg border border-slate-200/80 bg-slate-50/90 px-2.5 py-1 text-xs text-slate-600"
+            >
+              <UserCircleIcon class="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+              <span class="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                {{ t('tp_program_detail.meta_label_responsible') }}
+              </span>
+              <span
+                class="min-w-0 max-w-[12rem] truncate font-medium sm:max-w-[16rem]"
+                :class="responsibleName ? 'text-slate-800' : 'italic text-slate-400'"
+                :title="responsibleName || undefined"
+              >
+                {{ responsibleName || t('tp_program_detail.empty_responsible') }}
+              </span>
+            </span>
+
+            <span
+              role="listitem"
+              class="inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-lg border border-slate-200/80 bg-slate-50/90 px-2.5 py-1 text-xs text-slate-600"
+            >
+              <MapPinIcon class="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+              <template v-if="hasRoute">
+                <span class="min-w-0 max-w-[9rem] truncate font-medium text-slate-800 sm:max-w-[11rem]" :title="program.origin_name">
+                  {{ program.origin_name }}
+                </span>
+                <ArrowLongRightIcon class="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+                <span
+                  class="min-w-0 max-w-[9rem] truncate font-medium text-slate-800 sm:max-w-[11rem]"
+                  :title="routeDestinationName"
+                >
+                  {{ routeDestinationName }}
+                </span>
+              </template>
+              <span v-else class="italic text-slate-400">{{ t('tp_program_detail.empty_route') }}</span>
+            </span>
+          </div>
         </div>
         <div class="flex shrink-0 flex-wrap items-center gap-2">
           <button
@@ -98,17 +159,23 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowLeftIcon,
+  ArrowLongRightIcon,
   ArrowPathIcon,
   BoltIcon,
   PauseIcon,
   XMarkIcon,
   ChartBarIcon,
   CalendarIcon,
+  CalendarDaysIcon,
+  MapPinIcon,
+  TagIcon,
+  UserCircleIcon,
   UsersIcon,
   ClipboardDocumentCheckIcon,
   IdentificationIcon,
 } from '@heroicons/vue/24/outline'
 import { getProgram, activateProgram, pauseProgram, cancelProgram, listProgramDays } from '../../api/transportProgram'
+import { formatViDate } from '../../composables/useTpAttendanceList'
 import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
 import { confirmAction } from '../../composables/useConfirm'
 import TpProgramDetailSummaryBar from '../../components/transportProgram/TpProgramDetailSummaryBar.vue'
@@ -128,23 +195,24 @@ const active = ref('overview')
 
 const operatingDayCount = computed(() => days.value.filter((d) => d.day_type === 'operating').length)
 
+const hasDateRange = computed(() => Boolean(program.value?.start_date && program.value?.end_date))
+
 const dateRangeText = computed(() => {
   const p = program.value
-  if (p?.start_date && p?.end_date) return `${p.start_date} → ${p.end_date}`
-  return t('tp_program_detail.empty_date_range')
+  if (!hasDateRange.value) return t('tp_program_detail.empty_date_range')
+  const from = formatViDate(p.start_date)
+  const to = formatViDate(p.end_date)
+  return `${from} – ${to}`
 })
 
-const responsibleText = computed(() => {
-  const name = program.value?.responsible_user_name
-  if (name) return t('tp_program_detail.meta_responsible', { name })
-  return t('tp_program_detail.empty_responsible')
-})
+const responsibleName = computed(() => program.value?.responsible_user_name?.trim() || '')
 
-const routeText = computed(() => {
+const hasRoute = computed(() => Boolean(program.value?.origin_name?.trim()))
+
+const routeDestinationName = computed(() => {
   const p = program.value
-  if (!p?.origin_name) return t('tp_program_detail.empty_route')
-  const destination = p.destination_name || t('tp_programs_page.card_destination_default')
-  return t('tp_program_detail.meta_route', { origin: p.origin_name, destination })
+  if (!p?.origin_name) return ''
+  return p.destination_name?.trim() || t('tp_programs_page.card_destination_default')
 })
 
 const tabs = [

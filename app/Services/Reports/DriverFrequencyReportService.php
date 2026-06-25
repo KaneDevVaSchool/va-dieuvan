@@ -37,14 +37,24 @@ class DriverFrequencyReportService
         $quarter = isset($filters['quarter']) && $filters['quarter'] !== ''
             ? (string) $filters['quarter']
             : null;
+        $month = isset($filters['month']) && $filters['month'] !== ''
+            ? (int) $filters['month']
+            : null;
+        if ($month !== null && ($month < 1 || $month > 12)) {
+            $month = null;
+        }
+        if ($month !== null) {
+            // Tháng và quý loại trừ lẫn nhau — ưu tiên tháng cho kỳ chính.
+            $quarter = null;
+        }
 
-        [$from, $to] = $this->periodRange($year, $quarter);
+        [$from, $to] = $this->periodRange($year, $quarter, $month);
         [$yearFrom, $yearTo] = $this->periodRange($year, null);
 
         $trips = $this->tripsForPeriod($user, $from, $to, $filters);
 
         $prevYear = $year - 1;
-        [$prevFrom, $prevTo] = $this->periodRange($prevYear, $quarter);
+        [$prevFrom, $prevTo] = $this->periodRange($prevYear, $quarter, $month);
         $prevFilters = $filters;
         $prevFilters['year'] = $prevYear;
         $prevTrips = $this->tripsForPeriod($user, $prevFrom, $prevTo, $prevFilters);
@@ -61,26 +71,27 @@ class DriverFrequencyReportService
             ? round(100 * ($totalCurrent - $totalPrev) / $totalPrev, 1)
             : null;
 
-        $monthSpan = $this->monthsInPeriod($quarter);
+        $monthSpan = $month !== null ? 1 : $this->monthsInPeriod($quarter);
         $drivers = $this->enrichDriverRowsForExport($drivers, $monthSpan);
         $vehicles = $this->enrichVehicleRowsForExport($vehicles, $trips, $monthSpan);
-        $driverMonthly = $this->buildDriverMonthlyRows($trips, $drivers, $year, $quarter);
+        $driverMonthly = $this->buildDriverMonthlyRows($trips, $drivers, $year, $quarter, $month);
 
         return [
-            'year'            => $year,
-            'quarter'         => $quarter,
-            'kpi'             => $kpi,
-            'drivers'         => $drivers,
-            'vehicles'        => $vehicles,
-            'quarterly'       => $quarterly,
-            'monthly'         => $monthly,
-            'driver_monthly'  => $driverMonthly,
-            'monthly_totals'  => $this->monthlyTotalsFromDriverRows($driverMonthly),
+            'year' => $year,
+            'quarter' => $quarter,
+            'month' => $month,
+            'kpi' => $kpi,
+            'drivers' => $drivers,
+            'vehicles' => $vehicles,
+            'quarterly' => $quarterly,
+            'monthly' => $monthly,
+            'driver_monthly' => $driverMonthly,
+            'monthly_totals' => $this->monthlyTotalsFromDriverRows($driverMonthly),
             'year_comparison' => [
-                'previous_year'   => $prevYear,
+                'previous_year' => $prevYear,
                 'trips_delta_pct' => $tripsDeltaPct,
             ],
-            'filter_options'  => $this->filterOptions($user, $yearFrom, $yearTo),
+            'filter_options' => $this->filterOptions($user, $yearFrom, $yearTo),
         ];
     }
 
@@ -139,8 +150,15 @@ class DriverFrequencyReportService
     }
 
     /** @return array{0: Carbon, 1: Carbon} */
-    private function periodRange(int $year, ?string $quarter): array
+    private function periodRange(int $year, ?string $quarter, ?int $month = null): array
     {
+        if ($month !== null && $month >= 1 && $month <= 12) {
+            $from = Carbon::create($year, $month, 1)->startOfDay();
+            $to = Carbon::create($year, $month, 1)->endOfMonth()->endOfDay();
+
+            return [$from, $to];
+        }
+
         if ($quarter !== null && $quarter !== '') {
             $months = match ($quarter) {
                 'q1' => [1, 3],
@@ -184,20 +202,20 @@ class DriverFrequencyReportService
             $tripCount = $driverTrips->count();
 
             $rows[] = [
-                'id'           => (int) $driverId,
-                'code'         => $this->driverCode($driver),
+                'id' => (int) $driverId,
+                'code' => $this->driverCode($driver),
                 'employeeCode' => $this->driverEmployeeCode((int) $driverId),
-                'name'         => $driver->full_name ?? ('Tài xế #'.$driverId),
-                'trips'        => $tripCount,
-                'hours'        => $hours,
-                'onTime'       => $onTime,
-                'types'        => array_values($typeCountsMap),
-                'typesExport'  => $this->typeCountsExportOrder($typeCountsMap),
-                'kpi'          => 0,
-                'bonus'        => 'C',
-                'bonusLabel'   => 'Thưởng C',
-                'bonusNote'    => '',
-                'freqScore'    => 0,
+                'name' => $driver->full_name ?? ('Tài xế #'.$driverId),
+                'trips' => $tripCount,
+                'hours' => $hours,
+                'onTime' => $onTime,
+                'types' => array_values($typeCountsMap),
+                'typesExport' => $this->typeCountsExportOrder($typeCountsMap),
+                'kpi' => 0,
+                'bonus' => 'C',
+                'bonusLabel' => 'Thưởng C',
+                'bonusNote' => '',
+                'freqScore' => 0,
                 'diversityScore' => 0,
                 'avgTripsPerMonth' => 0.0,
             ];
@@ -250,12 +268,12 @@ class DriverFrequencyReportService
             $category = $this->vehicleCategoryLabel($vehicleTrips);
 
             $rows[] = [
-                'id'       => (int) $vehicleId,
-                'plate'    => (string) ($vehicle->license_plate ?? ('#'.$vehicleId)),
-                'trips'    => $tripCount,
-                'hours'    => $hours,
+                'id' => (int) $vehicleId,
+                'plate' => (string) ($vehicle->license_plate ?? ('#'.$vehicleId)),
+                'trips' => $tripCount,
+                'hours' => $hours,
                 'category' => $category,
-                'model'    => $this->vehicleModelLabel($vehicle),
+                'model' => $this->vehicleModelLabel($vehicle),
             ];
         }
 
@@ -297,16 +315,16 @@ class DriverFrequencyReportService
         ));
 
         return [
-            'totalTrips'             => $totalTrips,
-            'activeDrivers'          => $activeDrivers,
-            'avgTripsPerDriver'      => $avgTripsPerDriver,
-            'driversAboveThreshold'  => $driversAboveThreshold,
-            'activeVehicles'         => $activeVehicles,
-            'avgTripsPerVehicle'     => $avgTripsPerVehicle,
+            'totalTrips' => $totalTrips,
+            'activeDrivers' => $activeDrivers,
+            'avgTripsPerDriver' => $avgTripsPerDriver,
+            'driversAboveThreshold' => $driversAboveThreshold,
+            'activeVehicles' => $activeVehicles,
+            'avgTripsPerVehicle' => $avgTripsPerVehicle,
             'vehiclesBelowThreshold' => $vehiclesBelowThreshold,
-            'totalHours'             => $totalHours,
-            'avgHoursPerDriver'      => $avgHoursPerDriver,
-            'overallOnTime'          => $overallOnTime,
+            'totalHours' => $totalHours,
+            'avgHoursPerDriver' => $avgHoursPerDriver,
+            'overallOnTime' => $overallOnTime,
         ];
     }
 
@@ -362,7 +380,7 @@ class DriverFrequencyReportService
             ->orderBy('full_name')
             ->get(['id', 'full_name'])
             ->map(fn (Driver $d) => [
-                'id'   => $d->id,
+                'id' => $d->id,
                 'name' => $d->full_name ?? ('#'.$d->id),
                 'code' => $this->driverCode($d),
             ])
@@ -374,14 +392,14 @@ class DriverFrequencyReportService
             ->orderBy('license_plate')
             ->get(['id', 'license_plate'])
             ->map(fn ($v) => [
-                'id'    => $v->id,
+                'id' => $v->id,
                 'plate' => (string) ($v->license_plate ?? '#'.$v->id),
             ])
             ->values()
             ->all();
 
         return [
-            'drivers'  => $drivers,
+            'drivers' => $drivers,
             'vehicles' => $vehicles,
         ];
     }
@@ -574,9 +592,9 @@ class DriverFrequencyReportService
      * @param  list<array<string, mixed>>  $drivers
      * @return list<array<string, mixed>>
      */
-    private function buildDriverMonthlyRows(Collection $trips, array $drivers, int $year, ?string $quarter): array
+    private function buildDriverMonthlyRows(Collection $trips, array $drivers, int $year, ?string $quarter, ?int $month = null): array
     {
-        $activeMonths = $this->activeMonthIndexes($quarter);
+        $activeMonths = $month !== null ? [$month] : $this->activeMonthIndexes($quarter);
         $byDriverMonth = [];
 
         foreach ($trips as $trip) {
@@ -611,11 +629,11 @@ class DriverFrequencyReportService
             }
 
             $rows[] = [
-                'id'         => $driverId,
-                'name'       => $driver['name'] ?? '',
+                'id' => $driverId,
+                'name' => $driver['name'] ?? '',
                 'employeeCode' => $driver['employeeCode'] ?? $this->driverEmployeeCode($driverId),
-                'months'     => $months,
-                'yearTotal'  => $yearTotal,
+                'months' => $months,
+                'yearTotal' => $yearTotal,
             ];
         }
 

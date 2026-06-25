@@ -1,5 +1,6 @@
 <script setup>
 import { FunnelIcon } from '@heroicons/vue/24/outline'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps({
   cards: {
@@ -22,6 +23,8 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['card-action'])
+
+const { t } = useI18n()
 
 const toneClass = {
   brand: 'kpi-card--brand',
@@ -104,7 +107,7 @@ function valueClass(card) {
           <div class="min-w-0 flex-1">
             <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ card.label }}</p>
             <p
-              class="mt-1 tabular-nums font-semibold"
+              class="mt-1 tabular-nums font-semibold font-display"
               :class="[
                 compact
                   ? 'truncate text-xs leading-snug sm:text-sm'
@@ -120,7 +123,7 @@ function valueClass(card) {
               class="mt-2"
             >
               <div class="mb-0.5 flex justify-between text-[10px] text-slate-500">
-                <span>Tỷ lệ</span>
+                <span>{{ t('app.kpi_strip_progress_label') }}</span>
                 <span class="tabular-nums">{{ card.progress }}%</span>
               </div>
               <div class="h-1.5 overflow-hidden rounded-full bg-slate-100">
@@ -146,7 +149,7 @@ function valueClass(card) {
           :class="isActive(card) ? '!text-va-800' : ''"
         >
           <FunnelIcon class="h-3 w-3" aria-hidden="true" />
-          {{ isActive(card) ? 'Đang lọc' : 'Lọc nhanh' }}
+          {{ isActive(card) ? t('app.kpi_strip_filtering') : t('app.kpi_strip_quick_filter') }}
         </p>
       </component>
     </div>

@@ -47,4 +47,17 @@ describe('vndAmountInWords', () => {
   it('reads grouped amounts correctly', () => {
     assert.match(vndAmountInWords('200.000'), /đồng$/)
   })
+
+  it('reads one million without spurious không trăm lẻ', () => {
+    assert.equal(vndAmountInWords(1_000_000), 'Một triệu đồng')
+    assert.equal(vndAmountInWords('1.000.000'), 'Một triệu đồng')
+  })
+
+  it('matches PDF presenter cases', () => {
+    assert.equal(vndAmountInWords(1_500_000), 'Một triệu năm trăm nghìn đồng')
+    assert.equal(
+      vndAmountInWords(150_000_090),
+      'Một trăm năm mươi triệu không trăm chín mươi đồng',
+    )
+  })
 })

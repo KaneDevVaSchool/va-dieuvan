@@ -53,13 +53,6 @@ export const TARGET_OPTIONS = [
   'Ban Pháp chế (P.CSVC)',
 ]
 
-/** Công tác & Hàng hóa: ẩn block trưởng đoàn phụ trách (vẫn giữ đối tượng phân bổ). */
-export const TRIP_TYPES_WITHOUT_COORDINATOR = ['business', 'cargo']
-
-export function showCoordinatorPanelForTripType(tripType) {
-  return !TRIP_TYPES_WITHOUT_COORDINATOR.includes(String(tripType ?? ''))
-}
-
 export function todayISODate() {
   const d = new Date()
   const y = d.getFullYear()
@@ -78,6 +71,7 @@ export function emptyPassengerRow() {
     unit_price: '',
     extra_fee: '',
     person_in_charge: '',
+    person_in_charge_phone: '',
     notes: '',
   }
 }

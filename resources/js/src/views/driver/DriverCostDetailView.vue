@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-full w-full overflow-x-hidden bg-driver-bg pb-[calc(7rem+env(safe-area-inset-bottom))] text-driver-ink">
+  <div class="min-h-full w-full overflow-x-hidden bg-driver-bg text-driver-ink">
     <!-- Top nav -->
     <header
-      class="sticky top-0 z-40 border-b border-white/[0.06] bg-driver-bg/90 backdrop-blur-md supports-[backdrop-filter]:bg-driver-bg/75"
+      class="border-b border-white/[0.06] bg-driver-bg"
       :style="{ paddingTop: 'max(0.5rem, env(safe-area-inset-top))' }"
     >
       <div class="mx-auto flex max-w-lg items-center gap-2 px-3 pb-3 pt-2 sm:max-w-2xl">
@@ -14,30 +14,14 @@
         >
           <ArrowLeftIcon class="h-6 w-6 text-driver-accent" />
         </button>
-        <h1 class="min-w-0 flex-1 truncate text-center text-lg font-bold sm:text-xl">
+        <h1 class="min-w-0 flex-1 truncate text-center text-lg font-bold">
           {{ t('driver_cost_req.title') }}
         </h1>
         <span class="w-[48px] shrink-0" aria-hidden="true" />
       </div>
     </header>
 
-    <!-- Compact sticky summary (scroll) -->
-    <Transition name="fade">
-      <div
-        v-if="cost && !heroVisible"
-        class="fixed left-0 right-0 z-[38] border-b border-white/[0.06] bg-driver-surface/95 px-4 py-3 backdrop-blur-md"
-        :style="{ top: 'calc(3.5rem + env(safe-area-inset-top))' }"
-      >
-        <div class="mx-auto flex max-w-lg items-center justify-between gap-3 sm:max-w-2xl">
-          <p class="text-lg font-bold tabular-nums text-driver-ink">{{ formatVnd(cost.amount) }}</p>
-          <span class="rounded-full px-3 py-1 text-[11px] font-semibold sm:text-xs" :class="badgeCls(cost.status)">
-            {{ badgeTitle(cost.status) }}
-          </span>
-        </div>
-      </div>
-    </Transition>
-
-    <div class="mx-auto max-w-lg px-4 pb-8 pt-4 sm:max-w-2xl">
+    <div class="mx-auto max-w-lg px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-4 sm:max-w-2xl">
       <p
         v-if="loadError"
         class="mb-4 rounded-2xl border border-amber-500/35 bg-amber-950/40 px-4 py-3 text-sm text-amber-100 ring-1 ring-amber-500/25"
@@ -60,13 +44,13 @@
 
       <template v-else-if="cost">
         <!-- Hero -->
-        <div ref="heroRef" class="relative isolate mb-6 overflow-hidden rounded-[1.5rem] bg-driver-card px-5 pb-6 pt-6 shadow-[0_18px_50px_-24px_rgba(127,220,200,0.35)] ring-1 ring-driver-accent/20">
+        <div class="relative isolate mb-5 overflow-hidden rounded-[1.25rem] bg-driver-card px-4 pb-5 pt-5 ring-1 ring-white/[0.06] sm:px-5 sm:pb-6 sm:pt-6">
           <div class="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full bg-driver-accent/[0.08] blur-3xl" aria-hidden="true" />
           <div class="relative flex flex-wrap items-start justify-between gap-3">
             <span class="rounded-full px-3.5 py-1.5 text-xs font-semibold sm:text-[13px]" :class="badgeCls(cost.status)">
               {{ badgeTitle(cost.status) }}
             </span>
-            <span v-if="cost.trip_id" class="font-mono text-sm font-semibold tabular-nums text-driver-muted">{{ tripCodeLabel }}</span>
+            <span v-if="cost.trip_id" class="text-sm font-semibold tabular-nums text-driver-muted">{{ tripCodeLabel }}</span>
             <span
               v-else
               class="rounded-full bg-driver-accent/12 px-2.5 py-0.5 text-xs font-semibold text-driver-accent ring-1 ring-driver-accent/25"
@@ -83,24 +67,22 @@
             </div>
             <div class="min-w-0 flex-1">
               <p class="text-sm font-semibold text-driver-muted">{{ typeLabelUi(cost.type) }}</p>
-              <p class="mt-2 text-[clamp(1.65rem,5vw,2.35rem)] font-bold tabular-nums leading-none tracking-tight text-driver-ink">
+              <p class="mt-2 text-2xl font-bold tabular-nums leading-tight text-driver-ink sm:text-3xl">
                 {{ formatVnd(cost.amount) }}
               </p>
-              <p class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-base text-driver-muted">
-                <span>{{ dateLabel }}</span>
-                <span aria-hidden="true" class="text-driver-muted/35">·</span>
-                <span>{{ timeLabel }}</span>
+              <p class="mt-2 text-sm tabular-nums text-driver-muted">
+                {{ datetimeLabel }}
               </p>
             </div>
           </div>
         </div>
 
         <!-- Quick trip -->
-        <details v-if="cost.trip_id" open class="mb-4 overflow-hidden rounded-[1.35rem] bg-driver-card ring-1 ring-white/[0.06]">
+        <details v-if="cost.trip_id" open class="mb-4 overflow-hidden rounded-[1.25rem] bg-driver-card ring-1 ring-white/[0.06]">
           <summary
-            class="flex cursor-pointer list-none items-center gap-3 px-4 py-4 text-lg font-bold text-driver-ink outline-none transition hover:bg-white/[0.03] [&::-webkit-details-marker]:hidden"
+            class="flex cursor-pointer list-none items-center gap-3 px-4 py-3.5 text-base font-semibold text-driver-ink outline-none transition hover:bg-white/[0.03] [&::-webkit-details-marker]:hidden"
           >
-            <MapIcon class="h-6 w-6 shrink-0 text-driver-accent" aria-hidden="true" />
+            <MapIcon class="h-5 w-5 shrink-0 text-driver-accent" aria-hidden="true" />
             <span class="min-w-0 flex-1">{{ t('driver_cost_req.sec_trip') }}</span>
             <ChevronDownIcon class="details-chevron h-5 w-5 shrink-0 text-driver-muted transition-transform duration-200" />
           </summary>
@@ -110,9 +92,9 @@
               class="flex min-h-[52px] items-center gap-4 rounded-2xl bg-driver-surface px-4 py-3 ring-1 ring-white/[0.06] transition hover:bg-driver-elevated"
             >
               <div class="min-w-0 flex-1">
-                <p class="text-xs font-semibold uppercase tracking-wide text-driver-muted">{{ t('driver_cost_req.trip_label') }}</p>
-                <p class="mt-1 font-mono text-lg font-bold text-driver-ink">{{ tripCodeLabel }}</p>
-                <p class="mt-1 line-clamp-2 text-base text-driver-muted">{{ tripRouteLine }}</p>
+                <p class="text-sm font-semibold text-driver-muted">{{ t('driver_cost_req.trip_label') }}</p>
+                <p class="mt-1 text-base font-semibold tabular-nums text-driver-ink">{{ tripCodeLabel }}</p>
+                <p class="mt-1 line-clamp-2 text-sm leading-snug text-driver-muted">{{ tripRouteLine }}</p>
               </div>
               <ChevronRightIcon class="h-6 w-6 shrink-0 text-driver-muted/45" />
             </RouterLink>
@@ -120,39 +102,40 @@
         </details>
 
         <!-- Cost breakdown -->
-        <details open class="mb-4 overflow-hidden rounded-[1.35rem] bg-driver-card ring-1 ring-white/[0.06]">
+        <details open class="mb-4 overflow-hidden rounded-[1.25rem] bg-driver-card ring-1 ring-white/[0.06]">
           <summary
-            class="flex cursor-pointer list-none items-center gap-3 px-5 py-4 text-lg font-bold text-driver-ink outline-none transition hover:bg-white/[0.03] [&::-webkit-details-marker]:hidden"
+            class="flex cursor-pointer list-none items-center gap-3 px-4 py-3.5 text-base font-semibold text-driver-ink outline-none transition hover:bg-white/[0.03] sm:px-5 [&::-webkit-details-marker]:hidden"
           >
-            <MoneyIcon class="h-6 w-6 shrink-0 text-driver-accent" aria-hidden="true" />
+            <MoneyIcon class="h-5 w-5 shrink-0 text-driver-accent" aria-hidden="true" />
             <span class="flex-1">{{ t('driver_cost_req.sec_cost') }}</span>
             <ChevronDownIcon class="details-chevron h-5 w-5 shrink-0 text-driver-muted transition-transform duration-200" />
           </summary>
-          <div class="border-t border-white/[0.06] px-5 pb-5 pt-4 text-base leading-relaxed">
+          <div class="border-t border-white/[0.06] px-4 pb-5 pt-4 sm:px-5">
             <dl class="grid gap-4 sm:grid-cols-2">
               <div>
-                <dt class="text-sm font-medium text-driver-muted">{{ t('driver_cost_req.cost_type_label') }}</dt>
-                <dd class="mt-1 text-lg font-semibold text-driver-ink">{{ typeLabelUi(cost.type) }}</dd>
+                <dt class="text-sm font-semibold text-driver-muted">{{ t('driver_cost_req.cost_type_label') }}</dt>
+                <dd class="mt-1 text-base text-driver-ink">{{ typeLabelUi(cost.type) }}</dd>
               </div>
               <div>
-                <dt class="text-sm font-medium text-driver-muted">{{ t('driver_cost_req.amount_label') }}</dt>
-                <dd class="mt-1 text-lg font-semibold tabular-nums text-driver-ink">{{ formatVnd(cost.amount) }}</dd>
+                <dt class="text-sm font-semibold text-driver-muted">{{ t('driver_cost_req.amount_label') }}</dt>
+                <dd class="mt-1 text-base font-semibold tabular-nums text-driver-ink">{{ formatVnd(cost.amount) }}</dd>
               </div>
-              <div>
-                <dt class="text-sm font-medium text-driver-muted">{{ t('driver_cost_req.date_label') }}</dt>
-                <dd class="mt-1 font-semibold text-driver-ink">{{ dateLabel }}</dd>
+              <div class="sm:col-span-2">
+                <dt class="text-sm font-semibold text-driver-muted">{{ t('driver_cost_req.date_label') }}</dt>
+                <dd class="mt-1 text-base tabular-nums text-driver-ink">{{ datetimeLabel }}</dd>
               </div>
-              <div>
-                <dt class="text-sm font-medium text-driver-muted">{{ t('driver_cost_req.time_label') }}</dt>
-                <dd class="mt-1 font-semibold text-driver-ink">{{ timeLabel }}</dd>
+              <div v-if="reportDateLabel">
+                <dt class="text-sm font-semibold text-driver-muted">{{ t('driver_costs.report_date_title') }}</dt>
+                <dd class="mt-1 text-base tabular-nums text-driver-ink">{{ reportDateLabel }}</dd>
               </div>
             </dl>
           </div>
         </details>
 
         <!-- Receipts -->
-        <div class="mb-4 overflow-hidden rounded-[1.35rem] bg-driver-card p-4 ring-1 ring-white/[0.06]">
+        <div class="mb-4 overflow-hidden rounded-[1.25rem] bg-driver-card p-4 ring-1 ring-white/[0.06]">
           <DriverReceiptGallery
+            compact-section
             :trip-id="cost.trip_id ? Number(cost.trip_id) : null"
             :cost-id="Number(cost.id)"
             :attachments="attachmentList"
@@ -182,69 +165,63 @@
         </div>
 
         <!-- Notes -->
-        <details v-if="cost.description" class="mb-4 overflow-hidden rounded-[1.35rem] bg-driver-card ring-1 ring-white/[0.06]">
+        <details v-if="cost.description" class="mb-4 overflow-hidden rounded-[1.25rem] bg-driver-card ring-1 ring-white/[0.06]">
           <summary
-            class="flex cursor-pointer list-none items-center gap-3 px-5 py-4 text-lg font-bold text-driver-ink outline-none transition hover:bg-white/[0.03] [&::-webkit-details-marker]:hidden"
+            class="flex cursor-pointer list-none items-center gap-3 px-4 py-3.5 text-base font-semibold text-driver-ink outline-none transition hover:bg-white/[0.03] sm:px-5 [&::-webkit-details-marker]:hidden"
           >
-            <DocumentTextIcon class="h-6 w-6 shrink-0 text-driver-accent" aria-hidden="true" />
+            <DocumentTextIcon class="h-5 w-5 shrink-0 text-driver-accent" aria-hidden="true" />
             <span class="flex-1">{{ t('driver_cost_req.notes_title') }}</span>
             <ChevronDownIcon class="details-chevron h-5 w-5 shrink-0 text-driver-muted transition-transform duration-200" />
           </summary>
-          <div class="border-t border-white/[0.06] px-5 pb-5 pt-4">
-            <p class="rounded-2xl bg-driver-surface/90 px-4 py-4 text-base leading-relaxed text-driver-ink ring-1 ring-white/[0.05]">
+          <div class="border-t border-white/[0.06] px-4 pb-5 pt-4 sm:px-5">
+            <p class="rounded-xl bg-driver-surface/90 px-4 py-3 text-sm leading-relaxed text-driver-ink ring-1 ring-white/[0.05]">
               {{ cost.description }}
             </p>
           </div>
         </details>
 
         <!-- Timeline -->
-        <details open class="mb-6 overflow-hidden rounded-[1.35rem] bg-driver-card ring-1 ring-white/[0.06]">
+        <details open class="mb-4 overflow-hidden rounded-[1.25rem] bg-driver-card ring-1 ring-white/[0.06]">
           <summary
-            class="flex cursor-pointer list-none items-center gap-3 px-5 py-4 text-lg font-bold text-driver-ink outline-none transition hover:bg-white/[0.03] [&::-webkit-details-marker]:hidden"
+            class="flex cursor-pointer list-none items-center gap-3 px-4 py-3.5 text-base font-semibold text-driver-ink outline-none transition hover:bg-white/[0.03] sm:px-5 [&::-webkit-details-marker]:hidden"
           >
-            <ClockIcon class="h-6 w-6 shrink-0 text-driver-accent" aria-hidden="true" />
+            <ClockIcon class="h-5 w-5 shrink-0 text-driver-accent" aria-hidden="true" />
             <span class="flex-1">{{ t('driver_cost_req.sec_timeline') }}</span>
             <ChevronDownIcon class="details-chevron h-5 w-5 shrink-0 text-driver-muted transition-transform duration-200" />
           </summary>
-          <div class="border-t border-white/[0.06] px-5 pb-5 pt-4">
-            <ol class="relative space-y-6 border-l-2 border-driver-accent/25 pl-6">
+          <div class="border-t border-white/[0.06] px-4 pb-5 pt-4 sm:px-5">
+            <ol class="relative space-y-5 border-l-2 border-driver-accent/25 pl-6">
               <li v-for="row in timelineRows" :key="row.key" class="relative">
                 <span class="absolute -left-[1.4rem] top-1 flex h-4 w-4 items-center justify-center rounded-full bg-driver-accent shadow-[0_0_0_4px_#020B0B]" aria-hidden="true" />
-                <p class="text-base font-semibold text-driver-ink">{{ row.title }}</p>
+                <p class="text-sm font-semibold text-driver-ink">{{ row.title }}</p>
                 <p class="mt-1 text-sm tabular-nums text-driver-muted">{{ row.when }}</p>
-                <p v-if="row.detail" class="mt-2 text-base leading-snug text-driver-muted">{{ row.detail }}</p>
+                <p v-if="row.detail" class="mt-1.5 text-sm leading-snug text-driver-muted">{{ row.detail }}</p>
               </li>
             </ol>
           </div>
         </details>
-      </template>
-    </div>
 
-    <!-- Bottom actions -->
-    <div
-      v-if="cost && canAct"
-      class="fixed bottom-[calc(var(--driver-bottom-nav-height,3.5rem)+env(safe-area-inset-bottom))] left-0 right-0 z-[36] border-t border-white/[0.07] bg-driver-bg/95 px-4 py-4 backdrop-blur-md sm:static sm:z-auto sm:border-0 sm:bg-transparent sm:px-0 sm:backdrop-blur-none"
-    >
-      <div class="mx-auto flex max-w-lg gap-3 sm:max-w-2xl">
-        <button
-          type="button"
-          class="flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-2xl bg-rose-500/15 py-3 text-base font-bold text-rose-200 ring-1 ring-rose-400/35 transition hover:bg-rose-500/25 disabled:opacity-45"
-          :disabled="actionBusy"
-          @click="onCancel"
-        >
-          <TrashIcon class="h-6 w-6 shrink-0" />
-          {{ t('driver_cost_req.btn_cancel') }}
-        </button>
-        <button
-          type="button"
-          class="flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-2xl bg-driver-accent py-3 text-base font-bold text-driver-bg shadow-[0_12px_36px_-14px_rgba(127,220,200,0.55)] transition hover:brightness-110 disabled:opacity-45 active:scale-[0.99]"
-          :disabled="actionBusy"
-          @click="openEdit"
-        >
-          <PencilSquareIcon class="h-6 w-6 shrink-0" />
-          {{ t('driver_cost_req.btn_edit') }}
-        </button>
-      </div>
+        <div v-if="canAct" class="mt-2 flex gap-3">
+          <button
+            type="button"
+            class="flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-xl bg-rose-500/15 py-3 text-sm font-bold text-rose-200 ring-1 ring-rose-400/35 transition hover:bg-rose-500/25 disabled:opacity-45"
+            :disabled="actionBusy"
+            @click="onCancel"
+          >
+            <TrashIcon class="h-5 w-5 shrink-0" />
+            {{ t('driver_cost_req.btn_cancel') }}
+          </button>
+          <button
+            type="button"
+            class="flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-xl bg-driver-accent py-3 text-sm font-bold text-driver-bg transition hover:brightness-110 disabled:opacity-45 active:scale-[0.99]"
+            :disabled="actionBusy"
+            @click="openEdit"
+          >
+            <PencilSquareIcon class="h-5 w-5 shrink-0" />
+            {{ t('driver_cost_req.btn_edit') }}
+          </button>
+        </div>
+      </template>
     </div>
 
     <!-- Edit bottom sheet -->
@@ -356,6 +333,7 @@ import { deleteTripCost, getTripCost, updateTripCost } from '../../api/costs'
 import { useDriverVisiblePoll } from '../../composables/useDriverVisiblePoll'
 import { isTripBlockingDriverCostMutations } from '../../constants/tripStatus'
 import { formatTripCode, formatVnd } from '../../util/labels'
+import { formatViDate, formatViDateTime } from '../../composables/useTpAttendanceList'
 
 const { t, te } = useI18n()
 const route = useRoute()
@@ -370,8 +348,6 @@ const editBusy = ref(false)
 const editError = ref('')
 const editForm = ref({ type: 'toll', amount: '', description: '' })
 const touch = ref({ amount: false })
-const heroRef = ref(null)
-const heroVisible = ref(true)
 const draftSavedHint = ref('')
 
 const editTypes = [
@@ -381,7 +357,6 @@ const editTypes = [
   { value: 'other' },
 ]
 
-let heroIo = null
 let draftDebounceTimer = null
 let draftHintTimer = null
 
@@ -467,18 +442,15 @@ function typeLabelUi(type) {
 
 const tripCodeLabel = computed(() => formatTripCode(cost.value?.trip_id ?? cost.value?.trip?.id))
 
-const dateLabel = computed(() => {
-  if (!cost.value?.created_at) return '—'
-  const d = new Date(cost.value.created_at)
-  if (Number.isNaN(d.getTime())) return '—'
-  return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+const datetimeLabel = computed(() => {
+  const raw = formatViDateTime(cost.value?.created_at)
+  return raw || '—'
 })
 
-const timeLabel = computed(() => {
-  if (!cost.value?.created_at) return '—'
-  const d = new Date(cost.value.created_at)
-  if (Number.isNaN(d.getTime())) return '—'
-  return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+const reportDateLabel = computed(() => {
+  const v = cost.value?.reported_on
+  if (!v) return ''
+  return formatViDate(String(v).slice(0, 10))
 })
 
 const tripRouteLine = computed(() => {
@@ -489,16 +461,7 @@ const tripRouteLine = computed(() => {
 })
 
 function fmtWhen(iso) {
-  if (!iso) return '—'
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return '—'
-  return d.toLocaleString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  return formatViDateTime(iso) || '—'
 }
 
 const timelineRows = computed(() => {
@@ -711,19 +674,6 @@ const { start: startCostDetailVisiblePoll } = useDriverVisiblePoll(() => load())
 
 onMounted(() => {
   void load().finally(() => startCostDetailVisiblePoll())
-  heroIo = new IntersectionObserver(
-    ([e]) => {
-      heroVisible.value = e?.isIntersecting ?? true
-    },
-    { threshold: 0.35 },
-  )
-  if (heroRef.value) heroIo.observe(heroRef.value)
-})
-
-watch(heroRef, (el, prev) => {
-  if (!heroIo) return
-  if (prev) heroIo.unobserve(prev)
-  if (el) heroIo.observe(el)
 })
 
 watch(
@@ -734,7 +684,6 @@ watch(
 )
 
 onUnmounted(() => {
-  if (heroIo) heroIo.disconnect()
   window.clearTimeout(draftDebounceTimer)
   window.clearTimeout(draftHintTimer)
 })

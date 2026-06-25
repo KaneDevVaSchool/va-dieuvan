@@ -143,13 +143,13 @@ export function vndAmountInWords(amount) {
   for (const { v, label } of scales) {
     const block = Math.floor(n / v)
     if (block > 0) {
-      chunks.push(`${readTriple(block, n >= v)} ${label}`)
+      // Khớp DispatchRequestPdfPresenter::readVndTriple($block, $block >= 100)
+      chunks.push(`${readTriple(block, block >= 100)} ${label}`)
       n %= v
     }
   }
   if (n > 0) {
-    const tail = readTriple(n, false)
-    chunks.push(chunks.length > 0 && n < 1000 ? `lẻ ${tail}` : tail)
+    chunks.push(readTriple(n, chunks.length > 0))
   }
 
   const text = chunks.join(' ').replace(/\s+/g, ' ').trim()

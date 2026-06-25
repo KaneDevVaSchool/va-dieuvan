@@ -72,8 +72,16 @@ class TripOpsController extends Controller
                 abort(409, Messages::OPTIMISTIC_LOCK_CONFLICT);
             }
 
+            $fromStatus = (string) $locked->status;
+            if ($scheduleKey !== null) {
+                $legFrom = $scheduleLegs->resolveLegStatusForTransition($locked, $scheduleKey);
+                if ($legFrom !== null) {
+                    $fromStatus = $legFrom;
+                }
+            }
+
             app(TripStatusTransitionValidator::class)->assertCanTransition(
-                (string) $locked->status,
+                $fromStatus,
                 $newStatus,
             );
 

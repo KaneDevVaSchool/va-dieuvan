@@ -17,7 +17,6 @@
         :filter-control-defs="filterControlDefsLabeled"
         :quick-filter-options="isExtracurricularModule ? ecQuickFilterOptions : null"
         :visible-filters="visibleFilters"
-        :active-filter-count="activeFilterCount"
         :show-suggest="showSearchSuggest"
         :search-suggest-loading="searchSuggestLoading"
         :search-suggestions="searchSuggestions"
@@ -29,7 +28,6 @@
         @search-suggest-pick="pickSearchSuggestion"
         @toggle-filter-panel="toggleFilterPanel"
         @close-filter-panel="closeFilterPanel"
-        @reset-filters="resetFilters"
         @export-csv="exportCurrentCsv"
         @export-excel="exportCurrentCsv"
       >
@@ -528,20 +526,6 @@ const dateRangeChipSummary = computed(() =>
   ),
 )
 
-// â”€â”€ Active filter count + summary lines â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const activeFilterCount = computed(() => {
-  let n = 0
-  if (filterStatus.value !== 'all') n++
-  if (filterTripType.value !== 'all') n++
-  if (filterUrgent.value !== 'all') n++
-  if (filterExtracurricular.value !== 'all') n++
-  if (sort.value !== 'depart_desc') n++
-  if (debouncedQ.value) n++
-  if (dateFrom.value || dateTo.value) n++
-  if (slaRiskOnly.value) n++
-  return n
-})
-
 async function loadSummary() {
   summaryLoading.value = true
   try {
@@ -802,25 +786,6 @@ function onExtracurricular(key, ev) {
 function onSort(value, ev) {
   sort.value = value
   closeParentDetails(ev)
-  reloadFromStart()
-}
-
-function resetFilters() {
-  filterStatus.value = 'all'
-  filterTripType.value = 'all'
-  filterUrgent.value = 'all'
-  filterExtracurricular.value = 'all'
-  sort.value = 'depart_desc'
-  clearTimeout(debounceTimer)
-  searchInput.value = ''
-  debouncedQ.value = ''
-  closeSearchSuggest()
-  searchSuggestions.value = []
-  dateFrom.value = ''
-  dateTo.value = ''
-  slaRiskOnly.value = false
-  quickFilter.value = 'all'
-  kpiActiveKey.value = ''
   reloadFromStart()
 }
 

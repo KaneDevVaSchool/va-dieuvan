@@ -1,7 +1,11 @@
 <template>
   <!-- Teleport ra <body>: tránh ancestor (vùng <main> cuộn) làm fixed bám sai, để backdrop phủ trọn viewport. -->
   <Teleport to="body">
-    <div v-if="open" class="fixed inset-0 z-50 overflow-y-auto bg-black/45 backdrop-blur-[1px]">
+    <div
+      v-if="open"
+      class="fixed inset-0 overflow-y-auto bg-black/45 backdrop-blur-[1px]"
+      :style="{ zIndex }"
+    >
       <div class="flex min-h-full items-center justify-center px-4 py-10 sm:px-6 sm:py-12">
       <div
         class="w-full rounded-xl border border-slate-200/80 bg-white shadow-xl ring-1 ring-slate-900/5"
@@ -43,6 +47,8 @@ const props = defineProps({
   wide: { type: Boolean, default: false },
   /** Bảng tra cứu rộng (bảng giá tham chiếu). */
   extraWide: { type: Boolean, default: false },
+  /** Lớp chồng (modal mở trên modal khác, vd. bảng giá trên điền giá chặng). */
+  zIndex: { type: Number, default: 50 },
 })
 
 const panelClass = computed(() => {
