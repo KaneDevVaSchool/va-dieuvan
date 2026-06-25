@@ -3,38 +3,53 @@
     <h2 v-if="hint" class="text-base font-semibold text-slate-900 sm:text-lg">{{ hint }}</h2>
     <p v-if="doubleTapHint" class="mt-0.5 text-xs text-slate-500 sm:text-sm">{{ doubleTapHint }}</p>
     <div
-      class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-2"
+      class="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2"
       role="listbox"
       :aria-label="hint"
-      aria-orientation="horizontal"
     >
       <button
         v-for="tt in tripTypes"
         :key="tt"
         type="button"
         role="option"
-        class="group relative flex max-h-[80px] min-h-[60px] items-center justify-center gap-2 rounded-xl border px-2 py-2.5 text-center outline-none transition focus-visible:ring-2 focus-visible:ring-va-800/30 sm:max-h-[72px] sm:min-h-[64px] sm:px-3"
+        class="group relative flex items-start gap-3 rounded-2xl border p-3 text-left outline-none transition focus-visible:ring-2 focus-visible:ring-va-800/30 sm:p-3.5"
         :class="tripType === tt ? styleFor(tt).selectedCard : styleFor(tt).idleCard"
         :aria-selected="tripType === tt"
-        :title="t(`dispatch_wizard.trip_type.${tt}.hint`)"
         :data-testid="`trip-type-${tt}`"
         @click="$emit('select', tt)"
       >
         <span
-          v-if="slaBadge(tt)"
-          class="absolute right-1 top-1 rounded-md bg-white/90 px-1 py-px text-[9px] font-bold uppercase tracking-wide text-orange-700 ring-1 ring-orange-200/80"
+          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 sm:h-11 sm:w-11"
+          :class="styleFor(tt).iconWrap"
         >
-          {{ slaBadge(tt) }}
+          <component
+            :is="tripTypeIcon(tt)"
+            class="h-5 w-5 shrink-0 stroke-[1.75] sm:h-6 sm:w-6"
+            :class="styleFor(tt).iconClass"
+            aria-hidden="true"
+          />
         </span>
-        <component
-          :is="tripTypeIcon(tt)"
-          class="h-5 w-5 shrink-0 stroke-[1.75] sm:h-6 sm:w-6"
-          :class="styleFor(tt).iconClass"
-          aria-hidden="true"
-        />
-        <span class="text-xs font-semibold leading-tight text-slate-900 sm:text-sm">{{
-          t(`dispatch_wizard.trip_type.${tt}.label`)
-        }}</span>
+        <span class="min-w-0 flex-1">
+          <span class="flex flex-wrap items-center gap-1.5">
+            <span class="text-sm font-semibold leading-tight text-slate-900 sm:text-[15px]">{{
+              t(`dispatch_wizard.trip_type.${tt}.label`)
+            }}</span>
+            <span
+              v-if="slaBadge(tt)"
+              class="rounded-md bg-orange-50 px-1.5 py-px text-[10px] font-bold uppercase tracking-wide text-orange-700 ring-1 ring-orange-200/80"
+            >
+              {{ slaBadge(tt) }}
+            </span>
+            <CheckCircleIcon
+              v-if="tripType === tt"
+              class="h-4 w-4 shrink-0 text-va-700"
+              aria-hidden="true"
+            />
+          </span>
+          <span class="mt-0.5 block text-xs leading-relaxed text-slate-500">{{
+            t(`dispatch_wizard.trip_type.${tt}.hint`)
+          }}</span>
+        </span>
       </button>
     </div>
   </div>
@@ -46,6 +61,7 @@ import {
   AcademicCapIcon,
   BriefcaseIcon,
   BuildingOffice2Icon,
+  CheckCircleIcon,
   CubeIcon,
 } from '@heroicons/vue/24/outline'
 
@@ -68,21 +84,25 @@ function slaBadge(tt) {
 const TRIP_STYLE = {
   door_to_door: {
     iconClass: 'text-va-800',
+    iconWrap: 'bg-va-50 ring-va-100',
     selectedCard: 'border-va-600 bg-va-50/90 shadow-sm ring-1 ring-va-700/25',
     idleCard: 'border-slate-200/90 bg-white hover:border-slate-300 hover:bg-slate-50/80',
   },
   point_to_point: {
     iconClass: 'text-sky-600',
+    iconWrap: 'bg-sky-50 ring-sky-100',
     selectedCard: 'border-va-600 bg-sky-50/90 shadow-sm ring-1 ring-va-700/25',
     idleCard: 'border-slate-200/90 bg-white hover:border-slate-300 hover:bg-slate-50/80',
   },
   business: {
     iconClass: 'text-emerald-600',
+    iconWrap: 'bg-emerald-50 ring-emerald-100',
     selectedCard: 'border-va-600 bg-emerald-50/90 shadow-sm ring-1 ring-va-700/25',
     idleCard: 'border-slate-200/90 bg-white hover:border-slate-300 hover:bg-slate-50/80',
   },
   cargo: {
     iconClass: 'text-orange-600',
+    iconWrap: 'bg-orange-50 ring-orange-100',
     selectedCard: 'border-va-600 bg-orange-50/90 shadow-sm ring-1 ring-va-700/25',
     idleCard: 'border-slate-200/90 bg-white hover:border-slate-300 hover:bg-slate-50/80',
   },

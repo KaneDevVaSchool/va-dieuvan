@@ -289,7 +289,7 @@
   @apply bg-slate-200/90 text-slate-600;
 }
 .dispatch-wizard.portal-create .dw-portal-subtab__label {
-  @apply truncate leading-snug;
+  @apply leading-snug;
 }
 .dispatch-wizard.portal-create .dw-portal-panel {
   @apply rounded-2xl border border-slate-200/70 bg-white/90 p-4 ring-1 ring-slate-900/[0.03] sm:p-5;
@@ -435,6 +435,10 @@
 }
 .dispatch-wizard.portal-create .dw-step2-cell {
   @apply min-w-0 rounded-2xl bg-slate-50/40 p-3.5 sm:p-4;
+}
+/* Mobile: chỉ hiển thị mục đang chọn theo thẻ. Desktop: luôn hiển thị (lưới 2×2). */
+.dispatch-wizard.portal-create .dw-step2-cell--collapsed {
+  @apply hidden md:block;
 }
 .dispatch-wizard.portal-create .dw-step2-cell__title {
   @apply mb-2.5 text-xs font-bold uppercase tracking-wide text-slate-500;

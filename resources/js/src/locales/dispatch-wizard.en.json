@@ -207,7 +207,7 @@
             "step1_title": "1. Choose service type",
             "step1_hint": "Pick the right type so the next step shows the correct form (passengers / cargo).",
             "step2_title": "2. Requester & schedule",
-            "step2_lead": "Fill all sections in parallel — no sub-steps.",
+            "step2_lead": "On desktop all sections show side by side; on mobile, use the tabs to switch between them.",
             "step2_sub_nav_aria": "Request information steps",
             "step2_sub_requester": "Requester",
             "step2_sub_time": "Schedule",

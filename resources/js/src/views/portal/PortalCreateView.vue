@@ -220,8 +220,36 @@
                         </p>
                     </div>
 
+                    <!-- Mobile-only: chuyển nhanh giữa các mục bằng thẻ. Desktop hiển thị song song. -->
+                    <div
+                        class="dw-portal-subtabs md:hidden"
+                        role="tablist"
+                        :aria-label="
+                            t('dispatch_wizard.create.step2_sub_nav_aria')
+                        "
+                    >
+                        <button
+                            v-for="(tab, i) in step2Tabs"
+                            :key="tab.key"
+                            type="button"
+                            role="tab"
+                            :aria-selected="step2Tab === tab.key"
+                            :aria-controls="tab.panel"
+                            class="dw-portal-subtab"
+                            @click="step2Tab = tab.key"
+                        >
+                            <span class="dw-portal-subtab__num">{{ i + 1 }}</span>
+                            <span class="dw-portal-subtab__label">{{
+                                tab.label
+                            }}</span>
+                        </button>
+                    </div>
+
                     <div class="dw-step2-quad">
-                    <section class="dw-step2-cell">
+                    <section
+                        class="dw-step2-cell"
+                        :class="{ 'dw-step2-cell--collapsed': step2Tab !== 'requester' }"
+                    >
                     <h3 class="dw-step2-cell__title">{{ t("dispatch_wizard.create.sec_requester") }}</h3>
                     <div
                         id="portal-step2-panel-requester"
@@ -414,7 +442,10 @@
                     </div>
                     </section>
 
-                    <section class="dw-step2-cell">
+                    <section
+                        class="dw-step2-cell"
+                        :class="{ 'dw-step2-cell--collapsed': step2Tab !== 'time' }"
+                    >
                     <h3 class="dw-step2-cell__title">{{ t("dispatch_wizard.create.sec_time") }}</h3>
                     <div
                         id="portal-step2-panel-time"
@@ -713,7 +744,10 @@
                     </div>
                     </section>
 
-                    <section class="dw-step2-cell">
+                    <section
+                        class="dw-step2-cell"
+                        :class="{ 'dw-step2-cell--collapsed': step2Tab !== 'purpose' }"
+                    >
                     <h3 class="dw-step2-cell__title">{{ t("dispatch_wizard.create.sec_purpose") }}</h3>
                     <div
                         id="portal-step2-panel-purpose"
@@ -853,7 +887,10 @@
                     </div>
                     </section>
 
-                    <section class="dw-step2-cell">
+                    <section
+                        class="dw-step2-cell"
+                        :class="{ 'dw-step2-cell--collapsed': step2Tab !== 'coordination' }"
+                    >
                     <h3 class="dw-step2-cell__title">{{ t("dispatch_wizard.create.sec_targets") }}</h3>
                     <div
                         id="portal-step2-panel-coordination"
@@ -1812,6 +1849,32 @@ const urgentExplainTooltip = computed(() =>
 const stepperSteps = computed(() =>
     steps.value.map((s) => ({ key: s.id, label: s.title })),
 );
+
+// Bước 2: thẻ chuyển nhanh giữa các mục — chỉ hiển thị trên mobile (md:hidden);
+// trên màn hình lớn, 4 mục hiển thị song song trong lưới 2×2.
+const step2Tab = ref("requester");
+const step2Tabs = computed(() => [
+    {
+        key: "requester",
+        label: t("dispatch_wizard.create.step2_sub_requester"),
+        panel: "portal-step2-panel-requester",
+    },
+    {
+        key: "time",
+        label: t("dispatch_wizard.create.step2_sub_time"),
+        panel: "portal-step2-panel-time",
+    },
+    {
+        key: "purpose",
+        label: t("dispatch_wizard.create.step2_sub_purpose"),
+        panel: "portal-step2-panel-purpose",
+    },
+    {
+        key: "coordination",
+        label: t("dispatch_wizard.create.step2_sub_coordination"),
+        panel: "portal-step2-panel-coordination",
+    },
+]);
 
 const showWizardActionBar = computed(() => step.value !== 3 || !created.value);
 
