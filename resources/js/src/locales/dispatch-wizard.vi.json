@@ -207,7 +207,7 @@
             "step1_title": "1. Chọn loại dịch vụ",
             "step1_hint": "Chọn đúng loại để form bước sau hiển thị đúng (hành khách / hàng hóa).",
             "step2_title": "2. Thông tin người đề nghị & thời gian",
-            "step2_lead": "Trên máy tính các mục hiển thị song song; trên điện thoại, dùng thẻ để chuyển nhanh giữa các mục.",
+            "step2_lead": "Bấm vào từng thẻ để điền thông tin của mục tương ứng.",
             "step2_sub_nav_aria": "Các bước thông tin đề nghị",
             "step2_sub_requester": "Người đề nghị",
             "step2_sub_time": "Thời gian",

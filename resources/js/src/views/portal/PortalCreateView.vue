@@ -220,9 +220,9 @@
                         </p>
                     </div>
 
-                    <!-- Mobile-only: chuyển nhanh giữa các mục bằng thẻ. Desktop hiển thị song song. -->
+                    <!-- Thẻ chuyển giữa các mục — áp dụng cho mọi kích thước màn hình. -->
                     <div
-                        class="dw-portal-subtabs md:hidden"
+                        class="dw-portal-subtabs"
                         role="tablist"
                         :aria-label="
                             t('dispatch_wizard.create.step2_sub_nav_aria')
@@ -231,6 +231,7 @@
                         <button
                             v-for="(tab, i) in step2Tabs"
                             :key="tab.key"
+                            :id="`step2-tab-${tab.key}`"
                             type="button"
                             role="tab"
                             :aria-selected="step2Tab === tab.key"
@@ -254,6 +255,8 @@
                     <div
                         id="portal-step2-panel-requester"
                         class="dw-portal-panel dw-form-stack"
+                        role="tabpanel"
+                        aria-labelledby="step2-tab-requester"
                     >
 
                         <div class="relative">
@@ -450,6 +453,8 @@
                     <div
                         id="portal-step2-panel-time"
                         class="dw-portal-panel dw-form-stack"
+                        role="tabpanel"
+                        aria-labelledby="step2-tab-time"
                     >
 
                         <div class="dw-form-grid-2">
@@ -752,6 +757,8 @@
                     <div
                         id="portal-step2-panel-purpose"
                         class="dw-portal-panel dw-form-stack"
+                        role="tabpanel"
+                        aria-labelledby="step2-tab-purpose"
                     >
                         <div
                             v-if="form.trip_type === 'point_to_point'"
@@ -895,6 +902,8 @@
                     <div
                         id="portal-step2-panel-coordination"
                         class="dw-portal-panel dw-form-stack"
+                        role="tabpanel"
+                        aria-labelledby="step2-tab-coordination"
                     >
 
                             <div

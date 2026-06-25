@@ -431,17 +431,18 @@
 }
 
 .dispatch-wizard.portal-create .dw-step2-quad {
-  @apply grid grid-cols-1 gap-4 md:grid-cols-2;
+  @apply grid grid-cols-1;
 }
 .dispatch-wizard.portal-create .dw-step2-cell {
   @apply min-w-0 rounded-2xl bg-slate-50/40 p-3.5 sm:p-4;
 }
-/* Mobile: chỉ hiển thị mục đang chọn theo thẻ. Desktop: luôn hiển thị (lưới 2×2). */
+/* Dạng tab: chỉ hiển thị mục đang chọn — áp dụng cho mọi kích thước màn hình. */
 .dispatch-wizard.portal-create .dw-step2-cell--collapsed {
-  @apply hidden md:block;
+  @apply hidden;
 }
+/* Tab đã là tiêu đề của mục → ẩn tiêu đề lặp trong panel (vẫn giữ cho trình đọc màn hình). */
 .dispatch-wizard.portal-create .dw-step2-cell__title {
-  @apply mb-2.5 text-xs font-bold uppercase tracking-wide text-slate-500;
+  @apply sr-only;
 }
 .dispatch-wizard.portal-create .dw-step2-cell .dw-portal-panel {
   @apply rounded-xl border-0 bg-transparent p-0 shadow-none ring-0;
