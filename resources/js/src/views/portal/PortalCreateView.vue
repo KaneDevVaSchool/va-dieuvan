@@ -959,6 +959,33 @@
                     </div>
                     </section>
                     </div>
+
+                    <div
+                        class="dw-portal-footer"
+                        data-testid="portal-step2-subnav-footer"
+                    >
+                        <button
+                            type="button"
+                            class="dw-portal-btn-ghost"
+                            data-testid="portal-step2-sub-back"
+                            @click="step2SubBack"
+                        >
+                            {{ t("dispatch_wizard.create.back") }}
+                        </button>
+                        <button
+                            type="button"
+                            class="dw-portal-btn-primary inline-flex items-center gap-2"
+                            data-testid="portal-step2-sub-next"
+                            :disabled="!portalCanGoNext"
+                            @click="portalNextStep"
+                        >
+                            {{ t("dispatch_wizard.create.next") }}
+                            <ArrowRightIcon
+                                class="h-4 w-4 shrink-0"
+                                aria-hidden="true"
+                            />
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Step 3 — lazy chunk + chỉ mount khi step === 2 -->
@@ -1832,6 +1859,7 @@ const {
     onDeptHeadSearchBlur,
     pickDeptHead,
     validateDeptHeadSelected,
+    wantsRecurringTemplate,
 } = wizard;
 
 const draftMenuOpen = ref(false);
@@ -1859,8 +1887,6 @@ const stepperSteps = computed(() =>
     steps.value.map((s) => ({ key: s.id, label: s.title })),
 );
 
-// Bước 2: thẻ chuyển nhanh giữa các mục — chỉ hiển thị trên mobile (md:hidden);
-// trên màn hình lớn, 4 mục hiển thị song song trong lưới 2×2.
 const step2Tab = ref("requester");
 const step2Tabs = computed(() => [
     {
@@ -1884,6 +1910,95 @@ const step2Tabs = computed(() => [
         panel: "portal-step2-panel-coordination",
     },
 ]);
+
+function portalStep2RecurringTimeComplete() {
+    const f = form.value;
+    if (!String(f.recurrence_start_date || "").trim()) return false;
+    const normTime = (raw) => {
+        const s = String(raw ?? "").trim();
+        const m = s.match(/^(\d{1,2}):(\d{2})/);
+        return m ? `${m[1].padStart(2, "0")}:${m[2]}` : "";
+    };
+    if (!normTime(f.recurrence_depart_time)) return false;
+    if (!normTime(f.recurrence_return_time)) return false;
+    const mode = f.recurrence_end_mode || "date";
+    if (mode === "date" && !String(f.recurrence_end_date || "").trim())
+        return false;
+    if (mode === "weeks") {
+        const n = Number(f.recurrence_repeat_count);
+        if (!Number.isFinite(n) || n < 1) return false;
+    }
+    return true;
+}
+
+function step2TabComplete(tabKey) {
+    const f = form.value;
+    if (tabKey === "requester") {
+        return (
+            !!f.requester_name?.trim() &&
+            !!f.requester_email?.trim() &&
+            !requesterEmailFormatInvalid.value
+        );
+    }
+    if (tabKey === "time") {
+        const deptOk =
+            !portalNeedsDeptHead.value ||
+            !!String(f.dept_head_user_id ?? "").trim();
+        if (wantsRecurringTemplate.value) {
+            return portalStep2RecurringTimeComplete() && deptOk;
+        }
+        return (
+            !!f.proposed_date &&
+            !!f.date_needed &&
+            !step2DateOrderInvalid.value &&
+            deptOk
+        );
+    }
+    if (tabKey === "purpose") {
+        return (
+            !!f.purpose?.trim() &&
+            (!f.is_urgent || !!f.urgent_reason?.trim())
+        );
+    }
+    return true;
+}
+
+const step2CanGoSubNext = computed(() => step2TabComplete(step2Tab.value));
+
+const step2TabIndex = computed(() =>
+    step2Tabs.value.findIndex((tab) => tab.key === step2Tab.value),
+);
+
+function step2GoPrevTab() {
+    const idx = step2TabIndex.value;
+    if (idx > 0) step2Tab.value = step2Tabs.value[idx - 1].key;
+}
+
+function step2SubBack() {
+    if (step2TabIndex.value > 0) {
+        step2GoPrevTab();
+        return;
+    }
+    prevStep();
+}
+
+function step2SubNext() {
+    if (!step2CanGoSubNext.value) {
+        if (step2Tab.value === "requester") onRequesterEmailBlur?.();
+        if (
+            step2Tab.value === "time" &&
+            portalNeedsDeptHead.value &&
+            !String(form.value.dept_head_user_id ?? "").trim()
+        ) {
+            validateDeptHeadSelected?.();
+        }
+        return;
+    }
+    const idx = step2TabIndex.value;
+    if (idx < step2Tabs.value.length - 1) {
+        step2Tab.value = step2Tabs.value[idx + 1].key;
+    }
+}
 
 const showWizardActionBar = computed(() => step.value !== 3 || !created.value);
 
@@ -1964,9 +2079,18 @@ onMounted(() => {
     form.value.recurring_enabled = false;
 });
 
-const portalCanGoNext = computed(() => canGoNext.value);
+const portalCanGoNext = computed(() => {
+    if (step.value === 1 && step2TabIndex.value < step2Tabs.value.length - 1) {
+        return step2CanGoSubNext.value;
+    }
+    return canGoNext.value;
+});
 
 function portalNextStep() {
+    if (step.value === 1 && step2TabIndex.value < step2Tabs.value.length - 1) {
+        step2SubNext();
+        return;
+    }
     if (
         step.value === 1 &&
         portalNeedsDeptHead.value &&
@@ -1979,8 +2103,16 @@ function portalNextStep() {
 }
 
 function portalPrevStep() {
+    if (step.value === 1 && step2TabIndex.value > 0) {
+        step2GoPrevTab();
+        return;
+    }
     prevStep();
 }
+
+watch(step, (current, previous) => {
+    if (current === 1 && previous === 0) step2Tab.value = "requester";
+});
 
 // --- Đối tượng phân bổ: chỉ chọn 1 trong modal ---
 const targetPickerModalOpen = ref(false);
