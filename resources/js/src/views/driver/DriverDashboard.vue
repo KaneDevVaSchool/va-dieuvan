@@ -67,7 +67,6 @@
           :trips="dash.needsConfirmationTrips"
           :loading="dash.loadingInitial && dash.needsConfirmationTrips.length === 0"
         />
-
         <p
           v-if="dash.errorMsg"
           class="rounded-2xl border border-amber-700/50 bg-amber-950/40 px-4 py-3 text-sm text-amber-100 ring-1 ring-amber-600/30"

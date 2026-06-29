@@ -76,85 +76,52 @@
       </div>
     </div>
 
-    <!-- Trip rows (luôn hiển thị khi có dữ liệu — không gắn v-else với loading) -->
+    <!-- Danh sách chuyến cần xác nhận — luôn hiện khi có trip (kể cả đang refresh) -->
     <div
-      v-if="hasTripRows && !loading"
+      v-if="pendingCount > 0"
       :id="tripListId"
       class="border-t border-amber-500/25"
       data-testid="pending-confirmation-trip-list"
     >
       <ul class="divide-y divide-amber-500/20">
         <li
-          v-for="row in tripRows"
+          v-for="row in displayRows"
           :key="row.rowKey"
           class="pending-banner-item flex flex-col gap-3 px-4 py-3.5 sm:px-5"
         >
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
-          <!-- Summary + toggle chi tiết từng chuyến -->
-          <div class="min-w-0 flex-1">
-            <button
-              type="button"
-              class="flex w-full min-w-0 items-start gap-2 rounded-xl py-0.5 text-left transition hover:bg-amber-950/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50 sm:-mx-1 sm:px-1"
-              :aria-expanded="isItemDetailsOpen(row.trip)"
-              :aria-controls="itemDetailsDomId(row.trip)"
-              data-testid="pending-trip-toggle-details"
-              @click="toggleItemDetails(row.trip)"
-            >
-              <div class="min-w-0 flex-1 space-y-2">
-                <div class="flex flex-wrap items-center gap-2">
-                  <span
-                    class="inline-flex shrink-0 rounded-md px-2 py-1 text-xs font-bold uppercase tracking-wide sm:text-sm"
-                    :class="tripTypeBadgeClass(row.trip)"
-                  >
-                    {{ tripTypeBadgeText(row.trip) }}
-                  </span>
-                  <span class="text-sm font-semibold text-slate-400">
-                    {{ tripCodeDisplay(row.trip) }}
-                  </span>
-                  <span
-                    v-if="isTripUrgent(row.trip)"
-                    class="inline-flex shrink-0 rounded-md bg-rose-600/90 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white ring-1 ring-rose-400/40"
-                  >
-                    {{ t('driver_home.urgent_badge') }}
-                  </span>
-                </div>
-
-                <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                  <span class="text-lg font-bold tabular-nums leading-none text-white sm:text-xl">
-                    {{ departOrRange(row.trip) }}
-                  </span>
-                  <span
-                    v-if="row.dateLine"
-                    class="text-xs font-medium text-slate-400 sm:text-sm"
-                  >
-                    {{ row.dateLine }}
-                  </span>
-                </div>
-              </div>
+          <div class="min-w-0 flex-1 space-y-2">
+            <div class="flex flex-wrap items-center gap-2">
               <span
-                class="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-amber-200/90 ring-1 ring-amber-500/25 sm:mt-0"
-                aria-hidden="true"
+                class="inline-flex shrink-0 rounded-md px-2 py-1 text-xs font-bold uppercase tracking-wide sm:text-sm"
+                :class="tripTypeBadgeClass(row.trip)"
               >
-                <ChevronDownIcon
-                  class="h-5 w-5 transition-transform duration-200"
-                  :class="isItemDetailsOpen(row.trip) ? 'rotate-180' : ''"
-                />
+                {{ tripTypeBadgeText(row.trip) }}
               </span>
-              <span class="sr-only">
-                {{
-                  isItemDetailsOpen(row.trip)
-                    ? t('driver_home.pending_item_collapse_details')
-                    : t('driver_home.pending_item_expand_details')
-                }}
+              <span class="text-sm font-semibold text-slate-400">
+                {{ tripCodeDisplay(row.trip) }}
               </span>
-            </button>
+              <span
+                v-if="isTripUrgent(row.trip)"
+                class="inline-flex shrink-0 rounded-md bg-rose-600/90 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white ring-1 ring-rose-400/40"
+              >
+                {{ t('driver_home.urgent_badge') }}
+              </span>
+            </div>
 
-            <div
-              :id="itemDetailsDomId(row.trip)"
-              v-show="isItemDetailsOpen(row.trip)"
-              class="space-y-0.5 border-t border-amber-500/15 pt-3 mt-2"
-              role="region"
-            >
+            <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+              <span class="text-lg font-bold tabular-nums leading-none text-white sm:text-xl">
+                {{ departOrRange(row.trip) }}
+              </span>
+              <span
+                v-if="row.dateLine"
+                class="text-xs font-medium text-slate-400 sm:text-sm"
+              >
+                {{ row.dateLine }}
+              </span>
+            </div>
+
+            <div class="space-y-0.5 pt-1">
               <div class="flex min-w-0 items-start gap-2">
                 <span class="mt-0.5 shrink-0 text-[10px] leading-none text-emerald-400" aria-hidden="true">●</span>
                 <div class="min-w-0 flex-1">
@@ -178,34 +145,33 @@
                   </p>
                 </div>
               </div>
+            </div>
 
-              <p v-if="bannerMetaLine(row.trip)" class="pt-1 text-xs leading-snug text-slate-400">
-                {{ bannerMetaLine(row.trip) }}
-              </p>
+            <p v-if="bannerMetaLine(row.trip)" class="text-xs leading-snug text-slate-400">
+              {{ bannerMetaLine(row.trip) }}
+            </p>
 
-              <div
-                v-if="row.contact"
-                class="mt-2 flex items-center gap-2 rounded-xl bg-amber-950/30 px-3 py-2 ring-1 ring-amber-500/15"
-              >
-                <div class="min-w-0 flex-1">
-                  <p class="text-[10px] font-semibold uppercase tracking-wide text-amber-300/70">
-                    {{ contactRoleLabel(row.contact.role) }}
-                  </p>
-                  <p class="break-words text-[13px] font-semibold leading-snug text-amber-50">
-                    {{ row.contact.name }}
-                  </p>
-                </div>
-                <a
-                  v-if="row.contact.phone"
-                  :href="`tel:${row.contact.phone}`"
-                  class="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center gap-1.5 rounded-lg bg-emerald-600/90 px-3 text-sm font-semibold text-white ring-1 ring-emerald-400/30 transition hover:bg-emerald-500 active:scale-[0.97]"
-                  :aria-label="t('driver_home.contact_call')"
-                  @click.stop
-                >
-                  <PhoneIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-                  <span>{{ t('driver_home.contact_call') }}</span>
-                </a>
+            <div
+              v-if="row.contact"
+              class="flex items-center gap-2 rounded-xl bg-amber-950/30 px-3 py-2 ring-1 ring-amber-500/15"
+            >
+              <div class="min-w-0 flex-1">
+                <p class="text-[10px] font-semibold uppercase tracking-wide text-amber-300/70">
+                  {{ contactRoleLabel(row.contact.role) }}
+                </p>
+                <p class="break-words text-[13px] font-semibold leading-snug text-amber-50">
+                  {{ row.contact.name }}
+                </p>
               </div>
+              <a
+                v-if="row.contact.phone"
+                :href="`tel:${row.contact.phone}`"
+                class="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center gap-1.5 rounded-lg bg-emerald-600/90 px-3 text-sm font-semibold text-white ring-1 ring-emerald-400/30 transition hover:bg-emerald-500 active:scale-[0.97]"
+                :aria-label="t('driver_home.contact_call')"
+              >
+                <PhoneIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>{{ t('driver_home.contact_call') }}</span>
+              </a>
             </div>
           </div>
 
@@ -334,8 +300,8 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
-import { ChevronDownIcon, PhoneIcon } from '@heroicons/vue/24/outline'
+import { computed, ref } from 'vue'
+import { PhoneIcon } from '@heroicons/vue/24/outline'
 import { useI18n } from 'vue-i18n'
 import { formatApiError } from '../../api/http'
 import { isOptimisticLockConflict } from '../../util/tripLock'
@@ -413,7 +379,17 @@ const tripRows = computed(() => {
   })
 })
 
-const hasTripRows = computed(() => tripRows.value.length > 0)
+const displayRows = computed(() => {
+  const rows = tripRows.value
+  if (rows.length > 0) return rows
+  const list = Array.isArray(props.trips) ? props.trips : []
+  return sortByDepart(list).map((trip, index) => ({
+    trip,
+    dateLine: '',
+    contact: null,
+    rowKey: `pending-fallback-${index}`,
+  }))
+})
 
 function contactRoleLabel(role) {
   if (role === 'requester') return t('driver_home.contact_requester')
@@ -422,47 +398,6 @@ function contactRoleLabel(role) {
 }
 
 const tripListId = 'pending-confirmation-trip-list'
-
-const itemDetailsExpanded = ref(/** @type Record<string, boolean> */ ({}))
-
-function tripRowKey(trip) {
-  return driverTripListRowKey(trip) || String(trip?.id ?? '')
-}
-
-function itemDetailsDomId(trip) {
-  const raw = tripRowKey(trip)
-  const safe = raw.replace(/[^a-zA-Z0-9-_]/g, '-')
-  return `pending-trip-details-${safe}`
-}
-
-function isItemDetailsOpen(trip) {
-  const k = tripRowKey(trip)
-  return itemDetailsExpanded.value[k] === true
-}
-
-function toggleItemDetails(trip) {
-  const k = tripRowKey(trip)
-  const nextOpen = !isItemDetailsOpen(trip)
-  itemDetailsExpanded.value = { ...itemDetailsExpanded.value, [k]: nextOpen }
-}
-
-watch(
-  tripRows,
-  (rows) => {
-    if (!rows.length) return
-    const next = { ...itemDetailsExpanded.value }
-    let changed = false
-    for (const row of rows) {
-      const k = tripRowKey(row.trip)
-      if (k && next[k] === undefined) {
-        next[k] = true
-        changed = true
-      }
-    }
-    if (changed) itemDetailsExpanded.value = next
-  },
-  { immediate: true },
-)
 
 const pendingCount = computed(() => props.trips.length)
 
@@ -615,20 +550,5 @@ async function onConfirm(trip) {
 <style scoped>
 .pending-banner-item {
   will-change: transform, opacity;
-}
-.pending-banner-enter-active,
-.pending-banner-leave-active {
-  transition: opacity 0.22s ease-out, transform 0.22s ease-out;
-}
-.pending-banner-enter-from {
-  opacity: 0;
-  transform: translateX(-10px);
-}
-.pending-banner-leave-to {
-  opacity: 0;
-  transform: translateX(-8px);
-}
-.pending-banner-move {
-  transition: transform 0.22s ease-out;
 }
 </style>
