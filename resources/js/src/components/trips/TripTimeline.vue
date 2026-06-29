@@ -1,6 +1,14 @@
 <template>
   <section class="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm">
-    <h2 class="text-[11px] font-bold uppercase tracking-wide text-slate-500">{{ $t('trip_detail.timeline.title') }}</h2>
+    <div class="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
+      <h2 class="text-[11px] font-bold uppercase tracking-wide text-slate-500">{{ $t('trip_detail.timeline.title') }}</h2>
+      <span
+        v-if="scheduleLabel"
+        class="text-[11px] font-semibold uppercase tracking-wide text-brand"
+      >
+        {{ scheduleLabel }}
+      </span>
+    </div>
     <div class="mt-3 overflow-x-auto pb-1 scrollbar-hidden">
       <div class="flex w-full min-w-0 items-start justify-between gap-1 sm:gap-2 px-0.5">
         <template v-for="(step, idx) in STEPS" :key="step.key">
@@ -69,6 +77,8 @@ export type TimelineLog = {
 const props = defineProps<{
   currentStatus: string
   logs: TimelineLog[]
+  /** Nhãn chặng/lịch trình khi chuyến đa lịch (vd. «Chặng 1»). */
+  scheduleLabel?: string
 }>()
 
 const { locale, t } = useI18n()

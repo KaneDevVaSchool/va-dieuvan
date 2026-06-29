@@ -4942,6 +4942,7 @@
         },
         "timeline": {
             "title": "Activity timeline",
+            "multi_aria": "Timeline per schedule leg",
             "step_created": "Request created",
             "step_approved": "Approved",
             "step_assigned": "Vehicle & driver assigned",

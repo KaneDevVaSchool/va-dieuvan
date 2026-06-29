@@ -77,12 +77,29 @@
                     :hide-passenger-metrics="isCargoTrip"
                 />
 
-                <!-- TIMELINE — compact horizontal -->
+                <!-- TIMELINE — một dòng hoặc một dòng / chặng khi đa lịch -->
                 <TripTimeline
+                    v-if="scheduleCount <= 1"
                     class="w-full min-w-0"
+                    data-testid="trip-timeline-single"
                     :current-status="timelineWorkflowStatus"
                     :logs="activityLogs"
                 />
+                <div
+                    v-else
+                    class="grid w-full min-w-0 grid-cols-1 gap-3 lg:grid-cols-2"
+                    :aria-label="t('trip_detail.timeline.multi_aria')"
+                >
+                    <TripTimeline
+                        v-for="entry in scheduleTimelineEntries"
+                        :key="entry.key"
+                        class="min-w-0"
+                        :data-testid="`trip-timeline-${entry.key}`"
+                        :schedule-label="entry.scheduleLabel"
+                        :current-status="entry.currentStatus"
+                        :logs="entry.logs"
+                    />
+                </div>
 
                 <div
                     v-if="driverCancellationEvent"
@@ -716,6 +733,10 @@ import PassengerCheckIn from "../../components/trips/PassengerCheckIn.vue";
 import TripHeroHeader from "../../components/trips/TripHeroHeader.vue";
 import TripDetailSummaryBar from "../../components/trips/TripDetailSummaryBar.vue";
 import TripTimeline from "../../components/trips/TripTimeline.vue";
+import {
+    buildTripActivityTimelineLogs,
+    tripStatusToTimelineKey,
+} from "../../util/tripWorkflowTimeline.js";
 import TripInfoCard from "../../components/trips/TripInfoCard.vue";
 import TripRouteJourney from "../../components/trips/TripRouteJourney.vue";
 import DispatchPanel from "../../components/trips/DispatchPanel.vue";
@@ -2806,50 +2827,31 @@ const noteEvents = computed(() => {
 
 const timelineWorkflowStatus = computed(() => {
     const s = workflowStatusForDisplay.value ?? trip.value?.status;
-    const m = {
-        pending: "created",
-        approved: "approved",
-        assigned: "assigned",
-        driver_confirmed: "assigned",
-        in_progress: "running",
-        completed: "completed",
-        cancelled: "created",
-        incident: "created",
-    };
-    return m[s] ?? "created";
+    return tripStatusToTimelineKey(s);
 });
 
-const activityLogs = computed(() => {
-    const logs = [];
-    if (trip.value?.created_at) {
-        logs.push({
-            status: "created",
-            created_at: trip.value.created_at,
-            actor_name: "",
-        });
-    }
-    const ev = trip.value?.events ?? [];
-    for (const e of ev) {
-        if (e?.type === "status_change" && e?.data?.to) {
-            const st = e.data.to;
-            const keyMap = {
-                pending: "created",
-                approved: "approved",
-                assigned: "assigned",
-                driver_confirmed: "assigned",
-                in_progress: "running",
-                completed: "completed",
-                cancelled: "created",
-                incident: "created",
-            };
-            logs.push({
-                status: keyMap[st] ?? "created",
-                created_at: e.created_at,
-                actor_name: e.creator?.name ?? "",
-            });
-        }
-    }
-    return logs;
+const activityLogs = computed(() =>
+    buildTripActivityTimelineLogs(trip.value),
+);
+
+const scheduleTimelineEntries = computed(() => {
+    if (!trip.value || scheduleCount.value <= 1) return [];
+    return scheduleCards.value.map((card) => {
+        const leg =
+            scheduleLegs.value.find((l) => l.key === card.key) ?? null;
+        const status = leg?.status ?? trip.value?.status ?? "pending";
+        return {
+            key: card.key,
+            scheduleLabel: t("trip_detail.route_journey.segment", {
+                n: card.labelSeq ?? 0,
+            }),
+            currentStatus: tripStatusToTimelineKey(status),
+            logs: buildTripActivityTimelineLogs(trip.value, {
+                scheduleKey: card.key,
+                assignedActorName: resolveLegDriver(leg?.assignment),
+            }),
+        };
+    });
 });
 
 async function doReschedule() {

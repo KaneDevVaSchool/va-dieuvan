@@ -4384,6 +4384,7 @@
         },
         "timeline": {
             "title": "Dòng thời gian",
+            "multi_aria": "Dòng thời gian theo từng chặng",
             "step_created": "Tạo yêu cầu",
             "step_approved": "Phê duyệt",
             "step_assigned": "Gán xe & tài xế",
