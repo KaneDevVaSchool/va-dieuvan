@@ -637,4 +637,100 @@ class TripScheduleAssignmentsTest extends TestCase
         $this->assertCount(1, $row['schedule_legs']);
         $this->assertSame('business:1', $row['schedule_legs'][0]['key']);
     }
+
+    public function test_driver_trip_list_uses_vn_wall_clock_and_leg_guest_count(): void
+    {
+        $this->seed(RbacSeeder::class);
+        Notification::fake();
+
+        $day = '2026-06-29';
+        $user = User::factory()->create(['is_active' => true]);
+        $user->assignRole('driver');
+        $driver = Driver::query()->create([
+            'user_id' => $user->id,
+            'full_name' => 'Leg Driver',
+            'phone' => '0900000199',
+            'status' => 'active',
+        ]);
+        $vehicle = Vehicle::query()->create([
+            'license_plate' => '51A-LEG1',
+            'type' => 'bus',
+            'seat_count' => 16,
+            'status' => 'ready',
+        ]);
+        $otherDriver = Driver::query()->create([
+            'user_id' => User::factory()->create()->id,
+            'full_name' => 'Other Leg Driver',
+            'phone' => '0900000200',
+            'status' => 'active',
+        ]);
+
+        $dr = DispatchRequest::create([
+            'requester_id' => User::factory()->create()->id,
+            'trip_type' => 'point_to_point',
+            'origin' => '806 Âu Cơ',
+            'destination' => 'Lạc Long Quân',
+            'depart_at' => Carbon::parse("{$day} 15:00:00", 'Asia/Ho_Chi_Minh'),
+            'arrive_by' => Carbon::parse("{$day} 16:30:00", 'Asia/Ho_Chi_Minh'),
+            'passenger_count' => 11,
+            'status' => 'approved',
+            'source_channel' => 'portal',
+            'is_urgent' => false,
+            'paper_status' => 'pending',
+            'wizard_snapshot' => [
+                'passengerRows' => [
+                    [
+                        'depart_at' => "{$day}T15:00:00",
+                        'return_at' => "{$day}T16:30:00",
+                        'pickup' => '806 Âu Cơ',
+                        'dropoff' => 'Lạc Long Quân',
+                        'guests' => '10',
+                    ],
+                    [
+                        'depart_at' => "{$day}T16:30:00",
+                        'return_at' => "{$day}T16:31:00",
+                        'pickup' => 'Lạc Long Quân',
+                        'dropoff' => '806 Âu Cơ',
+                        'guests' => '1',
+                    ],
+                ],
+            ],
+        ]);
+
+        $trip = Trip::create([
+            'dispatch_request_id' => $dr->id,
+            'status' => 'assigned',
+            'depart_at' => Carbon::parse("{$day} 15:00:00", 'Asia/Ho_Chi_Minh'),
+            'driver_id' => $driver->id,
+            'vehicle_id' => $vehicle->id,
+            'lock_version' => 0,
+            'schedule_assignments' => [
+                [
+                    'key' => 'passenger:0',
+                    'driver_id' => $driver->id,
+                    'vehicle_id' => $vehicle->id,
+                ],
+                [
+                    'key' => 'passenger:1',
+                    'driver_id' => $otherDriver->id,
+                    'vehicle_id' => $vehicle->id,
+                ],
+            ],
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->getJson('/api/driver/trips?'.http_build_query([
+                'date_from' => $day,
+                'date_to' => $day,
+            ]));
+
+        $response->assertOk();
+        $row = collect($response->json('data.items'))->firstWhere('id', $trip->id);
+        $this->assertNotNull($row);
+        $this->assertSame(10, $row['passenger_count']);
+        $this->assertSame('15:00', $row['pickup_time']);
+        $this->assertSame('16:30', $row['arrive_time']);
+        $this->assertStringContainsString('T15:00:00', (string) $row['depart_at']);
+        $this->assertStringContainsString('+07:00', (string) $row['depart_at']);
+    }
 }

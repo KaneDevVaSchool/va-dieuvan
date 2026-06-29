@@ -3,6 +3,7 @@
 namespace App\Services\Dispatching;
 
 use App\Models\Trip;
+use App\Support\TripScheduleInstant;
 use Illuminate\Support\Carbon;
 
 class TripScheduleLegService
@@ -778,14 +779,7 @@ class TripScheduleLegService
 
     private function isoOrNull(mixed $val): ?string
     {
-        if ($val === null || $val === '') {
-            return null;
-        }
-        try {
-            return Carbon::parse((string) $val)->toIso8601String();
-        } catch (\Throwable) {
-            return null;
-        }
+        return TripScheduleInstant::toIso8601String($val);
     }
 
     /**

@@ -118,6 +118,58 @@ final class DispatchWizardPassengerCount
     }
 
     /**
+     * Số khách trên một chặng (passenger:0, business:1, cargo:0) — khớp guests trên wizard row.
+     *
+     * @param  array<string, mixed>|null  $wizardSnapshot
+     */
+    public static function guestsForScheduleLegKey(?array $wizardSnapshot, string $tripType, string $legKey): ?int
+    {
+        if (! is_array($wizardSnapshot) || $wizardSnapshot === [] || trim($legKey) === '') {
+            return null;
+        }
+
+        if (! preg_match('/^(passenger|business|cargo):(\d+)$/', trim($legKey), $m)) {
+            return null;
+        }
+
+        $variant = $m[1];
+        $idx = (int) $m[2];
+
+        if ($variant === 'cargo') {
+            $rows = array_values($wizardSnapshot['cargoRows'] ?? []);
+            $row = $rows[$idx] ?? null;
+            if (! is_array($row) || ! self::cargoSnapshotRowFilled($row)) {
+                return null;
+            }
+            $q = (int) ($row['qty'] ?? 1);
+
+            return $q >= 1 ? $q : 1;
+        }
+
+        if ($variant === 'business') {
+            $rows = array_values($wizardSnapshot['businessRows'] ?? []);
+            $row = $rows[$idx] ?? null;
+            if (! is_array($row) || ! self::businessSnapshotRowCounted($row)) {
+                return null;
+            }
+
+            $g = self::rowGuestsValue($row);
+
+            return $g > 0 ? $g : 1;
+        }
+
+        $rows = array_values($wizardSnapshot['passengerRows'] ?? []);
+        $row = $rows[$idx] ?? null;
+        if (! is_array($row) || ! self::passengerSnapshotRowCounted($row)) {
+            return null;
+        }
+
+        $g = self::rowGuestsValue($row);
+
+        return $g > 0 ? $g : 1;
+    }
+
+    /**
      * @param  array<string, mixed>  $r
      */
     private static function cargoSnapshotRowFilled(array $r): bool

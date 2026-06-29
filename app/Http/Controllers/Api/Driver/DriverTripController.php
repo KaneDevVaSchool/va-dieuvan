@@ -11,6 +11,7 @@ use App\Models\Trip;
 use App\Services\Dispatching\TripScheduleLegService;
 use App\Services\DispatchRequests\DispatchRequestMailPresenter;
 use App\Support\DispatchWizardPassengerCount;
+use App\Support\TripScheduleInstant;
 use App\Support\TripVisibility;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -155,10 +156,10 @@ class DriverTripController extends Controller
         if (count($scheduleLegs) >= 1) {
             $primaryLeg = $scheduleLegs[0];
             if (! empty($primaryLeg['depart_at'])) {
-                $depart = Carbon::parse((string) $primaryLeg['depart_at']);
+                $depart = TripScheduleInstant::parse($primaryLeg['depart_at']);
             }
             if (! empty($primaryLeg['arrive_by'])) {
-                $arriveBy = Carbon::parse((string) $primaryLeg['arrive_by']);
+                $arriveBy = TripScheduleInstant::parse($primaryLeg['arrive_by']);
             }
             if (! empty($primaryLeg['pickup'])) {
                 $pickupLocation = (string) $primaryLeg['pickup'];
@@ -179,6 +180,14 @@ class DriverTripController extends Controller
 
         $passengerCount = DispatchWizardPassengerCount::displayFromDispatchRequest($dr);
         $tripType = (string) ($dr?->trip_type ?? '');
+        if (count($scheduleLegs) === 1) {
+            $legKey = (string) ($scheduleLegs[0]['key'] ?? '');
+            $snap = is_array($dr?->wizard_snapshot) ? $dr->wizard_snapshot : null;
+            $legGuests = DispatchWizardPassengerCount::guestsForScheduleLegKey($snap, $tripType, $legKey);
+            if ($legGuests !== null && $legGuests > 0) {
+                $passengerCount = $legGuests;
+            }
+        }
         if ($passengerCount <= 0 && $tripType !== 'cargo' && $trip->relationLoaded('tripPassengers')) {
             $passengerCount = $trip->tripPassengers->count();
         }
@@ -273,15 +282,30 @@ class DriverTripController extends Controller
             }
         }
 
-        return array_map(fn (array $leg) => [
-            'key' => $leg['key'],
-            'label_seq' => $leg['label_seq'] ?? null,
-            'depart_at' => $leg['depart_at'] ?? null,
-            'arrive_by' => $leg['arrive_by'] ?? null,
-            'pickup' => $leg['pickup'] ?? '',
-            'dropoff' => $leg['dropoff'] ?? '',
-            'status' => $leg['status'] ?? $trip->status,
-        ], $pool);
+        return array_map(function (array $leg) use ($trip) {
+            $legKey = (string) ($leg['key'] ?? '');
+            $guests = null;
+            $dr = $trip->dispatchRequest;
+            if ($dr && $legKey !== '') {
+                $snap = is_array($dr->wizard_snapshot) ? $dr->wizard_snapshot : null;
+                $guests = DispatchWizardPassengerCount::guestsForScheduleLegKey(
+                    $snap,
+                    (string) ($dr->trip_type ?? ''),
+                    $legKey,
+                );
+            }
+
+            return [
+                'key' => $legKey,
+                'label_seq' => $leg['label_seq'] ?? null,
+                'depart_at' => $leg['depart_at'] ?? null,
+                'arrive_by' => $leg['arrive_by'] ?? null,
+                'pickup' => $leg['pickup'] ?? '',
+                'dropoff' => $leg['dropoff'] ?? '',
+                'status' => $leg['status'] ?? $trip->status,
+                'guest_count' => $guests,
+            ];
+        }, $pool);
     }
 
     /**

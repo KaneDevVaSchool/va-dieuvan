@@ -106,7 +106,70 @@ export function meaningfulNamedTripPassengerCount(tplist) {
 }
 
 /**
- * Số khách hiển thị trên màn chi tiết chuyến — không phóng theo length trip_passengers.
+ * Số khách trên một chặng lịch (passenger:0, business:1…) — khớp PHP `guestsForScheduleLegKey`.
+ * @param {{ wizard_snapshot?: object, trip_type?: string } | null | undefined} dr
+ * @param {string | null | undefined} legKey
+ */
+export function scheduleLegGuestCount(dr, legKey) {
+  if (!dr || !legKey || String(legKey).trim() === '') return 0
+  const snap = dr.wizard_snapshot
+  if (!snap || typeof snap !== 'object') return 0
+  const m = String(legKey).trim().match(/^(passenger|business|cargo):(\d+)$/)
+  if (!m) return 0
+  const variant = m[1]
+  const idx = Number(m[2])
+  if (!Number.isFinite(idx) || idx < 0) return 0
+
+  if (variant === 'cargo') {
+    const row = snap.cargoRows?.[idx]
+    if (!row || !isCargoRowFilled(row)) return 0
+    const q = parseInt(String(row?.qty ?? '1'), 10)
+    return Number.isFinite(q) && q >= 1 ? q : 1
+  }
+
+  if (variant === 'business') {
+    const row = snap.businessRows?.[idx]
+    if (!row || !isBusinessRowCounted(row)) return 0
+    const g = rowGuestsValue(row)
+    return g > 0 ? g : 1
+  }
+
+  const row = snap.passengerRows?.[idx]
+  if (!row || !isPassengerRowCounted(row)) return 0
+  const g = rowGuestsValue(row)
+  return g > 0 ? g : 1
+}
+
+/**
+ * Số khách hiển thị cho tài xế trên một dòng chuyến (đã tách chặng hoặc API driver/trips).
+ * @param {object} trip
+ */
+export function driverTripDisplayPassengerCount(trip) {
+  const dr = trip?.dispatch_request ?? trip?.dispatchRequest ?? null
+  if (!dr) return 0
+  if (String(dr.trip_type ?? '').trim() === 'cargo') return 0
+
+  const legKey =
+    trip?.schedule_leg_key ||
+    (Array.isArray(trip?.schedule_legs) && trip.schedule_legs.length === 1
+      ? trip.schedule_legs[0]?.key
+      : null)
+
+  if (legKey) {
+    const legN = scheduleLegGuestCount(dr, legKey)
+    if (legN > 0) return legN
+    const legGuest = trip?.schedule_legs?.find((l) => l?.key === legKey)?.guest_count
+    if (legGuest != null && Number(legGuest) > 0) return Number(legGuest)
+  }
+
+  const apiN = Number(trip?.passenger_count)
+  if (Number.isFinite(apiN) && apiN > 0) return Math.round(apiN)
+
+  return dispatchRequestDisplayPassengerCount(dr)
+}
+
+/**
+ * Số khách hiển thị trên màn chi tiết chuyến (staff) — không phóng theo length trip_passengers.
  * (Slot "Hành khách N" vẫn tính vào số khai báo; chỉ dùng passenger_count / snapshot làm nguồn.)
  * @param {{ wizard_snapshot?: object, trip_type?: string, student_count_actual?: number|string|null, passenger_count?: number|string|null } | null | undefined} dr
  * @param {Array<{ name?: string, phone?: string, note?: string }> | null | undefined} [_tplist]

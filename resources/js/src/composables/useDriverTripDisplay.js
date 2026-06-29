@@ -66,8 +66,8 @@ export function tripRequesterLine(trip) {
 export function tripPassengerLine(trip, t) {
   const dr = dispatchReqOf(trip)
   if (String(dr?.trip_type ?? '').trim() === 'cargo') return ''
-  const n = dr?.passenger_count ?? trip?.passenger_count
-  if (n != null && n !== '' && Number(n) > 0) return t('driver_home.pending_passengers', { n })
+  const n = driverTripDisplayPassengerCount(trip)
+  if (n > 0) return t('driver_home.pending_passengers', { n })
   return ''
 }
 

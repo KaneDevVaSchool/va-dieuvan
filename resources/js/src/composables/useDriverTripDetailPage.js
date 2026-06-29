@@ -26,7 +26,11 @@ import {
   isSameVnCalendarDayAsNow,
   parseTripInstant,
 } from '../util/tripDatetime'
-import { tripNamedPassengerDisplayCount } from '../util/dispatchRequestPassengers'
+import {
+  tripNamedPassengerDisplayCount,
+  scheduleLegGuestCount,
+  driverTripDisplayPassengerCount,
+} from '../util/dispatchRequestPassengers'
 import { buildDriverTripPaxList } from '../util/buildDriverTripPaxList'
 import {
   buildDriverOperationalLegs,
@@ -165,10 +169,12 @@ export function useDriverTripDetailPage() {
 
   const scheduleTimeLine = computed(() => {
     const tr = trip.value
-    if (!tr?.depart_at) return '—'
+    const leg = primaryDriverLeg.value
+    const depIso = leg?.depart_at || tr?.depart_at
+    if (!depIso) return '—'
     const loc = locale.value
-    const start = formatTripTimeHm24(tr.depart_at, { locale: loc })
-    const endIso = tr.arrive_by || dr.value?.arrive_by
+    const start = formatTripTimeHm24(depIso, { locale: loc })
+    const endIso = leg?.arrive_by || tr?.arrive_by || dr.value?.arrive_by
     if (!endIso) return t('driver_trip_detail.schedule_start_only', { start })
     const end = formatTripTimeHm24(endIso, { locale: loc })
     return t('driver_trip_detail.schedule_time_range', { start, end })
@@ -783,9 +789,16 @@ export function useDriverTripDetailPage() {
     tripNamedPassengerDisplayCount(dr.value, trip.value?.trip_passengers),
   )
 
-  /** Số khách hiển thị (thống kê, tiêu đề, thanh đón) — khớp staff TripDetailView. */
+  /** Số khách hiển thị (thống kê, tiêu đề, thanh đón) — khớp chặng tài xế khi đa lịch. */
   const paxDisplayTotal = computed(() => {
     if (paxKind.value === 'cargo') return paxList.value.length
+    const leg = primaryDriverLeg.value
+    if (leg?.key && dr.value) {
+      const legN = scheduleLegGuestCount(dr.value, leg.key)
+      if (legN > 0) return legN
+    }
+    const fromDriver = driverTripDisplayPassengerCount(trip.value ?? {})
+    if (fromDriver > 0) return fromDriver
     const eff = effectivePassengerCount.value
     if (eff > 0) return eff
     return paxList.value.length
@@ -808,10 +821,12 @@ export function useDriverTripDetailPage() {
 
   const statsDuration = computed(() => {
     const tr = trip.value
-    if (!tr?.depart_at) return `— ${t('driver_trip_detail.stats_duration_unit')}`
-    const end = tr.arrive_by || dr.value?.arrive_by
+    const leg = primaryDriverLeg.value
+    const depIso = leg?.depart_at || tr?.depart_at
+    if (!depIso) return `— ${t('driver_trip_detail.stats_duration_unit')}`
+    const end = leg?.arrive_by || tr?.arrive_by || dr.value?.arrive_by
     if (!end) return `— ${t('driver_trip_detail.stats_duration_unit')}`
-    const d0 = parseTripInstant(tr.depart_at)
+    const d0 = parseTripInstant(depIso)
     const d1 = parseTripInstant(end)
     if (!d0 || !d1) return `— ${t('driver_trip_detail.stats_duration_unit')}`
     const mins = Math.round((d1.getTime() - d0.getTime()) / 60000)

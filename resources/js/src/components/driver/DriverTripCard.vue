@@ -158,7 +158,7 @@ import {
   tripOutboundInboundTimeRange,
   tripTypeBadgeText,
 } from '../../composables/useDriverTripDisplay'
-import { dispatchRequestDisplayPassengerCount } from '../../util/dispatchRequestPassengers'
+import { driverTripDisplayPassengerCount } from '../../util/dispatchRequestPassengers'
 import { useHaptics } from '../../composables/useHaptics'
 import { resolveDispatchTripApiId } from '../../util/driverScheduleLeg'
 import { tpDriverTripCanConfirm, tpDriverTripCanStart } from '../../composables/useTpDriverSlotActions'
@@ -435,17 +435,7 @@ const destLine = computed(() => {
   return (tr.dropoff_location || tr.destination || dr.destination || '—').toString()
 })
 
-const passengerCount = computed(() => {
-  const tr = tripRaw.value
-  const dr = drOf(tr)
-  if (String(dr?.trip_type ?? '').trim() === 'cargo') return 0
-  if (dr) {
-    const fromUtil = dispatchRequestDisplayPassengerCount(dr)
-    if (fromUtil > 0) return fromUtil
-  }
-  const n = Number(tr.passenger_count)
-  return Number.isFinite(n) && n > 0 ? n : 0
-})
+const passengerCount = computed(() => driverTripDisplayPassengerCount(tripRaw.value))
 
 const passengerMeta = computed(() => {
   const n = passengerCount.value
