@@ -39,7 +39,7 @@ class TripOpsController extends Controller
             $scheduleKey = null;
         }
 
-        if ($user->hasRole('driver') && $scheduleKey === null) {
+        if ($scheduleKey === null) {
             $trip->loadMissing('dispatchRequest');
             $defs = $scheduleLegs->buildLegDefinitionsFromSnapshot(
                 is_array($trip->dispatchRequest?->wizard_snapshot) ? $trip->dispatchRequest->wizard_snapshot : null,

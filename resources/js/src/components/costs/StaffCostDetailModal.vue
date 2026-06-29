@@ -191,13 +191,26 @@
           </div>
           <div>
             <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              {{ t('costs_page.col_time') }}
+              {{ t('costs_page.detail_occurred_at') }}
             </dt>
             <dd
               class="mt-1 text-sm tabular-nums"
               :class="displayTextOrNull(cost.created_at) ? 'text-slate-800 dark:text-slate-200' : 'italic text-slate-400 dark:text-slate-500'"
+              data-testid="cost-detail-occurred-at"
             >
               {{ formatDateTimeDisplay(cost.created_at) }}
+            </dd>
+          </div>
+          <div>
+            <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              {{ t('costs_page.detail_reported_on') }}
+            </dt>
+            <dd
+              class="mt-1 text-sm tabular-nums"
+              :class="displayTextOrNull(cost.reported_on) ? 'text-slate-800 dark:text-slate-200' : 'italic text-slate-400 dark:text-slate-500'"
+              data-testid="cost-detail-reported-on"
+            >
+              {{ formatReportDateDisplay(cost.reported_on) }}
             </dd>
           </div>
           <div v-if="cost.confirmed_at">
@@ -597,6 +610,23 @@ function formatDateTimeDisplay(iso) {
   if (isEmptyDisplay(iso)) return t('costs_page.empty_date')
   const formatted = formatDateTime(iso)
   return isEmptyDisplay(formatted) ? t('costs_page.empty_date') : formatted
+}
+
+function formatReportDateDisplay(raw) {
+  if (isEmptyDisplay(raw)) return t('costs_page.empty_date')
+  const datePart = String(raw).trim().slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(datePart)) return t('costs_page.empty_date')
+  try {
+    const loc = locale.value === 'en' ? 'en-US' : 'vi-VN'
+    const formatted = new Date(`${datePart}T12:00:00`).toLocaleDateString(loc, {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    })
+    return isEmptyDisplay(formatted) ? t('costs_page.empty_date') : formatted
+  } catch {
+    return t('costs_page.empty_date')
+  }
 }
 
 async function openPreview(row) {

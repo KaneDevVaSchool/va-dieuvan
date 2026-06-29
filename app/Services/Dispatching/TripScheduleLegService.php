@@ -115,8 +115,9 @@ class TripScheduleLegService
             return $tripStatus;
         }
 
+        // Đa lịch: không suy ra hoàn thành/hủy từ trip.status — mỗi lịch có trạng thái riêng.
         if (in_array($tripStatus, ['completed', 'cancelled', 'incident'], true)) {
-            return $tripStatus;
+            return 'assigned';
         }
 
         if ($tripStatus === 'in_progress') {
@@ -186,12 +187,7 @@ class TripScheduleLegService
         $assignments = array_values(is_array($trip->schedule_assignments) ? $trip->schedule_assignments : []);
 
         if ($scheduleKey === null || $scheduleKey === '') {
-            $assignments = $this->setAllLegsStatus($assignments, $defs, $newStatus);
-
-            return [
-                'trip' => $this->wholeTripStatusFieldUpdates($trip, $newStatus, $assignments),
-                'schedule_assignments' => $assignments,
-            ];
+            abort(422, 'Chuyến có nhiều lịch trình — gửi schedule_key khi đổi trạng thái.');
         }
 
         abort_unless($this->legKeyInDefinitions($defs, $scheduleKey), 422, 'Lịch trình không hợp lệ.');

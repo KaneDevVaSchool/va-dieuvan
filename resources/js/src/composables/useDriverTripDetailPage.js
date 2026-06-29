@@ -35,6 +35,7 @@ import { buildDriverTripPaxList } from '../util/buildDriverTripPaxList'
 import {
   buildDriverOperationalLegs,
   buildDriverTripStatusFields,
+  driverTripRequiresScheduleKey,
   resolveDriverOperationalLeg,
   tripHasMultipleScheduleLegs,
 } from '../util/driverScheduleLeg'
@@ -349,7 +350,14 @@ export function useDriverTripDetailPage() {
   const driverRouteLegs = computed(() => {
     const cards = scheduleCards.value
     if (cards.length) {
-      return cards.map((card, idx) =>
+      const apiLegKeys = new Set(
+        (trip.value?.schedule_legs ?? [])
+          .map((l) => (l?.key != null ? String(l.key).trim() : ''))
+          .filter(Boolean),
+      )
+      const visibleCards =
+        apiLegKeys.size > 0 ? cards.filter((c) => apiLegKeys.has(c.key)) : cards
+      return visibleCards.map((card, idx) =>
         legFromPlaces(
           card.pickup,
           card.dropoff,
@@ -357,7 +365,7 @@ export function useDriverTripDetailPage() {
           card.key,
           t('driver_trip_detail.schedule_leg', { n: card.labelSeq ?? idx + 1 }),
           idx,
-          cards.length,
+          visibleCards.length,
         ),
       )
     }
@@ -1018,9 +1026,15 @@ export function useDriverTripDetailPage() {
   async function doCompleteTrip() {
     const id = tripId.value
     if (id == null || actionBusy.value) return
+    const legKey =
+      driverOperationalLeg.value?.key != null ? String(driverOperationalLeg.value.key).trim() : ''
+    if (driverTripRequiresScheduleKey(trip.value) && !legKey) {
+      loadError.value = t('driver_trip_detail.status_err')
+      return
+    }
     actionBusy.value = true
     try {
-      await mutateTripStatus('completed')
+      await mutateTripStatus('completed', legKey || null)
       await refresh()
       void driverDashboardStore.refreshTripsQuiet()
     } catch (e) {
@@ -1094,9 +1108,15 @@ export function useDriverTripDetailPage() {
   async function startTrip() {
     const id = tripId.value
     if (id == null || actionBusy.value) return
+    const legKey =
+      driverOperationalLeg.value?.key != null ? String(driverOperationalLeg.value.key).trim() : ''
+    if (driverTripRequiresScheduleKey(trip.value) && !legKey) {
+      loadError.value = t('driver_trip_detail.status_err')
+      return
+    }
     actionBusy.value = true
     try {
-      await mutateTripStatus('in_progress')
+      await mutateTripStatus('in_progress', legKey || null)
       await refresh()
       void driverDashboardStore.refreshTripsQuiet()
     } catch (e) {

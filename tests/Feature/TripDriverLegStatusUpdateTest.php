@@ -178,4 +178,114 @@ class TripDriverLegStatusUpdateTest extends TestCase
         $trip->refresh();
         $this->assertSame('in_progress', $trip->status);
     }
+
+    public function test_completing_one_leg_does_not_complete_sibling_leg_with_other_driver(): void
+    {
+        $this->seed(RbacSeeder::class);
+        $userA = User::factory()->create(['is_active' => true]);
+        $userA->assignRole('driver');
+        $driverA = Driver::query()->create([
+            'user_id' => $userA->id,
+            'full_name' => 'TX A',
+            'phone' => '0900111111',
+            'status' => 'active',
+        ]);
+        $driverB = Driver::query()->create([
+            'user_id' => User::factory()->create()->id,
+            'full_name' => 'TX B',
+            'phone' => '0900222222',
+            'status' => 'active',
+        ]);
+
+        $day = '2026-06-26';
+        $snap = [
+            'businessRows' => [
+                [
+                    'depart_at' => "{$day}T08:00:00+07:00",
+                    'pickup' => 'Điểm A',
+                    'return_at' => "{$day}T10:00:00+07:00",
+                    'dropoff' => 'Điểm B',
+                    'guests' => '2',
+                ],
+                [
+                    'depart_at' => "{$day}T14:00:00+07:00",
+                    'pickup' => 'Điểm B',
+                    'return_at' => "{$day}T16:00:00+07:00",
+                    'dropoff' => 'Điểm A',
+                    'guests' => '2',
+                ],
+            ],
+        ];
+
+        $dr = DispatchRequest::create([
+            'requester_id' => User::factory()->create()->id,
+            'trip_type' => 'business',
+            'origin' => 'Điểm A',
+            'destination' => 'Điểm B',
+            'depart_at' => Carbon::parse("{$day} 08:00:00"),
+            'status' => 'approved',
+            'source_channel' => 'portal',
+            'is_urgent' => false,
+            'paper_status' => 'pending',
+            'wizard_snapshot' => $snap,
+        ]);
+
+        $trip = Trip::create([
+            'dispatch_request_id' => $dr->id,
+            'status' => 'in_progress',
+            'depart_at' => Carbon::parse("{$day} 08:00:00"),
+            'driver_id' => $driverA->id,
+            'lock_version' => 0,
+            'schedule_assignments' => [
+                [
+                    'key' => 'business:0',
+                    'driver_id' => $driverA->id,
+                    'vehicle_id' => 1,
+                    'status' => 'in_progress',
+                ],
+                [
+                    'key' => 'business:1',
+                    'driver_id' => $driverB->id,
+                    'vehicle_id' => 2,
+                    'status' => 'assigned',
+                ],
+            ],
+        ]);
+
+        $res = $this->actingAs($userA, 'sanctum')->postJson("/api/trips/{$trip->id}/status", [
+            'status' => 'completed',
+            'schedule_key' => 'business:0',
+            'lock_version' => 0,
+        ]);
+
+        $res->assertOk();
+        $trip->refresh();
+        $this->assertSame('in_progress', $trip->status);
+        $this->assertNull($trip->completed_at);
+
+        $legs = app(TripScheduleLegService::class)->resolveScheduleLegsForTrip($trip);
+        $this->assertSame('completed', $legs[0]['status']);
+        $this->assertSame('assigned', $legs[1]['status']);
+    }
+
+    public function test_multileg_status_without_schedule_key_rejected_for_all_roles(): void
+    {
+        $this->seed(RbacSeeder::class);
+        $admin = User::factory()->create(['is_active' => true]);
+        $admin->assignRole('admin');
+
+        [$user, $driver] = $this->makeDriverUser();
+        [$trip] = $this->makeMultiLegBusinessTrip($driver, 'assigned');
+
+        $res = $this->actingAs($admin, 'sanctum')->postJson("/api/trips/{$trip->id}/status", [
+            'status' => 'completed',
+            'lock_version' => 0,
+        ]);
+
+        $res->assertStatus(422);
+        $trip->refresh();
+        $legs = app(TripScheduleLegService::class)->resolveScheduleLegsForTrip($trip);
+        $this->assertNotSame('completed', $legs[0]['status']);
+        $this->assertNotSame('completed', $legs[1]['status']);
+    }
 }

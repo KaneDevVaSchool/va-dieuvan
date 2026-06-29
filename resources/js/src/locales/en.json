@@ -2543,6 +2543,8 @@
         "detail_loading": "Loading details…",
         "detail_load_err": "Could not load note details.",
         "detail_type": "Type",
+        "detail_occurred_at": "Expense date & time",
+        "detail_reported_on": "Report date",
         "detail_confirmed_at": "Confirmed at",
         "detail_evidence_heading": "Photos & evidence",
         "detail_evidence_hint": "Images or PDF files uploaded with this note.",

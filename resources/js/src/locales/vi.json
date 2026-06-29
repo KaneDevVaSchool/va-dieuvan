@@ -5091,6 +5091,8 @@
         "detail_loading": "Đang tải chi tiết…",
         "detail_load_err": "Không tải được chi tiết ghi chú.",
         "detail_type": "Loại",
+        "detail_occurred_at": "Ngày giờ phát sinh",
+        "detail_reported_on": "Ngày báo cáo",
         "detail_confirmed_at": "Thời điểm xác nhận",
         "detail_evidence_heading": "Ảnh & minh chứng",
         "detail_evidence_hint": "Ảnh hoặc file PDF tài xế tải lên kèm dòng ghi chú.",

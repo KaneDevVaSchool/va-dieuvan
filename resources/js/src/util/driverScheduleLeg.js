@@ -11,7 +11,8 @@ const PENDING_LEG_STATUSES = new Set(['pending', 'assigned', 'incident'])
  */
 export function tripHasMultipleScheduleLegs(trip) {
   const legs = trip?.schedule_legs
-  return Array.isArray(legs) && legs.length > 1
+  if (Array.isArray(legs) && legs.length > 1) return true
+  return countWizardScheduleLegDefinitions(trip) > 1
 }
 
 /**
