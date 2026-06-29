@@ -41,7 +41,52 @@
             <p v-if="pendingCount > 0" class="mt-1 text-sm font-medium text-amber-200/75 sm:text-base">
               {{ bannerSubline }}
             </p>
+            <ul
+              v-if="!listExpanded && hasTripRows"
+              class="mt-3 space-y-2"
+              :aria-label="t('driver_home.pending_banner_expand_list')"
+            >
+              <li
+                v-for="{ trip, dateLine } in bannerRows"
+                :key="tripRowKey(trip)"
+                class="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl bg-amber-950/35 px-3 py-2 ring-1 ring-amber-500/20"
+              >
+                <span
+                  class="inline-flex shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide sm:text-xs"
+                  :class="tripTypeBadgeClass(trip)"
+                >
+                  {{ tripTypeBadgeText(trip) }}
+                </span>
+                <span class="text-sm font-bold tabular-nums text-amber-50">
+                  {{ departOrRange(trip) }}
+                </span>
+                <span v-if="dateLine" class="text-xs text-amber-200/60">{{ dateLine }}</span>
+                <span class="text-xs font-semibold text-amber-200/80">{{ tripCodeDisplay(trip) }}</span>
+              </li>
+            </ul>
           </div>
+          <button
+            v-if="hasTripRows"
+            type="button"
+            class="-mr-1 flex h-11 min-w-[44px] shrink-0 items-center justify-center rounded-xl text-amber-200/90 ring-1 ring-amber-500/30 transition hover:bg-amber-500/15 hover:text-amber-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60"
+            :aria-expanded="listExpanded"
+            :aria-controls="tripListId"
+            data-testid="pending-confirmation-toggle-list"
+            @click="toggleListExpanded"
+          >
+            <ChevronDownIcon
+              class="h-6 w-6 transition-transform duration-200"
+              :class="listExpanded ? 'rotate-180' : ''"
+              aria-hidden="true"
+            />
+            <span class="sr-only">
+              {{
+                listExpanded
+                  ? t('driver_home.pending_banner_collapse_list')
+                  : t('driver_home.pending_banner_expand_list')
+              }}
+            </span>
+          </button>
         </div>
 
         <p
@@ -77,16 +122,16 @@
     </div>
 
     <!-- Trip rows -->
-    <div v-else-if="hasTripRows" class="border-t border-amber-500/25">
-      <TransitionGroup
-        :id="tripListId"
-        name="pending-banner"
-        tag="ul"
-        class="divide-y divide-amber-500/20"
-      >
+    <div
+      v-if="!loading && hasTripRows && listExpanded"
+      :id="tripListId"
+      class="border-t border-amber-500/25"
+      data-testid="pending-confirmation-trip-list"
+    >
+      <ul class="divide-y divide-amber-500/20">
         <li
           v-for="{ trip, dateLine, contact } in bannerRows"
-          :key="trip.id"
+          :key="tripRowKey(trip)"
           class="pending-banner-item flex flex-col gap-3 px-4 py-3.5 sm:px-5"
         >
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
@@ -95,9 +140,10 @@
             <button
               type="button"
               class="flex w-full min-w-0 items-start gap-2 rounded-xl py-0.5 text-left transition hover:bg-amber-950/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50 sm:-mx-1 sm:px-1"
-              :aria-expanded="isItemDetailsOpen(trip.id)"
-              :aria-controls="itemDetailsDomId(trip.id)"
-              @click="toggleItemDetails(trip.id)"
+              :aria-expanded="isItemDetailsOpen(trip)"
+              :aria-controls="itemDetailsDomId(trip)"
+              data-testid="pending-trip-toggle-details"
+              @click="toggleItemDetails(trip)"
             >
               <div class="min-w-0 flex-1 space-y-2">
                 <div class="flex flex-wrap items-center gap-2">
@@ -136,12 +182,12 @@
               >
                 <ChevronDownIcon
                   class="h-5 w-5 transition-transform duration-200"
-                  :class="isItemDetailsOpen(trip.id) ? 'rotate-180' : ''"
+                  :class="isItemDetailsOpen(trip) ? 'rotate-180' : ''"
                 />
               </span>
               <span class="sr-only">
                 {{
-                  isItemDetailsOpen(trip.id)
+                  isItemDetailsOpen(trip)
                     ? t('driver_home.pending_item_collapse_details')
                     : t('driver_home.pending_item_expand_details')
                 }}
@@ -149,8 +195,8 @@
             </button>
 
             <div
-              :id="itemDetailsDomId(trip.id)"
-              v-show="isItemDetailsOpen(trip.id)"
+              :id="itemDetailsDomId(trip)"
+              v-show="isItemDetailsOpen(trip)"
               class="space-y-0.5 border-t border-amber-500/15 pt-3 mt-2"
               role="region"
             >
@@ -234,7 +280,7 @@
           </div>
         </div>
         </li>
-      </TransitionGroup>
+      </ul>
     </div>
 
     <!-- Decline modal -->
@@ -331,7 +377,7 @@
 </template>
 
 <script setup>
-import { computed, ref, TransitionGroup } from 'vue'
+import { computed, ref } from 'vue'
 import { ChevronDownIcon, PhoneIcon } from '@heroicons/vue/24/outline'
 import { useI18n } from 'vue-i18n'
 import { formatApiError } from '../../api/http'
@@ -410,23 +456,34 @@ function contactRoleLabel(role) {
 }
 
 const tripListId = 'pending-confirmation-trip-list'
+const listExpanded = ref(true)
 
 const hasTripRows = computed(() => bannerRows.value.length > 0)
 
+function toggleListExpanded() {
+  listExpanded.value = !listExpanded.value
+}
+
+function tripRowKey(trip) {
+  return driverTripListRowKey(trip) || String(trip?.id ?? '')
+}
+
 const itemDetailsExpanded = ref(/** @type Record<string, boolean> */ ({}))
 
-function itemDetailsDomId(tripId) {
-  return `pending-trip-details-${tripId}`
+function itemDetailsDomId(trip) {
+  const raw = tripRowKey(trip)
+  const safe = raw.replace(/[^a-zA-Z0-9-_]/g, '-')
+  return `pending-trip-details-${safe}`
 }
 
-function isItemDetailsOpen(tripId) {
-  const k = String(tripId)
-  return itemDetailsExpanded.value[k] !== false
+function isItemDetailsOpen(trip) {
+  const k = tripRowKey(trip)
+  return itemDetailsExpanded.value[k] === true
 }
 
-function toggleItemDetails(tripId) {
-  const k = String(tripId)
-  const nextOpen = !isItemDetailsOpen(tripId)
+function toggleItemDetails(trip) {
+  const k = tripRowKey(trip)
+  const nextOpen = !isItemDetailsOpen(trip)
   itemDetailsExpanded.value = { ...itemDetailsExpanded.value, [k]: nextOpen }
 }
 
