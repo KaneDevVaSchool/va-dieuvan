@@ -2,7 +2,9 @@
 <html lang="vi">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    {{-- interactive-widget=resizes-visual: bàn phím ảo chỉ co visual viewport, KHÔNG co layout
+         viewport → thanh fixed bottom (menu bottom PWA) không bị đẩy lên trên bàn phím khi focus input --}}
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-visual" />
     {{-- Nền tối dưới status bar / tai thỏ (PWA iOS & Chrome); tránh vệt trắng phía trên --}}
     <meta name="theme-color" content="#020B0B" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#020B0B" media="(prefers-color-scheme: dark)" />

@@ -41,31 +41,7 @@
             <p v-if="pendingCount > 0" class="mt-1 text-sm font-medium text-amber-200/75 sm:text-base">
               {{ bannerSubline }}
             </p>
-            <p
-              v-if="!listExpanded && hasTripRows"
-              class="mt-1.5 text-xs font-medium text-amber-300/70 sm:text-sm"
-            >
-              {{ t('driver_home.pending_collapsed_count', { n: bannerRows.length }) }}
-            </p>
           </div>
-          <button
-            v-if="hasTripRows"
-            type="button"
-            class="-mr-1 flex h-11 min-w-[44px] shrink-0 items-center justify-center rounded-xl text-amber-200/90 ring-1 ring-amber-500/30 transition hover:bg-amber-500/15 hover:text-amber-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60"
-            :aria-expanded="listExpanded"
-            :aria-controls="tripListId"
-            @click="toggleListExpanded"
-          >
-            <ChevronDownIcon v-if="!listExpanded" class="h-6 w-6" aria-hidden="true" />
-            <ChevronUpIcon v-else class="h-6 w-6" aria-hidden="true" />
-            <span class="sr-only">
-              {{
-                listExpanded
-                  ? t('driver_home.pending_banner_collapse_list')
-                  : t('driver_home.pending_banner_expand_list')
-              }}
-            </span>
-          </button>
         </div>
 
         <p
@@ -101,11 +77,7 @@
     </div>
 
     <!-- Trip rows -->
-    <div
-      v-else
-      v-show="listExpanded"
-      class="border-t border-amber-500/25"
-    >
+    <div v-else-if="hasTripRows" class="border-t border-amber-500/25">
       <TransitionGroup
         :id="tripListId"
         name="pending-banner"
@@ -360,7 +332,7 @@
 
 <script setup>
 import { computed, ref, TransitionGroup } from 'vue'
-import { ChevronDownIcon, ChevronUpIcon, PhoneIcon } from '@heroicons/vue/24/outline'
+import { ChevronDownIcon, PhoneIcon } from '@heroicons/vue/24/outline'
 import { useI18n } from 'vue-i18n'
 import { formatApiError } from '../../api/http'
 import { isOptimisticLockConflict } from '../../util/tripLock'
@@ -438,13 +410,8 @@ function contactRoleLabel(role) {
 }
 
 const tripListId = 'pending-confirmation-trip-list'
-const listExpanded = ref(true)
 
 const hasTripRows = computed(() => bannerRows.value.length > 0)
-
-function toggleListExpanded() {
-  listExpanded.value = !listExpanded.value
-}
 
 const itemDetailsExpanded = ref(/** @type Record<string, boolean> */ ({}))
 
@@ -454,12 +421,12 @@ function itemDetailsDomId(tripId) {
 
 function isItemDetailsOpen(tripId) {
   const k = String(tripId)
-  return itemDetailsExpanded.value[k] === true
+  return itemDetailsExpanded.value[k] !== false
 }
 
 function toggleItemDetails(tripId) {
   const k = String(tripId)
-  const nextOpen = !itemDetailsExpanded.value[k]
+  const nextOpen = !isItemDetailsOpen(tripId)
   itemDetailsExpanded.value = { ...itemDetailsExpanded.value, [k]: nextOpen }
 }
 
