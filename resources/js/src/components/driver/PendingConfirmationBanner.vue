@@ -76,134 +76,29 @@
       </div>
     </div>
 
-    <!-- Danh sách chuyến cần xác nhận — luôn hiện khi có trip (kể cả đang refresh) -->
+    <!-- Danh sách chuyến — thẻ DriverTripCard accordion -->
     <div
       v-if="pendingCount > 0"
       :id="tripListId"
-      class="border-t border-amber-500/25"
+      class="space-y-3 border-t border-amber-500/25 px-4 py-4 sm:px-5"
       data-testid="pending-confirmation-trip-list"
     >
-      <ul class="divide-y divide-amber-500/20">
-        <li
-          v-for="row in displayRows"
-          :key="row.rowKey"
-          class="pending-banner-item flex flex-col gap-3 px-4 py-3.5 sm:px-5"
-        >
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
-          <div class="min-w-0 flex-1 space-y-2">
-            <div class="flex flex-wrap items-center gap-2">
-              <span
-                class="inline-flex shrink-0 rounded-md px-2 py-1 text-xs font-bold uppercase tracking-wide sm:text-sm"
-                :class="tripTypeBadgeClass(row.trip)"
-              >
-                {{ tripTypeBadgeText(row.trip) }}
-              </span>
-              <span class="text-sm font-semibold text-slate-400">
-                {{ tripCodeDisplay(row.trip) }}
-              </span>
-              <span
-                v-if="isTripUrgent(row.trip)"
-                class="inline-flex shrink-0 rounded-md bg-rose-600/90 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white ring-1 ring-rose-400/40"
-              >
-                {{ t('driver_home.urgent_badge') }}
-              </span>
-            </div>
-
-            <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-              <span class="text-lg font-bold tabular-nums leading-none text-white sm:text-xl">
-                {{ departOrRange(row.trip) }}
-              </span>
-              <span
-                v-if="row.dateLine"
-                class="text-xs font-medium text-slate-400 sm:text-sm"
-              >
-                {{ row.dateLine }}
-              </span>
-            </div>
-
-            <div class="space-y-0.5 pt-1">
-              <div class="flex min-w-0 items-start gap-2">
-                <span class="mt-0.5 shrink-0 text-[10px] leading-none text-emerald-400" aria-hidden="true">●</span>
-                <div class="min-w-0 flex-1">
-                  <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                    {{ t('driver_home.pending_pickup') }}
-                  </p>
-                  <p class="break-words text-[13px] font-medium leading-snug text-[#e2e8f0]">
-                    {{ tripOrigin(row.trip) }}
-                  </p>
-                </div>
-              </div>
-              <div class="ml-[5px] h-3 w-px shrink-0 bg-white/15" aria-hidden="true" />
-              <div class="flex min-w-0 items-start gap-2">
-                <span class="mt-0.5 shrink-0 text-[10px] leading-none text-rose-400" aria-hidden="true">●</span>
-                <div class="min-w-0 flex-1">
-                  <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                    {{ t('driver_home.pending_dropoff') }}
-                  </p>
-                  <p class="break-words text-[13px] font-medium leading-snug text-[#e2e8f0]">
-                    {{ tripDestination(row.trip) }}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <p v-if="bannerMetaLine(row.trip)" class="text-xs leading-snug text-slate-400">
-              {{ bannerMetaLine(row.trip) }}
-            </p>
-
-            <div
-              v-if="row.contact"
-              class="flex items-center gap-2 rounded-xl bg-amber-950/30 px-3 py-2 ring-1 ring-amber-500/15"
-            >
-              <div class="min-w-0 flex-1">
-                <p class="text-[10px] font-semibold uppercase tracking-wide text-amber-300/70">
-                  {{ contactRoleLabel(row.contact.role) }}
-                </p>
-                <p class="break-words text-[13px] font-semibold leading-snug text-amber-50">
-                  {{ row.contact.name }}
-                </p>
-              </div>
-              <a
-                v-if="row.contact.phone"
-                :href="`tel:${row.contact.phone}`"
-                class="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center gap-1.5 rounded-lg bg-emerald-600/90 px-3 text-sm font-semibold text-white ring-1 ring-emerald-400/30 transition hover:bg-emerald-500 active:scale-[0.97]"
-                :aria-label="t('driver_home.contact_call')"
-              >
-                <PhoneIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-                <span>{{ t('driver_home.contact_call') }}</span>
-              </a>
-            </div>
-          </div>
-
-          <div
-            class="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end sm:pt-0.5"
-          >
-            <div
-              class="grid min-h-[48px] w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:gap-2"
-            >
-              <button
-                type="button"
-                class="inline-flex min-h-[48px] min-w-0 flex-1 items-center justify-center rounded-lg bg-emerald-600 px-3 text-sm font-bold text-white shadow shadow-black/30 transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-45 sm:min-w-[7rem]"
-                :disabled="busyId != null || !tpDriverTripCanConfirm(row.trip)"
-                data-testid="pending-trip-confirm"
-                @click="onConfirm(row.trip)"
-              >
-                {{ t('driver_home.btn_confirm') }}
-              </button>
-              <button
-                type="button"
-                class="inline-flex min-h-[48px] min-w-0 flex-1 items-center justify-center rounded-lg border border-rose-400/60 bg-rose-950/40 px-3 text-sm font-bold text-rose-200 transition hover:bg-rose-900/50 disabled:cursor-not-allowed disabled:opacity-45 sm:min-w-[7rem]"
-                :disabled="busyId != null"
-                data-testid="pending-trip-decline"
-                @click="openDeclineModal(row.trip)"
-              >
-                {{ row.trip._tp ? t('driver_home.btn_busy') : t('driver_home.btn_decline') }}
-              </button>
-            </div>
-          </div>
-        </div>
-        </li>
-      </ul>
+      <DriverTripCard
+        v-for="row in displayRows"
+        :key="row.rowKey"
+        :trip="row.trip"
+        layout="stacked"
+        class="w-full min-w-0 max-w-none"
+        suppress-card-navigation
+        :show-pending-actions="expandedRowKey === row.rowKey"
+        :footer-detail-mode="expandedRowKey === row.rowKey ? 'collapse' : 'expand'"
+        :busy="isTripBusy(row.trip)"
+        data-testid="pending-confirmation-trip-card"
+        @expand-request="setExpandedRow(row.rowKey)"
+        @collapse-request="setExpandedRow(null)"
+        @confirm="onConfirm"
+        @decline="openDeclineModal"
+      />
     </div>
 
     <!-- Decline modal -->
@@ -300,26 +195,15 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
-import { PhoneIcon } from '@heroicons/vue/24/outline'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { formatApiError } from '../../api/http'
 import { isOptimisticLockConflict } from '../../util/tripLock'
 import { driverTripListRowKey } from '../../util/driverScheduleLeg'
 import { useDriverDashboardStore } from '../../store/driverDashboard'
-import { resolveTripLeaderContact } from '../../util/tripLeaderContact'
-import {
-  formatDepartForTrip,
-  isTripUrgent,
-  tripDestination,
-  tripOrigin,
-  tripOutboundInboundTimeRange,
-  tripPassengerLine,
-  tripRequesterLine,
-  tripTypeBadgeClass,
-  tripTypeBadgeText,
-} from '../../composables/useDriverTripDisplay'
+import { formatDepartForTrip, tripOrigin } from '../../composables/useDriverTripDisplay'
 import { tpDriverTripCanConfirm } from '../../composables/useTpDriverSlotActions'
+import DriverTripCard from './DriverTripCard.vue'
 
 let tripStatusCooldownUntil = 0
 
@@ -362,20 +246,11 @@ function sortByDepart(list) {
 }
 
 const tripRows = computed(() => {
-  const tag = locale.value === 'vi' ? 'vi' : 'en'
   const list = Array.isArray(props.trips) ? props.trips : []
   return sortByDepart(list).map((trip, index) => {
-    let dateLine = ''
-    let contact = null
-    try {
-      dateLine = formatDepartForTrip(trip, tag).dateLine || ''
-      contact = resolveTripLeaderContact(trip)
-    } catch {
-      /* giữ dòng chuyến dù enrich lỗi */
-    }
     const baseKey = driverTripListRowKey(trip) || String(trip?.id ?? '')
     const rowKey = baseKey ? `${baseKey}::${index}` : `pending-row-${index}`
-    return { trip, dateLine, contact, rowKey }
+    return { trip, rowKey }
   })
 })
 
@@ -385,16 +260,34 @@ const displayRows = computed(() => {
   const list = Array.isArray(props.trips) ? props.trips : []
   return sortByDepart(list).map((trip, index) => ({
     trip,
-    dateLine: '',
-    contact: null,
     rowKey: `pending-fallback-${index}`,
   }))
 })
 
-function contactRoleLabel(role) {
-  if (role === 'requester') return t('driver_home.contact_requester')
-  if (role === 'coordinator') return t('driver_home.contact_coordinator')
-  return t('driver_home.contact_leader')
+const expandedRowKey = ref(/** @type {string | null} */ (null))
+
+watch(
+  displayRows,
+  (rows) => {
+    if (!rows.length) {
+      expandedRowKey.value = null
+      return
+    }
+    if (expandedRowKey.value && !rows.some((r) => r.rowKey === expandedRowKey.value)) {
+      expandedRowKey.value = null
+    }
+  },
+  { immediate: true },
+)
+
+function setExpandedRow(key) {
+  expandedRowKey.value = key
+}
+
+function isTripBusy(trip) {
+  if (busyId.value == null) return false
+  const k = driverTripListRowKey(trip) || trip?.id
+  return String(busyId.value) === String(k)
 }
 
 const tripListId = 'pending-confirmation-trip-list'
@@ -449,30 +342,6 @@ const modalConfirmHint = computed(() =>
 const modalConfirmBtn = computed(() =>
   isBusyFlow.value ? t('driver_home.busy_confirm_btn') : t('driver_home.pending_decline_confirm_btn'),
 )
-
-function tripCodeDisplay(trip) {
-  return trip?.trip_number || `#${trip?.id ?? ''}`
-}
-
-function localeTag() {
-  return locale.value === 'vi' ? 'vi' : 'en'
-}
-
-function departOrRange(trip) {
-  const tag = localeTag()
-  const range = tripOutboundInboundTimeRange(trip, tag, t)
-  if (range) return range
-  return formatDepartForTrip(trip, tag).time
-}
-
-function bannerMetaLine(trip) {
-  const parts = []
-  const pl = tripPassengerLine(trip, t)
-  if (pl) parts.push(pl)
-  const rq = tripRequesterLine(trip)
-  if (rq) parts.push(t('driver_home.pending_requester', { name: rq }))
-  return parts.join(' · ')
-}
 
 function closeDeclineModal() {
   declineModalOpen.value = false
@@ -548,7 +417,4 @@ async function onConfirm(trip) {
 </script>
 
 <style scoped>
-.pending-banner-item {
-  will-change: transform, opacity;
-}
 </style>

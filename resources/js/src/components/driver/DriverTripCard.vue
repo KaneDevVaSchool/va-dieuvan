@@ -126,17 +126,27 @@
               :disabled="busy"
               @click.stop="onDecline"
             >
-              {{ t('driver_home.btn_decline') }}
+              {{ declineButtonLabel }}
             </button>
           </div>
+          <button
+            v-if="footerDetailMode === 'collapse'"
+            type="button"
+            class="min-h-[44px] w-full text-center text-sm font-semibold text-[#fbbf24]/90 underline-offset-2 hover:underline"
+            data-testid="driver-trip-card-collapse"
+            @click.stop="emit('collapse-request')"
+          >
+            {{ t('driver_home.pending_item_collapse_details') }}
+          </button>
         </template>
         <button
           v-else
           type="button"
           class="inline-flex shrink-0 items-center justify-center rounded-xl border-2 border-[#fbbf24] bg-transparent px-4 py-2 text-sm font-bold text-[#fbbf24]"
-          @click.stop="goDetail"
+          data-testid="driver-trip-card-detail"
+          @click.stop="onFooterDetailClick"
         >
-          {{ t('driver_home.card_view_detail') }}
+          {{ footerDetailLabel }}
         </button>
       </template>
       <template v-else-if="cardMode === 'completed'">
@@ -167,12 +177,16 @@ const props = defineProps({
   trip: { type: Object, required: true },
   /** Hiển thị nút Xác nhận / Từ chối (banner chờ xác nhận). */
   showPendingActions: { type: Boolean, default: false },
+  /** Không điều hướng khi bấm thẻ (banner accordion). */
+  suppressCardNavigation: { type: Boolean, default: false },
+  /** Nút footer pending: navigate | expand | collapse */
+  footerDetailMode: { type: String, default: 'navigate' },
   busy: { type: Boolean, default: false },
   /** `stacked` = full-width dashboard; `carousel` = horizontal snap strip */
   layout: { type: String, default: 'carousel' },
 })
 
-const emit = defineEmits(['start', 'confirm', 'decline'])
+const emit = defineEmits(['start', 'confirm', 'decline', 'expand-request', 'collapse-request'])
 
 const router = useRouter()
 const { locale, t } = useI18n()
@@ -465,6 +479,28 @@ const kmLabel = computed(() => {
   return ''
 })
 
+const declineButtonLabel = computed(() =>
+  tripRaw.value?._tp ? t('driver_home.btn_busy') : t('driver_home.btn_decline'),
+)
+
+const footerDetailLabel = computed(() => {
+  if (props.footerDetailMode === 'collapse') return t('driver_home.pending_item_collapse_details')
+  if (props.footerDetailMode === 'expand') return t('driver_home.card_view_detail')
+  return t('driver_home.card_view_detail')
+})
+
+function onFooterDetailClick() {
+  if (props.footerDetailMode === 'expand') {
+    emit('expand-request')
+    return
+  }
+  if (props.footerDetailMode === 'collapse') {
+    emit('collapse-request')
+    return
+  }
+  goDetail()
+}
+
 function goDetail() {
   const tp = tripRaw.value._tp
   if (tp?.day_id) {
@@ -476,6 +512,7 @@ function goDetail() {
 }
 
 function onRootClick() {
+  if (props.suppressCardNavigation) return
   if (cardMode.value === 'cancelled') return
   goDetail()
 }
