@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import TripTimeline from './TripTimeline.vue'
 
 const props = defineProps({
   /**
@@ -107,9 +108,17 @@ function arriveTimeDisplay(seg) {
         </div>
 
         <!-- Segment card -->
-        <button
+        <div class="mb-1 min-w-0 flex-1 space-y-2">
+          <TripTimeline
+            v-if="seg.timelineLogs?.length"
+            embedded
+            :data-testid="`trip-timeline-${seg.key}`"
+            :current-status="seg.timelineCurrentStatus || 'created'"
+            :logs="seg.timelineLogs"
+          />
+          <button
           type="button"
-          class="mb-1 w-full rounded-lg border bg-white px-3 py-2.5 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/40 sm:px-3.5 sm:py-3"
+          class="w-full rounded-lg border bg-white px-3 py-2.5 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/40 sm:px-3.5 sm:py-3"
           :class="
             isActive(seg.key)
               ? 'border-blue-300 ring-1 ring-blue-200'
@@ -294,6 +303,7 @@ function arriveTimeDisplay(seg) {
             </dl>
           </div>
         </button>
+        </div>
       </li>
     </ol>
   </section>

@@ -1,5 +1,12 @@
 <template>
-  <section class="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm">
+  <section
+    class="min-w-0"
+    :class="
+      embedded
+        ? 'rounded-lg border border-slate-100 bg-slate-50/70 p-2.5'
+        : 'rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm'
+    "
+  >
     <div class="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
       <h2 class="text-[11px] font-bold uppercase tracking-wide text-slate-500">{{ $t('trip_detail.timeline.title') }}</h2>
       <span
@@ -79,6 +86,8 @@ const props = defineProps<{
   logs: TimelineLog[]
   /** Nhãn chặng/lịch trình khi chuyến đa lịch (vd. «Chặng 1»). */
   scheduleLabel?: string
+  /** Nhúng trong card chặng — viền/nền gọn hơn. */
+  embedded?: boolean
 }>()
 
 const { locale, t } = useI18n()

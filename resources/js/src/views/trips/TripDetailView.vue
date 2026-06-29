@@ -77,30 +77,6 @@
                     :hide-passenger-metrics="isCargoTrip"
                 />
 
-                <!-- TIMELINE — một dòng hoặc một dòng / chặng khi đa lịch -->
-                <TripTimeline
-                    v-if="scheduleCount <= 1"
-                    class="w-full min-w-0"
-                    data-testid="trip-timeline-single"
-                    :current-status="timelineWorkflowStatus"
-                    :logs="activityLogs"
-                />
-                <div
-                    v-else
-                    class="grid w-full min-w-0 grid-cols-1 gap-3 lg:grid-cols-2"
-                    :aria-label="t('trip_detail.timeline.multi_aria')"
-                >
-                    <TripTimeline
-                        v-for="entry in scheduleTimelineEntries"
-                        :key="entry.key"
-                        class="min-w-0"
-                        :data-testid="`trip-timeline-${entry.key}`"
-                        :schedule-label="entry.scheduleLabel"
-                        :current-status="entry.currentStatus"
-                        :logs="entry.logs"
-                    />
-                </div>
-
                 <div
                     v-if="driverCancellationEvent"
                     class="w-full max-w-none"
@@ -212,6 +188,12 @@
                         :step-dropoff="stepDropoff"
                         :origin-label="displayOriginLabel"
                         :destination-label="displayDestinationLabel"
+                        :timeline-current-status="
+                            scheduleCount <= 1 ? timelineWorkflowStatus : ''
+                        "
+                        :timeline-logs="
+                            scheduleCount <= 1 ? activityLogs : undefined
+                        "
                     />
                     <TripRouteJourney
                         v-if="scheduleCount > 1"
@@ -732,7 +714,6 @@ import StatusActions from "../../components/trips/StatusActions.vue";
 import PassengerCheckIn from "../../components/trips/PassengerCheckIn.vue";
 import TripHeroHeader from "../../components/trips/TripHeroHeader.vue";
 import TripDetailSummaryBar from "../../components/trips/TripDetailSummaryBar.vue";
-import TripTimeline from "../../components/trips/TripTimeline.vue";
 import {
     buildTripActivityTimelineLogs,
     tripStatusToTimelineKey,
@@ -1569,6 +1550,11 @@ const routeJourneyView = computed(() => {
             vehicle: resolveLegVehicle(assignment),
             driver: resolveLegDriver(assignment),
             transportProvider: resolveLegProvider(assignment),
+            timelineCurrentStatus: tripStatusToTimelineKey(status),
+            timelineLogs: buildTripActivityTimelineLogs(trip.value, {
+                scheduleKey: card.key,
+                assignedActorName: resolveLegDriver(assignment),
+            }),
         };
     });
 
@@ -2833,26 +2819,6 @@ const timelineWorkflowStatus = computed(() => {
 const activityLogs = computed(() =>
     buildTripActivityTimelineLogs(trip.value),
 );
-
-const scheduleTimelineEntries = computed(() => {
-    if (!trip.value || scheduleCount.value <= 1) return [];
-    return scheduleCards.value.map((card) => {
-        const leg =
-            scheduleLegs.value.find((l) => l.key === card.key) ?? null;
-        const status = leg?.status ?? trip.value?.status ?? "pending";
-        return {
-            key: card.key,
-            scheduleLabel: t("trip_detail.route_journey.segment", {
-                n: card.labelSeq ?? 0,
-            }),
-            currentStatus: tripStatusToTimelineKey(status),
-            logs: buildTripActivityTimelineLogs(trip.value, {
-                scheduleKey: card.key,
-                assignedActorName: resolveLegDriver(leg?.assignment),
-            }),
-        };
-    });
-});
 
 async function doReschedule() {
     rescheduleMsg.value = "";

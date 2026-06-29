@@ -6,6 +6,13 @@ import {
     MapIcon,
 } from "@heroicons/vue/24/outline";
 import { isEmptyDisplay } from "../../util/displayValue";
+import TripTimeline from "./TripTimeline.vue";
+
+type TimelineLog = {
+    status: string;
+    created_at: string;
+    actor_name: string;
+};
 
 type Step = { state: string; label: string };
 
@@ -35,6 +42,8 @@ const props = defineProps<{
     stepDropoff: Step;
     originLabel: string;
     destinationLabel: string;
+    timelineCurrentStatus?: string;
+    timelineLogs?: TimelineLog[];
 }>();
 
 const { t, locale } = useI18n();
@@ -124,11 +133,19 @@ const hasFallbackScheduleBody = computed(() => {
     );
 });
 
+const showTripTimeline = computed(
+    () =>
+        props.scheduleLegCount <= 1 &&
+        !!props.timelineCurrentStatus &&
+        Array.isArray(props.timelineLogs),
+);
+
 const showSection = computed(
     () =>
         !!props.slaBanner ||
         hasEmbeddedSchedule.value ||
-        hasFallbackScheduleBody.value,
+        hasFallbackScheduleBody.value ||
+        showTripTimeline.value,
 );
 </script>
 
@@ -138,6 +155,16 @@ const showSection = computed(
         class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-3.5 text-[13px] shadow-sm sm:p-4"
         :aria-label="t('trip_detail.sections.schedule')"
     >
+        <!-- Timeline vận hành — đầu card chuyến -->
+        <TripTimeline
+            v-if="showTripTimeline"
+            class="mb-3"
+            data-testid="trip-timeline-single"
+            embedded
+            :current-status="timelineCurrentStatus"
+            :logs="timelineLogs ?? []"
+        />
+
         <div
             v-if="slaBanner"
             class="rounded-xl border px-3 py-2 text-[12px] font-medium"
