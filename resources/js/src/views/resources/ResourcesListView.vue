@@ -3257,7 +3257,13 @@ function driverCardPills(d) {
 
 function driverCardFields(d) {
   return [
-    { label: t('resources.col_user_email'), value: d.email || '', emptyKey: 'resources.empty_email' },
+    {
+      label: t('resources.col_user_email'),
+      value: d.email || '',
+      emptyKey: 'resources.empty_email',
+      breakAll: true,
+      colSpan: 2,
+    },
     { label: t('resources.col_employee_code'), value: d.employeeCode || '', emptyKey: 'resources.empty_employee_code', mono: true },
     { label: t('driver_detail.license_class'), value: d.license_class || '', emptyKey: 'resources.empty_license_class' },
     { label: t('resources.col_phone'), value: d.phone || '', emptyKey: 'resources.empty_phone' },

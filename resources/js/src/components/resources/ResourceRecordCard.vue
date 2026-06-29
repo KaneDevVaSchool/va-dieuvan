@@ -201,17 +201,23 @@ const complianceGridClass = computed(() => {
           v-if="fields.length"
           class="min-w-0 flex-1 grid grid-cols-2 gap-x-3 gap-y-2.5 rounded-xl border border-slate-100 bg-slate-50/80 p-3 sm:grid-cols-3 dark:border-slate-800 dark:bg-slate-800/40"
         >
-          <div v-for="(f, i) in fields" :key="i" class="min-w-0">
-            <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          <div
+            v-for="(f, i) in fields"
+            :key="i"
+            class="min-w-0 overflow-hidden"
+            :class="f.colSpan === 2 ? 'col-span-2 sm:col-span-1' : ''"
+          >
+            <dt class="truncate text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               {{ f.label }}
             </dt>
             <dd
-              class="mt-0.5 text-sm font-medium text-slate-800 dark:text-slate-200"
+              class="mt-0.5 min-w-0 text-sm font-medium text-slate-800 dark:text-slate-200"
               :class="f.mono ? 'font-mono tabular-nums' : ''"
             >
               <EmptyValue
                 :value="f.value"
                 :empty-key="f.emptyKey || 'resources.empty_not_available'"
+                :break-all="!!f.breakAll"
               />
             </dd>
           </div>
