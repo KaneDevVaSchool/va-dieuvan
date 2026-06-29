@@ -99,6 +99,66 @@ export function resolveDriverOperationalLeg(trip, myDriverId = null) {
   return waiting ?? pool[0] ?? null
 }
 
+function parseCompositeScheduleTail(raw) {
+  if (raw == null || raw === '') return null
+  const s = String(raw)
+  if (!s.includes(':')) return null
+  const tail = s.split(':').slice(1).join(':').trim()
+  return tail || null
+}
+
+function wizardRowFilled(row, tripType) {
+  if (!row || typeof row !== 'object') return false
+  if (tripType === 'cargo') {
+    return Boolean(
+      String(row.pickup ?? row.origin ?? '').trim() ||
+        String(row.dropoff ?? row.destination ?? '').trim(),
+    )
+  }
+  return Boolean(
+    String(row.depart_at ?? '').trim() ||
+      String(row.pickup ?? '').trim() ||
+      String(row.return_at ?? '').trim() ||
+      String(row.dropoff ?? '').trim(),
+  )
+}
+
+/**
+ * Số chặng lịch theo wizard (khớp TripScheduleLegService::buildLegDefinitionsFromSnapshot).
+ * @param {object | null | undefined} trip
+ * @returns {number}
+ */
+export function countWizardScheduleLegDefinitions(trip) {
+  const dr = trip?.dispatch_request ?? trip?.dispatchRequest ?? null
+  if (!dr) return 0
+  const snap = dr.wizard_snapshot
+  if (!snap || typeof snap !== 'object') return 0
+  const tripType = String(dr.trip_type ?? '')
+  let count = 0
+  if (tripType === 'cargo') {
+    for (const row of snap.cargoRows ?? []) {
+      if (wizardRowFilled(row, tripType)) count++
+    }
+    return count
+  }
+  if (tripType !== 'business') {
+    for (const row of snap.passengerRows ?? []) {
+      if (wizardRowFilled(row, tripType)) count++
+    }
+  }
+  if (tripType !== 'point_to_point') {
+    for (const row of snap.businessRows ?? []) {
+      if (wizardRowFilled(row, tripType)) count++
+    }
+  }
+  return count
+}
+
+export function driverTripRequiresScheduleKey(trip) {
+  if (tripHasMultipleScheduleLegs(trip)) return true
+  return countWizardScheduleLegDefinitions(trip) > 1
+}
+
 /**
  * `schedule_key` gửi API đổi trạng thái — ưu tiên `schedule_leg_key` trên row đã tách chặng.
  * @param {object | null | undefined} trip
@@ -110,10 +170,32 @@ export function resolveDriverScheduleKey(trip, myDriverId = null) {
   if (explicit != null && String(explicit).trim() !== '') {
     return String(explicit).trim()
   }
-  if (!tripHasMultipleScheduleLegs(trip)) return null
+  const fromComposite =
+    parseCompositeScheduleTail(trip?.id) ?? parseCompositeScheduleTail(trip?.calendar_key)
+  if (fromComposite) return fromComposite
+
+  if (!driverTripRequiresScheduleKey(trip)) return null
+
   const leg = resolveDriverOperationalLeg(trip, myDriverId)
-  const key = leg?.key
-  return key != null && String(key).trim() !== '' ? String(key).trim() : null
+  const legKey = leg?.key
+  if (legKey != null && String(legKey).trim() !== '') {
+    return String(legKey).trim()
+  }
+
+  const legs = trip?.schedule_legs
+  if (Array.isArray(legs) && legs.length > 0) {
+    const assigned = legs.find(
+      (l) => String(l?.status ?? '').trim().toLowerCase() === 'assigned',
+    )
+    if (assigned?.key != null && String(assigned.key).trim() !== '') {
+      return String(assigned.key).trim()
+    }
+    if (legs.length === 1 && legs[0]?.key != null && String(legs[0].key).trim() !== '') {
+      return String(legs[0].key).trim()
+    }
+  }
+
+  return null
 }
 
 /**

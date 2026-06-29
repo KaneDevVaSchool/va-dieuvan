@@ -76,7 +76,7 @@
       </div>
     </div>
 
-    <!-- Danh sách chuyến — thẻ DriverTripCard accordion -->
+    <!-- Danh sách chuyến — thẻ DriverTripCard + xác nhận / từ chối -->
     <div
       v-if="pendingCount > 0"
       :id="tripListId"
@@ -90,12 +90,9 @@
         layout="stacked"
         class="w-full min-w-0 max-w-none"
         suppress-card-navigation
-        :show-pending-actions="expandedRowKey === row.rowKey"
-        :footer-detail-mode="expandedRowKey === row.rowKey ? 'collapse' : 'expand'"
+        show-pending-actions
         :busy="isTripBusy(row.trip)"
         data-testid="pending-confirmation-trip-card"
-        @expand-request="setExpandedRow(row.rowKey)"
-        @collapse-request="setExpandedRow(null)"
         @confirm="onConfirm"
         @decline="openDeclineModal"
       />
@@ -195,7 +192,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { formatApiError } from '../../api/http'
 import { isOptimisticLockConflict } from '../../util/tripLock'
@@ -263,26 +260,6 @@ const displayRows = computed(() => {
     rowKey: `pending-fallback-${index}`,
   }))
 })
-
-const expandedRowKey = ref(/** @type {string | null} */ (null))
-
-watch(
-  displayRows,
-  (rows) => {
-    if (!rows.length) {
-      expandedRowKey.value = null
-      return
-    }
-    if (expandedRowKey.value && !rows.some((r) => r.rowKey === expandedRowKey.value)) {
-      expandedRowKey.value = null
-    }
-  },
-  { immediate: true },
-)
-
-function setExpandedRow(key) {
-  expandedRowKey.value = key
-}
 
 function isTripBusy(trip) {
   if (busyId.value == null) return false

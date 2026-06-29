@@ -137,10 +137,19 @@ export function expandTripsForPendingConfirmation(trips) {
       continue
     }
     if (tripNeedsDriverConfirmation(trip)) {
-      out.push({
+      const row = {
         ...trip,
         calendar_key: String(trip.id),
-      })
+      }
+      const legKey =
+        row.schedule_leg_key ??
+        (Array.isArray(row.schedule_legs) && row.schedule_legs.length === 1
+          ? row.schedule_legs[0]?.key
+          : null)
+      if (legKey != null && String(legKey).trim() !== '') {
+        row.schedule_leg_key = String(legKey).trim()
+      }
+      out.push(row)
     }
   }
   return out

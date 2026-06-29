@@ -71,6 +71,25 @@ const pendingRows = expandTripsForPendingConfirmation([pendingTrip])
 ok(pendingRows.length === 1, 'only assigned leg in banner')
 ok(pendingRows[0].schedule_leg_key === 'a', 'pending leg key')
 
+const wizardMulti = {
+  id: 50,
+  status: 'assigned',
+  schedule_legs: [{ key: 'leg-0', status: 'assigned' }],
+  dispatch_request: {
+    trip_type: 'business',
+    wizard_snapshot: {
+      businessRows: [
+        { depart_at: '2026-06-01', pickup: 'A', dropoff: 'B' },
+        { depart_at: '2026-06-02', pickup: 'C', dropoff: 'D' },
+      ],
+    },
+  },
+}
+ok(
+  buildDriverTripStatusFields('driver_confirmed', wizardMulti, 1).schedule_key === 'leg-0',
+  'wizard multi defs still send schedule_key',
+)
+
 // --- row key ---
 ok(driverTripListRowKey({ id: 1, calendar_key: '1:morning' }) === '1:morning', 'calendar_key priority')
 
