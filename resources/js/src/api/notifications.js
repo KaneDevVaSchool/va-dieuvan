@@ -35,3 +35,8 @@ export async function markAllNotificationsRead() {
   const { data } = await http.post('/notifications/read-all')
   return data.data
 }
+
+export async function deleteNotification(id) {
+  const { data } = await http.delete(`/notifications/${id}`)
+  return data.data
+}

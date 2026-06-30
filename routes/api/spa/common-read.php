@@ -25,6 +25,9 @@ Route::get('/notifications/inbox', [InboxController::class, 'index']);
 Route::post('/notifications/read-all', [InboxController::class, 'markAllRead']);
 Route::post('/notifications/{notification}/read', [InboxController::class, 'markRead'])
     ->whereUuid('notification');
+Route::delete('/notifications/{notification}', [InboxController::class, 'destroy'])
+    ->whereUuid('notification')
+    ->middleware('throttle:60,1');
 
 Route::get('/dispatch-requests/{dispatchRequest}', [DispatchRequestController::class, 'show']);
 Route::get('/dispatch-requests/{dispatchRequest}/audit-logs', [DispatchRequestController::class, 'auditLogs'])

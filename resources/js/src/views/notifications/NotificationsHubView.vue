@@ -18,53 +18,86 @@
               ? 'bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-200'
               : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
           "
+          :data-testid="`notifications-hub-tab-${tab.key}`"
           @click="setActiveTab(tab.key)"
         >
           {{ t(tab.labelKey) }}
         </button>
       </div>
       <div class="mb-3 flex flex-wrap items-center gap-2">
-        <Button variant="secondary" type="button" :loading="loading" @click="load">{{
+        <Button
+          variant="secondary"
+          type="button"
+          :loading="loading"
+          data-testid="notifications-hub-refresh"
+          @click="load"
+        >{{
           t('notifications_hub.refresh')
         }}</Button>
-        <Button variant="secondary" type="button" :loading="markingAll" @click="markAll">{{
+        <Button
+          variant="secondary"
+          type="button"
+          :loading="markingAll"
+          data-testid="notifications-hub-mark-all"
+          @click="markAll"
+        >{{
           t('notifications_hub.mark_all_read')
         }}</Button>
       </div>
       <p v-if="error" class="text-sm text-rose-600">{{ error }}</p>
       <div v-if="!loading && !items.length" class="text-sm text-slate-500">{{ t('notifications_hub.empty') }}</div>
-      <ul class="divide-y divide-slate-100">
+      <ul class="divide-y divide-slate-100 dark:divide-slate-800" data-testid="notifications-hub-list">
         <li v-for="n in items" :key="n.id" class="py-3">
           <div class="flex flex-wrap items-start justify-between gap-2">
             <div class="min-w-0 flex-1">
-              <div class="text-sm font-medium text-slate-900">{{ n.data?.title ?? n.type }}</div>
-              <div class="mt-0.5 text-sm text-slate-600">{{ n.data?.body ?? '' }}</div>
+              <div class="text-sm font-medium text-slate-900 dark:text-slate-100">{{ n.data?.title ?? n.type }}</div>
+              <div
+                v-if="requestRef(n)"
+                class="mt-1 font-mono text-xs font-bold tracking-tight text-brand"
+              >
+                {{ requestRef(n) }}
+              </div>
+              <div class="mt-0.5 text-sm text-slate-600 dark:text-slate-300">{{ n.data?.body ?? '' }}</div>
               <div class="mt-1 text-xs text-slate-400">{{ fmt(n.created_at) }}</div>
               <RouterLink
                 v-if="n.data?.dispatch_request_id"
-                class="mt-2 inline-block text-xs font-medium text-slate-900 underline"
-                to="/requests"
+                class="mt-2 inline-block text-xs font-medium text-slate-900 underline dark:text-slate-100"
+                :to="requestDetailPath(n)"
+                :data-testid="`notifications-hub-open-${n.id}`"
               >
-                {{ t('notifications_hub.open_request', { id: n.data.dispatch_request_id }) }}
+                {{ t('notifications_hub.open_request', { code: requestRef(n) || String(n.data.dispatch_request_id) }) }}
               </RouterLink>
             </div>
-            <div class="shrink-0">
+            <div class="flex shrink-0 flex-col items-end gap-2">
               <span
                 v-if="!n.read"
                 class="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-900"
               >
                 {{ t('notifications_hub.badge_new') }}
               </span>
-              <Button
-                v-if="!n.read"
-                variant="secondary"
-                type="button"
-                class="mt-2 text-xs"
-                :loading="markingId === n.id"
-                @click="markOne(n.id)"
-              >
-                {{ t('notifications_hub.mark_read') }}
-              </Button>
+              <div class="flex flex-wrap justify-end gap-2">
+                <Button
+                  v-if="!n.read"
+                  variant="secondary"
+                  type="button"
+                  class="text-xs"
+                  :loading="markingId === n.id"
+                  :data-testid="`notifications-hub-mark-read-${n.id}`"
+                  @click="markOne(n.id)"
+                >
+                  {{ t('notifications_hub.mark_read') }}
+                </Button>
+                <Button
+                  variant="secondary"
+                  type="button"
+                  class="text-xs text-rose-700 hover:text-rose-800 dark:text-rose-400"
+                  :loading="deletingId === n.id"
+                  :data-testid="`notifications-hub-delete-${n.id}`"
+                  @click="removeOne(n)"
+                >
+                  {{ t('notifications_hub.delete') }}
+                </Button>
+              </div>
             </div>
           </div>
         </li>
@@ -74,18 +107,27 @@
     <Card :title="t('notifications_hub.card_suggestions_title')">
       <ul class="grid gap-2 text-sm md:grid-cols-2">
         <li>
-          <RouterLink class="text-slate-900 underline hover:text-slate-600" :to="{ path: '/requests', query: { status: 'pending' } }">
+          <RouterLink
+            class="text-slate-900 underline hover:text-slate-600 dark:text-slate-100"
+            :to="{ path: staffPath('/requests'), query: { status: 'pending' } }"
+          >
             {{ t('notifications_hub.link_pending_requests') }}
           </RouterLink>
         </li>
         <li>
-          <RouterLink class="text-slate-900 underline hover:text-slate-600" to="/trips">{{ t('notifications_hub.link_trips') }}</RouterLink>
+          <RouterLink class="text-slate-900 underline hover:text-slate-600 dark:text-slate-100" :to="staffPath('/trips')">{{
+            t('notifications_hub.link_trips')
+          }}</RouterLink>
         </li>
         <li>
-          <RouterLink class="text-slate-900 underline hover:text-slate-600" to="/cargo">{{ t('notifications_hub.link_cargo') }}</RouterLink>
+          <RouterLink class="text-slate-900 underline hover:text-slate-600 dark:text-slate-100" :to="staffPath('/cargo')">{{
+            t('notifications_hub.link_cargo')
+          }}</RouterLink>
         </li>
         <li>
-          <RouterLink class="text-slate-900 underline hover:text-slate-600" to="/costs">{{ t('notifications_hub.link_costs') }}</RouterLink>
+          <RouterLink class="text-slate-900 underline hover:text-slate-600 dark:text-slate-100" :to="staffPath('/costs')">{{
+            t('notifications_hub.link_costs')
+          }}</RouterLink>
         </li>
       </ul>
     </Card>
@@ -98,7 +140,14 @@ import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
-import { fetchNotificationInbox, markAllNotificationsRead, markNotificationRead } from '../../api/notifications'
+import {
+  deleteNotification,
+  fetchNotificationInbox,
+  markAllNotificationsRead,
+  markNotificationRead,
+} from '../../api/notifications'
+import { buildStaffPrefixedPath } from '../../config/dispatchWebBase'
+import { refCodeFromPortalNotification } from '../../util/portalNotificationRoute'
 import { useAuthStore } from '../../store'
 import { useNotificationStore } from '../../store/notificationCenter'
 
@@ -129,8 +178,23 @@ function setActiveTab(key) {
 const loading = ref(false)
 const markingAll = ref(false)
 const markingId = ref(null)
+const deletingId = ref(null)
 const error = ref('')
 const items = ref([])
+
+function staffPath(path) {
+  return buildStaffPrefixedPath(path)
+}
+
+function requestRef(n) {
+  return refCodeFromPortalNotification(n)
+}
+
+function requestDetailPath(n) {
+  const id = n.data?.dispatch_request_id
+  if (id == null || id === '') return staffPath('/requests')
+  return staffPath(`/requests/${id}`)
+}
 
 function fmt(iso) {
   if (!iso) return ''
@@ -159,6 +223,7 @@ async function markAll() {
   try {
     await markAllNotificationsRead()
     await load()
+    void notifStore.refreshBadges()
   } catch (e) {
     error.value = e?.response?.data?.message ?? String(e?.message ?? 'Error')
   } finally {
@@ -172,10 +237,28 @@ async function markOne(id) {
   try {
     await markNotificationRead(id)
     await load()
+    void notifStore.refreshBadges()
   } catch (e) {
     error.value = e?.response?.data?.message ?? String(e?.message ?? 'Error')
   } finally {
     markingId.value = null
+  }
+}
+
+async function removeOne(n) {
+  if (!window.confirm(t('notifications_hub.confirm_delete'))) {
+    return
+  }
+  deletingId.value = n.id
+  error.value = ''
+  try {
+    await deleteNotification(n.id)
+    items.value = items.value.filter((x) => x.id !== n.id)
+    void notifStore.refreshBadges()
+  } catch (e) {
+    error.value = e?.response?.data?.message ?? String(e?.message ?? 'Error')
+  } finally {
+    deletingId.value = null
   }
 }
 
