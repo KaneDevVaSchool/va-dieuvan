@@ -10,12 +10,22 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Carbon;
 
 class DispatchRequest extends Model
 {
     use HasFactory;
     use SoftDeletes;
+
+    protected static function booted(): void
+    {
+        static::deleted(function (DispatchRequest $dispatchRequest): void {
+            DatabaseNotification::query()
+                ->where('data->dispatch_request_id', $dispatchRequest->getKey())
+                ->delete();
+        });
+    }
 
     protected $hidden = [
         'wizard_snapshot',
@@ -206,5 +216,16 @@ class DispatchRequest extends Model
         return $query->whereNot(function (Builder $draft) {
             $draft->extracurricularRecurringDraft();
         });
+    }
+
+    /**
+     * Portal (danh sách / KPI): không hiển thị phiếu đã hủy đồng bộ lịch.
+     *
+     * @param  Builder<DispatchRequest>  $query
+     * @return Builder<DispatchRequest>
+     */
+    public function scopeVisibleOnPortalRequestIndex(Builder $query): Builder
+    {
+        return $query->where('status', '!=', 'cancelled');
     }
 }

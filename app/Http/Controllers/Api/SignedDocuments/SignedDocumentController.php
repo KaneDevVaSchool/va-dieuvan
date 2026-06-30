@@ -50,6 +50,8 @@ class SignedDocumentController extends Controller
         DispatchRequest $dispatchRequest,
         SignedDocumentUploadService $uploadService,
     ): \Illuminate\Http\JsonResponse {
+        abort_if($dispatchRequest->trashed(), 404);
+
         $result = $uploadService->upload(
             $dispatchRequest,
             $request->file('file'),

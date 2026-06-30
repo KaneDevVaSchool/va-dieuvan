@@ -64,11 +64,12 @@ class Vehicle extends Model
 
     protected static function booted(): void
     {
-        static::deleting(function (Vehicle $vehicle) {
+        static::deleting(function (Vehicle $vehicle): void {
             if ($vehicle->isForceDeleting()) {
                 return;
             }
             Trip::where('vehicle_id', $vehicle->id)->update(['vehicle_id' => null]);
+            TpProgram::where('default_vehicle_id', $vehicle->id)->update(['default_vehicle_id' => null]);
         });
     }
 }

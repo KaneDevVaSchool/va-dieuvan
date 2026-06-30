@@ -37,5 +37,14 @@ class TransportProvider extends Model
     {
         return $this->hasMany(Trip::class);
     }
-}
 
+    protected static function booted(): void
+    {
+        static::deleting(function (TransportProvider $provider): void {
+            if ($provider->isForceDeleting()) {
+                return;
+            }
+            Trip::where('transport_provider_id', $provider->id)->update(['transport_provider_id' => null]);
+        });
+    }
+}

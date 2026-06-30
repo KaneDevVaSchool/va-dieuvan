@@ -8,6 +8,7 @@ use App\Http\Requests\Api\Portal\PortalNotificationIndexRequest;
 use App\Http\Requests\Api\Portal\PortalNotificationMarkReadRequest;
 use App\Models\DispatchRequest;
 use App\Services\DispatchRequests\DispatchRequestMailPresenter;
+use App\Services\Notifications\NotificationInboxQuery;
 
 class PortalNotificationController extends Controller
 {
@@ -20,13 +21,15 @@ class PortalNotificationController extends Controller
 
         $perPage = isset($data['per_page']) ? max(1, min(50, (int) $data['per_page'])) : 20;
 
-        $unreadTotal = $user->unreadNotifications()->count();
-
         $filter = isset($data['filter']) ? (string) $data['filter'] : 'all';
 
-        $notificationsQuery = $filter === 'unread'
-            ? $user->unreadNotifications()
-            : $user->notifications();
+        $notificationsQuery = NotificationInboxQuery::excludeRemovedDispatchRequests(
+            $filter === 'unread'
+                ? $user->unreadNotifications()
+                : $user->notifications(),
+        );
+
+        $unreadTotal = NotificationInboxQuery::excludeRemovedDispatchRequests($user->unreadNotifications())->count();
 
         $paginator = $notificationsQuery
             ->orderByDesc('created_at')

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Permission\Models\Role as SpatieRole;
+use Spatie\Permission\PermissionRegistrar;
 
 class Role extends SpatieRole
 {
@@ -39,5 +40,15 @@ class Role extends SpatieRole
             config('permission.column_names.role_pivot_key') ?? 'role_id',
             config('permission.column_names.model_morph_key') ?? 'model_id',
         );
+    }
+
+    protected static function booted(): void
+    {
+        $clearCache = static function (): void {
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+        };
+
+        static::deleted($clearCache);
+        static::restored($clearCache);
     }
 }

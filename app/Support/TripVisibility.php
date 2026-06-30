@@ -35,6 +35,7 @@ class TripVisibility
         }
 
         return $trip->dispatchRequest()
+            ->withTrashed()
             ->where('requester_id', $user->id)
             ->exists();
     }
@@ -62,7 +63,7 @@ class TripVisibility
                 $w->orWhere('driver_id', $driverId);
                 $w->orWhere(fn (Builder $legQ) => self::applyScheduleLegDriverFilter($legQ, (int) $driverId));
             }
-            $w->orWhereHas('dispatchRequest', fn (Builder $dr) => $dr->where('requester_id', $user->id));
+            $w->orWhereHas('dispatchRequest', fn (Builder $dr) => $dr->withTrashed()->where('requester_id', $user->id));
         });
     }
 
@@ -90,7 +91,7 @@ class TripVisibility
         }
 
         $needle = '"driver_id":'.$driverId;
-        $q->where(function (Builder $w) use ($needle, $driverId) {
+        $q->where(function (Builder $w) use ($needle) {
             $w->where('schedule_assignments', 'like', '%'.$needle.',%')
                 ->orWhere('schedule_assignments', 'like', '%'.$needle.'}%');
         });

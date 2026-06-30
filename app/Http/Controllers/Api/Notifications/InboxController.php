@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
 use App\Models\DispatchRequest;
 use App\Services\DispatchRequests\DispatchRequestMailPresenter;
+use App\Services\Notifications\NotificationInboxQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -17,7 +18,7 @@ class InboxController extends Controller
     {
         $perPage = min(50, max(1, (int) $request->query('per_page', 20)));
         $user = $request->user();
-        $unreadTotal = $user->unreadNotifications()->count();
+        $unreadTotal = NotificationInboxQuery::excludeRemovedDispatchRequests($user->unreadNotifications())->count();
 
         $audience = $request->query('audience');
         $allowedAudiences = ['driver', 'dispatcher', 'department_head', 'admin'];
@@ -30,7 +31,8 @@ class InboxController extends Controller
             $audience = null;
         }
 
-        $query = $user->notifications()->orderByDesc('created_at');
+        $query = NotificationInboxQuery::excludeRemovedDispatchRequests($user->notifications())
+            ->orderByDesc('created_at');
         if ($audience !== null) {
             $query->where('data->audience', $audience);
         }

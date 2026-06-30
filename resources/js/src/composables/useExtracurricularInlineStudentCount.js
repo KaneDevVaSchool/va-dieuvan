@@ -3,6 +3,7 @@ import { useI18n } from 'vue-i18n'
 import { patchPassengerCount, patchPortalRecurringInstance } from '../api/requests'
 import { formatApiError } from '../api/http'
 import { showAppSuccess } from './appMessage'
+import { formatDispatchRequestRefCode } from '../util/portalRequestFormat'
 
 /**
  * Inline draft + save for extracurricular student count (list views).
@@ -64,8 +65,9 @@ export function useExtracurricularInlineStudentCount(requestsRef, row, options) 
           req.student_count_actual = n
         }
       }
+      const code = formatDispatchRequestRefCode(req) || `#${id}`
       showAppSuccess(
-        t(`${p}.save_success`, { count: n, id }),
+        t(`${p}.save_success`, { count: n, code }),
         t(`${p}.save_success_title`),
       )
       options.onSaved?.()

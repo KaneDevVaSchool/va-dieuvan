@@ -131,6 +131,12 @@ export const NAV_SECTIONS = [
             featureKey: 'module.system.audit',
             permissionKey: 'audit_log.view',
           },
+          {
+            to: `${DISPATCH_WEB_BASE}/system/trash`,
+            labelKey: 'nav.trash',
+            icon: 'trash',
+            featureKey: 'module.system.trash',
+          },
         ],
       },
     ],

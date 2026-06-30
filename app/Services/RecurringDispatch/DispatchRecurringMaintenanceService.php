@@ -305,7 +305,7 @@ class DispatchRecurringMaintenanceService
         $windowStart = $localDepartMinute->copy()->subSeconds(59);
         $windowEnd = $localDepartMinute->copy()->addSeconds(59);
 
-        return DispatchRequest::query()
+        return DispatchRequest::withTrashed()
             ->where('dispatch_request_template_id', $template->id)
             ->whereBetween('depart_at', [$windowStart, $windowEnd])
             /** @phpstan-ignore-next-line */

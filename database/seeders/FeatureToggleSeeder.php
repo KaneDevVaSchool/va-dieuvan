@@ -22,6 +22,7 @@ class FeatureToggleSeeder extends Seeder
             ['key' => 'module.system.feature_toggles', 'name' => 'Quyền hạn — Feature toggle', 'module' => 'system', 'is_enabled' => true],
             ['key' => 'module.system.dispatch_settings', 'name' => 'Quyền hạn — Ngưỡng Gấp điều vận', 'module' => 'system', 'is_enabled' => true],
             ['key' => 'module.system.audit', 'name' => 'Quyền hạn — Activity log', 'module' => 'system', 'is_enabled' => true],
+            ['key' => 'module.system.trash', 'name' => 'Quyền hạn — Thùng rác (soft delete)', 'module' => 'system', 'is_enabled' => true],
         ];
 
         foreach ($rows as $row) {

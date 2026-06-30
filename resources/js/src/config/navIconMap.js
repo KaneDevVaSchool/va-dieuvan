@@ -17,6 +17,7 @@ import {
   ShieldCheckIcon,
   TagIcon,
   RectangleStackIcon,
+  TrashIcon,
   TruckIcon,
   UserGroupIcon,
   UserIcon,
@@ -52,4 +53,5 @@ export const NAV_ICON_MAP = {
   user_roles: UsersIcon,
   feature_toggle: AdjustmentsHorizontalIcon,
   p2p_policy: AcademicCapIcon,
+  trash: TrashIcon,
 }

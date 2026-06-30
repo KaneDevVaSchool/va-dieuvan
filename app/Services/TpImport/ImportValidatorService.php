@@ -18,7 +18,7 @@ class ImportValidatorService
         $warning = 0;
         $error = 0;
 
-        $existingCodes = TpStudent::query()->pluck('id', 'code');
+        $existingCodes = TpStudent::withTrashed()->pluck('id', 'code');
 
         $batch->rows()->orderBy('row_number')->chunkById(200, function ($rows) use ($mapping, &$valid, &$warning, &$error, $existingCodes) {
             foreach ($rows as $row) {
@@ -55,7 +55,7 @@ class ImportValidatorService
      */
     public function evaluateMappedData(array $data): array
     {
-        $existingCodes = TpStudent::query()->pluck('id', 'code');
+        $existingCodes = TpStudent::withTrashed()->pluck('id', 'code');
         $result = $this->evaluateMappedDataInternal($data, $existingCodes);
 
         return ['validation_status' => $result['status'], 'validation_errors' => $result['errors']];

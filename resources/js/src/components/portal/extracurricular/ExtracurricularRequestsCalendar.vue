@@ -70,7 +70,7 @@
               class="group block rounded-lg border border-white/80 bg-white p-1.5 shadow-sm ring-1 ring-va-200/60 transition hover:border-va-300 hover:shadow-md hover:ring-va-300/80 sm:p-2"
             >
               <div class="flex items-start justify-between gap-1">
-                <span class="font-mono text-[11px] font-bold text-va-900 sm:text-xs">#{{ req.id }}</span>
+                <span class="font-mono text-[11px] font-bold text-va-900 sm:text-xs">{{ requestRefCode(req) }}</span>
                 <span
                   class="shrink-0 rounded px-1 py-0.5 text-[10px] font-bold tabular-nums text-va-900 bg-va-50"
                 >
@@ -123,6 +123,7 @@ import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { extracurricularStudentCountTrackingKey } from '../../../composables/useExtracurricularStudentCountTracking'
+import { formatDispatchRequestRefCode } from '../../../util/portalRequestFormat'
 
 const props = defineProps({
   requests: { type: Array, default: () => [] },
@@ -235,6 +236,10 @@ function routeLabel(req) {
   if (o && d) return `${o} → ${d}`
   if (o || d) return o || d
   return t('portal.extracurricular_table.no_route')
+}
+
+function requestRefCode(req) {
+  return formatDispatchRequestRefCode(req) || `#${req?.id ?? ''}`
 }
 
 function hsActual(req) {

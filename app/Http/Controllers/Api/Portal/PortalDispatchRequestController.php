@@ -45,7 +45,9 @@ class PortalDispatchRequestController extends Controller
         $data = $request->validated();
         $module = isset($data['module']) ? (string) $data['module'] : 'all';
 
-        $base = DispatchRequest::query()->where('requester_id', $user->getKey());
+        $base = DispatchRequest::query()
+            ->where('requester_id', $user->getKey())
+            ->visibleOnPortalRequestIndex();
 
         if ($module === 'extracurricular') {
             $base->extracurricularOnly();
@@ -143,6 +145,7 @@ class PortalDispatchRequestController extends Controller
 
         $query = DispatchRequest::query()
             ->where('requester_id', $user->getKey())
+            ->visibleOnPortalRequestIndex()
             ->with([
                 'dispatchRequestTemplate.dispatchPackage',
                 'trip:id,dispatch_request_id,status,completed_at',

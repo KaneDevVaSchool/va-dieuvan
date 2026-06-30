@@ -13,6 +13,7 @@ class ImportExecutorService
     public function __construct(
         private readonly TpImportStudentPayload $studentPayload,
     ) {}
+
     /**
      * @param  array{skip_errors?: bool, include_warnings?: bool, update_existing?: bool, target_program_id?: int}  $options
      * @return array{imported: int, skipped: int, failed: int}
@@ -44,9 +45,9 @@ class ImportExecutorService
                     try {
                         DB::transaction(function () use ($row, $data, $updateExisting, $targetProgramId, &$imported, &$skipped) {
                             $code = trim((string) ($data['code'] ?? '')) ?: 'TP-'.Str::upper(Str::random(8));
-                            $existing = TpStudent::query()->where('code', $code)->first();
+                            $existing = TpStudent::withTrashed()->where('code', $code)->first();
 
-                            if ($existing && ! $updateExisting) {
+                            if ($existing && ! $updateExisting && ! $existing->trashed()) {
                                 $row->update(['import_status' => 'skipped', 'student_id' => $existing->id]);
                                 $skipped++;
 
@@ -55,7 +56,13 @@ class ImportExecutorService
 
                             $payload = $this->studentPayload->fromImportRow($data, $existing);
 
-                            $student = TpStudent::query()->updateOrCreate(['code' => $code], $payload);
+                            if ($existing?->trashed()) {
+                                $existing->restore();
+                                $existing->update($payload);
+                                $student = $existing->fresh();
+                            } else {
+                                $student = TpStudent::withTrashed()->updateOrCreate(['code' => $code], $payload);
+                            }
 
                             if ($targetProgramId) {
                                 TpEnrollment::query()->updateOrCreate(

@@ -408,6 +408,16 @@ const staffChildRoutes = [
       },
     },
     {
+      path: "system/trash",
+      name: "systemTrash",
+      component: () => import("../views/system/TrashView.vue"),
+      meta: {
+        title: "Thùng rác",
+        subtitle: "Bản ghi đã xóa mềm",
+        featureKey: "module.system.trash",
+      },
+    },
+    {
       path: "notifications",
       name: "notificationsHub",
       component: () => import("../views/notifications/NotificationsHubView.vue"),

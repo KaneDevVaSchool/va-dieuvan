@@ -5,6 +5,7 @@ namespace App\Services\Nav;
 use App\Models\CargoShipment;
 use App\Models\DispatchRequest;
 use App\Models\User;
+use App\Services\Notifications\NotificationInboxQuery;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -76,7 +77,7 @@ final class NavBadgesService
     private function notificationsUnread(User $user): int
     {
         try {
-            return $user->unreadNotifications()->count();
+            return NotificationInboxQuery::excludeRemovedDispatchRequests($user->unreadNotifications())->count();
         } catch (Throwable $e) {
             Log::warning('nav_badges.notifications_unread_failed', [
                 'user_id' => $user->id,
