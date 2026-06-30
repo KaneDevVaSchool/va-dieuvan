@@ -30,10 +30,10 @@ import DatagridFilterField from '../../components/shared/ui/DatagridFilterField.
 import FilterVisibilityDropdown from '../../components/shared/ui/FilterVisibilityDropdown.vue'
 
 const FT_FILTER_CONTROLS = [
-  { key: 'status', label: 'Tr?ng th?i', default: false },
-  { key: 'module', label: 'Module', default: false },
-  { key: 'maintenance', label: 'Ch? b?o tr?', default: false },
-  { key: 'upgrade', label: 'N?ng c?p', default: false },
+  { key: 'status', labelKey: 'system_pages.feature_toggles.filter_status', default: false },
+  { key: 'module', labelKey: 'system_pages.feature_toggles.filter_module', default: false },
+  { key: 'maintenance', labelKey: 'system_pages.feature_toggles.filter_control_maintenance', default: false },
+  { key: 'upgrade', labelKey: 'system_pages.feature_toggles.filter_control_upgrade', default: false },
 ]
 
 const {
@@ -42,7 +42,6 @@ const {
   showFilterPanelDd,
   openFilterPanel,
   closeFilterPanel,
-  filterControlDefs,
 } = useVisibleFilterControls(FT_FILTER_CONTROLS, 'va-dieuvan.system.feature-toggles.filters.v1')
 
 const datagridRef = ref(null)
@@ -55,8 +54,7 @@ function toggleFilterPanel() {
 const FILTER_CONTROL_CLASS =
   'input h-10 w-full text-sm rounded-lg border border-slate-200 bg-white px-3 text-slate-900 shadow-sm focus:border-va-700 focus:outline-none focus:ring-2 focus:ring-va-700/15 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100'
 
-// ??? Nav clusters: featureKey ? links ?????????????????????????????????????????
-// T?nh m?t l?n, d?ng per-row khi expand
+// Nav clusters: featureKey → links (computed once, used per expanded row)
 const navKeyMap = computed(() => {
   const m = new Map()
   for (const cluster of getFeatureToggleNavClusters()) {
@@ -90,15 +88,23 @@ function relatedPermHint(permName) {
   return permissionPlainVi[permName] ?? ''
 }
 
-// ??? State ????????????????????????????????????????????????????????????????????
+// ─── State ───────────────────────────────────────────────────────────────────
 
 const auth = useAuthStore()
 const { t } = useI18n()
 
+const filterControlDefs = computed(() =>
+  FT_FILTER_CONTROLS.map((fd) => ({
+    key: fd.key,
+    label: t(fd.labelKey),
+  })),
+)
+
 const loading    = ref(true)
 const saving     = ref(false)
 const items      = ref([])
-const expandedId = ref(null)  // id c?a row ?ang expand nav panel
+
+const expandedId = ref(null)
 
 const searchRaw  = ref('')
 const searchQ    = ref('')
@@ -111,15 +117,13 @@ const addModalOpen = ref(false)
 const presetIdx    = ref('')
 const form = reactive({ key: '', name: '', module: '', is_enabled: true, maintenance_mode: false, upgrade_notice: false })
 
-const STATUS_OPTS = [
-  { value: 'all',         label: 'T?t c?' },
-  { value: 'on',          label: '?ang b?t' },
-  { value: 'off',         label: '?ang t?t' },
-  { value: 'maintenance', label: '?ang b?o tr?' },
-  { value: 'upgrade',     label: 'C? th?ng b?o n?ng c?p' },
-]
-
-// ??? Computed ?????????????????????????????????????????????????????????????????
+const STATUS_OPTS = computed(() => [
+  { value: 'all', label: t('system_pages.feature_toggles.status_all') },
+  { value: 'on', label: t('system_pages.feature_toggles.status_on') },
+  { value: 'off', label: t('system_pages.feature_toggles.status_off') },
+  { value: 'maintenance', label: t('system_pages.feature_toggles.status_maintenance') },
+  { value: 'upgrade', label: t('system_pages.feature_toggles.status_upgrade') },
+])
 
 const bumpSearch = debounceTrailing(() => { searchQ.value = searchRaw.value }, 300)
 watch(searchRaw, () => bumpSearch())
@@ -170,7 +174,7 @@ async function syncSession() {
   try { await auth.fetchMe() } catch { /* ignore */ }
 }
 
-// ??? Sync session sau mutation ????????????????????????????????????????????????
+// Sync session after mutations
 
 async function load() {
   loading.value = true
@@ -196,10 +200,10 @@ async function patchToggle(row, partial) {
     Object.assign(row, partial)
     await syncSession()
     const label = 'is_enabled' in partial
-      ? (partial.is_enabled ? '?? b?t t?nh n?ng.' : '?? t?t t?nh n?ng.')
+      ? (partial.is_enabled ? t('system_pages.feature_toggles.toast_enabled_on') : t('system_pages.feature_toggles.toast_enabled_off'))
       : 'maintenance_mode' in partial
-        ? (partial.maintenance_mode ? '?? b?t ch? ?? b?o tr?.' : '?? t?t ch? ?? b?o tr?.')
-        : (partial.upgrade_notice ? '?? b?t th?ng b?o n?ng c?p.' : '?? t?t th?ng b?o n?ng c?p.')
+        ? (partial.maintenance_mode ? t('system_pages.feature_toggles.toast_maintenance_on') : t('system_pages.feature_toggles.toast_maintenance_off'))
+        : (partial.upgrade_notice ? t('system_pages.feature_toggles.toast_upgrade_on') : t('system_pages.feature_toggles.toast_upgrade_off'))
     showAppSuccess(label, row.name)
   } catch (e) {
     showAppError(formatApiError(e))
@@ -211,9 +215,9 @@ async function patchToggle(row, partial) {
 
 async function confirmDelete(row) {
   const ok = await confirmAction({
-    title:        'X?a t?nh n?ng?',
-    message:      `X?a t?nh n?ng ?${row.name}? (${row.key})?\nC?c menu li?n quan s? b? ?nh h??ng ngay l?p t?c.`,
-    confirmLabel: 'X?a',
+    title:        t('system_pages.feature_toggles.confirm_delete_title'),
+    message:      t('system_pages.feature_toggles.confirm_delete_message', { name: row.name, key: row.key }),
+    confirmLabel: t('system_pages.feature_toggles.confirm_delete_ok'),
     danger:       true,
   })
   if (!ok) return
@@ -222,7 +226,7 @@ async function confirmDelete(row) {
     await admin.deleteFeatureToggle(row.id)
     await load()
     await syncSession()
-    showAppSuccess('?? x?a t?nh n?ng.')
+    showAppSuccess(t('system_pages.feature_toggles.toast_deleted'))
   } catch (e) {
     showAppError(formatApiError(e))
   } finally {
@@ -230,7 +234,7 @@ async function confirmDelete(row) {
   }
 }
 
-// ??? Create ???????????????????????????????????????????????????????????????????
+// ─── Create ──────────────────────────────────────────────────────────────────
 
 watch(presetIdx, (v) => {
   if (v === '' || v == null) return
@@ -268,7 +272,7 @@ async function submitAdd() {
     addModalOpen.value = false
     await load()
     await syncSession()
-    showAppSuccess('?? th?m t?nh n?ng m?i.')
+    showAppSuccess(t('system_pages.feature_toggles.toast_created'))
   } catch (e) {
     showAppError(formatApiError(e))
   } finally {
@@ -307,14 +311,14 @@ onActivated(() => load())
 
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-lg font-bold text-slate-900 dark:text-slate-50">T?nh n?ng h? th?ng</h1>
+        <h1 class="text-lg font-bold text-slate-900 dark:text-slate-50">{{ t('system_pages.feature_toggles.hero_title') }}</h1>
         <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-          B?t / t?t c?c t?nh n?ng v? qu?n l? ch? ?? b?o tr?, th?ng b?o n?ng c?p.
+          {{ t('system_pages.feature_toggles.hero_subtitle') }}
         </p>
       </div>
       <Button type="button" class="shrink-0 gap-1.5" :disabled="loading || saving" data-testid="feature-toggles-add" @click="openAdd">
         <PlusIcon class="h-4 w-4" aria-hidden="true" />
-        Th?m t?nh n?ng
+        {{ t('system_pages.feature_toggles.btn_add') }}
       </Button>
     </div>
 
@@ -417,14 +421,14 @@ onActivated(() => load())
 
       <template v-else-if="!items.length">
         <div class="py-12 text-center">
-          <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Ch?a c? t?nh n?ng n?o.</p>
-          <Button class="mt-4" data-testid="feature-toggles-add-first" @click="openAdd">Th?m t?nh n?ng ??u ti?n</Button>
+          <p class="text-sm font-medium text-slate-600 dark:text-slate-400">{{ t('system_pages.feature_toggles.empty_none') }}</p>
+          <Button class="mt-4" data-testid="feature-toggles-add-first" @click="openAdd">{{ t('system_pages.feature_toggles.btn_add_first') }}</Button>
         </div>
       </template>
 
       <template v-else>
         <div v-if="filteredItems.length === 0" class="border-t border-slate-100 py-10 text-center text-sm text-amber-800 dark:border-slate-700 dark:text-amber-200">
-          Kh?ng t?m th?y t?nh n?ng n?o kh?p b? l?c.
+          {{ t('system_pages.feature_toggles.empty_filtered') }}
         </div>
         <div v-else class="space-y-2 border-t border-slate-100 p-3 sm:p-4 dark:border-slate-700">
           <SystemFeatureToggleRecordCard
@@ -457,43 +461,43 @@ onActivated(() => load())
     >
       <Card class="max-h-[90vh] w-full max-w-lg overflow-y-auto shadow-xl">
         <div class="mb-4 flex items-center justify-between">
-          <h2 id="feature-add-title" class="text-sm font-semibold text-slate-900 dark:text-slate-100">Th?m t?nh n?ng m?i</h2>
+          <h2 id="feature-add-title" class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('system_pages.feature_toggles.add_modal_title') }}</h2>
           <button type="button" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800" @click="addModalOpen = false">
             <XMarkIcon class="h-5 w-5" />
           </button>
         </div>
 
         <form class="space-y-4" @submit.prevent="submitAdd">
-          <Select v-model="presetIdx" label="Ch?n t? m?u c? s?n">
-            <option value="">? Kh?ng d?ng m?u ?</option>
+          <Select v-model="presetIdx" :label="t('system_pages.feature_toggles.add_preset_label')">
+            <option value="">{{ t('system_pages.feature_toggles.add_preset_none') }}</option>
             <option v-for="(row, i) in SEED_FEATURE_TOGGLE_PRESETS" :key="row.key" :value="String(i)">
               {{ row.name }} ({{ row.key }})
             </option>
           </Select>
 
           <div class="grid gap-4 sm:grid-cols-2">
-            <Input v-model="form.key" label="Kho? (Key) *" placeholder="vd. module.reports" required />
-            <Input v-model="form.name" label="T?n hi?n th? *" placeholder="vd. B?o c?o" required />
+            <Input v-model="form.key" :label="t('system_pages.feature_toggles.add_key_label')" :placeholder="t('system_pages.feature_toggles.add_key_ph')" required />
+            <Input v-model="form.name" :label="t('system_pages.feature_toggles.add_name_label')" :placeholder="t('system_pages.feature_toggles.add_name_ph')" required />
           </div>
 
-          <Input v-model="form.module" label="Nh?m (t?y ch?n)" placeholder="vd. reports" />
+          <Input v-model="form.module" :label="t('system_pages.feature_toggles.add_module_label')" :placeholder="t('system_pages.feature_toggles.add_module_ph')" />
 
           <div class="space-y-2 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
-            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">TR?NG TH?I M?C ??NH</p>
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">{{ t('system_pages.feature_toggles.add_default_heading') }}</p>
             <label class="flex cursor-pointer items-center justify-between gap-2 text-sm text-slate-700 dark:text-slate-300">
-              <span>B?t t?nh n?ng</span>
+              <span>{{ t('system_pages.feature_toggles.add_toggle_enable') }}</span>
               <button type="button" role="switch" :aria-checked="form.is_enabled" class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 border-transparent transition-colors" :class="form.is_enabled ? 'bg-teal-500' : 'bg-slate-200 dark:bg-slate-700'" @click="form.is_enabled = !form.is_enabled">
                 <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200" :class="form.is_enabled ? 'translate-x-5' : 'translate-x-0'" />
               </button>
             </label>
             <label class="flex cursor-pointer items-center justify-between gap-2 text-sm text-slate-700 dark:text-slate-300">
-              <span>Ch? ?? b?o tr?</span>
+              <span>{{ t('system_pages.feature_toggles.add_toggle_maintenance') }}</span>
               <button type="button" role="switch" :aria-checked="form.maintenance_mode" class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 border-transparent transition-colors" :class="form.maintenance_mode ? 'bg-amber-500' : 'bg-slate-200 dark:bg-slate-700'" @click="form.maintenance_mode = !form.maintenance_mode">
                 <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200" :class="form.maintenance_mode ? 'translate-x-5' : 'translate-x-0'" />
               </button>
             </label>
             <label class="flex cursor-pointer items-center justify-between gap-2 text-sm text-slate-700 dark:text-slate-300">
-              <span>Th?ng b?o n?ng c?p</span>
+              <span>{{ t('system_pages.feature_toggles.add_toggle_upgrade') }}</span>
               <button type="button" role="switch" :aria-checked="form.upgrade_notice" class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 border-transparent transition-colors" :class="form.upgrade_notice ? 'bg-violet-500' : 'bg-slate-200 dark:bg-slate-700'" @click="form.upgrade_notice = !form.upgrade_notice">
                 <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200" :class="form.upgrade_notice ? 'translate-x-5' : 'translate-x-0'" />
               </button>
@@ -501,8 +505,8 @@ onActivated(() => load())
           </div>
 
           <div class="flex flex-col-reverse gap-2 border-t border-slate-100 pt-4 dark:border-slate-800 sm:flex-row sm:justify-end">
-            <Button variant="secondary" type="button" :disabled="saving" @click="addModalOpen = false">Hu?</Button>
-            <Button type="submit" :loading="saving" :disabled="saving || !form.key.trim() || !form.name.trim()">Th?m t?nh n?ng</Button>
+            <Button variant="secondary" type="button" :disabled="saving" @click="addModalOpen = false">{{ t('feature_toggles.cancel') }}</Button>
+            <Button type="submit" :loading="saving" :disabled="saving || !form.key.trim() || !form.name.trim()">{{ t('system_pages.feature_toggles.btn_add') }}</Button>
           </div>
         </form>
       </Card>

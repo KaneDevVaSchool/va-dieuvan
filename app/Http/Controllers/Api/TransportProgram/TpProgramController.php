@@ -6,6 +6,7 @@ use App\Actions\CreateTransportProgramAction;
 use App\Actions\UpdateProgramDateRangeAction;
 use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\TransportProgram\BulkDeleteTpProgramsRequest;
 use App\Http\Requests\Api\TransportProgram\ListTpProgramsRequest;
 use App\Http\Requests\Api\TransportProgram\StoreTpProgramRequest;
 use App\Http\Requests\Api\TransportProgram\UpdateTpProgramRequest;
@@ -13,6 +14,8 @@ use App\Models\TpProgram;
 use App\Services\TransportProgram\TpDriverAssignmentNotifyService;
 use App\Services\TransportProgram\TpProgramPresenter;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TpProgramController extends Controller
 {
@@ -102,10 +105,28 @@ class TpProgramController extends Controller
         return $this->ok($this->presenter->programSummary($tpProgram));
     }
 
-    public function destroy(TpProgram $tpProgram): JsonResponse
+    public function destroy(Request $request, TpProgram $tpProgram): JsonResponse
     {
+        abort_unless($request->user()?->hasPermission('tp_program.manage'), 403);
+
         $tpProgram->delete();
 
         return $this->ok(['deleted' => true]);
+    }
+
+    public function bulkDestroy(BulkDeleteTpProgramsRequest $request): JsonResponse
+    {
+        $ids = collect($request->validated('ids'))->unique()->values()->all();
+        $deleted = 0;
+
+        DB::transaction(function () use ($ids, &$deleted) {
+            $programs = TpProgram::query()->whereIn('id', $ids)->get();
+            foreach ($programs as $program) {
+                $program->delete();
+                $deleted++;
+            }
+        });
+
+        return $this->ok(['deleted_count' => $deleted]);
     }
 }

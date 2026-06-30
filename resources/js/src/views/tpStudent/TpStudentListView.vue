@@ -106,6 +106,17 @@
                 </label>
               </li>
             </FilterVisibilityDropdown>
+
+            <button
+              v-if="selected.length"
+              type="button"
+              class="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 text-sm font-medium text-rose-800 shadow-sm transition hover:bg-rose-100 disabled:opacity-50 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200"
+              :disabled="bulkDeleting"
+              data-testid="tp-student-bulk-delete"
+              @click="confirmBulkDeleteStudents"
+            >
+              {{ t('tp_student_page.bulk_delete', { n: selected.length }) }}
+            </button>
           </div>
 
           <div class="ml-auto flex shrink-0 flex-wrap items-center gap-2">
@@ -379,7 +390,7 @@ import { useTpStudentListColumns, TP_STUDENT_COL_DEFAULTS } from '../../composab
 import AppRowActionsMenu from '../../components/ui/AppRowActionsMenu.vue'
 import TpStudentFormModal from '../../components/transportProgram/TpStudentFormModal.vue'
 import TpStudentDetailModal from '../../components/transportProgram/TpStudentDetailModal.vue'
-import { listStudents, getStudent, deleteStudent, exportStudentsList } from '../../api/transportProgram'
+import { listStudents, getStudent, deleteStudent, bulkDeleteStudents, exportStudentsList } from '../../api/transportProgram'
 import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
 import { confirmAction } from '../../composables/useConfirm'
 
@@ -389,6 +400,7 @@ const loading = ref(false)
 const exporting = ref(false)
 const items = ref([])
 const selected = ref([])
+const bulkDeleting = ref(false)
 const showForm = ref(false)
 const editing = ref(null)
 const studentDetailOpen = ref(false)
@@ -788,10 +800,35 @@ async function remove(s) {
   if (!ok) return
   try {
     await deleteStudent(s.id)
+    selected.value = selected.value.filter((id) => id !== s.id)
     showAppSuccess(t('tp_student_page.delete_success'))
     load()
   } catch (err) {
     showAppErrorFromApi(err)
+  }
+}
+
+async function confirmBulkDeleteStudents() {
+  const ids = [...selected.value]
+  if (!ids.length || bulkDeleting.value) return
+  const ok = await confirmAction({
+    title: t('tp_student_page.bulk_delete_title'),
+    message: t('tp_student_page.bulk_delete_message', { n: ids.length }),
+    confirmLabel: t('tp_student_page.delete_confirm'),
+    danger: true,
+  })
+  if (!ok) return
+  bulkDeleting.value = true
+  try {
+    const res = await bulkDeleteStudents(ids)
+    const n = res?.deleted_count ?? ids.length
+    selected.value = []
+    showAppSuccess(t('tp_student_page.bulk_delete_success', { n }))
+    load()
+  } catch (err) {
+    showAppErrorFromApi(err)
+  } finally {
+    bulkDeleting.value = false
   }
 }
 

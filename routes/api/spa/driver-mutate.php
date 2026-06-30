@@ -33,6 +33,7 @@ Route::prefix('trip-costs')->controller(TripCostController::class)->group(functi
         ->name('api.trip-costs.store');
     Route::patch('/{tripCost}', 'updateByDriver')->middleware('throttle:30,1');
     Route::delete('/{tripCost}', 'destroyByDriver')->middleware('throttle:20,1');
+    Route::post('/bulk-delete', 'bulkDestroy')->middleware('throttle:20,1');
 });
 
 // Transport Program redesign (tp_*) — tài xế ghi (§5, §7)

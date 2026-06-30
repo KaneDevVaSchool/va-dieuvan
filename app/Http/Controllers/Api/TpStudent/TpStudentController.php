@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Api\TpStudent;
 
 use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\TpStudent\BulkDeleteTpStudentsRequest;
 use App\Http\Requests\Api\TpStudent\StoreTpStudentRequest;
 use App\Http\Requests\Api\TpStudent\UpdateTpStudentRequest;
 use App\Models\TpStudent;
 use App\Services\TpStudent\TpStudentPresenter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TpStudentController extends Controller
 {
@@ -148,8 +150,29 @@ class TpStudentController extends Controller
 
     public function destroy(TpStudent $tpStudent): JsonResponse
     {
+        abort_unless(
+            request()->user()?->hasPermission('tp_student.manage'),
+            403,
+        );
+
         $tpStudent->delete();
 
         return $this->ok(['deleted' => true]);
+    }
+
+    public function bulkDestroy(BulkDeleteTpStudentsRequest $request): JsonResponse
+    {
+        $ids = collect($request->validated('ids'))->unique()->values()->all();
+        $deleted = 0;
+
+        DB::transaction(function () use ($ids, &$deleted) {
+            $students = TpStudent::query()->whereIn('id', $ids)->get();
+            foreach ($students as $student) {
+                $student->delete();
+                $deleted++;
+            }
+        });
+
+        return $this->ok(['deleted_count' => $deleted]);
     }
 }

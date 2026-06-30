@@ -160,6 +160,7 @@ Route::delete('/transport-providers/{id}/force', [OperationalResourceController:
 // Transport Program redesign (tp_*) — ghi
 Route::prefix('tp-programs')->group(function () {
     Route::post('/', [\App\Http\Controllers\Api\TransportProgram\TpProgramController::class, 'store'])->middleware('throttle:30,1');
+    Route::post('/bulk-delete', [\App\Http\Controllers\Api\TransportProgram\TpProgramController::class, 'bulkDestroy'])->middleware('throttle:20,1');
     Route::patch('/{tpProgram}', [\App\Http\Controllers\Api\TransportProgram\TpProgramController::class, 'update'])->middleware('throttle:30,1');
     Route::delete('/{tpProgram}', [\App\Http\Controllers\Api\TransportProgram\TpProgramController::class, 'destroy'])->middleware('throttle:20,1');
 
@@ -201,6 +202,7 @@ Route::post('/tp-executions/{tpTripExecution}/force-complete', [\App\Http\Contro
 // Students (tp_*) — ghi
 Route::prefix('tp-students')->group(function () {
     Route::post('/', [\App\Http\Controllers\Api\TpStudent\TpStudentController::class, 'store'])->middleware('throttle:30,1');
+    Route::post('/bulk-delete', [\App\Http\Controllers\Api\TpStudent\TpStudentController::class, 'bulkDestroy'])->middleware('throttle:20,1');
     Route::patch('/{tpStudent}', [\App\Http\Controllers\Api\TpStudent\TpStudentController::class, 'update'])->middleware('throttle:30,1');
     Route::delete('/{tpStudent}', [\App\Http\Controllers\Api\TpStudent\TpStudentController::class, 'destroy'])->middleware('throttle:20,1');
 });

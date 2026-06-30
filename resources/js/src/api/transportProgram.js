@@ -33,6 +33,11 @@ export async function deleteProgram(id) {
   return data.data
 }
 
+export async function bulkDeletePrograms(ids) {
+  const { data } = await http.post('/tp-programs/bulk-delete', { ids })
+  return data.data
+}
+
 export async function activateProgram(id) {
   const { data } = await http.post(`/tp-programs/${id}/activate`)
   return data.data
@@ -261,6 +266,11 @@ export async function updateStudent(id, payload) {
 
 export async function deleteStudent(id) {
   const { data } = await http.delete(`/tp-students/${id}`)
+  return data.data
+}
+
+export async function bulkDeleteStudents(ids) {
+  const { data } = await http.post('/tp-students/bulk-delete', { ids })
   return data.data
 }
 

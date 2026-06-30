@@ -76,6 +76,17 @@
                 </label>
               </li>
             </FilterVisibilityDropdown>
+
+            <button
+              v-if="canManagePrograms && selectedProgramIds.length"
+              type="button"
+              class="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 text-sm font-medium text-rose-800 shadow-sm transition hover:bg-rose-100 disabled:opacity-50 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200"
+              :disabled="bulkDeleting"
+              data-testid="tp-programs-bulk-delete"
+              @click="confirmBulkDeletePrograms"
+            >
+              {{ t('tp_programs_page.bulk_delete', { n: selectedProgramIds.length }) }}
+            </button>
           </div>
 
           <div
@@ -190,10 +201,24 @@
         <article
           v-for="p in visibleItems"
           :key="p.id"
-          class="group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-va-800/30 hover:shadow-md dark:border-slate-700 dark:bg-slate-900/40"
+          class="group relative flex cursor-pointer flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-va-800/30 hover:shadow-md dark:border-slate-700 dark:bg-slate-900/40"
           :data-testid="`tp-program-card-${p.id}`"
           @click="goWorkspace(p.id)"
         >
+          <div
+            v-if="canManagePrograms"
+            class="absolute left-2 top-2 z-10 flex items-center gap-1"
+            @click.stop
+          >
+            <input
+              type="checkbox"
+              class="h-4 w-4 rounded border-slate-300 bg-white accent-va-800 shadow-sm"
+              :checked="selectedProgramIds.includes(p.id)"
+              :aria-label="t('tp_programs_page.select_row')"
+              :data-testid="`tp-program-select-${p.id}`"
+              @change="toggleProgramSelection(p.id, $event)"
+            />
+          </div>
           <div class="flex min-h-0 flex-1 flex-col gap-2.5 p-3.5">
             <div class="flex items-start justify-between gap-2">
               <div class="flex min-w-0 items-start gap-2.5">
@@ -311,12 +336,24 @@
               </span>
               <span class="truncate">{{ p.responsible_user_name || t('tp_programs_page.card_responsible') }}</span>
             </div>
-            <span
-              class="inline-flex shrink-0 items-center gap-0.5 text-xs font-medium text-va-800 group-hover:underline"
-            >
-              {{ t('tp_programs_page.card_view_detail') }}
-              <ArrowRightIcon class="h-3.5 w-3.5" aria-hidden="true" />
-            </span>
+            <div class="flex shrink-0 items-center gap-2">
+              <button
+                v-if="canManagePrograms"
+                type="button"
+                class="inline-flex h-8 items-center gap-1 rounded-lg border border-rose-200 px-2 text-xs font-medium text-rose-700 hover:bg-rose-50 dark:border-rose-900 dark:text-rose-300"
+                :data-testid="`tp-program-delete-${p.id}`"
+                @click="removeProgram(p, $event)"
+              >
+                <TrashIcon class="h-3.5 w-3.5" aria-hidden="true" />
+                {{ t('tp_programs_page.action_delete') }}
+              </button>
+              <span
+                class="inline-flex shrink-0 items-center gap-0.5 text-xs font-medium text-va-800 group-hover:underline"
+              >
+                {{ t('tp_programs_page.card_view_detail') }}
+                <ArrowRightIcon class="h-3.5 w-3.5" aria-hidden="true" />
+              </span>
+            </div>
           </div>
         </article>
       </div>
@@ -325,6 +362,16 @@
         <table class="w-full min-w-[56rem] text-left text-base">
           <thead class="bg-slate-50 text-sm uppercase tracking-wide text-slate-500 dark:bg-slate-800/60">
             <tr>
+              <th v-if="canManagePrograms" class="w-10 px-3 py-3.5">
+                <input
+                  type="checkbox"
+                  class="h-4 w-4 rounded border-slate-300 accent-va-800"
+                  :checked="programsPageAllSelected"
+                  :aria-label="t('tp_programs_page.select_all_page')"
+                  data-testid="tp-programs-select-all"
+                  @change="toggleSelectAllProgramsPage"
+                />
+              </th>
               <th class="px-4 py-3.5 font-medium">{{ t('tp_programs_page.col_program') }}</th>
               <th class="px-4 py-3.5 font-medium">{{ t('tp_programs_page.col_route') }}</th>
               <th class="px-4 py-3.5 font-medium">{{ t('tp_programs_page.col_time') }}</th>
@@ -332,6 +379,7 @@
               <th class="px-4 py-3.5 font-medium">{{ t('tp_programs_page.col_days') }}</th>
               <th class="px-4 py-3.5 font-medium">{{ t('tp_programs_page.col_responsible') }}</th>
               <th class="px-4 py-3.5 font-medium">{{ t('tp_programs_page.col_status') }}</th>
+              <th v-if="canManagePrograms" class="px-4 py-3.5 font-medium text-right">{{ t('tp_programs_page.col_actions') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
@@ -342,6 +390,15 @@
               :data-testid="`tp-program-row-${p.id}`"
               @click="goWorkspace(p.id)"
             >
+              <td v-if="canManagePrograms" class="px-3 py-3.5" @click.stop>
+                <input
+                  type="checkbox"
+                  class="h-4 w-4 rounded border-slate-300 accent-va-800"
+                  :checked="selectedProgramIds.includes(p.id)"
+                  :data-testid="`tp-program-row-select-${p.id}`"
+                  @change="toggleProgramSelection(p.id, $event)"
+                />
+              </td>
               <td class="px-4 py-3.5">
                 <div class="font-medium text-slate-900 dark:text-white">{{ p.name }}</div>
                 <div class="font-mono text-xs text-slate-400">{{ p.code }}</div>
@@ -361,6 +418,17 @@
                   <span class="h-1.5 w-1.5 rounded-full" :class="accent(p.status).dot"></span>
                   {{ statusLabel(p.status) }}
                 </span>
+              </td>
+              <td v-if="canManagePrograms" class="px-4 py-3.5 text-right" @click.stop>
+                <button
+                  type="button"
+                  class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-medium text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950/40"
+                  :data-testid="`tp-program-row-delete-${p.id}`"
+                  @click="removeProgram(p, $event)"
+                >
+                  <TrashIcon class="h-4 w-4" aria-hidden="true" />
+                  {{ t('tp_programs_page.action_delete') }}
+                </button>
               </td>
             </tr>
           </tbody>
@@ -412,6 +480,7 @@ import {
   ClockIcon,
   TruckIcon,
   ArrowRightIcon,
+  TrashIcon,
 } from '@heroicons/vue/24/outline'
 import Button from '../../components/ui/Button.vue'
 import TpProgramSummaryBar from '../../components/transportProgram/TpProgramSummaryBar.vue'
@@ -421,13 +490,19 @@ import DatagridFilterField from '../../components/shared/ui/DatagridFilterField.
 import FilterVisibilityDropdown from '../../components/shared/ui/FilterVisibilityDropdown.vue'
 import { useVisibleFilterControls } from '../../composables/useVisibleFilterControls.js'
 import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
-import { listPrograms } from '../../api/transportProgram'
-import { showAppErrorFromApi } from '../../composables/appMessage'
+import { listPrograms, deleteProgram, bulkDeletePrograms } from '../../api/transportProgram'
+import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
+import { confirmAction } from '../../composables/useConfirm'
+import { useAuthStore } from '../../store'
 
 const { t } = useI18n()
 const router = useRouter()
+const auth = useAuthStore()
 const loading = ref(false)
 const items = ref([])
+const selectedProgramIds = ref([])
+const bulkDeleting = ref(false)
+const canManagePrograms = computed(() => auth.hasPermission('tp_program.manage'))
 const kpiStats = ref({ total: 0, by_status: {}, operating_days: 0 })
 const view = ref('grid')
 const sort = ref('newest')
@@ -653,6 +728,76 @@ function goCreate() {
 }
 function goWorkspace(id) {
   router.push({ name: 'tpProgramWorkspace', params: { id } })
+}
+
+function toggleProgramSelection(id, event) {
+  event?.stopPropagation?.()
+  const i = selectedProgramIds.value.indexOf(id)
+  if (i === -1) selectedProgramIds.value = [...selectedProgramIds.value, id]
+  else selectedProgramIds.value = selectedProgramIds.value.filter((x) => x !== id)
+}
+
+const visiblePageIds = computed(() => {
+  if (view.value === 'list') return pagedListItems.value.map((p) => p.id)
+  return visibleItems.value.map((p) => p.id)
+})
+
+const programsPageAllSelected = computed(() => {
+  const ids = visiblePageIds.value
+  return ids.length > 0 && ids.every((id) => selectedProgramIds.value.includes(id))
+})
+
+function toggleSelectAllProgramsPage(event) {
+  const ids = visiblePageIds.value
+  if (!ids.length) return
+  if (event.target.checked) {
+    selectedProgramIds.value = [...new Set([...selectedProgramIds.value, ...ids])]
+  } else {
+    selectedProgramIds.value = selectedProgramIds.value.filter((id) => !ids.includes(id))
+  }
+}
+
+async function removeProgram(p, event) {
+  event?.stopPropagation?.()
+  const ok = await confirmAction({
+    title: t('tp_programs_page.delete_title'),
+    message: t('tp_programs_page.delete_message', { name: p.name }),
+    confirmLabel: t('tp_programs_page.delete_confirm'),
+    danger: true,
+  })
+  if (!ok) return
+  try {
+    await deleteProgram(p.id)
+    selectedProgramIds.value = selectedProgramIds.value.filter((id) => id !== p.id)
+    showAppSuccess(t('tp_programs_page.delete_success'))
+    await load()
+  } catch (err) {
+    showAppErrorFromApi(err)
+  }
+}
+
+async function confirmBulkDeletePrograms() {
+  const ids = [...selectedProgramIds.value]
+  if (!ids.length || bulkDeleting.value) return
+  const ok = await confirmAction({
+    title: t('tp_programs_page.bulk_delete_title'),
+    message: t('tp_programs_page.bulk_delete_message', { n: ids.length }),
+    confirmLabel: t('tp_programs_page.delete_confirm'),
+    danger: true,
+  })
+  if (!ok) return
+  bulkDeleting.value = true
+  try {
+    const res = await bulkDeletePrograms(ids)
+    const n = res?.deleted_count ?? ids.length
+    selectedProgramIds.value = []
+    showAppSuccess(t('tp_programs_page.bulk_delete_success', { n }))
+    await load()
+  } catch (err) {
+    showAppErrorFromApi(err)
+  } finally {
+    bulkDeleting.value = false
+  }
 }
 
 function statusLabel(s) {

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Costs;
 
 use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Costs\BulkDeleteTripCostsRequest;
 use App\Http\Requests\Api\Costs\DecideTripCostRequest;
 use App\Http\Requests\Api\Costs\DestroyTripCostByDriverRequest;
 use App\Http\Requests\Api\Costs\ListAllTripCostsRequest;
@@ -334,6 +335,31 @@ class TripCostController extends Controller
             abort_unless(TripCostAccess::driverCanMutateCostRow($user, $tripCost), 403);
         }
 
+        $deletedId = $this->deleteTripCostForUser($user, $tripCost, $isReconciler);
+
+        return $this->ok(['deleted' => true, 'id' => $deletedId]);
+    }
+
+    public function bulkDestroy(BulkDeleteTripCostsRequest $request)
+    {
+        $user = $request->user();
+        $ids = collect($request->validated('ids'))->unique()->values()->all();
+        $deleted = 0;
+
+        DB::transaction(function () use ($user, $ids, &$deleted) {
+            $costs = TripCost::query()->whereIn('id', $ids)->get();
+            foreach ($costs as $tripCost) {
+                abort_unless(TripCostAccess::userCanView($user, $tripCost), 403);
+                $this->deleteTripCostForUser($user, $tripCost, true);
+                $deleted++;
+            }
+        });
+
+        return $this->ok(['deleted_count' => $deleted]);
+    }
+
+    private function deleteTripCostForUser(User $user, TripCost $tripCost, bool $isReconciler): int
+    {
         if ($tripCost->trip_id !== null) {
             $tripCost->load('trip');
             FinancialDataLock::assertTripNotPaid($tripCost->trip);
@@ -361,7 +387,7 @@ class TripCostController extends Controller
             app(RecurringBudgetAlertService::class)->refreshAndNotifyForTrip($relatedTrip->fresh());
         }
 
-        return $this->ok(['deleted' => true, 'id' => $deletedId]);
+        return $deletedId;
     }
 
     public function decide(DecideTripCostRequest $request, TripCost $tripCost)

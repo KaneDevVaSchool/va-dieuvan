@@ -159,6 +159,17 @@
                   </label>
                 </li>
               </FilterVisibilityDropdown>
+
+              <button
+                v-if="canReconcileCosts && selectedCostIds.length"
+                type="button"
+                class="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 text-sm font-medium text-rose-800 shadow-sm transition hover:bg-rose-100 disabled:opacity-50 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200"
+                :disabled="bulkDeletingCosts"
+                data-testid="costs-bulk-delete"
+                @click="confirmBulkDeleteCosts"
+              >
+                {{ t('costs_page.bulk_delete', { n: selectedCostIds.length }) }}
+              </button>
             </div>
 
             <div class="ml-auto flex shrink-0 items-center gap-2">
@@ -335,6 +346,22 @@
         {{ t('costs_page.loading_table') }}
       </div>
       <div v-else class="space-y-3 md:space-y-4">
+        <div
+          v-if="canReconcileCosts && hasTableRows"
+          class="flex items-center gap-2 px-1"
+        >
+          <input
+            type="checkbox"
+            class="h-4 w-4 rounded border-slate-300 accent-va-800"
+            :checked="costsPageAllSelected"
+            :aria-label="t('costs_page.select_all_page')"
+            data-testid="costs-select-all-page"
+            @change="toggleSelectAllCostsPage"
+          />
+          <span v-if="selectedCostIds.length" class="text-xs text-slate-500">
+            {{ t('costs_page.bulk_delete', { n: selectedCostIds.length }) }}
+          </span>
+        </div>
         <article
           v-for="c in displayedItems"
           :key="costRowKey(c)"
@@ -345,6 +372,20 @@
           <div class="border-b border-slate-100 px-3 py-4 sm:px-5 dark:border-slate-800">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div class="flex min-w-0 gap-3 sm:gap-4">
+                <label
+                  v-if="canReconcileCosts"
+                  class="mt-1 flex shrink-0 items-start"
+                  :aria-label="t('costs_page.select_row')"
+                  @click.stop
+                >
+                  <input
+                    type="checkbox"
+                    class="h-4 w-4 rounded border-slate-300 accent-va-800"
+                    :checked="selectedCostIds.includes(c.id)"
+                    :data-testid="`cost-select-${c.id}`"
+                    @change="toggleCostSelection(c.id)"
+                  />
+                </label>
                 <div
                   class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12"
                   :class="costStatusIconWrap(c.status)"
@@ -528,6 +569,16 @@
                   {{ t('costs_page.action_reject') }}
                 </button>
               </template>
+              <button
+                v-if="canReconcileCosts"
+                type="button"
+                class="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-white px-3 py-2.5 text-sm font-medium text-rose-800 shadow-sm transition hover:bg-rose-50 disabled:opacity-50 sm:min-h-0 dark:border-rose-900 dark:bg-slate-900 dark:text-rose-200"
+                :disabled="deletingCostId != null || bulkDeletingCosts"
+                :data-testid="`cost-card-delete-${c.id}`"
+                @click="openDeleteModal(c)"
+              >
+                {{ t('costs_page.action_delete') }}
+              </button>
               <AppRowActionsMenu
                 v-if="canReconcileCosts"
                 align="end"
@@ -1501,6 +1552,7 @@ import {
   submitStandaloneTripCost,
   decideTripCost,
   deleteTripCost,
+  bulkDeleteTripCosts,
   listCostNotes,
   addCostNote,
   deleteCostNote,
@@ -1511,7 +1563,8 @@ import { formatCostNoteCode, formatTripCode, formatVnd, formatVndDigitsInput, la
 import StaffCostDetailModal from '../../components/costs/StaffCostDetailModal.vue'
 import CostEstimateLegBreakdown from '../../components/costs/CostEstimateLegBreakdown.vue'
 import AppRowActionsMenu from '../../components/ui/AppRowActionsMenu.vue'
-import { showAppErrorFromApi } from '../../composables/appMessage'
+import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
+import { confirmAction } from '../../composables/useConfirm'
 import { useAuthStore } from '../../store'
 import { displayTextOrNull, isEmptyDisplay } from '../../util/displayValue'
 
@@ -1870,6 +1923,8 @@ const deleteModalOpen = ref(false)
 /** @type {import('vue').Ref<Record<string, unknown> | null>} */
 const deleteTarget = ref(null)
 const deletingCostId = ref(null)
+const selectedCostIds = ref([])
+const bulkDeletingCosts = ref(false)
 
 // ── Main filter state ─────────────────────────────────────────────
 const filters = reactive({
@@ -1969,11 +2024,57 @@ async function submitDeleteModal() {
   try {
     await deleteTripCost(c.id)
     closeDeleteModal()
+    selectedCostIds.value = selectedCostIds.value.filter((id) => id !== c.id)
     await reload()
   } catch (e) {
     showAppErrorFromApi(e, t('costs_page.delete_err'))
   } finally {
     deletingCostId.value = null
+  }
+}
+
+function toggleCostSelection(id) {
+  const i = selectedCostIds.value.indexOf(id)
+  if (i === -1) selectedCostIds.value = [...selectedCostIds.value, id]
+  else selectedCostIds.value = selectedCostIds.value.filter((x) => x !== id)
+}
+
+const costsPageAllSelected = computed(() => {
+  const ids = displayedItems.value.map((c) => c.id).filter(Boolean)
+  return ids.length > 0 && ids.every((id) => selectedCostIds.value.includes(id))
+})
+
+function toggleSelectAllCostsPage(event) {
+  const ids = displayedItems.value.map((c) => c.id).filter(Boolean)
+  if (!ids.length) return
+  if (event.target.checked) {
+    selectedCostIds.value = [...new Set([...selectedCostIds.value, ...ids])]
+  } else {
+    selectedCostIds.value = selectedCostIds.value.filter((id) => !ids.includes(id))
+  }
+}
+
+async function confirmBulkDeleteCosts() {
+  const ids = [...selectedCostIds.value]
+  if (!ids.length || bulkDeletingCosts.value) return
+  const ok = await confirmAction({
+    title: t('costs_page.bulk_delete_title'),
+    message: t('costs_page.bulk_delete_message', { n: ids.length }),
+    confirmLabel: t('costs_page.delete_modal_submit'),
+    danger: true,
+  })
+  if (!ok) return
+  bulkDeletingCosts.value = true
+  try {
+    const res = await bulkDeleteTripCosts(ids)
+    const n = res?.deleted_count ?? ids.length
+    selectedCostIds.value = []
+    showAppSuccess(t('costs_page.bulk_delete_success', { n }))
+    await reload()
+  } catch (e) {
+    showAppErrorFromApi(e, t('costs_page.delete_err'))
+  } finally {
+    bulkDeletingCosts.value = false
   }
 }
 

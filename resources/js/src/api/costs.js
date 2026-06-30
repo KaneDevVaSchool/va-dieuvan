@@ -64,6 +64,11 @@ export async function deleteTripCost(id) {
   return data.data
 }
 
+export async function bulkDeleteTripCosts(ids) {
+  const { data } = await http.post('/trip-costs/bulk-delete', { ids })
+  return data.data
+}
+
 // ── Operational notes (tab Ghi chú vận hành) ─────────────────────
 
 export async function listCostNotes(params = {}) {
