@@ -69,10 +69,75 @@
                 </label>
               </li>
             </FilterVisibilityDropdown>
+
+            <div
+              v-if="canManageTripsData"
+              class="relative"
+              data-trips-data-panel
+            >
+              <DatagridToolbarActionButton
+                icon="data"
+                :active="showTripsDataMenu"
+                test-id="trips-toolbar-data"
+                @click="toggleTripsDataMenu"
+              >
+                {{ t('trips_page.toolbar_data') }}
+              </DatagridToolbarActionButton>
+              <div
+                v-if="showTripsDataMenu"
+                class="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[280px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+              >
+                <button
+                  type="button"
+                  class="flex w-full flex-col px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
+                  data-testid="trips-data-sample"
+                  @click="triggerDownloadTripSample(); showTripsDataMenu = false"
+                >
+                  <span class="text-sm font-medium text-slate-800 dark:text-slate-100">
+                    {{ t('trips_page.data_menu_sample') }}
+                  </span>
+                  <span class="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                    {{ t('trips_page.data_menu_sample_hint') }}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  class="flex w-full flex-col px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
+                  data-testid="trips-data-import"
+                  @click="tripsImportInputRef?.click(); showTripsDataMenu = false"
+                >
+                  <span class="text-sm font-medium text-slate-800 dark:text-slate-100">
+                    {{ t('trips_page.data_menu_import') }}
+                  </span>
+                  <span class="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                    {{ t('trips_page.data_menu_import_hint') }}
+                  </span>
+                </button>
+                <div class="my-1 border-t border-slate-100 dark:border-slate-700" role="separator" />
+                <button
+                  type="button"
+                  class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                  :disabled="tripsImporting || tripsExporting || !(meta.total ?? 0)"
+                  data-testid="trips-data-export"
+                  @click="triggerExportTripsXlsx(); showTripsDataMenu = false"
+                >
+                  {{ t('trips_page.data_menu_export') }}
+                </button>
+              </div>
+            </div>
           </div>
 
         </div>
       </div>
+
+      <input
+        ref="tripsImportInputRef"
+        type="file"
+        accept=".xlsx,.xls"
+        class="hidden"
+        data-testid="trips-import-file"
+        @change="onTripsImportFile"
+      />
 
       <div
         v-if="hasFilterRow"
@@ -532,7 +597,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -556,7 +621,7 @@ import DatagridToolbarActionButton from '../../components/shared/ui/DatagridTool
 import DatagridFilterField from '../../components/shared/ui/DatagridFilterField.vue'
 import FilterVisibilityDropdown from '../../components/shared/ui/FilterVisibilityDropdown.vue'
 import FilterDatePicker from '../../components/shared/ui/FilterDatePicker.vue'
-import { getTripStats, listTrips } from '../../api/trips'
+import { downloadTripImportSample, exportTripsListXlsx, getTripStats, importTripsFile, listTrips } from '../../api/trips'
 import {
   labelPaperStatus,
   labelSourceChannel,
@@ -571,6 +636,7 @@ import { useVisiblePoll } from '../../composables/useDriverVisiblePoll'
 import { useAuthStore } from '../../store'
 import { buildStaffPrefixedPath as staffPath } from '../../config/dispatchWebBase'
 import { formatListDateTime } from '../../util/datetime'
+import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -740,6 +806,66 @@ function onUrgentSelect(raw) {
 }
 
 const canAssignTrip = computed(() => auth.hasPermission('trip.assign'))
+const canManageTripsData = computed(() => auth.hasPermission('trip.manage'))
+const showTripsDataMenu = ref(false)
+const tripsImportInputRef = ref(null)
+const tripsImporting = ref(false)
+const tripsExporting = ref(false)
+
+function toggleTripsDataMenu() {
+  showTripsDataMenu.value = !showTripsDataMenu.value
+}
+
+function onTripsDatagridDocMouseDown(ev) {
+  const target = ev.target
+  if (!target || typeof target.closest !== 'function') return
+  if (target.closest('[data-trips-data-panel]')) return
+  showTripsDataMenu.value = false
+}
+
+async function triggerDownloadTripSample() {
+  try {
+    await downloadTripImportSample()
+  } catch (e) {
+    showAppErrorFromApi(e, t('trips_page.sample_download_fail'))
+  }
+}
+
+async function triggerExportTripsXlsx() {
+  if (tripsImporting.value || tripsExporting.value || !(meta.value.total ?? 0)) return
+  tripsExporting.value = true
+  try {
+    await exportTripsListXlsx(listParams())
+  } catch (e) {
+    showAppErrorFromApi(e, t('trips_page.export_fail'))
+  } finally {
+    tripsExporting.value = false
+  }
+}
+
+async function onTripsImportFile(ev) {
+  const file = ev.target?.files?.[0]
+  if (!file) return
+  ev.target.value = ''
+  tripsImporting.value = true
+  try {
+    const result = await importTripsFile(file)
+    const created = result?.created ?? 0
+    const skipped = result?.skipped ?? 0
+    const errors = result?.errors ?? []
+    if (errors.length > 0) {
+      showAppErrorFromApi(null, t('trips_page.import_partial', { created, skipped, errors: errors.length }))
+    } else {
+      showAppSuccess(t('trips_page.import_success', { created, skipped }))
+    }
+    reloadStats()
+    await reload()
+  } catch (e) {
+    showAppErrorFromApi(e, t('trips_page.import_fail'))
+  } finally {
+    tripsImporting.value = false
+  }
+}
 
 const pageFrom = computed(() => {
   const total = meta.value.total ?? 0
@@ -1009,9 +1135,14 @@ watch(
 )
 
 onMounted(() => {
+  document.addEventListener('mousedown', onTripsDatagridDocMouseDown)
   applyStatusFromRoute()
   reloadStats()
   reload()
   startTripsListPoll()
+})
+
+onUnmounted(() => {
+  document.removeEventListener('mousedown', onTripsDatagridDocMouseDown)
 })
 </script>

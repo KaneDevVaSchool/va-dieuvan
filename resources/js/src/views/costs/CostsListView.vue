@@ -180,6 +180,46 @@
                 >
                   <button
                     type="button"
+                    class="flex w-full flex-col px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
+                    data-testid="costs-data-sample"
+                    role="menuitem"
+                    @click="triggerDownloadCostSample(); showCostsDataMenu = false"
+                  >
+                    <span class="text-sm font-medium text-slate-800 dark:text-slate-100">
+                      {{ t('costs_page.data_menu_sample') }}
+                    </span>
+                    <span class="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                      {{ t('costs_page.data_menu_sample_hint') }}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    class="flex w-full flex-col px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
+                    data-testid="costs-data-import"
+                    role="menuitem"
+                    @click="costsImportInputRef?.click(); showCostsDataMenu = false"
+                  >
+                    <span class="text-sm font-medium text-slate-800 dark:text-slate-100">
+                      {{ t('costs_page.data_menu_import') }}
+                    </span>
+                    <span class="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                      {{ t('costs_page.data_menu_import_hint') }}
+                    </span>
+                  </button>
+                  <div class="my-1 border-t border-slate-100 dark:border-slate-700" role="separator" />
+                  <button
+                    type="button"
+                    class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                    :disabled="costsImporting || costsExporting || !(meta.total ?? 0)"
+                    data-testid="costs-data-export"
+                    role="menuitem"
+                    @click="triggerExportCostsXlsx(); showCostsDataMenu = false"
+                  >
+                    {{ t('costs_page.data_menu_export') }}
+                  </button>
+                  <div class="my-1 border-t border-slate-100 dark:border-slate-700" role="separator" />
+                  <button
+                    type="button"
                     class="flex w-full flex-col px-3 py-2 text-left hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-red-950/30"
                     :disabled="!(meta.total ?? 0) || purgeAllCostsSubmitting"
                     data-testid="costs-data-purge-all"
@@ -1548,6 +1588,15 @@
       </div>
     </Teleport>
 
+    <input
+      ref="costsImportInputRef"
+      type="file"
+      accept=".xlsx,.xls"
+      class="hidden"
+      data-testid="costs-import-file"
+      @change="onCostsImportFile"
+    />
+
     <!-- Purge all trip costs (filtered list) -->
     <Teleport to="body">
       <div
@@ -1655,6 +1704,9 @@ import FilterDatePicker from '../../components/shared/ui/FilterDatePicker.vue'
 import CostsSummaryBar from '../../components/costs/CostsSummaryBar.vue'
 import UserAvatar from '../../components/branding/UserAvatar.vue'
 import {
+  downloadTripCostImportSample,
+  exportTripCostListXlsx,
+  importTripCostFile,
   listTripCosts,
   listBusinessPersonnelCostLines,
   submitTripCost,
@@ -2051,6 +2103,9 @@ const deletingCostId = ref(null)
 const selectedCostIds = ref([])
 const bulkDeletingCosts = ref(false)
 const showCostsDataMenu = ref(false)
+const costsImportInputRef = ref(null)
+const costsImporting = ref(false)
+const costsExporting = ref(false)
 const purgeAllCostsOpen = ref(false)
 const purgeCostsConfirmPhrase = ref('')
 const purgeCostsCooldownSeconds = ref(0)
@@ -3059,6 +3114,49 @@ watch(
   },
   { deep: true },
 )
+
+async function triggerDownloadCostSample() {
+  try {
+    await downloadTripCostImportSample()
+  } catch (e) {
+    showAppErrorFromApi(e, t('costs_page.sample_download_fail'))
+  }
+}
+
+async function triggerExportCostsXlsx() {
+  if (costsImporting.value || costsExporting.value || !(meta.value.total ?? 0)) return
+  costsExporting.value = true
+  try {
+    await exportTripCostListXlsx(buildListApiParams())
+  } catch (e) {
+    showAppErrorFromApi(e, t('costs_page.export_fail'))
+  } finally {
+    costsExporting.value = false
+  }
+}
+
+async function onCostsImportFile(ev) {
+  const file = ev.target?.files?.[0]
+  if (!file) return
+  ev.target.value = ''
+  costsImporting.value = true
+  try {
+    const result = await importTripCostFile(file)
+    const created = result?.created ?? 0
+    const skipped = result?.skipped ?? 0
+    const errors = result?.errors ?? []
+    if (errors.length > 0) {
+      showAppErrorFromApi(null, t('costs_page.import_partial', { created, skipped, errors: errors.length }))
+    } else {
+      showAppSuccess(t('costs_page.import_success', { created, skipped }))
+    }
+    await reload()
+  } catch (e) {
+    showAppErrorFromApi(e, t('costs_page.import_fail'))
+  } finally {
+    costsImporting.value = false
+  }
+}
 
 onMounted(async () => {
   document.addEventListener('mousedown', onCostsDatagridDocMouseDown)

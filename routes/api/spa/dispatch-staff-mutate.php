@@ -60,14 +60,27 @@ Route::controller(RequestController::class)->group(function () {
     Route::post('/requests/purge-all', 'purgeAll')->middleware('throttle:requests-purge');
 });
 
-Route::prefix('requests/legacy-import')->controller(\App\Http\Controllers\Api\Requests\LegacyDispatchImportController::class)->group(function () {
-    Route::get('/', 'index')->middleware('throttle:60,1');
-    Route::get('/template', 'template')->middleware('throttle:30,1');
-    Route::post('/', 'store')->middleware('throttle:10,1');
-    Route::get('/{dispatchImportBatch}', 'show')->middleware('throttle:60,1');
-    Route::post('/{dispatchImportBatch}/execute', 'execute')->middleware('throttle:legacy-import-execute');
-    Route::get('/{dispatchImportBatch}/error-report', 'errorReport')->middleware('throttle:30,1');
-});
+// Requests — ghi (import)
+Route::post('/requests/import', [\App\Http\Controllers\Api\Requests\RequestImportController::class, 'store'])
+    ->middleware('throttle:10,1');
+
+// Trips — ghi (import)
+Route::post('/trips/import', [\App\Http\Controllers\Api\Trips\TripImportController::class, 'store'])
+    ->middleware('throttle:10,1');
+
+// Trip Costs — ghi (import)
+Route::post('/trip-costs/import', [\App\Http\Controllers\Api\Costs\TripCostImportController::class, 'store'])
+    ->middleware('throttle:10,1');
+
+// Cargo — ghi (import)
+Route::post('/cargo-shipments/import', [\App\Http\Controllers\Api\Cargo\CargoImportController::class, 'store'])
+    ->middleware('throttle:10,1');
+
+// Resources — ghi (import)
+Route::post('/vehicles/import', [\App\Http\Controllers\Api\Resources\VehicleImportController::class, 'store'])
+    ->middleware('throttle:10,1');
+Route::post('/drivers/import', [\App\Http\Controllers\Api\Resources\DriverImportController::class, 'store'])
+    ->middleware('throttle:10,1');
 
 Route::prefix('trips')->group(function () {
     Route::controller(TripController::class)->group(function () {

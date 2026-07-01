@@ -97,6 +97,45 @@ export async function deleteCostNote(id) {
   return data.data
 }
 
+export async function downloadTripCostImportSample() {
+  const { data } = await http.get('/trip-costs/import-sample', {
+    responseType: 'blob',
+    headers: { Accept: '*/*' },
+  })
+  const url = window.URL.createObjectURL(new Blob([data]))
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', 'mau-import-chi-phi.xlsx')
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.URL.revokeObjectURL(url)
+}
+
+export async function importTripCostFile(file) {
+  const form = new FormData()
+  form.append('file', file, file.name || 'import.xlsx')
+  const { data } = await http.post('/trip-costs/import', form)
+  return data.data
+}
+
+export async function exportTripCostListXlsx(params = {}) {
+  const { data } = await http.get('/trip-costs/export', {
+    params,
+    responseType: 'blob',
+    headers: { Accept: '*/*' },
+  })
+  const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+  const url = window.URL.createObjectURL(new Blob([data]))
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', `danh-sach-chi-phi_${stamp}.xlsx`)
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.URL.revokeObjectURL(url)
+}
+
 export async function uploadTripCostReceipt(tripId, tripCostId, file, { idempotencyKey } = {}) {
   const headers = {}
   if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey

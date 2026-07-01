@@ -6,7 +6,11 @@ class PurgeAllCargoShipmentsRequest extends ListCargoShipmentsRequest
 {
     public function authorize(): bool
     {
-        return $this->allowAllOf(['cargo.manage']);
+        return $this->allowAnyOf([
+            'cargo.manage',
+            'trip.view_all',
+            'request.approve',
+        ]);
     }
 
     protected function prepareForValidation(): void

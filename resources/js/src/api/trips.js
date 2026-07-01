@@ -112,3 +112,42 @@ export async function bulkSetPassengerStatus(tripId, payload) {
   const { data } = await http.patch(`/trips/${tripId}/passengers/status-bulk`, payload)
   return data.data
 }
+
+export async function downloadTripImportSample() {
+  const { data } = await http.get('/trips/import-sample', {
+    responseType: 'blob',
+    headers: { Accept: '*/*' },
+  })
+  const url = window.URL.createObjectURL(new Blob([data]))
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', 'mau-import-chuyen.xlsx')
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.URL.revokeObjectURL(url)
+}
+
+export async function importTripsFile(file) {
+  const form = new FormData()
+  form.append('file', file, file.name || 'import.xlsx')
+  const { data } = await http.post('/trips/import', form)
+  return data.data
+}
+
+export async function exportTripsListXlsx(params = {}) {
+  const { data } = await http.get('/trips/export', {
+    params,
+    responseType: 'blob',
+    headers: { Accept: '*/*' },
+  })
+  const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+  const url = window.URL.createObjectURL(new Blob([data]))
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', `danh-sach-chuyen_${stamp}.xlsx`)
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.URL.revokeObjectURL(url)
+}

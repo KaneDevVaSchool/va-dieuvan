@@ -91,7 +91,7 @@
               </li>
             </FilterVisibilityDropdown>
 
-            <div v-if="canManageCargoData" class="relative" data-cargo-data-panel>
+            <div v-if="showCargoDataMenu" class="relative" data-cargo-data-panel>
               <DatagridToolbarActionButton
                 icon="data"
                 :active="showDataMenu"
@@ -104,6 +104,50 @@
                 v-if="showDataMenu"
                 class="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[280px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
               >
+                <template v-if="canManageCargoImportData">
+                <button
+                  type="button"
+                  class="flex w-full flex-col px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
+                  data-testid="cargo-data-sample"
+                  @click="triggerDownloadCargoSample(); showDataMenu = false"
+                >
+                  <span class="text-sm font-medium text-slate-800 dark:text-slate-100">
+                    {{ t('cargo_page.data_menu_sample') }}
+                  </span>
+                  <span class="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                    {{ t('cargo_page.data_menu_sample_hint') }}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  class="flex w-full flex-col px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
+                  data-testid="cargo-data-import"
+                  @click="cargoImportInputRef?.click(); showDataMenu = false"
+                >
+                  <span class="text-sm font-medium text-slate-800 dark:text-slate-100">
+                    {{ t('cargo_page.data_menu_import') }}
+                  </span>
+                  <span class="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                    {{ t('cargo_page.data_menu_import_hint') }}
+                  </span>
+                </button>
+                <div class="my-1 border-t border-slate-100 dark:border-slate-700" role="separator" />
+                <button
+                  type="button"
+                  class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                  :disabled="importing || exporting || !(meta.total ?? 0)"
+                  data-testid="cargo-data-export"
+                  @click="triggerExportCargoXlsx(); showDataMenu = false"
+                >
+                  {{ t('cargo_page.data_menu_export') }}
+                </button>
+                </template>
+                <div
+                  v-if="canManageCargoImportData && canPurgeAllCargo"
+                  class="my-1 border-t border-slate-100 dark:border-slate-700"
+                  role="separator"
+                />
+                <template v-if="canPurgeAllCargo">
                 <button
                   type="button"
                   class="flex w-full flex-col px-3 py-2 text-left hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-rose-950/30"
@@ -132,6 +176,7 @@
                     {{ t('cargo_page.purge_all_permanent_hint', { n: meta.total ?? 0 }) }}
                   </span>
                 </button>
+                </template>
               </div>
             </div>
           </div>
@@ -258,6 +303,15 @@
       </div>
     </div>
 
+    <input
+      ref="cargoImportInputRef"
+      type="file"
+      accept=".xlsx,.xls"
+      class="hidden"
+      data-testid="cargo-import-file"
+      @change="onCargoImportFile"
+    />
+
     <Teleport to="body">
       <div
         v-if="purgeAllOpen"
@@ -354,7 +408,13 @@ import DatagridToolbarActionButton from '../../components/shared/ui/DatagridTool
 import DatagridFilterField from '../../components/shared/ui/DatagridFilterField.vue'
 import FilterVisibilityDropdown from '../../components/shared/ui/FilterVisibilityDropdown.vue'
 import FilterDatePicker from '../../components/shared/ui/FilterDatePicker.vue'
-import { listCargoShipments, purgeAllCargoShipments } from '../../api/cargo'
+import {
+  downloadCargoImportSample,
+  exportCargoListXlsx,
+  importCargoFile,
+  listCargoShipments,
+  purgeAllCargoShipments,
+} from '../../api/cargo'
 import { labelCargoStatus } from '../../util/labels'
 import { useVisibleFilterControls } from '../../composables/useVisibleFilterControls.js'
 import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
@@ -386,8 +446,20 @@ const searchDebounce = ref(null)
 const cargoDatagridRef = ref(null)
 useDetailsAutoCloseWithin(cargoDatagridRef)
 
-const canManageCargoData = computed(() => auth.hasPermission('cargo.manage'))
+const canManageCargoImportData = computed(() => auth.hasPermission('cargo.manage'))
+const canPurgeAllCargo = computed(
+  () =>
+    auth.hasPermission('cargo.manage') ||
+    auth.hasPermission('trip.view_all') ||
+    auth.hasPermission('request.approve'),
+)
+const showCargoDataMenu = computed(
+  () => canManageCargoImportData.value || canPurgeAllCargo.value,
+)
 const showDataMenu = ref(false)
+const cargoImportInputRef = ref(null)
+const importing = ref(false)
+const exporting = ref(false)
 const purgeAllOpen = ref(false)
 const purgePermanent = ref(false)
 const purgeConfirmPhrase = ref('')
@@ -698,6 +770,50 @@ watch(searchInput, () => {
     }
   }, 350)
 })
+
+async function triggerDownloadCargoSample() {
+  try {
+    await downloadCargoImportSample()
+  } catch (e) {
+    showAppErrorFromApi(e, t('cargo_page.sample_download_fail'))
+  }
+}
+
+async function triggerExportCargoXlsx() {
+  if (importing.value || exporting.value || !(meta.value.total ?? 0)) return
+  exporting.value = true
+  try {
+    await exportCargoListXlsx(listParams())
+  } catch (e) {
+    showAppErrorFromApi(e, t('cargo_page.export_fail'))
+  } finally {
+    exporting.value = false
+  }
+}
+
+async function onCargoImportFile(ev) {
+  const file = ev.target?.files?.[0]
+  if (!file) return
+  ev.target.value = ''
+  importing.value = true
+  try {
+    const result = await importCargoFile(file)
+    const created = result?.created ?? 0
+    const skipped = result?.skipped ?? 0
+    const errors = result?.errors ?? []
+    if (errors.length > 0) {
+      showAppErrorFromApi(null, t('cargo_page.import_partial', { created, skipped, errors: errors.length }))
+    } else {
+      showAppSuccess(t('cargo_page.import_success', { created, skipped }))
+    }
+    await reloadKpis()
+    await reload()
+  } catch (e) {
+    showAppErrorFromApi(e, t('cargo_page.import_fail'))
+  } finally {
+    importing.value = false
+  }
+}
 
 onMounted(() => {
   document.addEventListener('mousedown', onDatagridDocMouseDown)

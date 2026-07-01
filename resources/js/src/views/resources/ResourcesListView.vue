@@ -114,6 +114,120 @@
               </li>
             </FilterVisibilityDropdown>
 
+            <!-- Data menu (vehicles tab) -->
+            <div
+              v-if="activeTab === 'vehicles' && canManageVehicles && vehiclesViewMode === 'active'"
+              class="relative"
+              data-resources-vehicles-data-panel
+            >
+              <DatagridToolbarActionButton
+                icon="data"
+                :active="showVehiclesDataMenu"
+                test-id="resources-vehicles-toolbar-data"
+                @click="toggleVehiclesDataMenu"
+              >
+                {{ t('resources.toolbar_data') }}
+              </DatagridToolbarActionButton>
+              <div
+                v-if="showVehiclesDataMenu"
+                class="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[280px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+              >
+                <button
+                  type="button"
+                  class="flex w-full flex-col px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
+                  data-testid="resources-vehicles-data-sample"
+                  @click="triggerDownloadVehicleSample(); showVehiclesDataMenu = false"
+                >
+                  <span class="text-sm font-medium text-slate-800 dark:text-slate-100">
+                    {{ t('resources.data_menu_sample') }}
+                  </span>
+                  <span class="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                    {{ t('resources.vehicles_data_menu_sample_hint') }}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  class="flex w-full flex-col px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
+                  data-testid="resources-vehicles-data-import"
+                  @click="vehiclesImportInputRef?.click(); showVehiclesDataMenu = false"
+                >
+                  <span class="text-sm font-medium text-slate-800 dark:text-slate-100">
+                    {{ t('resources.data_menu_import') }}
+                  </span>
+                  <span class="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                    {{ t('resources.vehicles_data_menu_import_hint') }}
+                  </span>
+                </button>
+                <div class="my-1 border-t border-slate-100 dark:border-slate-700" role="separator" />
+                <button
+                  type="button"
+                  class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                  :disabled="vehiclesImporting || vehiclesExporting || !(vehiclesMeta.total ?? 0)"
+                  data-testid="resources-vehicles-data-export"
+                  @click="triggerExportVehiclesXlsx(); showVehiclesDataMenu = false"
+                >
+                  {{ t('resources.data_menu_export') }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Data menu (drivers tab) -->
+            <div
+              v-else-if="activeTab === 'drivers' && canManageDrivers && driversViewMode === 'active'"
+              class="relative"
+              data-resources-drivers-data-panel
+            >
+              <DatagridToolbarActionButton
+                icon="data"
+                :active="showDriversDataMenu"
+                test-id="resources-drivers-toolbar-data"
+                @click="toggleDriversDataMenu"
+              >
+                {{ t('resources.toolbar_data') }}
+              </DatagridToolbarActionButton>
+              <div
+                v-if="showDriversDataMenu"
+                class="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[280px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+              >
+                <button
+                  type="button"
+                  class="flex w-full flex-col px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
+                  data-testid="resources-drivers-data-sample"
+                  @click="triggerDownloadDriverSample(); showDriversDataMenu = false"
+                >
+                  <span class="text-sm font-medium text-slate-800 dark:text-slate-100">
+                    {{ t('resources.data_menu_sample') }}
+                  </span>
+                  <span class="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                    {{ t('resources.drivers_data_menu_sample_hint') }}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  class="flex w-full flex-col px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
+                  data-testid="resources-drivers-data-import"
+                  @click="driversImportInputRef?.click(); showDriversDataMenu = false"
+                >
+                  <span class="text-sm font-medium text-slate-800 dark:text-slate-100">
+                    {{ t('resources.data_menu_import') }}
+                  </span>
+                  <span class="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                    {{ t('resources.drivers_data_menu_import_hint') }}
+                  </span>
+                </button>
+                <div class="my-1 border-t border-slate-100 dark:border-slate-700" role="separator" />
+                <button
+                  type="button"
+                  class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                  :disabled="driversImporting || driversExporting || !(driversMeta.total ?? 0)"
+                  data-testid="resources-drivers-data-export"
+                  @click="triggerExportDriversXlsx(); showDriversDataMenu = false"
+                >
+                  {{ t('resources.data_menu_export') }}
+                </button>
+              </div>
+            </div>
+
             <!-- Add button -->
             <button
               v-if="activeTab === 'drivers' && driversViewMode === 'active' && canManageDrivers"
@@ -1079,6 +1193,23 @@
         </aside>
       </Transition>
     </div>
+
+    <input
+      ref="vehiclesImportInputRef"
+      type="file"
+      accept=".xlsx,.xls"
+      class="hidden"
+      data-testid="resources-vehicles-import-file"
+      @change="onVehiclesImportFile"
+    />
+    <input
+      ref="driversImportInputRef"
+      type="file"
+      accept=".xlsx,.xls"
+      class="hidden"
+      data-testid="resources-drivers-import-file"
+      @change="onDriversImportFile"
+    />
 
     <!-- Modal: thêm / sửa xe -->
     <Teleport to="body">
@@ -2374,6 +2505,14 @@ import {
 import { formatApiError, TOKEN_KEY } from '../../api/http'
 import { showAppError, showAppErrorFromApi, showAppInfo, showAppSuccess } from '../../composables/appMessage'
 import {
+  downloadVehicleImportSample,
+  exportVehiclesListXlsx,
+  importVehiclesFile,
+  downloadDriverImportSample,
+  exportDriversListXlsx,
+  importDriversFile,
+} from '../../api/resources'
+import {
   downloadPdfAttachmentFromApi,
   downloadPdfAttachmentFromUrl,
   fetchPdfBlobForPreview,
@@ -2386,6 +2525,122 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
+const showVehiclesDataMenu = ref(false)
+const vehiclesImportInputRef = ref(null)
+const vehiclesImporting = ref(false)
+const vehiclesExporting = ref(false)
+const showDriversDataMenu = ref(false)
+const driversImportInputRef = ref(null)
+const driversImporting = ref(false)
+const driversExporting = ref(false)
+
+const vehiclesMeta = computed(() => ({ total: vehicles.value.length }))
+const driversMeta = computed(() => ({ total: drivers.value.length }))
+
+function toggleVehiclesDataMenu() {
+  showDriversDataMenu.value = false
+  showVehiclesDataMenu.value = !showVehiclesDataMenu.value
+}
+
+function toggleDriversDataMenu() {
+  showVehiclesDataMenu.value = false
+  showDriversDataMenu.value = !showDriversDataMenu.value
+}
+
+function onResourcesDataMenuDocMouseDown(ev) {
+  const target = ev.target
+  if (!target || typeof target.closest !== 'function') return
+  if (target.closest('[data-resources-vehicles-data-panel]') || target.closest('[data-resources-drivers-data-panel]')) return
+  showVehiclesDataMenu.value = false
+  showDriversDataMenu.value = false
+}
+
+async function triggerDownloadVehicleSample() {
+  try {
+    await downloadVehicleImportSample()
+  } catch (e) {
+    showAppErrorFromApi(e, t('resources.sample_download_fail'))
+  }
+}
+
+async function triggerExportVehiclesXlsx() {
+  if (vehiclesImporting.value || vehiclesExporting.value || !vehicles.value.length) return
+  vehiclesExporting.value = true
+  try {
+    await exportVehiclesListXlsx({ status: filters.value.status, type: filters.value.type })
+  } catch (e) {
+    showAppErrorFromApi(e, t('resources.export_fail'))
+  } finally {
+    vehiclesExporting.value = false
+  }
+}
+
+async function onVehiclesImportFile(ev) {
+  const file = ev.target?.files?.[0]
+  if (!file) return
+  ev.target.value = ''
+  vehiclesImporting.value = true
+  try {
+    const result = await importVehiclesFile(file)
+    const created = result?.created ?? 0
+    const skipped = result?.skipped ?? 0
+    const errors = result?.errors ?? []
+    if (errors.length > 0) {
+      showAppErrorFromApi(null, t('resources.import_partial', { created, skipped, errors: errors.length }))
+    } else {
+      showAppSuccess(t('resources.import_success', { created, skipped, entity: t('resources.entity_vehicles') }))
+    }
+    await loadAll()
+  } catch (e) {
+    showAppErrorFromApi(e, t('resources.import_fail'))
+  } finally {
+    vehiclesImporting.value = false
+  }
+}
+
+async function triggerDownloadDriverSample() {
+  try {
+    await downloadDriverImportSample()
+  } catch (e) {
+    showAppErrorFromApi(e, t('resources.sample_download_fail'))
+  }
+}
+
+async function triggerExportDriversXlsx() {
+  if (driversImporting.value || driversExporting.value || !drivers.value.length) return
+  driversExporting.value = true
+  try {
+    await exportDriversListXlsx({ status: filters.value.status })
+  } catch (e) {
+    showAppErrorFromApi(e, t('resources.export_fail'))
+  } finally {
+    driversExporting.value = false
+  }
+}
+
+async function onDriversImportFile(ev) {
+  const file = ev.target?.files?.[0]
+  if (!file) return
+  ev.target.value = ''
+  driversImporting.value = true
+  try {
+    const result = await importDriversFile(file)
+    const created = result?.created ?? 0
+    const skipped = result?.skipped ?? 0
+    const errors = result?.errors ?? []
+    if (errors.length > 0) {
+      showAppErrorFromApi(null, t('resources.import_partial', { created, skipped, errors: errors.length }))
+    } else {
+      showAppSuccess(t('resources.import_success', { created, skipped, entity: t('resources.entity_drivers') }))
+    }
+    await loadAll()
+  } catch (e) {
+    showAppErrorFromApi(e, t('resources.import_fail'))
+  } finally {
+    driversImporting.value = false
+  }
+}
+
 const canManageVehicles = computed(() => auth.hasPermission('resource.vehicle.manage'))
 /** Xem danh sách giấy tờ / đính kèm (cùng quyền gần với xem danh sách xe) */
 const canViewVehicleComplianceDocs = computed(
@@ -3150,6 +3405,7 @@ watch(
 )
 
 onMounted(() => {
+  document.addEventListener('mousedown', onResourcesDataMenuDocMouseDown)
   onResourcesFilterBarEnter()
   applyTabFromRoute()
   loadAll()
@@ -3789,6 +4045,7 @@ async function openVehiclePdfPreview(doc, a, aIdx) {
 }
 
 onUnmounted(() => {
+  document.removeEventListener('mousedown', onResourcesDataMenuDocMouseDown)
   revokePdfPreviewBlobUrl()
 })
 

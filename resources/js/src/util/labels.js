@@ -46,6 +46,7 @@ export function labelRequestStatus(v) {
     approved: 'Đã duyệt',
     rejected: 'Từ chối',
     cancelled: 'Đã huỷ',
+    soft_deleted: 'Đã xóa mềm',
   }
   const fb = m[v] ?? v ?? '—'
   return key ? tOrFallback(key, fb) : fb

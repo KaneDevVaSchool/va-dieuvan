@@ -95,8 +95,21 @@
                 <button
                   type="button"
                   class="flex w-full flex-col px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
+                  data-testid="requests-data-sample"
+                  @click="triggerDownloadRequestSample(); showDataMenu = false"
+                >
+                  <span class="text-sm font-medium text-slate-800 dark:text-slate-100">
+                    {{ t('requests_page.data_menu_sample') }}
+                  </span>
+                  <span class="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                    {{ t('requests_page.data_menu_sample_hint') }}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  class="flex w-full flex-col px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
                   data-testid="requests-data-import"
-                  @click="openLegacyImport(); showDataMenu = false"
+                  @click="requestImportInputRef?.click(); showDataMenu = false"
                 >
                   <span class="text-sm font-medium text-slate-800 dark:text-slate-100">
                     {{ t('requests_page.data_menu_import') }}
@@ -109,9 +122,9 @@
                 <button
                   type="button"
                   class="flex w-full flex-col px-3 py-2 text-left hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-slate-800"
-                  :disabled="exporting || !(meta.total ?? 0)"
+                  :disabled="importing || exporting || !(meta.total ?? 0)"
                   data-testid="requests-data-export-excel"
-                  @click="exportRequestsExcel(); showDataMenu = false"
+                  @click="triggerExportRequestsXlsx(); showDataMenu = false"
                 >
                   <span class="text-sm font-medium text-slate-800 dark:text-slate-100">
                     {{ t('requests_page.data_menu_export_excel') }}
@@ -600,6 +613,12 @@
                 </div>
                 <div class="flex shrink-0 flex-wrap items-center gap-2 lg:justify-end">
                   <StatusBadge :status="r.status" />
+                  <StatusBadge
+                    v-if="r.deleted_at"
+                    status="soft_deleted"
+                    size="sm"
+                    data-testid="requests-badge-soft-deleted"
+                  />
                   <span
                     v-if="r.trip?.status"
                     class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300"
@@ -907,10 +926,13 @@
       </div>
     </Teleport>
 
-    <RequestsLegacyImportModal
-      :open="legacyImportOpen"
-      @close="legacyImportOpen = false"
-      @completed="onLegacyImportCompleted"
+    <input
+      ref="requestImportInputRef"
+      type="file"
+      accept=".xlsx,.xls"
+      class="hidden"
+      data-testid="requests-import-file"
+      @change="onRequestImportFile"
     />
 
     <Teleport to="body">
@@ -1020,7 +1042,6 @@ import AppRowActionsMenu from '../../components/ui/AppRowActionsMenu.vue'
 import StatusBadge from '../../components/ui/StatusBadge.vue'
 import UserAvatar from '../../components/branding/UserAvatar.vue'
 import RequestsSummaryBar from '../../components/requests/RequestsSummaryBar.vue'
-import RequestsLegacyImportModal from '../../components/requests/RequestsLegacyImportModal.vue'
 import DatagridToolbarSearch from '../../components/shared/ui/DatagridToolbarSearch.vue'
 import DatagridToolbarActionButton from '../../components/shared/ui/DatagridToolbarActionButton.vue'
 import DatagridFilterField from '../../components/shared/ui/DatagridFilterField.vue'
@@ -1031,6 +1052,9 @@ import {
   bulkForceDeleteRequests,
   bulkRestoreRequests,
   bulkSoftDeleteRequests,
+  downloadRequestImportSample,
+  exportRequestsListXlsx,
+  importRequestsFile,
   listRequests,
   purgeAllRequests,
 } from '../../api/requests'
@@ -1131,7 +1155,8 @@ const filterControlDefs = computed(() =>
 
 const showExportMenu = ref(false)
 const showDataMenu = ref(false)
-const legacyImportOpen = ref(false)
+const requestImportInputRef = ref(null)
+const importing = ref(false)
 const purgeAllOpen = ref(false)
 const purgePermanent = ref(false)
 const purgeConfirmPhrase = ref('')
@@ -1185,8 +1210,10 @@ function onKpiQuickFilter({ tab, sla }) {
 function onTrashFilterSelect(raw) {
   filters.only_trashed = raw === '1'
   if (filters.only_trashed) {
-    filters.request_status = ''
+    filters.request_status = REQUEST_STATUS_SOFT_DELETED
     filters.trip_status_filter = ''
+  } else if (filters.request_status === REQUEST_STATUS_SOFT_DELETED) {
+    filters.request_status = ''
   }
   filters.page = 1
   syncListScopeToRoute()
@@ -1202,6 +1229,8 @@ function syncListScopeToRoute() {
   delete q.trash
   if (filters.only_trashed) {
     q.trash = '1'
+  } else if (filters.request_status === REQUEST_STATUS_SOFT_DELETED) {
+    q.status = REQUEST_STATUS_SOFT_DELETED
   } else if (filters.trip_status_filter) {
     q.trip_status = filters.trip_status_filter
   } else if (filters.request_status) {
@@ -1235,6 +1264,8 @@ const bulkConfirmOpen = ref(false)
 /** @type {import('vue').Ref<'delete' | 'restore' | 'force_delete' | null>} */
 const bulkConfirmKind = ref(null)
 
+const REQUEST_STATUS_SOFT_DELETED = 'soft_deleted'
+
 const REQUEST_TRIP_STATUS_FILTER_VALUES = [
   'pending',
   'approved',
@@ -1253,6 +1284,7 @@ const REQUEST_STATUS_FILTER_VALUES = [
   'approved',
   'rejected',
   'cancelled',
+  REQUEST_STATUS_SOFT_DELETED,
 ]
 
 /** Chỉ hiển thị ghi chú do người dùng nhập; bản cũ lưu BM.03 trong `notes` thì để trống (xem chi tiết). */
@@ -1345,7 +1377,12 @@ const activeFilterCount = computed(() => {
   if (filters.source_channel) n++
   if (filters.paper_status) n++
   if (filters.priority === 'urgent') n++
-  if (filters.request_status) n++
+  if (
+    filters.request_status &&
+    filters.request_status !== REQUEST_STATUS_SOFT_DELETED
+  ) {
+    n++
+  }
   if (filters.trip_status_filter) n++
   if (filters.sla_risk_only) n++
   if (filters.recurring_only) n++
@@ -1434,7 +1471,7 @@ function slaExportText(r) {
 function requestToExportRowValues(r) {
   return [
     displayRequestCode(r),
-    labelRequestStatus(r.status),
+    r.deleted_at ? labelRequestStatus(REQUEST_STATUS_SOFT_DELETED) : labelRequestStatus(r.status),
     r.trip?.status ? labelTripStatus(r.trip.status) : '',
     labelTripType(r.trip_type) || t('requests_page.empty_trip_type'),
     r.source_channel ? labelSourceChannel(r.source_channel) : t('requests_page.empty_channel'),
@@ -1645,6 +1682,7 @@ const tripStatusFilterOptions = computed(() => [
 function buildRouteQueryFromState() {
   const out = {}
   if (filters.only_trashed) out.trash = '1'
+  else if (filters.request_status === REQUEST_STATUS_SOFT_DELETED) out.status = REQUEST_STATUS_SOFT_DELETED
   else if (filters.trip_status_filter) out.trip_status = filters.trip_status_filter
   else if (filters.request_status) out.status = filters.request_status
 
@@ -1856,6 +1894,10 @@ function buildListParams() {
     params.only_trashed = 1
     params.status = undefined
     params.trip_status = undefined
+  } else if (filters.request_status === REQUEST_STATUS_SOFT_DELETED) {
+    params.only_trashed = 1
+    params.status = undefined
+    params.trip_status = undefined
   } else if (filters.request_status) {
     params.status = filters.request_status
     params.trip_status = filters.trip_status_filter || undefined
@@ -1894,9 +1936,14 @@ function onFilterChange() {
 }
 
 function onRequestStatusFilterChange() {
-  if (filters.request_status) {
+  if (filters.request_status === REQUEST_STATUS_SOFT_DELETED) {
+    filters.only_trashed = true
+    filters.trip_status_filter = ''
+  } else if (filters.request_status) {
     filters.only_trashed = false
     filters.trip_status_filter = ''
+  } else {
+    filters.only_trashed = false
   }
   onFilterChange()
   syncListScopeToRoute()
@@ -1980,13 +2027,47 @@ function closeBulkConfirm() {
   bulkConfirmKind.value = null
 }
 
-function openLegacyImport() {
-  legacyImportOpen.value = true
+async function triggerDownloadRequestSample() {
+  try {
+    await downloadRequestImportSample()
+  } catch (e) {
+    showAppErrorFromApi(e, t('requests_page.sample_download_fail'))
+  }
 }
 
-async function onLegacyImportCompleted() {
-  legacyImportOpen.value = false
-  await reload()
+async function triggerExportRequestsXlsx() {
+  if (importing.value || exporting.value || !(meta.value.total ?? 0)) return
+  exporting.value = true
+  try {
+    await exportRequestsListXlsx(buildListParams())
+  } catch (e) {
+    showAppErrorFromApi(e, t('requests_page.export_fail'))
+  } finally {
+    exporting.value = false
+  }
+}
+
+async function onRequestImportFile(ev) {
+  const file = ev.target?.files?.[0]
+  if (!file) return
+  ev.target.value = ''
+  importing.value = true
+  try {
+    const result = await importRequestsFile(file)
+    const created = result?.created ?? 0
+    const skipped = result?.skipped ?? 0
+    const errors = result?.errors ?? []
+    if (errors.length > 0) {
+      showAppErrorFromApi(null, t('requests_page.import_partial', { created, skipped, errors: errors.length }))
+    } else {
+      showAppSuccess(t('requests_page.import_success', { created, skipped }))
+    }
+    await reload()
+  } catch (e) {
+    showAppErrorFromApi(e, t('requests_page.import_fail'))
+  } finally {
+    importing.value = false
+  }
 }
 
 function clearPurgeCooldownTimer() {
@@ -2187,11 +2268,13 @@ function applySearchNow() {
 
 function applyRouteQuery() {
   const q = route.query
-  filters.only_trashed = q.trash === '1' || q.trash === 'true'
+  const trashFromQuery = q.trash === '1' || q.trash === 'true'
+  const softDeletedFromStatus = q.status === REQUEST_STATUS_SOFT_DELETED
+  filters.only_trashed = trashFromQuery || softDeletedFromStatus
   filters.trip_status_filter = ''
   filters.request_status = ''
   if (filters.only_trashed) {
-    /* scope from trash */
+    filters.request_status = REQUEST_STATUS_SOFT_DELETED
   } else if (typeof q.trip_status === 'string') {
     filters.trip_status_filter = q.trip_status
   } else if (

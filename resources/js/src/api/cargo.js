@@ -39,3 +39,42 @@ export async function purgeAllCargoShipments(payload) {
   const { data } = await http.post('/cargo-shipments/purge-all', payload)
   return data.data
 }
+
+export async function downloadCargoImportSample() {
+  const { data } = await http.get('/cargo-shipments/import-sample', {
+    responseType: 'blob',
+    headers: { Accept: '*/*' },
+  })
+  const url = window.URL.createObjectURL(new Blob([data]))
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', 'mau-import-don-hang.xlsx')
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.URL.revokeObjectURL(url)
+}
+
+export async function importCargoFile(file) {
+  const form = new FormData()
+  form.append('file', file, file.name || 'import.xlsx')
+  const { data } = await http.post('/cargo-shipments/import', form)
+  return data.data
+}
+
+export async function exportCargoListXlsx(params = {}) {
+  const { data } = await http.get('/cargo-shipments/export', {
+    params,
+    responseType: 'blob',
+    headers: { Accept: '*/*' },
+  })
+  const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+  const url = window.URL.createObjectURL(new Blob([data]))
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', `danh-sach-don-hang_${stamp}.xlsx`)
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.URL.revokeObjectURL(url)
+}

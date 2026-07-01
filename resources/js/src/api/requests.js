@@ -67,7 +67,51 @@ export async function purgeAllRequests(payload) {
   return data.data
 }
 
+// ── Import / Export (new pattern) ────────────────────────────────────
+
+export async function downloadRequestImportSample() {
+  const { data } = await http.get('/requests/import-sample', {
+    responseType: 'blob',
+    headers: { Accept: '*/*' },
+  })
+  const url = window.URL.createObjectURL(new Blob([data]))
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', 'mau-import-phieu-de-xuat.xlsx')
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.URL.revokeObjectURL(url)
+}
+
+export async function importRequestsFile(file) {
+  const form = new FormData()
+  form.append('file', file, file.name || 'import.xlsx')
+  const { data } = await http.post('/requests/import', form)
+  return data.data
+}
+
+export async function exportRequestsListXlsx(params = {}) {
+  const { data } = await http.get('/requests/export', {
+    params,
+    responseType: 'blob',
+    headers: { Accept: '*/*' },
+  })
+  const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+  const url = window.URL.createObjectURL(new Blob([data]))
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', `danh-sach-phieu-de-xuat_${stamp}.xlsx`)
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.URL.revokeObjectURL(url)
+}
+
+// ── Legacy import (kept for Artisan CLI compatibility — not used in web UI) ──
+
 /**
+ * @deprecated Routes removed from web UI. Only used by Artisan CLI.
  * @returns {Promise<void>}
  */
 export async function downloadLegacyDispatchImportTemplate() {

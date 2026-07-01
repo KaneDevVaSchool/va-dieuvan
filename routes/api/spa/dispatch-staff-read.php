@@ -96,6 +96,40 @@ Route::prefix('admin')->group(function () {
     Route::put('dispatch-settings', [DispatchSettingController::class, 'update']);
 });
 
+// Requests — đọc
+Route::get('/requests/import-sample', \App\Http\Controllers\Api\Requests\RequestImportSampleController::class)
+    ->middleware('throttle:30,1');
+Route::get('/requests/export', [\App\Http\Controllers\Api\Requests\RequestExportController::class, 'download'])
+    ->middleware('throttle:30,1');
+
+// Trips — đọc
+Route::get('/trips/import-sample', \App\Http\Controllers\Api\Trips\TripImportSampleController::class)
+    ->middleware('throttle:30,1');
+Route::get('/trips/export', [\App\Http\Controllers\Api\Trips\TripExportController::class, 'download'])
+    ->middleware('throttle:30,1');
+
+// Trip Costs — đọc
+Route::get('/trip-costs/import-sample', \App\Http\Controllers\Api\Costs\TripCostImportSampleController::class)
+    ->middleware('throttle:30,1');
+Route::get('/trip-costs/export', [\App\Http\Controllers\Api\Costs\TripCostExportController::class, 'download'])
+    ->middleware('throttle:30,1');
+
+// Cargo — đọc
+Route::get('/cargo-shipments/import-sample', \App\Http\Controllers\Api\Cargo\CargoImportSampleController::class)
+    ->middleware('throttle:30,1');
+Route::get('/cargo-shipments/export', [\App\Http\Controllers\Api\Cargo\CargoExportController::class, 'download'])
+    ->middleware('throttle:30,1');
+
+// Resources — đọc
+Route::get('/vehicles/import-sample', \App\Http\Controllers\Api\Resources\VehicleImportSampleController::class)
+    ->middleware('throttle:30,1');
+Route::get('/vehicles/export', [\App\Http\Controllers\Api\Resources\VehicleExportController::class, 'download'])
+    ->middleware('throttle:30,1');
+Route::get('/drivers/import-sample', \App\Http\Controllers\Api\Resources\DriverImportSampleController::class)
+    ->middleware('throttle:30,1');
+Route::get('/drivers/export', [\App\Http\Controllers\Api\Resources\DriverExportController::class, 'download'])
+    ->middleware('throttle:30,1');
+
 // Transport Program redesign (tp_*) — đọc
 Route::prefix('tp-programs')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\TransportProgram\TpProgramController::class, 'index']);
