@@ -18,19 +18,25 @@ export async function listTrash(params = {}) {
 }
 
 /**
- * @param {{ type: string, ids: number[] }} payload
+ * @param {{ type?: string, ids?: number[], groups?: { type: string, ids: number[] }[] }} payload
  * @returns {Promise<{ restored: number }>}
  */
 export async function restoreTrashItems(payload) {
-  const { data } = await http.post('/trash/restore', payload)
+  const body = payload.groups
+    ? { groups: payload.groups }
+    : { type: payload.type, ids: payload.ids }
+  const { data } = await http.post('/trash/restore', body)
   return data.data
 }
 
 /**
- * @param {{ type: string, ids: number[] }} payload
+ * @param {{ type?: string, ids?: number[], groups?: { type: string, ids: number[] }[] }} payload
  * @returns {Promise<{ deleted: number }>}
  */
 export async function forceDeleteTrashItems(payload) {
-  const { data } = await http.post('/trash/force-delete', payload)
+  const body = payload.groups
+    ? { groups: payload.groups }
+    : { type: payload.type, ids: payload.ids }
+  const { data } = await http.post('/trash/force-delete', body)
   return data.data
 }

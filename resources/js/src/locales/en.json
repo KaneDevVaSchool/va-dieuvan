@@ -5927,6 +5927,8 @@
         "confirm_delete_body": "This will permanently delete {count} record(s) and cannot be undone.",
         "confirm_ok": "Confirm",
         "confirm_delete_ok": "Delete permanently",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "toast_restored": "Restored {count} record(s)",
+        "toast_deleted": "Permanently deleted {count} record(s)"
     }
 }

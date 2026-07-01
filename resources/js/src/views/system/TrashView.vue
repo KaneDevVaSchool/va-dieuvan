@@ -403,6 +403,8 @@ import FilterDatePicker from '../../components/shared/ui/FilterDatePicker.vue'
 import TrashSummaryBar from '../../components/system/TrashSummaryBar.vue'
 import { useVisibleFilterControls } from '../../composables/useVisibleFilterControls.js'
 import { getTrashSummary, listTrash, restoreTrashItems, forceDeleteTrashItems } from '../../api/trash'
+import { formatApiError } from '../../api/http'
+import { showAppError, showAppSuccess } from '../../composables/appMessage'
 
 const { t, locale } = useI18n()
 
@@ -612,6 +614,10 @@ function groupSelectedByType() {
   return byType
 }
 
+function byTypeToGroups(byType) {
+  return Object.entries(byType).map(([type, ids]) => ({ type, ids }))
+}
+
 function confirmBulkRestore() {
   confirmRestore.value = { byType: groupSelectedByType(), ids: [...selected.value] }
 }
@@ -629,30 +635,36 @@ function singleForceDelete(item) {
 }
 
 async function executeRestore() {
-  if (!confirmRestore.value) return
+  if (!confirmRestore.value || busyRestore.value) return
   busyRestore.value = true
   try {
-    for (const [type, ids] of Object.entries(confirmRestore.value.byType)) {
-      await restoreTrashItems({ type, ids })
-    }
+    const { restored } = await restoreTrashItems({
+      groups: byTypeToGroups(confirmRestore.value.byType),
+    })
     confirmRestore.value = null
     selected.value = new Set()
+    showAppSuccess(t('trash_page.toast_restored', { count: restored ?? 0 }))
     await Promise.all([loadSummary(), loadItems()])
+  } catch (e) {
+    showAppError(formatApiError(e))
   } finally {
     busyRestore.value = false
   }
 }
 
 async function executeForceDelete() {
-  if (!confirmDelete.value) return
+  if (!confirmDelete.value || busyDelete.value) return
   busyDelete.value = true
   try {
-    for (const [type, ids] of Object.entries(confirmDelete.value.byType)) {
-      await forceDeleteTrashItems({ type, ids })
-    }
+    const { deleted } = await forceDeleteTrashItems({
+      groups: byTypeToGroups(confirmDelete.value.byType),
+    })
     confirmDelete.value = null
     selected.value = new Set()
+    showAppSuccess(t('trash_page.toast_deleted', { count: deleted ?? 0 }))
     await Promise.all([loadSummary(), loadItems()])
+  } catch (e) {
+    showAppError(formatApiError(e))
   } finally {
     busyDelete.value = false
   }

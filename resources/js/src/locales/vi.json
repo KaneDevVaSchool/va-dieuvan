@@ -6086,6 +6086,8 @@
         "confirm_delete_body": "Thao tác này sẽ xóa vĩnh viễn {count} bản ghi và không thể hoàn tác.",
         "confirm_ok": "Xác nhận",
         "confirm_delete_ok": "Xóa vĩnh viễn",
-        "cancel": "Huỷ"
+        "cancel": "Huỷ",
+        "toast_restored": "Đã khôi phục {count} bản ghi",
+        "toast_deleted": "Đã xóa vĩnh viễn {count} bản ghi"
     }
 }

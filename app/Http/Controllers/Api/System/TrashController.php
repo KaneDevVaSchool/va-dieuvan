@@ -157,79 +157,100 @@ class TrashController extends Controller
         ]);
     }
 
-    /** POST /trash/restore */
+    /** POST /trash/restore — một nhóm `{ type, ids }` hoặc nhiều nhóm `{ groups: [...] }` (một request). */
     public function restore(Request $request): JsonResponse
     {
-        $data = $request->validate([
-            'type' => ['required', 'string', 'in:'.implode(',', array_keys(self::MODELS))],
-            'ids' => ['required', 'array', 'min:1', 'max:100'],
-            'ids.*' => ['required', 'integer', 'min:1'],
-        ]);
-
-        $this->assertCanManageType($request, $data['type']);
-
-        $modelClass = self::MODELS[$data['type']];
+        $groups = $this->validatedTrashGroups($request);
         $actorId = $request->user()->id;
         $restored = 0;
 
-        DB::transaction(function () use ($data, $modelClass, $actorId, &$restored) {
-            foreach ($data['ids'] as $id) {
-                $m = $modelClass::onlyTrashed()->find($id);
-                if (! $m) {
-                    continue;
+        DB::transaction(function () use ($request, $groups, $actorId, &$restored) {
+            foreach ($groups as $group) {
+                $this->assertCanManageType($request, $group['type']);
+                $modelClass = self::MODELS[$group['type']];
+                foreach ($group['ids'] as $id) {
+                    $m = $modelClass::onlyTrashed()->find($id);
+                    if (! $m) {
+                        continue;
+                    }
+                    $m->restore();
+                    app(AuditLogger::class)->log(
+                        actorId: $actorId,
+                        event: 'trash.restore',
+                        auditable: $m,
+                        before: null,
+                        after: null,
+                        metadata: ['type' => $group['type'], 'id' => $id],
+                    );
+                    $restored++;
                 }
-                $m->restore();
-                app(AuditLogger::class)->log(
-                    actorId: $actorId,
-                    event: 'trash.restore',
-                    auditable: $m,
-                    before: null,
-                    after: null,
-                    metadata: ['type' => $data['type'], 'id' => $id],
-                );
-                $restored++;
             }
         });
 
         return $this->ok(['restored' => $restored]);
     }
 
-    /** POST /trash/force-delete */
+    /** POST /trash/force-delete — một nhóm `{ type, ids }` hoặc nhiều nhóm `{ groups: [...] }` (một request). */
     public function forceDelete(Request $request): JsonResponse
     {
-        $data = $request->validate([
-            'type' => ['required', 'string', 'in:'.implode(',', array_keys(self::MODELS))],
-            'ids' => ['required', 'array', 'min:1', 'max:100'],
-            'ids.*' => ['required', 'integer', 'min:1'],
-        ]);
-
-        $this->assertCanManageType($request, $data['type']);
-
-        $modelClass = self::MODELS[$data['type']];
+        $groups = $this->validatedTrashGroups($request);
         $actorId = $request->user()->id;
         $deleted = 0;
 
-        DB::transaction(function () use ($data, $modelClass, $actorId, &$deleted) {
-            foreach ($data['ids'] as $id) {
-                $m = $modelClass::onlyTrashed()->find($id);
-                if (! $m) {
-                    continue;
+        DB::transaction(function () use ($request, $groups, $actorId, &$deleted) {
+            foreach ($groups as $group) {
+                $this->assertCanManageType($request, $group['type']);
+                $modelClass = self::MODELS[$group['type']];
+                foreach ($group['ids'] as $id) {
+                    $m = $modelClass::onlyTrashed()->find($id);
+                    if (! $m) {
+                        continue;
+                    }
+                    $before = $m->toArray();
+                    $m->forceDelete();
+                    app(AuditLogger::class)->log(
+                        actorId: $actorId,
+                        event: 'trash.force_delete',
+                        auditable: null,
+                        before: $before,
+                        after: null,
+                        metadata: ['type' => $group['type'], 'id' => $id],
+                    );
+                    $deleted++;
                 }
-                $before = $m->toArray();
-                $m->forceDelete();
-                app(AuditLogger::class)->log(
-                    actorId: $actorId,
-                    event: 'trash.force_delete',
-                    auditable: null,
-                    before: $before,
-                    after: null,
-                    metadata: ['type' => $data['type'], 'id' => $id],
-                );
-                $deleted++;
             }
         });
 
         return $this->ok(['deleted' => $deleted]);
+    }
+
+    /**
+     * @return list<array{type: string, ids: list<int>}>
+     */
+    private function validatedTrashGroups(Request $request): array
+    {
+        $typeRule = 'in:'.implode(',', array_keys(self::MODELS));
+
+        if ($request->has('groups')) {
+            $data = $request->validate([
+                'groups' => ['required', 'array', 'min:1', 'max:'.count(self::MODELS)],
+                'groups.*.type' => ['required', 'string', $typeRule],
+                'groups.*.ids' => ['required', 'array', 'min:1', 'max:100'],
+                'groups.*.ids.*' => ['required', 'integer', 'min:1'],
+            ]);
+
+            return $data['groups'];
+        }
+
+        $data = $request->validate([
+            'type' => ['required', 'string', $typeRule],
+            'ids' => ['required', 'array', 'min:1', 'max:100'],
+            'ids.*' => ['required', 'integer', 'min:1'],
+        ]);
+
+        return [
+            ['type' => $data['type'], 'ids' => $data['ids']],
+        ];
     }
 
     /** @return array<string, mixed> */
