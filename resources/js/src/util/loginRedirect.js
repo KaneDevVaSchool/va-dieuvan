@@ -166,6 +166,10 @@ export function normalizeLoginRouteQuery(q) {
   if (t != null && String(t).trim() !== '') {
     o.token = String(Array.isArray(t) ? t[0] : t).trim()
   }
+  const c = q.code
+  if (c != null && String(c).trim() !== '') {
+    o.code = String(Array.isArray(c) ? c[0] : c).trim()
+  }
   const e = q.error
   if (e != null && String(e).trim() !== '') {
     o.error = String(Array.isArray(e) ? e[0] : e).trim()

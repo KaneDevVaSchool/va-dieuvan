@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\SuperAdminAccess;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -139,7 +141,15 @@ class GoogleAuthController extends Controller
 
         SuperAdminAccess::ensureRole($user);
 
-        $token = $user->createToken('web')->plainTextToken;
+        // Không đưa token thẳng lên URL (rò qua access log / history / referer).
+        // Phát một mã ngẫu nhiên dùng-một-lần (TTL ngắn); SPA POST /api/auth/exchange để đổi lấy token.
+        $code = Str::random(64);
+        Cache::put(
+            AuthController::OAUTH_EXCHANGE_CACHE_PREFIX.hash('sha256', $code),
+            $user->getKey(),
+            now()->addSeconds(120),
+        );
+
         $next = $this->sanitizePostLoginRedirect(session()->pull('oauth_redirect', '/'));
 
         if (! $user->canAccessDispatchWebApp() && ! $user->canAccessDriverWebApp()) {
@@ -152,7 +162,7 @@ class GoogleAuthController extends Controller
         Log::info('google.oauth.callback_success', ['user_id' => $user->getKey()]);
 
         return $this->loginRedirect([
-            'token' => $token,
+            'code' => $code,
             'redirect' => $next,
         ]);
     }

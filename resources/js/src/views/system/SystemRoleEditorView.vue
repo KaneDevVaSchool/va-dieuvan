@@ -7,9 +7,11 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
   ExclamationTriangleIcon,
+  MagnifyingGlassIcon,
+  XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import { JOB_ROLE_TEMPLATES, TEMPLATE_COLOR_CLASSES } from '../../config/jobRoleTemplates.js'
-import { BUSINESS_CAPABILITY_GROUPS, getColorClasses } from '../../config/businessCapabilities.js'
+import { BUSINESS_CAPABILITY_GROUPS, getColorClasses, getUncoveredPerms } from '../../config/businessCapabilities.js'
 import * as admin from '../../api/admin'
 import { formatApiError } from '../../api/http'
 import { showAppError, showAppSuccess } from '../../composables/appMessage'
@@ -115,6 +117,9 @@ async function loadAll() {
         }
       }
     }
+
+    // Reveal the "uncovered" section if the role already holds any unmapped perm
+    uncoveredOpen.value = uncoveredPerms.value.some((p) => selectedPermNames.value.has(p.name))
   } catch (e) {
     showAppError(formatApiError(e))
   } finally {
@@ -175,6 +180,59 @@ function expandAll() {
 
 function collapseAll() {
   openGroups.value = new Set()
+}
+
+// ─── Search & uncovered permissions ────────────────────────────────────────────
+
+const permQuery       = ref('')
+const uncoveredOpen   = ref(false)
+const normalizedQuery = computed(() => permQuery.value.trim().toLowerCase())
+const isSearching     = computed(() => normalizedQuery.value.length > 0)
+
+function capMatches(cap) {
+  const q = normalizedQuery.value
+  if (!q) return true
+  return cap.label.toLowerCase().includes(q) || cap.perm.toLowerCase().includes(q)
+}
+
+/** Capability groups after applying the search filter (empty groups dropped). */
+const visibleGroups = computed(() =>
+  BUSINESS_CAPABILITY_GROUPS
+    .map((group) => ({ group, caps: group.capabilities.filter(capMatches) }))
+    .filter((entry) => entry.caps.length > 0),
+)
+
+/** A group is shown open when searching (force-open) or manually expanded. */
+function isGroupOpen(groupId) {
+  return isSearching.value || openGroups.value.has(groupId)
+}
+
+/** Permissions present in the backend but not mapped to any capability group. */
+const uncoveredPerms = computed(() => getUncoveredPerms(allPerms.value))
+
+const visibleUncovered = computed(() => {
+  const q = normalizedQuery.value
+  if (!q) return uncoveredPerms.value
+  return uncoveredPerms.value.filter(
+    (p) => p.name.toLowerCase().includes(q) || (p.display_name ?? '').toLowerCase().includes(q),
+  )
+})
+
+const uncoveredSelectedCount = computed(
+  () => uncoveredPerms.value.filter((p) => selectedPermNames.value.has(p.name)).length,
+)
+
+const hasVisibleResults = computed(
+  () => visibleGroups.value.length > 0 || visibleUncovered.value.length > 0,
+)
+
+function permLabel(perm) {
+  const dn = perm.display_name?.trim()
+  return dn && dn !== perm.name ? dn : perm.name
+}
+
+function clearAllPerms() {
+  selectedPermNames.value = new Set()
 }
 
 // ─── Submit ───────────────────────────────────────────────────────────────────
@@ -386,35 +444,65 @@ onMounted(loadAll)
         <!-- ── Section B: Permission cards ──────────────────────────────── -->
         <div class="mt-5 rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
           <!-- Card header -->
-          <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-800">
-            <div>
-              <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                Nhóm quyền
-              </h2>
-              <p class="mt-0.5 text-sm text-slate-700 dark:text-slate-300">
-                Đã bật
-                <span class="font-bold text-teal-700 dark:text-teal-400">{{ totalSelected }}</span>
-                quyền
-              </p>
+          <div class="border-b border-slate-100 px-6 py-4 dark:border-slate-800">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  Nhóm quyền
+                </h2>
+                <p class="mt-0.5 text-sm text-slate-700 dark:text-slate-300">
+                  Đã bật
+                  <span class="font-bold text-teal-700 dark:text-teal-400">{{ totalSelected }}</span>
+                  quyền
+                </p>
+              </div>
+              <div class="flex flex-wrap justify-end gap-2">
+                <button
+                  type="button"
+                  class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                  :disabled="isSearching"
+                  @click="expandAll"
+                >Mở tất cả</button>
+                <button
+                  type="button"
+                  class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                  :disabled="isSearching"
+                  @click="collapseAll"
+                >Thu gọn</button>
+                <button
+                  type="button"
+                  class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                  :disabled="totalSelected === 0"
+                  @click="clearAllPerms"
+                >Bỏ chọn tất cả</button>
+              </div>
             </div>
-            <div class="flex gap-2">
+
+            <!-- Search -->
+            <div class="relative mt-3">
+              <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+              <input
+                v-model="permQuery"
+                type="text"
+                placeholder="Tìm quyền theo tên hoặc mã…"
+                class="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-9 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-500/25 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
+              />
               <button
+                v-if="permQuery"
                 type="button"
-                class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
-                @click="expandAll"
-              >Mở tất cả</button>
-              <button
-                type="button"
-                class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
-                @click="collapseAll"
-              >Thu gọn</button>
+                class="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-0.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700"
+                aria-label="Xóa tìm kiếm"
+                @click="permQuery = ''"
+              >
+                <XMarkIcon class="h-4 w-4" />
+              </button>
             </div>
           </div>
 
           <!-- Capability cards list -->
           <div class="divide-y divide-slate-100 dark:divide-slate-800">
             <div
-              v-for="group in BUSINESS_CAPABILITY_GROUPS"
+              v-for="{ group, caps } in visibleGroups"
               :key="group.id"
               class="px-6 py-4"
             >
@@ -459,22 +547,23 @@ onMounted(loadAll)
                 <!-- Expand/collapse chevron -->
                 <button
                   type="button"
-                  class="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                  :aria-label="openGroups.has(group.id) ? 'Thu gọn' : 'Mở rộng'"
+                  class="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-40 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                  :disabled="isSearching"
+                  :aria-label="isGroupOpen(group.id) ? 'Thu gọn' : 'Mở rộng'"
                   @click="toggleGroupOpen(group.id)"
                 >
-                  <ChevronUpIcon v-if="openGroups.has(group.id)" class="h-4 w-4" />
+                  <ChevronUpIcon v-if="isGroupOpen(group.id)" class="h-4 w-4" />
                   <ChevronDownIcon v-else class="h-4 w-4" />
                 </button>
               </div>
 
               <!-- Capability list (accordion) -->
               <div
-                v-if="openGroups.has(group.id)"
+                v-if="isGroupOpen(group.id)"
                 class="mt-3 ml-14 grid gap-2 sm:grid-cols-2"
               >
                 <label
-                  v-for="cap in group.capabilities"
+                  v-for="cap in caps"
                   :key="cap.perm"
                   class="flex cursor-pointer items-center gap-3 rounded-xl px-3.5 py-2.5 transition"
                   :class="selectedPermNames.has(cap.perm)
@@ -491,6 +580,71 @@ onMounted(loadAll)
                   <span class="text-sm text-slate-800 dark:text-slate-200">{{ cap.label }}</span>
                 </label>
               </div>
+            </div>
+
+            <!-- Uncovered permissions (exist in backend but not grouped) -->
+            <div v-if="uncoveredPerms.length" class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                <span class="flex h-6 w-11 shrink-0 items-center justify-center text-lg">🧩</span>
+                <div class="flex-1 min-w-0">
+                  <p class="font-semibold text-slate-900 dark:text-slate-50">Quyền khác (chưa phân nhóm)</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">
+                    Quyền có trong hệ thống nhưng chưa được gán vào nhóm nghiệp vụ nào.
+                  </p>
+                </div>
+                <span
+                  class="rounded-full px-2.5 py-0.5 text-xs font-semibold tabular-nums"
+                  :class="uncoveredSelectedCount > 0
+                    ? 'bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-200'
+                    : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'"
+                >
+                  {{ uncoveredSelectedCount }}/{{ uncoveredPerms.length }}
+                </span>
+                <button
+                  type="button"
+                  class="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-40 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                  :disabled="isSearching"
+                  :aria-label="(uncoveredOpen || isSearching) ? 'Thu gọn' : 'Mở rộng'"
+                  @click="uncoveredOpen = !uncoveredOpen"
+                >
+                  <ChevronUpIcon v-if="uncoveredOpen || isSearching" class="h-4 w-4" />
+                  <ChevronDownIcon v-else class="h-4 w-4" />
+                </button>
+              </div>
+
+              <div
+                v-if="(uncoveredOpen || isSearching) && visibleUncovered.length"
+                class="mt-3 ml-14 grid gap-2 sm:grid-cols-2"
+              >
+                <label
+                  v-for="perm in visibleUncovered"
+                  :key="perm.id ?? perm.name"
+                  class="flex cursor-pointer items-start gap-3 rounded-xl px-3.5 py-2.5 transition"
+                  :class="selectedPermNames.has(perm.name)
+                    ? 'border border-teal-200 bg-teal-50/70 dark:border-teal-800/50 dark:bg-teal-950/30'
+                    : 'border border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50'"
+                >
+                  <input
+                    type="checkbox"
+                    class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900"
+                    :checked="selectedPermNames.has(perm.name)"
+                    :disabled="saving"
+                    @change="togglePerm(perm.name)"
+                  />
+                  <span class="min-w-0">
+                    <span class="block text-sm text-slate-800 dark:text-slate-200">{{ permLabel(perm) }}</span>
+                    <span class="block truncate font-mono text-[10px] text-slate-400 dark:text-slate-500">{{ perm.name }}</span>
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <!-- No search results -->
+            <div
+              v-if="isSearching && !hasVisibleResults"
+              class="px-6 py-10 text-center text-sm text-slate-500 dark:text-slate-400"
+            >
+              Không tìm thấy quyền nào khớp «{{ permQuery.trim() }}».
             </div>
           </div>
         </div>

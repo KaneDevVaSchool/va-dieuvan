@@ -5,6 +5,11 @@
 /public/storage
 /storage/*.key
 /vendor
+# Logs & file tạm không được commit (rò dữ liệu + phá `git pull` khi deploy)
+/laravel.log
+*.log
+/storage/framework/*.sqlite
+/storage/logs/*.log
 /nativephp
 .env
 .env.backup

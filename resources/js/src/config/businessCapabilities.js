@@ -182,6 +182,25 @@ export function getAllCapabilityPerms() {
   return BUSINESS_CAPABILITY_GROUPS.flatMap((g) => g.capabilities.map((c) => c.perm))
 }
 
+/** Set of every permission name mapped to a capability group. */
+const COVERED_PERM_SET = new Set(getAllCapabilityPerms())
+
+/** True when a permission name is mapped to some capability group. */
+export function isPermCovered(permName) {
+  return COVERED_PERM_SET.has(permName)
+}
+
+/**
+ * Permission objects that are NOT mapped to any capability group.
+ * Guards against config drift: any perm added to the backend but not yet
+ * grouped here stays editable instead of becoming invisible.
+ *
+ * @param {Array<{id?: any, name: string, display_name?: string}>} allPerms
+ */
+export function getUncoveredPerms(allPerms) {
+  return (allPerms ?? []).filter((p) => p && !COVERED_PERM_SET.has(p.name))
+}
+
 const CAPABILITY_LABEL_BY_PERM = new Map(
   BUSINESS_CAPABILITY_GROUPS.flatMap((g) => g.capabilities.map((c) => [c.perm, c.label])),
 )

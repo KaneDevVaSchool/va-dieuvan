@@ -12,8 +12,11 @@ use App\Models\TpProgram;
 use App\Models\TpStudent;
 use App\Models\TransportProvider;
 use App\Models\Vehicle;
+use App\Services\Auditing\AuditLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class TrashController extends Controller
 {
@@ -30,6 +33,39 @@ class TrashController extends Controller
         'role' => Role::class,
         'menu_item' => MenuItem::class,
     ];
+
+    /**
+     * Quyền tối thiểu (any-of) để KHÔI PHỤC / XÓA VĨNH VIỄN từng loại dữ liệu.
+     * Không dùng chung `trip.view_all` (quyền XEM) cho thao tác hủy — least privilege.
+     *
+     * @var array<string, list<string>>
+     */
+    private const MANAGE_PERMISSIONS = [
+        'dispatch_request' => ['request.approve', 'trip.view_all'],
+        'driver' => ['resource.driver.manage'],
+        'vehicle' => ['resource.vehicle.manage'],
+        'transport_provider' => ['resource.provider.manage'],
+        'tp_student' => ['tp_student.manage'],
+        'tp_program' => ['tp_program.manage'],
+        'role' => ['system.roles.manage'],
+        'menu_item' => ['system.feature_toggles.manage'],
+    ];
+
+    /** SuperAdmin (hasPermission luôn true) hoặc có ít nhất một quyền quản lý loại này. */
+    private function assertCanManageType(Request $request, string $type): void
+    {
+        $perms = self::MANAGE_PERMISSIONS[$type] ?? null;
+        abort_if($perms === null, 422, 'Loại dữ liệu không hợp lệ.');
+
+        $user = $request->user();
+        foreach ($perms as $p) {
+            if ($user->hasPermission($p)) {
+                return;
+            }
+        }
+
+        abort(403, 'Không có quyền quản lý thùng rác cho loại dữ liệu này.');
+    }
 
     /** GET /trash/summary */
     public function summary(Request $request): JsonResponse
@@ -61,6 +97,8 @@ class TrashController extends Controller
         $type = $request->query('type');
         $q = (string) $request->query('q', '');
         $perPage = min((int) $request->query('per_page', 20), 100);
+        $from = $request->query('from') ? Carbon::parse($request->query('from'))->startOfDay() : null;
+        $to = $request->query('to') ? Carbon::parse($request->query('to'))->endOfDay() : null;
 
         if ($type && array_key_exists($type, self::MODELS)) {
             $modelClass = self::MODELS[$type];
@@ -68,6 +106,12 @@ class TrashController extends Controller
 
             if ($q !== '') {
                 $query = $this->applySearch($query, $type, $q);
+            }
+            if ($from) {
+                $query->where('deleted_at', '>=', $from);
+            }
+            if ($to) {
+                $query->where('deleted_at', '<=', $to);
             }
 
             $paged = $query->paginate($perPage);
@@ -87,10 +131,14 @@ class TrashController extends Controller
         // Không có type: gom top-50 từ từng model, sắp theo deleted_at giảm dần.
         $all = collect();
         foreach (self::MODELS as $key => $modelClass) {
-            $rows = $modelClass::onlyTrashed()
-                ->orderByDesc('deleted_at')
-                ->limit(50)
-                ->get();
+            $q2 = $modelClass::onlyTrashed()->orderByDesc('deleted_at');
+            if ($from) {
+                $q2->where('deleted_at', '>=', $from);
+            }
+            if ($to) {
+                $q2->where('deleted_at', '<=', $to);
+            }
+            $rows = $q2->limit(50)->get();
             foreach ($rows as $m) {
                 $all->push($this->toItem($m, $key));
             }
@@ -112,24 +160,36 @@ class TrashController extends Controller
     /** POST /trash/restore */
     public function restore(Request $request): JsonResponse
     {
-        abort_unless($request->user()->hasPermission('trip.view_all'), 403, 'Không có quyền khôi phục bản ghi.');
-
         $data = $request->validate([
             'type' => ['required', 'string', 'in:'.implode(',', array_keys(self::MODELS))],
             'ids' => ['required', 'array', 'min:1', 'max:100'],
             'ids.*' => ['required', 'integer', 'min:1'],
         ]);
 
+        $this->assertCanManageType($request, $data['type']);
+
         $modelClass = self::MODELS[$data['type']];
+        $actorId = $request->user()->id;
         $restored = 0;
 
-        foreach ($data['ids'] as $id) {
-            $m = $modelClass::onlyTrashed()->find($id);
-            if ($m) {
+        DB::transaction(function () use ($data, $modelClass, $actorId, &$restored) {
+            foreach ($data['ids'] as $id) {
+                $m = $modelClass::onlyTrashed()->find($id);
+                if (! $m) {
+                    continue;
+                }
                 $m->restore();
+                app(AuditLogger::class)->log(
+                    actorId: $actorId,
+                    event: 'trash.restore',
+                    auditable: $m,
+                    before: null,
+                    after: null,
+                    metadata: ['type' => $data['type'], 'id' => $id],
+                );
                 $restored++;
             }
-        }
+        });
 
         return $this->ok(['restored' => $restored]);
     }
@@ -137,24 +197,37 @@ class TrashController extends Controller
     /** POST /trash/force-delete */
     public function forceDelete(Request $request): JsonResponse
     {
-        abort_unless($request->user()->hasPermission('trip.view_all'), 403, 'Không có quyền xóa vĩnh viễn bản ghi.');
-
         $data = $request->validate([
             'type' => ['required', 'string', 'in:'.implode(',', array_keys(self::MODELS))],
             'ids' => ['required', 'array', 'min:1', 'max:100'],
             'ids.*' => ['required', 'integer', 'min:1'],
         ]);
 
+        $this->assertCanManageType($request, $data['type']);
+
         $modelClass = self::MODELS[$data['type']];
+        $actorId = $request->user()->id;
         $deleted = 0;
 
-        foreach ($data['ids'] as $id) {
-            $m = $modelClass::onlyTrashed()->find($id);
-            if ($m) {
+        DB::transaction(function () use ($data, $modelClass, $actorId, &$deleted) {
+            foreach ($data['ids'] as $id) {
+                $m = $modelClass::onlyTrashed()->find($id);
+                if (! $m) {
+                    continue;
+                }
+                $before = $m->toArray();
                 $m->forceDelete();
+                app(AuditLogger::class)->log(
+                    actorId: $actorId,
+                    event: 'trash.force_delete',
+                    auditable: null,
+                    before: $before,
+                    after: null,
+                    metadata: ['type' => $data['type'], 'id' => $id],
+                );
                 $deleted++;
             }
-        }
+        });
 
         return $this->ok(['deleted' => $deleted]);
     }

@@ -54,6 +54,7 @@ import { useAuthStore, readCachedDefaultHome } from '../../store'
 import { TOKEN_KEY } from '../../core/config/authKeys'
 import { isUnauthorizedApiError, isTransientSessionError } from '../../util/apiError'
 import { formatApiError } from '../../api/http'
+import { exchangeOauthCode } from '../../api/auth'
 import {
   sanitizeLoginRedirect,
   normalizeLoginRouteQuery,
@@ -99,6 +100,37 @@ onMounted(async () => {
       clean.redirect = safeErrRedirect
     }
     await router.replace({ path: '/login', query: clean })
+  }
+
+  // Luồng OAuth mới: đổi mã một-lần (code) lấy token bearer (token không còn nằm trên URL).
+  if (q.code) {
+    bootstrapping.value = true
+    error.value = ''
+    try {
+      const res = await exchangeOauthCode(String(q.code))
+      auth.setToken(res.token)
+      if (!localStorage.getItem(TOKEN_KEY)) {
+        throw new Error('storage_blocked')
+      }
+      await auth.fetchMe()
+      const target = resolvePostLoginTarget(auth, q.redirect)
+      await router.replace(target)
+    } catch (e) {
+      auth.setToken(null)
+      const fallback =
+        e?.message === 'storage_blocked'
+          ? 'Thiết bị không cho lưu phiên đăng nhập. Tắt chế độ riêng tư hoặc mở app bằng trình duyệt thường, rồi thử lại.'
+          : 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.'
+      error.value = formatApiError(e, fallback)
+      const safe = sanitizeLoginRedirect(q.redirect ?? '/')
+      await router.replace({
+        path: '/login',
+        query: safe !== '/' ? { redirect: safe } : {},
+      })
+    } finally {
+      bootstrapping.value = false
+    }
+    return
   }
 
   if (!q.token) {

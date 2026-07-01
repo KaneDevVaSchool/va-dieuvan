@@ -698,8 +698,8 @@ const router = createRouter({
 
 router.beforeEach(async (to) => {
     if (to.meta.public) {
-        // Redirect user đã đăng nhập ra khỏi trang login (trừ OAuth callback có ?token)
-        if ((to.name === "login" || to.name === "home") && !to.query.token) {
+        // Redirect user đã đăng nhập ra khỏi trang login (trừ OAuth callback có ?token hoặc ?code)
+        if ((to.name === "login" || to.name === "home") && !to.query.token && !to.query.code) {
             const auth = useAuthStore();
             if (auth.user) {
                 return resolvePostLoginTarget(auth, to.query.redirect);

@@ -18,7 +18,21 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
+// Health check cho deploy/monitoring (không auth). Kiểm tra kết nối DB nhẹ, không lộ chi tiết.
+Route::get('/health', function () {
+    try {
+        \Illuminate\Support\Facades\DB::connection()->getPdo();
+        $db = 'ok';
+    } catch (\Throwable) {
+        $db = 'down';
+    }
+
+    return response()->json(['status' => $db === 'ok' ? 'ok' : 'degraded', 'db' => $db], $db === 'ok' ? 200 : 503);
+})->middleware('throttle:60,1');
+
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:20,1');
+// Đổi mã một-lần sau OAuth Google lấy token bearer (token không còn nằm trên URL).
+Route::post('/auth/exchange', [AuthController::class, 'exchange'])->middleware('throttle:30,1');
 Route::post('/telemetry/frontend', [ClientTelemetryController::class, 'store'])->middleware('throttle:60,1');
 
 /*

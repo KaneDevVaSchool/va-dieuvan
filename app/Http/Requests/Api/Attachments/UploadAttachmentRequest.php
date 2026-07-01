@@ -77,7 +77,15 @@ class UploadAttachmentRequest extends ApiFormRequest
             'attachable_type' => ['required', Rule::in(['trip', 'cargo_shipment', 'trip_cost', 'dispatch_request', 'driver_compliance_document', 'vehicle_compliance_document'])],
             'attachable_id' => ['required', 'integer', 'min:1'],
             'kind' => ['nullable', 'string', 'max:50', Rule::in(['paper_scan', 'request_attachment', 'proposal_basis', 'signed_paper', 'receipt', 'pod', 'route_doc'])],
-            'file' => ['required', 'file', 'max:10240'], // 10MB
+            // Whitelist loại tệp: ảnh + tài liệu công vụ. Chặn html/svg/js/php… (Stored XSS / khả năng RCE).
+            // `mimes` kiểm tra theo nội dung, `extensions` kiểm tra đuôi do client gửi — dùng cả hai.
+            'file' => [
+                'required',
+                'file',
+                'max:10240', // 10MB
+                'mimes:jpg,jpeg,png,webp,gif,heic,heif,pdf,xlsx,xls,docx,doc,csv',
+                'extensions:jpg,jpeg,png,webp,gif,heic,heif,pdf,xlsx,xls,docx,doc,csv',
+            ],
         ];
     }
 }

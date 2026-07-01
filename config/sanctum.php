@@ -46,7 +46,8 @@ return [
     |
     */
 
-    'expiration' => null,
+    // Token hết hạn sau N phút (mặc định 30 ngày). Đặt null để không hết hạn (không khuyến nghị).
+    'expiration' => env('SANCTUM_TOKEN_EXPIRATION', 60 * 24 * 30),
 
     /*
     |--------------------------------------------------------------------------

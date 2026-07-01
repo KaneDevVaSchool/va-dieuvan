@@ -1,8 +1,8 @@
 <template>
-  <div class="min-w-0 space-y-5 pb-10">
+  <div class="min-w-0 space-y-6 pb-10">
 
     <!-- Page header -->
-    <div class="flex flex-col gap-3 border-b border-slate-200/80 pb-5 sm:flex-row sm:items-end sm:justify-between dark:border-slate-700">
+    <div class="flex flex-col gap-3 border-b border-slate-200/80 pb-6 lg:flex-row lg:items-end lg:justify-between dark:border-slate-700">
       <div>
         <h1 class="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">
           {{ t('trash_page.title') }}
@@ -21,73 +21,23 @@
       </button>
     </div>
 
-    <!-- KPI type filter strip -->
-    <section
-      class="kpi-strip rounded-xl border border-slate-200/80 bg-gradient-to-b from-slate-50/90 to-white shadow-sm dark:border-slate-700 dark:from-slate-800/60 dark:to-slate-900"
-      aria-label="Thống kê thùng rác"
-    >
-      <div class="px-5 pb-4 pt-4">
-        <div class="mb-3 flex items-center justify-between gap-2">
-          <div>
-            <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-brand/80">THỐNG KÊ</p>
-            <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ t('trash_page.kpi_title') }}</h2>
-          </div>
-          <p class="text-[11px] text-slate-400">{{ t('trash_page.kpi_hint') }}</p>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-9">
-          <!-- All -->
-          <button
-            type="button"
-            class="kpi-card kpi-card--brand"
-            :class="activeType === null ? 'kpi-card--active' : 'kpi-card--interactive'"
-            :aria-pressed="activeType === null"
-            data-testid="trash-filter-all"
-            @click="setTypeFilter(null)"
-          >
-            <div class="kpi-card__inner">
-              <div class="kpi-card__icon-cell">
-                <TrashIcon class="h-5 w-5" aria-hidden="true" />
-              </div>
-              <div class="kpi-card__body">
-                <p class="kpi-card__label">{{ t('trash_page.type_all') }}</p>
-                <p class="kpi-card__value">{{ loadingSummary ? '…' : fmtCount(summary?.counts?.total ?? 0) }}</p>
-              </div>
-            </div>
-          </button>
-
-          <!-- Per model type -->
-          <button
-            v-for="cfg in typeConfigs"
-            :key="cfg.type"
-            type="button"
-            class="kpi-card"
-            :class="[`kpi-card--${cfg.tone}`, activeType === cfg.type ? 'kpi-card--active' : 'kpi-card--interactive']"
-            :aria-pressed="activeType === cfg.type"
-            :data-testid="`trash-filter-${cfg.type}`"
-            @click="setTypeFilter(cfg.type)"
-          >
-            <div class="kpi-card__inner">
-              <div class="kpi-card__icon-cell">
-                <component :is="cfg.icon" class="h-5 w-5" aria-hidden="true" />
-              </div>
-              <div class="kpi-card__body">
-                <p class="kpi-card__label">{{ cfg.label }}</p>
-                <p class="kpi-card__value">{{ loadingSummary ? '…' : fmtCount(summary?.counts?.[cfg.type] ?? 0) }}</p>
-              </div>
-            </div>
-          </button>
-        </div>
-      </div>
-    </section>
+    <!-- KPI summary strip -->
+    <TrashSummaryBar
+      :summary="summary"
+      :loading="loadingSummary"
+      :active-type="activeType"
+      @quick-filter="onKpiQuickFilter"
+    />
 
     <!-- Data card -->
     <div class="overflow-visible rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
 
-      <!-- Toolbar -->
+      <!-- Toolbar row -->
       <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
         <div class="flex w-full min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
-          <div class="min-w-0 w-full basis-full lg:flex-1 lg:basis-auto">
+
+          <!-- Search -->
+          <div class="min-w-0 w-full basis-full lg:min-w-[10rem] lg:flex-1 lg:basis-auto">
             <DatagridToolbarSearch
               v-model="searchInput"
               input-id="trash-search"
@@ -100,9 +50,48 @@
             />
           </div>
 
-          <!-- Bulk actions (visible when rows selected) -->
-          <template v-if="selected.size > 0">
+          <!-- Action buttons -->
+          <div class="flex shrink-0 items-center gap-2">
+            <FilterVisibilityDropdown
+              :open="showFilterPanelDd"
+              :title="t('trash_page.filter_panel_title')"
+              :hint="t('trash_page.filter_panel_hint')"
+              @close="closeFilterPanel"
+            >
+              <template #trigger>
+                <DatagridToolbarActionButton
+                  icon="filter"
+                  :active="showFilterPanelDd"
+                  test-id="trash-toolbar-filter"
+                  @click="openFilterPanel"
+                >
+                  {{ t('trash_page.toolbar_filter') }}
+                </DatagridToolbarActionButton>
+              </template>
+              <li
+                v-for="fd in filterControlDefs"
+                :key="'trash-vis-' + fd.key"
+                class="flex items-start gap-2"
+              >
+                <input
+                  :id="`trash-filter-vis-${fd.key}`"
+                  v-model="visibleFilters[fd.key]"
+                  type="checkbox"
+                  class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-va-800 focus:ring-va-700/30 dark:border-slate-600"
+                  :data-testid="`trash-filter-vis-${fd.key}`"
+                />
+                <label
+                  :for="`trash-filter-vis-${fd.key}`"
+                  class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
+                >
+                  {{ fd.label }}
+                </label>
+              </li>
+            </FilterVisibilityDropdown>
+
+            <!-- Bulk restore -->
             <button
+              v-if="selected.size > 0"
               type="button"
               class="inline-flex h-10 items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100 disabled:opacity-50 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300"
               :disabled="busyRestore"
@@ -112,9 +101,12 @@
               <ArrowUturnUpIcon class="h-4 w-4" aria-hidden="true" />
               {{ t('trash_page.btn_restore') }} ({{ selected.size }})
             </button>
+
+            <!-- Bulk force-delete -->
             <button
+              v-if="selected.size > 0"
               type="button"
-              class="inline-flex h-10 items-center gap-1.5 rounded-xl border border-rose-300 bg-rose-50 px-3 text-sm font-medium text-rose-700 transition hover:bg-rose-100 disabled:opacity-50 dark:border-rose-700 dark:bg-rose-950/30 dark:text-rose-300"
+              class="inline-flex h-10 items-center gap-1.5 rounded-xl border border-rose-300 bg-rose-50 px-3 text-sm font-medium text-rose-700 transition hover:bg-rose-100 disabled:opacity-50 dark:border-rose-700 dark:bg-rose-950/30 dark:text-rose-400"
               :disabled="busyDelete"
               data-testid="trash-bulk-force-delete"
               @click="confirmBulkForceDelete"
@@ -122,13 +114,48 @@
               <TrashIcon class="h-4 w-4" aria-hidden="true" />
               {{ t('trash_page.btn_force_delete') }} ({{ selected.size }})
             </button>
-          </template>
+          </div>
 
-          <span v-if="activeType !== null" class="ml-auto shrink-0 text-xs text-slate-400">
-            {{ t('trash_page.showing_type', { type: activeTypeLabel }) }}
-          </span>
         </div>
       </div>
+
+      <!-- Filter row (date_range) -->
+      <Transition name="fade-slide">
+        <div
+          v-if="hasFilterRow"
+          class="grid grid-cols-1 gap-3 border-b border-slate-100 px-5 py-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 dark:border-slate-700"
+        >
+          <div v-if="visibleFilters.date_range" class="min-w-0 w-full sm:col-span-2 xl:col-span-2">
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <FilterDatePicker
+                v-model="filters.from"
+                :placeholder="t('trash_page.filter_from')"
+                :max-date="filters.to || null"
+                input-id="trash-filter-from"
+                @update:model-value="onDateFilterChange"
+              />
+              <FilterDatePicker
+                v-model="filters.to"
+                :placeholder="t('trash_page.filter_to')"
+                :min-date="filters.from || null"
+                input-id="trash-filter-to"
+                @update:model-value="onDateFilterChange"
+              />
+            </div>
+          </div>
+
+          <div v-if="activeFilterCount > 0" class="col-span-full flex justify-end">
+            <button
+              type="button"
+              class="text-xs font-medium text-va-800 hover:text-va-700 dark:text-va-300"
+              data-testid="trash-clear-filters"
+              @click="clearFilters"
+            >
+              {{ t('trash_page.clear_filters') }}
+            </button>
+          </div>
+        </div>
+      </Transition>
 
       <!-- Table -->
       <div class="overflow-x-auto">
@@ -151,7 +178,7 @@
               <th class="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 {{ t('trash_page.col_record') }}
               </th>
-              <th class="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              <th class="hidden px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 sm:table-cell dark:text-slate-400">
                 {{ t('trash_page.col_deleted_at') }}
               </th>
               <th class="w-32 px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -161,35 +188,44 @@
           </thead>
 
           <tbody class="divide-y divide-slate-100 dark:divide-slate-700/60">
-            <!-- Loading -->
+
+            <!-- Loading skeleton -->
             <template v-if="loadingItems">
-              <tr v-for="i in 6" :key="`sk-${i}`">
-                <td class="px-4 py-3"><div class="h-4 w-4 animate-pulse rounded bg-slate-200 dark:bg-slate-700" /></td>
-                <td class="px-3 py-3"><div class="h-5 w-20 animate-pulse rounded-full bg-slate-200 dark:bg-slate-700" /></td>
+              <tr v-for="i in 8" :key="`sk-${i}`">
+                <td class="px-4 py-3">
+                  <div class="h-4 w-4 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
+                </td>
+                <td class="px-3 py-3">
+                  <div class="h-5 w-20 animate-pulse rounded-full bg-slate-200 dark:bg-slate-700" />
+                </td>
                 <td class="px-3 py-3">
                   <div class="h-4 w-48 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
                   <div class="mt-1.5 h-3 w-32 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
                 </td>
-                <td class="px-3 py-3"><div class="h-4 w-28 animate-pulse rounded bg-slate-200 dark:bg-slate-700" /></td>
-                <td class="px-3 py-3"><div class="h-8 w-20 animate-pulse rounded-xl bg-slate-200 dark:bg-slate-700 ml-auto" /></td>
+                <td class="hidden px-3 py-3 sm:table-cell">
+                  <div class="h-4 w-28 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
+                </td>
+                <td class="px-3 py-3">
+                  <div class="ml-auto h-7 w-20 animate-pulse rounded-xl bg-slate-200 dark:bg-slate-700" />
+                </td>
               </tr>
             </template>
 
-            <!-- Empty -->
+            <!-- Empty state -->
             <tr v-else-if="items.length === 0">
               <td colspan="5" class="px-5 py-16 text-center">
-                <TrashIcon class="mx-auto mb-3 h-10 w-10 text-slate-300 dark:text-slate-600" />
-                <p class="font-medium text-slate-700 dark:text-slate-300">{{ t('trash_page.empty_title') }}</p>
+                <TrashIcon class="mx-auto mb-3 h-10 w-10 text-slate-300 dark:text-slate-600" aria-hidden="true" />
+                <p class="font-semibold text-slate-700 dark:text-slate-300">{{ t('trash_page.empty_title') }}</p>
                 <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ t('trash_page.empty_body') }}</p>
               </td>
             </tr>
 
-            <!-- Rows -->
+            <!-- Data rows -->
             <tr
               v-for="item in items"
               :key="`${item.type}-${item.id}`"
               class="group transition hover:bg-slate-50/70 dark:hover:bg-slate-800/30"
-              :class="selected.has(itemKey(item)) ? 'bg-va-50/40 dark:bg-va-900/10' : ''"
+              :class="selected.has(itemKey(item)) ? 'bg-va-50/30 dark:bg-va-900/10' : ''"
             >
               <td class="px-4 py-3">
                 <input
@@ -202,24 +238,24 @@
               </td>
               <td class="px-3 py-3">
                 <span
-                  class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
-                  :class="typeConfig(item.type)?.badgeClass"
+                  class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
+                  :class="typeConfig(item.type)?.badgeClass ?? 'bg-slate-100 text-slate-600'"
                 >
                   {{ typeConfig(item.type)?.label ?? item.type }}
                 </span>
               </td>
-              <td class="px-3 py-3 max-w-xs">
+              <td class="max-w-xs px-3 py-3">
                 <p class="truncate font-medium text-slate-800 dark:text-slate-200">{{ item.label }}</p>
-                <p v-if="item.sublabel" class="truncate text-[11px] text-slate-400 mt-0.5">{{ item.sublabel }}</p>
+                <p v-if="item.sublabel" class="mt-0.5 truncate text-[11px] text-slate-400">{{ item.sublabel }}</p>
               </td>
-              <td class="px-3 py-3 text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">
+              <td class="hidden whitespace-nowrap px-3 py-3 text-sm text-slate-500 sm:table-cell dark:text-slate-400">
                 {{ formatDate(item.deleted_at) }}
               </td>
               <td class="px-3 py-3">
                 <div class="flex items-center justify-end gap-1.5">
                   <button
                     type="button"
-                    class="inline-flex h-7 items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400"
+                    class="inline-flex h-7 items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100 disabled:opacity-50 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400"
                     :disabled="busyRestore"
                     :data-testid="`trash-restore-${item.type}-${item.id}`"
                     @click="singleRestore(item)"
@@ -229,8 +265,9 @@
                   </button>
                   <button
                     type="button"
-                    class="inline-flex h-7 items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2 text-xs font-medium text-rose-700 transition hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-400"
+                    class="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-xs font-medium text-rose-600 transition hover:bg-rose-100 disabled:opacity-50 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-400"
                     :disabled="busyDelete"
+                    :title="t('trash_page.btn_force_delete')"
                     :data-testid="`trash-force-delete-${item.type}-${item.id}`"
                     @click="singleForceDelete(item)"
                   >
@@ -243,28 +280,30 @@
         </table>
       </div>
 
-      <!-- Pagination (only when a specific type is selected) -->
+      <!-- Pagination -->
       <div
-        v-if="activeType !== null && meta && meta.last_page > 1"
-        class="flex items-center justify-between border-t border-slate-100 px-5 py-3 dark:border-slate-700"
+        v-if="meta && meta.last_page > 1"
+        class="flex items-center justify-between border-t border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5"
       >
-        <p class="text-xs text-slate-500 dark:text-slate-400">
+        <p class="text-xs text-slate-400 dark:text-slate-500">
           {{ t('trash_page.pagination_info', { from: paginationFrom, to: paginationTo, total: meta.total }) }}
         </p>
         <div class="flex items-center gap-1">
           <button
             type="button"
-            class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:opacity-40 dark:border-slate-700 dark:text-slate-400"
+            class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
             :disabled="currentPage <= 1"
             data-testid="trash-prev-page"
             @click="goPage(currentPage - 1)"
           >
             <ChevronLeftIcon class="h-4 w-4" aria-hidden="true" />
           </button>
-          <span class="px-2 text-sm text-slate-600 dark:text-slate-400">{{ currentPage }} / {{ meta.last_page }}</span>
+          <span class="min-w-[4.5rem] text-center text-xs font-medium text-slate-600 dark:text-slate-300">
+            {{ t('trash_page.page_of', { cur: currentPage, last: meta.last_page }) }}
+          </span>
           <button
             type="button"
-            class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:opacity-40 dark:border-slate-700 dark:text-slate-400"
+            class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
             :disabled="currentPage >= meta.last_page"
             data-testid="trash-next-page"
             @click="goPage(currentPage + 1)"
@@ -273,9 +312,10 @@
           </button>
         </div>
       </div>
+
     </div>
 
-    <!-- Confirm restore modal -->
+    <!-- Confirm restore dialog -->
     <Teleport to="body">
       <div
         v-if="confirmRestore"
@@ -303,7 +343,7 @@
       </div>
     </Teleport>
 
-    <!-- Confirm force-delete modal -->
+    <!-- Confirm force-delete dialog -->
     <Teleport to="body">
       <div
         v-if="confirmDelete"
@@ -338,7 +378,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowPathIcon,
@@ -356,12 +396,50 @@ import {
   Bars3Icon,
   BuildingOfficeIcon,
 } from '@heroicons/vue/24/outline'
-import { getTrashSummary, listTrash, restoreTrashItems, forceDeleteTrashItems } from '../../api/trash'
 import DatagridToolbarSearch from '../../components/shared/ui/DatagridToolbarSearch.vue'
+import DatagridToolbarActionButton from '../../components/shared/ui/DatagridToolbarActionButton.vue'
+import FilterVisibilityDropdown from '../../components/shared/ui/FilterVisibilityDropdown.vue'
+import FilterDatePicker from '../../components/shared/ui/FilterDatePicker.vue'
+import TrashSummaryBar from '../../components/system/TrashSummaryBar.vue'
+import { useVisibleFilterControls } from '../../composables/useVisibleFilterControls.js'
+import { getTrashSummary, listTrash, restoreTrashItems, forceDeleteTrashItems } from '../../api/trash'
 
 const { t, locale } = useI18n()
 
-// ─── State ───────────────────────────────────────────────────────────────────
+// ─── Filter controls (datagrid-toolbar pattern) ────────────────────────────────
+
+const FILTER_CONTROLS = [
+  { key: 'date_range', label: t('trash_page.filter_vis_date_range'), default: false },
+]
+
+const {
+  visibleFilters,
+  hasFilterRow,
+  showFilterPanelDd,
+  openFilterPanel,
+  closeFilterPanel,
+  filterControlDefs,
+} = useVisibleFilterControls(FILTER_CONTROLS, 'va-dieuvan.trash.visible-filters.v1')
+
+const filters = reactive({ from: '', to: '' })
+
+const activeFilterCount = computed(() => {
+  return (filters.from ? 1 : 0) + (filters.to ? 1 : 0)
+})
+
+function clearFilters() {
+  filters.from = ''
+  filters.to = ''
+  currentPage.value = 1
+  loadItems()
+}
+
+function onDateFilterChange() {
+  currentPage.value = 1
+  loadItems()
+}
+
+// ─── State ─────────────────────────────────────────────────────────────────────
 
 const summary        = ref(null)
 const loadingSummary = ref(false)
@@ -377,72 +455,23 @@ const busyDelete     = ref(false)
 const confirmRestore = ref(null)
 const confirmDelete  = ref(null)
 
-// ─── Type configs ─────────────────────────────────────────────────────────────
+// ─── Type badge configs ────────────────────────────────────────────────────────
 
-const typeConfigs = computed(() => [
-  {
-    type: 'dispatch_request',
-    label: t('trash_page.type_dispatch_request'),
-    icon: ClipboardDocumentListIcon,
-    tone: 'sky',
-    badgeClass: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300',
-  },
-  {
-    type: 'driver',
-    label: t('trash_page.type_driver'),
-    icon: TruckIcon,
-    tone: 'violet',
-    badgeClass: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300',
-  },
-  {
-    type: 'vehicle',
-    label: t('trash_page.type_vehicle'),
-    icon: RectangleStackIcon,
-    tone: 'amber',
-    badgeClass: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-  },
-  {
-    type: 'transport_provider',
-    label: t('trash_page.type_transport_provider'),
-    icon: BuildingOfficeIcon,
-    tone: 'emerald',
-    badgeClass: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
-  },
-  {
-    type: 'tp_student',
-    label: t('trash_page.type_tp_student'),
-    icon: AcademicCapIcon,
-    tone: 'rose',
-    badgeClass: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
-  },
-  {
-    type: 'tp_program',
-    label: t('trash_page.type_tp_program'),
-    icon: CalendarDaysIcon,
-    tone: 'brand',
-    badgeClass: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300',
-  },
-  {
-    type: 'role',
-    label: t('trash_page.type_role'),
-    icon: UserGroupIcon,
-    tone: 'slate',
-    badgeClass: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300',
-  },
-  {
-    type: 'menu_item',
-    label: t('trash_page.type_menu_item'),
-    icon: Bars3Icon,
-    tone: 'slate',
-    badgeClass: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
-  },
-])
+const TYPE_BADGE = {
+  dispatch_request:   { label: () => t('trash_page.type_dispatch_request'), badgeClass: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300' },
+  driver:             { label: () => t('trash_page.type_driver'),            badgeClass: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300' },
+  vehicle:            { label: () => t('trash_page.type_vehicle'),           badgeClass: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' },
+  transport_provider: { label: () => t('trash_page.type_transport_provider'), badgeClass: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' },
+  tp_student:         { label: () => t('trash_page.type_tp_student'),        badgeClass: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300' },
+  tp_program:         { label: () => t('trash_page.type_tp_program'),        badgeClass: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300' },
+  role:               { label: () => t('trash_page.type_role'),              badgeClass: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300' },
+  menu_item:          { label: () => t('trash_page.type_menu_item'),         badgeClass: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300' },
+}
 
-const activeTypeLabel = computed(() => typeConfigs.value.find(c => c.type === activeType.value)?.label ?? '')
-
-// ─── Computed ────────────────────────────────────────────────────────────────
+// ─── Computed ─────────────────────────────────────────────────────────────────
 
 const pageIds = computed(() => items.value.map(itemKey))
+
 const allOnPageSelected = computed(() =>
   pageIds.value.length > 0 && pageIds.value.every(k => selected.value.has(k))
 )
@@ -456,18 +485,16 @@ const paginationTo = computed(() =>
   meta.value ? Math.min(meta.value.current_page * meta.value.per_page, meta.value.total) : 0
 )
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function itemKey(item) {
   return `${item.type}::${item.id}`
 }
 
 function typeConfig(type) {
-  return typeConfigs.value.find(c => c.type === type) ?? null
-}
-
-function fmtCount(n) {
-  return n >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(n)
+  const cfg = TYPE_BADGE[type]
+  if (!cfg) return null
+  return { label: cfg.label(), badgeClass: cfg.badgeClass }
 }
 
 function formatDate(v) {
@@ -475,7 +502,7 @@ function formatDate(v) {
   try {
     return new Date(v).toLocaleString(locale.value === 'en' ? 'en-US' : 'vi-VN')
   } catch {
-    return v
+    return String(v)
   }
 }
 
@@ -499,13 +526,15 @@ async function loadItems() {
   selected.value = new Set()
   try {
     const result = await listTrash({
-      type: activeType.value ?? undefined,
-      q: searchInput.value || undefined,
-      page: currentPage.value,
+      type:     activeType.value ?? undefined,
+      q:        searchInput.value || undefined,
+      from:     filters.from || undefined,
+      to:       filters.to || undefined,
+      page:     currentPage.value,
       per_page: 20,
     })
-    items.value  = result.items ?? []
-    meta.value   = result.meta ?? null
+    items.value = result.items ?? []
+    meta.value  = result.meta ?? null
   } catch {
     items.value = []
     meta.value  = null
@@ -526,7 +555,7 @@ watch(activeType, () => {
   loadItems()
 })
 
-watch(searchInput, (val) => {
+watch(searchInput, () => {
   clearTimeout(searchTimer)
   searchTimer = setTimeout(() => {
     currentPage.value = 1
@@ -534,12 +563,13 @@ watch(searchInput, (val) => {
   }, 350)
 })
 
-// ─── Filters / pagination ─────────────────────────────────────────────────────
+// ─── KPI quick-filter ─────────────────────────────────────────────────────────
 
-function setTypeFilter(type) {
-  if (activeType.value === type) return
+function onKpiQuickFilter({ type }) {
   activeType.value = type
 }
+
+// ─── Pagination ───────────────────────────────────────────────────────────────
 
 function goPage(n) {
   currentPage.value = n
@@ -559,56 +589,50 @@ function toggleSelectAll() {
 
 function toggleItem(item) {
   const k = itemKey(item)
-  if (selected.value.has(k)) {
-    selected.value.delete(k)
+  const next = new Set(selected.value)
+  if (next.has(k)) {
+    next.delete(k)
   } else {
-    selected.value.add(k)
+    next.add(k)
   }
-  selected.value = new Set(selected.value)
+  selected.value = next
 }
 
-// ─── Actions ──────────────────────────────────────────────────────────────────
+// ─── Bulk / single actions ────────────────────────────────────────────────────
 
 function groupSelectedByType() {
   const byType = {}
   for (const key of selected.value) {
-    const [type, id] = key.split('::')
+    const sep = key.indexOf('::')
+    const type = key.slice(0, sep)
+    const id   = parseInt(key.slice(sep + 2), 10)
     if (!byType[type]) byType[type] = []
-    byType[type].push(parseInt(id, 10))
+    byType[type].push(id)
   }
   return byType
 }
 
 function confirmBulkRestore() {
-  const byType = groupSelectedByType()
-  confirmRestore.value = { byType, ids: [...selected.value] }
+  confirmRestore.value = { byType: groupSelectedByType(), ids: [...selected.value] }
 }
 
 function confirmBulkForceDelete() {
-  const byType = groupSelectedByType()
-  confirmDelete.value = { byType, ids: [...selected.value] }
+  confirmDelete.value = { byType: groupSelectedByType(), ids: [...selected.value] }
 }
 
 function singleRestore(item) {
-  confirmRestore.value = {
-    byType: { [item.type]: [item.id] },
-    ids: [itemKey(item)],
-  }
+  confirmRestore.value = { byType: { [item.type]: [item.id] }, ids: [itemKey(item)] }
 }
 
 function singleForceDelete(item) {
-  confirmDelete.value = {
-    byType: { [item.type]: [item.id] },
-    ids: [itemKey(item)],
-  }
+  confirmDelete.value = { byType: { [item.type]: [item.id] }, ids: [itemKey(item)] }
 }
 
 async function executeRestore() {
   if (!confirmRestore.value) return
   busyRestore.value = true
   try {
-    const byType = confirmRestore.value.byType
-    for (const [type, ids] of Object.entries(byType)) {
+    for (const [type, ids] of Object.entries(confirmRestore.value.byType)) {
       await restoreTrashItems({ type, ids })
     }
     confirmRestore.value = null
@@ -623,8 +647,7 @@ async function executeForceDelete() {
   if (!confirmDelete.value) return
   busyDelete.value = true
   try {
-    const byType = confirmDelete.value.byType
-    for (const [type, ids] of Object.entries(byType)) {
+    for (const [type, ids] of Object.entries(confirmDelete.value.byType)) {
       await forceDeleteTrashItems({ type, ids })
     }
     confirmDelete.value = null
@@ -637,44 +660,13 @@ async function executeForceDelete() {
 </script>
 
 <style scoped>
-/* KPI card shell — tuỳ chỉnh gọn cho trash module */
-.kpi-card {
-  @apply relative overflow-hidden rounded-xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-va-600/50;
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
-.kpi-card--interactive {
-  @apply cursor-pointer border-dashed border-slate-200 bg-white hover:border-solid hover:shadow-sm dark:border-slate-700 dark:bg-slate-900;
-}
-.kpi-card--active {
-  @apply cursor-pointer border-solid border-slate-300 bg-slate-50 shadow-sm dark:border-slate-600 dark:bg-slate-800/50;
-}
-.kpi-card--brand.kpi-card--active  { @apply border-teal-400/60 bg-teal-50/60 dark:border-teal-700 dark:bg-teal-950/20; }
-.kpi-card--sky.kpi-card--active    { @apply border-sky-400/60 bg-sky-50/60 dark:border-sky-700 dark:bg-sky-950/20; }
-.kpi-card--violet.kpi-card--active { @apply border-violet-400/60 bg-violet-50/60 dark:border-violet-700 dark:bg-violet-950/20; }
-.kpi-card--amber.kpi-card--active  { @apply border-amber-400/60 bg-amber-50/60 dark:border-amber-700 dark:bg-amber-950/20; }
-.kpi-card--emerald.kpi-card--active{ @apply border-emerald-400/60 bg-emerald-50/60 dark:border-emerald-700 dark:bg-emerald-950/20; }
-.kpi-card--rose.kpi-card--active   { @apply border-rose-400/60 bg-rose-50/60 dark:border-rose-700 dark:bg-rose-950/20; }
-.kpi-card--static {
-  @apply cursor-default border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900;
-}
-.kpi-card__inner {
-  @apply flex items-start gap-2.5;
-}
-.kpi-card__icon-cell {
-  @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400;
-}
-.kpi-card--brand .kpi-card__icon-cell  { @apply bg-teal-100 text-teal-600 dark:bg-teal-900/40 dark:text-teal-400; }
-.kpi-card--sky .kpi-card__icon-cell    { @apply bg-sky-100 text-sky-600 dark:bg-sky-900/40 dark:text-sky-400; }
-.kpi-card--violet .kpi-card__icon-cell { @apply bg-violet-100 text-violet-600 dark:bg-violet-900/40 dark:text-violet-400; }
-.kpi-card--amber .kpi-card__icon-cell  { @apply bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400; }
-.kpi-card--emerald .kpi-card__icon-cell{ @apply bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400; }
-.kpi-card--rose .kpi-card__icon-cell   { @apply bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-400; }
-.kpi-card__body {
-  @apply min-w-0 flex-1;
-}
-.kpi-card__label {
-  @apply text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400;
-}
-.kpi-card__value {
-  @apply text-xl font-bold tabular-nums text-slate-800 dark:text-slate-100;
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 </style>

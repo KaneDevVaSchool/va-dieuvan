@@ -10,7 +10,7 @@ import {
   CheckCircleIcon,
   XCircleIcon,
 } from '@heroicons/vue/24/outline'
-import { BUSINESS_CAPABILITY_GROUPS, getColorClasses, computeGroupStats } from '../../config/businessCapabilities.js'
+import { BUSINESS_CAPABILITY_GROUPS, getColorClasses, computeGroupStats, isPermCovered } from '../../config/businessCapabilities.js'
 import { JOB_ROLE_TEMPLATES } from '../../config/jobRoleTemplates.js'
 import * as admin from '../../api/admin'
 import { formatApiError } from '../../api/http'
@@ -47,6 +47,11 @@ const colorKey   = computed(() => matchedTemplate.value?.colorKey ?? 'slate')
 
 const activeGroups   = computed(() => BUSINESS_CAPABILITY_GROUPS.filter((g) => groupStats.value.get(g.id)?.selected > 0))
 const inactiveGroups = computed(() => BUSINESS_CAPABILITY_GROUPS.filter((g) => !groupStats.value.get(g.id)?.selected))
+
+/** Perms granted to this role but not mapped to any capability group. */
+const uncoveredRolePerms = computed(() =>
+  (role.value?.permissions ?? []).filter((p) => !isPermCovered(p.name)),
+)
 
 // ─── Load ─────────────────────────────────────────────────────────────────────
 
@@ -252,6 +257,22 @@ onMounted(load)
             >
               <span>{{ group.icon }}</span>
               {{ group.title }}
+            </span>
+          </div>
+        </template>
+
+        <!-- Uncovered perms (granted but not mapped to any capability group) -->
+        <template v-if="uncoveredRolePerms.length">
+          <h3 class="mt-2 px-1 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Quyền khác (chưa phân nhóm)
+          </h3>
+          <div class="flex flex-wrap gap-2">
+            <span
+              v-for="perm in uncoveredRolePerms"
+              :key="perm.id ?? perm.name"
+              class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+            >
+              <span class="font-mono text-[10px] text-slate-400 dark:text-slate-500">{{ perm.name }}</span>
             </span>
           </div>
         </template>

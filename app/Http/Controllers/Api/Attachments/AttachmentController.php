@@ -15,12 +15,14 @@ use App\Models\DispatchRequest;
 use App\Models\DriverComplianceDocument;
 use App\Models\Trip;
 use App\Models\TripCost;
+use App\Models\User;
 use App\Models\VehicleComplianceDocument;
 use App\Services\Auditing\AuditLogger;
 use App\Services\Ocr\PaperOcrStubService;
 use App\Services\SignedDocuments\SignedDocumentUploadService;
 use App\Support\FinancialDataLock;
 use App\Support\TripCostAccess;
+use App\Support\TripVisibility;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -44,6 +46,7 @@ class AttachmentController extends Controller
             'dispatch_request' => [DispatchRequest::findOrFail($data['attachable_id']), 'dispatch_requests'],
             'driver_compliance_document' => [DriverComplianceDocument::findOrFail($data['attachable_id']), 'driver_compliance_documents'],
             'vehicle_compliance_document' => [VehicleComplianceDocument::findOrFail($data['attachable_id']), 'vehicle_compliance_documents'],
+            default => abort(422, 'Loại đối tượng đính kèm không hợp lệ.'),
         };
 
         if ($attachable instanceof DriverComplianceDocument) {
@@ -57,6 +60,10 @@ class AttachmentController extends Controller
                 abort(403);
             }
         }
+
+        // Object-level check: chỉ cho đính kèm vào đối tượng người dùng thực sự thấy/quản lý
+        // (chống dùng quyền `attachment.upload` để gắn file vào trip/phiếu/cargo bất kỳ theo ID).
+        $this->assertCanAttachTo($user, $attachable);
 
         if ($attachable instanceof TripCost) {
             FinancialDataLock::assertTripCostAllowsNewAttachment($attachable);
@@ -353,6 +360,45 @@ class AttachmentController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Kiểm tra quyền đính kèm theo TỪNG đối tượng (không chỉ quyền chung `attachment.upload`).
+     * Compliance documents đã được kiểm tra riêng ở trên.
+     */
+    private function assertCanAttachTo(?User $user, Model $attachable): void
+    {
+        if (! $user instanceof User) {
+            abort(403);
+        }
+        if ($user->isSuperAdmin()) {
+            return;
+        }
+
+        if ($attachable instanceof Trip) {
+            abort_unless(TripVisibility::userCanViewTrip($user, $attachable), 403);
+
+            return;
+        }
+
+        if ($attachable instanceof DispatchRequest) {
+            abort_unless($user->can('view', $attachable), 403);
+
+            return;
+        }
+
+        if ($attachable instanceof CargoShipment) {
+            abort_unless(
+                $user->hasPermission('cargo.manage') || $user->hasPermission('trip.view_all'),
+                403,
+            );
+
+            return;
+        }
+
+        if ($attachable instanceof TripCost) {
+            abort_unless(TripCostAccess::userCanView($user, $attachable), 403);
+        }
     }
 
     private function authorizeAttachmentDownload(Request $request, Attachment $attachment): void

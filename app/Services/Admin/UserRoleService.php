@@ -17,6 +17,8 @@ final class UserRoleService
      */
     public function syncPrimaryRole(User $user, Role $role, ?int $actorId = null): void
     {
+        $this->assertActorMayGrantRole($role->name);
+
         if (SuperAdminAccess::matches($user) && $role->name !== config('permission.superadmin_role', 'superadmin')) {
             abort(422, 'Không thể đổi vai trò tài khoản Super Admin bootstrap.');
         }
@@ -27,7 +29,7 @@ final class UserRoleService
             $user->syncRoles([$role]);
             $user->update([
                 'primary_role_name' => $role->name,
-                'primary_role_id'   => $role->id,
+                'primary_role_id' => $role->id,
             ]);
 
             app(AuditLogger::class)->log(
@@ -40,6 +42,23 @@ final class UserRoleService
         });
     }
 
+    /**
+     * Chỉ Super Admin mới được cấp/gỡ vai trò superadmin — chống leo thang đặc quyền
+     * (admin có system.user_roles.manage vẫn không được tự nâng lên superadmin).
+     */
+    private function assertActorMayGrantRole(string $roleName): void
+    {
+        $superRole = (string) config('permission.superadmin_role', 'superadmin');
+        if ($roleName !== $superRole) {
+            return;
+        }
+
+        $actor = auth()->user();
+        if (! $actor instanceof User || ! $actor->isSuperAdmin()) {
+            abort(403, 'Chỉ Super Admin mới được cấp hoặc gỡ vai trò Super Admin.');
+        }
+    }
+
     public function bulkUpdateRoles(BulkUpdateUserRoleDTO $dto): void
     {
         DB::transaction(function () use ($dto) {
@@ -47,6 +66,10 @@ final class UserRoleService
 
             $uniqueUserIds = array_values(array_unique($dto->userIds));
             $uniqueRoleNames = array_values(array_unique($dto->roles));
+
+            foreach ($uniqueRoleNames as $roleName) {
+                $this->assertActorMayGrantRole($roleName);
+            }
 
             $roleModels = Role::query()
                 ->where('guard_name', $guard)
@@ -86,7 +109,7 @@ final class UserRoleService
                     if (count($roleList) === 1) {
                         $user->update([
                             'primary_role_name' => $roleList[0]->name,
-                            'primary_role_id'   => $roleList[0]->id,
+                            'primary_role_id' => $roleList[0]->id,
                         ]);
                     }
                 } else {

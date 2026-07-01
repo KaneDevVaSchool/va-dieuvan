@@ -17,17 +17,30 @@ return [
 
     'paths' => ['api/*', 'sanctum/csrf-cookie'],
 
-    'allowed_methods' => ['*'],
+    'allowed_methods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 
-    'allowed_origins' => ['*'],
+    // SPA phục vụ cùng origin với API nên bình thường không cần CORS. Chỉ mở cho các
+    // origin khai báo tường minh qua CORS_ALLOWED_ORIGINS (phẩy ngăn cách), mặc định APP_URL.
+    'allowed_origins' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', (string) env('CORS_ALLOWED_ORIGINS', (string) env('APP_URL', ''))),
+    ))),
 
     'allowed_origins_patterns' => [],
 
-    'allowed_headers' => ['*'],
+    'allowed_headers' => [
+        'Accept',
+        'Authorization',
+        'Content-Type',
+        'X-Requested-With',
+        'X-Idempotency-Key',
+        'Idempotency-Key',
+        'X-XSRF-TOKEN',
+    ],
 
     'exposed_headers' => [],
 
-    'max_age' => 0,
+    'max_age' => 3600,
 
     'supports_credentials' => false,
 

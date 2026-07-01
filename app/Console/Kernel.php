@@ -20,6 +20,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('tp:remind-driver-morning-shifts')->dailyAt('06:00')->timezone('Asia/Ho_Chi_Minh');
         $schedule->command('tp:remind-driver-afternoon-shifts')->dailyAt('14:00')->timezone('Asia/Ho_Chi_Minh');
         $schedule->command('trips:remind-drivers-upcoming')->everyFiveMinutes();
+        // Dọn personal access token đã hết hạn (Sanctum) — chạy sau khi bật expiration.
+        $schedule->command('sanctum:prune-expired --hours=24')->daily();
     }
 
     /**
