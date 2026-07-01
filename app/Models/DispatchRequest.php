@@ -219,13 +219,15 @@ class DispatchRequest extends Model
     }
 
     /**
-     * Portal (danh sách / KPI): không hiển thị phiếu đã hủy đồng bộ lịch.
+     * Portal (danh sách / KPI): ẩn phiếu soft-delete và phiếu hủy đồng bộ lịch (cancelled).
      *
      * @param  Builder<DispatchRequest>  $query
      * @return Builder<DispatchRequest>
      */
     public function scopeVisibleOnPortalRequestIndex(Builder $query): Builder
     {
-        return $query->where('status', '!=', 'cancelled');
+        return $query
+            ->withoutTrashed()
+            ->where('status', '!=', 'cancelled');
     }
 }

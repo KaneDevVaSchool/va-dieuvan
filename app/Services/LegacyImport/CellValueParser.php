@@ -14,7 +14,7 @@ trait CellValueParser
             return null;
         }
         if ($val instanceof \DateTimeInterface) {
-            return null;
+            return Carbon::instance($val)->format('d/m/Y');
         }
         $s = trim((string) $val);
 
@@ -66,6 +66,41 @@ trait CellValueParser
             $ts = (int) round(($val - 25569) * 86400);
 
             return Carbon::createFromTimestampUTC($ts)->startOfDay();
+        }
+
+        if (is_string($val)) {
+            $parsed = $this->parseDateString(trim($val));
+            if ($parsed !== null) {
+                return $parsed;
+            }
+        }
+
+        return null;
+    }
+
+    private function parseDateString(string $raw): ?Carbon
+    {
+        if ($raw === '') {
+            return null;
+        }
+
+        if (preg_match('/(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{2,4})/u', $raw, $m)) {
+            $d = (int) $m[1];
+            $mo = (int) $m[2];
+            $y = (int) $m[3];
+            if ($y < 100) {
+                $y += $y >= 50 ? 1900 : 2000;
+            }
+            if (checkdate($mo, $d, $y)) {
+                return Carbon::createFromDate($y, $mo, $d)->startOfDay();
+            }
+        }
+
+        foreach (['d/m/Y', 'd-m-Y', 'd.m.Y', 'Y-m-d', 'm/Y', 'm-Y'] as $fmt) {
+            $dt = \DateTime::createFromFormat($fmt, $raw);
+            if ($dt instanceof \DateTimeInterface) {
+                return Carbon::instance($dt)->startOfDay();
+            }
         }
 
         return null;
@@ -132,5 +167,34 @@ trait CellValueParser
     private function normalizePlate(string $raw): string
     {
         return mb_strtoupper((string) preg_replace('/\s+/', ' ', trim($raw)));
+    }
+
+    /** Canonical key for plate lookup (ignores spaces/dashes). */
+    private function normalizePlateKey(string $raw): string
+    {
+        $u = mb_strtoupper(trim($raw));
+
+        return (string) preg_replace('/[^A-Z0-9.]/u', '', $u);
+    }
+
+    /**
+     * @param  array<string,int>  $vehicleMap
+     */
+    private function resolveVehicleId(array $vehicleMap, ?string $rawPlate): ?int
+    {
+        if ($rawPlate === null || trim($rawPlate) === '') {
+            return null;
+        }
+        $keys = [
+            $this->normalizePlateKey($rawPlate),
+            $this->normalizePlate($rawPlate),
+        ];
+        foreach ($keys as $k) {
+            if ($k !== '' && isset($vehicleMap[$k])) {
+                return (int) $vehicleMap[$k];
+            }
+        }
+
+        return null;
     }
 }

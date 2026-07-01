@@ -11,7 +11,7 @@ const props = defineProps({
   icon: {
     type: String,
     default: 'filter',
-    validator: (v) => ['filter', 'columns', 'export'].includes(v),
+    validator: (v) => ['filter', 'columns', 'export', 'data'].includes(v),
   },
   active: { type: Boolean, default: false },
   disabled: { type: Boolean, default: false },
@@ -32,6 +32,7 @@ function onClick(event) {
 const IconComp = computed(() => {
   if (props.icon === 'columns') return ViewColumnsIcon
   if (props.icon === 'export') return ArrowDownTrayIcon
+  if (props.icon === 'data') return Squares2X2Icon
   return FunnelIcon
 })
 </script>

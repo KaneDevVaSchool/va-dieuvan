@@ -2,13 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
-use App\Services\LegacyImport\LegacyDispatchRequestImporter;
-use App\Services\LegacyImport\LegacyTripCostImporter;
-use App\Services\LegacyImport\LegacyTripRecordImporter;
-use App\Services\LegacyImport\LegacyVehicleImporter;
+use App\Services\LegacyImport\LegacyDispatchImportOrchestrator;
 use Illuminate\Console\Command;
-use Illuminate\Support\Str;
 
 /**
  * One-time Artisan command to import legacy "Phiếu đề xuất ghi nhận" Excel data.
@@ -36,14 +31,10 @@ class ImportLegacyDispatchRequestsCommand extends Command
 
     protected $description = 'Import legacy dispatch-request history from the "Phiếu đề xuất ghi nhận" Excel file';
 
-    private const VALID_SHEETS = ['vehicles', 'passenger', 'cargo', 'costs', 'odometer'];
+    private const VALID_SHEETS = LegacyDispatchImportOrchestrator::VALID_SHEETS;
 
-    public function handle(
-        LegacyVehicleImporter $vehicleImporter,
-        LegacyDispatchRequestImporter $dispatchImporter,
-        LegacyTripCostImporter $costImporter,
-        LegacyTripRecordImporter $recordImporter,
-    ): int {
+    public function handle(LegacyDispatchImportOrchestrator $orchestrator): int
+    {
         $dryRun = (bool) $this->option('dry-run');
 
         $filePath = $this->resolveFilePath();
@@ -63,61 +54,37 @@ class ImportLegacyDispatchRequestsCommand extends Command
         $this->line('Sheets cần import: <comment>'.implode(', ', $sheets).'</comment>');
         $this->newLine();
 
-        // Step 1: vehicles (must run first to build the lookup map)
-        $vehicleMap = [];
-        if (in_array('vehicles', $sheets, true)) {
-            $this->info('▶ [1/5] Import xe (Sheet 3)…');
-            $vehicleMap = $vehicleImporter->import($filePath, $dryRun);
-            $this->line('   Xe đã upsert: <comment>'.count($vehicleMap).'</comment>');
+        $result = $orchestrator->run($filePath, $sheets, $dryRun);
+
+        if (isset($result['vehicles']['upserted'])) {
+            $this->info('▶ Import xe (Sheet 3)…');
+            $this->line('   Xe đã upsert: <comment>'.$result['vehicles']['upserted'].'</comment>');
             $this->newLine();
-        } else {
-            // Even if vehicles sheet is skipped, load existing plate→id map from DB
-            $vehicleMap = $this->loadExistingVehicleMap();
-            $this->line('[vehicles skipped] Đã load '.count($vehicleMap).' xe từ DB.');
+        } elseif (! empty($result['vehicles']['skipped'])) {
+            $this->line('[vehicles skipped] Đã load '.($result['vehicles']['loaded_from_db'] ?? 0).' xe từ DB.');
             $this->newLine();
         }
 
-        // Resolve the system user ID needed for requester_id / created_by
-        // In dry-run there is no DB available, so use a placeholder.
-        $systemUserId = $dryRun ? 0 : $this->ensureSystemUser();
-
-        // Steps 2 & 3: passenger and/or cargo dispatch requests
-        // Both are processed in a single file pass to avoid opening the XLSX twice.
-        $doPassenger = in_array('passenger', $sheets, true);
-        $doCargo = in_array('cargo', $sheets, true);
-
-        if ($doPassenger || $doCargo) {
-            $label = match (true) {
-                $doPassenger && $doCargo => '[2-3/5] Import phiếu hành khách + hàng hóa (Sheets 1 & 2)…',
-                $doPassenger => '[2/5] Import phiếu hành khách / công tác (Sheet 1)…',
-                default => '[3/5] Import phiếu hàng hóa (Sheet 2)…',
-            };
-
-            $this->info("▶ {$label}");
-            $drStats = $dispatchImporter->import($filePath, $vehicleMap, $dryRun, $doPassenger, $doCargo);
-
-            if ($doPassenger) {
-                $this->printDispatchStats('Hành khách', $drStats['passenger']);
-            }
-            if ($doCargo) {
-                $this->printDispatchStats('Hàng hóa', $drStats['cargo']);
-            }
+        if ($result['passenger'] !== null) {
+            $this->info('▶ Import phiếu hành khách / công tác (Sheet 1)…');
+            $this->printDispatchStats('Hành khách', $result['passenger']);
+            $this->newLine();
+        }
+        if ($result['cargo'] !== null) {
+            $this->info('▶ Import phiếu hàng hóa (Sheet 2)…');
+            $this->printDispatchStats('Hàng hóa', $result['cargo']);
             $this->newLine();
         }
 
-        // Step 4: vehicle-level standalone costs
-        if (in_array('costs', $sheets, true)) {
-            $this->info('▶ [4/5] Import chi phí tổng xe (Sheet 4)…');
-            $costStats = $costImporter->import($filePath, $systemUserId, $dryRun);
-            $this->printSimpleStats('Chi phí tổng xe', $costStats, 'created');
+        if ($result['costs'] !== null) {
+            $this->info('▶ Import chi phí tổng xe (Sheet 4)…');
+            $this->printSimpleStats('Chi phí tổng xe', $result['costs'], 'created');
             $this->newLine();
         }
 
-        // Step 5: per-vehicle odometer log → TripCost rows
-        if (in_array('odometer', $sheets, true)) {
-            $this->info('▶ [5/5] Import nhật ký xe 51A-796.68 (Sheet 5)…');
-            $odoStats = $recordImporter->import($filePath, $systemUserId, $vehicleMap, $dryRun);
-            $this->printSimpleStats('Odometer / chi phí xe', $odoStats, 'created_costs');
+        if ($result['odometer'] !== null) {
+            $this->info('▶ Import nhật ký xe (Sheet 5)…');
+            $this->printSimpleStats('Odometer / chi phí xe', $result['odometer'], 'created_costs');
             $this->newLine();
         }
 
@@ -157,36 +124,6 @@ class ImportLegacyDispatchRequestsCommand extends Command
         $valid = array_intersect($raw, self::VALID_SHEETS);
 
         return array_values($valid);
-    }
-
-    /**
-     * Load all existing vehicles from the DB into a plate→id map so that
-     * rows in sheets 1 & 2 can still resolve vehicle_id even when the
-     * --sheet=vehicles step is skipped.
-     *
-     * @return array<string,int>
-     */
-    private function loadExistingVehicleMap(): array
-    {
-        return \App\Models\Vehicle::query()
-            ->select(['id', 'license_plate'])
-            ->get()
-            ->mapWithKeys(fn ($v) => [mb_strtoupper($v->license_plate) => $v->id])
-            ->all();
-    }
-
-    private function ensureSystemUser(): int
-    {
-        $user = User::firstOrCreate(
-            ['email' => 'legacy-import@va.edu.vn'],
-            [
-                'name' => 'Legacy Import System',
-                'password' => bcrypt(Str::random(32)),
-                'is_active' => false,
-            ],
-        );
-
-        return $user->id;
     }
 
     /** @param  array<string,int>  $stats */

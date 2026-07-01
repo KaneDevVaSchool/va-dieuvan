@@ -71,7 +71,7 @@ class LegacyTripRecordImporter
     {
         $stats = ['parsed' => 0, 'skipped' => 0, 'errors' => 0, 'created_costs' => 0];
 
-        $vehicleId = $vehicleMap[self::SHEET_VEHICLE_PLATE] ?? null;
+        $vehicleId = $this->resolveVehicleId($vehicleMap, self::SHEET_VEHICLE_PLATE);
 
         $reader = new XlsxReader;
         $reader->open($filePath);

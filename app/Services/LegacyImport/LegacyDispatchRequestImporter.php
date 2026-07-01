@@ -48,6 +48,7 @@ class LegacyDispatchRequestImporter
         bool $dryRun = false,
         bool $includePassenger = true,
         bool $includeCargo = true,
+        ?LegacyImportDiagnostics $diagnostics = null,
     ): array {
         $systemUserId = $dryRun ? 0 : $this->ensureSystemUser();
 
@@ -72,6 +73,9 @@ class LegacyDispatchRequestImporter
                         $vehicleMap,
                         $stats['passenger'],
                         $dryRun,
+                        'passenger',
+                        [1, 2, 5, 6, 9, 10, 13, 16],
+                        $diagnostics,
                     );
                 }
             } elseif ($sheetIdx === self::CARGO_SHEET_INDEX) {
@@ -84,6 +88,9 @@ class LegacyDispatchRequestImporter
                         $vehicleMap,
                         $stats['cargo'],
                         $dryRun,
+                        'cargo',
+                        [1, 2, 4, 5, 8, 9, 12, 15],
+                        $diagnostics,
                     );
                 }
                 break; // Sheets 3-5 are handled by other importers; stop early.
@@ -108,9 +115,14 @@ class LegacyDispatchRequestImporter
         array $vehicleMap,
         array &$stats,
         bool $dryRun,
+        string $sheetKey,
+        array $mergeIndices,
+        ?LegacyImportDiagnostics $diagnostics,
     ): void {
         $rowNum = 0;
         $buffer = [];
+        $carry = [];
+        $sheetLabel = $sheetKey === 'passenger' ? 'Hành khách (Sheet 1)' : 'Hàng hóa (Sheet 2)';
 
         foreach ($sheet->getRowIterator() as $row) {
             $rowNum++;
@@ -120,23 +132,49 @@ class LegacyDispatchRequestImporter
             }
 
             $stats['parsed']++;
-            $cells = $row->getCells();
+            $rawCells = $row->getCells();
+            $values = [];
+            foreach ($rawCells as $i => $c) {
+                $values[$i] = $c?->getValue();
+            }
+            $values = LegacyMergeRowFiller::fillValues($values, $carry, $mergeIndices);
+            $cells = LegacyRowCellAdapter::fromValues($values);
 
             try {
                 $mapped = $mapper->map($cells, $rowNum, $systemUserId, $vehicleMap);
             } catch (\Throwable $e) {
                 $stats['errors']++;
+                $diagnostics?->add(
+                    $sheetLabel,
+                    $rowNum,
+                    'error',
+                    'exception',
+                    'Dòng '.$rowNum.': lỗi hệ thống khi đọc — '.$e->getMessage(),
+                    'Liên hệ IT nếu lỗi lặp lại.',
+                );
+                logger()->warning('LegacyImport row exception', [
+                    'sheet' => $sheetKey,
+                    'row' => $rowNum,
+                    'message' => $e->getMessage(),
+                ]);
 
                 continue;
             }
 
             if ($mapped === null) {
                 $stats['skipped']++;
+                $reason = $mapper->consumeSkipReason() ?? 'Bỏ qua — không đủ dữ liệu.';
+                $diagnostics?->add($sheetLabel, $rowNum, 'skipped', 'skip', $reason, null);
 
                 continue;
             }
 
             $stats['valid']++;
+            $warning = $mapped['request']['wizard_snapshot']['legacy_status_warning'] ?? null;
+            if ($warning && $diagnostics) {
+                $diagnostics->add($sheetLabel, $rowNum, 'warning', 'status_fuzzy', $warning, null);
+            }
+
             $buffer[] = $mapped;
 
             if (count($buffer) >= self::CHUNK_SIZE) {

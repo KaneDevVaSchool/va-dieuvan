@@ -106,6 +106,7 @@ class LegacyTripCostImporter
                 $stats['parsed']++;
 
                 $reportedOn = $this->cellDate($cells, self::C_DATE)?->format('Y-m-d');
+                $legacyRef = '[legacy:cost:sheet4:row:'.$rowNum.']';
 
                 // Build a description combining available text fields
                 $descParts = array_filter([
@@ -125,10 +126,10 @@ class LegacyTripCostImporter
                     'type' => $this->mapCostType($this->cellStr($cells, self::C_TYPE)),
                     'amount' => $amount,
                     'currency' => 'VND',
-                    'description' => $descParts ? mb_substr(implode(' | ', $descParts), 0, 255) : null,
+                    'description' => mb_substr(trim($legacyRef.' '.($descParts ? implode(' | ', $descParts) : '')), 0, 255),
                     'reported_on' => $reportedOn,
                     'status' => 'confirmed',
-                    // Receipt ref stored in description; receipt_url not applicable here
+                    '_legacy_ref' => $legacyRef,
                 ];
 
                 if (count($buffer) >= self::CHUNK_SIZE) {
@@ -160,6 +161,13 @@ class LegacyTripCostImporter
 
         DB::transaction(function () use ($buffer, &$stats): void {
             foreach ($buffer as $row) {
+                $ref = $row['_legacy_ref'] ?? null;
+                unset($row['_legacy_ref']);
+                if ($ref !== null && TripCost::query()->where('description', 'like', $ref.'%')->exists()) {
+                    $stats['duplicates']++;
+
+                    continue;
+                }
                 TripCost::create($row);
                 $stats['created']++;
             }

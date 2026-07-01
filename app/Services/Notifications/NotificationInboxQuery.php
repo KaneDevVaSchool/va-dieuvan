@@ -18,7 +18,7 @@ final class NotificationInboxQuery
     {
         $visibleDispatchRequestIds = DispatchRequest::query()
             ->select('id')
-            ->where('status', '!=', 'cancelled');
+            ->visibleOnPortalRequestIndex();
 
         return $query->where(function (Builder $outer) use ($visibleDispatchRequestIds) {
             $outer->whereNull('data->dispatch_request_id')

@@ -79,7 +79,86 @@
               </li>
             </FilterVisibilityDropdown>
 
-            <div class="relative" data-requests-export-panel>
+            <div v-if="canManageBulkData" class="relative" data-requests-data-panel>
+              <DatagridToolbarActionButton
+                icon="data"
+                :active="showDataMenu"
+                test-id="requests-toolbar-data"
+                @click="toggleDataMenu"
+              >
+                {{ t('requests_page.toolbar_data') }}
+              </DatagridToolbarActionButton>
+              <div
+                v-if="showDataMenu"
+                class="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[280px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+              >
+                <button
+                  type="button"
+                  class="flex w-full flex-col px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
+                  data-testid="requests-data-import"
+                  @click="openLegacyImport(); showDataMenu = false"
+                >
+                  <span class="text-sm font-medium text-slate-800 dark:text-slate-100">
+                    {{ t('requests_page.data_menu_import') }}
+                  </span>
+                  <span class="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                    {{ t('requests_page.data_menu_import_hint') }}
+                  </span>
+                </button>
+                <div class="my-1 border-t border-slate-100 dark:border-slate-700" role="separator" />
+                <button
+                  type="button"
+                  class="flex w-full flex-col px-3 py-2 text-left hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-slate-800"
+                  :disabled="exporting || !(meta.total ?? 0)"
+                  data-testid="requests-data-export-excel"
+                  @click="exportRequestsExcel(); showDataMenu = false"
+                >
+                  <span class="text-sm font-medium text-slate-800 dark:text-slate-100">
+                    {{ t('requests_page.data_menu_export_excel') }}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                  :disabled="exporting || !(meta.total ?? 0)"
+                  data-testid="requests-data-export-csv"
+                  @click="exportRequestsCsv(); showDataMenu = false"
+                >
+                  {{ t('requests_page.data_menu_export_csv') }}
+                </button>
+                <div class="my-1 border-t border-slate-100 dark:border-slate-700" role="separator" />
+                <button
+                  type="button"
+                  class="flex w-full flex-col px-3 py-2 text-left hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-rose-950/30"
+                  :disabled="!(meta.total ?? 0) || bulkSubmitting"
+                  data-testid="requests-data-purge-soft"
+                  @click="openPurgeAll(false); showDataMenu = false"
+                >
+                  <span class="text-sm font-medium text-rose-900 dark:text-rose-200">
+                    {{ t('requests_page.purge_all_soft') }}
+                  </span>
+                  <span class="mt-0.5 text-[11px] leading-snug text-rose-700/80 dark:text-rose-300/80">
+                    {{ t('requests_page.purge_all_soft_hint', { n: meta.total ?? 0 }) }}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  class="flex w-full flex-col px-3 py-2 text-left hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-red-950/30"
+                  :disabled="!(meta.total ?? 0) || bulkSubmitting"
+                  data-testid="requests-data-purge-permanent"
+                  @click="openPurgeAll(true); showDataMenu = false"
+                >
+                  <span class="text-sm font-medium text-red-950 dark:text-red-200">
+                    {{ t('requests_page.purge_all_permanent') }}
+                  </span>
+                  <span class="mt-0.5 text-[11px] leading-snug text-red-800/80 dark:text-red-300/80">
+                    {{ t('requests_page.purge_all_permanent_hint', { n: meta.total ?? 0 }) }}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <div v-else class="relative" data-requests-export-panel>
               <DatagridToolbarActionButton
                 icon="export"
                 :disabled="exporting || !(meta.total ?? 0)"
@@ -827,6 +906,74 @@
         </div>
       </div>
     </Teleport>
+
+    <RequestsLegacyImportModal
+      :open="legacyImportOpen"
+      @close="legacyImportOpen = false"
+      @completed="onLegacyImportCompleted"
+    />
+
+    <Teleport to="body">
+      <div
+        v-if="purgeAllOpen"
+        class="fixed inset-0 z-[191] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-[2px]"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="purge-all-title"
+        data-testid="requests-purge-all-modal"
+        @click.self="closePurgeAll"
+      >
+        <div class="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5">
+          <div class="border-b border-slate-100 bg-red-50/90 px-5 py-4">
+            <h2 id="purge-all-title" class="text-base font-semibold text-slate-900">
+              {{ t('requests_page.purge_all_modal_title') }}
+            </h2>
+            <p class="mt-1 text-sm text-slate-600">{{ t('requests_page.purge_all_modal_lead') }}</p>
+          </div>
+          <div class="space-y-4 px-5 py-4">
+            <p class="text-sm font-medium text-slate-800">
+              {{ purgePermanent ? t('requests_page.purge_all_mode_permanent') : t('requests_page.purge_all_mode_soft') }}
+              · {{ meta.total ?? 0 }}
+            </p>
+            <div>
+              <label for="requests-purge-confirm" class="text-xs font-medium text-slate-700">
+                {{ t('requests_page.purge_all_confirm_label') }}
+              </label>
+              <p class="mt-0.5 text-[11px] text-slate-500">
+                {{ t('requests_page.purge_all_confirm_hint', { phrase: purgeRequiredPhrase }) }}
+              </p>
+              <input
+                id="requests-purge-confirm"
+                v-model="purgeConfirmPhrase"
+                type="text"
+                autocomplete="off"
+                class="input mt-2 h-10 w-full text-sm"
+                data-testid="requests-purge-confirm-input"
+              />
+            </div>
+          </div>
+          <div class="flex justify-end gap-2 border-t border-slate-100 bg-slate-50/80 px-5 py-3">
+            <button
+              type="button"
+              class="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+              data-testid="requests-purge-cancel"
+              @click="closePurgeAll"
+            >
+              {{ t('requests_page.bulk_confirm_cancel') }}
+            </button>
+            <button
+              type="button"
+              class="rounded-lg bg-red-700 px-3 py-2 text-sm font-medium text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
+              :disabled="bulkSubmitting || purgeConfirmPhrase !== purgeRequiredPhrase"
+              data-testid="requests-purge-submit"
+              @click="submitPurgeAll"
+            >
+              {{ t('requests_page.purge_all_submit', { n: meta.total ?? 0 }) }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -857,6 +1004,7 @@ import AppRowActionsMenu from '../../components/ui/AppRowActionsMenu.vue'
 import StatusBadge from '../../components/ui/StatusBadge.vue'
 import UserAvatar from '../../components/branding/UserAvatar.vue'
 import RequestsSummaryBar from '../../components/requests/RequestsSummaryBar.vue'
+import RequestsLegacyImportModal from '../../components/requests/RequestsLegacyImportModal.vue'
 import DatagridToolbarSearch from '../../components/shared/ui/DatagridToolbarSearch.vue'
 import DatagridToolbarActionButton from '../../components/shared/ui/DatagridToolbarActionButton.vue'
 import DatagridFilterField from '../../components/shared/ui/DatagridFilterField.vue'
@@ -868,6 +1016,7 @@ import {
   bulkRestoreRequests,
   bulkSoftDeleteRequests,
   listRequests,
+  purgeAllRequests,
 } from '../../api/requests'
 import ExtracurricularRequestsDataTable from '../../components/requests/ExtracurricularRequestsDataTable.vue'
 import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
@@ -965,23 +1114,38 @@ const filterControlDefs = computed(() =>
 )
 
 const showExportMenu = ref(false)
+const showDataMenu = ref(false)
+const legacyImportOpen = ref(false)
+const purgeAllOpen = ref(false)
+const purgePermanent = ref(false)
+const purgeConfirmPhrase = ref('')
 const requestsDatagridRef = ref(null)
 useDetailsAutoCloseWithin(requestsDatagridRef)
 
 function closeToolbarMenusExceptFilter() {
+  showExportMenu.value = false
+  showDataMenu.value = false
+}
+
+function toggleDataMenu() {
+  closeFilterPanel()
+  showDataMenu.value = !showDataMenu.value
   showExportMenu.value = false
 }
 
 function toggleExportMenu() {
   closeFilterPanel()
   showExportMenu.value = !showExportMenu.value
+  showDataMenu.value = false
 }
 
 function onDatagridDocMouseDown(ev) {
   const t = ev.target
   if (!t || typeof t.closest !== 'function') return
   if (t.closest('[data-requests-export-panel]')) return
+  if (t.closest('[data-requests-data-panel]')) return
   showExportMenu.value = false
+  showDataMenu.value = false
 }
 
 function onKpiQuickFilter({ tab, sla }) {
@@ -1040,6 +1204,12 @@ const canBulkTrash = computed(
     auth.hasPermission('request.update_own') ||
     auth.hasPermission('request.create'),
 )
+
+const canManageBulkData = computed(
+  () => auth.hasPermission('trip.view_all') || auth.hasPermission('request.approve'),
+)
+
+const purgeRequiredPhrase = computed(() => `XOA ${meta.value.total ?? 0}`)
 
 const selectedIds = ref([])
 const bulkSubmitting = ref(false)
@@ -1790,6 +1960,58 @@ function closeBulkConfirm() {
   if (bulkSubmitting.value) return
   bulkConfirmOpen.value = false
   bulkConfirmKind.value = null
+}
+
+function openLegacyImport() {
+  legacyImportOpen.value = true
+}
+
+async function onLegacyImportCompleted() {
+  legacyImportOpen.value = false
+  await reload()
+}
+
+function openPurgeAll(permanent) {
+  purgePermanent.value = permanent
+  purgeConfirmPhrase.value = ''
+  purgeAllOpen.value = true
+}
+
+function closePurgeAll() {
+  if (bulkSubmitting.value) return
+  purgeAllOpen.value = false
+  purgeConfirmPhrase.value = ''
+}
+
+async function submitPurgeAll() {
+  if (bulkSubmitting.value || purgeConfirmPhrase.value !== purgeRequiredPhrase.value) return
+  bulkSubmitting.value = true
+  try {
+    const params = {
+      ...buildListParams(),
+      permanent: purgePermanent.value,
+      confirm_phrase: purgeConfirmPhrase.value,
+      expected_count: meta.value.total ?? 0,
+    }
+    delete params.page
+    delete params.per_page
+    delete params.sort
+    const res = await purgeAllRequests(params)
+    const n = res.deleted ?? 0
+    showAppSuccess(
+      purgePermanent.value
+        ? t('requests_page.purge_all_done_permanent', { n })
+        : t('requests_page.purge_all_done_soft', { n }),
+    )
+    purgeAllOpen.value = false
+    purgeConfirmPhrase.value = ''
+    selectedIds.value = []
+    await reload()
+  } catch (e) {
+    showAppErrorFromApi(e)
+  } finally {
+    bulkSubmitting.value = false
+  }
 }
 
 async function submitBulkConfirm() {

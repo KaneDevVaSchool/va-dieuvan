@@ -126,13 +126,17 @@ class LegacyVehicleImporter
 
                 if ($dryRun) {
                     // In dry-run we only collect plate strings; IDs stay 0
-                    $plateMap[$plate] = 0;
+                    $key = $this->normalizePlateKey($rawPlate);
+                    $plateMap[$key] = 0;
+                    $plateMap[$this->normalizePlate($rawPlate)] = 0;
                 } else {
                     $vehicle = Vehicle::updateOrCreate(
-                        ['license_plate' => $plate],
+                        ['license_plate' => $this->normalizePlate($rawPlate)],
                         $data,
                     );
-                    $plateMap[$plate] = $vehicle->id;
+                    $key = $this->normalizePlateKey($rawPlate);
+                    $plateMap[$key] = $vehicle->id;
+                    $plateMap[$vehicle->license_plate] = $vehicle->id;
                     $processed++;
                 }
             }

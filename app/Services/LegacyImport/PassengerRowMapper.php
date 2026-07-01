@@ -44,6 +44,7 @@ namespace App\Services\LegacyImport;
 class PassengerRowMapper
 {
     use CellValueParser;
+    use MapsWithSkipReason;
 
     private const C_STT = 1;
 
@@ -125,17 +126,24 @@ class PassengerRowMapper
     public function map(array $cells, int $rowNum, int $systemUserId, array $vehicleMap): ?array
     {
         if ($this->isRowEmpty($cells, [self::C_STT, self::C_ORIGIN, self::C_STATUS])) {
-            return null;
+            return $this->skip('Dòng trống (không có số thứ tự, điểm đi hoặc trạng thái).');
         }
 
-        $rawStatus = mb_strtolower(trim($this->cellStr($cells, self::C_STATUS) ?? ''));
-        $statusEntry = self::STATUS_MAP[$rawStatus] ?? null;
+        $rawStatus = $this->cellStr($cells, self::C_STATUS);
+        $resolved = LegacyStatusResolver::resolve($rawStatus, self::STATUS_MAP);
+        if ($resolved === null) {
+            return $this->skip('Thiếu cột «Trạng thái xử lý».');
+        }
+        $statusEntry = $resolved;
+        $statusWarning = $resolved['warning'] ?? null;
 
         $dateDepart = $this->cellDate($cells, self::C_DATE_DEP);
         if ($dateDepart === null) {
-            return null;
+            return $this->skip('«Ngày đi» trống hoặc sai định dạng — dùng ô kiểu Ngày (Date) hoặc gõ dd/mm/yyyy.');
         }
 
+        $origin = $this->cellStr($cells, self::C_ORIGIN);
+        $dest = $this->cellStr($cells, self::C_DEST);
         $dateDepartStr = $this->buildDatetime($dateDepart, $this->cellTimeParts($cells, self::C_TIME_DEP));
         $dateArriveStr = $this->buildDatetime(
             $this->cellDate($cells, self::C_DATE_ARR),
@@ -159,7 +167,7 @@ class PassengerRowMapper
             'arrive_by' => $dateArriveStr,
             'passenger_count' => $this->cellInt($cells, self::C_PAX),
             'notes' => $this->cellStr($cells, self::C_NOTES),
-            'status' => $statusEntry['request'] ?? 'pending',
+            'status' => $statusEntry['request'],
             'source_channel' => 'paper',
             'paper_status' => 'received',
             'paper_received_at' => $receivedDateStr,
@@ -167,7 +175,8 @@ class PassengerRowMapper
             'service_price' => $servicePrice,
             'wizard_snapshot' => [
                 'legacy_import' => true,
-                '_import_key' => 'pax_'.$rowNum,
+                '_import_key' => $this->buildImportKey('pax', $dateDepartStr, $origin, $dest, $rawStatus),
+                'legacy_status_warning' => $statusWarning,
                 'legacy_requester_name' => $this->cellStr($cells, self::C_PERSON),
                 'legacy_department' => $this->cellStr($cells, self::C_DEPT),
                 'legacy_contact' => $this->cellStr($cells, self::C_CONTACT),
@@ -176,7 +185,7 @@ class PassengerRowMapper
             ],
         ];
 
-        if ($statusEntry === null || $statusEntry['trip'] === null) {
+        if ($statusEntry['trip'] === null) {
             return ['request' => $request, 'trip' => null];
         }
 
@@ -205,9 +214,9 @@ class PassengerRowMapper
 
         // Attempt to resolve internal vehicle by license plate
         if ($intVehRaw !== null) {
-            $plate = $this->normalizePlate($intVehRaw);
-            if (isset($vehicleMap[$plate])) {
-                $vehicleId = $vehicleMap[$plate];
+            $vehicleId = $this->resolveVehicleId($vehicleMap, $intVehRaw);
+            if ($vehicleId !== null) {
+                // resolved
             } else {
                 $externalVehicleRef = $intVehRaw;
             }
@@ -239,5 +248,12 @@ class PassengerRowMapper
             'completed_at' => $completedAt,
             'payment_status' => 'unpaid',
         ];
+    }
+
+    private function buildImportKey(string $prefix, ?string $depart, ?string $origin, ?string $dest, ?string $status): string
+    {
+        $payload = implode('|', array_map(fn ($v) => mb_strtolower(trim((string) ($v ?? ''))), [$depart, $origin, $dest, $status]));
+
+        return $prefix.'_'.substr(hash('sha256', $payload), 0, 20);
     }
 }

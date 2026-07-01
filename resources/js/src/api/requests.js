@@ -58,6 +58,86 @@ export async function bulkForceDeleteRequests(payload) {
   return data.data
 }
 
+/**
+ * Xóa hàng loạt theo bộ lọc danh sách hiện tại.
+ * @param {Record<string, unknown> & { permanent: boolean, confirm_phrase: string, expected_count: number }} payload
+ */
+export async function purgeAllRequests(payload) {
+  const { data } = await http.post('/requests/purge-all', normalizeRequestListParams(payload))
+  return data.data
+}
+
+/**
+ * @returns {Promise<void>}
+ */
+export async function downloadLegacyDispatchImportTemplate() {
+  const res = await http.get('/requests/legacy-import/template', {
+    responseType: 'blob',
+    headers: { Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' },
+  })
+  const blob = res.data
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'Mau_Phieu_de_xuat_ghi_nhan.xlsx'
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+/**
+ * @returns {Promise<{ items: Array<Record<string, unknown>> }>}
+ */
+export async function listLegacyImportBatches() {
+  const { data } = await http.get('/requests/legacy-import')
+  return data.data
+}
+
+/**
+ * Tải lên + kiểm tra (dry-run) — trả về batch đã phân tích.
+ * @param {File} file
+ * @param {{ sheets?: string[] }} [opts]
+ */
+export async function uploadLegacyDispatchImport(file, opts = {}) {
+  const fd = new FormData()
+  fd.append('file', file)
+  for (const s of opts.sheets ?? []) {
+    fd.append('sheets[]', s)
+  }
+  const { data } = await http.post('/requests/legacy-import', fd)
+  return data.data
+}
+
+/**
+ * @param {number} batchId
+ */
+export async function executeLegacyDispatchImportBatch(batchId) {
+  const { data } = await http.post(`/requests/legacy-import/${batchId}/execute`)
+  return data.data
+}
+
+/**
+ * @param {number} batchId
+ */
+export async function downloadLegacyDispatchImportErrorReport(batchId) {
+  const res = await http.get(`/requests/legacy-import/${batchId}/error-report`, {
+    responseType: 'blob',
+    headers: { Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' },
+  })
+  const url = URL.createObjectURL(res.data)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `Bao_cao_import_${batchId}.xlsx`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+/** @deprecated dùng uploadLegacyDispatchImport + executeLegacyDispatchImportBatch */
+export async function importLegacyDispatchRequests(file, opts = {}) {
+  const batch = await uploadLegacyDispatchImport(file, opts)
+  if (opts.dryRun) return { stats: batch.analyze_stats, filename: batch.original_filename }
+  return executeLegacyDispatchImportBatch(batch.id)
+}
+
 export async function getDispatchRequest(id) {
   const { data } = await http.get(`/dispatch-requests/${id}`)
   return data.data

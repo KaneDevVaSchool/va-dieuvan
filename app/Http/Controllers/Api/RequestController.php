@@ -8,13 +8,16 @@ use App\Http\Requests\Api\Requests\BulkForceDeleteDispatchRequestsRequest;
 use App\Http\Requests\Api\Requests\BulkRestoreDispatchRequestsRequest;
 use App\Http\Requests\Api\Requests\BulkSoftDeleteDispatchRequestsRequest;
 use App\Http\Requests\Api\Requests\ListRequestsRequest;
+use App\Http\Requests\Api\Requests\PurgeAllDispatchRequestsRequest;
 use App\Models\DispatchRequest;
 use App\Models\User;
+use App\Services\DispatchRequests\DispatchRequestMailPresenter;
 use App\Support\DispatchRequestExtraFeeListHint;
 use App\Support\DispatchWizardPassengerCount;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class RequestController extends Controller
 {
@@ -27,17 +30,7 @@ class RequestController extends Controller
 
         $stats = $this->buildStats($user);
 
-        $onlyTrashed = ! empty($data['only_trashed']);
-
-        $q = $this->scopedDispatchRequestsQuery($user);
-
-        if (! $this->staffListIncludesExtracurricularDrafts($data)) {
-            $q->visibleOnStaffRequestIndex();
-        }
-
-        if ($onlyTrashed) {
-            $q->onlyTrashed();
-        }
+        $q = $this->buildFilteredListQuery($user, $data);
 
         $q->with([
             'requester:id,name,email,employee_code,avatar_url',
@@ -54,84 +47,6 @@ class RequestController extends Controller
             'approval_inbox' => $this->applyApprovalInboxSort($q),
             default => $q->orderByDesc('created_at')->orderByDesc('id'),
         };
-
-        $q->when(isset($data['q']) && $data['q'] !== '', function (Builder $b) use ($data) {
-            $term = trim($data['q']);
-            $like = '%'.addcslashes($term, '%_\\').'%';
-            $b->where(function (Builder $inner) use ($like, $term) {
-                $inner->where('origin', 'like', $like)
-                    ->orWhere('destination', 'like', $like)
-                    ->orWhere('notes', 'like', $like);
-                if (ctype_digit($term)) {
-                    $inner->orWhere('id', (int) $term);
-                }
-                $refId = DispatchRequestMailPresenter::parseReferenceCodeSearchId($term);
-                if ($refId !== null) {
-                    $inner->orWhere('id', $refId);
-                }
-                $lower = mb_strtolower($term, 'UTF-8');
-                if ($lower === 'cargo' || $lower === 'hàng hóa' || $lower === 'hang hoa') {
-                    $inner->orWhere('trip_type', 'cargo');
-                }
-            });
-        });
-
-        $q->when(isset($data['status']), fn (Builder $b) => $b->where('status', $data['status']));
-        $q->when(isset($data['trip_type']), fn (Builder $b) => $b->where('trip_type', $data['trip_type']));
-        $q->when(isset($data['source_channel']), fn (Builder $b) => $b->where('source_channel', $data['source_channel']));
-        $q->when(isset($data['paper_status']), fn (Builder $b) => $b->where('paper_status', $data['paper_status']));
-
-        $q->when(! empty($data['is_urgent']), fn (Builder $b) => $b->where('is_urgent', true));
-
-        $q->when(isset($data['trip_status']), function (Builder $b) use ($data) {
-            $b->whereHas('trip', fn (Builder $t) => $t->where('status', $data['trip_status']));
-        });
-
-        $q->when(! empty($data['sla_risk_only']), function (Builder $b) {
-            $b->where('status', 'pending')
-                ->where(function (Builder $inner) {
-                    $inner->where('is_urgent', true)
-                        ->orWhere('depart_at', '<=', now()->addHours(48));
-                });
-        });
-
-        $q->when(! empty($data['recurring_only']), fn (Builder $b) => $b->whereNotNull('dispatch_request_template_id'));
-
-        $q->when(! empty($data['extracurricular_only']), fn (Builder $b) => $b->extracurricularOnly());
-
-        if (array_key_exists('student_count_submitted', $data) && $data['student_count_submitted'] !== null) {
-            if ($data['student_count_submitted']) {
-                $q->whereNotNull('student_count_submitted_at');
-            } else {
-                $q->whereNull('student_count_submitted_at')
-                    ->whereNotNull('dispatch_request_template_id');
-            }
-        }
-
-        // Khoảng ngày khởi hành: bản ghi depart_at null (một số luồng cũ / nhập tay) vẫn lọc theo created_at trong khoảng.
-        $q->when(isset($data['from']) || isset($data['to']), function (Builder $b) use ($data) {
-            $from = isset($data['from']) ? Carbon::parse($data['from'])->startOfDay() : null;
-            $to = isset($data['to']) ? Carbon::parse($data['to'])->endOfDay() : null;
-            $b->where(function (Builder $outer) use ($from, $to) {
-                $outer->where(function (Builder $hasDepart) use ($from, $to) {
-                    $hasDepart->whereNotNull('depart_at');
-                    if ($from) {
-                        $hasDepart->where('depart_at', '>=', $from);
-                    }
-                    if ($to) {
-                        $hasDepart->where('depart_at', '<=', $to);
-                    }
-                })->orWhere(function (Builder $noDepart) use ($from, $to) {
-                    $noDepart->whereNull('depart_at');
-                    if ($from) {
-                        $noDepart->where('created_at', '>=', $from);
-                    }
-                    if ($to) {
-                        $noDepart->where('created_at', '<=', $to);
-                    }
-                });
-            });
-        });
 
         $perPage = (int) ($data['per_page'] ?? 20);
         $results = $q->paginate($perPage);
@@ -317,6 +232,144 @@ class RequestController extends Controller
         }
 
         return $this->ok(['deleted' => $deleted]);
+    }
+
+    public function purgeAll(PurgeAllDispatchRequestsRequest $request)
+    {
+        $user = $request->user();
+        $validated = $request->validated();
+        $permanent = (bool) $validated['permanent'];
+        $expected = (int) $validated['expected_count'];
+
+        $filterData = collect($validated)
+            ->except(['permanent', 'confirm_phrase', 'expected_count', 'per_page', 'page', 'sort'])
+            ->all();
+
+        $q = $this->buildFilteredListQuery($user, $filterData);
+        $total = (int) (clone $q)->count();
+
+        if ($total !== $expected) {
+            abort(422, 'Số lượng yêu cầu đã thay đổi ('.$total.' ≠ '.$expected.'). Làm mới trang rồi thử lại.');
+        }
+
+        if ($total === 0) {
+            return $this->ok(['deleted' => 0, 'permanent' => $permanent]);
+        }
+
+        $deleted = 0;
+
+        DB::transaction(function () use ($q, $permanent, &$deleted) {
+            foreach ($q->lazyById(100, 'id', 'id') as $dr) {
+                if ($permanent) {
+                    $dr->forceDelete();
+                } elseif (! $dr->trashed()) {
+                    $dr->delete();
+                }
+                $deleted++;
+            }
+        });
+
+        return $this->ok([
+            'deleted' => $deleted,
+            'permanent' => $permanent,
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function buildFilteredListQuery(User $user, array $data): Builder
+    {
+        $onlyTrashed = ! empty($data['only_trashed']);
+
+        $q = $this->scopedDispatchRequestsQuery($user);
+
+        if (! $this->staffListIncludesExtracurricularDrafts($data)) {
+            $q->visibleOnStaffRequestIndex();
+        }
+
+        if ($onlyTrashed) {
+            $q->onlyTrashed();
+        }
+
+        $q->when(isset($data['q']) && $data['q'] !== '', function (Builder $b) use ($data) {
+            $term = trim($data['q']);
+            $like = '%'.addcslashes($term, '%_\\').'%';
+            $b->where(function (Builder $inner) use ($like, $term) {
+                $inner->where('origin', 'like', $like)
+                    ->orWhere('destination', 'like', $like)
+                    ->orWhere('notes', 'like', $like);
+                if (ctype_digit($term)) {
+                    $inner->orWhere('id', (int) $term);
+                }
+                $refId = DispatchRequestMailPresenter::parseReferenceCodeSearchId($term);
+                if ($refId !== null) {
+                    $inner->orWhere('id', $refId);
+                }
+                $lower = mb_strtolower($term, 'UTF-8');
+                if ($lower === 'cargo' || $lower === 'hàng hóa' || $lower === 'hang hoa') {
+                    $inner->orWhere('trip_type', 'cargo');
+                }
+            });
+        });
+
+        $q->when(isset($data['status']), fn (Builder $b) => $b->where('status', $data['status']));
+        $q->when(isset($data['trip_type']), fn (Builder $b) => $b->where('trip_type', $data['trip_type']));
+        $q->when(isset($data['source_channel']), fn (Builder $b) => $b->where('source_channel', $data['source_channel']));
+        $q->when(isset($data['paper_status']), fn (Builder $b) => $b->where('paper_status', $data['paper_status']));
+
+        $q->when(! empty($data['is_urgent']), fn (Builder $b) => $b->where('is_urgent', true));
+
+        $q->when(isset($data['trip_status']), function (Builder $b) use ($data) {
+            $b->whereHas('trip', fn (Builder $t) => $t->where('status', $data['trip_status']));
+        });
+
+        $q->when(! empty($data['sla_risk_only']), function (Builder $b) {
+            $b->where('status', 'pending')
+                ->where(function (Builder $inner) {
+                    $inner->where('is_urgent', true)
+                        ->orWhere('depart_at', '<=', now()->addHours(48));
+                });
+        });
+
+        $q->when(! empty($data['recurring_only']), fn (Builder $b) => $b->whereNotNull('dispatch_request_template_id'));
+
+        $q->when(! empty($data['extracurricular_only']), fn (Builder $b) => $b->extracurricularOnly());
+
+        if (array_key_exists('student_count_submitted', $data) && $data['student_count_submitted'] !== null) {
+            if ($data['student_count_submitted']) {
+                $q->whereNotNull('student_count_submitted_at');
+            } else {
+                $q->whereNull('student_count_submitted_at')
+                    ->whereNotNull('dispatch_request_template_id');
+            }
+        }
+
+        $q->when(isset($data['from']) || isset($data['to']), function (Builder $b) use ($data) {
+            $from = isset($data['from']) ? Carbon::parse($data['from'])->startOfDay() : null;
+            $to = isset($data['to']) ? Carbon::parse($data['to'])->endOfDay() : null;
+            $b->where(function (Builder $outer) use ($from, $to) {
+                $outer->where(function (Builder $hasDepart) use ($from, $to) {
+                    $hasDepart->whereNotNull('depart_at');
+                    if ($from) {
+                        $hasDepart->where('depart_at', '>=', $from);
+                    }
+                    if ($to) {
+                        $hasDepart->where('depart_at', '<=', $to);
+                    }
+                })->orWhere(function (Builder $noDepart) use ($from, $to) {
+                    $noDepart->whereNull('depart_at');
+                    if ($from) {
+                        $noDepart->where('created_at', '>=', $from);
+                    }
+                    if ($to) {
+                        $noDepart->where('created_at', '<=', $to);
+                    }
+                });
+            });
+        });
+
+        return $q;
     }
 
     /**
