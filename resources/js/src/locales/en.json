@@ -3655,6 +3655,8 @@
         "purge_all_confirm_label": "Confirmation phrase",
         "purge_all_confirm_hint": "Type exactly: {phrase}",
         "purge_all_submit": "Delete {n} requests",
+        "purge_all_submitting": "Deleting…",
+        "purge_all_rate_limit_wait": "Rate limited — wait {seconds} seconds before trying again.",
         "purge_all_done_soft": "Moved {n} request(s) to trash.",
         "purge_all_done_permanent": "Permanently deleted {n} request(s).",
         "legacy_import_modal_title": "Excel import — legacy dispatch requests",

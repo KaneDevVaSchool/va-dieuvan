@@ -57,7 +57,7 @@ Route::controller(RequestController::class)->group(function () {
     Route::post('/requests/bulk-delete', 'bulkDestroy');
     Route::post('/requests/bulk-restore', 'bulkRestore');
     Route::post('/requests/bulk-force-delete', 'bulkForceDestroy');
-    Route::post('/requests/purge-all', 'purgeAll')->middleware('throttle:5,1');
+    Route::post('/requests/purge-all', 'purgeAll')->middleware('throttle:requests-purge');
 });
 
 Route::prefix('requests/legacy-import')->controller(\App\Http\Controllers\Api\Requests\LegacyDispatchImportController::class)->group(function () {
@@ -65,7 +65,7 @@ Route::prefix('requests/legacy-import')->controller(\App\Http\Controllers\Api\Re
     Route::get('/template', 'template')->middleware('throttle:30,1');
     Route::post('/', 'store')->middleware('throttle:10,1');
     Route::get('/{dispatchImportBatch}', 'show')->middleware('throttle:60,1');
-    Route::post('/{dispatchImportBatch}/execute', 'execute')->middleware('throttle:5,1');
+    Route::post('/{dispatchImportBatch}/execute', 'execute')->middleware('throttle:legacy-import-execute');
     Route::get('/{dispatchImportBatch}/error-report', 'errorReport')->middleware('throttle:30,1');
 });
 

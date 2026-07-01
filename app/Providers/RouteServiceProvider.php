@@ -33,6 +33,15 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(40)->by($request->user()?->id ?: $request->ip());
         });
 
+        // Xóa hàng loạt có cụm xác nhận — tránh 429 khi thử lại sau lỗi đếm/422; vẫn giới hạn theo user.
+        RateLimiter::for('requests-purge', function (Request $request) {
+            return Limit::perMinute(15)->by($request->user()?->id ?: $request->ip());
+        });
+
+        RateLimiter::for('legacy-import-execute', function (Request $request) {
+            return Limit::perMinute(10)->by($request->user()?->id ?: $request->ip());
+        });
+
         $this->routes(function () {
             Route::middleware('api')
                 ->prefix('api')

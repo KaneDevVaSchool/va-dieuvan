@@ -942,6 +942,14 @@
               <p class="mt-0.5 text-[11px] text-slate-500">
                 {{ t('requests_page.purge_all_confirm_hint', { phrase: purgeRequiredPhrase }) }}
               </p>
+              <p
+                v-if="purgeCooldownSeconds > 0"
+                class="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900"
+                role="status"
+                data-testid="requests-purge-rate-limit"
+              >
+                {{ t('requests_page.purge_all_rate_limit_wait', { seconds: purgeCooldownSeconds }) }}
+              </p>
               <input
                 id="requests-purge-confirm"
                 v-model="purgeConfirmPhrase"
@@ -964,11 +972,19 @@
             <button
               type="button"
               class="rounded-lg bg-red-700 px-3 py-2 text-sm font-medium text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
-              :disabled="bulkSubmitting || purgeConfirmPhrase !== purgeRequiredPhrase"
+              :disabled="
+                bulkSubmitting ||
+                purgeCooldownSeconds > 0 ||
+                purgeConfirmPhrase !== purgeRequiredPhrase
+              "
               data-testid="requests-purge-submit"
               @click="submitPurgeAll"
             >
-              {{ t('requests_page.purge_all_submit', { n: meta.total ?? 0 }) }}
+              {{
+                bulkSubmitting
+                  ? t('requests_page.purge_all_submitting')
+                  : t('requests_page.purge_all_submit', { n: meta.total ?? 0 })
+              }}
             </button>
           </div>
         </div>
@@ -1119,6 +1135,8 @@ const legacyImportOpen = ref(false)
 const purgeAllOpen = ref(false)
 const purgePermanent = ref(false)
 const purgeConfirmPhrase = ref('')
+const purgeCooldownSeconds = ref(0)
+let purgeCooldownTimer = null
 const requestsDatagridRef = ref(null)
 useDetailsAutoCloseWithin(requestsDatagridRef)
 
@@ -1971,6 +1989,26 @@ async function onLegacyImportCompleted() {
   await reload()
 }
 
+function clearPurgeCooldownTimer() {
+  if (purgeCooldownTimer) {
+    clearInterval(purgeCooldownTimer)
+    purgeCooldownTimer = null
+  }
+  purgeCooldownSeconds.value = 0
+}
+
+function startPurgeCooldown(seconds) {
+  clearPurgeCooldownTimer()
+  const n = Math.max(1, Math.min(120, Math.floor(Number(seconds) || 35)))
+  purgeCooldownSeconds.value = n
+  purgeCooldownTimer = setInterval(() => {
+    purgeCooldownSeconds.value -= 1
+    if (purgeCooldownSeconds.value <= 0) {
+      clearPurgeCooldownTimer()
+    }
+  }, 1000)
+}
+
 function openPurgeAll(permanent) {
   purgePermanent.value = permanent
   purgeConfirmPhrase.value = ''
@@ -1984,7 +2022,13 @@ function closePurgeAll() {
 }
 
 async function submitPurgeAll() {
-  if (bulkSubmitting.value || purgeConfirmPhrase.value !== purgeRequiredPhrase.value) return
+  if (
+    bulkSubmitting.value ||
+    purgeCooldownSeconds.value > 0 ||
+    purgeConfirmPhrase.value !== purgeRequiredPhrase.value
+  ) {
+    return
+  }
   bulkSubmitting.value = true
   try {
     const params = {
@@ -2008,6 +2052,11 @@ async function submitPurgeAll() {
     selectedIds.value = []
     await reload()
   } catch (e) {
+    if (e?.response?.status === 429) {
+      const headers = e.response.headers || {}
+      const raw = headers['retry-after'] ?? headers['Retry-After']
+      startPurgeCooldown(raw ?? 35)
+    }
     showAppErrorFromApi(e)
   } finally {
     bulkSubmitting.value = false
@@ -2212,5 +2261,6 @@ onActivated(() => {
 onUnmounted(() => {
   document.removeEventListener('mousedown', onDatagridDocMouseDown)
   if (searchDebounce) clearTimeout(searchDebounce)
+  clearPurgeCooldownTimer()
 })
 </script>

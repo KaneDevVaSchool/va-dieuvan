@@ -6,7 +6,7 @@ trait MapsWithSkipReason
 {
     private ?string $lastSkipReason = null;
 
-    protected function skip(?string $reason): null
+    protected function skip(?string $reason): ?array
     {
         $this->lastSkipReason = $reason;
 

@@ -3063,6 +3063,8 @@
         "purge_all_confirm_label": "Nhập cụm xác nhận",
         "purge_all_confirm_hint": "Gõ chính xác: {phrase}",
         "purge_all_submit": "Xóa {n} yêu cầu",
+        "purge_all_submitting": "Đang xóa…",
+        "purge_all_rate_limit_wait": "Giới hạn tạm thời — đợi {seconds} giây rồi bấm lại (tránh bấm liên tục).",
         "purge_all_done_soft": "Đã chuyển {n} yêu cầu vào thùng rác.",
         "purge_all_done_permanent": "Đã xóa vĩnh viễn {n} yêu cầu.",
         "legacy_import_modal_title": "Nhập dữ liệu từ Excel",
