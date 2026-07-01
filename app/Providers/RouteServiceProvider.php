@@ -38,6 +38,22 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(15)->by($request->user()?->id ?: $request->ip());
         });
 
+        RateLimiter::for('cargo-purge', function (Request $request) {
+            return Limit::perMinute(15)->by($request->user()?->id ?: $request->ip());
+        });
+
+        RateLimiter::for('trip-costs-purge', function (Request $request) {
+            return Limit::perMinute(15)->by($request->user()?->id ?: $request->ip());
+        });
+
+        RateLimiter::for('tp-programs-purge', function (Request $request) {
+            return Limit::perMinute(15)->by($request->user()?->id ?: $request->ip());
+        });
+
+        RateLimiter::for('tp-students-purge', function (Request $request) {
+            return Limit::perMinute(15)->by($request->user()?->id ?: $request->ip());
+        });
+
         RateLimiter::for('legacy-import-execute', function (Request $request) {
             return Limit::perMinute(10)->by($request->user()?->id ?: $request->ip());
         });

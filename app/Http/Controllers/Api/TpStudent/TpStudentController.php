@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Api\TpStudent;
 use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\TpStudent\BulkDeleteTpStudentsRequest;
+use App\Http\Requests\Api\TpStudent\PurgeAllTpStudentsRequest;
 use App\Http\Requests\Api\TpStudent\StoreTpStudentRequest;
 use App\Http\Requests\Api\TpStudent\UpdateTpStudentRequest;
 use App\Models\TpStudent;
 use App\Services\TpStudent\TpStudentPresenter;
+use App\Services\TpStudent\TpStudentPurgeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +21,7 @@ class TpStudentController extends Controller
 
     public function __construct(
         private readonly TpStudentPresenter $presenter,
+        private readonly TpStudentPurgeService $purgeService,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -174,5 +177,35 @@ class TpStudentController extends Controller
         });
 
         return $this->ok(['deleted_count' => $deleted]);
+    }
+
+    public function purgeAll(PurgeAllTpStudentsRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+        $permanent = (bool) $validated['permanent'];
+        $expected = (int) $validated['expected_count'];
+
+        $filterData = collect($validated)
+            ->except(['permanent', 'confirm_phrase', 'expected_count', 'per_page', 'page'])
+            ->all();
+
+        $q = TpStudent::query();
+        $this->presenter->applyListFiltersFromInput($q, $filterData);
+        $total = (int) (clone $q)->count();
+
+        if ($total !== $expected) {
+            abort(422, 'Số lượng học sinh đã thay đổi ('.$total.' ≠ '.$expected.'). Làm mới trang rồi thử lại.');
+        }
+
+        if ($total === 0) {
+            return $this->ok(['deleted_count' => 0, 'permanent' => $permanent]);
+        }
+
+        $deleted = $this->purgeService->purgeAll($request->user(), $filterData, $permanent);
+
+        return $this->ok([
+            'deleted_count' => $deleted,
+            'permanent' => $permanent,
+        ]);
     }
 }

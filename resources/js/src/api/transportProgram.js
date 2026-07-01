@@ -38,6 +38,59 @@ export async function bulkDeletePrograms(ids) {
   return data.data
 }
 
+export async function purgeAllTpPrograms(payload) {
+  const { data } = await http.post('/tp-programs/purge-all', payload)
+  return data.data
+}
+
+export async function exportProgramsList(params = {}) {
+  let res
+  try {
+    res = await http.get('/tp-programs/export', {
+      params,
+      responseType: 'blob',
+      headers: { Accept: '*/*' },
+      timeout: 120_000,
+    })
+  } catch (e) {
+    await normalizeAxiosBlobError(e)
+    throw e
+  }
+  const blob = res.data
+  if (!(blob instanceof Blob) || blob.size === 0) throw new Error('empty_response')
+  const stamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '').replace('T', '_')
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', `danh-sach-chuong-trinh_${stamp}.xlsx`)
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.URL.revokeObjectURL(url)
+}
+
+export async function downloadProgramImportSample() {
+  const { data } = await http.get('/tp-programs/import-sample', {
+    responseType: 'blob',
+    headers: { Accept: '*/*' },
+  })
+  const url = window.URL.createObjectURL(new Blob([data]))
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', 'mau-import-chuong-trinh.xlsx')
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.URL.revokeObjectURL(url)
+}
+
+export async function importProgramsFile(file) {
+  const form = new FormData()
+  form.append('file', file, file.name || 'import.xlsx')
+  const { data } = await http.post('/tp-programs/import', form)
+  return data.data
+}
+
 export async function activateProgram(id) {
   const { data } = await http.post(`/tp-programs/${id}/activate`)
   return data.data
@@ -271,6 +324,11 @@ export async function deleteStudent(id) {
 
 export async function bulkDeleteStudents(ids) {
   const { data } = await http.post('/tp-students/bulk-delete', { ids })
+  return data.data
+}
+
+export async function purgeAllTpStudents(payload) {
+  const { data } = await http.post('/tp-students/purge-all', payload)
   return data.data
 }
 

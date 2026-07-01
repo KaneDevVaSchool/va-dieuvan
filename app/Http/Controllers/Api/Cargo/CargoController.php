@@ -6,13 +6,15 @@ use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Cargo\CreateCargoShipmentRequest;
 use App\Http\Requests\Api\Cargo\ListCargoShipmentsRequest;
+use App\Http\Requests\Api\Cargo\PurgeAllCargoShipmentsRequest;
 use App\Http\Requests\Api\Cargo\ShowCargoShipmentRequest;
 use App\Http\Requests\Api\Cargo\UpdateCargoShipmentStatusRequest;
 use App\Http\Requests\Api\Cargo\UploadCargoPodRequest;
 use App\Models\Attachment;
 use App\Models\CargoShipment;
 use App\Services\Auditing\AuditLogger;
-use Illuminate\Database\Eloquent\Builder;
+use App\Services\Cargo\CargoShipmentListService;
+use App\Services\Cargo\CargoShipmentPurgeService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -21,12 +23,16 @@ class CargoController extends Controller
 {
     use ApiResponses;
 
+    public function __construct(
+        private readonly CargoShipmentListService $listService,
+        private readonly CargoShipmentPurgeService $purgeService,
+    ) {}
+
     public function index(ListCargoShipmentsRequest $request)
     {
         $data = $request->validated();
 
-        $q = CargoShipment::query()
-            ->visibleOnStaffCargoIndex()
+        $q = $this->listService->filteredQuery($data)
             ->with([
                 'trip:id,status,depart_at,driver_id,vehicle_id',
                 'trip.driver:id,full_name,phone',
@@ -34,36 +40,7 @@ class CargoController extends Controller
                 'dispatchRequest:id,status,created_at,requester_id',
                 'dispatchRequest.requester:id,name,email,employee_code,avatar_url',
                 'attachments' => fn ($q) => $q->where('kind', 'pod')->orderByDesc('id'),
-            ])
-            ->orderByDesc('id');
-
-        $q->when(isset($data['status']), fn (Builder $b) => $b->where('status', $data['status']));
-
-        $q->when(isset($data['from']), fn (Builder $b) => $b->where(
-            'created_at',
-            '>=',
-            Carbon::parse($data['from'])->startOfDay(),
-        ));
-        $q->when(isset($data['to']), fn (Builder $b) => $b->where(
-            'created_at',
-            '<=',
-            Carbon::parse($data['to'])->endOfDay(),
-        ));
-
-        $q->when(isset($data['q']), function (Builder $b) use ($data) {
-            $raw = trim((string) $data['q']);
-            if ($raw === '') {
-                return;
-            }
-            $term = '%'.addcslashes($raw, '%_\\').'%';
-            $b->where(function (Builder $inner) use ($term) {
-                $inner->where('tracking_code', 'like', $term)
-                    ->orWhere('pickup_address', 'like', $term)
-                    ->orWhere('delivery_address', 'like', $term)
-                    ->orWhere('sender_name', 'like', $term)
-                    ->orWhere('receiver_name', 'like', $term);
-            });
-        });
+            ]);
 
         $perPage = (int) ($data['per_page'] ?? 20);
         $results = $q->paginate($perPage);
@@ -251,6 +228,34 @@ class CargoController extends Controller
         return $this->created([
             ...$attachment->toArray(),
             'url' => Storage::url($path),
+        ]);
+    }
+
+    public function purgeAll(PurgeAllCargoShipmentsRequest $request)
+    {
+        $validated = $request->validated();
+        $permanent = (bool) $validated['permanent'];
+        $expected = (int) $validated['expected_count'];
+
+        $filterData = collect($validated)
+            ->except(['permanent', 'confirm_phrase', 'expected_count', 'per_page', 'page'])
+            ->all();
+
+        $total = (int) $this->listService->filteredQuery($filterData)->count();
+
+        if ($total !== $expected) {
+            abort(422, 'Số lượng đơn hàng đã thay đổi ('.$total.' ≠ '.$expected.'). Làm mới trang rồi thử lại.');
+        }
+
+        if ($total === 0) {
+            return $this->ok(['deleted' => 0, 'permanent' => $permanent]);
+        }
+
+        $deleted = $this->purgeService->purgeAll($request->user(), $filterData, $permanent);
+
+        return $this->ok([
+            'deleted' => $deleted,
+            'permanent' => $permanent,
         ]);
     }
 }

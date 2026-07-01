@@ -34,6 +34,7 @@ Route::prefix('trip-costs')->controller(TripCostController::class)->group(functi
     Route::patch('/{tripCost}', 'updateByDriver')->middleware('throttle:30,1');
     Route::delete('/{tripCost}', 'destroyByDriver')->middleware('throttle:20,1');
     Route::post('/bulk-delete', 'bulkDestroy')->middleware('throttle:20,1');
+    Route::post('/purge-all', 'purgeAll')->middleware('throttle:trip-costs-purge');
 });
 
 // Transport Program redesign (tp_*) — tài xế ghi (§5, §7)

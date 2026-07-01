@@ -99,6 +99,10 @@ Route::prefix('admin')->group(function () {
 // Transport Program redesign (tp_*) — đọc
 Route::prefix('tp-programs')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\TransportProgram\TpProgramController::class, 'index']);
+    Route::get('/export', [\App\Http\Controllers\Api\TransportProgram\TpProgramExportController::class, 'download'])
+        ->middleware('throttle:30,1');
+    Route::get('/import-sample', \App\Http\Controllers\Api\TransportProgram\TpProgramImportSampleController::class)
+        ->middleware('throttle:30,1');
     Route::get('/{tpProgram}', [\App\Http\Controllers\Api\TransportProgram\TpProgramController::class, 'show']);
     Route::get('/{tpProgram}/days', [\App\Http\Controllers\Api\TransportProgram\TpProgramDayController::class, 'index']);
     Route::get('/{tpProgram}/enrollments', [\App\Http\Controllers\Api\TransportProgram\TpEnrollmentController::class, 'index']);

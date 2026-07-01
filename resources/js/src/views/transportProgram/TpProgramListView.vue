@@ -87,6 +87,97 @@
             >
               {{ t('tp_programs_page.bulk_delete', { n: selectedProgramIds.length }) }}
             </button>
+
+            <div v-if="canManagePrograms" class="relative" data-tp-programs-data-panel>
+              <DatagridToolbarActionButton
+                icon="data"
+                :active="showDataMenu"
+                test-id="tp-programs-toolbar-data"
+                @click="toggleDataMenu"
+              >
+                {{ t('tp_programs_page.toolbar_data') }}
+              </DatagridToolbarActionButton>
+              <div
+                v-if="showDataMenu"
+                class="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[280px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+              >
+                <button
+                  type="button"
+                  class="flex w-full flex-col px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
+                  data-testid="tp-programs-data-import-sample"
+                  @click="downloadProgramSample(); showDataMenu = false"
+                >
+                  <span class="text-sm font-medium text-slate-800 dark:text-slate-100">
+                    {{ t('tp_programs_page.data_menu_import_sample') }}
+                  </span>
+                  <span class="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                    {{ t('tp_programs_page.data_menu_import_sample_hint') }}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  class="flex w-full flex-col px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
+                  data-testid="tp-programs-data-import"
+                  @click="triggerProgramImport(); showDataMenu = false"
+                >
+                  <span class="text-sm font-medium text-slate-800 dark:text-slate-100">
+                    {{ t('tp_programs_page.data_menu_import') }}
+                  </span>
+                  <span class="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                    {{ t('tp_programs_page.data_menu_import_hint') }}
+                  </span>
+                </button>
+                <div class="my-1 border-t border-slate-100 dark:border-slate-700" role="separator" />
+                <button
+                  type="button"
+                  class="flex w-full flex-col px-3 py-2 text-left hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-slate-800"
+                  :disabled="exporting || !(listMeta.total ?? 0)"
+                  data-testid="tp-programs-data-export"
+                  @click="exportProgramList(); showDataMenu = false"
+                >
+                  <span class="text-sm font-medium text-slate-800 dark:text-slate-100">
+                    {{ t('tp_programs_page.data_menu_export') }}
+                  </span>
+                </button>
+                <div class="my-1 border-t border-slate-100 dark:border-slate-700" role="separator" />
+                <button
+                  type="button"
+                  class="flex w-full flex-col px-3 py-2 text-left hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-rose-950/30"
+                  :disabled="!(listMeta.total ?? 0) || bulkSubmitting"
+                  data-testid="tp-programs-data-purge-soft"
+                  @click="openPurgeAll(false); showDataMenu = false"
+                >
+                  <span class="text-sm font-medium text-rose-900 dark:text-rose-200">
+                    {{ t('tp_programs_page.purge_all_soft') }}
+                  </span>
+                  <span class="mt-0.5 text-[11px] leading-snug text-rose-700/80 dark:text-rose-300/80">
+                    {{ t('tp_programs_page.purge_all_soft_hint', { n: listMeta.total ?? 0 }) }}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  class="flex w-full flex-col px-3 py-2 text-left hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-red-950/30"
+                  :disabled="!(listMeta.total ?? 0) || bulkSubmitting"
+                  data-testid="tp-programs-data-purge-permanent"
+                  @click="openPurgeAll(true); showDataMenu = false"
+                >
+                  <span class="text-sm font-medium text-red-950 dark:text-red-200">
+                    {{ t('tp_programs_page.purge_all_permanent') }}
+                  </span>
+                  <span class="mt-0.5 text-[11px] leading-snug text-red-800/80 dark:text-red-300/80">
+                    {{ t('tp_programs_page.purge_all_permanent_hint', { n: listMeta.total ?? 0 }) }}
+                  </span>
+                </button>
+              </div>
+              <input
+                ref="programImportInputRef"
+                type="file"
+                accept=".xlsx,.xls"
+                class="hidden"
+                data-testid="tp-programs-import-file"
+                @change="onProgramImportFile"
+              />
+            </div>
           </div>
 
           <div
@@ -464,11 +555,76 @@
         </div>
       </div>
     </div>
+
+    <div
+      v-if="purgeAllOpen"
+      class="fixed inset-0 z-[200] flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="tp-programs-purge-all-title"
+      data-testid="tp-programs-purge-all-modal"
+      @click.self="closePurgeAll"
+    >
+      <div class="absolute inset-0 bg-slate-900/50" aria-hidden="true" />
+      <div class="relative w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+        <h2 id="tp-programs-purge-all-title" class="text-base font-semibold text-slate-900 dark:text-white">
+          {{ t('tp_programs_page.purge_all_modal_title') }}
+        </h2>
+        <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">{{ t('tp_programs_page.purge_all_modal_lead') }}</p>
+        <p class="mt-2 text-sm font-medium text-slate-800 dark:text-slate-200">
+          {{
+            purgePermanent
+              ? t('tp_programs_page.purge_all_mode_permanent')
+              : t('tp_programs_page.purge_all_mode_soft')
+          }}
+        </p>
+        <label for="tp-programs-purge-confirm" class="mt-4 block text-xs font-medium text-slate-700 dark:text-slate-300">
+          {{ t('tp_programs_page.purge_all_confirm_label') }}
+        </label>
+        <p class="mt-1 text-[11px] text-slate-500">{{ t('tp_programs_page.purge_all_confirm_hint', { phrase: purgeRequiredPhrase }) }}</p>
+        <p
+          v-if="purgeCooldownSeconds > 0"
+          class="mt-2 text-xs text-amber-700"
+          data-testid="tp-programs-purge-rate-limit"
+        >
+          {{ t('tp_programs_page.purge_all_rate_limit_wait', { seconds: purgeCooldownSeconds }) }}
+        </p>
+        <input
+          id="tp-programs-purge-confirm"
+          v-model="purgeConfirmPhrase"
+          type="text"
+          autocomplete="off"
+          class="input mt-2 h-10 w-full text-sm"
+          data-testid="tp-programs-purge-confirm-input"
+        />
+        <div class="mt-5 flex justify-end gap-2">
+          <Button variant="secondary" data-testid="tp-programs-purge-cancel" @click="closePurgeAll">
+            {{ t('common.cancel') }}
+          </Button>
+          <Button
+            variant="danger"
+            :disabled="
+              bulkSubmitting ||
+              purgeCooldownSeconds > 0 ||
+              purgeConfirmPhrase !== purgeRequiredPhrase
+            "
+            data-testid="tp-programs-purge-submit"
+            @click="submitPurgeAll"
+          >
+            {{
+              bulkSubmitting
+                ? t('tp_programs_page.purge_all_submitting')
+                : t('tp_programs_page.purge_all_submit', { n: listMeta.total ?? 0 })
+            }}
+          </Button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { computed, onActivated, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onActivated, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -490,7 +646,15 @@ import DatagridFilterField from '../../components/shared/ui/DatagridFilterField.
 import FilterVisibilityDropdown from '../../components/shared/ui/FilterVisibilityDropdown.vue'
 import { useVisibleFilterControls } from '../../composables/useVisibleFilterControls.js'
 import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
-import { listPrograms, deleteProgram, bulkDeletePrograms } from '../../api/transportProgram'
+import {
+  listPrograms,
+  deleteProgram,
+  bulkDeletePrograms,
+  purgeAllTpPrograms,
+  exportProgramsList,
+  downloadProgramImportSample,
+  importProgramsFile,
+} from '../../api/transportProgram'
 import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
 import { confirmAction } from '../../composables/useConfirm'
 import { useAuthStore } from '../../store'
@@ -502,6 +666,16 @@ const loading = ref(false)
 const items = ref([])
 const selectedProgramIds = ref([])
 const bulkDeleting = ref(false)
+const bulkSubmitting = ref(false)
+const exporting = ref(false)
+const showDataMenu = ref(false)
+const purgeAllOpen = ref(false)
+const purgePermanent = ref(false)
+const purgeConfirmPhrase = ref('')
+const purgeCooldownSeconds = ref(0)
+const programImportInputRef = ref(null)
+const listMeta = ref({ total: 0 })
+let purgeCooldownTimer = null
 const canManagePrograms = computed(() => auth.hasPermission('tp_program.manage'))
 const kpiStats = ref({ total: 0, by_status: {}, operating_days: 0 })
 const view = ref('grid')
@@ -549,6 +723,146 @@ const statusFilterOptions = computed(() => [
 const tpProgramsDatagridRef = ref(null)
 useDetailsAutoCloseWithin(tpProgramsDatagridRef)
 
+const purgeRequiredPhrase = computed(() => `XOA ${listMeta.value.total ?? 0}`)
+
+function programListParams() {
+  return {
+    status: filters.status || undefined,
+    search: filters.search?.trim() || undefined,
+    destination_name: filters.route || undefined,
+    school_year: filters.schoolYear || undefined,
+  }
+}
+
+function closeDataMenu() {
+  showDataMenu.value = false
+}
+
+function toggleDataMenu() {
+  closeFilterPanel()
+  showDataMenu.value = !showDataMenu.value
+}
+
+function onDatagridDocMouseDown(ev) {
+  const t = ev.target
+  if (!(t instanceof Element)) return
+  if (t.closest('[data-tp-programs-data-panel]')) return
+  closeDataMenu()
+}
+
+function clearPurgeCooldownTimer() {
+  if (purgeCooldownTimer) {
+    clearInterval(purgeCooldownTimer)
+    purgeCooldownTimer = null
+  }
+  purgeCooldownSeconds.value = 0
+}
+
+function startPurgeCooldown(seconds) {
+  clearPurgeCooldownTimer()
+  const n = Math.max(1, Math.min(120, Math.floor(Number(seconds) || 35)))
+  purgeCooldownSeconds.value = n
+  purgeCooldownTimer = setInterval(() => {
+    purgeCooldownSeconds.value -= 1
+    if (purgeCooldownSeconds.value <= 0) {
+      clearPurgeCooldownTimer()
+    }
+  }, 1000)
+}
+
+function openPurgeAll(permanent) {
+  purgePermanent.value = permanent
+  purgeConfirmPhrase.value = ''
+  purgeAllOpen.value = true
+}
+
+function closePurgeAll() {
+  if (bulkSubmitting.value) return
+  purgeAllOpen.value = false
+  purgeConfirmPhrase.value = ''
+}
+
+async function submitPurgeAll() {
+  if (
+    bulkSubmitting.value ||
+    purgeCooldownSeconds.value > 0 ||
+    purgeConfirmPhrase.value !== purgeRequiredPhrase.value
+  ) {
+    return
+  }
+  bulkSubmitting.value = true
+  try {
+    const res = await purgeAllTpPrograms({
+      ...programListParams(),
+      permanent: purgePermanent.value,
+      confirm_phrase: purgeConfirmPhrase.value,
+      expected_count: listMeta.value.total ?? 0,
+    })
+    const n = res.deleted_count ?? 0
+    showAppSuccess(
+      purgePermanent.value
+        ? t('tp_programs_page.purge_all_done_permanent', { n })
+        : t('tp_programs_page.purge_all_done_soft', { n }),
+    )
+    purgeAllOpen.value = false
+    purgeConfirmPhrase.value = ''
+    selectedProgramIds.value = []
+    await load()
+  } catch (err) {
+    const retry = err?.response?.headers?.['retry-after'] ?? err?.response?.data?.retry_after
+    if (err?.response?.status === 429 && retry) {
+      startPurgeCooldown(Number(retry))
+    }
+    showAppErrorFromApi(err)
+  } finally {
+    bulkSubmitting.value = false
+  }
+}
+
+async function exportProgramList() {
+  if (exporting.value) return
+  exporting.value = true
+  try {
+    await exportProgramsList(programListParams())
+    showAppSuccess(t('tp_programs_page.export_done'))
+  } catch (err) {
+    showAppErrorFromApi(err)
+  } finally {
+    exporting.value = false
+  }
+}
+
+async function downloadProgramSample() {
+  try {
+    await downloadProgramImportSample()
+  } catch (err) {
+    showAppErrorFromApi(err)
+  }
+}
+
+function triggerProgramImport() {
+  programImportInputRef.value?.click()
+}
+
+async function onProgramImportFile(ev) {
+  const file = ev.target?.files?.[0]
+  ev.target.value = ''
+  if (!file) return
+  bulkSubmitting.value = true
+  try {
+    const res = await importProgramsFile(file)
+    const created = res.created ?? 0
+    const skipped = res.skipped ?? 0
+    const errCount = (res.errors ?? []).length
+    showAppSuccess(t('tp_programs_page.import_done', { created, skipped, errors: errCount }))
+    await load()
+  } catch (err) {
+    showAppErrorFromApi(err)
+  } finally {
+    bulkSubmitting.value = false
+  }
+}
+
 const LIST_PER_PAGE_OPTIONS = [5, 10, 15, 20]
 const listPage = ref(1)
 const listPerPage = ref(10)
@@ -558,11 +872,11 @@ async function load() {
   loading.value = true
   try {
     const res = await listPrograms({
-      status: filters.status || undefined,
-      search: filters.search?.trim() || undefined,
-      per_page: 60,
+      ...programListParams(),
+      per_page: 100,
     })
     items.value = res?.items ?? []
+    listMeta.value = { total: res?.meta?.total ?? items.value.length }
     if (res?.summary) {
       kpiStats.value = {
         total: res.summary.total ?? 0,
@@ -578,6 +892,8 @@ async function load() {
 }
 
 watch(() => filters.status, load)
+watch(() => filters.route, load)
+watch(() => filters.schoolYear, load)
 watch(
   () => filters.search,
   () => {
@@ -656,12 +972,7 @@ const routeOptions = computed(() => {
 })
 
 const visibleItems = computed(() => {
-  let rows = items.value.filter((p) => {
-    if (filters.schoolYear && schoolYear(p) !== filters.schoolYear) return false
-    if (filters.route && p.destination_name !== filters.route) return false
-    return true
-  })
-  rows = [...rows]
+  let rows = [...items.value]
   switch (sort.value) {
     case 'oldest':
       rows.sort((a, b) => a.id - b.id)
@@ -849,6 +1160,13 @@ function accent(s) {
   )
 }
 
-onMounted(load)
+onMounted(() => {
+  document.addEventListener('mousedown', onDatagridDocMouseDown)
+  load()
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('mousedown', onDatagridDocMouseDown)
+  clearPurgeCooldownTimer()
+})
 onActivated(load)
 </script>

@@ -78,6 +78,12 @@ const diffAll = `${diffStat}\n${diffBody}`
 function inferFromDiff(text) {
   const topics = [
     {
+      test: (t) => /trip-costs-purge|purgeAllTripCosts|costs-purge-all|costs-data-purge/i.test(t),
+      type: 'feat',
+      scope: 'ui',
+      subject: 'xóa tất cả ghi chú chi phí theo bộ lọc trên /costs',
+    },
+    {
       test: (t) => /requests-purge|purge-all|purgeCooldown|purge_all_rate_limit/i.test(t),
       type: 'fix',
       scope: 'requests',

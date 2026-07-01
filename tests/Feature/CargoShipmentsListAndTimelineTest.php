@@ -124,4 +124,83 @@ class CargoShipmentsListAndTimelineTest extends TestCase
         $this->assertContains('picked_up', $codes);
         $this->assertContains('delivered', $codes);
     }
+
+    public function test_purge_all_soft_respects_filters_and_trashes_linked_requests(): void
+    {
+        $user = $this->seedDispatcher();
+        $requester = User::factory()->create();
+        $this->actingAs($user);
+
+        $dr = DispatchRequest::create([
+            'requester_id' => $requester->id,
+            'trip_type' => 'cargo',
+            'origin' => 'A',
+            'destination' => 'B',
+            'depart_at' => now()->addDay(),
+            'status' => 'pending',
+            'source_channel' => 'portal',
+            'is_urgent' => false,
+            'paper_status' => 'pending',
+        ]);
+
+        CargoShipment::create([
+            'dispatch_request_id' => $dr->id,
+            'tracking_code' => 'CGO-PURGE-LINK',
+            'status' => 'pending',
+        ]);
+        CargoShipment::create([
+            'tracking_code' => 'CGO-PURGE-STAND',
+            'status' => 'pending',
+        ]);
+
+        $res = $this->postJson('/api/cargo-shipments/purge-all', [
+            'permanent' => false,
+            'expected_count' => 2,
+            'confirm_phrase' => 'XOA 2',
+        ]);
+        $res->assertOk();
+        $this->assertSame(2, $res->json('data.deleted'));
+
+        $list = $this->getJson('/api/cargo-shipments');
+        $list->assertOk();
+        $this->assertSame(0, $list->json('data.meta.total'));
+        $this->assertSoftDeleted('dispatch_requests', ['id' => $dr->id]);
+        $this->assertDatabaseMissing('cargo_shipments', ['tracking_code' => 'CGO-PURGE-STAND']);
+        $this->assertDatabaseHas('cargo_shipments', ['tracking_code' => 'CGO-PURGE-LINK']);
+    }
+
+    public function test_purge_all_permanent_deletes_shipments_and_requests(): void
+    {
+        $user = $this->seedDispatcher();
+        $requester = User::factory()->create();
+        $this->actingAs($user);
+
+        $dr = DispatchRequest::create([
+            'requester_id' => $requester->id,
+            'trip_type' => 'cargo',
+            'origin' => 'A',
+            'destination' => 'B',
+            'depart_at' => now()->addDay(),
+            'status' => 'pending',
+            'source_channel' => 'portal',
+            'is_urgent' => false,
+            'paper_status' => 'pending',
+        ]);
+
+        CargoShipment::create([
+            'dispatch_request_id' => $dr->id,
+            'tracking_code' => 'CGO-PERM-LINK',
+            'status' => 'pending',
+        ]);
+
+        $res = $this->postJson('/api/cargo-shipments/purge-all', [
+            'permanent' => true,
+            'expected_count' => 1,
+            'confirm_phrase' => 'XOA 1',
+        ]);
+        $res->assertOk();
+        $this->assertSame(1, $res->json('data.deleted'));
+        $this->assertDatabaseMissing('cargo_shipments', ['tracking_code' => 'CGO-PERM-LINK']);
+        $this->assertDatabaseMissing('dispatch_requests', ['id' => $dr->id]);
+    }
 }

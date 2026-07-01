@@ -90,6 +90,50 @@
                 </label>
               </li>
             </FilterVisibilityDropdown>
+
+            <div v-if="canManageCargoData" class="relative" data-cargo-data-panel>
+              <DatagridToolbarActionButton
+                icon="data"
+                :active="showDataMenu"
+                test-id="cargo-toolbar-data"
+                @click="toggleDataMenu"
+              >
+                {{ t('cargo_page.toolbar_data') }}
+              </DatagridToolbarActionButton>
+              <div
+                v-if="showDataMenu"
+                class="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[280px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+              >
+                <button
+                  type="button"
+                  class="flex w-full flex-col px-3 py-2 text-left hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-rose-950/30"
+                  :disabled="!(meta.total ?? 0) || bulkSubmitting"
+                  data-testid="cargo-data-purge-soft"
+                  @click="openPurgeAll(false); showDataMenu = false"
+                >
+                  <span class="text-sm font-medium text-rose-900 dark:text-rose-200">
+                    {{ t('cargo_page.purge_all_soft') }}
+                  </span>
+                  <span class="mt-0.5 text-[11px] leading-snug text-rose-700/80 dark:text-rose-300/80">
+                    {{ t('cargo_page.purge_all_soft_hint', { n: meta.total ?? 0 }) }}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  class="flex w-full flex-col px-3 py-2 text-left hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-red-950/30"
+                  :disabled="!(meta.total ?? 0) || bulkSubmitting"
+                  data-testid="cargo-data-purge-permanent"
+                  @click="openPurgeAll(true); showDataMenu = false"
+                >
+                  <span class="text-sm font-medium text-red-950 dark:text-red-200">
+                    {{ t('cargo_page.purge_all_permanent') }}
+                  </span>
+                  <span class="mt-0.5 text-[11px] leading-snug text-red-800/80 dark:text-red-300/80">
+                    {{ t('cargo_page.purge_all_permanent_hint', { n: meta.total ?? 0 }) }}
+                  </span>
+                </button>
+              </div>
+            </div>
           </div>
 
         </div>
@@ -213,11 +257,89 @@
         </button>
       </div>
     </div>
+
+    <Teleport to="body">
+      <div
+        v-if="purgeAllOpen"
+        class="fixed inset-0 z-[191] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-[2px]"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cargo-purge-all-title"
+        data-testid="cargo-purge-all-modal"
+        @click.self="closePurgeAll"
+      >
+        <div class="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900">
+          <div class="border-b border-slate-100 bg-red-50/90 px-5 py-4 dark:border-slate-700 dark:bg-red-950/40">
+            <h2 id="cargo-purge-all-title" class="text-base font-semibold text-slate-900 dark:text-white">
+              {{ t('cargo_page.purge_all_modal_title') }}
+            </h2>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('cargo_page.purge_all_modal_lead') }}</p>
+          </div>
+          <div class="space-y-4 px-5 py-4">
+            <p class="text-sm font-medium text-slate-800 dark:text-slate-100">
+              {{ purgePermanent ? t('cargo_page.purge_all_mode_permanent') : t('cargo_page.purge_all_mode_soft') }}
+              · {{ meta.total ?? 0 }}
+            </p>
+            <div>
+              <label for="cargo-purge-confirm" class="text-xs font-medium text-slate-700 dark:text-slate-300">
+                {{ t('cargo_page.purge_all_confirm_label') }}
+              </label>
+              <p class="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                {{ t('cargo_page.purge_all_confirm_hint', { phrase: purgeRequiredPhrase }) }}
+              </p>
+              <p
+                v-if="purgeCooldownSeconds > 0"
+                class="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"
+                role="status"
+                data-testid="cargo-purge-rate-limit"
+              >
+                {{ t('cargo_page.purge_all_rate_limit_wait', { seconds: purgeCooldownSeconds }) }}
+              </p>
+              <input
+                id="cargo-purge-confirm"
+                v-model="purgeConfirmPhrase"
+                type="text"
+                autocomplete="off"
+                class="input mt-2 h-10 w-full text-sm"
+                data-testid="cargo-purge-confirm-input"
+              />
+            </div>
+          </div>
+          <div class="flex justify-end gap-2 border-t border-slate-100 bg-slate-50/80 px-5 py-3 dark:border-slate-700 dark:bg-slate-900/80">
+            <button
+              type="button"
+              class="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+              data-testid="cargo-purge-cancel"
+              @click="closePurgeAll"
+            >
+              {{ t('requests_page.bulk_confirm_cancel') }}
+            </button>
+            <button
+              type="button"
+              class="rounded-lg bg-red-700 px-3 py-2 text-sm font-medium text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
+              :disabled="
+                bulkSubmitting ||
+                purgeCooldownSeconds > 0 ||
+                purgeConfirmPhrase !== purgeRequiredPhrase
+              "
+              data-testid="cargo-purge-submit"
+              @click="submitPurgeAll"
+            >
+              {{
+                bulkSubmitting
+                  ? t('cargo_page.purge_all_submitting')
+                  : t('cargo_page.purge_all_submit', { n: meta.total ?? 0 })
+              }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, onActivated, reactive, ref, watch } from 'vue'
+import { computed, onActivated, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -232,14 +354,17 @@ import DatagridToolbarActionButton from '../../components/shared/ui/DatagridTool
 import DatagridFilterField from '../../components/shared/ui/DatagridFilterField.vue'
 import FilterVisibilityDropdown from '../../components/shared/ui/FilterVisibilityDropdown.vue'
 import FilterDatePicker from '../../components/shared/ui/FilterDatePicker.vue'
-import { listCargoShipments } from '../../api/cargo'
+import { listCargoShipments, purgeAllCargoShipments } from '../../api/cargo'
 import { labelCargoStatus } from '../../util/labels'
 import { useVisibleFilterControls } from '../../composables/useVisibleFilterControls.js'
 import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 import { useNotificationStore } from '../../store/notificationCenter'
+import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
+import { useAuthStore } from '../../store'
 
 const { t } = useI18n()
 const notifStore = useNotificationStore()
+const auth = useAuthStore()
 
 const loading = ref(false)
 const kpiLoading = ref(false)
@@ -260,6 +385,106 @@ const searchInput = ref('')
 const searchDebounce = ref(null)
 const cargoDatagridRef = ref(null)
 useDetailsAutoCloseWithin(cargoDatagridRef)
+
+const canManageCargoData = computed(() => auth.hasPermission('cargo.manage'))
+const showDataMenu = ref(false)
+const purgeAllOpen = ref(false)
+const purgePermanent = ref(false)
+const purgeConfirmPhrase = ref('')
+const purgeCooldownSeconds = ref(0)
+const bulkSubmitting = ref(false)
+let purgeCooldownTimer = null
+
+const purgeRequiredPhrase = computed(() => `XOA ${meta.value.total ?? 0}`)
+
+function closeToolbarMenus() {
+  showDataMenu.value = false
+}
+
+function toggleDataMenu() {
+  closeFilterPanel()
+  showDataMenu.value = !showDataMenu.value
+}
+
+function onDatagridDocMouseDown(ev) {
+  const t = ev.target
+  if (!(t instanceof Element)) return
+  if (t.closest('[data-cargo-data-panel]')) return
+  closeToolbarMenus()
+}
+
+function clearPurgeCooldownTimer() {
+  if (purgeCooldownTimer) {
+    clearInterval(purgeCooldownTimer)
+    purgeCooldownTimer = null
+  }
+  purgeCooldownSeconds.value = 0
+}
+
+function startPurgeCooldown(seconds) {
+  clearPurgeCooldownTimer()
+  const n = Math.max(1, Math.min(120, Math.floor(Number(seconds) || 35)))
+  purgeCooldownSeconds.value = n
+  purgeCooldownTimer = setInterval(() => {
+    purgeCooldownSeconds.value -= 1
+    if (purgeCooldownSeconds.value <= 0) {
+      clearPurgeCooldownTimer()
+    }
+  }, 1000)
+}
+
+function openPurgeAll(permanent) {
+  purgePermanent.value = permanent
+  purgeConfirmPhrase.value = ''
+  purgeAllOpen.value = true
+}
+
+function closePurgeAll() {
+  if (bulkSubmitting.value) return
+  purgeAllOpen.value = false
+  purgeConfirmPhrase.value = ''
+}
+
+async function submitPurgeAll() {
+  if (
+    bulkSubmitting.value ||
+    purgeCooldownSeconds.value > 0 ||
+    purgeConfirmPhrase.value !== purgeRequiredPhrase.value
+  ) {
+    return
+  }
+  bulkSubmitting.value = true
+  try {
+    const params = {
+      ...listParams(),
+      permanent: purgePermanent.value,
+      confirm_phrase: purgeConfirmPhrase.value,
+      expected_count: meta.value.total ?? 0,
+    }
+    delete params.page
+    delete params.per_page
+    const res = await purgeAllCargoShipments(params)
+    const n = res.deleted ?? 0
+    showAppSuccess(
+      purgePermanent.value
+        ? t('cargo_page.purge_all_done_permanent', { n })
+        : t('cargo_page.purge_all_done_soft', { n }),
+    )
+    purgeAllOpen.value = false
+    purgeConfirmPhrase.value = ''
+    await reloadKpis()
+    await reload()
+  } catch (e) {
+    if (e?.response?.status === 429) {
+      const headers = e.response.headers || {}
+      const raw = headers['retry-after'] ?? headers['Retry-After']
+      startPurgeCooldown(raw ?? 35)
+    }
+    showAppErrorFromApi(e)
+  } finally {
+    bulkSubmitting.value = false
+  }
+}
 
 const FILTER_CONTROL_CLASS =
   'h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm focus:border-va-700 focus:outline-none focus:ring-2 focus:ring-va-700/15 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100'
@@ -475,6 +700,7 @@ watch(searchInput, () => {
 })
 
 onMounted(() => {
+  document.addEventListener('mousedown', onDatagridDocMouseDown)
   reloadKpis()
   reload()
 })
@@ -482,5 +708,10 @@ onMounted(() => {
 onActivated(() => {
   reloadKpis()
   reload()
+})
+
+onUnmounted(() => {
+  document.removeEventListener('mousedown', onDatagridDocMouseDown)
+  clearPurgeCooldownTimer()
 })
 </script>

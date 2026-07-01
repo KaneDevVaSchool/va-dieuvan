@@ -17,6 +17,8 @@ class ListTpProgramsRequest extends ApiFormRequest
             'status' => ['nullable', 'in:draft,active,paused,completed,cancelled'],
             'responsible_user_id' => ['nullable', 'integer'],
             'search' => ['nullable', 'string', 'max:255'],
+            'destination_name' => ['nullable', 'string', 'max:255'],
+            'school_year' => ['nullable', 'string', 'max:32'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ];
     }

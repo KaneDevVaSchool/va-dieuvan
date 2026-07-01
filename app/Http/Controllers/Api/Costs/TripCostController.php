@@ -10,6 +10,7 @@ use App\Http\Requests\Api\Costs\DestroyTripCostByDriverRequest;
 use App\Http\Requests\Api\Costs\ListAllTripCostsRequest;
 use App\Http\Requests\Api\Costs\ListTripCostsRequest;
 use App\Http\Requests\Api\Costs\OverrideTripCostRequest;
+use App\Http\Requests\Api\Costs\PurgeAllTripCostsRequest;
 use App\Http\Requests\Api\Costs\ShowTripCostRequest;
 use App\Http\Requests\Api\Costs\SubmitStandaloneTripCostRequest;
 use App\Http\Requests\Api\Costs\SubmitTripCostRequest;
@@ -42,7 +43,13 @@ class TripCostController extends Controller
         $data = $request->validated();
         $user = $request->user();
 
-        $q = TripCost::query()
+        if (isset($data['trip_id'])) {
+            $trip = Trip::query()->find($data['trip_id']);
+            abort_unless($trip, 404);
+            abort_unless(TripVisibility::userCanViewTrip($user, $trip), 403);
+        }
+
+        $q = $this->buildFilteredTripCostsQuery($user, $data)
             ->withCount('attachments')
             ->with([
                 'trip:id,status,depart_at,dispatcher_id,driver_id,transport_provider_id,vehicle_id,dispatch_request_id',
@@ -53,55 +60,7 @@ class TripCostController extends Controller
                 'vehicle:id,license_plate,type,seat_count',
                 'creator:id,name,email,avatar_url',
                 'confirmer:id,name,email,avatar_url',
-            ])
-            ->orderByDesc('id');
-
-        if (! $user->hasPermission('trip.view_all')) {
-            TripCostAccess::applyVisibleToUserScope($q, $user);
-        }
-
-        if (isset($data['trip_id'])) {
-            $trip = Trip::query()->find($data['trip_id']);
-            abort_unless($trip, 404);
-            abort_unless(TripVisibility::userCanViewTrip($user, $trip), 403);
-        }
-
-        $q->when(isset($data['status']), fn (Builder $b) => $b->where('status', $data['status']));
-        $q->when(isset($data['type']), fn (Builder $b) => $b->where('type', $data['type']));
-        $q->when(isset($data['trip_id']), fn (Builder $b) => $b->where('trip_id', $data['trip_id']));
-        $q->when(isset($data['standalone']), function (Builder $b) use ($data): void {
-            if ((int) $data['standalone'] === 1) {
-                $b->whereNull('trip_id');
-            } else {
-                $b->whereNotNull('trip_id');
-            }
-        });
-        $q->when(
-            isset($data['trip_type']) && $data['trip_type'] !== '',
-            fn (Builder $b) => $b->whereHas(
-                'trip.dispatchRequest',
-                fn (Builder $dr) => $dr->where('trip_type', $data['trip_type']),
-            ),
-        );
-        $q->when(isset($data['from']), fn (Builder $b) => $b->where('created_at', '>=', Carbon::parse($data['from'])->startOfDay()));
-        $q->when(isset($data['to']), fn (Builder $b) => $b->where('created_at', '<=', Carbon::parse($data['to'])->endOfDay()));
-        $q->when(! empty($data['fleet_mode']), function (Builder $b) use ($data) {
-            $b->whereHas('trip', function (Builder $trip) use ($data) {
-                match ($data['fleet_mode']) {
-                    'internal' => $trip->whereNull('transport_provider_id')->whereNotNull('vehicle_id'),
-                    'vendor_hire' => $trip->whereNotNull('transport_provider_id')
-                        ->whereHas('transportProvider', function (Builder $p) {
-                            $p->where(function (Builder $inner) {
-                                $inner->whereNull('type')->orWhere('type', '!=', 'taxi');
-                            });
-                        }),
-                    'taxi' => $trip->whereNotNull('transport_provider_id')
-                        ->whereHas('transportProvider', fn (Builder $p) => $p->where('type', 'taxi')),
-                    'unspecified' => $trip->whereNull('transport_provider_id')->whereNull('vehicle_id'),
-                    default => null,
-                };
-            });
-        });
+            ]);
 
         $perPage = (int) ($data['per_page'] ?? 20);
         $results = $q->paginate($perPage);
@@ -356,6 +315,97 @@ class TripCostController extends Controller
         });
 
         return $this->ok(['deleted_count' => $deleted]);
+    }
+
+    public function purgeAll(PurgeAllTripCostsRequest $request): \Illuminate\Http\JsonResponse
+    {
+        $user = $request->user();
+        $validated = $request->validated();
+        $expected = (int) $validated['expected_count'];
+
+        $filterData = collect($validated)
+            ->except(['confirm_phrase', 'expected_count', 'per_page', 'page'])
+            ->all();
+
+        if (isset($filterData['trip_id'])) {
+            $trip = Trip::query()->find($filterData['trip_id']);
+            abort_unless($trip, 404);
+            abort_unless(TripVisibility::userCanViewTrip($user, $trip), 403);
+        }
+
+        $q = $this->buildFilteredTripCostsQuery($user, $filterData);
+        $total = (int) (clone $q)->count();
+
+        if ($total !== $expected) {
+            abort(422, 'Số lượng ghi chú đã thay đổi ('.$total.' ≠ '.$expected.'). Làm mới trang rồi thử lại.');
+        }
+
+        if ($total === 0) {
+            return $this->ok(['deleted_count' => 0]);
+        }
+
+        $deleted = 0;
+
+        DB::transaction(function () use ($q, $user, &$deleted) {
+            foreach ($q->lazyById(100, 'id', 'id') as $tripCost) {
+                abort_unless(TripCostAccess::userCanView($user, $tripCost), 403);
+                $this->deleteTripCostForUser($user, $tripCost, true);
+                $deleted++;
+            }
+        });
+
+        return $this->ok(['deleted_count' => $deleted]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function buildFilteredTripCostsQuery(User $user, array $data): Builder
+    {
+        $q = TripCost::query()->orderByDesc('id');
+
+        if (! $user->hasPermission('trip.view_all')) {
+            TripCostAccess::applyVisibleToUserScope($q, $user);
+        }
+
+        $q->when(isset($data['status']), fn (Builder $b) => $b->where('status', $data['status']));
+        $q->when(isset($data['type']), fn (Builder $b) => $b->where('type', $data['type']));
+        $q->when(isset($data['trip_id']), fn (Builder $b) => $b->where('trip_id', $data['trip_id']));
+        $q->when(isset($data['standalone']), function (Builder $b) use ($data): void {
+            if ((int) $data['standalone'] === 1) {
+                $b->whereNull('trip_id');
+            } else {
+                $b->whereNotNull('trip_id');
+            }
+        });
+        $q->when(
+            isset($data['trip_type']) && $data['trip_type'] !== '',
+            fn (Builder $b) => $b->whereHas(
+                'trip.dispatchRequest',
+                fn (Builder $dr) => $dr->where('trip_type', $data['trip_type']),
+            ),
+        );
+        $q->when(isset($data['from']), fn (Builder $b) => $b->where('created_at', '>=', Carbon::parse($data['from'])->startOfDay()));
+        $q->when(isset($data['to']), fn (Builder $b) => $b->where('created_at', '<=', Carbon::parse($data['to'])->endOfDay()));
+        $q->when(! empty($data['fleet_mode']), function (Builder $b) use ($data) {
+            $b->whereHas('trip', function (Builder $trip) use ($data) {
+                match ($data['fleet_mode']) {
+                    'internal' => $trip->whereNull('transport_provider_id')->whereNotNull('vehicle_id'),
+                    'vendor_hire' => $trip->whereNotNull('transport_provider_id')
+                        ->whereHas('transportProvider', function (Builder $p) {
+                            $p->where(function (Builder $inner) {
+                                $inner->whereNull('type')->orWhere('type', '!=', 'taxi');
+                            });
+                        }),
+                    'taxi' => $trip->whereNotNull('transport_provider_id')
+                        ->whereHas('transportProvider', fn (Builder $p) => $p->where('type', 'taxi')),
+                    'unspecified' => $trip->whereNull('transport_provider_id')->whereNull('vehicle_id'),
+                    default => null,
+                };
+            });
+        });
+
+        return $q;
     }
 
     private function deleteTripCostForUser(User $user, TripCost $tripCost, bool $isReconciler): int

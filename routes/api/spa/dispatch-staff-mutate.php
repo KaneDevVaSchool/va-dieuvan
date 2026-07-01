@@ -99,6 +99,7 @@ Route::prefix('trip-costs')->controller(TripCostController::class)->group(functi
 });
 
 Route::prefix('cargo-shipments')->controller(CargoController::class)->group(function () {
+    Route::post('/purge-all', 'purgeAll')->middleware('throttle:cargo-purge');
     Route::post('/', 'store')->middleware('throttle:20,1');
     Route::post('/{cargoShipment}/status', 'updateStatus')->middleware('throttle:60,1');
     Route::post('/{cargoShipment}/pod', 'uploadPod')->middleware('throttle:20,1');
@@ -169,6 +170,8 @@ Route::delete('/transport-providers/{id}/force', [OperationalResourceController:
 
 // Transport Program redesign (tp_*) — ghi
 Route::prefix('tp-programs')->group(function () {
+    Route::post('/import', [\App\Http\Controllers\Api\TransportProgram\TpProgramImportController::class, 'store'])->middleware('throttle:10,1');
+    Route::post('/purge-all', [\App\Http\Controllers\Api\TransportProgram\TpProgramController::class, 'purgeAll'])->middleware('throttle:tp-programs-purge');
     Route::post('/', [\App\Http\Controllers\Api\TransportProgram\TpProgramController::class, 'store'])->middleware('throttle:30,1');
     Route::post('/bulk-delete', [\App\Http\Controllers\Api\TransportProgram\TpProgramController::class, 'bulkDestroy'])->middleware('throttle:20,1');
     Route::patch('/{tpProgram}', [\App\Http\Controllers\Api\TransportProgram\TpProgramController::class, 'update'])->middleware('throttle:30,1');
@@ -211,6 +214,7 @@ Route::post('/tp-executions/{tpTripExecution}/force-complete', [\App\Http\Contro
 
 // Students (tp_*) — ghi
 Route::prefix('tp-students')->group(function () {
+    Route::post('/purge-all', [\App\Http\Controllers\Api\TpStudent\TpStudentController::class, 'purgeAll'])->middleware('throttle:tp-students-purge');
     Route::post('/', [\App\Http\Controllers\Api\TpStudent\TpStudentController::class, 'store'])->middleware('throttle:30,1');
     Route::post('/bulk-delete', [\App\Http\Controllers\Api\TpStudent\TpStudentController::class, 'bulkDestroy'])->middleware('throttle:20,1');
     Route::patch('/{tpStudent}', [\App\Http\Controllers\Api\TpStudent\TpStudentController::class, 'update'])->middleware('throttle:30,1');

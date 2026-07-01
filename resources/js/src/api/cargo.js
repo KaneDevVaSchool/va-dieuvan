@@ -30,3 +30,12 @@ export async function driverUpdateCargoStatus(id, payload) {
   const { data } = await http.post(`/driver/cargo-shipments/${id}/status`, payload)
   return data.data
 }
+
+/**
+ * Xóa hàng loạt đơn hàng theo bộ lọc danh sách hiện tại.
+ * @param {Record<string, unknown> & { permanent: boolean, confirm_phrase: string, expected_count: number }} payload
+ */
+export async function purgeAllCargoShipments(payload) {
+  const { data } = await http.post('/cargo-shipments/purge-all', payload)
+  return data.data
+}

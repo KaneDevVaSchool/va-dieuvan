@@ -7,9 +7,6 @@
       </div>
 
       <div class="flex flex-wrap gap-2">
-        <Button variant="secondary" data-testid="tp-student-import" @click="goImport">
-          <ArrowUpTrayIcon class="h-4 w-4" /> {{ t('tp_student_page.btn_import') }}
-        </Button>
         <Button data-testid="tp-student-add" @click="openCreate">
           <PlusIcon class="h-4 w-4" /> {{ t('tp_student_page.btn_add') }}
         </Button>
@@ -120,7 +117,86 @@
           </div>
 
           <div class="ml-auto flex shrink-0 flex-wrap items-center gap-2">
-            <div ref="exportMenuRef" class="relative">
+            <div v-if="canManageStudentData" class="relative" data-tp-student-data-panel>
+              <DatagridToolbarActionButton
+                icon="data"
+                :active="showDataMenu"
+                test-id="tp-student-toolbar-data"
+                @click="toggleDataMenu"
+              >
+                {{ t('tp_student_page.toolbar_data') }}
+              </DatagridToolbarActionButton>
+              <div
+                v-if="showDataMenu"
+                class="absolute right-0 top-[calc(100%+6px)] z-[110] min-w-[280px] rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-600 dark:bg-slate-900"
+                @click.stop
+              >
+                <button
+                  type="button"
+                  class="flex w-full flex-col px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
+                  data-testid="tp-student-data-import-wizard"
+                  @click="goImport(); showDataMenu = false"
+                >
+                  <span class="text-sm font-medium text-slate-800 dark:text-slate-100">
+                    {{ t('tp_student_page.data_menu_import') }}
+                  </span>
+                  <span class="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                    {{ t('tp_student_page.data_menu_import_hint') }}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  class="flex w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                  data-testid="tp-student-data-import-sample"
+                  @click="downloadStudentSample(); showDataMenu = false"
+                >
+                  {{ t('tp_student_page.data_menu_import_sample') }}
+                </button>
+                <div class="my-1 border-t border-slate-100 dark:border-slate-700" role="separator" />
+                <button
+                  type="button"
+                  class="flex w-full flex-col px-3 py-2 text-left hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-slate-800"
+                  :disabled="exporting || !(meta.total ?? 0)"
+                  data-testid="tp-student-data-export"
+                  @click="exportList(); showDataMenu = false"
+                >
+                  <span class="text-sm font-medium text-slate-800 dark:text-slate-100">
+                    {{ t('tp_student_page.data_menu_export') }}
+                  </span>
+                </button>
+                <div class="my-1 border-t border-slate-100 dark:border-slate-700" role="separator" />
+                <button
+                  type="button"
+                  class="flex w-full flex-col px-3 py-2 text-left hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-rose-950/30"
+                  :disabled="!(meta.total ?? 0) || bulkSubmitting"
+                  data-testid="tp-student-data-purge-soft"
+                  @click="openPurgeAll(false); showDataMenu = false"
+                >
+                  <span class="text-sm font-medium text-rose-900 dark:text-rose-200">
+                    {{ t('tp_student_page.purge_all_soft') }}
+                  </span>
+                  <span class="mt-0.5 text-[11px] leading-snug text-rose-700/80 dark:text-rose-300/80">
+                    {{ t('tp_student_page.purge_all_soft_hint', { n: meta.total ?? 0 }) }}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  class="flex w-full flex-col px-3 py-2 text-left hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-red-950/30"
+                  :disabled="!(meta.total ?? 0) || bulkSubmitting"
+                  data-testid="tp-student-data-purge-permanent"
+                  @click="openPurgeAll(true); showDataMenu = false"
+                >
+                  <span class="text-sm font-medium text-red-950 dark:text-red-200">
+                    {{ t('tp_student_page.purge_all_permanent') }}
+                  </span>
+                  <span class="mt-0.5 text-[11px] leading-snug text-red-800/80 dark:text-red-300/80">
+                    {{ t('tp_student_page.purge_all_permanent_hint', { n: meta.total ?? 0 }) }}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <div v-else ref="exportMenuRef" class="relative">
               <DatagridToolbarActionButton
                 icon="export"
                 :active="showExportMenu"
@@ -365,15 +441,80 @@
       :student-id="studentDetailId"
       @close="closeStudentDetail"
     />
+
+    <div
+      v-if="purgeAllOpen"
+      class="fixed inset-0 z-[200] flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="tp-student-purge-all-title"
+      data-testid="tp-student-purge-all-modal"
+      @click.self="closePurgeAll"
+    >
+      <div class="absolute inset-0 bg-slate-900/50" aria-hidden="true" />
+      <div class="relative w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+        <h2 id="tp-student-purge-all-title" class="text-base font-semibold text-slate-900 dark:text-white">
+          {{ t('tp_student_page.purge_all_modal_title') }}
+        </h2>
+        <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">{{ t('tp_student_page.purge_all_modal_lead') }}</p>
+        <p class="mt-2 text-sm font-medium text-slate-800 dark:text-slate-200">
+          {{
+            purgePermanent
+              ? t('tp_student_page.purge_all_mode_permanent')
+              : t('tp_student_page.purge_all_mode_soft')
+          }}
+        </p>
+        <label for="tp-student-purge-confirm" class="mt-4 block text-xs font-medium text-slate-700 dark:text-slate-300">
+          {{ t('tp_student_page.purge_all_confirm_label') }}
+        </label>
+        <p class="mt-1 text-[11px] text-slate-500">{{ t('tp_student_page.purge_all_confirm_hint', { phrase: purgeRequiredPhrase }) }}</p>
+        <p
+          v-if="purgeCooldownSeconds > 0"
+          class="mt-2 text-xs text-amber-700"
+          data-testid="tp-student-purge-rate-limit"
+        >
+          {{ t('tp_student_page.purge_all_rate_limit_wait', { seconds: purgeCooldownSeconds }) }}
+        </p>
+        <input
+          id="tp-student-purge-confirm"
+          v-model="purgeConfirmPhrase"
+          type="text"
+          autocomplete="off"
+          class="input mt-2 h-10 w-full text-sm"
+          data-testid="tp-student-purge-confirm-input"
+        />
+        <div class="mt-5 flex justify-end gap-2">
+          <Button variant="secondary" data-testid="tp-student-purge-cancel" @click="closePurgeAll">
+            {{ t('common.cancel') }}
+          </Button>
+          <Button
+            variant="danger"
+            :disabled="
+              bulkSubmitting ||
+              purgeCooldownSeconds > 0 ||
+              purgeConfirmPhrase !== purgeRequiredPhrase
+            "
+            data-testid="tp-student-purge-submit"
+            @click="submitPurgeAll"
+          >
+            {{
+              bulkSubmitting
+                ? t('tp_student_page.purge_all_submitting')
+                : t('tp_student_page.purge_all_submit', { n: meta.total ?? 0 })
+            }}
+          </Button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
-  PlusIcon, ArrowPathIcon, ArrowUpTrayIcon,
+  PlusIcon, ArrowPathIcon,
   PencilSquareIcon,
   TrashIcon, AcademicCapIcon,
   ChevronRightIcon,
@@ -390,17 +531,27 @@ import { useTpStudentListColumns, TP_STUDENT_COL_DEFAULTS } from '../../composab
 import AppRowActionsMenu from '../../components/ui/AppRowActionsMenu.vue'
 import TpStudentFormModal from '../../components/transportProgram/TpStudentFormModal.vue'
 import TpStudentDetailModal from '../../components/transportProgram/TpStudentDetailModal.vue'
-import { listStudents, getStudent, deleteStudent, bulkDeleteStudents, exportStudentsList } from '../../api/transportProgram'
+import { listStudents, getStudent, deleteStudent, bulkDeleteStudents, exportStudentsList, purgeAllTpStudents, downloadImportSample } from '../../api/transportProgram'
 import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
 import { confirmAction } from '../../composables/useConfirm'
+import { useAuthStore } from '../../store'
 
 const router = useRouter()
 const { t } = useI18n()
+const auth = useAuthStore()
+const canManageStudentData = computed(() => auth.hasPermission('tp_student.manage'))
 const loading = ref(false)
 const exporting = ref(false)
 const items = ref([])
 const selected = ref([])
 const bulkDeleting = ref(false)
+const bulkSubmitting = ref(false)
+const showDataMenu = ref(false)
+const purgeAllOpen = ref(false)
+const purgePermanent = ref(false)
+const purgeConfirmPhrase = ref('')
+const purgeCooldownSeconds = ref(0)
+let purgeCooldownTimer = null
 const showForm = ref(false)
 const editing = ref(null)
 const studentDetailOpen = ref(false)
@@ -478,6 +629,117 @@ const showColPanelDd = ref(false)
 const { exportMenuRef, showExportMenu, toggleExportMenu, closeExportMenu } = useExportDetailsMenu()
 const datagridRef = ref(null)
 useDetailsAutoCloseWithin(datagridRef)
+
+const purgeRequiredPhrase = computed(() => `XOA ${meta.total ?? 0}`)
+
+function studentListFilterParams() {
+  return {
+    search: filters.search || undefined,
+    class_name: filters.class_name || undefined,
+    transport_status: filters.transport_status || undefined,
+    program_id: filters.program_id || undefined,
+    grade: filters.grade || undefined,
+    status: filters.student_status || undefined,
+    gender: filters.gender || undefined,
+    pickup_point: filters.pickup_point || undefined,
+    parent_phone: filters.parent_phone?.trim() || undefined,
+    address_contains: filters.address_contains?.trim() || undefined,
+  }
+}
+
+function closeDataMenu() {
+  showDataMenu.value = false
+}
+
+function toggleDataMenu() {
+  closeFilterPanel()
+  closeColPanel()
+  closeExportMenu()
+  showDataMenu.value = !showDataMenu.value
+}
+
+function onDatagridDocMouseDown(ev) {
+  const t = ev.target
+  if (!(t instanceof Element)) return
+  if (t.closest('[data-tp-student-data-panel]')) return
+  closeDataMenu()
+}
+
+function clearPurgeCooldownTimer() {
+  if (purgeCooldownTimer) {
+    clearInterval(purgeCooldownTimer)
+    purgeCooldownTimer = null
+  }
+  purgeCooldownSeconds.value = 0
+}
+
+function startPurgeCooldown(seconds) {
+  clearPurgeCooldownTimer()
+  const n = Math.max(1, Math.min(120, Math.floor(Number(seconds) || 35)))
+  purgeCooldownSeconds.value = n
+  purgeCooldownTimer = setInterval(() => {
+    purgeCooldownSeconds.value -= 1
+    if (purgeCooldownSeconds.value <= 0) {
+      clearPurgeCooldownTimer()
+    }
+  }, 1000)
+}
+
+function openPurgeAll(permanent) {
+  purgePermanent.value = permanent
+  purgeConfirmPhrase.value = ''
+  purgeAllOpen.value = true
+}
+
+function closePurgeAll() {
+  if (bulkSubmitting.value) return
+  purgeAllOpen.value = false
+  purgeConfirmPhrase.value = ''
+}
+
+async function submitPurgeAll() {
+  if (
+    bulkSubmitting.value ||
+    purgeCooldownSeconds.value > 0 ||
+    purgeConfirmPhrase.value !== purgeRequiredPhrase.value
+  ) {
+    return
+  }
+  bulkSubmitting.value = true
+  try {
+    const res = await purgeAllTpStudents({
+      ...studentListFilterParams(),
+      permanent: purgePermanent.value,
+      confirm_phrase: purgeConfirmPhrase.value,
+      expected_count: meta.total ?? 0,
+    })
+    const n = res.deleted_count ?? 0
+    showAppSuccess(
+      purgePermanent.value
+        ? t('tp_student_page.purge_all_done_permanent', { n })
+        : t('tp_student_page.purge_all_done_soft', { n }),
+    )
+    purgeAllOpen.value = false
+    purgeConfirmPhrase.value = ''
+    await load()
+  } catch (err) {
+    const retry = err?.response?.headers?.['retry-after'] ?? err?.response?.data?.retry_after
+    if (err?.response?.status === 429 && retry) {
+      startPurgeCooldown(Number(retry))
+    }
+    showAppErrorFromApi(err)
+  } finally {
+    bulkSubmitting.value = false
+  }
+}
+
+async function downloadStudentSample() {
+  try {
+    await downloadImportSample()
+  } catch (err) {
+    showAppErrorFromApi(err)
+  }
+}
 
 const filterControlDefs = computed(() => [
   { id: 'class_name', label: t('tp_student_page.filter_vis_class_name') },
@@ -650,16 +912,7 @@ async function load() {
   loading.value = true
   try {
     const res = await listStudents({
-      search: filters.search || undefined,
-      class_name: filters.class_name || undefined,
-      transport_status: filters.transport_status || undefined,
-      program_id: filters.program_id || undefined,
-      grade: filters.grade || undefined,
-      status: filters.student_status || undefined,
-      gender: filters.gender || undefined,
-      pickup_point: filters.pickup_point || undefined,
-      parent_phone: filters.parent_phone?.trim() || undefined,
-      address_contains: filters.address_contains?.trim() || undefined,
+      ...studentListFilterParams(),
       per_page: filters.per_page,
       page: filters.page,
     })
@@ -770,18 +1023,7 @@ async function exportList() {
   closeExportMenu()
   exporting.value = true
   try {
-    await exportStudentsList({
-      search: filters.search || undefined,
-      class_name: filters.class_name || undefined,
-      transport_status: filters.transport_status || undefined,
-      program_id: filters.program_id || undefined,
-      grade: filters.grade || undefined,
-      status: filters.student_status || undefined,
-      gender: filters.gender || undefined,
-      pickup_point: filters.pickup_point || undefined,
-      parent_phone: filters.parent_phone?.trim() || undefined,
-      address_contains: filters.address_contains?.trim() || undefined,
-    })
+    await exportStudentsList(studentListFilterParams())
     showAppSuccess(t('tp_student_page.export_success'))
   } catch (err) {
     showAppErrorFromApi(err)
@@ -918,7 +1160,12 @@ function transportDotClass(s) {
 }
 
 onMounted(() => {
+  document.addEventListener('mousedown', onDatagridDocMouseDown)
   load()
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('mousedown', onDatagridDocMouseDown)
+  clearPurgeCooldownTimer()
 })
 </script>
 

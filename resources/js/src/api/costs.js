@@ -69,6 +69,15 @@ export async function bulkDeleteTripCosts(ids) {
   return data.data
 }
 
+/**
+ * Xóa toàn bộ ghi chú chi phí khớp bộ lọc danh sách (tab Ghi chú / Phát sinh).
+ * @param {Record<string, unknown> & { confirm_phrase: string, expected_count: number }} payload
+ */
+export async function purgeAllTripCosts(payload) {
+  const { data } = await http.post('/trip-costs/purge-all', payload)
+  return data.data
+}
+
 // ── Operational notes (tab Ghi chú vận hành) ─────────────────────
 
 export async function listCostNotes(params = {}) {

@@ -160,6 +160,42 @@
                 </li>
               </FilterVisibilityDropdown>
 
+              <div
+                v-if="canReconcileCosts"
+                class="relative"
+                data-costs-data-panel
+              >
+                <DatagridToolbarActionButton
+                  icon="data"
+                  :active="showCostsDataMenu"
+                  test-id="costs-toolbar-data"
+                  @click="toggleCostsDataMenu"
+                >
+                  {{ t('costs_page.toolbar_data') }}
+                </DatagridToolbarActionButton>
+                <div
+                  v-if="showCostsDataMenu"
+                  class="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[280px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+                  role="menu"
+                >
+                  <button
+                    type="button"
+                    class="flex w-full flex-col px-3 py-2 text-left hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-red-950/30"
+                    :disabled="!(meta.total ?? 0) || purgeAllCostsSubmitting"
+                    data-testid="costs-data-purge-all"
+                    role="menuitem"
+                    @click="openPurgeAllCosts(); showCostsDataMenu = false"
+                  >
+                    <span class="text-sm font-medium text-red-950 dark:text-red-200">
+                      {{ t('costs_page.purge_all') }}
+                    </span>
+                    <span class="mt-0.5 text-[11px] leading-snug text-red-800/80 dark:text-red-300/80">
+                      {{ t('costs_page.purge_all_hint', { n: meta.total ?? 0 }) }}
+                    </span>
+                  </button>
+                </div>
+              </div>
+
               <button
                 v-if="canReconcileCosts && selectedCostIds.length"
                 type="button"
@@ -1512,6 +1548,79 @@
       </div>
     </Teleport>
 
+    <!-- Purge all trip costs (filtered list) -->
+    <Teleport to="body">
+      <div
+        v-if="purgeAllCostsOpen"
+        class="fixed inset-0 z-[120] flex items-end justify-center p-4 sm:items-center"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="costs-purge-all-title"
+        data-testid="costs-purge-all-modal"
+      >
+        <div class="absolute inset-0 bg-slate-900/50" aria-hidden="true" @click="closePurgeAllCosts" />
+        <div class="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+          <div>
+            <h2 id="costs-purge-all-title" class="text-base font-semibold text-slate-900 dark:text-slate-100">
+              {{ t('costs_page.purge_all_modal_title') }}
+            </h2>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">{{ t('costs_page.purge_all_modal_lead') }}</p>
+            <div class="mt-4">
+              <label for="costs-purge-confirm" class="text-xs font-medium text-slate-700 dark:text-slate-300">
+                {{ t('costs_page.purge_all_confirm_label') }}
+              </label>
+              <p class="mt-0.5 text-[11px] text-slate-500">
+                {{ t('costs_page.purge_all_confirm_hint', { phrase: purgeCostsRequiredPhrase }) }}
+              </p>
+              <p
+                v-if="purgeCostsCooldownSeconds > 0"
+                class="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900"
+                role="status"
+                data-testid="costs-purge-rate-limit"
+              >
+                {{ t('costs_page.purge_all_rate_limit_wait', { seconds: purgeCostsCooldownSeconds }) }}
+              </p>
+              <input
+                id="costs-purge-confirm"
+                v-model="purgeCostsConfirmPhrase"
+                type="text"
+                autocomplete="off"
+                class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+                data-testid="costs-purge-confirm-input"
+              />
+            </div>
+          </div>
+          <div class="mt-5 flex justify-end gap-2">
+            <button
+              type="button"
+              class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200"
+              data-testid="costs-purge-cancel"
+              @click="closePurgeAllCosts"
+            >
+              {{ t('app.cancel') }}
+            </button>
+            <button
+              type="button"
+              class="rounded-lg bg-red-700 px-3 py-2 text-sm font-medium text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
+              :disabled="
+                purgeAllCostsSubmitting ||
+                purgeCostsCooldownSeconds > 0 ||
+                purgeCostsConfirmPhrase !== purgeCostsRequiredPhrase
+              "
+              data-testid="costs-purge-submit"
+              @click="submitPurgeAllCosts"
+            >
+              {{
+                purgeAllCostsSubmitting
+                  ? t('costs_page.purge_all_submitting')
+                  : t('costs_page.purge_all_submit', { n: meta.total ?? 0 })
+              }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
     <!-- Cost detail modal -->
     <StaffCostDetailModal
       :open="detailModalOpen"
@@ -1553,6 +1662,7 @@ import {
   decideTripCost,
   deleteTripCost,
   bulkDeleteTripCosts,
+  purgeAllTripCosts,
   listCostNotes,
   addCostNote,
   deleteCostNote,
@@ -1878,11 +1988,26 @@ function closeColPanel() {
 }
 function toggleColPanel() {
   closeFilterPanel()
+  showCostsDataMenu.value = false
   showColPanelDd.value = !showColPanelDd.value
 }
 function toggleFilterPanel() {
   closeColPanel()
+  showCostsDataMenu.value = false
   openFilterPanel()
+}
+
+function toggleCostsDataMenu() {
+  closeFilterPanel()
+  closeColPanel()
+  showCostsDataMenu.value = !showCostsDataMenu.value
+}
+
+function onCostsDatagridDocMouseDown(ev) {
+  const t = ev.target
+  if (!t || typeof t.closest !== 'function') return
+  if (t.closest('[data-costs-data-panel]')) return
+  showCostsDataMenu.value = false
 }
 
 const colVisible = reactive(defaultColVisibility())
@@ -1925,6 +2050,14 @@ const deleteTarget = ref(null)
 const deletingCostId = ref(null)
 const selectedCostIds = ref([])
 const bulkDeletingCosts = ref(false)
+const showCostsDataMenu = ref(false)
+const purgeAllCostsOpen = ref(false)
+const purgeCostsConfirmPhrase = ref('')
+const purgeCostsCooldownSeconds = ref(0)
+const purgeAllCostsSubmitting = ref(false)
+let purgeCostsCooldownTimer = null
+
+const purgeCostsRequiredPhrase = computed(() => `XOA ${meta.value.total ?? 0}`)
 
 // ── Main filter state ─────────────────────────────────────────────
 const filters = reactive({
@@ -2075,6 +2208,72 @@ async function confirmBulkDeleteCosts() {
     showAppErrorFromApi(e, t('costs_page.delete_err'))
   } finally {
     bulkDeletingCosts.value = false
+  }
+}
+
+function clearPurgeCostsCooldownTimer() {
+  if (purgeCostsCooldownTimer) {
+    clearInterval(purgeCostsCooldownTimer)
+    purgeCostsCooldownTimer = null
+  }
+  purgeCostsCooldownSeconds.value = 0
+}
+
+function startPurgeCostsCooldown(seconds) {
+  clearPurgeCostsCooldownTimer()
+  const n = Math.max(1, Math.min(120, Math.floor(Number(seconds) || 35)))
+  purgeCostsCooldownSeconds.value = n
+  purgeCostsCooldownTimer = setInterval(() => {
+    purgeCostsCooldownSeconds.value -= 1
+    if (purgeCostsCooldownSeconds.value <= 0) {
+      clearPurgeCostsCooldownTimer()
+    }
+  }, 1000)
+}
+
+function openPurgeAllCosts() {
+  purgeCostsConfirmPhrase.value = ''
+  purgeAllCostsOpen.value = true
+}
+
+function closePurgeAllCosts() {
+  purgeAllCostsOpen.value = false
+  purgeCostsConfirmPhrase.value = ''
+}
+
+async function submitPurgeAllCosts() {
+  if (
+    purgeAllCostsSubmitting.value ||
+    purgeCostsCooldownSeconds.value > 0 ||
+    purgeCostsConfirmPhrase.value !== purgeCostsRequiredPhrase.value
+  ) {
+    return
+  }
+  purgeAllCostsSubmitting.value = true
+  try {
+    const params = {
+      ...buildListApiParams(),
+      confirm_phrase: purgeCostsConfirmPhrase.value,
+      expected_count: meta.value.total ?? 0,
+    }
+    delete params.page
+    delete params.per_page
+    const res = await purgeAllTripCosts(params)
+    const n = res?.deleted_count ?? 0
+    showAppSuccess(t('costs_page.purge_all_done', { n }))
+    purgeAllCostsOpen.value = false
+    purgeCostsConfirmPhrase.value = ''
+    selectedCostIds.value = []
+    await reload()
+  } catch (e) {
+    if (e?.response?.status === 429) {
+      const headers = e.response.headers || {}
+      const raw = headers['retry-after'] ?? headers['Retry-After']
+      startPurgeCostsCooldown(raw ?? 35)
+    }
+    showAppErrorFromApi(e)
+  } finally {
+    purgeAllCostsSubmitting.value = false
   }
 }
 
@@ -2519,9 +2718,12 @@ function closeAddCostModal() {
   costMsgIsError.value = false
 }
 
-watch([addCostModalOpen, rejectModalOpen, deleteModalOpen], () => {
+watch([addCostModalOpen, rejectModalOpen, deleteModalOpen, purgeAllCostsOpen], () => {
   if (typeof document === 'undefined') return
-  document.body.style.overflow = addCostModalOpen.value || rejectModalOpen.value || deleteModalOpen.value ? 'hidden' : ''
+  document.body.style.overflow =
+    addCostModalOpen.value || rejectModalOpen.value || deleteModalOpen.value || purgeAllCostsOpen.value
+      ? 'hidden'
+      : ''
 })
 
 let escapeCloseModal = null
@@ -2636,21 +2838,25 @@ function resetFilters() {
 }
 
 // ── API reload ───────────────────────────────────────────────────
+function buildListApiParams() {
+  const p = { ...filters }
+  for (const k of ['provider', 'amount_min', 'amount_max']) {
+    delete p[k]
+  }
+  Object.keys(p).forEach((k) => (p[k] === '' || p[k] === null ? delete p[k] : null))
+  if (activeTab.value === 'standalone') {
+    p.standalone = 1
+    delete p.trip_id
+    delete p.trip_type
+    delete p.fleet_mode
+  }
+  return p
+}
+
 async function reload() {
   loading.value = true
   try {
-    const p = { ...filters }
-    for (const k of ['provider', 'amount_min', 'amount_max']) {
-      delete p[k]
-    }
-    Object.keys(p).forEach((k) => (p[k] === '' || p[k] === null ? delete p[k] : null))
-    if (activeTab.value === 'standalone') {
-      p.standalone = 1
-      delete p.trip_id
-      delete p.trip_type
-      delete p.fleet_mode
-    }
-    const res = await listTripCosts(p)
+    const res = await listTripCosts(buildListApiParams())
     items.value = res.items ?? []
     meta.value = res.meta ?? {}
   } finally {
@@ -2855,11 +3061,17 @@ watch(
 )
 
 onMounted(async () => {
+  document.addEventListener('mousedown', onCostsDatagridDocMouseDown)
   loadExtraCostTypesFromStorage()
   loadColVisibility()
   hydrateCostStatusFromRoute()
   await loadTripPickerOptions()
   await reload()
+})
+
+onUnmounted(() => {
+  document.removeEventListener('mousedown', onCostsDatagridDocMouseDown)
+  clearPurgeCostsCooldownTimer()
 })
 </script>
 

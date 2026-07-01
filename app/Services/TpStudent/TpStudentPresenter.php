@@ -10,28 +10,36 @@ class TpStudentPresenter
 {
     public function applyListFilters(Builder $query, Request $request): Builder
     {
-        $transportStatus = $request->query('transport_status');
+        return $this->applyListFiltersFromInput($query, $request->query());
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     */
+    public function applyListFiltersFromInput(Builder $query, array $input): Builder
+    {
+        $transportStatus = $input['transport_status'] ?? null;
 
         return $query
-            ->search($request->query('search'))
-            ->when($request->query('status'), fn ($q, $s) => $q->where('status', $s))
-            ->when($request->query('grade'), fn ($q, $g) => $q->where('grade', $g))
-            ->when($request->query('class_name'), fn ($q, $c) => $q->where('class_name', $c))
-            ->when($request->query('campus_id'), fn ($q, $c) => $q->where('campus_id', $c))
-            ->when($request->query('gender'), fn ($q, $g) => $q->where('metadata->gender', $g))
-            ->when($request->query('pickup_point'), fn ($q, $p) => $q->where('metadata->pickup_point', $p))
-            ->when($request->filled('address_contains'), function ($q) use ($request) {
-                $q->where('address', 'like', '%'.$request->query('address_contains').'%');
+            ->search($input['search'] ?? null)
+            ->when($input['status'] ?? null, fn ($q, $s) => $q->where('status', $s))
+            ->when($input['grade'] ?? null, fn ($q, $g) => $q->where('grade', $g))
+            ->when($input['class_name'] ?? null, fn ($q, $c) => $q->where('class_name', $c))
+            ->when($input['campus_id'] ?? null, fn ($q, $c) => $q->where('campus_id', $c))
+            ->when($input['gender'] ?? null, fn ($q, $g) => $q->where('metadata->gender', $g))
+            ->when($input['pickup_point'] ?? null, fn ($q, $p) => $q->where('metadata->pickup_point', $p))
+            ->when(! empty($input['address_contains']), function ($q) use ($input) {
+                $q->where('address', 'like', '%'.$input['address_contains'].'%');
             })
-            ->when($request->filled('parent_phone'), function ($q) use ($request) {
-                $needle = '%'.$request->query('parent_phone').'%';
+            ->when(! empty($input['parent_phone']), function ($q) use ($input) {
+                $needle = '%'.$input['parent_phone'].'%';
                 $q->where(function (Builder $inner) use ($needle) {
                     $inner->where('parent_phone', 'like', $needle)
                         ->orWhere('metadata->father_phone', 'like', $needle)
                         ->orWhere('metadata->mother_phone', 'like', $needle);
                 });
             })
-            ->when($request->query('program_id'), fn ($q, $p) => $q->whereHas(
+            ->when($input['program_id'] ?? null, fn ($q, $p) => $q->whereHas(
                 'enrollments',
                 fn ($e) => $e->whereNull('unenrolled_at')->where('program_id', $p)
             ))
