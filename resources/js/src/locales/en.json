@@ -1043,6 +1043,11 @@
             "contact_dispatch": "Contact dispatch",
             "contact_short": "Contact"
         },
+        "withdraw_pending": "Withdraw request",
+        "withdraw_pending_busy": "Withdrawing…",
+        "withdraw_pending_confirm_title": "Withdraw this pending request?",
+        "withdraw_pending_confirm_message": "The request will be removed from the portal and cannot be restored here. Continue?",
+        "withdraw_pending_fail": "Could not withdraw the request.",
         "detail_journey": {
             "title": "Route",
             "depart_label": "Departure",

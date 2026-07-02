@@ -88,6 +88,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
             ->middleware('throttle:60,1');
         Route::post('/portal/dispatch-requests/{dispatchRequest}/submit-recurring', [PortalDispatchRequestController::class, 'submitRecurringInstance'])
             ->middleware('throttle:30,1');
+        Route::delete('/portal/dispatch-requests/{dispatchRequest}', [PortalDispatchRequestController::class, 'destroy'])
+            ->middleware('throttle:30,1');
 
         // Biểu mẫu đã lưu — mutate
         Route::post('/portal/form-templates', [PortalFormTemplateController::class, 'store'])

@@ -363,6 +363,15 @@ export async function deletePortalFormTemplate(id) {
 }
 
 /**
+ * Xóa (soft-delete) phiếu chờ duyệt trên cổng đề xuất.
+ * @param {number} dispatchRequestId
+ */
+export async function deletePortalDispatchRequest(dispatchRequestId) {
+  const { data } = await http.delete(`/portal/dispatch-requests/${dispatchRequestId}`)
+  return data.data
+}
+
+/**
  * @param {number} dispatchRequestId
  * @returns {Promise<Blob>}
  */

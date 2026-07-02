@@ -1,7 +1,7 @@
 <template>
   <div
     class="portal-request-detail mx-auto max-w-7xl px-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4 xs:px-4 sm:px-6 sm:pt-6 supports-[padding:max(0px)]:pb-[max(1.5rem,env(safe-area-inset-bottom))]"
-    :class="canPrintRequest ? 'max-sm:pb-[max(5rem,env(safe-area-inset-bottom))]' : ''"
+    :class="hasMobileActionBar ? 'max-sm:pb-[max(5rem,env(safe-area-inset-bottom))]' : ''"
   >
     <PortalSuccessCard
       v-if="welcomeOpen"
@@ -47,7 +47,10 @@
         :priority-label="actionCenter.priorityLabel"
         :polling-refreshing="pollingRefreshing"
         :can-print="canPrintRequest"
+        :can-withdraw="canWithdrawPending"
+        :withdraw-busy="withdrawBusy"
         @print="onPrintRequest"
+        @withdraw="onWithdrawPending"
       />
 
       <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -301,8 +304,12 @@
       </div>
 
       <PortalRequestMobileActionBar
-        v-if="canPrintRequest"
+        v-if="hasMobileActionBar"
+        :can-print="canPrintRequest"
+        :can-withdraw="canWithdrawPending"
+        :withdraw-busy="withdrawBusy"
         @print="onPrintRequest"
+        @withdraw="onWithdrawPending"
       />
     </template>
   </div>
@@ -322,6 +329,7 @@ import { saveAs } from 'file-saver'
 import { confirmAndCloneDispatchRequest } from '../../composables/useDispatchRequestClone'
 import {
   exportPortalDispatchRequestPdf,
+  deletePortalDispatchRequest,
   getPortalDispatchRequest,
   patchPassengerCount,
   submitStudentCount,
@@ -372,6 +380,7 @@ const passengerSubmitting = ref(false)
 const extracurricularRow = useExtracurricularRequestRow(auth, computed(() => auth.user))
 const passengerPatchErr = ref('')
 const resetCloneBusy = ref(false)
+const withdrawBusy = ref(false)
 const bm03FormRef = ref(null)
 
 const pdfBusy = ref(false)
@@ -394,6 +403,13 @@ const timelineSteps = usePortalTimelineSteps(req, t)
 const actionCenter = usePortalRequestActionCenter(req, t)
 
 const canPrintRequest = computed(() => req.value?.status === 'approved')
+
+const canWithdrawPending = computed(() => {
+  if (!isCurrentUserRequester.value || !req.value) return false
+  return ['pending', 'price_filled'].includes(String(req.value.status || ''))
+})
+
+const hasMobileActionBar = computed(() => canPrintRequest.value || canWithdrawPending.value)
 
 const PORTAL_DETAIL_TAB_IDS = ['overview', 'progress', 'details', 'form', 'manage', 'pdf', 'docs']
 const activeTab = ref('overview')
@@ -796,6 +812,25 @@ watch(detailTabs, () => {
     activeTab.value = resolveDefaultPortalTab()
   }
 })
+
+async function onWithdrawPending() {
+  if (!req.value?.id || withdrawBusy.value || !canWithdrawPending.value) return
+  const ok = await confirmAction({
+    title: t('portal.withdraw_pending_confirm_title'),
+    message: t('portal.withdraw_pending_confirm_message'),
+    confirmLabel: t('portal.withdraw_pending'),
+  })
+  if (!ok) return
+  withdrawBusy.value = true
+  try {
+    await deletePortalDispatchRequest(req.value.id)
+    await router.push({ name: portalRoutes.value.list })
+  } catch (e) {
+    window.alert(formatApiError(e, t('portal.withdraw_pending_fail')))
+  } finally {
+    withdrawBusy.value = false
+  }
+}
 
 async function onResetCloneRequest() {
   if (!req.value?.id || resetCloneBusy.value) return

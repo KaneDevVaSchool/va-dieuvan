@@ -1100,6 +1100,11 @@
             "contact_dispatch": "Liên hệ điều vận",
             "contact_short": "Liên hệ"
         },
+        "withdraw_pending": "Xóa phiếu",
+        "withdraw_pending_busy": "Đang xóa…",
+        "withdraw_pending_confirm_title": "Xóa phiếu chờ duyệt?",
+        "withdraw_pending_confirm_message": "Phiếu sẽ được gỡ khỏi cổng đề xuất và không thể khôi phục tại đây. Bạn có chắc?",
+        "withdraw_pending_fail": "Không thể xóa phiếu.",
         "detail_journey": {
             "title": "Lộ trình",
             "depart_label": "Thời gian đi",

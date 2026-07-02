@@ -66,8 +66,20 @@
         </div>
       </div>
 
-      <div v-if="canPrint" class="flex sm:justify-end">
+      <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
         <button
+          v-if="canWithdraw"
+          type="button"
+          class="inline-flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-4 text-sm font-medium text-rose-800 transition hover:bg-rose-100 disabled:opacity-50 sm:w-auto"
+          :disabled="withdrawBusy"
+          data-testid="portal-request-withdraw"
+          @click="$emit('withdraw')"
+        >
+          <TrashIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+          {{ withdrawBusy ? t('portal.withdraw_pending_busy') : t('portal.withdraw_pending') }}
+        </button>
+        <button
+          v-if="canPrint"
           type="button"
           class="inline-flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-50 sm:w-auto"
           @click="$emit('print')"
@@ -84,7 +96,7 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ArrowLeftIcon, BoltIcon, PrinterIcon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, BoltIcon, PrinterIcon, TrashIcon } from '@heroicons/vue/24/outline'
 import StatusBadge from '../ui/StatusBadge.vue'
 import { formatDispatchRequestRefCode } from '../../util/portalRequestFormat.js'
 
@@ -94,9 +106,11 @@ const props = defineProps({
   priorityLabel: { type: String, default: '' },
   pollingRefreshing: { type: Boolean, default: false },
   canPrint: { type: Boolean, default: false },
+  canWithdraw: { type: Boolean, default: false },
+  withdrawBusy: { type: Boolean, default: false },
 })
 
-defineEmits(['print'])
+defineEmits(['print', 'withdraw'])
 
 const { t } = useI18n()
 

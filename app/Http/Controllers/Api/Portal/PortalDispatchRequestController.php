@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Concerns\PresentsDispatchRequest;
 use App\Http\Controllers\Api\SignedDocuments\SignedDocumentController;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Portal\CreatePortalDispatchRequestRequest;
+use App\Http\Requests\Api\Portal\DestroyPortalDispatchRequestRequest;
 use App\Http\Requests\Api\Portal\IndexPortalDispatchRequestsRequest;
 use App\Http\Requests\Api\Portal\PatchPortalRecurringDispatchInstanceRequest;
 use App\Http\Requests\Api\Portal\PortalPatchSigningWorkflowRequest;
@@ -31,6 +32,7 @@ use App\Support\Messages;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 
@@ -562,5 +564,30 @@ class PortalDispatchRequestController extends Controller
         return $this->ok([
             'dispatch_request' => $this->presentDispatchRequest($fresh, true),
         ]);
+    }
+
+    public function destroy(
+        DestroyPortalDispatchRequestRequest $request,
+        DispatchRequest $dispatchRequest,
+    ): \Illuminate\Http\JsonResponse {
+        $user = $request->user();
+        $before = $dispatchRequest->toArray();
+
+        DB::transaction(function () use ($dispatchRequest, $user, $before): void {
+            app(AuditLogger::class)->log(
+                actorId: $user?->id,
+                event: 'request.withdrawn',
+                auditable: $dispatchRequest,
+                before: $before,
+                after: null,
+                metadata: [
+                    'source' => 'portal',
+                    'status' => $dispatchRequest->status,
+                ],
+            );
+            $dispatchRequest->delete();
+        });
+
+        return $this->ok(['deleted' => true]);
     }
 }
