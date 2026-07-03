@@ -203,4 +203,51 @@ class CargoShipmentsListAndTimelineTest extends TestCase
         $this->assertDatabaseMissing('cargo_shipments', ['tracking_code' => 'CGO-PERM-LINK']);
         $this->assertDatabaseMissing('dispatch_requests', ['id' => $dr->id]);
     }
+
+    public function test_destroy_and_bulk_delete_permanent(): void
+    {
+        $user = $this->seedDispatcher();
+        $requester = User::factory()->create();
+        $this->actingAs($user);
+
+        $dr = DispatchRequest::create([
+            'requester_id' => $requester->id,
+            'trip_type' => 'cargo',
+            'origin' => 'A',
+            'destination' => 'B',
+            'depart_at' => now()->addDay(),
+            'status' => 'pending',
+            'source_channel' => 'portal',
+            'is_urgent' => false,
+            'paper_status' => 'pending',
+        ]);
+
+        $linked = CargoShipment::create([
+            'dispatch_request_id' => $dr->id,
+            'tracking_code' => 'CGO-BULK-LINK',
+            'status' => 'pending',
+        ]);
+        $stand = CargoShipment::create([
+            'tracking_code' => 'CGO-BULK-STAND',
+            'status' => 'pending',
+        ]);
+        $single = CargoShipment::create([
+            'tracking_code' => 'CGO-SINGLE',
+            'status' => 'pending',
+        ]);
+
+        $this->deleteJson("/api/cargo-shipments/{$single->id}")
+            ->assertOk()
+            ->assertJsonPath('data.deleted', 1);
+        $this->assertDatabaseMissing('cargo_shipments', ['tracking_code' => 'CGO-SINGLE']);
+
+        $bulk = $this->postJson('/api/cargo-shipments/bulk-delete', [
+            'ids' => [$linked->id, $stand->id],
+        ]);
+        $bulk->assertOk();
+        $this->assertSame(2, $bulk->json('data.deleted'));
+        $this->assertDatabaseMissing('cargo_shipments', ['tracking_code' => 'CGO-BULK-LINK']);
+        $this->assertDatabaseMissing('cargo_shipments', ['tracking_code' => 'CGO-BULK-STAND']);
+        $this->assertDatabaseMissing('dispatch_requests', ['id' => $dr->id]);
+    }
 }

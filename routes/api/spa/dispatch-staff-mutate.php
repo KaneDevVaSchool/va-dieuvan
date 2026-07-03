@@ -113,7 +113,9 @@ Route::prefix('trip-costs')->controller(TripCostController::class)->group(functi
 
 Route::prefix('cargo-shipments')->controller(CargoController::class)->group(function () {
     Route::post('/purge-all', 'purgeAll')->middleware('throttle:cargo-purge');
+    Route::post('/bulk-delete', 'bulkDestroy')->middleware('throttle:30,1');
     Route::post('/', 'store')->middleware('throttle:20,1');
+    Route::delete('/{cargoShipment}', 'destroy')->middleware('throttle:30,1');
     Route::post('/{cargoShipment}/status', 'updateStatus')->middleware('throttle:60,1');
     Route::post('/{cargoShipment}/pod', 'uploadPod')->middleware('throttle:20,1');
 });

@@ -2821,7 +2821,18 @@
         "purge_all_submitting": "Đang xóa…",
         "purge_all_rate_limit_wait": "Giới hạn tạm thời — đợi {seconds} giây rồi bấm lại (tránh bấm liên tục).",
         "purge_all_done_soft": "Đã xử lý {n} đơn (phiếu liên kết vào thùng rác).",
-        "purge_all_done_permanent": "Đã xóa vĩnh viễn {n} đơn."
+        "purge_all_done_permanent": "Đã xóa vĩnh viễn {n} đơn.",
+        "action_delete": "Xóa",
+        "delete_title": "Xóa đơn hàng",
+        "delete_message": "Xóa vĩnh viễn đơn {code}? Phiếu yêu cầu liên kết (nếu có) cũng bị xóa — không hoàn tác.",
+        "delete_confirm": "Xóa vĩnh viễn",
+        "delete_success": "Đã xóa đơn hàng.",
+        "bulk_delete": "Xóa đã chọn ({n})",
+        "bulk_delete_title": "Xóa đơn đã chọn",
+        "bulk_delete_message": "Xóa vĩnh viễn {n} đơn (bỏ qua thùng rác)? Không hoàn tác.",
+        "bulk_delete_success": "Đã xóa {n} đơn.",
+        "select_all_page": "Chọn tất cả trên trang",
+        "selected_count": "Đã chọn {n}"
     },
     "cargo_detail": {
         "document_title": "Đơn hàng {code}",

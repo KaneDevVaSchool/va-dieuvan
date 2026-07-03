@@ -10,6 +10,7 @@ import {
   EyeIcon,
   MapPinIcon,
   ScaleIcon,
+  TrashIcon,
   TruckIcon,
 } from '@heroicons/vue/24/outline'
 import { labelCargoStatus } from '../../util/labels'
@@ -19,7 +20,12 @@ import UserAvatar from '../branding/UserAvatar.vue'
 
 const props = defineProps({
   shipment: { type: Object, required: true },
+  canDelete: { type: Boolean, default: false },
+  selectable: { type: Boolean, default: false },
+  selected: { type: Boolean, default: false },
 })
+
+const emit = defineEmits(['toggle-select', 'delete'])
 
 const { t, locale } = useI18n()
 
@@ -124,6 +130,19 @@ const quantityDisplay = computed(() => {
     <div class="border-b border-slate-100 px-3 py-4 sm:px-5 dark:border-slate-800">
       <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div class="flex min-w-0 gap-3 sm:gap-4">
+          <label
+            v-if="selectable"
+            class="mt-1 flex shrink-0 cursor-pointer items-start"
+            :data-testid="`cargo-select-${shipment.id}`"
+          >
+            <input
+              type="checkbox"
+              class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-600/30 dark:border-slate-600"
+              :checked="selected"
+              :aria-label="trackingCode"
+              @change="emit('toggle-select', shipment.id)"
+            />
+          </label>
           <div
             class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12"
             :class="iconWrapClass"
@@ -360,6 +379,16 @@ const quantityDisplay = computed(() => {
           <DocumentTextIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
           {{ t('cargo_page.card_request') }}
         </RouterLink>
+        <button
+          v-if="canDelete"
+          type="button"
+          class="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm font-medium text-rose-900 hover:bg-rose-100 sm:min-h-0 dark:border-rose-900 dark:bg-rose-950/60 dark:text-rose-100"
+          :data-testid="`cargo-action-delete-${shipment.id}`"
+          @click="emit('delete', shipment)"
+        >
+          <TrashIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+          {{ t('cargo_page.action_delete') }}
+        </button>
       </div>
     </div>
   </article>

@@ -40,6 +40,17 @@ export async function purgeAllCargoShipments(payload) {
   return data.data
 }
 
+export async function deleteCargoShipment(id) {
+  const { data } = await http.delete(`/cargo-shipments/${id}`)
+  return data.data
+}
+
+/** Xóa vĩnh viễn nhiều đơn (bỏ qua thùng rác). */
+export async function bulkDeleteCargoShipments(ids) {
+  const { data } = await http.post('/cargo-shipments/bulk-delete', { ids })
+  return data.data
+}
+
 export async function downloadCargoImportSample() {
   const { data } = await http.get('/cargo-shipments/import-sample', {
     responseType: 'blob',

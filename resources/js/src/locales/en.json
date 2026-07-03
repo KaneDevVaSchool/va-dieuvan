@@ -3434,7 +3434,18 @@
         "purge_all_submitting": "Deleting…",
         "purge_all_rate_limit_wait": "Rate limited — wait {seconds}s before trying again.",
         "purge_all_done_soft": "Processed {n} shipments (linked requests moved to trash).",
-        "purge_all_done_permanent": "Permanently deleted {n} shipments."
+        "purge_all_done_permanent": "Permanently deleted {n} shipments.",
+        "action_delete": "Delete",
+        "delete_title": "Delete shipment",
+        "delete_message": "Permanently delete {code}? Linked requests (if any) are removed too — cannot undo.",
+        "delete_confirm": "Delete permanently",
+        "delete_success": "Shipment deleted.",
+        "bulk_delete": "Delete selected ({n})",
+        "bulk_delete_title": "Delete selected shipments",
+        "bulk_delete_message": "Permanently delete {n} shipment(s) (skip trash)? Cannot undo.",
+        "bulk_delete_success": "Deleted {n} shipment(s).",
+        "select_all_page": "Select all on page",
+        "selected_count": "{n} selected"
     },
     "cargo_detail": {
         "document_title": "Shipment {code}",

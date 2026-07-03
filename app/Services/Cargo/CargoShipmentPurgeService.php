@@ -36,6 +36,29 @@ class CargoShipmentPurgeService
         return $deleted;
     }
 
+    /**
+     * @param  list<int>  $ids
+     */
+    public function purgeByIds(User $user, array $ids, bool $permanent): int
+    {
+        $deleted = 0;
+
+        DB::transaction(function () use ($user, $ids, $permanent, &$deleted) {
+            $shipments = CargoShipment::query()
+                ->whereIn('id', $ids)
+                ->orderBy('id')
+                ->get();
+
+            foreach ($shipments as $shipment) {
+                if ($this->purgeOne($user, $shipment, $permanent)) {
+                    $deleted++;
+                }
+            }
+        });
+
+        return $deleted;
+    }
+
     private function purgeOne(User $user, CargoShipment $shipment, bool $permanent): bool
     {
         $before = $shipment->toArray();

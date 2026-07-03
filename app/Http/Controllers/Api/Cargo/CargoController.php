@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api\Cargo;
 
 use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Cargo\BulkDeleteCargoShipmentsRequest;
 use App\Http\Requests\Api\Cargo\CreateCargoShipmentRequest;
+use App\Http\Requests\Api\Cargo\DestroyCargoShipmentRequest;
 use App\Http\Requests\Api\Cargo\ListCargoShipmentsRequest;
 use App\Http\Requests\Api\Cargo\PurgeAllCargoShipmentsRequest;
 use App\Http\Requests\Api\Cargo\ShowCargoShipmentRequest;
@@ -229,6 +231,23 @@ class CargoController extends Controller
             ...$attachment->toArray(),
             'url' => Storage::url($path),
         ]);
+    }
+
+    public function destroy(DestroyCargoShipmentRequest $request, CargoShipment $cargoShipment)
+    {
+        $deleted = $this->purgeService->purgeByIds($request->user(), [$cargoShipment->id], true);
+
+        abort_if($deleted === 0, 403, 'Không thể xóa đơn hàng này.');
+
+        return $this->ok(['deleted' => $deleted]);
+    }
+
+    public function bulkDestroy(BulkDeleteCargoShipmentsRequest $request)
+    {
+        $ids = array_map('intval', $request->validated('ids'));
+        $deleted = $this->purgeService->purgeByIds($request->user(), $ids, true);
+
+        return $this->ok(['deleted' => $deleted]);
     }
 
     public function purgeAll(PurgeAllCargoShipmentsRequest $request)

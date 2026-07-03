@@ -91,6 +91,17 @@
               </li>
             </FilterVisibilityDropdown>
 
+            <button
+              v-if="canDeleteCargo && selectedIds.length"
+              type="button"
+              class="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 text-sm font-medium text-rose-800 shadow-sm transition hover:bg-rose-100 disabled:opacity-50 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200"
+              :disabled="bulkSubmitting"
+              data-testid="cargo-bulk-delete"
+              @click="confirmBulkDeleteSelected"
+            >
+              {{ t('cargo_page.bulk_delete', { n: selectedIds.length }) }}
+            </button>
+
             <div v-if="showCargoDataMenu" class="relative" data-cargo-data-panel>
               <DatagridToolbarActionButton
                 icon="data"
@@ -244,10 +255,33 @@
       {{ t('cargo_page.loading') }}
     </div>
     <div v-else class="space-y-3 md:space-y-4">
+      <div
+        v-if="canDeleteCargo && items.length"
+        class="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200/80 bg-slate-50/80 px-4 py-2.5 text-sm dark:border-slate-700 dark:bg-slate-900/40"
+      >
+        <label class="inline-flex cursor-pointer items-center gap-2">
+          <input
+            type="checkbox"
+            class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-600/30 dark:border-slate-600"
+            :checked="allPageSelected"
+            data-testid="cargo-select-all"
+            @change="toggleSelectAllPage($event.target.checked)"
+          />
+          <span class="font-medium text-slate-700 dark:text-slate-300">{{ t('cargo_page.select_all_page') }}</span>
+        </label>
+        <span v-if="selectedIds.length" class="text-slate-600 dark:text-slate-400">
+          {{ t('cargo_page.selected_count', { n: selectedIds.length }) }}
+        </span>
+      </div>
       <CargoCard
         v-for="shipment in items"
         :key="shipment.id"
         :shipment="shipment"
+        :can-delete="canDeleteCargo"
+        :selectable="canDeleteCargo"
+        :selected="selectedIds.includes(shipment.id)"
+        @toggle-select="toggleSelectShipment"
+        @delete="confirmDeleteShipment"
       />
       <div
         v-if="!items.length"
@@ -414,12 +448,15 @@ import {
   importCargoFile,
   listCargoShipments,
   purgeAllCargoShipments,
+  deleteCargoShipment,
+  bulkDeleteCargoShipments,
 } from '../../api/cargo'
 import { labelCargoStatus } from '../../util/labels'
 import { useVisibleFilterControls } from '../../composables/useVisibleFilterControls.js'
 import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 import { useNotificationStore } from '../../store/notificationCenter'
 import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
+import { confirmAction } from '../../composables/useConfirm'
 import { useAuthStore } from '../../store'
 
 const { t } = useI18n()
@@ -453,6 +490,8 @@ const canPurgeAllCargo = computed(
     auth.hasPermission('trip.view_all') ||
     auth.hasPermission('request.approve'),
 )
+const canDeleteCargo = canPurgeAllCargo
+const selectedIds = ref([])
 const showCargoDataMenu = computed(
   () => canManageCargoImportData.value || canPurgeAllCargo.value,
 )
@@ -645,6 +684,85 @@ const pageNumbers = computed(() => {
   return pages
 })
 
+const pageShipmentIds = computed(() => items.value.map((s) => s.id))
+
+const allPageSelected = computed(
+  () =>
+    pageShipmentIds.value.length > 0 &&
+    pageShipmentIds.value.every((id) => selectedIds.value.includes(id)),
+)
+
+function pruneSelectedIds() {
+  selectedIds.value = selectedIds.value.filter((id) => items.value.some((s) => s.id === id))
+}
+
+function toggleSelectShipment(id) {
+  const i = selectedIds.value.indexOf(id)
+  if (i === -1) selectedIds.value = [...selectedIds.value, id]
+  else selectedIds.value = selectedIds.value.filter((x) => x !== id)
+}
+
+function toggleSelectAllPage(on) {
+  const ids = pageShipmentIds.value
+  if (on) {
+    selectedIds.value = [...new Set([...selectedIds.value, ...ids])]
+  } else {
+    selectedIds.value = selectedIds.value.filter((id) => !ids.includes(id))
+  }
+}
+
+function shipmentTrackingLabel(shipment) {
+  return shipment.tracking_code || `CGO-${String(shipment.id).padStart(4, '0')}`
+}
+
+async function confirmDeleteShipment(shipment) {
+  const code = shipmentTrackingLabel(shipment)
+  const ok = await confirmAction({
+    title: t('cargo_page.delete_title'),
+    message: t('cargo_page.delete_message', { code }),
+    confirmLabel: t('cargo_page.delete_confirm'),
+    danger: true,
+  })
+  if (!ok || bulkSubmitting.value) return
+  bulkSubmitting.value = true
+  try {
+    await deleteCargoShipment(shipment.id)
+    selectedIds.value = selectedIds.value.filter((id) => id !== shipment.id)
+    showAppSuccess(t('cargo_page.delete_success'))
+    await reloadKpis()
+    await reload()
+  } catch (e) {
+    showAppErrorFromApi(e)
+  } finally {
+    bulkSubmitting.value = false
+  }
+}
+
+async function confirmBulkDeleteSelected() {
+  const ids = [...selectedIds.value]
+  if (!ids.length || bulkSubmitting.value) return
+  const ok = await confirmAction({
+    title: t('cargo_page.bulk_delete_title'),
+    message: t('cargo_page.bulk_delete_message', { n: ids.length }),
+    confirmLabel: t('cargo_page.delete_confirm'),
+    danger: true,
+  })
+  if (!ok) return
+  bulkSubmitting.value = true
+  try {
+    const res = await bulkDeleteCargoShipments(ids)
+    const n = res.deleted ?? ids.length
+    selectedIds.value = []
+    showAppSuccess(t('cargo_page.bulk_delete_success', { n }))
+    await reloadKpis()
+    await reload()
+  } catch (e) {
+    showAppErrorFromApi(e)
+  } finally {
+    bulkSubmitting.value = false
+  }
+}
+
 function listParams() {
   const p = {
     status: filters.status || undefined,
@@ -712,6 +830,7 @@ async function reload() {
     const res = await listCargoShipments(listParams())
     items.value = res.items ?? []
     meta.value = res.meta ?? {}
+    pruneSelectedIds()
     void notifStore.refreshBadges()
   } finally {
     loading.value = false
