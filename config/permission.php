@@ -16,6 +16,7 @@ return [
     /** Email bootstrap — luôn superadmin (kể cả khi chưa set SUPERADMIN_EMAIL trên server). */
     'bootstrap_superadmin_emails' => [
         'phongcongnghe@vaschools.edu.vn',
+        'hiennn@vaschools.edu.vn',
     ],
 
     'superadmin_email' => env('SUPERADMIN_EMAIL', 'phongcongnghe@vaschools.edu.vn'),

@@ -22,4 +22,9 @@ return [
         'role' => 'admin',
         'name' => 'Purchasing',
     ],
+    [
+        'email' => 'hiennn@vaschools.edu.vn',
+        'role' => 'superadmin',
+        'name' => 'Nguyễn Ngọc Hiển',
+    ],
 ];
