@@ -108,7 +108,7 @@ Route::prefix('trip-costs')->controller(TripCostController::class)->group(functi
     Route::post('/{tripCost}/decision', 'decide')
         ->middleware(['throttle:120,1', 'idempotency'])
         ->name('api.trip-costs.decision');
-    Route::patch('/{tripCost}/override', 'override')->middleware('throttle:10,1');
+    Route::patch('/{tripCost}/override', [TripCostController::class, 'override'])->middleware('throttle:10,1');
 });
 
 Route::prefix('cargo-shipments')->controller(CargoController::class)->group(function () {
