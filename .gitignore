@@ -25,5 +25,4 @@ yarn-error.log
 /.vscode
 
 # Dữ liệu bàn giao / dump DB production — không commit (chứa thông tin cá nhân)
-/data/
 /storage/backups/
