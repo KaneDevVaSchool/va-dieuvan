@@ -79,7 +79,7 @@ jobs:
         run: php artisan migrate --env=testing --force
 
       - name: Run PHPUnit tests
-        run: php artisan test --env=testing --parallel
+        run: php artisan test --env=testing
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1

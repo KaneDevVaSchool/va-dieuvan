@@ -1,5 +1,3 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
 
 echo "🚀 Running pre-push checks..."
 
@@ -12,7 +10,7 @@ fi
 
 # PHPUnit tests
 echo "→ PHPUnit..."
-"$PHP_BIN" artisan test --parallel --stop-on-failure
+"$PHP_BIN" artisan test --stop-on-failure
 if [ $? -ne 0 ]; then
   echo "❌ PHPUnit tests failed!"
   exit 1

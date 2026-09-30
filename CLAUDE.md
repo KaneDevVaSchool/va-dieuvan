@@ -25,7 +25,7 @@
 # PHP
 ./vendor/bin/pint              # Format PHP
 php artisan test               # Chạy tests
-php artisan test --parallel    # Tests song song
+php artisan test --parallel    # Tests song song (cần cài brianium/paratest)
 php artisan migrate            # Migrate DB
 
 # Node
