@@ -237,6 +237,16 @@ const staffChildRoutes = [
         redirect: { name: "resourcesList" },
     },
     {
+        path: "resources/documents",
+        name: "complianceDocuments",
+        component: () => import("../views/resources/ComplianceDocumentsView.vue"),
+        meta: {
+            title: "Kho chứng từ",
+            subtitle: "Giấy tờ xe & tài xế",
+            featureKey: "module.operations",
+        },
+    },
+    {
         path: "resources/drivers/:id",
         name: "driverDetail",
         component: () => import("../views/resources/DriverDetailView.vue"),

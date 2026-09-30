@@ -133,7 +133,8 @@
             "system_dispatch_settings": "Gấp",
             "audit": "Nhật ký",
             "resources": "Nguồn lực"
-        }
+        },
+        "compliance_library": "Kho chứng từ"
     },
     "driver_tp_days": {
         "subtitle": "Chương trình đưa đón học sinh"
@@ -2257,7 +2258,8 @@
         "audit_event_vehicle_compliance_document_created": "Thêm giấy tờ",
         "audit_event_vehicle_compliance_document_updated": "Cập nhật giấy tờ",
         "audit_event_vehicle_compliance_document_deleted": "Xóa giấy tờ",
-        "audit_event_unknown": "Thao tác khác"
+        "audit_event_unknown": "Thao tác khác",
+        "audit_event_vehicle_compliance_document_renewed": "Gia hạn giấy tờ"
     },
     "driver_detail": {
         "back": "Quay lại nguồn lực",
@@ -6333,5 +6335,56 @@
         "cancel": "Huỷ",
         "toast_restored": "Đã khôi phục {count} bản ghi",
         "toast_deleted": "Đã xóa vĩnh viễn {count} bản ghi"
+    },
+    "compliance": {
+        "renew": "Gia hạn",
+        "renew_title": "Gia hạn / cập nhật chứng từ mới",
+        "renew_hint": "Tải bản scan mới và nhập hạn mới. Bản cũ vẫn được lưu trong lịch sử để tra cứu.",
+        "current_expires": "Hạn hiện tại: {date}",
+        "document_no": "Số chứng từ / số seri",
+        "ph_document_no": "Ví dụ: số GCN kiểm định, số hợp đồng bảo hiểm",
+        "file_required": "Tải bản scan mới (PDF, ảnh, Word, Excel — tối đa 10MB)",
+        "file_missing": "Vui lòng chọn file scan chứng từ mới.",
+        "expires_required": "Vui lòng nhập ngày hết hạn mới.",
+        "submit_renew": "Lưu chứng từ mới",
+        "renewed_toast": "Đã cập nhật chứng từ mới.",
+        "history": "Lịch sử ({n})",
+        "history_hide": "Ẩn lịch sử",
+        "history_title": "Các bản trước",
+        "superseded": "Đã thay thế",
+        "preview": "Xem",
+        "download": "Tải về",
+        "download_error": "Không tải được tệp.",
+        "library_title": "Kho chứng từ",
+        "library_subtitle": "Toàn bộ giấy tờ xe và tài xế — xem trước hoặc tải về",
+        "tab_vehicles": "Xe",
+        "tab_drivers": "Tài xế",
+        "search_ph_vehicle": "Tìm biển số, tiêu đề, số chứng từ…",
+        "search_ph_driver": "Tìm tên, SĐT tài xế, tiêu đề, số chứng từ…",
+        "filter_doc_type": "Loại chứng từ",
+        "filter_state": "Tình trạng hạn",
+        "filter_status": "Phiên bản",
+        "all": "Tất cả",
+        "state_exp": "Đã hết hạn",
+        "state_soon": "Sắp hết hạn (≤ 30 ngày)",
+        "state_ok": "Còn hạn",
+        "state_none": "Không khai hạn",
+        "status_active": "Đang hiệu lực",
+        "status_superseded": "Đã thay thế (lịch sử)",
+        "status_all": "Tất cả phiên bản",
+        "col_owner_vehicle": "Xe",
+        "col_owner_driver": "Tài xế",
+        "col_doc": "Chứng từ",
+        "col_issued": "Ngày cấp",
+        "col_expires": "Hết hạn",
+        "col_status": "Tình trạng",
+        "col_files": "Tệp",
+        "no_files": "Chưa có tệp",
+        "empty": "Không có chứng từ phù hợp.",
+        "no_permission": "Bạn không có quyền xem kho chứng từ.",
+        "open_owner": "Mở hồ sơ",
+        "page_info": "Trang {page}/{last} · {total} chứng từ",
+        "prev": "Trước",
+        "next": "Sau"
     }
 }

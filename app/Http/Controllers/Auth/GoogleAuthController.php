@@ -118,6 +118,7 @@ class GoogleAuthController extends Controller
                 'email_verified_at' => now(),
                 'google_id' => $googleId,
                 'avatar_url' => $googleUser->getAvatar(),
+                'source' => User::SOURCE_GOOGLE,
             ]);
         } else {
             if (isset($user->is_active) && ! $user->is_active) {

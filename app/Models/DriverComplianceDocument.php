@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,13 +12,24 @@ class DriverComplianceDocument extends Model
 {
     use HasFactory;
 
+    public const STATUS_ACTIVE = 'active';
+
+    public const STATUS_SUPERSEDED = 'superseded';
+
     protected $fillable = [
         'driver_id',
         'doc_type',
         'title',
+        'document_no',
         'notes',
         'issued_at',
         'expires_at',
+        'status',
+        'replaces_id',
+    ];
+
+    protected $attributes = [
+        'status' => self::STATUS_ACTIVE,
     ];
 
     protected $casts = [
@@ -28,6 +40,17 @@ class DriverComplianceDocument extends Model
     public function driver(): BelongsTo
     {
         return $this->belongsTo(Driver::class);
+    }
+
+    /** Bản cũ mà bản này thay thế (gia hạn). */
+    public function replaces(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'replaces_id');
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('status', self::STATUS_ACTIVE);
     }
 
     public function attachments(): MorphMany

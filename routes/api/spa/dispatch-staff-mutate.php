@@ -5,6 +5,7 @@
  */
 
 use App\Http\Controllers\Api\Admin\BulkUserRolesUpdateController;
+use App\Http\Controllers\Api\Admin\UserStoreController;
 use App\Http\Controllers\Api\Cargo\CargoController;
 use App\Http\Controllers\Api\Costs\TripCostController;
 use App\Http\Controllers\Api\Operational\DriverComplianceDocumentController;
@@ -19,6 +20,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('v1/users/roles/bulk-update', BulkUserRolesUpdateController::class)
     ->middleware(['permission:any,system.user_roles.manage', 'throttle:60,1']);
+// Thêm tay người dùng không có trong CMS (trang Phân vai trò).
+Route::post('admin/users', UserStoreController::class)
+    ->middleware(['permission:any,system.user_roles.manage', 'throttle:30,1']);
 
 Route::patch('/reference-pricing/passenger-fares/{passengerFareRate}', [ReferencePricingController::class, 'updatePassengerFare'])
     ->middleware('permission:reference_pricing.manage');
@@ -144,6 +148,8 @@ Route::patch('/drivers/{driver}/compliance-documents/{complianceDocument}', [Dri
     ->middleware('throttle:30,1');
 Route::delete('/drivers/{driver}/compliance-documents/{complianceDocument}', [DriverComplianceDocumentController::class, 'destroy'])
     ->middleware('throttle:30,1');
+Route::post('/drivers/{driver}/compliance-documents/{complianceDocument}/renew', [DriverComplianceDocumentController::class, 'renew'])
+    ->middleware('throttle:30,1');
 Route::post('/vehicles', [OperationalResourceController::class, 'storeVehicle'])
     ->middleware('throttle:30,1');
 Route::post('/vehicles/bulk-delete', [OperationalResourceController::class, 'bulkDestroyVehicles'])
@@ -165,6 +171,8 @@ Route::post('/vehicles/{vehicle}/compliance-documents', [VehicleComplianceDocume
 Route::patch('/vehicles/{vehicle}/compliance-documents/{complianceDocument}', [VehicleComplianceDocumentController::class, 'update'])
     ->middleware('throttle:30,1');
 Route::delete('/vehicles/{vehicle}/compliance-documents/{complianceDocument}', [VehicleComplianceDocumentController::class, 'destroy'])
+    ->middleware('throttle:30,1');
+Route::post('/vehicles/{vehicle}/compliance-documents/{complianceDocument}/renew', [VehicleComplianceDocumentController::class, 'renew'])
     ->middleware('throttle:30,1');
 Route::post('/transport-providers', [OperationalResourceController::class, 'storeTransportProvider'])
     ->middleware('throttle:30,1');

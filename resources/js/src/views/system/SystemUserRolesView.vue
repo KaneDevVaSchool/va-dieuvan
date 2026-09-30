@@ -3,8 +3,10 @@ import { computed, onActivated, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   UserGroupIcon,
+  UserPlusIcon,
   XMarkIcon,
 } from '@heroicons/vue/24/outline'
+import SystemAddUserModal from '../../components/system/SystemAddUserModal.vue'
 import { useUserRoleManager } from '../../composables/useUserRoleManager'
 import { useVisibleFilterControls } from '../../composables/useVisibleFilterControls.js'
 import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
@@ -154,6 +156,14 @@ function onRoleSelect(user, val) {
   onRoleChange(user)
 }
 
+const addUserOpen = ref(false)
+
+/** Sau khi thêm: lọc danh sách theo email vừa tạo để thấy ngay người dùng mới. */
+function onUserCreated(user) {
+  addUserOpen.value = false
+  filters.q = user.email
+}
+
 onMounted(() => bootstrap())
 onActivated(() => bootstrap())
 </script>
@@ -169,7 +179,22 @@ onActivated(() => bootstrap())
           Thay đổi lưu tự động sau 0,5 giây.
         </p>
       </div>
+      <Button
+        class="h-10 shrink-0 gap-1.5 px-4 text-sm"
+        data-testid="user-roles-add-user"
+        @click="addUserOpen = true"
+      >
+        <UserPlusIcon class="h-4 w-4" aria-hidden="true" />
+        Thêm người dùng
+      </Button>
     </div>
+
+    <SystemAddUserModal
+      :open="addUserOpen"
+      :roles="roles"
+      @close="addUserOpen = false"
+      @created="onUserCreated"
+    />
 
     <SystemUserRolesSummaryBar
       :meta="meta"

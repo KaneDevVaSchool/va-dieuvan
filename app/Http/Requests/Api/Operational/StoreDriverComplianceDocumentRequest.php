@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Operational;
 
 use App\Http\Requests\Api\ApiFormRequest;
+use App\Services\Resources\ComplianceDocumentService;
 use Illuminate\Validation\Rule;
 
 class StoreDriverComplianceDocumentRequest extends ApiFormRequest
@@ -28,10 +29,11 @@ class StoreDriverComplianceDocumentRequest extends ApiFormRequest
         return [
             'doc_type' => ['required', 'string', Rule::in(self::DOC_TYPES)],
             'title' => ['nullable', 'string', 'max:255'],
+            'document_no' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'issued_at' => ['nullable', 'date'],
             'expires_at' => ['nullable', 'date', 'after_or_equal:issued_at'],
-            'file' => ['nullable', 'file', 'max:10240'],
+            'file' => ['nullable', 'file', ComplianceDocumentService::FILE_MIMES_RULE, 'max:10240'],
         ];
     }
 }

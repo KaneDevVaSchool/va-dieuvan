@@ -7,8 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Admin\ListUsersForRolesRequest;
 use App\Models\User;
 use App\Services\CmsUserInfoService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 
 class UserListController extends Controller
 {
@@ -34,7 +34,7 @@ class UserListController extends Controller
         $like = $q !== '' ? '%'.addcslashes($q, '%_\\').'%' : null;
 
         $base = User::query()
-            ->select(['id', 'name', 'email', 'employee_code', 'avatar_url', 'department_id'])
+            ->select(['id', 'name', 'email', 'employee_code', 'avatar_url', 'department_id', 'source'])
             ->with([
                 'department:id,name,code',
                 'roles' => static function ($r) {
@@ -140,6 +140,7 @@ class UserListController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'employee_code' => $user->employee_code,
+            'source' => $user->source,
             'avatar_url' => $user->avatar_url,
             'department_name' => $departmentName,
             'position_name' => $positionName,

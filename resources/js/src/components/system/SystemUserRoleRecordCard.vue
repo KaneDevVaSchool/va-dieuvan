@@ -52,7 +52,17 @@ const NEEDS = 'Cần bổ sung'
           class="shrink-0"
         />
         <div class="min-w-0 flex-1">
-          <p class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">{{ user.name }}</p>
+          <p class="flex min-w-0 items-center gap-1.5 text-sm font-semibold text-slate-900 dark:text-slate-100">
+            <span class="truncate">{{ user.name }}</span>
+            <span
+              v-if="user.source === 'manual'"
+              class="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800 dark:bg-amber-950/50 dark:text-amber-200"
+              title="Người dùng được thêm tay, chưa có trên CMS. Khi CMS có cùng email, lệnh đồng bộ sẽ tự nối và giữ nguyên vai trò."
+              data-testid="user-role-card-manual-badge"
+            >
+              Ngoài CMS
+            </span>
+          </p>
           <p v-if="colVisible.email" class="mt-0.5 flex items-center gap-1 truncate text-xs text-slate-500 dark:text-slate-400">
             <EnvelopeIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             {{ user.email }}

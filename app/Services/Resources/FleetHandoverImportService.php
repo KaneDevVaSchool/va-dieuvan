@@ -339,7 +339,7 @@ class FleetHandoverImportService
                     continue;
                 }
                 VehicleComplianceDocument::query()->updateOrCreate(
-                    ['vehicle_id' => $vehicle->id, 'doc_type' => $type],
+                    ['vehicle_id' => $vehicle->id, 'doc_type' => $type, 'status' => VehicleComplianceDocument::STATUS_ACTIVE],
                     ['title' => $title, 'notes' => $links, 'expires_at' => $expires?->toDateString()],
                 );
             }
@@ -407,7 +407,7 @@ class FleetHandoverImportService
     private function upsertDriverDoc(Driver $driver, string $type, array $attrs): void
     {
         DriverComplianceDocument::query()->updateOrCreate(
-            ['driver_id' => $driver->id, 'doc_type' => $type],
+            ['driver_id' => $driver->id, 'doc_type' => $type, 'status' => DriverComplianceDocument::STATUS_ACTIVE],
             $attrs,
         );
     }

@@ -291,3 +291,35 @@ export async function deleteVehicleComplianceDocument(vehicleId, docId) {
   const { data } = await http.delete(`/vehicles/${vehicleId}/compliance-documents/${docId}`)
   return data.data
 }
+
+/**
+ * Gia hạn chứng từ tài xế: file scan mới + hạn mới; bản cũ được giữ trong lịch sử.
+ * @param {number} driverId
+ * @param {number} docId
+ * @param {FormData} formData file, expires_at, issued_at?, document_no?, title?, notes?
+ */
+export async function renewDriverComplianceDocument(driverId, docId, formData) {
+  const { data } = await http.post(`/drivers/${driverId}/compliance-documents/${docId}/renew`, formData)
+  return data.data
+}
+
+/**
+ * Gia hạn chứng từ xe: file scan mới + hạn mới; bản cũ được giữ trong lịch sử.
+ * @param {number} vehicleId
+ * @param {number} docId
+ * @param {FormData} formData file, expires_at, issued_at?, document_no?, title?, notes?
+ */
+export async function renewVehicleComplianceDocument(vehicleId, docId, formData) {
+  const { data } = await http.post(`/vehicles/${vehicleId}/compliance-documents/${docId}/renew`, formData)
+  return data.data
+}
+
+/**
+ * Kho chứng từ — danh sách tập trung.
+ * @param {{ owner_type: 'vehicle'|'driver', doc_type?: string, state?: 'exp'|'soon'|'ok'|'none', status?: 'active'|'superseded'|'all', q?: string, page?: number, per_page?: number }} params
+ * @returns {Promise<{ items: object[], meta: { current_page: number, last_page: number, per_page: number, total: number }, summary: Record<string, number> }>}
+ */
+export async function listComplianceLibrary(params) {
+  const { data } = await http.get('/compliance-documents', { params })
+  return data.data
+}

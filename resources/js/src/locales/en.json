@@ -130,7 +130,8 @@
             "system_dispatch_settings": "Urgent",
             "audit": "Log",
             "resources": "Resources"
-        }
+        },
+        "compliance_library": "Document library"
     },
     "driver_tp_days": {
         "subtitle": "Student transport program"
@@ -2161,7 +2162,8 @@
         "audit_event_vehicle_compliance_document_created": "Document added",
         "audit_event_vehicle_compliance_document_updated": "Document updated",
         "audit_event_vehicle_compliance_document_deleted": "Document deleted",
-        "audit_event_unknown": "Other action"
+        "audit_event_unknown": "Other action",
+        "audit_event_vehicle_compliance_document_renewed": "Document renewed"
     },
     "driver_detail": {
         "back": "Back to resources",
@@ -6139,5 +6141,56 @@
         "cancel": "Cancel",
         "toast_restored": "Restored {count} record(s)",
         "toast_deleted": "Permanently deleted {count} record(s)"
+    },
+    "compliance": {
+        "renew": "Renew",
+        "renew_title": "Renew / upload new document",
+        "renew_hint": "Upload the new scan and enter the new expiry date. The previous version stays in history.",
+        "current_expires": "Current expiry: {date}",
+        "document_no": "Document / serial number",
+        "ph_document_no": "e.g. inspection certificate no., insurance policy no.",
+        "file_required": "Upload new scan (PDF, image, Word, Excel — max 10MB)",
+        "file_missing": "Please choose the new document scan.",
+        "expires_required": "Please enter the new expiry date.",
+        "submit_renew": "Save new document",
+        "renewed_toast": "New document saved.",
+        "history": "History ({n})",
+        "history_hide": "Hide history",
+        "history_title": "Previous versions",
+        "superseded": "Superseded",
+        "preview": "View",
+        "download": "Download",
+        "download_error": "Could not download the file.",
+        "library_title": "Document library",
+        "library_subtitle": "All vehicle and driver documents — preview or download",
+        "tab_vehicles": "Vehicles",
+        "tab_drivers": "Drivers",
+        "search_ph_vehicle": "Search plate, title, document no…",
+        "search_ph_driver": "Search driver name, phone, title, document no…",
+        "filter_doc_type": "Document type",
+        "filter_state": "Expiry",
+        "filter_status": "Version",
+        "all": "All",
+        "state_exp": "Expired",
+        "state_soon": "Expiring (≤ 30 days)",
+        "state_ok": "Valid",
+        "state_none": "No expiry",
+        "status_active": "Current",
+        "status_superseded": "Superseded (history)",
+        "status_all": "All versions",
+        "col_owner_vehicle": "Vehicle",
+        "col_owner_driver": "Driver",
+        "col_doc": "Document",
+        "col_issued": "Issued",
+        "col_expires": "Expires",
+        "col_status": "Status",
+        "col_files": "Files",
+        "no_files": "No files",
+        "empty": "No matching documents.",
+        "no_permission": "You do not have permission to view the document library.",
+        "open_owner": "Open profile",
+        "page_info": "Page {page}/{last} · {total} documents",
+        "prev": "Previous",
+        "next": "Next"
     }
 }

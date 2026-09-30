@@ -49,6 +49,12 @@ export const NAV_SECTIONS = [
         icon: 'resources',
         featureKey: 'module.operations',
       },
+      {
+        to: `${DISPATCH_WEB_BASE}/resources/documents`,
+        labelKey: 'nav.compliance_library',
+        icon: 'documents',
+        featureKey: 'module.operations',
+      },
     ],
   },
   // P2P — Đưa đón học sinh chính sách: section riêng cho rõ ràng (module độc lập).

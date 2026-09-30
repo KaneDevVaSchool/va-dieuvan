@@ -237,9 +237,8 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+              <template v-for="doc in documents" :key="doc.id">
               <tr
-                v-for="doc in documents"
-                :key="doc.id"
                 class="cursor-pointer transition hover:bg-slate-50 dark:hover:bg-slate-800/40"
                 @click="openDocModal(doc)"
               >
@@ -248,6 +247,16 @@
                   <span class="line-clamp-2">
                     <EmptyValue :value="doc.title" empty-key="driver_detail.empty_doc_title" />
                   </span>
+                  <span v-if="doc.document_no" class="block truncate text-slate-500">{{ doc.document_no }}</span>
+                  <button
+                    v-if="doc.history?.length"
+                    type="button"
+                    class="mt-1 text-[11px] font-medium text-teal-700 hover:underline dark:text-teal-400"
+                    data-testid="vehicle-detail-doc-history-toggle"
+                    @click.stop="toggleHistory(doc.id)"
+                  >
+                    {{ expandedHistory[doc.id] ? t('compliance.history_hide') : t('compliance.history', { n: doc.history.length }) }}
+                  </button>
                 </td>
                 <td class="whitespace-nowrap px-3 py-2 align-top text-xs">
                   <EmptyValue :value="doc.expires_at" empty-key="driver_detail.empty_doc_expires" />
@@ -255,24 +264,26 @@
                 <td class="px-3 py-2 align-top">
                   <span :class="expiryPillClass(doc.expiry)">{{ expiryLabel(doc.expiry) }}</span>
                 </td>
-                <td class="max-w-[min(100%,280px)] px-3 py-2 align-top text-xs" @click.stop>
+                <td class="max-w-[min(100%,300px)] px-3 py-2 align-top text-xs" @click.stop>
                   <span v-if="!doc.attachments?.length">
                     <EmptyValue value="" empty-key="vehicle_detail.empty_attachment" />
                   </span>
-                  <div v-else class="flex flex-col gap-2">
-                    <a
-                      v-for="(a, aIdx) in doc.attachments"
-                      :key="a.id ?? `att-${aIdx}`"
-                      :href="resolveAttachmentAbsoluteUrl(a)"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="truncate rounded-lg border border-slate-200/90 bg-slate-50/80 px-2 py-1.5 text-teal-700 underline dark:border-slate-600/80 dark:bg-slate-800/40 dark:text-teal-400"
-                    >
-                      {{ a.original_name || a.id }}
-                    </a>
-                  </div>
+                  <ComplianceFileActions v-else :attachments="doc.attachments" />
                 </td>
                 <td v-if="canManage" class="whitespace-nowrap px-3 py-2 align-top text-right text-xs" @click.stop>
+                  <button
+                    type="button"
+                    class="mr-2 rounded px-1.5 py-0.5 font-semibold"
+                    :class="
+                      doc.expiry?.state === 'exp' || doc.expiry?.state === 'soon'
+                        ? 'bg-amber-100 text-amber-900 hover:bg-amber-200 dark:bg-amber-950/60 dark:text-amber-200'
+                        : 'text-teal-700 hover:underline dark:text-teal-400'
+                    "
+                    data-testid="vehicle-detail-doc-renew"
+                    @click="renewingDoc = doc"
+                  >
+                    {{ t('compliance.renew') }}
+                  </button>
                   <button
                     type="button"
                     class="text-teal-700 hover:underline dark:text-teal-400"
@@ -291,6 +302,12 @@
                   </button>
                 </td>
               </tr>
+              <tr v-if="expandedHistory[doc.id] && doc.history?.length">
+                <td :colspan="canManage ? 6 : 5" class="px-3 pb-3 pt-0">
+                  <ComplianceHistoryList :history="doc.history" />
+                </td>
+              </tr>
+              </template>
             </tbody>
           </table>
         </div>
@@ -373,6 +390,18 @@
               />
             </label>
             <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+              {{ t('compliance.document_no') }}
+              <input
+                v-model="docForm.document_no"
+                type="text"
+                maxlength="100"
+                :readonly="!canManage"
+                class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                :class="!canManage ? 'bg-slate-50 dark:bg-slate-800/80' : ''"
+                :placeholder="t('compliance.ph_document_no')"
+              />
+            </label>
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
               {{ t('driver_detail.notes') }}
               <textarea
                 v-model="docForm.notes"
@@ -444,6 +473,15 @@
         </div>
       </div>
     </Teleport>
+
+    <ComplianceRenewModal
+      :open="!!renewingDoc"
+      :doc="renewingDoc"
+      :doc-type-label="renewingDoc ? docTypeLabel(renewingDoc.doc_type) : ''"
+      :submit="(fd) => renewVehicleComplianceDocument(Number(route.params.id), renewingDoc.id, fd)"
+      @close="renewingDoc = null"
+      @renewed="onRenewed"
+    />
   </div>
 </template>
 
@@ -457,6 +495,7 @@ import {
   getVehicle,
   getVehicleComplianceAudit,
   listVehicleComplianceDocuments,
+  renewVehicleComplianceDocument,
   updateVehicle,
   updateVehicleComplianceDocument,
 } from '../../api/operational'
@@ -464,6 +503,9 @@ import { formatApiError } from '../../api/http'
 import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
 import { useAuthStore } from '../../store'
 import EmptyValue from '../../components/ui/EmptyValue.vue'
+import ComplianceFileActions from '../../components/compliance/ComplianceFileActions.vue'
+import ComplianceHistoryList from '../../components/compliance/ComplianceHistoryList.vue'
+import ComplianceRenewModal from '../../components/compliance/ComplianceRenewModal.vue'
 import { vehicleIconKind, VEHICLE_ICON_COMPONENTS } from '../../util/vehicleIcon'
 
 const DOC_TYPES = [
@@ -507,11 +549,26 @@ const docFile = ref(null)
 const docForm = ref({
   doc_type: 'registration',
   title: '',
+  document_no: '',
   notes: '',
   issued_at: '',
   expires_at: '',
   replace_file: false,
 })
+
+/** Chứng từ đang mở modal gia hạn. */
+const renewingDoc = ref(null)
+/** doc.id → đang mở lịch sử. */
+const expandedHistory = ref({})
+
+function toggleHistory(docId) {
+  expandedHistory.value = { ...expandedHistory.value, [docId]: !expandedHistory.value[docId] }
+}
+
+async function onRenewed() {
+  renewingDoc.value = null
+  await load()
+}
 
 const docTypeOptions = computed(() =>
   DOC_TYPES.map((value) => ({
@@ -792,6 +849,7 @@ function emptyDocForm() {
   docForm.value = {
     doc_type: 'registration',
     title: '',
+    document_no: '',
     notes: '',
     issued_at: '',
     expires_at: '',
@@ -807,6 +865,7 @@ function openDocModal(doc) {
     docForm.value = {
       doc_type: doc.doc_type,
       title: doc.title || '',
+      document_no: doc.document_no || '',
       notes: doc.notes || '',
       issued_at: doc.issued_at || '',
       expires_at: doc.expires_at || '',
@@ -834,6 +893,7 @@ async function submitDocForm() {
     const fd = new FormData()
     fd.append('doc_type', docForm.value.doc_type)
     if (docForm.value.title) fd.append('title', docForm.value.title)
+    if (docForm.value.document_no) fd.append('document_no', docForm.value.document_no)
     if (docForm.value.notes) fd.append('notes', docForm.value.notes)
     if (docForm.value.issued_at) fd.append('issued_at', docForm.value.issued_at)
     if (docForm.value.expires_at) fd.append('expires_at', docForm.value.expires_at)
@@ -872,29 +932,6 @@ async function confirmDelete(doc) {
     await load()
   } catch (e) {
     showAppErrorFromApi(e, t('resources.load_error'))
-  }
-}
-
-function resolveAttachmentAbsoluteUrl(a) {
-  const u = a?.url
-  if (!u) return ''
-  if (typeof window === 'undefined') return u
-  const viteBackend =
-    import.meta.env.DEV && import.meta.env.VITE_APP_URL ? String(import.meta.env.VITE_APP_URL).trim().replace(/\/$/, '') : ''
-  try {
-    const parsed = new URL(u, window.location.origin)
-    if (parsed.pathname.startsWith('/storage')) {
-      const base = viteBackend || window.location.origin
-      return `${base}${parsed.pathname}${parsed.search}`
-    }
-    return parsed.href
-  } catch {
-    const path = u.startsWith('/') ? u : `/${u}`
-    if (path.startsWith('/storage')) {
-      const base = viteBackend || window.location.origin
-      return `${base}${path}`
-    }
-    return `${window.location.origin}${path}`
   }
 }
 </script>

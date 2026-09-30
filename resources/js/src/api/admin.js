@@ -98,3 +98,12 @@ export async function bulkUpdateUserRoles(payload) {
   const { data } = await http.post('/v1/users/roles/bulk-update', payload)
   return data.data
 }
+
+/**
+ * Thêm tay người dùng không có trong CMS (trang Phân vai trò).
+ * @param {{ name: string, email: string, employee_code?: string, phone?: string, role_id?: number|null }} payload
+ */
+export async function createUser(payload) {
+  const { data } = await http.post('/admin/users', payload)
+  return data.data
+}

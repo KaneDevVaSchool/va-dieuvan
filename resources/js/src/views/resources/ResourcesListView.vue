@@ -1008,10 +1008,32 @@
                         </div>
                       </div>
                       <div v-if="canManageVehicles" class="flex shrink-0 gap-2">
+                        <button
+                          type="button"
+                          class="rounded px-1.5 font-semibold"
+                          :class="
+                            doc.expiry?.state === 'exp' || doc.expiry?.state === 'soon'
+                              ? 'bg-amber-100 text-amber-900 hover:bg-amber-200 dark:bg-amber-950/60 dark:text-amber-200'
+                              : 'text-teal-700 dark:text-teal-400'
+                          "
+                          data-testid="resources-vehicle-doc-renew"
+                          @click="renewingVehicleDoc = doc"
+                        >
+                          {{ t('compliance.renew') }}
+                        </button>
                         <button type="button" class="text-teal-700 dark:text-teal-400" @click="openVehicleDocModal(doc)">{{ t('resources.action_edit') }}</button>
                         <button type="button" class="text-rose-600" @click="openVehicleDocDeleteModal(doc)">{{ t('resources.delete') }}</button>
                       </div>
                     </div>
+                    <button
+                      v-if="doc.history?.length"
+                      type="button"
+                      class="mt-2 text-[11px] font-medium text-teal-700 hover:underline dark:text-teal-400"
+                      @click="vehicleDocHistoryOpen = { ...vehicleDocHistoryOpen, [doc.id]: !vehicleDocHistoryOpen[doc.id] }"
+                    >
+                      {{ vehicleDocHistoryOpen[doc.id] ? t('compliance.history_hide') : t('compliance.history', { n: doc.history.length }) }}
+                    </button>
+                    <ComplianceHistoryList v-if="vehicleDocHistoryOpen[doc.id] && doc.history?.length" class="mt-2" :history="doc.history" />
                   </li>
                 </ul>
                 <p v-if="!vehicleComplianceDocs.length" class="mt-1.5 text-[11px] text-slate-500 sm:text-xs">{{ t('resources.empty') }}</p>
@@ -2446,6 +2468,15 @@
         </div>
       </div>
     </Teleport>
+
+    <ComplianceRenewModal
+      :open="!!renewingVehicleDoc && !!selectedVehicle"
+      :doc="renewingVehicleDoc"
+      :doc-type-label="renewingVehicleDoc ? vehicleDocTypeLabel(renewingVehicleDoc.doc_type) : ''"
+      :submit="(fd) => renewVehicleComplianceDocument(selectedVehicle.id, renewingVehicleDoc.id, fd)"
+      @close="renewingVehicleDoc = null"
+      @renewed="onVehicleDocRenewed"
+    />
   </div>
 </template>
 
@@ -2501,7 +2532,10 @@ import {
   updateTransportProvider,
   updateVehicle,
   updateVehicleComplianceDocument,
+  renewVehicleComplianceDocument,
 } from '../../api/operational'
+import ComplianceHistoryList from '../../components/compliance/ComplianceHistoryList.vue'
+import ComplianceRenewModal from '../../components/compliance/ComplianceRenewModal.vue'
 import { formatApiError, TOKEN_KEY } from '../../api/http'
 import { showAppError, showAppErrorFromApi, showAppInfo, showAppSuccess } from '../../composables/appMessage'
 import {
@@ -3157,6 +3191,22 @@ const VEHICLE_DOC_TYPES = [
 ]
 
 const vehicleComplianceDocs = ref([])
+/** Chứng từ xe đang mở modal gia hạn. */
+const renewingVehicleDoc = ref(null)
+/** doc.id → đang mở lịch sử. */
+const vehicleDocHistoryOpen = ref({})
+
+async function onVehicleDocRenewed() {
+  renewingVehicleDoc.value = null
+  const vid = selectedVehicle.value?.id
+  if (!vid) return
+  try {
+    const res = await listVehicleComplianceDocuments(vid)
+    vehicleComplianceDocs.value = res.items || []
+  } catch (e) {
+    showAppErrorFromApi(e, t('resources.load_error'))
+  }
+}
 const vehicleDocModalOpen = ref(false)
 const vehicleDocSaving = ref(false)
 const vehicleDocFormError = ref('')
