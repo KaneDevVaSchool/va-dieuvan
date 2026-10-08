@@ -82,6 +82,8 @@
           :tp-shift="dash.upcomingBannerTrip._tp?.shift ?? null"
         />
 
+        <DriverChecklistTodayCard />
+
         <DriverUpcomingTripsSection
           :trips="dash.upcomingScheduleTripsToday"
           :list-loading="dash.listLoadingForUi"
@@ -148,6 +150,7 @@ import DriverHeader from '../../components/driver/DriverHeader.vue'
 import UpcomingTripBanner from '../../components/driver/UpcomingTripBanner.vue'
 import DriverPendingConfirmationSection from '../../components/driver/dashboard/DriverPendingConfirmationSection.vue'
 import DriverUpcomingTripsSection from '../../components/driver/dashboard/DriverUpcomingTripsSection.vue'
+import DriverChecklistTodayCard from '../../components/driver/checklist/DriverChecklistTodayCard.vue'
 const { t } = useI18n()
 const auth = useAuthStore()
 const dash = useDriverDashboardStore()

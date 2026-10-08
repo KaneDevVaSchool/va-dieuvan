@@ -100,3 +100,30 @@ Luồng: `pending` → (dept_head duyệt) → `approved` → (dispatcher điề
 ### SD-BR-2: Dispatch sync
 - Biên bản ký được sync vào DispatchRequest paper status
 - `paper_status`: `pending` → `received`
+
+## Quy tắc checklist tài xế (CHK)
+
+Chi tiết: [docs/modules/driver-checklist-expenses.md](../modules/driver-checklist-expenses.md)
+
+### CHK-BR-1: Kết luận phiếu
+Có ≥ 1 mục Critical = NG → phiếu `fail` (không đủ điều kiện khởi hành). Hệ thống không chặn chuyến, chỉ báo ngay cho điều phối.
+
+### CHK-BR-2: Hoàn thành phiếu
+Mọi mục phải có kết quả; N/A chỉ cho mục `allow_na`; NG bắt buộc ghi chú, và ảnh nếu `requires_photo_on_ng`. Phiếu đã nộp không sửa được.
+
+### CHK-BR-3: Kỳ & nhắc nhở
+Kỳ daily/weekly tính theo giờ VN. Kỳ đã làm khi có ≥ 1 phiếu nộp. Nhắc chỉ gửi tài xế chưa làm kỳ, mỗi khung giờ tối đa 1 lần/ngày.
+
+## Quy tắc hồ sơ chi phí xe (EXP)
+
+### EXP-BR-1: Mã hồ sơ theo ngày
+`{PREFIX}-{YYMMDD}-{n}` — DX, TT, TU, HU, BK, CL; `n` reset mỗi ngày, riêng từng tiền tố.
+
+### EXP-BR-2: Khóa tài chính
+Hồ sơ `submitted/signed/paid` khóa sửa hồ sơ và các `trip_costs` liên kết. Chỉ kế toán trả lại (`rejected`) mới mở sửa.
+
+### EXP-BR-3: Một chi phí — một hồ sơ thanh toán
+Một `trip_cost` không thuộc 2 hồ sơ cùng loại đang hiệu lực. Bảng kê con dùng chung dòng với hồ sơ cha.
+
+### EXP-BR-4: Khoản không hóa đơn
+Nộp Đề nghị thanh toán / hoàn ứng có dòng không hóa đơn → tự sinh Bảng kê con. Bảng kê bắt buộc tên người bán và ngày mua.

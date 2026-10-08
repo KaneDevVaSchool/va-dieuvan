@@ -173,3 +173,40 @@
 | 409 | Conflict (optimistic lock) |
 | 422 | Validation error |
 | 429 | Too many requests |
+
+## Checklist tài xế & Hồ sơ chi phí xe
+
+Chi tiết nghiệp vụ: [docs/modules/driver-checklist-expenses.md](../modules/driver-checklist-expenses.md)
+
+### Tài xế (`driver.spa` cho GET; quyền `checklist.submit` / `expense.submit`)
+
+| Method | Path | Mô tả |
+|---|---|---|
+| GET | `/api/driver/checklists/overview` | Kỳ hiện tại daily/weekly, xe NG hôm nay |
+| GET | `/api/driver/checklists/options` | Template, xe, chuyến / ngày TP hôm nay |
+| GET | `/api/driver/checklists` | Lịch sử phiếu |
+| GET | `/api/driver/checklists/{id}` · `/{id}/pdf` | Chi tiết · file in |
+| POST | `/api/driver/checklists` | Tạo phiếu `{template_id, vehicle_id, trip_id?, tp_program_day_id?, location_text?}` |
+| PATCH | `/api/driver/checklists/{id}` | Lưu nháp `{lock_version, items:[{id,result,note}], trip_info?, note?}` |
+| POST | `/api/driver/checklists/{id}/submit` | Nộp `{lock_version, confirm:true, items?}` |
+| DELETE | `/api/driver/checklists/{id}` | Hủy nháp |
+| POST/DELETE | `/api/driver/checklists/{id}/items/{item}/evidence[/{attachment}]` | Ảnh minh chứng |
+| GET | `/api/driver/expenses` · `/defaults` · `/cost-candidates` | Danh sách · mặc định · chi phí có thể đưa vào hồ sơ |
+| GET | `/api/driver/expenses/{id}` · `/{id}/pdf` · `/{id}/xlsx` | Chi tiết · file in |
+| POST | `/api/driver/expenses` | Tạo `{doc_type, payment_kind?, parent_id?, …, lines[]}` |
+| PATCH | `/api/driver/expenses/{id}` | Sửa (draft/rejected) `{lock_version, …}` |
+| POST | `/api/driver/expenses/{id}/submit` · `/cancel` · `/signed-scan` | Nộp · hủy · upload scan |
+
+### Back-office (`dispatch.staff`)
+
+| Method | Path | Quyền |
+|---|---|---|
+| GET | `/api/checklists/compliance?template_id&date_from&date_to` | checklist.view |
+| GET | `/api/checklists` · `/export` · `/{id}` · `/{id}/pdf` · `/{id}/xlsx` | checklist.view |
+| POST | `/api/checklists/{id}/review` | checklist.view |
+| GET | `/api/checklist-settings` | checklist.view |
+| PATCH/POST/DELETE | `/api/checklist-settings/templates/{t}[/items[/{item}\|/reorder]]`, `/api/checklist-settings/slots[/{slot}]` | checklist.manage |
+| GET | `/api/expenses` · `/{id}` · `/{id}/pdf` · `/{id}/xlsx` · `/settings` | expense.view |
+| POST | `/api/expenses/{id}/reject` · `/mark-paid` · `/cancel` · `/signed-scan` | expense.manage |
+| PUT | `/api/expenses/settings` | expense.manage |
+| GET | `/api/vehicle-cost-ledger?date_from&date_to` · `/{vehicle}` · `/{vehicle}/export` | expense.view |

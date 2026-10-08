@@ -22,6 +22,11 @@ class SubmitTripCostRequest extends ApiFormRequest
             'reported_on' => ['nullable', 'date', 'before_or_equal:today'],
             'receipt_url' => ['nullable', 'string', 'max:2048'],
             'vehicle_id' => ['nullable', 'integer', 'min:1', 'exists:vehicles,id'],
+            // Thông tin hóa đơn / người bán — dùng lập Bảng kê không hóa đơn & Đề nghị thanh toán.
+            'has_invoice' => ['sometimes', 'boolean'],
+            'invoice_no' => ['nullable', 'string', 'max:64'],
+            'seller_name' => ['nullable', 'string', 'max:255'],
+            'seller_address' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

@@ -41,6 +41,20 @@
         </RouterLink>
       </div>
 
+      <RouterLink
+        v-if="canExpense"
+        :to="{ name: 'driverExpenses' }"
+        class="mt-4 flex min-h-[56px] items-center gap-3 rounded-2xl bg-driver-card px-4 py-3 ring-1 ring-white/[0.08] active:scale-[0.99]"
+        data-testid="driver-costs-expense-link"
+      >
+        <DocumentDuplicateIcon class="h-6 w-6 shrink-0 text-driver-accent" aria-hidden="true" />
+        <span class="min-w-0 flex-1">
+          <span class="block text-base font-bold">{{ t('expense.costs_link_title') }}</span>
+          <span class="block text-xs text-driver-muted">{{ t('expense.costs_link_hint') }}</span>
+        </span>
+        <ChevronRightIcon class="h-5 w-5 shrink-0 text-driver-muted" aria-hidden="true" />
+      </RouterLink>
+
       <p
         v-if="errorMsg"
         class="mt-4 rounded-2xl border border-amber-500/35 bg-amber-950/35 px-4 py-3 text-sm text-amber-100 ring-1 ring-amber-500/20"
@@ -101,7 +115,8 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { ClipboardDocumentListIcon, PlusCircleIcon } from '@heroicons/vue/24/outline'
+import { ChevronRightIcon, ClipboardDocumentListIcon, DocumentDuplicateIcon, PlusCircleIcon } from '@heroicons/vue/24/outline'
+import { useAuthStore } from '../../store'
 import DriverCostStatusTabs from '../../components/driver/costs/DriverCostStatusTabs.vue'
 import DriverCostListCard from '../../components/driver/costs/DriverCostListCard.vue'
 import { useDriverCostsList } from '../../composables/useDriverCostsList'
@@ -109,6 +124,10 @@ import { useDriverVisiblePoll } from '../../composables/useDriverVisiblePoll'
 import { usePullToRefresh } from '../../composables/usePullToRefresh'
 
 const { t, te } = useI18n()
+const auth = useAuthStore()
+const canExpense = computed(
+  () => auth.hasPermission('expense.submit') && auth.isNavFeatureVisible('module.driver_expense'),
+)
 const route = useRoute()
 const router = useRouter()
 
@@ -160,6 +179,8 @@ function typeLabel(type) {
   const slug = raw.toLowerCase().replace(/[^a-z0-9_]/g, '_')
   const driverKey = `driver_trip_detail.cost_type_${slug}`
   if (te(driverKey)) return t(driverKey)
+  const expenseKey = `expense.cost_type_${slug}`
+  if (te(expenseKey)) return t(expenseKey)
   return t('driver_trip_detail.cost_type_other')
 }
 

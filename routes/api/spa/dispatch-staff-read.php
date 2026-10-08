@@ -172,3 +172,32 @@ Route::prefix('tp-imports')->group(function () {
     Route::get('/{tpImportBatch}/rows', [\App\Http\Controllers\Api\TpStudent\TpImportRowController::class, 'index']);
     Route::get('/{tpImportBatch}/error-report', [\App\Http\Controllers\Api\TpStudent\TpImportErrorReportController::class, 'download'])->middleware('throttle:30,1');
 });
+
+// Checklist tài xế — điều phối xem (quyền checklist.view / checklist.manage trong FormRequest)
+Route::middleware('feature:module.driver_checklist')->group(function () {
+    Route::prefix('checklists')->controller(\App\Http\Controllers\Api\Checklist\ChecklistController::class)->group(function () {
+        Route::get('/compliance', 'compliance');
+        Route::get('/export', 'export')->middleware('throttle:20,1');
+        Route::get('/', 'index');
+        Route::get('/{checklist}', 'show')->whereNumber('checklist');
+        Route::get('/{checklist}/pdf', 'pdf')->whereNumber('checklist')->middleware('throttle:30,1');
+        Route::get('/{checklist}/xlsx', 'xlsx')->whereNumber('checklist')->middleware('throttle:30,1');
+    });
+    Route::get('/checklist-settings', [\App\Http\Controllers\Api\Checklist\ChecklistSettingsController::class, 'index']);
+});
+
+// Hồ sơ chi phí xe & sổ chi phí theo xe — back-office xem (expense.view)
+Route::middleware('feature:module.driver_expense')->group(function () {
+    Route::prefix('expenses')->controller(\App\Http\Controllers\Api\Expenses\ExpenseDocumentController::class)->group(function () {
+        Route::get('/settings', 'settings');
+        Route::get('/', 'index');
+        Route::get('/{expense}', 'show')->whereNumber('expense');
+        Route::get('/{expense}/pdf', 'pdf')->whereNumber('expense')->middleware('throttle:30,1');
+        Route::get('/{expense}/xlsx', 'xlsx')->whereNumber('expense')->middleware('throttle:30,1');
+    });
+    Route::prefix('vehicle-cost-ledger')->controller(\App\Http\Controllers\Api\Expenses\VehicleCostLedgerController::class)->group(function () {
+        Route::get('/', 'summary');
+        Route::get('/{vehicle}', 'show')->whereNumber('vehicle');
+        Route::get('/{vehicle}/export', 'export')->whereNumber('vehicle')->middleware('throttle:20,1');
+    });
+});

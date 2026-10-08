@@ -55,6 +55,20 @@ export const NAV_SECTIONS = [
         icon: 'documents',
         featureKey: 'module.operations',
       },
+      {
+        to: `${DISPATCH_WEB_BASE}/checklists`,
+        labelKey: 'checklist.nav_staff',
+        icon: 'checklist',
+        featureKey: 'module.driver_checklist',
+        permissionKey: 'checklist.view',
+      },
+      {
+        to: `${DISPATCH_WEB_BASE}/expenses`,
+        labelKey: 'expense.nav_staff',
+        icon: 'costs',
+        featureKey: 'module.driver_expense',
+        permissionKey: 'expense.view',
+      },
     ],
   },
   // P2P — Đưa đón học sinh chính sách: section riêng cho rõ ràng (module độc lập).

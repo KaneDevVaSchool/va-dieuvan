@@ -254,6 +254,7 @@ class TripCostController extends Controller
     public function updateByDriver(UpdateTripCostByDriverRequest $request, TripCost $tripCost)
     {
         $user = $request->user();
+        FinancialDataLock::assertTripCostNotLockedByExpense($tripCost);
         abort_unless(TripCostAccess::driverCanMutateCostRow($user, $tripCost), 403);
 
         if ($tripCost->trip_id !== null) {
@@ -289,6 +290,7 @@ class TripCostController extends Controller
     {
         $user = $request->user();
         $isReconciler = $user->hasPermission('trip.cost.reconcile');
+        FinancialDataLock::assertTripCostNotLockedByExpense($tripCost);
 
         if (! $isReconciler) {
             abort_unless(TripCostAccess::driverCanMutateCostRow($user, $tripCost), 403);

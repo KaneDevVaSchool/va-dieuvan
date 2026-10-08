@@ -132,6 +132,10 @@ class TripCostReportController extends Controller
         'wash' => 'Rửa xe',
         'fine' => 'Phạt',
         'repair' => 'Sửa chữa',
+        'insurance' => 'Bảo hiểm',
+        'inspection' => 'Đăng kiểm',
+        'supplies' => 'Vật tư / phụ tùng',
+        'maintenance' => 'Bảo dưỡng',
         'wizard_estimate' => 'Dự toán phiếu',
         'other' => 'Khác',
     ];

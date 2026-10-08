@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class TripCost extends Model
@@ -21,6 +22,13 @@ class TripCost extends Model
         'amount',
         'currency',
         'description',
+        'has_invoice',
+        'invoice_no',
+        'seller_name',
+        'seller_address',
+        'unit',
+        'quantity',
+        'unit_price',
         'reported_on',
         'receipt_url',
         'status',
@@ -32,6 +40,9 @@ class TripCost extends Model
         'amount' => 'decimal:2',
         'reported_on' => 'date:Y-m-d',
         'confirmed_at' => 'datetime',
+        'has_invoice' => 'boolean',
+        'quantity' => 'decimal:2',
+        'unit_price' => 'decimal:2',
     ];
 
     public function trip(): BelongsTo
@@ -57,5 +68,11 @@ class TripCost extends Model
     public function attachments(): MorphMany
     {
         return $this->morphMany(Attachment::class, 'attachable');
+    }
+
+    /** Các dòng hồ sơ chi phí (Đề nghị thanh toán / Bảng kê) đang tham chiếu chi phí này. */
+    public function expenseLines(): HasMany
+    {
+        return $this->hasMany(ExpenseDocumentLine::class);
     }
 }

@@ -316,3 +316,18 @@ attachments
 signed_document_versions, signed_document_verifications
 compliance_documents (driver & vehicle)
 ```
+
+## Checklist tài xế & Hồ sơ chi phí xe (10/2026)
+
+| Bảng | Ghi chú |
+|---|---|
+| `document_sequences` | Bộ đếm mã theo ngày — unique (`prefix`, `seq_date`) |
+| `checklist_templates` | `code` (daily_safety / weekly_compliance), `frequency`, `version`, `form_meta` json |
+| `checklist_template_items` | Mục kiểm tra: `severity` critical/non_critical, `ng_action`, `allow_na`, `requires_photo_on_ng`, `auto_source` |
+| `checklist_reminder_slots` | `remind_at` HH:MM, `weekdays` json (1–7), `escalate_after_minutes` |
+| `checklist_submissions` | Phiếu: `code` CL-…, `period_type/period_key`, `started_at/submitted_at` (giờ server), `result`, `trip_info` json, `lock_version`, soft delete |
+| `checklist_submission_items` | Snapshot mục + `result` ok/ng/na, `checked_at`, `prefill_hint`; ảnh qua `attachments` (kind `checklist_evidence`) |
+| `trip_costs` (+cột) | `has_invoice`, `invoice_no`, `seller_name`, `seller_address`, `unit`, `quantity`, `unit_price` |
+| `expense_documents` | Hồ sơ DX/TT/TU/HU/BK: `doc_type`, `payment_kind`, `parent_id`, snapshot người đề nghị, `signatories` json, `status`, `lock_version`, soft delete; scan qua `attachments` (kind `signed_scan`) |
+| `expense_document_lines` | Dòng: `vehicle_id`, `trip_cost_id`, `owns_trip_cost`, SL/đơn giá/thành tiền, người bán, `has_invoice` |
+| `expense_form_settings` | 1 dòng: thông tin công ty, `form_codes` json, `default_signatories` json |

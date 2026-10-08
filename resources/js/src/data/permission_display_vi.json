@@ -44,5 +44,11 @@
     "system.permissions.manage": "Quản lý danh sách quyền chi tiết",
     "system.user_roles.manage": "Gán vai trò cho người dùng",
     "system.feature_toggles.manage": "Bật / tắt tính năng hệ thống",
-    "audit_log.view": "Xem nhật ký hoạt động"
+    "audit_log.view": "Xem nhật ký hoạt động",
+    "checklist.submit": "Làm checklist xe (tài xế)",
+    "checklist.view": "Xem checklist tài xế",
+    "checklist.manage": "Cấu hình checklist & khung giờ nhắc",
+    "expense.submit": "Lập hồ sơ đề xuất / thanh toán (tài xế)",
+    "expense.view": "Xem hồ sơ chi phí xe",
+    "expense.manage": "Xử lý hồ sơ chi phí (trả lại, đã thanh toán, cấu hình mẫu)"
 }

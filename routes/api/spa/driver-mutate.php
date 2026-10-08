@@ -68,3 +68,30 @@ Route::prefix('attachments')->controller(AttachmentController::class)->group(fun
         ->middleware('throttle:30,1');
     Route::post('/{attachment}/ocr', 'runOcr')->middleware('throttle:attachment-ocr');
 });
+
+// Checklist Daily/Weekly — tài xế ghi (quyền checklist.submit trong FormRequest)
+Route::prefix('driver/checklists')
+    ->middleware('feature:module.driver_checklist')
+    ->controller(\App\Http\Controllers\Api\Driver\DriverChecklistController::class)
+    ->group(function () {
+        Route::post('/', 'store')->middleware(['throttle:30,1', 'idempotency']);
+        Route::patch('/{checklist}', 'update')->whereNumber('checklist')->middleware('throttle:240,1');
+        Route::post('/{checklist}/submit', 'submit')->whereNumber('checklist')->middleware(['throttle:30,1', 'idempotency']);
+        Route::delete('/{checklist}', 'destroy')->whereNumber('checklist')->middleware('throttle:30,1');
+        Route::post('/{checklist}/items/{item}/evidence', 'uploadEvidence')
+            ->whereNumber(['checklist', 'item'])->middleware('throttle:60,1');
+        Route::delete('/{checklist}/items/{item}/evidence/{attachment}', 'deleteEvidence')
+            ->whereNumber(['checklist', 'item', 'attachment'])->middleware('throttle:60,1');
+    });
+
+// Hồ sơ đề xuất / thanh toán chi phí xe — người lập ghi (quyền expense.submit trong FormRequest)
+Route::prefix('driver/expenses')
+    ->middleware('feature:module.driver_expense')
+    ->controller(\App\Http\Controllers\Api\Driver\DriverExpenseController::class)
+    ->group(function () {
+        Route::post('/', 'store')->middleware(['throttle:30,1', 'idempotency']);
+        Route::patch('/{expense}', 'update')->whereNumber('expense')->middleware('throttle:120,1');
+        Route::post('/{expense}/submit', 'submit')->whereNumber('expense')->middleware(['throttle:30,1', 'idempotency']);
+        Route::post('/{expense}/cancel', 'cancel')->whereNumber('expense')->middleware('throttle:30,1');
+        Route::post('/{expense}/signed-scan', 'uploadScan')->whereNumber('expense')->middleware('throttle:30,1');
+    });

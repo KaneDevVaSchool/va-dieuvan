@@ -154,6 +154,11 @@ class TripCostListXlsxWriter
             'parking' => 'Phí đỗ xe',
             'maintenance' => 'Bảo dưỡng',
             'driver_fee' => 'Phí tài xế',
+            'meal' => 'Ăn uống',
+            'repair' => 'Sửa chữa',
+            'insurance' => 'Bảo hiểm',
+            'inspection' => 'Đăng kiểm',
+            'supplies' => 'Vật tư / phụ tùng',
             'other' => 'Khác',
             default => (string) $type,
         };

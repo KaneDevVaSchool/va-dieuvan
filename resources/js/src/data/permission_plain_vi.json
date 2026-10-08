@@ -44,5 +44,11 @@
     "tp_import.manage": "Import danh sách học sinh (file Excel) và xử lý lỗi import.",
     "tp_report.view": "Xem báo cáo vắng mặt và doanh thu Transport Program.",
     "tp_audit.view": "Xem nhật ký thao tác trên module Transport Program.",
-    "tp_execution.force_complete": "Buộc hoàn thành chuyến/ngày vận chuyển (thao tác điều phối đặc biệt)."
+    "tp_execution.force_complete": "Buộc hoàn thành chuyến/ngày vận chuyển (thao tác điều phối đặc biệt).",
+    "checklist.submit": "Tài xế tạo và nộp phiếu checklist Daily/Weekly trên app, chụp ảnh minh chứng.",
+    "checklist.view": "Xem bảng theo dõi checklist, chi tiết phiếu, xuất PDF/Excel, đánh dấu đã xem.",
+    "checklist.manage": "Sửa nội dung mục checklist và khung giờ nhắc tài xế.",
+    "expense.submit": "Tài xế lập Phiếu đề xuất, Đề nghị thanh toán/tạm ứng/hoàn ứng, Bảng kê không hóa đơn và tải file in.",
+    "expense.view": "Xem danh sách hồ sơ chi phí, sổ chi phí theo xe, tải file in.",
+    "expense.manage": "Trả lại hồ sơ, xác nhận bản scan, đánh dấu đã thanh toán, cấu hình thông tin mẫu in."
 }

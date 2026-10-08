@@ -145,6 +145,18 @@
           />
         </div>
 
+        <div>
+          <label class="flex min-h-[44px] items-center gap-3 text-sm font-semibold text-driver-muted">
+            <input v-model="form.has_invoice" type="checkbox" class="h-5 w-5 accent-[#7fdcc8]" data-testid="driver-cost-has-invoice" />
+            {{ t('expense.line_has_invoice') }}
+          </label>
+          <div v-if="!form.has_invoice" class="mt-2 grid gap-2">
+            <p class="text-xs text-amber-200/90">{{ t('expense.line_no_invoice_hint') }}</p>
+            <input v-model="form.seller_name" type="text" maxlength="255" :placeholder="t('expense.line_seller')" class="flex min-h-[48px] w-full rounded-xl border border-white/10 bg-driver-surface px-3 py-2.5 text-base text-driver-ink placeholder:text-driver-muted/50 focus:outline-none focus:ring-2 focus:ring-driver-accent/45" />
+            <input v-model="form.seller_address" type="text" maxlength="255" :placeholder="t('expense.line_seller_address')" class="flex min-h-[48px] w-full rounded-xl border border-white/10 bg-driver-surface px-3 py-2.5 text-base text-driver-ink placeholder:text-driver-muted/50 focus:outline-none focus:ring-2 focus:ring-driver-accent/45" />
+          </div>
+        </div>
+
         <div class="border-t border-white/[0.06] pt-4">
           <DriverCostCreateReceiptPicker
             ref="receiptPickerRef"
@@ -206,6 +218,9 @@ const form = ref({
   amount: '',
   description: '',
   reported_on: todayKey,
+  has_invoice: true,
+  seller_name: '',
+  seller_address: '',
 })
 
 const saving = ref(false)
@@ -223,6 +238,12 @@ const costTypes = computed(() => [
   { value: 'fuel', label: t('driver_trip_detail.cost_type_fuel') },
   { value: 'toll', label: t('driver_trip_detail.cost_type_toll') },
   { value: 'parking', label: t('driver_trip_detail.cost_type_parking') },
+  { value: 'meal', label: t('expense.cost_type_meal') },
+  { value: 'repair', label: t('expense.cost_type_repair') },
+  { value: 'maintenance', label: t('expense.cost_type_maintenance') },
+  { value: 'insurance', label: t('expense.cost_type_insurance') },
+  { value: 'inspection', label: t('expense.cost_type_inspection') },
+  { value: 'supplies', label: t('expense.cost_type_supplies') },
   { value: 'other', label: t('driver_trip_detail.cost_type_other') },
 ])
 
@@ -345,6 +366,9 @@ async function submit() {
       amount: num,
       description: form.value.description?.trim() || null,
       currency: 'VND',
+      has_invoice: !!form.value.has_invoice,
+      seller_name: form.value.has_invoice ? null : form.value.seller_name?.trim() || null,
+      seller_address: form.value.has_invoice ? null : form.value.seller_address?.trim() || null,
     }
     if (linkMode.value === 'none') {
       const vehicleRaw = String(form.value.vehicle_id || '').trim()

@@ -3,6 +3,8 @@ import vi from './locales/vi.json'
 import en from './locales/en.json'
 import dwVi from './locales/dispatch-wizard.vi.json'
 import dwEn from './locales/dispatch-wizard.en.json'
+import ceVi from './locales/checklist-expense.vi.json'
+import ceEn from './locales/checklist-expense.en.json'
 
 const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('locale') : null
 
@@ -11,8 +13,8 @@ export const i18n = createI18n({
   locale: saved === 'en' ? 'en' : 'vi',
   fallbackLocale: 'vi',
   messages: {
-    vi: { ...vi, ...dwVi },
-    en: { ...en, ...dwEn },
+    vi: { ...vi, ...dwVi, ...ceVi },
+    en: { ...en, ...dwEn, ...ceEn },
   },
 })
 

@@ -95,6 +95,14 @@ class RbacSeeder extends Seeder
             'tp_report.view',
             'tp_audit.view',
             'tp_execution.force_complete',
+            // Checklist tài xế
+            'checklist.submit',
+            'checklist.view',
+            'checklist.manage',
+            // Hồ sơ chi phí xe (đề xuất / thanh toán)
+            'expense.submit',
+            'expense.view',
+            'expense.manage',
         ];
 
         foreach ($permissions as $p) {
@@ -121,6 +129,8 @@ class RbacSeeder extends Seeder
                 'trip.event.create',
                 'trip.cost.view',
                 'attachment.upload',
+                'checklist.submit',
+                'expense.submit',
             ],
             'dispatcher' => [
                 'request.create',
@@ -158,6 +168,9 @@ class RbacSeeder extends Seeder
                 'tp_report.view',
                 'tp_audit.view',
                 'tp_execution.force_complete',
+                'checklist.view',
+                'checklist.manage',
+                'expense.view',
             ],
             'department_head' => [
                 'request.create',
@@ -181,6 +194,8 @@ class RbacSeeder extends Seeder
                 'tp_program.view',
                 'tp_cost.manage',
                 'tp_report.view',
+                'expense.view',
+                'expense.manage',
             ],
             'admin' => $permissions,
             'superadmin' => $permissions,

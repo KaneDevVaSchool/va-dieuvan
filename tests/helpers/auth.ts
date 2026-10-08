@@ -20,6 +20,26 @@ export async function loginAs(page: Page, role: UserRole): Promise<void> {
   await page.waitForURL(/\/(dashboard|driver|portal)/)
 }
 
+/**
+ * Đăng nhập bằng token Sanctum qua POST /api/login (trang /login hiện chỉ có Google OAuth).
+ * Token được ghi vào localStorage `sanctum_token` trước khi SPA khởi động.
+ */
+export async function loginWithToken(page: Page, role: UserRole): Promise<void> {
+  const user = TEST_USERS[role]
+  const response = await page.request.post('/api/login', {
+    data: { email: user.email, password: user.password },
+    headers: { Accept: 'application/json' },
+  })
+  const body = await response.json()
+  const token = body?.data?.token ?? body?.token
+  if (!token) throw new Error(`Không đăng nhập được ${user.email}: ${response.status()}`)
+
+  await page.addInitScript((value) => {
+    window.localStorage.setItem('sanctum_token', value)
+    window.localStorage.setItem('vas_onboarded', '1')
+  }, token)
+}
+
 export async function logout(page: Page): Promise<void> {
   await page.click('[data-testid="user-menu"]')
   await page.click('[data-testid="logout-btn"]')

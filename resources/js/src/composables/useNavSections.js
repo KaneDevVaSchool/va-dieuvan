@@ -37,7 +37,7 @@ export function useNavSections() {
       return [
         {
           headingKey: 'nav.section_driver',
-          items: [
+          items: filterItems([
             {
               to: '/driver',
               labelKey: 'nav.driver_home',
@@ -59,11 +59,25 @@ export function useNavSections() {
               icon: 'costs',
             },
             {
+              to: '/driver/checklists',
+              labelKey: 'checklist.nav_driver',
+              icon: 'checklist',
+              featureKey: 'module.driver_checklist',
+              permissionKey: 'checklist.submit',
+            },
+            {
+              to: '/driver/expenses',
+              labelKey: 'expense.nav_driver',
+              icon: 'documents',
+              featureKey: 'module.driver_expense',
+              permissionKey: 'expense.submit',
+            },
+            {
               to: '/driver/account',
               labelKey: 'nav.bottom_driver_account',
               icon: 'user',
             },
-          ],
+          ]),
         },
       ]
     }

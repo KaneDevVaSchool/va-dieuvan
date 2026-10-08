@@ -33,7 +33,7 @@ class TripCostSpreadsheetImportService
     ];
 
     /** @var list<string> */
-    private const VALID_TYPES = ['fuel', 'toll', 'parking', 'maintenance', 'driver_fee', 'other'];
+    private const VALID_TYPES = ['fuel', 'toll', 'parking', 'maintenance', 'driver_fee', 'meal', 'repair', 'insurance', 'inspection', 'supplies', 'other'];
 
     /**
      * @return array{created: int, skipped: int, errors: list<array{row: int, message: string}>}

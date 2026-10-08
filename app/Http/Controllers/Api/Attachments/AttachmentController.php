@@ -11,6 +11,8 @@ use App\Http\Resources\SignedDocumentVersionResource;
 use App\Jobs\ProcessAttachmentOcrJob;
 use App\Models\Attachment;
 use App\Models\CargoShipment;
+use App\Models\ChecklistSubmissionItem;
+use App\Models\ExpenseDocument;
 use App\Models\DispatchRequest;
 use App\Models\DriverComplianceDocument;
 use App\Models\Trip;
@@ -20,6 +22,8 @@ use App\Models\VehicleComplianceDocument;
 use App\Services\Auditing\AuditLogger;
 use App\Services\Ocr\PaperOcrStubService;
 use App\Services\SignedDocuments\SignedDocumentUploadService;
+use App\Support\ChecklistAccess;
+use App\Support\ExpenseDocumentAccess;
 use App\Support\FinancialDataLock;
 use App\Support\TripCostAccess;
 use App\Support\TripVisibility;
@@ -459,6 +463,19 @@ class AttachmentController extends Controller
                 return;
             }
             abort(403);
+        }
+
+        if ($parent instanceof ChecklistSubmissionItem) {
+            $submission = $parent->submission()->withTrashed()->first();
+            abort_unless($submission !== null && ChecklistAccess::userCanView($user, $submission), 403);
+
+            return;
+        }
+
+        if ($parent instanceof ExpenseDocument) {
+            abort_unless(ExpenseDocumentAccess::userCanView($user, $parent), 403);
+
+            return;
         }
 
         abort(403);
