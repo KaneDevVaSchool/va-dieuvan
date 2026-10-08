@@ -1,6 +1,3 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 # Validate commit message format
 COMMIT_MSG=$(cat "$1")
 PATTERN="^(feat|fix|refactor|perf|test|docs|chore|style|ci|revert)(\(.+\))?: .{3,}"
