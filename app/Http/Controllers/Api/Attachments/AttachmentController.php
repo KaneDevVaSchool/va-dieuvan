@@ -146,6 +146,8 @@ class AttachmentController extends Controller
     public function destroy(DestroyAttachmentRequest $request, Attachment $attachment)
     {
         $this->authorizeAttachmentDownload($request, $attachment);
+        abort_if($attachment->isDriverWorkflowFile(), 409,
+            'Ảnh checklist phải xóa từ phiếu nháp; bản scan hồ sơ chi phí được giữ cùng lịch sử hồ sơ.');
 
         $user = $request->user();
         $before = $attachment->toArray();
@@ -179,7 +181,7 @@ class AttachmentController extends Controller
         $name = $attachment->original_name ?: 'download';
 
         // Chứng từ mới chỉ lưu file. Binary cũ chỉ là fallback trong giai đoạn chuyển dữ liệu.
-        if ($attachment->isComplianceDocument() && $attachment->path) {
+        if (($attachment->isComplianceDocument() || $attachment->isDriverWorkflowFile()) && $attachment->path) {
             $resolved = $this->resolveForAttachmentDownload($attachment->disk ?: 'local', $attachment->path);
             if ($resolved) {
                 return $resolved['kind'] === 'absolute'

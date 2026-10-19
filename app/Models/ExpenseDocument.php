@@ -166,6 +166,12 @@ class ExpenseDocument extends Model
         return in_array($this->status, self::EDITABLE_STATUSES, true);
     }
 
+    public function isManagedStatement(): bool
+    {
+        return $this->doc_type === self::TYPE_NO_INVOICE_STATEMENT && $this->parent_id
+            && ($this->relationLoaded('parent') ? $this->parent?->doc_type : $this->parent()->value('doc_type')) === self::TYPE_PAYMENT_REQUEST;
+    }
+
     /**
      * Chứng từ ghi nhận chi phí đã phát sinh (TT, HU, BK) → dòng gắn với trip_costs (sổ chi phí xe).
      * Phiếu đề xuất (DX) và Đề nghị tạm ứng (TU) là số dự kiến, không tạo chi phí.

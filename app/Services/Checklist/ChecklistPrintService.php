@@ -236,9 +236,11 @@ class ChecklistPrintService
     {
         $weekly = ChecklistSubmission::query()
             ->where('driver_id', $s->driver_id)
+            ->where('vehicle_id', $s->vehicle_id)
             ->where('period_type', ChecklistTemplate::FREQUENCY_WEEKLY)
             ->where('status', '!=', ChecklistSubmission::STATUS_DRAFT)
             ->where('submitted_at', '>=', ($s->started_at ?? Carbon::now())->copy()->subDays(14))
+            ->where('submitted_at', '<=', $s->submitted_at ?? $s->started_at ?? Carbon::now())
             ->orderByDesc('submitted_at')
             ->with('items:id,submission_id,title,result,note')
             ->first();

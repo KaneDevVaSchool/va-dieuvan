@@ -23,7 +23,7 @@ class EnsureDispatchStaffAccess
             abort(403, 'Yêu cầu tài khoản đã đăng nhập SPA điều vận.');
         }
 
-        if ($user->hasRole('internal_user') && ! $user->hasAnyRole(['admin', 'dispatcher', 'department_head'])) {
+        if ($user->hasRole('internal_user') && ! $user->hasAnyRole(['admin', 'dispatcher', 'department_head', 'accountant'])) {
             abort(403, 'Khu vực này dành cho điều vận (admin, dispatcher, trưởng đơn vị).');
         }
 

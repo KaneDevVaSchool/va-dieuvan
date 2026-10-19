@@ -249,7 +249,6 @@ const parentOptions = computed(() =>
   (defaults.value.parents ?? []).filter((p) => {
     if (docType.value === 'payment_request' && paymentKind.value === 'reimbursement') return p.doc_type === 'proposal' || p.payment_kind === 'advance'
     if (docType.value === 'payment_request') return p.doc_type === 'proposal'
-    if (docType.value === 'no_invoice_statement') return p.doc_type === 'payment_request' && p.payment_kind !== 'advance'
     return false
   }),
 )
@@ -296,6 +295,7 @@ function addLine() {
 
 function addPickedCosts(costs) {
   for (const c of costs) {
+    if (lines.value.some((line) => Number(line.trip_cost_id) === Number(c.id))) continue
     lines.value.push(
       newLine({
         trip_cost_id: c.id,
@@ -368,6 +368,7 @@ async function load() {
 
 function payload() {
   const body = { ...form }
+  if (docType.value === 'no_invoice_statement') body.parent_id = null
   for (const k of Object.keys(body)) {
     if (body[k] === '') body[k] = null
   }

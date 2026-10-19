@@ -18,8 +18,19 @@ class MigrateComplianceFilesCommand extends Command
 
     protected $description = 'Chuyển scan xe/tài xế từ database/disk cũ sang kho private, kiểm tra SHA-256';
 
-    public function handle(ComplianceFileMigration $migration): int
+    protected function migration(): ComplianceFileMigration
     {
+        return app(ComplianceFileMigration::class);
+    }
+
+    protected function attachmentTypes(): array
+    {
+        return Attachment::COMPLIANCE_TYPES;
+    }
+
+    public function handle(): int
+    {
+        $migration = $this->migration();
         $apply = (bool) $this->option('apply');
         $verify = (bool) $this->option('verify');
         $prune = (bool) $this->option('prune-binary');
@@ -38,7 +49,7 @@ class MigrateComplianceFilesCommand extends Command
         $this->info('Disk đích: '.$disk.'; mode: '.($verify ? 'verify' : ($apply ? ($prune ? 'prune-binary' : 'apply') : 'dry-run')));
         $checked = $failed = $binaryRemaining = 0;
         // Chỉ tải ID theo lô; mỗi lần đọc/khóa một blob, tránh giữ hàng trăm file trong RAM.
-        Attachment::query()->whereIn('attachable_type', Attachment::COMPLIANCE_TYPES)
+        Attachment::query()->whereIn('attachable_type', $this->attachmentTypes())
             ->select('id')->chunkById(100, function ($rows) use ($migration, $apply, $verify, $prune, &$checked, &$failed, &$binaryRemaining) {
                 foreach ($rows as $row) {
                     $checked++;

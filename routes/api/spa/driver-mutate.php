@@ -71,27 +71,31 @@ Route::prefix('attachments')->controller(AttachmentController::class)->group(fun
 
 // Checklist Daily/Weekly — tài xế ghi (quyền checklist.submit trong FormRequest)
 Route::prefix('driver/checklists')
+    ->withoutMiddleware(['throttle:120,1', 'throttle:180,1'])
+    ->middleware('throttle:driver-workflow-write')
     ->middleware('feature:module.driver_checklist')
     ->controller(\App\Http\Controllers\Api\Driver\DriverChecklistController::class)
     ->group(function () {
-        Route::post('/', 'store')->middleware(['throttle:30,1', 'idempotency']);
-        Route::patch('/{checklist}', 'update')->whereNumber('checklist')->middleware('throttle:240,1');
-        Route::post('/{checklist}/submit', 'submit')->whereNumber('checklist')->middleware(['throttle:30,1', 'idempotency']);
-        Route::delete('/{checklist}', 'destroy')->whereNumber('checklist')->middleware('throttle:30,1');
+        Route::post('/', 'store')->middleware(['throttle:driver-workflow-submit', 'idempotency']);
+        Route::patch('/{checklist}', 'update')->whereNumber('checklist')->middleware('throttle:checklist-autosave');
+        Route::post('/{checklist}/submit', 'submit')->whereNumber('checklist')->middleware(['throttle:driver-workflow-submit', 'idempotency']);
+        Route::delete('/{checklist}', 'destroy')->whereNumber('checklist')->middleware('throttle:driver-workflow-submit');
         Route::post('/{checklist}/items/{item}/evidence', 'uploadEvidence')
-            ->whereNumber(['checklist', 'item'])->middleware('throttle:60,1');
+            ->whereNumber(['checklist', 'item'])->middleware('throttle:driver-workflow-upload');
         Route::delete('/{checklist}/items/{item}/evidence/{attachment}', 'deleteEvidence')
-            ->whereNumber(['checklist', 'item', 'attachment'])->middleware('throttle:60,1');
+            ->whereNumber(['checklist', 'item', 'attachment'])->middleware('throttle:driver-workflow-upload');
     });
 
 // Hồ sơ đề xuất / thanh toán chi phí xe — người lập ghi (quyền expense.submit trong FormRequest)
 Route::prefix('driver/expenses')
+    ->withoutMiddleware(['throttle:120,1', 'throttle:180,1'])
+    ->middleware('throttle:driver-workflow-write')
     ->middleware('feature:module.driver_expense')
     ->controller(\App\Http\Controllers\Api\Driver\DriverExpenseController::class)
     ->group(function () {
-        Route::post('/', 'store')->middleware(['throttle:30,1', 'idempotency']);
-        Route::patch('/{expense}', 'update')->whereNumber('expense')->middleware('throttle:120,1');
-        Route::post('/{expense}/submit', 'submit')->whereNumber('expense')->middleware(['throttle:30,1', 'idempotency']);
-        Route::post('/{expense}/cancel', 'cancel')->whereNumber('expense')->middleware('throttle:30,1');
-        Route::post('/{expense}/signed-scan', 'uploadScan')->whereNumber('expense')->middleware('throttle:30,1');
+        Route::post('/', 'store')->middleware(['throttle:driver-workflow-submit', 'idempotency']);
+        Route::patch('/{expense}', 'update')->whereNumber('expense')->middleware('throttle:driver-workflow-write');
+        Route::post('/{expense}/submit', 'submit')->whereNumber('expense')->middleware(['throttle:driver-workflow-submit', 'idempotency']);
+        Route::post('/{expense}/cancel', 'cancel')->whereNumber('expense')->middleware('throttle:driver-workflow-submit');
+        Route::post('/{expense}/signed-scan', 'uploadScan')->whereNumber('expense')->middleware('throttle:driver-workflow-submit');
     });

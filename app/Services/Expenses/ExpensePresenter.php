@@ -78,6 +78,10 @@ class ExpensePresenter
         $owns = $viewer ? ExpenseDocumentAccess::userOwns($viewer, $doc) : false;
         $manage = $viewer ? $viewer->hasPermission('expense.manage') : false;
         $inFlight = in_array($doc->status, [ExpenseDocument::STATUS_SUBMITTED, ExpenseDocument::STATUS_SIGNED], true);
+        $managed = $doc->isManagedStatement();
+        $protectedChild = $doc->children->contains(fn (ExpenseDocument $child) => $child->doc_type === ExpenseDocument::TYPE_NO_INVOICE_STATEMENT
+            && in_array($child->status, [ExpenseDocument::STATUS_SIGNED, ExpenseDocument::STATUS_PAID], true));
+        $parentAllowsScan = ! $managed || in_array($doc->parent?->status, [ExpenseDocument::STATUS_SUBMITTED, ExpenseDocument::STATUS_SIGNED], true);
 
         return [
             ...$this->summary($doc),
@@ -125,12 +129,12 @@ class ExpensePresenter
                 'created_at' => $this->iso($a->created_at),
             ])->values()->all(),
             'can' => [
-                'edit' => $owns && $doc->isEditable(),
-                'submit' => $owns && $doc->isEditable(),
-                'cancel' => ($owns || $manage) && in_array($doc->status, [ExpenseDocument::STATUS_DRAFT, ExpenseDocument::STATUS_SUBMITTED, ExpenseDocument::STATUS_REJECTED], true),
-                'upload_scan' => ($owns || $manage) && $inFlight,
-                'reject' => $manage && $inFlight,
-                'mark_paid' => $manage && $inFlight,
+                'edit' => ! $managed && $owns && $doc->isEditable(),
+                'submit' => ! $managed && $owns && $doc->isEditable(),
+                'cancel' => ! $managed && ! $protectedChild && ($owns || $manage) && in_array($doc->status, [ExpenseDocument::STATUS_DRAFT, ExpenseDocument::STATUS_SUBMITTED, ExpenseDocument::STATUS_REJECTED], true),
+                'upload_scan' => $parentAllowsScan && ($owns || $manage) && $inFlight,
+                'reject' => ! $managed && $manage && $inFlight,
+                'mark_paid' => ! $managed && $manage && $inFlight,
             ],
         ];
     }

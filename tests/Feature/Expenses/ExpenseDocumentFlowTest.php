@@ -31,6 +31,7 @@ class ExpenseDocumentFlowTest extends TestCase
         parent::setUp();
         $this->seed(RbacSeeder::class);
         Storage::fake('local');
+        Storage::fake('compliance');
         Carbon::setTestNow(Carbon::parse('2026-09-30 03:00:00', 'UTC'));
 
         $this->driverUser = User::factory()->create(['is_active' => true, 'email' => 'taixe@vaschools.edu.vn']);

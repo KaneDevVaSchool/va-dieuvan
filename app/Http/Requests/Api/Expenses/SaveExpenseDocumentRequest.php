@@ -47,9 +47,9 @@ class SaveExpenseDocumentRequest extends DriverExpenseRequest
             'signatories.*.name' => ['nullable', 'string', 'max:120'],
 
             'lines' => ['sometimes', 'array', 'max:100'],
-            'lines.*.id' => ['nullable', 'integer'],
+            'lines.*.id' => ['nullable', 'integer', 'distinct'],
             'lines.*.vehicle_id' => ['nullable', 'integer', 'exists:vehicles,id'],
-            'lines.*.trip_cost_id' => ['nullable', 'integer'],
+            'lines.*.trip_cost_id' => ['nullable', 'integer', 'distinct'],
             'lines.*.cost_type' => ['nullable', 'string', 'max:64', 'regex:/^[a-z0-9_\-]+$/i'],
             'lines.*.category' => ['nullable', 'string', 'max:255'],
             'lines.*.description' => ['nullable', 'string', 'max:1000'],

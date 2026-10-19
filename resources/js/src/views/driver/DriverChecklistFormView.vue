@@ -261,7 +261,7 @@ function scheduleSave() {
   if (!editable.value) return
   saveState.value = 'pending'
   clearTimeout(saveTimer)
-  saveTimer = setTimeout(() => void flushSave(), AUTOSAVE_MS)
+  saveTimer = setTimeout(() => void flushSave().catch(() => {}), AUTOSAVE_MS)
 }
 
 async function flushSave() {
@@ -270,6 +270,7 @@ async function flushSave() {
   if (!dirtyItems.size && !headerDirty) return
   const payload = buildPayload()
   const sentIds = [...dirtyItems]
+  const sentHeader = headerDirty
   dirtyItems.clear()
   headerDirty = false
   saveState.value = 'saving'
@@ -279,11 +280,12 @@ async function flushSave() {
       saveState.value = 'saved'
     } catch (err) {
       sentIds.forEach((id) => dirtyItems.add(id))
+      headerDirty = headerDirty || sentHeader
       saveState.value = 'error'
       if (err?.response?.status === 409) {
         showAppError(err.response.data?.message || t('checklist.conflict'))
-        await load()
       }
+      throw err
     } finally {
       savePromise = null
     }
@@ -395,6 +397,6 @@ async function downloadPdf() {
 
 onMounted(load)
 onBeforeUnmount(() => {
-  if (dirtyItems.size || headerDirty) void flushSave()
+  if (dirtyItems.size || headerDirty) void flushSave().catch(() => {})
 })
 </script>

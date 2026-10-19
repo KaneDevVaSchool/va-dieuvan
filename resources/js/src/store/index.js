@@ -137,7 +137,7 @@ export const useAuthStore = defineStore('auth', {
       const u = this.user
       if (!u) return false
       if (u.is_superadmin) return true
-      const allow = new Set(['superadmin', 'admin', 'dispatcher', 'department_head', 'internal_user'])
+      const allow = new Set(['superadmin', 'admin', 'dispatcher', 'department_head', 'internal_user', 'accountant'])
       return (u.roles ?? []).some((r) => r && allow.has(r.name))
     },
     /** Khớp backend User::canAccessDriverWebApp — role driver. */
@@ -145,6 +145,11 @@ export const useAuthStore = defineStore('auth', {
       const u = this.user
       if (!u) return false
       return (u.roles ?? []).some((r) => r && r.name === 'driver')
+    },
+    isAccountantOnly() {
+      const roles = this.user?.roles ?? []
+      return !this.user?.is_superadmin && roles.some((r) => r.name === 'accountant') &&
+        !roles.some((r) => ['superadmin', 'admin', 'dispatcher', 'department_head'].includes(r.name))
     },
     async patchProfile(payload) {
       const data = await authApi.patchProfile(payload)

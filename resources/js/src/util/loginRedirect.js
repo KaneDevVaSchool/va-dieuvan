@@ -97,6 +97,7 @@ export function sanitizeLoginRedirect(raw) {
  * @param {{ canAccessDispatchWebApp: () => boolean, canAccessDriverWebApp: () => boolean, isDeptHeadOnly: () => boolean }} auth
  */
 function defaultPostLoginHome(auth) {
+  if (auth.isAccountantOnly?.()) return '/mng/expenses'
   if (!auth.canAccessDispatchWebApp() && !auth.canAccessDriverWebApp()) {
     return '/portal'
   }

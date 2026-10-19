@@ -19,6 +19,8 @@ Route::get('/driver/tp-days/{tpProgramDay}', [\App\Http\Controllers\Api\Driver\D
 
 // Checklist Daily/Weekly — tài xế đọc
 Route::prefix('driver/checklists')
+    ->withoutMiddleware(['throttle:120,1', 'throttle:180,1'])
+    ->middleware('throttle:driver-workflow-read')
     ->middleware('feature:module.driver_checklist')
     ->controller(\App\Http\Controllers\Api\Driver\DriverChecklistController::class)
     ->group(function () {
@@ -26,11 +28,13 @@ Route::prefix('driver/checklists')
         Route::get('/options', 'options');
         Route::get('/', 'index');
         Route::get('/{checklist}', 'show')->whereNumber('checklist');
-        Route::get('/{checklist}/pdf', 'pdf')->whereNumber('checklist')->middleware('throttle:30,1');
+        Route::get('/{checklist}/pdf', 'pdf')->whereNumber('checklist')->middleware('throttle:driver-workflow-export');
     });
 
 // Hồ sơ đề xuất / thanh toán chi phí xe — người lập đọc
 Route::prefix('driver/expenses')
+    ->withoutMiddleware(['throttle:120,1', 'throttle:180,1'])
+    ->middleware('throttle:driver-workflow-read')
     ->middleware('feature:module.driver_expense')
     ->controller(\App\Http\Controllers\Api\Driver\DriverExpenseController::class)
     ->group(function () {
@@ -38,6 +42,6 @@ Route::prefix('driver/expenses')
         Route::get('/cost-candidates', 'costCandidates');
         Route::get('/', 'index');
         Route::get('/{expense}', 'show')->whereNumber('expense');
-        Route::get('/{expense}/pdf', 'pdf')->whereNumber('expense')->middleware('throttle:30,1');
-        Route::get('/{expense}/xlsx', 'xlsx')->whereNumber('expense')->middleware('throttle:30,1');
+        Route::get('/{expense}/pdf', 'pdf')->whereNumber('expense')->middleware('throttle:driver-workflow-export');
+        Route::get('/{expense}/xlsx', 'xlsx')->whereNumber('expense')->middleware('throttle:driver-workflow-export');
     });

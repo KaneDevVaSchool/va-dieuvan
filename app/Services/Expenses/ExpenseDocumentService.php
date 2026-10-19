@@ -133,6 +133,23 @@ class ExpenseDocumentService
         return DB::transaction(function () use ($doc, $actor, $lockVersion) {
             $locked = $this->lockForEdit($doc, $actor, $lockVersion);
             $locked->load('lines');
+            $costIds = [];
+            foreach ($locked->lines as $index => $line) {
+                if ($line->trip_cost_id) {
+                    if (isset($costIds[$line->trip_cost_id])) {
+                        throw ValidationException::withMessages(["lines.{$index}.trip_cost_id" => 'Một chi phí chỉ được xuất hiện một lần trong hồ sơ.']);
+                    }
+                    $costIds[$line->trip_cost_id] = true;
+                    $cost = TripCost::query()->with('trip')->lockForUpdate()->findOrFail($line->trip_cost_id);
+                    if ($cost->status === 'rejected') {
+                        throw ValidationException::withMessages(["lines.{$index}.trip_cost_id" => 'Chi phí đã bị từ chối, không thể nộp hồ sơ.']);
+                    }
+                    $this->assertCostNotHeldElsewhere($locked, $cost, $index);
+                    $this->fillFromCost($line, $cost);
+                    $line->save();
+                }
+            }
+            $this->recalculate($locked);
             $this->assertSubmittable($locked);
 
             $before = $locked->only(['status', 'total_amount']);
@@ -161,6 +178,10 @@ class ExpenseDocumentService
     {
         return DB::transaction(function () use ($doc, $actor, $file) {
             $locked = ExpenseDocument::query()->lockForUpdate()->findOrFail($doc->id);
+            if ($locked->isManagedStatement()) {
+                abort_unless($locked->parent()->whereIn('status', [ExpenseDocument::STATUS_SUBMITTED, ExpenseDocument::STATUS_SIGNED])->exists(),
+                    409, 'Hồ sơ cha không còn ở trạng thái cho phép bổ sung bản ký.');
+            }
             abort_unless(ExpenseDocumentAccess::userOwns($actor, $locked) || $actor->hasPermission('expense.manage'), 403);
             if (! in_array($locked->status, [ExpenseDocument::STATUS_SUBMITTED, ExpenseDocument::STATUS_SIGNED], true)) {
                 abort(409, 'Chỉ upload bản scan có chữ ký sau khi đã nộp hồ sơ.');
@@ -187,6 +208,7 @@ class ExpenseDocumentService
     {
         return DB::transaction(function () use ($doc, $actor, $reason) {
             $locked = ExpenseDocument::query()->lockForUpdate()->findOrFail($doc->id);
+            $this->assertNotManagedStatement($locked);
             if (! in_array($locked->status, [ExpenseDocument::STATUS_SUBMITTED, ExpenseDocument::STATUS_SIGNED], true)) {
                 abort(409, 'Chỉ trả lại hồ sơ đã nộp / đã ký và chưa thanh toán.');
             }
@@ -201,6 +223,15 @@ class ExpenseDocumentService
             $locked->lock_version++;
             $locked->save();
 
+            foreach ($this->attachedStatements($locked) as $child) {
+                abort_if($child->status === ExpenseDocument::STATUS_PAID, 409, 'Bảng kê con đã thanh toán, không thể trả lại hồ sơ.');
+                if ($child->status !== ExpenseDocument::STATUS_CANCELLED) {
+                    $child->update(['status' => ExpenseDocument::STATUS_REJECTED, 'rejected_reason' => $reason,
+                        'rejected_by' => $actor->id, 'rejected_at' => Carbon::now(), 'signed_at' => null,
+                        'lock_version' => $child->lock_version + 1]);
+                }
+            }
+
             $this->audit->log($actor->id, 'expense.rejected', $locked, $before, $locked->only(['status', 'rejected_reason', 'rejected_at']));
 
             return $locked->fresh();
@@ -211,6 +242,7 @@ class ExpenseDocumentService
     {
         return DB::transaction(function () use ($doc, $actor, $paidAt) {
             $locked = ExpenseDocument::query()->lockForUpdate()->findOrFail($doc->id);
+            $this->assertNotManagedStatement($locked);
             if (! in_array($locked->status, [ExpenseDocument::STATUS_SUBMITTED, ExpenseDocument::STATUS_SIGNED], true)) {
                 abort(409, 'Chỉ đánh dấu đã thanh toán cho hồ sơ đã nộp / đã ký.');
             }
@@ -250,12 +282,21 @@ class ExpenseDocumentService
     {
         return DB::transaction(function () use ($doc, $actor) {
             $locked = ExpenseDocument::query()->lockForUpdate()->findOrFail($doc->id);
+            $this->assertNotManagedStatement($locked);
             abort_unless(ExpenseDocumentAccess::userOwns($actor, $locked) || $actor->hasPermission('expense.manage'), 403);
             if (! in_array($locked->status, [ExpenseDocument::STATUS_DRAFT, ExpenseDocument::STATUS_SUBMITTED, ExpenseDocument::STATUS_REJECTED], true)) {
                 abort(409, 'Không thể hủy hồ sơ ở trạng thái hiện tại.');
             }
 
             $before = $locked->only(['status']);
+            foreach ($this->attachedStatements($locked) as $child) {
+                abort_if(in_array($child->status, [ExpenseDocument::STATUS_SIGNED, ExpenseDocument::STATUS_PAID], true),
+                    409, 'Bảng kê con đã ký hoặc thanh toán, không thể hủy hồ sơ.');
+                if ($child->status !== ExpenseDocument::STATUS_CANCELLED) {
+                    $child->update(['status' => ExpenseDocument::STATUS_CANCELLED, 'lock_version' => $child->lock_version + 1]);
+                    $this->audit->log($actor->id, 'expense.cancelled_with_parent', $child, null, $child->only(['status']), ['parent_id' => $locked->id]);
+                }
+            }
             $locked->status = ExpenseDocument::STATUS_CANCELLED;
             $locked->lock_version++;
             $locked->save();
@@ -274,6 +315,7 @@ class ExpenseDocumentService
     {
         $locked = ExpenseDocument::query()->lockForUpdate()->findOrFail($doc->id);
         abort_unless(ExpenseDocumentAccess::userOwns($actor, $locked), 403);
+        $this->assertNotManagedStatement($locked);
         FinancialDataLock::assertExpenseDocumentEditable($locked);
 
         if ((int) $locked->lock_version !== $lockVersion) {
@@ -281,6 +323,18 @@ class ExpenseDocumentService
         }
 
         return $locked;
+    }
+
+    private function assertNotManagedStatement(ExpenseDocument $doc): void
+    {
+        if ($doc->isManagedStatement()) {
+            abort(409, 'Bảng kê đính kèm được quản lý cùng hồ sơ thanh toán/hoàn ứng cha.');
+        }
+    }
+
+    private function attachedStatements(ExpenseDocument $doc): \Illuminate\Support\Collection
+    {
+        return $doc->children()->where('doc_type', ExpenseDocument::TYPE_NO_INVOICE_STATEMENT)->lockForUpdate()->get();
     }
 
     /**
@@ -292,6 +346,7 @@ class ExpenseDocumentService
     {
         $existing = $doc->lines()->get()->keyBy('id');
         $keptIds = [];
+        $costIds = [];
 
         foreach (array_values($lines) as $i => $row) {
             $line = isset($row['id']) ? $existing->get((int) $row['id']) : null;
@@ -299,12 +354,19 @@ class ExpenseDocumentService
                 throw ValidationException::withMessages(["lines.{$i}.id" => 'Dòng không thuộc hồ sơ này.']);
             }
             $line ??= new ExpenseDocumentLine(['document_id' => $doc->id]);
+            if ($line->exists && in_array($line->id, $keptIds, true)) {
+                throw ValidationException::withMessages(["lines.{$i}.id" => 'Dòng chi phí bị trùng trong hồ sơ.']);
+            }
 
             $values = $this->lineValues($row, $doc);
             $line->fill([...$values, 'sort_order' => ($i + 1) * 10]);
 
             if ($doc->usesTripCosts()) {
                 $this->bindTripCost($doc, $actor, $line, $row, $i);
+                if (isset($costIds[$line->trip_cost_id])) {
+                    throw ValidationException::withMessages(["lines.{$i}.trip_cost_id" => 'Một chi phí chỉ được xuất hiện một lần trong hồ sơ.']);
+                }
+                $costIds[$line->trip_cost_id] = true;
             } else {
                 $line->trip_cost_id = null;
                 $line->owns_trip_cost = false;
@@ -361,7 +423,7 @@ class ExpenseDocumentService
         $requestedCostId = isset($row['trip_cost_id']) ? (int) $row['trip_cost_id'] : null;
 
         if ($requestedCostId !== null && $requestedCostId !== (int) $line->trip_cost_id) {
-            $cost = TripCost::query()->with('trip')->find($requestedCostId);
+            $cost = TripCost::query()->with('trip')->lockForUpdate()->find($requestedCostId);
             if ($cost === null || ! TripCostAccess::userCanView($actor, $cost)) {
                 throw ValidationException::withMessages(["lines.{$index}.trip_cost_id" => 'Không tìm thấy chi phí đã chọn.']);
             }
@@ -378,21 +440,18 @@ class ExpenseDocumentService
             $line->fill([
                 'trip_cost_id' => $cost->id,
                 'owns_trip_cost' => false,
-                'vehicle_id' => $line->vehicle_id ?? $cost->vehicle_id ?? $cost->trip?->vehicle_id,
-                'amount' => $cost->amount,
-                'unit_price' => $cost->unit_price ?? $cost->amount,
-                'quantity' => $cost->quantity ?? 1,
-                'purchased_on' => $line->purchased_on ?? $cost->reported_on ?? $cost->created_at?->toDateString(),
             ]);
+            $this->fillFromCost($line, $cost);
 
             return;
         }
 
         if ($line->trip_cost_id && ! $line->owns_trip_cost) {
             // Giữ liên kết với chi phí đã khai; số tiền theo chi phí gốc.
-            $cost = TripCost::query()->find($line->trip_cost_id);
+            $cost = TripCost::query()->with('trip')->lockForUpdate()->findOrFail($line->trip_cost_id);
             if ($cost !== null) {
-                $line->amount = $cost->amount;
+                $this->assertCostNotHeldElsewhere($doc, $cost, $index);
+                $this->fillFromCost($line, $cost);
             }
 
             return;
@@ -418,6 +477,8 @@ class ExpenseDocumentService
         ];
 
         if ($line->owns_trip_cost && $line->trip_cost_id) {
+            $cost = TripCost::query()->lockForUpdate()->findOrFail($line->trip_cost_id);
+            FinancialDataLock::assertTripCostAllowsDriverEdits($cost);
             TripCost::query()->whereKey($line->trip_cost_id)->update([...$costValues, 'updated_at' => now()]);
 
             return;
@@ -449,6 +510,20 @@ class ExpenseDocumentService
                 "lines.{$index}.trip_cost_id" => 'Chi phí này đã nằm trong hồ sơ '.$holder->document?->code.'.',
             ]);
         }
+    }
+
+    private function fillFromCost(ExpenseDocumentLine $line, TripCost $cost): void
+    {
+        $line->fill([
+            'vehicle_id' => $cost->vehicle_id ?? $cost->trip?->vehicle_id,
+            'amount' => $cost->amount,
+            'unit_price' => $cost->unit_price ?? $cost->amount,
+            'quantity' => $cost->quantity ?? 1,
+            'purchased_on' => $line->owns_trip_cost ? $line->purchased_on : ($cost->reported_on ?? $cost->created_at?->toDateString()),
+            'has_invoice' => (bool) $cost->has_invoice,
+            'seller_name' => $cost->seller_name,
+            'seller_address' => $cost->seller_address,
+        ]);
     }
 
     /**
@@ -496,8 +571,11 @@ class ExpenseDocumentService
 
         $statement = $doc->children()
             ->where('doc_type', ExpenseDocument::TYPE_NO_INVOICE_STATEMENT)
-            ->whereIn('status', [ExpenseDocument::STATUS_DRAFT, ExpenseDocument::STATUS_SUBMITTED, ExpenseDocument::STATUS_REJECTED])
+            ->lockForUpdate()
             ->first();
+
+        abort_if($statement && in_array($statement->status, [ExpenseDocument::STATUS_SIGNED, ExpenseDocument::STATUS_PAID], true),
+            409, 'Bảng kê con đã ký hoặc thanh toán, không thể thay đổi số liệu.');
 
         if ($noInvoice->isEmpty()) {
             if ($statement !== null) {
@@ -522,11 +600,16 @@ class ExpenseDocumentService
             'basis' => $doc->code,
             'status' => ExpenseDocument::STATUS_SUBMITTED,
             'submitted_at' => Carbon::now(),
+            'signed_at' => null,
+            'rejected_reason' => null,
+            'lock_version' => ($statement->lock_version ?? 0) + 1,
         ]);
         $statement->save();
 
         $statement->lines()->delete();
         foreach ($noInvoice->values() as $i => $line) {
+            $cost = TripCost::query()->lockForUpdate()->findOrFail($line->trip_cost_id);
+            $this->assertCostNotHeldElsewhere($statement, $cost, $i);
             $statement->lines()->create([
                 ...$line->only(['vehicle_id', 'trip_cost_id', 'cost_type', 'category', 'description', 'unit', 'quantity', 'unit_price', 'amount', 'purchased_on', 'seller_name', 'seller_address', 'note']),
                 'owns_trip_cost' => false,
@@ -576,8 +659,11 @@ class ExpenseDocumentService
                 $errors['bank_account_no'] = 'Vui lòng nhập số tài khoản người nhận.';
             }
         }
-        if ($doc->doc_type === ExpenseDocument::TYPE_NO_INVOICE_STATEMENT) {
+        if ($doc->doc_type === ExpenseDocument::TYPE_NO_INVOICE_STATEMENT || $doc->usesTripCosts()) {
             foreach ($doc->lines as $i => $line) {
+                if ($doc->doc_type !== ExpenseDocument::TYPE_NO_INVOICE_STATEMENT && $line->has_invoice) {
+                    continue;
+                }
                 if (trim((string) $line->seller_name) === '') {
                     $errors["lines.{$i}.seller_name"] = 'Bảng kê cần tên người bán cho từng dòng.';
                 }
@@ -601,6 +687,9 @@ class ExpenseDocumentService
     {
         if (empty($parentId)) {
             return null;
+        }
+        if ($docType === ExpenseDocument::TYPE_NO_INVOICE_STATEMENT) {
+            throw ValidationException::withMessages(['parent_id' => 'Bảng kê đính kèm được tạo tự động khi nộp hồ sơ thanh toán/hoàn ứng. Vui lòng cập nhật hồ sơ cha.']);
         }
 
         $parent = ExpenseDocument::query()->find((int) $parentId);

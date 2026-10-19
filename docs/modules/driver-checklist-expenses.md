@@ -18,7 +18,7 @@ Dữ liệu nguồn: `data/Dữ liệu tham khảo - Phần mềm Điều vận.
 | `expense.view` | dispatcher, accountant, admin |
 | `expense.manage` | accountant, admin |
 
-> Route back-office nằm sau middleware `dispatch.staff` → user cần thêm role vào được SPA điều vận (admin / dispatcher). Role `accountant` đơn lẻ hiện chưa vào được SPA (hành vi có sẵn của hệ thống).
+> Role `accountant` vào được SPA điều vận với các quyền đã được gán; không cần thêm role admin/dispatcher. Tài khoản chỉ có role kế toán mặc định mở `/mng/expenses` sau đăng nhập. Các API vẫn kiểm tra quyền riêng.
 
 ## Mã chứng từ
 
@@ -41,7 +41,9 @@ Dữ liệu nguồn: `data/Dữ liệu tham khảo - Phần mềm Điều vận.
 - Kết luận: có ≥ 1 mục Critical NG → `fail`. **Không chặn chuyến** — gửi `ChecklistCriticalFailedNotification` cho điều phối, banner cảnh báo trên app tài xế.
 - Mục giấy tờ có `auto_source` (`driver_doc:license`, `vehicle_doc:inspection_certificate`…) hiển thị gợi ý theo hạn trong kho chứng từ; tài xế vẫn tự bấm.
 - Mẫu in daily: 7 dòng giấy tờ đầu lấy từ phiếu weekly gần nhất (≤ 14 ngày) hoặc kho chứng từ.
-- Nhắc: `checklist:remind-drivers` chạy 5 phút/lần, đọc `checklist_reminder_slots` (giờ HH:MM, thứ ISO 1–7). Chống gửi trùng bằng cache key slot + ngày + user. `escalate_after_minutes` → 1 bản tổng hợp cho điều phối.
+- Nhắc: `checklist:remind-drivers` chạy mỗi phút, đọc `checklist_reminder_slots` (giờ HH:MM, thứ ISO 1–7). Bắt kịp slot đã đến hạn trong ngày nếu cron gián đoạn. Chống gửi trùng bằng cache key slot + ngày gốc + user trong 2 ngày. Báo quá hạn dùng kỳ của slot gốc, hỗ trợ qua nửa đêm và đầu tuần; xử lý bù trong 24 giờ kể từ hạn. Tắt module thì không phát nhắc mới.
+- Đọc, tự lưu, gửi và xuất file dùng named rate limiter riêng, tránh request đọc/tự lưu làm cạn bộ đếm gửi phiếu. Tự lưu lỗi giữ dữ liệu chưa lưu và chặn gửi cho tới khi lưu thành công.
+- Khi in Daily, Weekly tham chiếu phải cùng tài xế, cùng xe, trong 14 ngày và không sau mốc phiếu Daily. Với phiếu cũ chưa có Weekly phù hợp, fallback kho chứng từ vẫn là dữ liệu kho tại thời điểm xuất file.
 
 ## Hồ sơ chi phí xe
 
@@ -50,12 +52,24 @@ Luồng trạng thái: `draft → submitted → signed → paid`; kế toán có
 - **Sổ chi phí theo xe = `trip_costs`** (thêm `has_invoice`, `invoice_no`, `seller_name`, `seller_address`, `unit`, `quantity`, `unit_price`).
 - DX và TU là số dự kiến → dòng không tạo chi phí. TT, HU, BK → mỗi dòng gắn một `trip_cost`: chọn chi phí đã khai hoặc nhập mới (hệ thống tạo `trip_cost` standalone, `owns_trip_cost = true`).
 - Một `trip_cost` không nằm trong 2 hồ sơ **cùng loại** đang hiệu lực (BK con được phép dùng chung với TT/HU cha).
+- Một `trip_cost` chỉ xuất hiện một lần trong cùng hồ sơ; kiểm tra cả khi lưu và nộp. Dòng dùng chi phí gốc lấy xe, số tiền, trạng thái hóa đơn và thông tin người bán từ sổ, không lấy xe mặc định của hồ sơ đè lên xe của chi phí.
 - Nộp TT/HU có dòng không hóa đơn → tự tạo/cập nhật **Bảng kê con** (`parent_id`).
 - `submitted/signed/paid` khóa các `trip_costs` liên kết (`FinancialDataLock::tripCostLockedByExpenseDocument`, API sửa/xóa chi phí trả 409).
 - `paid` → xác nhận (`confirmed`) các trip_cost còn chờ; bảng kê con chuyển `paid`.
 - Hủy hồ sơ → xóa các trip_cost do hồ sơ tạo nếu chưa xác nhận và không nằm trong hồ sơ khác.
+- Hủy hồ sơ cha đồng thời hủy BK con chưa ký/chưa thanh toán, rồi mới giải phóng chi phí. Nếu con đã ký/thanh toán thì chặn hủy toàn bộ. Trả lại cha đưa BK con về rejected; nộp lại cập nhật BK đó, không tạo thêm BK trùng.
+- BK đính kèm được quản lý qua hồ sơ cha; không sửa/nộp/hủy/trả lại/thanh toán độc lập. Vẫn được upload bản ký khi cha đang submitted/signed. BK lập riêng không chọn hồ sơ cha; BK đính kèm tự sinh từ dòng không hóa đơn của TT/HU.
+- Cả BK trực tiếp và dòng sẽ sinh BK phải có tên người bán và ngày mua khi nộp.
 - Người đề nghị, đơn vị, người ký: mặc định từ `expense_form_settings`, tài xế sửa được, lưu snapshot vào hồ sơ.
 - Duyệt: in ra ký tay → upload bản scan (`signed_scan`) → `signed`.
+
+### Lưu file đính kèm
+
+Ảnh checklist và scan chi phí mới dùng cùng disk private với chứng từ xe (`config('compliance.disk')`, mặc định `compliance`, root `COMPLIANCE_STORAGE_ROOT`). DB lưu disk/path, metadata và SHA-256, không ghi binary mới. Download qua API có kiểm tra quyền. File cũ vẫn đọc được trong giai đoạn chuyển đổi.
+
+API xóa attachment dùng chung không được xóa ảnh checklist/scan chi phí để vượt khóa nghiệp vụ. Ảnh checklist chỉ xóa qua phiếu nháp; scan chi phí giữ cùng lịch sử hồ sơ.
+
+Lệnh `driver-workflow:migrate-files` dùng cho ảnh checklist và scan chi phí cũ, tách khỏi `compliance:migrate-files` của giấy tờ xe/tài xế. Các bước: dry-run → `--apply` → `--verify` → `--apply --prune-binary` → `--verify`. Lệnh không xóa file nguồn. Hướng dẫn server: [DRIVER_WORKFLOW_DEPLOYMENT.md](../DRIVER_WORKFLOW_DEPLOYMENT.md).
 
 ### File in
 
@@ -78,4 +92,6 @@ Luồng trạng thái: `draft → submitted → signed → paid`; kế toán có
 ## Kiểm thử
 
 - PHPUnit: `tests/Feature/Checklist`, `tests/Feature/Expenses`, `DocumentCodeGeneratorTest`, `tests/Unit/Support/{VietnameseMoneyWords,ChecklistResultCalculator}Test`.
+- Hồi quy: `tests/Feature/DriverWorkflowRegressionTest.php`, `DriverWorkflowFileMigrationTest.php`.
+- Chromium với API giả lập: `npm run build` rồi `npm run test:driver-checklist-autosave` (lỗi tự lưu, thử lại, đăng nhập kế toán).
 - Playwright: `tests/e2e/driver/driver-checklist.spec.ts`, `driver-expense.spec.ts` (đăng nhập bằng `loginWithToken` — trang `/login` hiện chỉ có Google OAuth).

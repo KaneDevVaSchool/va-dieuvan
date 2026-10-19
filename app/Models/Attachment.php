@@ -18,6 +18,16 @@ class Attachment extends Model
         'vehicle_compliance_document', 'driver_compliance_document',
     ];
 
+    public const DRIVER_WORKFLOW_TYPES = [
+        ChecklistSubmissionItem::class, ExpenseDocument::class,
+        'checklist_submission_item', 'expense_document',
+    ];
+
+    public function isDriverWorkflowFile(): bool
+    {
+        return in_array($this->attachable_type, self::DRIVER_WORKFLOW_TYPES, true);
+    }
+
     public function isComplianceDocument(): bool
     {
         return in_array($this->attachable_type, self::COMPLIANCE_TYPES, true);
@@ -69,7 +79,7 @@ class Attachment extends Model
 
     public function getUrlAttribute(): ?string
     {
-        if ($this->isComplianceDocument()) {
+        if ($this->isComplianceDocument() || $this->isDriverWorkflowFile()) {
             return url('/api/attachments/'.$this->getKey().'/download');
         }
 

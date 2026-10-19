@@ -38,6 +38,12 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(30)->by($request->user()?->id ?: $request->ip());
         });
 
+        foreach (['driver-workflow-read' => 120, 'driver-workflow-write' => 120, 'checklist-autosave' => 240,
+            'driver-workflow-submit' => 30, 'driver-workflow-upload' => 60, 'driver-workflow-export' => 30] as $name => $maximum) {
+            RateLimiter::for($name, fn (Request $request) => Limit::perMinute($maximum)
+                ->by($request->user()?->id ?: $request->ip()));
+        }
+
         // Xóa hàng loạt có cụm xác nhận — tránh 429 khi thử lại sau lỗi đếm/422; vẫn giới hạn theo user.
         RateLimiter::for('requests-purge', function (Request $request) {
             return Limit::perMinute(15)->by($request->user()?->id ?: $request->ip());

@@ -10,6 +10,22 @@ use RuntimeException;
 /** Chuyển từng file; không bao giờ xóa nguồn. Command khóa bản ghi khi cập nhật metadata. */
 class ComplianceFileMigration
 {
+    protected function folders(): string
+    {
+        return '(?:vehicle|driver)_compliance_documents';
+    }
+
+    protected function supports(Attachment $attachment): bool
+    {
+        return $attachment->isComplianceDocument();
+    }
+
+    protected function folder(Attachment $attachment): string
+    {
+        return in_array($attachment->attachable_type, [DriverComplianceDocument::class, 'driver_compliance_document'], true)
+            ? 'driver_compliance_documents' : 'vehicle_compliance_documents';
+    }
+
     public function validate(Attachment $attachment, string $bytes): void
     {
         if ($bytes === '' || ($attachment->size_bytes !== null && strlen($bytes) !== (int) $attachment->size_bytes)) {
@@ -39,7 +55,7 @@ class ComplianceFileMigration
             $raw = (string) parse_url($raw, PHP_URL_PATH);
         }
         // Chỉ nhận đường dẫn tương đối thuộc thư mục chứng từ, kể cả URL/absolute path cũ.
-        if (! preg_match('#(?:^|/)(attachments/(?:vehicle|driver)_compliance_documents/[^\r\n]+)$#', $raw, $match)) {
+        if (! preg_match('#(?:^|/)(attachments/'.$this->folders().'/[^\r\n]+)$#', $raw, $match)) {
             throw new RuntimeException('Không có nguồn binary hợp lệ hoặc đường dẫn chứng từ được hỗ trợ.');
         }
         $path = $match[1];
@@ -82,7 +98,7 @@ class ComplianceFileMigration
 
     public function migrate(Attachment $attachment, bool $pruneBinary): void
     {
-        if (! $attachment->isComplianceDocument()) {
+        if (! $this->supports($attachment)) {
             throw new RuntimeException('Không phải chứng từ xe/tài xế.');
         }
         $disk = ComplianceDocumentService::fileDisk();
@@ -96,8 +112,7 @@ class ComplianceFileMigration
 
         $bytes = $this->source($attachment);
         $sha = hash('sha256', $bytes);
-        $folder = in_array($attachment->attachable_type, [DriverComplianceDocument::class, 'driver_compliance_document'], true)
-            ? 'driver_compliance_documents' : 'vehicle_compliance_documents';
+        $folder = $this->folder($attachment);
         $path = "attachments/{$folder}/{$attachment->attachable_id}/migrated-{$attachment->id}-{$sha}";
 
         // File đã ở đích và còn nguyên thì giữ nguyên path, giúp chạy lại không sinh bản sao.

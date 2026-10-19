@@ -33,6 +33,7 @@ class DriverChecklistFlowTest extends TestCase
         parent::setUp();
         $this->seed(RbacSeeder::class);
         Storage::fake('local');
+        Storage::fake('compliance');
         Carbon::setTestNow(Carbon::parse('2026-10-05 00:10:00', 'UTC')); // 07:10 thứ Hai giờ VN
 
         $this->driverUser = User::factory()->create(['is_active' => true]);
@@ -209,9 +210,9 @@ class DriverChecklistFlowTest extends TestCase
         $this->artisan('checklist:remind-drivers', ['--at' => '2026-10-05 05:34'])->assertSuccessful();
         Notification::assertSentToTimes($this->driverUser, \App\Notifications\DriverChecklistReminderNotification::class, 1);
 
-        // Ngoài cửa sổ → không gửi.
+        // Ngày kế tiếp cron trễ 30 phút vẫn bắt kịp slot chưa gửi của ngày đó.
         $this->artisan('checklist:remind-drivers', ['--at' => '2026-10-06 06:00'])->assertSuccessful();
-        Notification::assertSentToTimes($this->driverUser, \App\Notifications\DriverChecklistReminderNotification::class, 1);
+        Notification::assertSentToTimes($this->driverUser, \App\Notifications\DriverChecklistReminderNotification::class, 2);
     }
 
     public function test_reminder_skips_driver_who_already_submitted(): void

@@ -254,30 +254,34 @@ Route::prefix('tp-imports')->group(function () {
 });
 
 // Checklist tài xế — điều phối xử lý & cấu hình
-Route::middleware('feature:module.driver_checklist')->group(function () {
-    Route::post('/checklists/{checklist}/review', [\App\Http\Controllers\Api\Checklist\ChecklistController::class, 'review'])
-        ->whereNumber('checklist')->middleware('throttle:60,1');
+Route::withoutMiddleware(['throttle:120,1', 'throttle:180,1'])
+    ->middleware('throttle:driver-workflow-write')
+    ->middleware('feature:module.driver_checklist')->group(function () {
+        Route::post('/checklists/{checklist}/review', [\App\Http\Controllers\Api\Checklist\ChecklistController::class, 'review'])
+            ->whereNumber('checklist')->middleware('throttle:driver-workflow-submit');
 
-    Route::prefix('checklist-settings')->controller(\App\Http\Controllers\Api\Checklist\ChecklistSettingsController::class)->group(function () {
-        Route::patch('/templates/{template}', 'updateTemplate')->whereNumber('template');
-        Route::post('/templates/{template}/items', 'storeItem')->whereNumber('template');
-        Route::post('/templates/{template}/items/reorder', 'reorderItems')->whereNumber('template');
-        Route::patch('/templates/{template}/items/{item}', 'updateItem')->whereNumber(['template', 'item']);
-        Route::delete('/templates/{template}/items/{item}', 'destroyItem')->whereNumber(['template', 'item']);
-        Route::post('/slots', 'storeSlot');
-        Route::patch('/slots/{slot}', 'updateSlot')->whereNumber('slot');
-        Route::delete('/slots/{slot}', 'destroySlot')->whereNumber('slot');
+        Route::prefix('checklist-settings')->controller(\App\Http\Controllers\Api\Checklist\ChecklistSettingsController::class)->group(function () {
+            Route::patch('/templates/{template}', 'updateTemplate')->whereNumber('template');
+            Route::post('/templates/{template}/items', 'storeItem')->whereNumber('template');
+            Route::post('/templates/{template}/items/reorder', 'reorderItems')->whereNumber('template');
+            Route::patch('/templates/{template}/items/{item}', 'updateItem')->whereNumber(['template', 'item']);
+            Route::delete('/templates/{template}/items/{item}', 'destroyItem')->whereNumber(['template', 'item']);
+            Route::post('/slots', 'storeSlot');
+            Route::patch('/slots/{slot}', 'updateSlot')->whereNumber('slot');
+            Route::delete('/slots/{slot}', 'destroySlot')->whereNumber('slot');
+        });
     });
-});
 
 // Hồ sơ chi phí xe — kế toán xử lý (expense.manage)
-Route::middleware('feature:module.driver_expense')
+Route::withoutMiddleware(['throttle:120,1', 'throttle:180,1'])
+    ->middleware('throttle:driver-workflow-write')
+    ->middleware('feature:module.driver_expense')
     ->prefix('expenses')
     ->controller(\App\Http\Controllers\Api\Expenses\ExpenseDocumentController::class)
     ->group(function () {
-        Route::put('/settings', 'updateSettings')->middleware('throttle:30,1');
-        Route::post('/{expense}/reject', 'reject')->whereNumber('expense')->middleware('throttle:60,1');
-        Route::post('/{expense}/mark-paid', 'markPaid')->whereNumber('expense')->middleware(['throttle:60,1', 'idempotency']);
-        Route::post('/{expense}/cancel', 'cancel')->whereNumber('expense')->middleware('throttle:30,1');
-        Route::post('/{expense}/signed-scan', 'uploadScan')->whereNumber('expense')->middleware('throttle:30,1');
+        Route::put('/settings', 'updateSettings')->middleware('throttle:driver-workflow-submit');
+        Route::post('/{expense}/reject', 'reject')->whereNumber('expense')->middleware('throttle:driver-workflow-submit');
+        Route::post('/{expense}/mark-paid', 'markPaid')->whereNumber('expense')->middleware(['throttle:driver-workflow-submit', 'idempotency']);
+        Route::post('/{expense}/cancel', 'cancel')->whereNumber('expense')->middleware('throttle:driver-workflow-submit');
+        Route::post('/{expense}/signed-scan', 'uploadScan')->whereNumber('expense')->middleware('throttle:driver-workflow-submit');
     });
