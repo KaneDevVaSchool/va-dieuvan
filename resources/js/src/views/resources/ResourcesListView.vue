@@ -64,6 +64,93 @@
 
           <!-- View mode + Filter + Add -->
           <div class="flex shrink-0 flex-wrap items-center gap-2">
+            <template v-if="currentResource === 'vehicles' && !loading && vehicleTotalFiltered && canManageVehicles">
+              <label class="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3 text-xs text-slate-600 dark:border-slate-600 dark:text-slate-300">
+                <input
+                  type="checkbox"
+                  class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
+                  :checked="vehiclePageAllSelected"
+                  data-testid="resources-select-all-vehicles"
+                  @change="toggleVehiclePageSelectAll"
+                />
+                <span>{{ t('resources.select_all_page') }}</span>
+              </label>
+              <button
+                v-if="!isInTrashMode && canManageVehicles && bulkVehicleIds.length"
+                type="button"
+                class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-800 hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60"
+                @click="openBulkTrashModal('vehicle')"
+              >
+                {{ t('resources.bulk_move_to_trash', { n: bulkVehicleIds.length }) }}
+              </button>
+              <button
+                v-else-if="isInTrashMode && canManageVehicles && bulkVehicleIds.length"
+                type="button"
+                class="rounded-lg border border-rose-300 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-900 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-200 dark:hover:bg-rose-950/70"
+                @click="openBulkForceModal('vehicle')"
+              >
+                {{ t('resources.bulk_permanent_delete_n', { n: bulkVehicleIds.length }) }}
+              </button>
+            </template>
+
+            <template v-if="currentResource === 'drivers' && !loading && driverTotalFiltered && canManageDrivers">
+              <label class="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3 text-xs text-slate-600 dark:border-slate-600 dark:text-slate-300">
+                <input
+                  type="checkbox"
+                  class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
+                  :checked="driverPageAllSelected"
+                  data-testid="resources-select-all-drivers"
+                  @change="toggleDriverPageSelectAll"
+                />
+                <span>{{ t('resources.select_all_page') }}</span>
+              </label>
+              <button
+                v-if="!isInTrashMode && canManageDrivers && bulkDriverIds.length"
+                type="button"
+                class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-800 hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60"
+                @click="openBulkTrashModal('driver')"
+              >
+                {{ t('resources.bulk_move_to_trash', { n: bulkDriverIds.length }) }}
+              </button>
+              <button
+                v-else-if="isInTrashMode && canManageDrivers && bulkDriverIds.length"
+                type="button"
+                class="rounded-lg border border-rose-300 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-900 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-200 dark:hover:bg-rose-950/70"
+                @click="openBulkForceModal('driver')"
+              >
+                {{ t('resources.bulk_permanent_delete_n', { n: bulkDriverIds.length }) }}
+              </button>
+            </template>
+
+            <template v-if="currentResource === 'suppliers' && !loading && supplierTotalFiltered && canManageProviders">
+              <label class="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3 text-xs text-slate-600 dark:border-slate-600 dark:text-slate-300">
+                <input
+                  type="checkbox"
+                  class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
+                  :checked="supplierPageAllSelected"
+                  data-testid="resources-select-all-suppliers"
+                  @change="toggleSupplierPageSelectAll"
+                />
+                <span>{{ t('resources.select_all_page') }}</span>
+              </label>
+              <button
+                v-if="!isInTrashMode && canManageProviders && bulkSupplierIds.length"
+                type="button"
+                class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-800 hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60"
+                @click="openBulkTrashModal('supplier')"
+              >
+                {{ t('resources.bulk_move_to_trash', { n: bulkSupplierIds.length }) }}
+              </button>
+              <button
+                v-else-if="isInTrashMode && canManageProviders && bulkSupplierIds.length"
+                type="button"
+                class="rounded-lg border border-rose-300 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-900 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-200 dark:hover:bg-rose-950/70"
+                @click="openBulkForceModal('supplier')"
+              >
+                {{ t('resources.bulk_permanent_delete_n', { n: bulkSupplierIds.length }) }}
+              </button>
+            </template>
+
             <!-- Trash type selector (only in trash tab) -->
             <div
               v-if="activeTab === 'trash'"
@@ -404,49 +491,9 @@
 
     <div v-else class="relative flex min-h-[280px] flex-col xl:min-h-[420px] xl:flex-row">
       <!-- Table -->
-      <div class="min-w-0 flex-1 p-2 sm:p-4 md:p-5">
+      <div class="min-w-0 flex-1 px-2 pb-2 sm:px-4 sm:pb-4 md:px-5 md:pb-5">
         <!-- VEHICLES -->
         <div v-if="currentResource === 'vehicles'">
-          <div v-if="vehicleTotalFiltered" class="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <div class="flex flex-wrap items-center gap-3">
-              <input
-                v-if="canManageVehicles"
-                type="checkbox"
-                class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
-                :checked="vehiclePageAllSelected"
-                :aria-label="t('resources.col_select')"
-                @change="toggleVehiclePageSelectAll"
-              />
-              <p class="text-xs text-slate-500 dark:text-slate-400">
-                {{ t('resources.pagination_showing', { from: vehicleRangeFrom, to: vehicleRangeTo, total: vehicleTotalFiltered }) }}
-              </p>
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
-              <button
-                v-if="!isInTrashMode && canManageVehicles && bulkVehicleIds.length"
-                type="button"
-                class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-800 hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60"
-                @click="openBulkTrashModal('vehicle')"
-              >
-                {{ t('resources.bulk_move_to_trash', { n: bulkVehicleIds.length }) }}
-              </button>
-              <button
-                v-else-if="isInTrashMode && canManageVehicles && bulkVehicleIds.length"
-                type="button"
-                class="rounded-lg border border-rose-300 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-900 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-200 dark:hover:bg-rose-950/70"
-                @click="openBulkForceModal('vehicle')"
-              >
-                {{ t('resources.bulk_permanent_delete_n', { n: bulkVehicleIds.length }) }}
-              </button>
-              <label class="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
-                {{ t('resources.pagination_per_page') }}
-                <select v-model.number="vehiclePerPage" class="rounded-lg border border-slate-200 bg-white py-1.5 pl-2 pr-8 text-xs font-medium dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
-                  <option v-for="n in vehiclePerPageOptions" :key="n" :value="n">{{ n }}</option>
-                </select>
-              </label>
-            </div>
-          </div>
-
           <div class="grid grid-cols-1 gap-3 xl:grid-cols-2">
             <ResourceRecordCard
               v-for="v in paginatedVehicles"
@@ -483,61 +530,32 @@
             {{ isInTrashMode ? t('resources.trash_empty') : t('resources.empty') }}
           </p>
 
-          <div v-if="vehicleTotalFiltered" class="mt-4 flex items-center justify-between gap-2">
-            <span class="text-xs text-slate-500 dark:text-slate-400">{{ t('resources.pagination_page_of', { page: vehicleListPage, total: vehicleTotalPages }) }}</span>
-            <div class="flex items-center gap-1">
-              <button type="button" class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800" :disabled="vehicleListPage <= 1" :aria-label="t('resources.pagination_prev')" @click="vehicleListPage = Math.max(1, vehicleListPage - 1)">
-                <ChevronLeftIcon class="h-4 w-4" aria-hidden="true" />
-              </button>
-              <button type="button" class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800" :disabled="vehicleListPage >= vehicleTotalPages" :aria-label="t('resources.pagination_next')" @click="vehicleListPage = Math.min(vehicleTotalPages, vehicleListPage + 1)">
-                <ChevronRightIcon class="h-4 w-4" aria-hidden="true" />
-              </button>
+          <div v-if="vehicleTotalFiltered" class="mt-4 flex flex-col gap-3 border-t border-slate-200/80 pt-3 sm:flex-row sm:items-center sm:justify-between dark:border-slate-700" data-testid="resources-pagination-vehicles">
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+              {{ t('resources.pagination_showing', { from: vehicleRangeFrom, to: vehicleRangeTo, total: vehicleTotalFiltered }) }}
+            </p>
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <label class="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                {{ t('resources.pagination_per_page') }}
+                <select v-model.number="vehiclePerPage" class="rounded-lg border border-slate-200 bg-white py-1.5 pl-2 pr-8 text-xs font-medium dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
+                  <option v-for="n in vehiclePerPageOptions" :key="n" :value="n">{{ n }}</option>
+                </select>
+              </label>
+              <span class="text-xs text-slate-500 dark:text-slate-400">{{ t('resources.pagination_page_of', { page: vehicleListPage, total: vehicleTotalPages }) }}</span>
+              <div class="flex items-center gap-1">
+                <button type="button" class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800" :disabled="vehicleListPage <= 1" :aria-label="t('resources.pagination_prev')" @click="vehicleListPage = Math.max(1, vehicleListPage - 1)">
+                  <ChevronLeftIcon class="h-4 w-4" aria-hidden="true" />
+                </button>
+                <button type="button" class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800" :disabled="vehicleListPage >= vehicleTotalPages" :aria-label="t('resources.pagination_next')" @click="vehicleListPage = Math.min(vehicleTotalPages, vehicleListPage + 1)">
+                  <ChevronRightIcon class="h-4 w-4" aria-hidden="true" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- DRIVERS -->
         <div v-else-if="currentResource === 'drivers'">
-          <div v-if="driverTotalFiltered" class="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <div class="flex flex-wrap items-center gap-3">
-              <input
-                v-if="canManageDrivers"
-                type="checkbox"
-                class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
-                :checked="driverPageAllSelected"
-                :aria-label="t('resources.col_select')"
-                @change="toggleDriverPageSelectAll"
-              />
-              <p class="text-xs text-slate-500 dark:text-slate-400">
-                {{ t('resources.pagination_showing', { from: driverRangeFrom, to: driverRangeTo, total: driverTotalFiltered }) }}
-              </p>
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
-              <button
-                v-if="!isInTrashMode && canManageDrivers && bulkDriverIds.length"
-                type="button"
-                class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-800 hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60"
-                @click="openBulkTrashModal('driver')"
-              >
-                {{ t('resources.bulk_move_to_trash', { n: bulkDriverIds.length }) }}
-              </button>
-              <button
-                v-else-if="isInTrashMode && canManageDrivers && bulkDriverIds.length"
-                type="button"
-                class="rounded-lg border border-rose-300 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-900 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-200 dark:hover:bg-rose-950/70"
-                @click="openBulkForceModal('driver')"
-              >
-                {{ t('resources.bulk_permanent_delete_n', { n: bulkDriverIds.length }) }}
-              </button>
-              <label class="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
-                {{ t('resources.pagination_per_page') }}
-                <select v-model.number="driverPerPage" class="rounded-lg border border-slate-200 bg-white py-1.5 pl-2 pr-8 text-xs font-medium dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
-                  <option v-for="n in driverPerPageOptions" :key="n" :value="n">{{ n }}</option>
-                </select>
-              </label>
-            </div>
-          </div>
-
           <div class="grid grid-cols-1 gap-3 xl:grid-cols-2">
             <ResourceRecordCard
               v-for="d in paginatedDrivers"
@@ -580,61 +598,32 @@
             {{ isInTrashMode ? t('resources.trash_empty') : t('resources.empty') }}
           </p>
 
-          <div v-if="driverTotalFiltered" class="mt-4 flex items-center justify-between gap-2">
-            <span class="text-xs text-slate-500 dark:text-slate-400">{{ t('resources.pagination_page_of', { page: driverListPage, total: driverTotalPages }) }}</span>
-            <div class="flex items-center gap-1">
-              <button type="button" class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800" :disabled="driverListPage <= 1" :aria-label="t('resources.pagination_prev')" @click="driverListPage = Math.max(1, driverListPage - 1)">
-                <ChevronLeftIcon class="h-4 w-4" aria-hidden="true" />
-              </button>
-              <button type="button" class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800" :disabled="driverListPage >= driverTotalPages" :aria-label="t('resources.pagination_next')" @click="driverListPage = Math.min(driverTotalPages, driverListPage + 1)">
-                <ChevronRightIcon class="h-4 w-4" aria-hidden="true" />
-              </button>
+          <div v-if="driverTotalFiltered" class="mt-4 flex flex-col gap-3 border-t border-slate-200/80 pt-3 sm:flex-row sm:items-center sm:justify-between dark:border-slate-700" data-testid="resources-pagination-drivers">
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+              {{ t('resources.pagination_showing', { from: driverRangeFrom, to: driverRangeTo, total: driverTotalFiltered }) }}
+            </p>
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <label class="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                {{ t('resources.pagination_per_page') }}
+                <select v-model.number="driverPerPage" class="rounded-lg border border-slate-200 bg-white py-1.5 pl-2 pr-8 text-xs font-medium dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
+                  <option v-for="n in driverPerPageOptions" :key="n" :value="n">{{ n }}</option>
+                </select>
+              </label>
+              <span class="text-xs text-slate-500 dark:text-slate-400">{{ t('resources.pagination_page_of', { page: driverListPage, total: driverTotalPages }) }}</span>
+              <div class="flex items-center gap-1">
+                <button type="button" class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800" :disabled="driverListPage <= 1" :aria-label="t('resources.pagination_prev')" @click="driverListPage = Math.max(1, driverListPage - 1)">
+                  <ChevronLeftIcon class="h-4 w-4" aria-hidden="true" />
+                </button>
+                <button type="button" class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800" :disabled="driverListPage >= driverTotalPages" :aria-label="t('resources.pagination_next')" @click="driverListPage = Math.min(driverTotalPages, driverListPage + 1)">
+                  <ChevronRightIcon class="h-4 w-4" aria-hidden="true" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- SUPPLIERS -->
         <div v-else-if="currentResource === 'suppliers'">
-          <div v-if="supplierTotalFiltered" class="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <div class="flex flex-wrap items-center gap-3">
-              <input
-                v-if="canManageProviders"
-                type="checkbox"
-                class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
-                :checked="supplierPageAllSelected"
-                :aria-label="t('resources.col_select')"
-                @change="toggleSupplierPageSelectAll"
-              />
-              <p class="text-xs text-slate-500 dark:text-slate-400">
-                {{ t('resources.pagination_showing', { from: supplierRangeFrom, to: supplierRangeTo, total: supplierTotalFiltered }) }}
-              </p>
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
-              <button
-                v-if="!isInTrashMode && canManageProviders && bulkSupplierIds.length"
-                type="button"
-                class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-800 hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60"
-                @click="openBulkTrashModal('supplier')"
-              >
-                {{ t('resources.bulk_move_to_trash', { n: bulkSupplierIds.length }) }}
-              </button>
-              <button
-                v-else-if="isInTrashMode && canManageProviders && bulkSupplierIds.length"
-                type="button"
-                class="rounded-lg border border-rose-300 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-900 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-200 dark:hover:bg-rose-950/70"
-                @click="openBulkForceModal('supplier')"
-              >
-                {{ t('resources.bulk_permanent_delete_n', { n: bulkSupplierIds.length }) }}
-              </button>
-              <label class="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
-                {{ t('resources.pagination_per_page') }}
-                <select v-model.number="supplierPerPage" class="rounded-lg border border-slate-200 bg-white py-1.5 pl-2 pr-8 text-xs font-medium dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
-                  <option v-for="n in supplierPerPageOptions" :key="n" :value="n">{{ n }}</option>
-                </select>
-              </label>
-            </div>
-          </div>
-
           <div class="grid grid-cols-1 gap-3 xl:grid-cols-2">
             <ResourceRecordCard
               v-for="s in paginatedSuppliers"
@@ -676,15 +665,26 @@
             {{ isInTrashMode ? t('resources.trash_empty') : t('resources.empty') }}
           </p>
 
-          <div v-if="supplierTotalFiltered" class="mt-4 flex items-center justify-between gap-2">
-            <span class="text-xs text-slate-500 dark:text-slate-400">{{ t('resources.pagination_page_of', { page: supplierListPage, total: supplierTotalPages }) }}</span>
-            <div class="flex items-center gap-1">
-              <button type="button" class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800" :disabled="supplierListPage <= 1" :aria-label="t('resources.pagination_prev')" @click="supplierListPage = Math.max(1, supplierListPage - 1)">
-                <ChevronLeftIcon class="h-4 w-4" aria-hidden="true" />
-              </button>
-              <button type="button" class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800" :disabled="supplierListPage >= supplierTotalPages" :aria-label="t('resources.pagination_next')" @click="supplierListPage = Math.min(supplierTotalPages, supplierListPage + 1)">
-                <ChevronRightIcon class="h-4 w-4" aria-hidden="true" />
-              </button>
+          <div v-if="supplierTotalFiltered" class="mt-4 flex flex-col gap-3 border-t border-slate-200/80 pt-3 sm:flex-row sm:items-center sm:justify-between dark:border-slate-700" data-testid="resources-pagination-suppliers">
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+              {{ t('resources.pagination_showing', { from: supplierRangeFrom, to: supplierRangeTo, total: supplierTotalFiltered }) }}
+            </p>
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <label class="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                {{ t('resources.pagination_per_page') }}
+                <select v-model.number="supplierPerPage" class="rounded-lg border border-slate-200 bg-white py-1.5 pl-2 pr-8 text-xs font-medium dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
+                  <option v-for="n in supplierPerPageOptions" :key="n" :value="n">{{ n }}</option>
+                </select>
+              </label>
+              <span class="text-xs text-slate-500 dark:text-slate-400">{{ t('resources.pagination_page_of', { page: supplierListPage, total: supplierTotalPages }) }}</span>
+              <div class="flex items-center gap-1">
+                <button type="button" class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800" :disabled="supplierListPage <= 1" :aria-label="t('resources.pagination_prev')" @click="supplierListPage = Math.max(1, supplierListPage - 1)">
+                  <ChevronLeftIcon class="h-4 w-4" aria-hidden="true" />
+                </button>
+                <button type="button" class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800" :disabled="supplierListPage >= supplierTotalPages" :aria-label="t('resources.pagination_next')" @click="supplierListPage = Math.min(supplierTotalPages, supplierListPage + 1)">
+                  <ChevronRightIcon class="h-4 w-4" aria-hidden="true" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -701,14 +701,14 @@
       >
         <aside
           v-if="activeTab === 'vehicles' && selectedVehicle"
-          class="fixed inset-0 z-50 flex justify-end bg-black/40 p-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-sm sm:p-3 xl:static xl:z-auto xl:inset-auto xl:flex xl:w-[min(100%,440px)] xl:max-w-none xl:shrink-0 xl:bg-transparent xl:p-0 xl:pt-0 xl:pb-0 xl:backdrop-blur-0"
+          class="fixed inset-0 z-50 flex justify-end bg-black/40 p-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-sm sm:p-3 xl:static xl:z-auto xl:inset-auto xl:flex xl:w-[min(100%,440px)] xl:max-w-none xl:shrink-0 xl:self-start xl:bg-transparent xl:p-0 xl:pt-0 xl:pb-0 xl:backdrop-blur-0"
           @click.self="closePanel"
         >
           <div
-            class="flex h-full max-h-[100dvh] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40 xl:max-h-none xl:max-w-none xl:rounded-none xl:border-l xl:border-y-0 xl:border-r-0 xl:shadow-none xl:ring-0"
+            class="flex h-full min-h-0 max-h-[100dvh] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40 xl:h-auto xl:max-h-none xl:max-w-none xl:overflow-clip xl:shadow-sm xl:ring-0"
             @click.stop
           >
-            <div class="sticky top-0 z-10 border-b border-slate-200 bg-white/95 px-3 py-3 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95 sm:px-4">
+            <div class="z-10 shrink-0 border-b border-slate-200 bg-white/95 px-3 py-3 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95 sm:px-4">
               <div class="flex items-start justify-between gap-2 sm:gap-3">
                 <div class="flex min-w-0 items-center gap-2.5 sm:gap-3">
                   <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-400">
@@ -788,7 +788,7 @@
               </div>
             </div>
 
-            <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-3 sm:px-4">
+            <div class="scrollbar-hidden min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-3 py-3 [overflow-wrap:anywhere] sm:px-4 xl:flex-none xl:overflow-visible xl:overscroll-y-auto">
               <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{{ t('resources.section_default_driver') }}</div>
               <div class="mt-1.5 rounded-lg border border-slate-200 bg-slate-50/80 p-2.5 dark:border-slate-700 dark:bg-slate-800/40">
                 <div v-if="selectedVehicle.defaultDriver" class="space-y-1 text-sm">
@@ -942,17 +942,17 @@
                   <li
                     v-for="doc in vehicleComplianceDocs"
                     :key="doc.id"
-                    class="rounded-lg border border-slate-200 bg-slate-50/80 p-3 text-xs dark:border-slate-700 dark:bg-slate-800/40"
+                    class="min-w-0 rounded-lg border border-slate-200 bg-slate-50/80 p-3 text-xs dark:border-slate-700 dark:bg-slate-800/40"
                   >
                     <div class="flex flex-wrap items-start justify-between gap-2">
-                      <div class="min-w-0">
+                      <div class="w-full min-w-0">
                         <div class="font-medium text-slate-900 dark:text-white">{{ vehicleDocTypeLabel(doc.doc_type) }}</div>
                         <div v-if="doc.title" class="mt-0.5 text-slate-600 dark:text-slate-400">{{ doc.title }}</div>
                         <div class="mt-1 flex flex-wrap gap-1">
                           <span :class="compliancePillClass(doc.expiry)">{{ vehicleDocExpiryLabel(doc.expiry) }}</span>
                           <span v-if="doc.expires_at" class="text-slate-500">{{ doc.expires_at }}</span>
                         </div>
-                        <div v-if="doc.notes" class="mt-1 text-slate-600 dark:text-slate-400">{{ doc.notes }}</div>
+                        <div v-if="doc.notes" class="mt-1 whitespace-pre-wrap [overflow-wrap:anywhere] text-slate-600 dark:text-slate-400">{{ doc.notes }}</div>
                         <div v-if="doc.attachments?.length" class="mt-2 flex flex-col gap-2">
                           <div
                             v-for="(a, aIdx) in doc.attachments"
@@ -1037,7 +1037,7 @@
 
             </div>
 
-            <div class="border-t border-slate-200 px-3 py-2.5 dark:border-slate-700 sm:px-4">
+            <div class="shrink-0 border-t border-slate-200 px-3 py-2.5 dark:border-slate-700 sm:px-4">
               <button
                 type="button"
                 class="w-full rounded-lg border border-slate-200 py-1.5 text-xs text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 sm:py-2 sm:text-sm"

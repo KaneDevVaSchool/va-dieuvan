@@ -1919,6 +1919,7 @@
         "col_notes": "Ghi chú",
         "pagination_showing": "Hiển thị {from}–{to} / {total}",
         "pagination_per_page": "Mỗi trang",
+        "select_all_page": "Chọn tất cả trên trang",
         "pagination_prev": "Trang trước",
         "pagination_next": "Trang sau",
         "pagination_page_of": "Trang {page} / {total}",

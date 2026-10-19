@@ -1840,6 +1840,7 @@
         "col_notes": "Notes",
         "pagination_showing": "Showing {from}–{to} of {total}",
         "pagination_per_page": "Per page",
+        "select_all_page": "Select all on this page",
         "pagination_prev": "Previous page",
         "pagination_next": "Next page",
         "pagination_page_of": "Page {page} of {total}",
