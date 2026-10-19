@@ -46,7 +46,7 @@ import { downloadBinaryAttachmentFromApi } from '../../util/downloadPdfAttachmen
 import { showAppErrorFromApi } from '../../composables/appMessage'
 
 /**
- * Xem trước / tải file chứng từ qua GET /attachments/{id}/download (đã xác thực, đọc từ DB).
+ * Xem trước / tải file chứng từ qua GET /attachments/{id}/download (đã xác thực, đọc kho private).
  */
 defineProps({
   attachments: { type: Array, default: () => [] },

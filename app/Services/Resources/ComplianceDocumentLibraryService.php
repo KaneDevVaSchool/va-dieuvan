@@ -108,8 +108,8 @@ class ComplianceDocumentLibraryService
 
     private function applyExpiryState(Builder $query, ?string $state): void
     {
-        $today = Carbon::today()->toDateString();
-        $soonEnd = Carbon::today()->addDays(ComplianceDocumentService::EXPIRY_SOON_DAYS)->toDateString();
+        $today = Carbon::today(config('compliance.timezone'))->toDateString();
+        $soonEnd = Carbon::today(config('compliance.timezone'))->addDays(ComplianceDocumentService::EXPIRY_SOON_DAYS)->toDateString();
 
         match ($state) {
             'exp' => $query->whereNotNull('expires_at')->whereDate('expires_at', '<', $today),
@@ -127,8 +127,8 @@ class ComplianceDocumentLibraryService
      */
     private function summary(Builder $query): array
     {
-        $today = Carbon::today()->toDateString();
-        $soonEnd = Carbon::today()->addDays(ComplianceDocumentService::EXPIRY_SOON_DAYS)->toDateString();
+        $today = Carbon::today(config('compliance.timezone'))->toDateString();
+        $soonEnd = Carbon::today(config('compliance.timezone'))->addDays(ComplianceDocumentService::EXPIRY_SOON_DAYS)->toDateString();
         $active = ComplianceDocumentService::STATUS_ACTIVE;
 
         $row = $query->toBase()

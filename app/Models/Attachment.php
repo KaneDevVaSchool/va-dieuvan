@@ -13,6 +13,16 @@ class Attachment extends Model
 {
     use HasFactory;
 
+    public const COMPLIANCE_TYPES = [
+        VehicleComplianceDocument::class, DriverComplianceDocument::class,
+        'vehicle_compliance_document', 'driver_compliance_document',
+    ];
+
+    public function isComplianceDocument(): bool
+    {
+        return in_array($this->attachable_type, self::COMPLIANCE_TYPES, true);
+    }
+
     protected $appends = ['url'];
 
     protected $hidden = [
@@ -59,6 +69,10 @@ class Attachment extends Model
 
     public function getUrlAttribute(): ?string
     {
+        if ($this->isComplianceDocument()) {
+            return url('/api/attachments/'.$this->getKey().'/download');
+        }
+
         if (! $this->path) {
             return null;
         }

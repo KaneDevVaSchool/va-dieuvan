@@ -23,7 +23,7 @@ use Throwable;
  * giữ nguyên file cũ để tra cứu. Hạn trên bảng chủ (vehicles.*_expires_at, drivers.license_expires_at)
  * được đồng bộ theo hạn xa nhất trong các bản đang hiệu lực cùng loại.
  *
- * File lưu song song: disk + cột attachments.file_binary (download ưu tiên đọc từ DB).
+ * File lưu trên disk private; database chỉ lưu metadata, đường dẫn và SHA-256.
  */
 class ComplianceDocumentService
 {
@@ -33,12 +33,16 @@ class ComplianceDocumentService
 
     public const EXPIRY_SOON_DAYS = 30;
 
-    /**
-     * Disk private (storage/app) — không truy cập trực tiếp qua URL; xem/tải qua GET /attachments/{id}/download.
-     * Trước đây code truyền ['disk' => 'public'] vào Storage::putFileAs nhưng tùy chọn đó bị bỏ qua,
-     * nên file thực tế vẫn nằm ở disk mặc định; nay ghi rõ để cột attachments.disk khớp thực tế.
-     */
-    public const FILE_DISK = 'local';
+    /** Disk private riêng, cấu hình tại config/compliance.php và config/filesystems.php. */
+    public static function fileDisk(): string
+    {
+        $disk = config('compliance.disk', 'compliance');
+        if ($disk === 'public' || config("filesystems.disks.{$disk}.visibility") === 'public') {
+            throw new \LogicException('Chứng từ phải được lưu trên disk private.');
+        }
+
+        return $disk;
+    }
 
     /** Loại file cho phép với scan chứng từ (chặn .html/.svg/.php…). */
     public const FILE_MIMES_RULE = 'mimes:pdf,jpg,jpeg,png,webp,heic,heif,doc,docx,xls,xlsx';
@@ -107,7 +111,7 @@ class ComplianceDocumentService
                     $this->storeFile($file, $doc, $actorId, $storedFiles);
                 }
 
-                $ownerSync = $this->syncOwnerExpiry($doc);
+                $ownerSync = $this->syncOwnerExpiry($doc, clearMissing: false);
                 $fresh = $doc->fresh(['attachments']);
 
                 $this->audit->log(
@@ -138,6 +142,7 @@ class ComplianceDocumentService
         try {
             return DB::transaction(function () use ($doc, $data, $file, $replaceFile, $actorId, $meta, &$storedFiles) {
                 $before = $doc->fresh(['attachments'])->toArray();
+                $previous = clone $doc;
 
                 $fill = collect($data)->only(self::EDITABLE_FIELDS)->all();
                 if ($fill !== []) {
@@ -151,7 +156,13 @@ class ComplianceDocumentService
                     $this->storeFile($file, $doc, $actorId, $storedFiles);
                 }
 
-                $ownerSync = $doc->status === self::STATUS_SUPERSEDED ? null : $this->syncOwnerExpiry($doc);
+                $clearMissing = array_key_exists('expires_at', $fill) || $previous->doc_type !== $doc->doc_type;
+                $ownerSync = $doc->status === self::STATUS_SUPERSEDED
+                    ? null
+                    : $this->syncOwnerExpiry($doc, clearMissing: $clearMissing);
+                $previousSync = $doc->status !== self::STATUS_SUPERSEDED && $previous->doc_type !== $doc->doc_type
+                    ? $this->syncOwnerExpiry($previous)
+                    : null;
                 $fresh = $doc->fresh(['attachments']);
 
                 $this->audit->log(
@@ -160,7 +171,10 @@ class ComplianceDocumentService
                     auditable: $doc,
                     before: $before,
                     after: $fresh->toArray(),
-                    metadata: $this->auditMetadata($fresh, ['owner_expiry_sync' => $ownerSync]),
+                    metadata: $this->auditMetadata($fresh, [
+                        'owner_expiry_sync' => $ownerSync,
+                        'previous_type_expiry_sync' => $previousSync,
+                    ]),
                 );
 
                 return $fresh;
@@ -192,7 +206,12 @@ class ComplianceDocumentService
                     ]);
                 }
 
-                $newExpires = Carbon::parse($data['expires_at'])->startOfDay();
+                $newExpires = Carbon::parse($data['expires_at'], config('compliance.timezone'))->startOfDay();
+                if ($newExpires->lt(Carbon::today(config('compliance.timezone')))) {
+                    throw ValidationException::withMessages([
+                        'expires_at' => 'Ngày hết hạn mới không được trước ngày hôm nay.',
+                    ]);
+                }
                 if ($old->expires_at && $newExpires->lte($old->expires_at->copy()->startOfDay())) {
                     throw ValidationException::withMessages([
                         'expires_at' => 'Ngày hết hạn mới phải sau ngày hết hạn hiện tại ('.$old->expires_at->format('d/m/Y').').',
@@ -266,6 +285,9 @@ class ComplianceDocumentService
             $doc->delete();
 
             $ownerSync = $wasActive ? $this->syncOwnerExpiry($doc) : null;
+            $restoredSync = $restored && $restored->doc_type !== $doc->doc_type
+                ? $this->syncOwnerExpiry($restored)
+                : null;
 
             $this->audit->log(
                 actorId: $actorId,
@@ -277,6 +299,7 @@ class ComplianceDocumentService
                     'compliance_document_id' => $doc->getKey(),
                     'restored_document_id' => $restored?->getKey(),
                     'owner_expiry_sync' => $ownerSync,
+                    'restored_type_expiry_sync' => $restoredSync,
                 ]),
             );
         });
@@ -327,7 +350,9 @@ class ComplianceDocumentService
             return ['state' => 'none', 'days' => null, 'until' => null];
         }
         $until = $date->format('Y-m-d');
-        $diff = Carbon::now()->startOfDay()->diffInDays($date->copy()->startOfDay(), false);
+        $diff = Carbon::today(config('compliance.timezone'))->diffInDays(
+            Carbon::parse($until, config('compliance.timezone'))->startOfDay(), false,
+        );
 
         if ($diff < 0) {
             return ['state' => 'exp', 'days' => (int) abs($diff), 'until' => $until];
@@ -345,11 +370,12 @@ class ComplianceDocumentService
     private function storeFile(UploadedFile $file, Model $doc, ?int $actorId, array &$storedFiles): Attachment
     {
         $meta = $this->meta($doc);
-        $disk = self::FILE_DISK;
+        $disk = self::fileDisk();
         $path = Storage::disk($disk)->putFileAs(
             "attachments/{$meta['folder']}/{$doc->getKey()}",
             $file,
             $file->hashName(),
+            ['visibility' => 'private'],
         );
         if ($path === false) {
             throw new \RuntimeException('Không ghi được file chứng từ lên máy chủ.');
@@ -363,9 +389,8 @@ class ComplianceDocumentService
             'path' => $path,
             'original_name' => $file->getClientOriginalName(),
             'size_bytes' => $file->getSize(),
-            'mime_type' => $file->getClientMimeType(),
+            'mime_type' => $file->getMimeType(),
             'sha256' => hash_file('sha256', (string) $file->getRealPath()) ?: null,
-            'file_binary' => Attachment::bytesFromUpload($file),
         ]);
 
         $this->audit->log(
@@ -389,7 +414,9 @@ class ComplianceDocumentService
     {
         foreach ($doc->attachments()->get(['id', 'disk', 'path']) as $attachment) {
             // Bản ghi cũ có thể ghi disk 'public' dù file thực tế nằm ở disk mặc định → xóa ở cả hai.
-            $disks = array_unique([$attachment->disk ?: 'public', self::FILE_DISK]);
+            $disks = $attachment->disk === 'public'
+                ? array_unique(['public', config('filesystems.default'), 'local'])
+                : [$attachment->disk ?: 'local'];
             $path = $attachment->path;
             $attachment->delete();
             if ($path) {
@@ -416,11 +443,11 @@ class ComplianceDocumentService
 
     /**
      * Đặt hạn trên bảng chủ = hạn xa nhất trong các bản đang hiệu lực cùng loại.
-     * Không có bản nào có hạn → giữ nguyên giá trị hiện tại.
+     * Sửa/xóa bản cuối có hạn → xóa hạn cũ; tạo mới chưa khai báo hạn giữ dữ liệu nhập tay.
      *
-     * @return array{column: string, from: string|null, to: string}|null
+     * @return array{column: string, from: string|null, to: string|null}|null
      */
-    private function syncOwnerExpiry(Model $doc): ?array
+    private function syncOwnerExpiry(Model $doc, bool $clearMissing = true): ?array
     {
         $meta = $this->meta($doc);
         $column = $meta['expiry_columns'][$doc->doc_type] ?? null;
@@ -439,11 +466,11 @@ class ComplianceDocumentService
             ->where('doc_type', $doc->doc_type)
             ->where('status', self::STATUS_ACTIVE)
             ->max('expires_at');
-        if ($max === null) {
+        if ($max === null && ! $clearMissing) {
             return null;
         }
 
-        $to = Carbon::parse($max)->toDateString();
+        $to = $max === null ? null : Carbon::parse($max)->toDateString();
         $current = $owner->{$column};
         $from = $current ? Carbon::parse($current)->toDateString() : null;
         if ($from === $to) {

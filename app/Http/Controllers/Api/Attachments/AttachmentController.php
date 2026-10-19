@@ -21,6 +21,7 @@ use App\Models\User;
 use App\Models\VehicleComplianceDocument;
 use App\Services\Auditing\AuditLogger;
 use App\Services\Ocr\PaperOcrStubService;
+use App\Services\Resources\ComplianceDocumentService;
 use App\Services\SignedDocuments\SignedDocumentUploadService;
 use App\Support\ChecklistAccess;
 use App\Support\ExpenseDocumentAccess;
@@ -75,6 +76,12 @@ class AttachmentController extends Controller
 
         /** @var UploadedFile $file */
         $file = $request->file('file');
+
+        if ($attachable instanceof DriverComplianceDocument || $attachable instanceof VehicleComplianceDocument) {
+            $document = app(ComplianceDocumentService::class)->update($attachable, [], $file, false, $user?->id);
+
+            return $this->created($document->attachments->sortByDesc('id')->first()->toArray());
+        }
 
         $kind = $data['kind'] ?? null;
         if (
@@ -171,6 +178,16 @@ class AttachmentController extends Controller
 
         $name = $attachment->original_name ?: 'download';
 
+        // Chứng từ mới chỉ lưu file. Binary cũ chỉ là fallback trong giai đoạn chuyển dữ liệu.
+        if ($attachment->isComplianceDocument() && $attachment->path) {
+            $resolved = $this->resolveForAttachmentDownload($attachment->disk ?: 'local', $attachment->path);
+            if ($resolved) {
+                return $resolved['kind'] === 'absolute'
+                    ? response()->download($resolved['path'], $name)
+                    : Storage::disk($resolved['disk'])->download($resolved['path'], $name);
+            }
+        }
+
         $binary = $attachment->file_binary;
         if ($binary !== null && $binary !== '') {
             $expectedBytes = $attachment->size_bytes;
@@ -224,8 +241,7 @@ class AttachmentController extends Controller
                 $useRel = $tryDisk === 'public'
                     ? $this->normalizeRelativeToPublicDisk($rel)
                     : ltrim(str_replace('\\', '/', $rel), '/');
-                $abs = Storage::disk($tryDisk)->path($useRel);
-                if (is_file($abs) && is_readable($abs)) {
+                if (Storage::disk($tryDisk)->exists($useRel)) {
                     return ['kind' => 'relative', 'disk' => $tryDisk, 'path' => $useRel];
                 }
             }
@@ -264,7 +280,8 @@ class AttachmentController extends Controller
     {
         $disk = $disk ?: 'public';
         if ($disk === 'public') {
-            return ['public'];
+            // Các upload cũ ghi nhãn public nhưng thực tế ghi vào disk mặc định.
+            return array_values(array_unique(['public', config('filesystems.default'), 'local']));
         }
 
         return [$disk, 'public'];

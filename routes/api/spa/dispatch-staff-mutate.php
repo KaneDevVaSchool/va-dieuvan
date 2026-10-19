@@ -143,13 +143,13 @@ Route::delete('/drivers/{id}/force', [OperationalResourceController::class, 'for
     ->whereNumber('id')
     ->middleware('throttle:30,1');
 Route::post('/drivers/{driver}/compliance-documents', [DriverComplianceDocumentController::class, 'store'])
-    ->middleware('throttle:30,1');
+    ->middleware('throttle:compliance-mutate');
 Route::patch('/drivers/{driver}/compliance-documents/{complianceDocument}', [DriverComplianceDocumentController::class, 'update'])
-    ->middleware('throttle:30,1');
+    ->middleware('throttle:compliance-mutate');
 Route::delete('/drivers/{driver}/compliance-documents/{complianceDocument}', [DriverComplianceDocumentController::class, 'destroy'])
-    ->middleware('throttle:30,1');
+    ->middleware('throttle:compliance-mutate');
 Route::post('/drivers/{driver}/compliance-documents/{complianceDocument}/renew', [DriverComplianceDocumentController::class, 'renew'])
-    ->middleware('throttle:30,1');
+    ->middleware('throttle:compliance-mutate');
 Route::post('/vehicles', [OperationalResourceController::class, 'storeVehicle'])
     ->middleware('throttle:30,1');
 Route::post('/vehicles/bulk-delete', [OperationalResourceController::class, 'bulkDestroyVehicles'])
@@ -167,13 +167,13 @@ Route::delete('/vehicles/{id}/force', [OperationalResourceController::class, 'fo
     ->whereNumber('id')
     ->middleware('throttle:30,1');
 Route::post('/vehicles/{vehicle}/compliance-documents', [VehicleComplianceDocumentController::class, 'store'])
-    ->middleware('throttle:30,1');
+    ->middleware('throttle:compliance-mutate');
 Route::patch('/vehicles/{vehicle}/compliance-documents/{complianceDocument}', [VehicleComplianceDocumentController::class, 'update'])
-    ->middleware('throttle:30,1');
+    ->middleware('throttle:compliance-mutate');
 Route::delete('/vehicles/{vehicle}/compliance-documents/{complianceDocument}', [VehicleComplianceDocumentController::class, 'destroy'])
-    ->middleware('throttle:30,1');
+    ->middleware('throttle:compliance-mutate');
 Route::post('/vehicles/{vehicle}/compliance-documents/{complianceDocument}/renew', [VehicleComplianceDocumentController::class, 'renew'])
-    ->middleware('throttle:30,1');
+    ->middleware('throttle:compliance-mutate');
 Route::post('/transport-providers', [OperationalResourceController::class, 'storeTransportProvider'])
     ->middleware('throttle:30,1');
 Route::post('/transport-providers/bulk-delete', [OperationalResourceController::class, 'bulkDestroyTransportProviders'])

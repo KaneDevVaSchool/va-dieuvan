@@ -30,6 +30,13 @@ return [
 
     'disks' => [
 
+        'compliance' => [
+            'driver' => 'local',
+            'root' => env('COMPLIANCE_STORAGE_ROOT', storage_path('app')),
+            'visibility' => 'private',
+            'throw' => true,
+        ],
+
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app'),

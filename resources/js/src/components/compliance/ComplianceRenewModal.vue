@@ -141,13 +141,19 @@ function emptyForm() {
   return { issued_at: '', expires_at: '', document_no: '', title: '', notes: '' }
 }
 
-/** Hạn mới phải sau hạn hiện tại. */
+/** Hạn mới còn hiệu lực theo ngày Việt Nam và phải sau hạn hiện tại. */
 const minExpires = computed(() => {
+  // Tính lại khi mở modal, kể cả khi trang đã mở qua đêm.
+  if (!props.open) return undefined
+  const today = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date())
   const cur = props.doc?.expires_at
-  if (!cur) return undefined
-  const d = new Date(`${cur}T12:00:00`)
-  d.setDate(d.getDate() + 1)
-  return d.toISOString().slice(0, 10)
+  if (!cur) return today
+  const d = new Date(`${cur}T00:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + 1)
+  const afterCurrent = d.toISOString().slice(0, 10)
+  return afterCurrent > today ? afterCurrent : today
 })
 
 watch(

@@ -112,6 +112,7 @@ Mặc định kho ưu tiên các bản đang hiệu lực. Nếu cần tìm bả
 
 - Phải có file mới và ngày hết hạn mới.
 - Nếu bản hiện tại có ngày hết hạn, ngày mới phải sau ngày cũ.
+- Ngày hết hạn mới không được trước hôm nay, tính theo múi giờ Việt Nam. Giấy tờ hết hạn ngay hôm nay vẫn được chấp nhận.
 - Ngày cấp, nếu nhập, không được sau ngày hết hạn.
 - Không gia hạn tiếp từ một bản đã bị thay thế; hãy chọn bản đang hiệu lực.
 
@@ -126,6 +127,10 @@ Sau khi lưu, hệ thống tạo bản mới, chuyển bản cũ sang **Đã tha
 3. Đối chiếu số chứng từ, ngày cấp, ngày hết hạn và file của từng bản.
 
 Gia hạn tạo một bản kế tiếp trong lịch sử. Khi có giấy tờ mới, dùng **Gia hạn** để giữ đầy đủ chuỗi bản cũ.
+
+Khi sửa loại giấy tờ, hệ thống tính lại hạn trên hồ sơ cho cả loại cũ và loại mới. Khi bỏ hạn hoặc xóa bản cuối cùng có hạn của một loại, hạn tương ứng trên hồ sơ được xóa. Xóa bản gia hạn hiện hành sẽ khôi phục bản trước và tính lại hạn theo bản được khôi phục.
+
+Hướng dẫn kỹ thuật về nơi lưu, sao lưu, chuyển thư mục và kiểm thử: [Lưu trữ và kiểm thử chứng từ](COMPLIANCE_STORAGE_AND_TESTING.md).
 
 ## 3. Thêm người dùng thủ công và đồng bộ CMS
 

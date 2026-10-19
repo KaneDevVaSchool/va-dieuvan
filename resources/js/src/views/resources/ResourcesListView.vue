@@ -995,15 +995,11 @@
                                 {{ t('resources.attachment_download_short') }}
                               </button>
                             </template>
-                            <a
+                            <ComplianceFileActions
                               v-else
-                              :href="a.url"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              class="min-w-0 flex-1 truncate text-teal-700 underline dark:text-teal-400"
-                            >
-                              {{ a.original_name || 'file' }}
-                            </a>
+                              :attachments="[a]"
+                              class="min-w-0 flex-1"
+                            />
                           </div>
                         </div>
                       </div>
@@ -2535,6 +2531,7 @@ import {
   renewVehicleComplianceDocument,
 } from '../../api/operational'
 import ComplianceHistoryList from '../../components/compliance/ComplianceHistoryList.vue'
+import ComplianceFileActions from '../../components/compliance/ComplianceFileActions.vue'
 import ComplianceRenewModal from '../../components/compliance/ComplianceRenewModal.vue'
 import { formatApiError, TOKEN_KEY } from '../../api/http'
 import { showAppError, showAppErrorFromApi, showAppInfo, showAppSuccess } from '../../composables/appMessage'

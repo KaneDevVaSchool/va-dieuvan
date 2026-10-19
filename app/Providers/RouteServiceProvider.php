@@ -33,6 +33,11 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(40)->by($request->user()?->id ?: $request->ip());
         });
 
+        // Tách lượt ghi chứng từ khỏi bộ đếm của các request đọc trong SPA.
+        RateLimiter::for('compliance-mutate', function (Request $request) {
+            return Limit::perMinute(30)->by($request->user()?->id ?: $request->ip());
+        });
+
         // Xóa hàng loạt có cụm xác nhận — tránh 429 khi thử lại sau lỗi đếm/422; vẫn giới hạn theo user.
         RateLimiter::for('requests-purge', function (Request $request) {
             return Limit::perMinute(15)->by($request->user()?->id ?: $request->ip());
