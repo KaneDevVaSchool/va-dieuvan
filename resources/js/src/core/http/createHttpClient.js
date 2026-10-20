@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { TOKEN_KEY } from '../config/authKeys'
 import { APP_CONFIG } from '../config/appConfig'
+import { getImpersonatorToken } from '../../util/impersonationSession'
 
 /**
  * Client HTTP thuần — interceptors nghiệp vụ (401, outbox) gắn tại {@link ../../api/http.js}.
@@ -18,6 +19,9 @@ export function createHttpClient() {
     const token = localStorage.getItem(TOKEN_KEY)
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+    }
+    if (getImpersonatorToken()) {
+      config.headers['X-Skip-Outbox'] = '1'
     }
     return config
   })

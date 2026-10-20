@@ -3,6 +3,7 @@ import { TOKEN_KEY } from '../config/authKeys'
 import { buildAbsoluteApiUrl } from '../http/apiUrl'
 import { openVaDb } from './idb'
 import { logger } from '../monitoring/logger'
+import { getImpersonatorToken } from '../../util/impersonationSession'
 
 const MUTABLE = new Set(['post', 'put', 'patch', 'delete'])
 
@@ -26,6 +27,7 @@ function serializeHeaders(config) {
  * @param {import('axios').InternalAxiosRequestConfig} config
  */
 export async function enqueueOutboxRequest(config) {
+  if (getImpersonatorToken()) return
   if (!config?.url || !MUTABLE.has(String(config.method || 'get').toLowerCase())) return
   if (config.headers?.['X-Skip-Outbox']) return
   if (typeof FormData !== 'undefined' && config.data instanceof FormData) return
@@ -72,6 +74,7 @@ async function requestBackgroundSync() {
 }
 
 export async function flushOutbox() {
+  if (getImpersonatorToken()) return
   const db = await openVaDb()
   const items = await new Promise((resolve, reject) => {
     const tx = db.transaction(APP_CONFIG.outboxStore, 'readonly')

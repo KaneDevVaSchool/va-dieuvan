@@ -39,6 +39,8 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 import { useAuthStore } from './store'
+import { TOKEN_KEY } from './core/config/authKeys'
+import { clearIdentityCache } from './util/impersonationSession'
 import { useOnboarding } from './composables/useOnboarding'
 import AppShell from './components/layout/AppShell.vue'
 import LayoutDriver from './components/layout/LayoutDriver.vue'
@@ -114,11 +116,18 @@ const onboardingViewportOk = ref(
 )
 
 let onboardingMq = null
+function syncSessionAcrossTabs(event) {
+  if (event.key === TOKEN_KEY && event.oldValue !== event.newValue) {
+    clearIdentityCache()
+    window.location.reload()
+  }
+}
 function onboardingMqSync() {
   if (onboardingMq) onboardingViewportOk.value = onboardingMq.matches
 }
 
 onMounted(() => {
+  window.addEventListener('storage', syncSessionAcrossTabs)
   splashAppReady.value = true
   onboardingMq = window.matchMedia(ONBOARDING_MAX_MQ)
   onboardingMqSync()
@@ -126,6 +135,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  window.removeEventListener('storage', syncSessionAcrossTabs)
   if (onboardingMq) {
     onboardingMq.removeEventListener('change', onboardingMqSync)
   }

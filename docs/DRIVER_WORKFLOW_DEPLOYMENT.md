@@ -4,6 +4,7 @@
 
 - Tách giới hạn request đọc, ghi, gửi, upload và export cho cả tài xế lẫn back-office. Việc đọc/tự lưu không dùng chung bộ đếm gửi phiếu.
 - Lỗi tự lưu checklist giữ các chỉnh sửa chưa lưu, chặn gửi khi chưa lưu được; không tự tải lại và xóa dữ liệu đang nhập khi gặp xung đột 409.
+- Checklist hiển thị tên từng mục thiếu kết quả, lý do Không đạt hoặc ảnh minh chứng ngay gần nút Nộp; bấm lỗi để tới đúng mục. Thông báo cập nhật khi bổ sung, giữ nguyên lỗi chi tiết từ API và chờ ảnh tải xong trước khi nộp.
 - Chặn chi phí trùng trong hồ sơ; kiểm tra lại lúc nộp, đồng bộ xe và thông tin hóa đơn theo chi phí gốc.
 - Kiểm tra tên người bán/ngày mua cho các dòng không hóa đơn trước khi tự sinh BK.
 - Hủy/trả lại TT/HU xử lý đồng thời BK con. Chặn hủy khi con đã ký/thanh toán; BK đính kèm không được thanh toán độc lập. Nộp lại cập nhật BK cũ.

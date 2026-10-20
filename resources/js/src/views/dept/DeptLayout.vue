@@ -309,6 +309,7 @@
             : 'px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5 lg:px-8 lg:py-6',
         ]"
       >
+        <ImpersonationBanner />
         <RouterView />
       </main>
     </div>
@@ -318,6 +319,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, provide, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
+import ImpersonationBanner from '../../components/layout/ImpersonationBanner.vue'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowRightStartOnRectangleIcon,

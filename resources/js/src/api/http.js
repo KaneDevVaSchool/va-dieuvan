@@ -2,6 +2,7 @@ import { createHttpClient } from '../core/http/createHttpClient'
 import { enqueueOutboxRequest } from '../core/offline/outbox'
 import { TOKEN_KEY } from '../core/config/authKeys'
 import { sanitizeLoginRedirect } from '../util/loginRedirect'
+import { restoreImpersonatorSession } from '../util/impersonationSession'
 
 export const http = createHttpClient()
 
@@ -9,6 +10,10 @@ http.interceptors.response.use(
   (r) => r,
   async (err) => {
     if (err.response?.status === 401 && !err.config?.url?.includes('/login')) {
+      const authorization = err.config?.headers?.Authorization
+      if (authorization && authorization !== `Bearer ${localStorage.getItem(TOKEN_KEY)}`) return Promise.reject(err)
+      if (err.config?.url?.includes('/impersonate/leave') || err.config?.url === '/logout') return Promise.reject(err)
+      if (restoreImpersonatorSession()) return Promise.reject(err)
       localStorage.removeItem(TOKEN_KEY)
       try {
         localStorage.removeItem('vas_user_hint')

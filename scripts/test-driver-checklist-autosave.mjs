@@ -99,6 +99,82 @@ try {
   await expect(accountingPage.locator('input[type="search"]').first()).toBeVisible()
   assert.deepEqual(accountingErrors, [])
   console.log('PASS: accountant-only login opens the financial document list.')
+  await accounting.close()
+
+  const validation = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'vi-VN', serviceWorkers: 'block' })
+  await validation.addInitScript(() => {
+    localStorage.setItem('sanctum_token', 'validation-test')
+    localStorage.setItem('vas_onboarded', '1')
+  })
+  let ngDoc = { id: 2, code: 'CL-NG-TEST', status: 'draft', period_type: 'daily', lock_version: 0,
+    started_at: '2026-10-20T08:00:00+07:00', vehicle: { id: 1, license_plate: 'TEST-NG' },
+    items: [{ id: 1, group_name: 'An toàn', title: 'Phanh', result: null, severity: 'critical', requires_photo_on_ng: true, attachments: [] }] }
+  let submitCalls = 0
+  let releaseUpload
+  const uploadGate = new Promise(resolve => { releaseUpload = resolve })
+  const serverError = 'Mục "Phanh" không đạt — vui lòng ghi rõ lý do / phương án.'
+  await validation.route('**/api/**', async route => {
+    const request = route.request(), path = new URL(request.url()).pathname
+    let status = 200, data = { data: { items: [], unread_count: 0 } }
+    if (path === '/api/user') data = { id: 1, name: 'Test Driver', roles: [{ name: 'driver' }], permissions: ['checklist.submit'] }
+    if (path === '/api/driver/checklists/2') {
+      if (request.method() === 'PATCH') {
+        const payload = request.postDataJSON()
+        ngDoc.items = ngDoc.items.map(item => ({ ...item, ...(payload.items || []).find(change => change.id === item.id) }))
+        ngDoc.lock_version++
+      }
+      data = { data: ngDoc }
+    }
+    if (path === '/api/driver/checklists/2/items/1/evidence') {
+      await uploadGate
+      const attachment = { id: 7, original_name: 'phanh.png', mime_type: 'image/png' }
+      ngDoc.items[0].attachments = [attachment]
+      status = 201; data = { data: attachment }
+    }
+    if (path === '/api/driver/checklists/2/submit') {
+      submitCalls++
+      if (submitCalls === 1) { status = 422; data = { message: 'Validation failed', errors: { 'items.1.note': [serverError] } } }
+      else { ngDoc = { ...ngDoc, status: 'submitted', result: 'fail', critical_ng_count: 1 }; data = { data: ngDoc } }
+    }
+    await route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(data) })
+  })
+  const ngPage = await validation.newPage()
+  const ngErrors = []
+  ngPage.on('pageerror', error => ngErrors.push(error.message))
+  await ngPage.goto(`http://127.0.0.1:${server.address().port}/driver/checklists/2`)
+  const row = ngPage.getByTestId('checklist-item-1')
+  const requirements = ngPage.getByTestId('checklist-submit-requirements')
+  const ngSubmit = ngPage.getByTestId('checklist-submit')
+  await ngPage.getByTestId('checklist-item-1-ng').click()
+  await expect(requirements).toContainText('Phanh')
+  await expect(requirements).toContainText('Chưa nhập lý do Không đạt')
+  await expect(requirements).toContainText('Chưa có ảnh minh chứng')
+  await expect(requirements).toContainText('Chưa tick xác nhận')
+  await ngPage.getByTestId('checklist-confirm').check()
+  await ngSubmit.click()
+  assert.equal(submitCalls, 0, 'Incomplete NG should explain the issue before sending')
+  await expect(row).toContainText('Chưa nhập lý do Không đạt')
+  await requirements.getByRole('button').click()
+  await expect(row.locator('textarea')).toBeFocused()
+  await row.locator('textarea').fill('Phanh yếu, đã báo điều phối.')
+  await expect(requirements).not.toContainText('Chưa nhập lý do Không đạt')
+  await expect(requirements).toContainText('Chưa có ảnh minh chứng')
+  await row.locator('input[type=file]').setInputFiles({ name: 'phanh.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a4qkAAAAASUVORK5CYII=', 'base64') })
+  await expect(ngSubmit).toBeDisabled()
+  await expect(requirements).toContainText('Ảnh đang được tải lên')
+  releaseUpload()
+  await expect(ngSubmit).toBeEnabled()
+  await expect(requirements).toHaveCount(0)
+  await ngSubmit.click()
+  await expect(requirements).toContainText(serverError)
+  await expect(row).toContainText(serverError)
+  await row.locator('textarea').fill('Phanh yếu, dừng xe và chờ điều phối đổi xe.')
+  await expect(requirements).toHaveCount(0)
+  await ngSubmit.click()
+  await expect(ngPage.getByTestId('checklist-result-card')).toBeVisible()
+  assert.equal(submitCalls, 2)
+  assert.deepEqual(ngErrors, [])
+  console.log('PASS: NG lists missing note/photo/confirmation, focuses the item, updates as corrected, waits for upload, and displays server validation details.')
 } finally {
   await browser?.close()
   await new Promise(r => server.close(r))

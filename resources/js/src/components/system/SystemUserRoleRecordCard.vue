@@ -21,9 +21,10 @@ const props = defineProps({
   displayOrSupplement: { type: Function, required: true },
   isSupplementValue: { type: Function, required: true },
   currentRoleName: { type: String, default: null },
+  canImpersonate: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['toggle-select', 'role-change'])
+const emit = defineEmits(['toggle-select', 'role-change', 'impersonate'])
 
 const NEEDS = 'Cần bổ sung'
 </script>
@@ -116,6 +117,7 @@ const NEEDS = 'Cần bổ sung'
       </div>
 
       <div class="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center lg:min-w-[13rem] lg:flex-col lg:items-stretch">
+        <button v-if="canImpersonate" type="button" :disabled="locked || saving" class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900 hover:bg-amber-100 disabled:opacity-50 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200" data-testid="user-role-impersonate" @click="emit('impersonate')">Giả lập</button>
         <div v-if="colVisible.role" class="min-w-0">
           <label class="sr-only" :for="`ur-role-${user.id}`">Vai trò của {{ user.name }}</label>
           <select

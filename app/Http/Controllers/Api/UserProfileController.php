@@ -22,6 +22,7 @@ class UserProfileController extends Controller
             'is_superadmin' => $user->isSuperAdmin(),
             'feature_toggles' => $featureToggles->mapForUser($user),
             'feature_toggle_states' => $featureToggles->mapStatesForRuntime(),
+            'impersonation' => $request->attributes->get('impersonation'),
         ]);
 
         $cmsUserId = $cms->findCmsUserIdByEmail($user->email);
@@ -87,6 +88,7 @@ class UserProfileController extends Controller
             'is_superadmin' => $user->isSuperAdmin(),
             'feature_toggles' => $featureToggles->mapForUser($user),
             'feature_toggle_states' => $featureToggles->mapStatesForRuntime(),
+            'impersonation' => $request->attributes->get('impersonation'),
         ]);
         $payload['cms_user_info'] = $cmsUserId !== null
             ? $cms->getLatestUserInfoRow($cmsUserId)

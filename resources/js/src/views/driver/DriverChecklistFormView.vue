@@ -91,7 +91,7 @@
               :key="item.id"
               :item="item"
               :editable="editable"
-              :error="itemErrors[item.id] || ''"
+              :error="itemErrors[item.id] || (validationAttempted ? itemValidationMessages(item).join(' ') : '')"
               :uploading="uploadingItemId === item.id"
               @update:result="(v) => setResult(item, v)"
               @update:note="(v) => setNote(item, v)"
@@ -121,12 +121,24 @@
             <span class="text-sm leading-snug">{{ statement }}</span>
           </label>
 
-          <p v-if="submitError" class="text-sm text-rose-300">{{ submitError }}</p>
+          <div v-if="submissionIssues.length || !confirmed || uploadingItemId != null" class="rounded-xl bg-amber-500/10 p-3 text-sm text-amber-100 ring-1 ring-amber-400/30" role="status" aria-live="polite" data-testid="checklist-submit-requirements">
+            <p class="font-semibold">{{ t('checklist.submit_requirements_title') }}</p>
+            <ul class="mt-2 max-h-56 space-y-2 overflow-y-auto">
+              <li v-for="issue in submissionIssues" :key="issue.id">
+                <button type="button" class="text-left underline decoration-amber-300/50 underline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-300" @click="goToItem(issue.id)">
+                  <strong>{{ issue.title }}:</strong> {{ issue.messages.join(' ') }}
+                </button>
+              </li>
+              <li v-if="!confirmed">{{ t('checklist.confirm_required') }}</li>
+              <li v-if="uploadingItemId != null">{{ t('checklist.wait_photo_upload') }}</li>
+            </ul>
+          </div>
+          <p v-if="submitError" role="alert" class="text-sm text-rose-300">{{ submitError }}</p>
 
           <button
             type="button"
             class="flex min-h-[52px] w-full items-center justify-center rounded-xl bg-driver-accent py-3 text-base font-bold text-driver-bg transition hover:brightness-110 disabled:opacity-45 active:scale-[0.99]"
-            :disabled="submitting || !confirmed || doneCount < items.length"
+            :disabled="submitting || !confirmed || doneCount < items.length || uploadingItemId != null"
             data-testid="checklist-submit"
             @click="submit"
           >
@@ -176,6 +188,7 @@ const confirmed = ref(false)
 const submitting = ref(false)
 const submitError = ref('')
 const itemErrors = ref({})
+const validationAttempted = ref(false)
 const uploadingItemId = ref(null)
 const downloading = ref(false)
 
@@ -189,6 +202,27 @@ const editable = computed(() => sub.value?.status === 'draft')
 const doneCount = computed(() => items.value.filter((i) => i.result).length)
 const progressPct = computed(() => (items.value.length ? Math.round((doneCount.value / items.value.length) * 100) : 0))
 const criticalNgCount = computed(() => items.value.filter((i) => i.result === 'ng' && i.severity === 'critical').length)
+function itemValidationMessages(item) {
+  if (!item.result) return [t('checklist.item_result_required')]
+  const messages = []
+  if (item.result === 'ng') {
+    if (!String(item.note || '').trim()) messages.push(t('checklist.ng_note_required'))
+    if (item.requires_photo_on_ng && !item.attachments?.length) messages.push(t('checklist.ng_photo_required'))
+  }
+  return messages
+}
+const submissionIssues = computed(() => items.value.map(item => ({
+  id: item.id,
+  title: item.title,
+  messages: itemErrors.value[item.id] ? [itemErrors.value[item.id]] : itemValidationMessages(item),
+})).filter(issue => issue.messages.length))
+
+function goToItem(id) {
+  const row = document.querySelector(`[data-testid="checklist-item-${id}"]`)
+  row?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  const input = row?.querySelector('textarea') || row?.querySelector('button:not(:disabled)')
+  input?.focus({ preventScroll: true })
+}
 const statement = computed(() =>
   String(sub.value?.form_meta?.confirm_statement || t('checklist.default_statement')).replace(':plate', sub.value?.vehicle?.license_plate || '…'),
 )
@@ -309,6 +343,7 @@ function setResult(item, value) {
 
 function setNote(item, value) {
   item.note = value
+  delete itemErrors.value[item.id]
   dirtyItems.add(item.id)
   scheduleSave()
 }
@@ -346,6 +381,12 @@ function mapErrors(errors) {
 
 async function submit() {
   if (submitting.value) return
+  validationAttempted.value = true
+  submitError.value = ''
+  if (submissionIssues.value.length) {
+    goToItem(submissionIssues.value[0].id)
+    return
+  }
   submitting.value = true
   submitError.value = ''
   try {
@@ -361,9 +402,10 @@ async function submit() {
     const res = err?.response
     if (res?.status === 422 && res.data?.errors) {
       itemErrors.value = mapErrors(res.data.errors)
-      submitError.value = t('checklist.submit_invalid')
+      submitError.value = Object.keys(itemErrors.value).length
+        ? '' : Object.values(res.data.errors).flat().join(' ')
       const first = Object.keys(itemErrors.value)[0]
-      if (first) document.querySelector(`[data-testid="checklist-item-${first}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      if (first) goToItem(first)
     } else {
       submitError.value = res?.data?.message || t('checklist.submit_error')
     }

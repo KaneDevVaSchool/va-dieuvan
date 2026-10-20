@@ -56,6 +56,9 @@
             <div class="min-w-0">
               <p class="truncate text-sm font-semibold text-slate-800 dark:text-slate-200">{{ item.actor.name }}</p>
               <p class="truncate text-[11px] text-slate-400">{{ emptyDisplay(item.actor.email) }}</p>
+              <p v-if="item.metadata?.impersonation?.impersonator" class="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                Giả lập bởi {{ item.metadata.impersonation.impersonator.name || item.metadata.impersonation.impersonator.email }}
+              </p>
             </div>
           </div>
           <p v-else class="mt-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">

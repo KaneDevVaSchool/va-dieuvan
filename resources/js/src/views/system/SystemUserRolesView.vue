@@ -17,11 +17,21 @@ import DatagridToolbarActionButton from '../../components/shared/ui/DatagridTool
 import DatagridFilterField from '../../components/shared/ui/DatagridFilterField.vue'
 import FilterVisibilityDropdown from '../../components/shared/ui/FilterVisibilityDropdown.vue'
 import Button from '../../components/ui/Button.vue'
+import SystemImpersonationModal from '../../components/system/SystemImpersonationModal.vue'
+import { useAuthStore } from '../../store'
 
 const NEEDS_SUPPLEMENT = 'Cần bổ sung'
 const COL_STORAGE_KEY = 'user-roles-table-cols-v2'
 
 const { t } = useI18n()
+const auth = useAuthStore()
+const impersonationUser = ref(null)
+
+function canImpersonate(user) {
+  return !!auth.user?.is_superadmin && !auth.user?.impersonation?.active && user.id !== auth.user.id
+    && user.is_active !== false && user.is_active !== 0 && !user.is_superadmin
+    && (user.roles?.length ?? 0) > 0 && !user.roles.some(role => role.name === 'superadmin')
+}
 
 const COLUMN_DEFS = [
   { id: 'employee_code', label: 'Mã nhân viên', defaultOn: true },
@@ -195,6 +205,7 @@ onActivated(() => bootstrap())
       @close="addUserOpen = false"
       @created="onUserCreated"
     />
+    <SystemImpersonationModal :user="impersonationUser" @close="impersonationUser = null" />
 
     <SystemUserRolesSummaryBar
       :meta="meta"
@@ -420,6 +431,8 @@ onActivated(() => bootstrap())
           :display-or-supplement="displayOrSupplement"
           :is-supplement-value="isSupplementValue"
           :current-role-name="userCurrentRoleName(user)"
+          :can-impersonate="canImpersonate(user)"
+          @impersonate="impersonationUser = user"
           @toggle-select="toggleSelect(user.id)"
           @role-change="(val) => onRoleSelect(user, val)"
         />

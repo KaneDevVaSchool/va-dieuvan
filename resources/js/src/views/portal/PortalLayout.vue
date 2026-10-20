@@ -11,6 +11,7 @@
              md:pb-[calc(env(safe-area-inset-bottom,0px)+1rem)]"
       :class="hideBottomNav ? '!pb-[calc(env(safe-area-inset-bottom,0px)+1rem)]' : ''"
     >
+      <ImpersonationBanner />
       <RouterView />
     </main>
     <PortalBottomNav v-if="!hideBottomNav" />
@@ -20,6 +21,7 @@
 <script setup>
 import { computed, onMounted } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
+import ImpersonationBanner from '../../components/layout/ImpersonationBanner.vue'
 import PortalHeader from '../../components/portal/PortalHeader.vue'
 import PortalBottomNav from '../../components/portal/shell/PortalBottomNav.vue'
 import { useAuthStore } from '../../store'

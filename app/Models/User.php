@@ -17,6 +17,7 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
+    use \App\Models\Concerns\SimulatesRole;
     use HasApiTokens;
     use HasFactory;
     use HasRoles;
@@ -63,6 +64,10 @@ class User extends Authenticatable
 
     public function isSuperAdmin(): bool
     {
+        if ($this->isRoleSimulationActive()) {
+            return false;
+        }
+
         if (SuperAdminAccess::matches($this)) {
             return true;
         }

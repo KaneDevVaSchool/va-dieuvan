@@ -42,13 +42,17 @@
       <p v-if="item.ng_action" class="rounded-lg bg-rose-500/10 px-2.5 py-2 text-xs leading-snug text-rose-100 ring-1 ring-rose-400/20">
         <span class="font-bold">{{ t('checklist.ng_action') }}:</span> {{ item.ng_action }}
       </p>
+      <label :for="`checklist-note-${item.id}`" class="block text-xs font-semibold text-driver-ink">{{ t('checklist.ng_note_label') }}</label>
       <textarea
+        :id="`checklist-note-${item.id}`"
         :value="item.note || ''"
         :readonly="!editable"
         rows="2"
         maxlength="1000"
         class="w-full rounded-xl border border-white/10 bg-driver-bg/60 px-3 py-2 text-sm text-driver-ink placeholder:text-driver-muted/50 focus:outline-none focus:ring-2 focus:ring-driver-accent/45"
         :placeholder="t('checklist.ng_note_ph')"
+        :aria-invalid="!String(item.note || '').trim()"
+        aria-required="true"
         @input="$emit('update:note', $event.target.value)"
       />
       <div class="flex flex-wrap items-center gap-2">
@@ -72,7 +76,7 @@
           <input type="file" accept="image/*" capture="environment" class="sr-only" :disabled="uploading" @change="onFile" />
         </label>
         <span v-if="item.requires_photo_on_ng && !item.attachments?.length" class="text-xs text-amber-200">
-          {{ t('checklist.photo_required') }}
+          {{ t('checklist.ng_photo_required') }}
         </span>
       </div>
     </div>

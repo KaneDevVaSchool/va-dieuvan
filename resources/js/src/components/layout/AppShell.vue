@@ -17,6 +17,7 @@
         isHorizontalMobilePad,
       ]"
     >
+      <ImpersonationBanner />
       <OperationalStatusBanner class="print:hidden" :class="mainFlush ? 'shrink-0 px-3 pt-3 sm:px-4 md:px-6 lg:px-8' : ''" />
       <div class="flex min-h-0 min-w-0 flex-1 flex-col">
         <slot />
@@ -40,6 +41,7 @@ import { useRoute } from 'vue-router'
 import { useAppViewportLock } from '../../composables/useAppViewportLock'
 import AppSidebar from './AppSidebar.vue'
 import OperationalStatusBanner from './OperationalStatusBanner.vue'
+import ImpersonationBanner from './ImpersonationBanner.vue'
 import MobileBottomNav from '../nav/MobileBottomNav.vue'
 import { useSidebarLayout } from '../../composables/useSidebarLayout'
 import { useAuthStore } from '../../store'

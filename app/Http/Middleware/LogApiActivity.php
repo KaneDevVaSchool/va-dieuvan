@@ -44,6 +44,7 @@ class LogApiActivity
                 'duration_ms' => $durationMs,
                 'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
+                'impersonation' => $request->attributes->get('impersonation'),
             ],
         );
 

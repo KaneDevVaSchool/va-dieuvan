@@ -20,3 +20,12 @@ export async function patchProfile(payload) {
   const { data } = await http.patch('/user', payload)
   return data
 }
+
+export async function startImpersonation(userId, role) {
+  const { data } = await http.post(`/impersonate/${userId}`, { role })
+  return data.data
+}
+
+export async function leaveImpersonation() {
+  await http.post('/impersonate/leave')
+}

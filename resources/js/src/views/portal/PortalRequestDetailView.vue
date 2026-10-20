@@ -316,7 +316,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -400,7 +400,8 @@ let copyRejectionTimer = null
 let portalDetailLoadSeq = 0
 
 const timelineSteps = usePortalTimelineSteps(req, t)
-const actionCenter = usePortalRequestActionCenter(req, t)
+// Unwrap nested computed values before passing them as component props.
+const actionCenter = reactive(usePortalRequestActionCenter(req, t))
 
 const canPrintRequest = computed(() => req.value?.status === 'approved')
 

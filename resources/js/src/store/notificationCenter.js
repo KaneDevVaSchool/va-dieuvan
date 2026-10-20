@@ -350,6 +350,7 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
   }
 
   async function requestBrowserNotificationPermission() {
+    if (useAuthStore().user?.impersonation?.active) return
     if (typeof Notification === 'undefined') {
       return
     }
@@ -369,6 +370,7 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
    */
   async function registerWebPush() {
     const auth = useAuthStore()
+    if (auth.user?.impersonation?.active) return { ok: false, reason: 'unsupported' }
     if (!auth.isLoggedIn || !auth.user || auth.isPortalUser()) {
       return { ok: false, reason: 'api' }
     }

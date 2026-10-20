@@ -39,7 +39,9 @@ Route::post('/telemetry/frontend', [ClientTelemetryController::class, 'store'])-
 | Sanctum — phiên đăng nhập
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth:sanctum', \App\Http\Middleware\ApplyImpersonation::class])->group(function () {
+    Route::post('/impersonate/leave', [\App\Http\Controllers\Api\Auth\ImpersonationController::class, 'leave'])->middleware('throttle:30,1');
+    Route::post('/impersonate/{user}', [\App\Http\Controllers\Api\Auth\ImpersonationController::class, 'start'])->whereNumber('user')->middleware('throttle:30,1');
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('throttle:30,1');
 
     Route::middleware(['throttle:120,1'])->group(function () {

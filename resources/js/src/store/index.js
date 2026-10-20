@@ -3,6 +3,7 @@ import { http, TOKEN_KEY } from '../api/http'
 import * as authApi from '../api/auth'
 import { isUnauthorizedApiError } from '../util/apiError'
 import { resolvePostLoginTarget } from '../util/loginRedirect'
+import { clearIdentityCache, getImpersonatorToken, stashImpersonatorToken, isRestoringImpersonator } from '../util/impersonationSession'
 
 const USER_HINT_KEY = 'vas_user_hint'
 
@@ -63,6 +64,7 @@ export const useAuthStore = defineStore('auth', {
         }
         await this.fetchMe()
       } catch (e) {
+        if (isRestoringImpersonator()) return
         this.user = null
         if (isUnauthorizedApiError(e)) {
           this.setToken(null)
@@ -83,6 +85,7 @@ export const useAuthStore = defineStore('auth', {
       }
     },
     setToken(token) {
+      if (token !== localStorage.getItem(TOKEN_KEY)) clearIdentityCache()
       this.token = token
       if (token) {
         localStorage.setItem(TOKEN_KEY, token)
@@ -94,15 +97,22 @@ export const useAuthStore = defineStore('auth', {
       const res = await authApi.login({ email, password, device_name: deviceName })
       this.setToken(res.token)
       this.user = res.user
+      stashImpersonatorToken(null)
       this.persistUserHint()
       return res
     },
     async logout() {
+      const original = getImpersonatorToken()
       try {
         await authApi.logout()
       } catch {
         // ignore
       }
+      if (original) {
+        this.setToken(original)
+        try { await authApi.logout() } catch { /* Original session may have expired. */ }
+      }
+      stashImpersonatorToken(null)
       this.user = null
       this.setToken(null)
       try {
@@ -127,10 +137,41 @@ export const useAuthStore = defineStore('auth', {
       }
     },
     async fetchMe() {
+      const requestToken = localStorage.getItem(TOKEN_KEY)
       const { data } = await http.get('/user')
+      if (requestToken !== localStorage.getItem(TOKEN_KEY)) return this.user
       this.user = data
       this.persistUserHint()
       return this.user
+    },
+    async startImpersonation(userId, role) {
+      if (getImpersonatorToken()) throw new Error('Hãy thoát phiên giả lập hiện tại trước.')
+      const original = localStorage.getItem(TOKEN_KEY)
+      if (!original) throw new Error('Chưa đăng nhập.')
+      const result = await authApi.startImpersonation(userId, role)
+      stashImpersonatorToken(original)
+      this.setToken(result.token)
+      try {
+        await this.fetchMe()
+        return resolvePostLoginTarget(this, '/')
+      } catch (error) {
+        if (isRestoringImpersonator()) throw error
+        try { await authApi.leaveImpersonation() } catch { /* Token expires automatically. */ }
+        this.setToken(original)
+        stashImpersonatorToken(null)
+        await this.fetchMe()
+        throw error
+      }
+    },
+    async leaveImpersonation() {
+      const original = getImpersonatorToken()
+      try { await authApi.leaveImpersonation() } catch { /* Restore even if the impersonation expired. */ }
+      this.setToken(original)
+      stashImpersonatorToken(null)
+      this.user = null
+      if (!original) return '/login'
+      await this.fetchMe()
+      return '/mng/system/user-roles'
     },
     /** Khớp backend User::canAccessDispatchWebApp — superadmin / admin / dispatcher / department_head / internal_user. */
     canAccessDispatchWebApp() {
