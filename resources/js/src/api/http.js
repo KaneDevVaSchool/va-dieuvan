@@ -247,7 +247,7 @@ export function formatApiError(err, fallback = 'Đã xảy ra lỗi. Vui lòng t
  * @param {string} fallback
  */
 export function buildApiErrorPresentation(err, fallback = 'Đã xảy ra lỗi.') {
-  const friendly = formatApiError(err, fallback)
+  let friendly = formatApiError(err, fallback)
   const cfg = err?.response?.config || err?.config
   const status = err?.response?.status ?? null
   const headers = err?.response?.headers || {}
@@ -296,7 +296,12 @@ export function buildApiErrorPresentation(err, fallback = 'Đã xảy ra lỗi.'
   } else if (status === 429) {
     title = 'Quá nhiều yêu cầu (429 Too Many Requests)'
   } else if (status === 403) {
-    title = 'Không có quyền (403)'
+    title = 'Bạn chưa có quyền thực hiện'
+    friendly += '\n\nVui lòng liên hệ quản trị viên để kiểm tra quyền của tài khoản đang dùng.'
+    if (method === 'GET' && /\/driver\/tp-days(?:[/?]|$)/.test(path)) {
+      title = 'Chưa thể xem lịch đưa đón'
+      friendly = 'Hệ thống chưa xác nhận được quyền xem lịch đưa đón của tài khoản này.\n\nVui lòng liên hệ điều vận để kiểm tra vai trò tài xế và hồ sơ tài xế liên kết với tài khoản.'
+    }
   } else if (status === 404) {
     title = 'Không tìm thấy (404)'
   } else if (status === 422) {

@@ -158,9 +158,9 @@
     },
     "driver_home": {
         "hello": "Hello,",
-        "good_morning": "Good morning ☀️",
-        "good_afternoon": "Good afternoon 🌤",
-        "good_evening": "Good evening 🌙",
+        "good_morning": "Good morning",
+        "good_afternoon": "Good afternoon",
+        "good_evening": "Good evening",
         "load_error": "Could not load data. Try again later.",
         "float_call": "Call dispatch",
         "pending_banner_title": "{n} trip(s) need confirmation",
@@ -2643,6 +2643,8 @@
     "message_modal": {
         "close": "Close",
         "tech_details": "Technical details",
+        "support_details": "Information for support",
+        "understood": "Got it",
         "http": "HTTP",
         "request": "Request",
         "config_missing": "Could not read request config (axios). The URL above defaults to /api — use it to verify the domain.",

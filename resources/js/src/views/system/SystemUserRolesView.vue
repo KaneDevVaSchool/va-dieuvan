@@ -19,6 +19,7 @@ import FilterVisibilityDropdown from '../../components/shared/ui/FilterVisibilit
 import Button from '../../components/ui/Button.vue'
 import SystemImpersonationModal from '../../components/system/SystemImpersonationModal.vue'
 import { useAuthStore } from '../../store'
+import { canImpersonate as canImpersonateUser } from '../../util/canImpersonate'
 
 const NEEDS_SUPPLEMENT = 'Cần bổ sung'
 const COL_STORAGE_KEY = 'user-roles-table-cols-v2'
@@ -28,9 +29,7 @@ const auth = useAuthStore()
 const impersonationUser = ref(null)
 
 function canImpersonate(user) {
-  return !!auth.user?.is_superadmin && !auth.user?.impersonation?.active && user.id !== auth.user.id
-    && user.is_active !== false && user.is_active !== 0 && !user.is_superadmin
-    && !(user.roles ?? []).some(role => role.name === 'superadmin')
+  return canImpersonateUser(auth.user, user)
 }
 
 const COLUMN_DEFS = [

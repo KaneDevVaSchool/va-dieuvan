@@ -34,7 +34,7 @@ class UserListController extends Controller
         $like = $q !== '' ? '%'.addcslashes($q, '%_\\').'%' : null;
 
         $base = User::query()
-            ->select(['id', 'name', 'email', 'employee_code', 'avatar_url', 'department_id', 'source'])
+            ->select(['id', 'name', 'email', 'employee_code', 'avatar_url', 'department_id', 'source', 'is_active'])
             ->with([
                 'department:id,name,code',
                 'roles' => static function ($r) {
@@ -139,6 +139,8 @@ class UserListController extends Controller
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
+            'is_active' => (bool) $user->is_active,
+            'is_superadmin' => $user->isSuperAdmin(),
             'employee_code' => $user->employee_code,
             'source' => $user->source,
             'avatar_url' => $user->avatar_url,

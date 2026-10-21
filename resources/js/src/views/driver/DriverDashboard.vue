@@ -1,6 +1,6 @@
 <template>
   <div
-    class="min-h-0 w-full bg-[#020B0B] pb-[max(6rem,calc(var(--driver-bottom-nav-height,3.5rem)+5rem+env(safe-area-inset-bottom)))] text-[#eaf8f5]"
+    class="min-h-0 w-full bg-[#020B0B] pb-[calc(2rem+env(safe-area-inset-bottom))] text-[#eaf8f5]"
   >
     <!-- Pull-to-refresh: overlay cố định, không đẩy header (giữ nguyên xử lý safe-area) -->
     <div
@@ -28,7 +28,7 @@
     </div>
 
     <div
-      class="relative isolate w-full overflow-hidden rounded-b-[1.75rem] shadow-[0_10px_40px_-8px_rgba(34,211,238,0.18)] ring-1 ring-[#7fdcc8]/10 -mt-[env(safe-area-inset-top,0px)] pt-[env(safe-area-inset-top,0px)]"
+      class="relative isolate w-full overflow-hidden shadow-[0_10px_40px_-8px_rgba(34,211,238,0.18)] ring-1 ring-[#7fdcc8]/10 -mt-[env(safe-area-inset-top,0px)] pt-[env(safe-area-inset-top,0px)]"
     >
       <div
         class="pointer-events-none absolute inset-x-0 top-0 z-0 h-[env(safe-area-inset-top,0px)] bg-[#020B0B]"
@@ -60,7 +60,7 @@
       </div>
     </div>
 
-    <div class="mx-auto w-full min-h-0 min-w-0 max-w-full px-3 pt-4 sm:px-4">
+    <div class="mx-auto w-full min-h-0 min-w-0 max-w-full px-4 pt-5 sm:px-5">
       <div class="driver-stagger min-w-0 space-y-4">
         <DriverPendingConfirmationSection
           v-if="dash.needsConfirmationTrips.length > 0 || dash.loadingInitial"
@@ -107,7 +107,7 @@
       </div>
 
       <div
-        class="pointer-events-none fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 z-30 flex max-w-[100vw] flex-col items-end gap-3 pr-[env(safe-area-inset-right)]"
+        class="pointer-events-none fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-[max(1rem,calc((100vw-42rem)/2+1.25rem),env(safe-area-inset-right))] z-30 flex max-w-[100vw] flex-col items-end gap-3"
       >
         <a
           v-if="dispatcherPhone"

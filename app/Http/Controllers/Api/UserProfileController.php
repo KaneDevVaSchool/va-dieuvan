@@ -20,6 +20,7 @@ class UserProfileController extends Controller
         $payload = array_merge($user->toArray(), [
             'permissions' => $permissions,
             'is_superadmin' => $user->isSuperAdmin(),
+            'can_impersonate' => $user->canImpersonate(),
             'feature_toggles' => $featureToggles->mapForUser($user),
             'feature_toggle_states' => $featureToggles->mapStatesForRuntime(),
             'impersonation' => $request->attributes->get('impersonation'),
@@ -86,6 +87,7 @@ class UserProfileController extends Controller
         $payload = array_merge($user->toArray(), [
             'permissions' => $permissions,
             'is_superadmin' => $user->isSuperAdmin(),
+            'can_impersonate' => $user->canImpersonate(),
             'feature_toggles' => $featureToggles->mapForUser($user),
             'feature_toggle_states' => $featureToggles->mapStatesForRuntime(),
             'impersonation' => $request->attributes->get('impersonation'),

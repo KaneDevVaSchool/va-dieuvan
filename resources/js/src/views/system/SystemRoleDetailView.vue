@@ -15,9 +15,15 @@ import { JOB_ROLE_TEMPLATES } from '../../config/jobRoleTemplates.js'
 import * as admin from '../../api/admin'
 import { formatApiError } from '../../api/http'
 import { showAppError } from '../../composables/appMessage'
+import { useAuthStore } from '../../store'
+import { canImpersonate } from '../../util/canImpersonate'
+import SystemImpersonationModal from '../../components/system/SystemImpersonationModal.vue'
 
 const route  = useRoute()
 const router = useRouter()
+const auth = useAuthStore()
+const impersonationUser = ref(null)
+const showImpersonationActions = computed(() => !!auth.user?.can_impersonate && !auth.user?.impersonation?.active)
 
 const roleId = computed(() => Number(route.params.id))
 
@@ -26,7 +32,11 @@ const roleId = computed(() => Number(route.params.id))
 const loading    = ref(true)
 const role       = ref(null)
 const members    = ref([])
-const activeTab  = ref('capabilities') // 'capabilities' | 'members'
+const activeTab = computed(() => route.query.tab === 'members' ? 'members' : 'capabilities')
+
+function selectTab(tab) {
+  router.replace({ query: { ...route.query, tab }, hash: route.hash })
+}
 
 // ─── Derived ─────────────────────────────────────────────────────────────────
 
@@ -81,6 +91,7 @@ onMounted(load)
 
 <template>
   <div class="space-y-5 pb-12">
+    <SystemImpersonationModal :user="impersonationUser" :initial-role="role?.name" @close="impersonationUser = null" />
 
     <!-- ── Loading ────────────────────────────────────────────────────────── -->
     <div v-if="loading" class="space-y-4">
@@ -183,7 +194,7 @@ onMounted(load)
           :class="activeTab === tab.id
             ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-slate-50'
             : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'"
-          @click="activeTab = tab.id"
+          @click="selectTab(tab.id)"
         >
           {{ tab.label }}
         </button>
@@ -286,18 +297,20 @@ onMounted(load)
         >
           Chưa có nhân viên nào được gán vai trò này.
         </div>
-        <div v-else class="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700">
+        <div v-else class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-700">
           <table class="w-full border-collapse text-sm">
             <thead>
               <tr class="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Nhân viên</th>
                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Email</th>
+                <th v-if="showImpersonationActions" class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Thao tác</th>
               </tr>
             </thead>
             <tbody>
               <tr
                 v-for="member in members"
                 :key="member.id"
+                :data-testid="`role-member-${member.id}`"
                 class="border-b border-slate-100 transition-colors hover:bg-slate-50/80 last:border-0 dark:border-slate-800 dark:hover:bg-slate-800/40"
               >
                 <td class="px-4 py-3">
@@ -309,6 +322,15 @@ onMounted(load)
                   </div>
                 </td>
                 <td class="px-4 py-3 text-slate-500 dark:text-slate-400">{{ member.email ?? '—' }}</td>
+                <td v-if="showImpersonationActions" class="px-4 py-3 text-right">
+                  <button
+                    v-if="canImpersonate(auth.user, member)"
+                    type="button"
+                    class="whitespace-nowrap rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200"
+                    data-testid="role-member-impersonate"
+                    @click="impersonationUser = member"
+                  >Giả lập</button>
+                </td>
               </tr>
             </tbody>
           </table>

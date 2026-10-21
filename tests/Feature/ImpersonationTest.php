@@ -35,6 +35,14 @@ class ImpersonationTest extends TestCase
         return $user;
     }
 
+    private function impersonator(): User
+    {
+        return User::factory()->create([
+            'email' => 'phongcongnghe@vaschools.edu.vn',
+            'is_active' => true,
+        ]);
+    }
+
     private function asToken(string $token): self
     {
         Auth::forgetGuards();
@@ -49,9 +57,9 @@ class ImpersonationTest extends TestCase
             ->assertOk()->json('data.token');
     }
 
-    public function test_super_admin_can_experience_target_role_without_changing_assignments(): void
+    public function test_allowed_email_can_experience_target_role_without_changing_assignments(): void
     {
-        $actor = $this->account(['superadmin']);
+        $actor = $this->impersonator();
         $target = $this->account(['driver', 'admin']);
         $target->givePermissionTo('report.export');
         $token = $this->start($actor, $target, 'driver');
@@ -59,6 +67,7 @@ class ImpersonationTest extends TestCase
         $response = $this->asToken($token)->getJson('/api/user')->assertOk()
             ->assertJsonPath('id', $target->id)
             ->assertJsonPath('is_superadmin', false)
+            ->assertJsonPath('can_impersonate', false)
             ->assertJsonPath('impersonation.impersonator.id', $actor->id)
             ->assertJsonPath('impersonation.role.name', 'driver')
             ->assertJsonCount(1, 'roles')->assertJsonPath('roles.0.name', 'driver');
@@ -71,25 +80,48 @@ class ImpersonationTest extends TestCase
         $this->assertEqualsWithDelta(now()->addHours(2)->timestamp, PersonalAccessToken::findToken($token)->expires_at->timestamp, 3);
     }
 
-    public function test_only_super_admin_can_start(): void
+    public function test_other_accounts_including_super_admin_cannot_start(): void
     {
         $target = $this->account(['driver']);
-        foreach (['admin', 'dispatcher', 'driver'] as $role) {
+        foreach (['superadmin', 'admin', 'dispatcher', 'driver'] as $role) {
             $actor = $this->account([$role]);
             $this->asToken($actor->createToken('test')->plainTextToken)
                 ->postJson('/api/impersonate/'.$target->id)->assertForbidden();
         }
     }
 
+    public function test_profile_exposes_impersonation_access_only_for_allowed_email(): void
+    {
+        $allowed = $this->impersonator();
+        $this->asToken($allowed->createToken('test')->plainTextToken)->getJson('/api/user')
+            ->assertOk()->assertJsonPath('can_impersonate', true);
+
+        $other = $this->account(['superadmin']);
+        $this->asToken($other->createToken('test')->plainTextToken)->getJson('/api/user')
+            ->assertOk()->assertJsonPath('is_superadmin', true)->assertJsonPath('can_impersonate', false);
+
+        $other->update(['email' => 'hiennn@vaschools.edu.vn']);
+        $this->asToken($other->createToken('test')->plainTextToken)
+            ->postJson('/api/impersonate/'.$this->account(['driver'])->id)->assertForbidden();
+    }
+
+    public function test_inactive_allowed_account_cannot_start(): void
+    {
+        $actor = $this->impersonator();
+        $actor->update(['is_active' => false]);
+        $this->asToken($actor->createToken('test')->plainTextToken)
+            ->postJson('/api/impersonate/'.$this->account(['driver'])->id)->assertUnauthorized();
+    }
+
     public function test_self_super_admin_and_inactive_targets_are_rejected(): void
     {
-        $actor = $this->account(['superadmin']);
+        $actor = $this->impersonator();
         $original = $actor->createToken('test')->plainTextToken;
         $this->asToken($original)->postJson('/api/impersonate/'.$actor->id)->assertForbidden();
         $other = $this->account(['superadmin']);
         $this->asToken($original)->postJson('/api/impersonate/'.$other->id)->assertForbidden();
         $bootstrap = $this->account(['driver']);
-        $bootstrap->update(['email' => 'phongcongnghe@vaschools.edu.vn']);
+        $bootstrap->update(['email' => 'hiennn@vaschools.edu.vn']);
         $this->asToken($original)->postJson('/api/impersonate/'.$bootstrap->id)->assertForbidden();
         $inactive = $this->account(['driver']);
         $inactive->update(['is_active' => false]);
@@ -98,7 +130,7 @@ class ImpersonationTest extends TestCase
 
     public function test_role_must_exist_on_target_and_multirole_requires_selection(): void
     {
-        $actor = $this->account(['superadmin']);
+        $actor = $this->impersonator();
         $original = $actor->createToken('test')->plainTextToken;
         $target = $this->account([]);
         $this->asToken($original)->postJson('/api/impersonate/'.$target->id, ['role' => 'driver'])->assertUnprocessable();
@@ -110,13 +142,14 @@ class ImpersonationTest extends TestCase
 
     public function test_user_without_role_is_impersonated_as_portal_requester(): void
     {
-        $actor = $this->account(['superadmin']);
+        $actor = $this->impersonator();
         $target = $this->account([]);
         $token = $this->start($actor, $target);
 
         $this->asToken($token)->getJson('/api/user')->assertOk()
             ->assertJsonPath('id', $target->id)
             ->assertJsonPath('is_superadmin', false)
+            ->assertJsonPath('can_impersonate', false)
             ->assertJsonPath('impersonation.portal', true)
             ->assertJsonPath('impersonation.role.label', 'Portal người yêu cầu')
             ->assertJsonCount(0, 'roles');
@@ -127,7 +160,7 @@ class ImpersonationTest extends TestCase
 
     public function test_staff_can_be_impersonated_as_portal_without_staff_access(): void
     {
-        $actor = $this->account(['superadmin']);
+        $actor = $this->impersonator();
         $target = $this->account(['dispatcher']);
         $token = $this->asToken($actor->createToken('test')->plainTextToken)
             ->postJson('/api/impersonate/'.$target->id, ['portal' => true])->assertOk()->json('data.token');
@@ -141,7 +174,7 @@ class ImpersonationTest extends TestCase
 
     public function test_nested_impersonation_is_forbidden(): void
     {
-        $actor = $this->account(['superadmin']);
+        $actor = $this->impersonator();
         $token = $this->start($actor, $this->account(['admin']));
         $target = $this->account(['driver']);
         $this->asToken($token)->postJson('/api/impersonate/'.$target->id)->assertForbidden();
@@ -149,7 +182,7 @@ class ImpersonationTest extends TestCase
 
     public function test_leave_revokes_only_impersonation_token_and_original_still_works(): void
     {
-        $actor = $this->account(['superadmin']);
+        $actor = $this->impersonator();
         $original = $actor->createToken('original')->plainTextToken;
         $target = $this->account(['driver']);
         $token = $this->asToken($original)->postJson('/api/impersonate/'.$target->id)->assertOk()->json('data.token');
@@ -164,20 +197,21 @@ class ImpersonationTest extends TestCase
 
     public function test_expired_token_and_revoked_actor_access_are_rejected(): void
     {
-        $actor = $this->account(['superadmin']);
+        $actor = $this->impersonator();
         $target = $this->account(['driver']);
         $token = $this->start($actor, $target);
         PersonalAccessToken::findToken($token)->update(['expires_at' => now()->subMinute()]);
         $this->asToken($token)->getJson('/api/user')->assertUnauthorized();
         $token = $this->start($actor, $target);
-        $actor->removeRole('superadmin');
+        $actor->assignRole('superadmin');
+        $actor->update(['email' => 'former-impersonator@example.test']);
         $this->asToken($token)->getJson('/api/user')->assertUnauthorized();
         $this->asToken($token)->postJson('/api/impersonate/leave')->assertOk();
     }
 
     public function test_target_role_removal_invalidates_impersonation(): void
     {
-        $actor = $this->account(['superadmin']);
+        $actor = $this->impersonator();
         $target = $this->account(['driver']);
         $token = $this->start($actor, $target);
         $target->removeRole('driver');
@@ -186,7 +220,7 @@ class ImpersonationTest extends TestCase
 
     public function test_driver_sees_only_their_trips_and_writes_log_the_impersonator(): void
     {
-        $actor = $this->account(['superadmin']);
+        $actor = $this->impersonator();
         $target = $this->account(['driver']);
         $driver = Driver::create(['user_id' => $target->id, 'full_name' => $target->name]);
         $request = DispatchRequest::create([

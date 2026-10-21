@@ -20,7 +20,8 @@
       </span>
     </template>
     <template v-else>
-      <BellIcon class="h-5 w-5" aria-hidden="true" />
+      <span v-if="compact" class="pointer-events-none absolute inset-1 rounded-full border" :class="tone === 'light' ? 'border-slate-200 bg-slate-100 dark:border-slate-600 dark:bg-slate-800/70' : 'border-white/15 bg-white/5'" aria-hidden="true" />
+      <BellIcon class="relative" :class="compact ? 'h-[18px] w-[18px]' : 'h-5 w-5'" aria-hidden="true" />
       <template v-if="notifStore.lastUnread > 0">
         <!-- Ping ring: only pulses when panel is closed (draws attention without distracting while reading) -->
         <span
@@ -57,6 +58,7 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  compact: { type: Boolean, default: false },
 })
 
 const { t } = useI18n()
@@ -72,6 +74,9 @@ const buttonClass = computed(() => {
       return 'flex w-full min-w-0 items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-3 pr-3 text-sm text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800/70 dark:text-slate-200 dark:hover:bg-slate-700'
     }
     return 'flex w-full min-w-0 items-center gap-3 rounded-lg py-2.5 pl-3 pr-3 text-sm text-white/90 hover:bg-white/10'
+  }
+  if (props.compact) {
+    return `flex h-11 w-11 items-center justify-center rounded-full ${props.tone === 'light' ? 'text-slate-700 hover:bg-slate-100 dark:text-slate-300' : 'text-white/85 hover:bg-white/5'}`
   }
   return props.tone === 'light'
     ? 'flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:border-slate-600 dark:bg-slate-800/70 dark:text-slate-300 dark:hover:bg-slate-700'

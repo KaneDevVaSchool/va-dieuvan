@@ -23,23 +23,21 @@
     <div
       class="driver-stagger mx-auto w-full max-w-lg px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-4 sm:max-w-2xl sm:px-5"
     >
-      <div class="flex flex-wrap items-end justify-between gap-3">
-        <div class="min-w-0">
-          <h1 class="text-[1.65rem] font-bold tracking-tight text-driver-ink sm:text-3xl">
-            {{ t('driver_costs.title') }}
-          </h1>
-          <p class="mt-1 text-base leading-snug text-driver-muted sm:text-lg">
-            {{ t('driver_costs.subtitle') }}
-          </p>
-        </div>
+      <div class="flex items-center justify-between gap-3">
+        <h1 class="min-w-0 text-xl font-bold tracking-tight text-driver-ink sm:text-2xl">
+          {{ t('driver_costs.title') }}
+        </h1>
         <RouterLink
           :to="{ name: 'driverCostCreate' }"
-          class="flex min-h-[52px] shrink-0 items-center gap-2 rounded-2xl bg-driver-accent/15 px-5 text-base font-bold text-driver-accent ring-1 ring-driver-accent/35 transition hover:bg-driver-accent/25 active:scale-[0.98] sm:text-lg"
+          class="inline-flex min-h-[44px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-driver-accent px-3 text-sm font-semibold text-driver-bg transition hover:brightness-110 active:scale-[0.98]"
         >
-          <PlusCircleIcon class="h-6 w-6" aria-hidden="true" />
+          <PlusIcon class="h-5 w-5 shrink-0" :stroke-width="2.5" aria-hidden="true" />
           {{ t('driver_costs.cta_add') }}
         </RouterLink>
       </div>
+      <p class="mt-2 text-sm leading-relaxed text-driver-muted">
+        {{ t('driver_costs.subtitle') }}
+      </p>
 
       <RouterLink
         v-if="canExpense"
@@ -73,17 +71,11 @@
       <!-- Empty -->
       <div
         v-else-if="!loading && !items.length"
-        class="mt-16 rounded-[1.35rem] bg-driver-card px-6 py-14 text-center ring-1 ring-white/[0.06]"
+        class="mt-6 rounded-2xl bg-driver-card px-5 py-8 text-center ring-1 ring-white/[0.06]"
       >
-        <ClipboardDocumentListIcon class="mx-auto h-14 w-14 text-driver-muted/45" aria-hidden="true" />
-        <p class="mt-5 text-xl font-semibold text-driver-ink sm:text-2xl">{{ t('driver_costs.empty_title') }}</p>
-        <p class="mt-2 text-base leading-relaxed text-driver-muted sm:text-lg">{{ t('driver_costs.empty_hint') }}</p>
-        <RouterLink
-          :to="{ name: 'driverCostCreate' }"
-          class="mt-8 inline-flex min-h-[52px] items-center justify-center rounded-2xl bg-driver-accent px-8 text-base font-bold text-driver-bg transition hover:brightness-110 active:scale-[0.99]"
-        >
-          {{ t('driver_costs.cta_add') }}
-        </RouterLink>
+        <ClipboardDocumentListIcon class="mx-auto h-10 w-10 text-driver-muted/45" aria-hidden="true" />
+        <p class="mt-4 text-base font-semibold text-driver-ink">{{ t('driver_costs.empty_title') }}</p>
+        <p class="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-driver-muted">{{ t('driver_costs.empty_hint') }}</p>
       </div>
 
       <ul v-else class="mt-6 space-y-5">
@@ -104,7 +96,7 @@
         <span class="inline-block h-9 w-9 animate-spin rounded-full border-2 border-driver-accent border-t-transparent" />
       </div>
 
-      <p v-if="items.length && noMore" class="pb-8 pt-2 text-center text-base text-driver-muted/70 sm:text-lg">
+      <p v-if="items.length && noMore" class="pb-8 pt-2 text-center text-sm text-driver-muted/70">
         {{ t('driver_costs.end_of_list') }}
       </p>
     </div>
@@ -115,7 +107,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { ChevronRightIcon, ClipboardDocumentListIcon, DocumentDuplicateIcon, PlusCircleIcon } from '@heroicons/vue/24/outline'
+import { ChevronRightIcon, ClipboardDocumentListIcon, DocumentDuplicateIcon, PlusIcon } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '../../store'
 import DriverCostStatusTabs from '../../components/driver/costs/DriverCostStatusTabs.vue'
 import DriverCostListCard from '../../components/driver/costs/DriverCostListCard.vue'

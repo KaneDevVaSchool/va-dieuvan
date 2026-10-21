@@ -39,7 +39,7 @@ class ApplyImpersonation
             return $next($request);
         }
 
-        abort_unless($actor && $actor->is_active && $actor->isSuperAdmin(), 401, 'Phiên giả lập không còn hợp lệ.');
+        abort_unless($actor && $actor->canImpersonate(), 401, 'Phiên giả lập không còn hợp lệ.');
         abort_unless($target->is_active && ! $target->isSuperAdmin(), 401, 'Phiên giả lập không còn hợp lệ.');
         abort_unless($portal || ($role && $target->hasRole($roleName)), 401, 'Vai trò giả lập đã thay đổi.');
 

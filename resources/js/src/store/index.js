@@ -3,7 +3,7 @@ import { http, TOKEN_KEY } from '../api/http'
 import * as authApi from '../api/auth'
 import { isUnauthorizedApiError } from '../util/apiError'
 import { resolvePostLoginTarget } from '../util/loginRedirect'
-import { clearIdentityCache, getImpersonatorToken, stashImpersonatorToken, isRestoringImpersonator } from '../util/impersonationSession'
+import { clearIdentityCache, getImpersonatorToken, getImpersonatorReturnPath, stashImpersonatorToken, isRestoringImpersonator } from '../util/impersonationSession'
 
 const USER_HINT_KEY = 'vas_user_hint'
 
@@ -148,8 +148,9 @@ export const useAuthStore = defineStore('auth', {
       if (getImpersonatorToken()) throw new Error('Hãy thoát phiên giả lập hiện tại trước.')
       const original = localStorage.getItem(TOKEN_KEY)
       if (!original) throw new Error('Chưa đăng nhập.')
+      const returnPath = `${window.location.pathname}${window.location.search}${window.location.hash}`
       const result = await authApi.startImpersonation(userId, role)
-      stashImpersonatorToken(original)
+      stashImpersonatorToken(original, returnPath)
       this.setToken(result.token)
       try {
         await this.fetchMe()
@@ -165,13 +166,14 @@ export const useAuthStore = defineStore('auth', {
     },
     async leaveImpersonation() {
       const original = getImpersonatorToken()
+      const returnPath = getImpersonatorReturnPath()
       try { await authApi.leaveImpersonation() } catch { /* Restore even if the impersonation expired. */ }
       this.setToken(original)
       stashImpersonatorToken(null)
       this.user = null
       if (!original) return '/login'
       await this.fetchMe()
-      return '/mng/system/user-roles'
+      return returnPath
     },
     /** Khớp backend User::canAccessDispatchWebApp — superadmin / admin / dispatcher / department_head / internal_user. */
     canAccessDispatchWebApp() {

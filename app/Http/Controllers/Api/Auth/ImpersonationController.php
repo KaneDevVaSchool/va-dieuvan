@@ -19,7 +19,7 @@ class ImpersonationController extends Controller
         $actor = $request->user();
         abort_unless($actor->is_active, 401, 'Tài khoản đã bị khóa.');
         abort_if(ImpersonationToken::current($request), 403, 'Hãy thoát phiên giả lập hiện tại trước.');
-        abort_unless($actor->isSuperAdmin(), 403, 'Chỉ Super Admin mới được giả lập người dùng.');
+        abort_unless($actor->canImpersonate(), 403, 'Chỉ tài khoản phongcongnghe@vaschools.edu.vn mới được giả lập người dùng.');
         abort_if($actor->id === $user->id, 403, 'Bạn không thể giả lập chính mình.');
         abort_if($user->isSuperAdmin(), 403, 'Không thể giả lập tài khoản Super Admin.');
         abort_unless($user->is_active, 422, 'Tài khoản này đã bị khóa.');

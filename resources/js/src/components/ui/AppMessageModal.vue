@@ -10,18 +10,22 @@
     >
       <div class="flex min-h-full items-center justify-center">
       <div
-        class="flex w-full max-h-[min(90dvh,calc(100dvh-2rem))] flex-col overflow-hidden rounded-xl border shadow-xl"
-        :class="[panelClass, state.apiDetails ? 'max-w-2xl' : 'max-w-lg']"
+        class="flex w-full max-w-lg max-h-[min(90dvh,calc(100dvh-2rem))] flex-col overflow-hidden rounded-xl border shadow-xl"
+        :class="panelClass"
       >
         <div class="flex shrink-0 items-start justify-between gap-3 border-b px-4 py-3 sm:px-5" :class="headerBorderClass">
-          <div :id="titleId" class="pr-2 text-sm font-semibold leading-snug" :class="titleClass">{{ state.title }}</div>
+          <div class="flex min-w-0 items-center gap-3">
+            <span v-if="isForbidden" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200" aria-hidden="true"><LockClosedIcon class="h-5 w-5" /></span>
+            <div :id="titleId" class="pr-2 text-base font-semibold leading-snug" :class="titleClass">{{ state.title }}</div>
+          </div>
           <button
             type="button"
-            class="shrink-0 rounded px-2 py-1 text-xs transition"
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition"
             :class="closeBtnClass"
+            :aria-label="t('message_modal.close')"
             @click="dismissModal"
           >
-            {{ t('message_modal.close') }}
+            <XMarkIcon class="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
         <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-3 sm:px-5">
@@ -46,11 +50,11 @@
           >
             {{ state.body }}
           </p>
-          <div
+          <details
             v-if="state.variant === 'error' && state.apiDetails"
             class="mt-4 rounded-lg border border-slate-200/90 bg-slate-50 p-3 text-left dark:border-slate-600 dark:bg-slate-800/80"
           >
-            <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('message_modal.tech_details') }}</p>
+            <summary class="cursor-pointer text-xs font-medium text-slate-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 dark:text-slate-300">{{ t('message_modal.support_details') }}</summary>
             <dl class="mt-2 space-y-1.5 font-mono text-[11px] text-slate-700 dark:text-slate-300">
               <div v-if="state.apiDetails.status != null" class="flex flex-wrap gap-x-2 gap-y-0.5">
                 <dt class="shrink-0 text-slate-500 dark:text-slate-500">{{ t('message_modal.http') }}</dt>
@@ -91,7 +95,7 @@
             >
               {{ t('message_modal.rate_limit_hint') }}
             </p>
-          </div>
+          </details>
         </div>
         <div class="flex shrink-0 justify-end border-t px-4 py-3 sm:px-5" :class="footerBorderClass">
           <button
@@ -113,14 +117,15 @@
 import { computed, onUnmounted, watch, watchEffect } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { CheckCircleIcon } from '@heroicons/vue/24/solid'
+import { CheckCircleIcon, LockClosedIcon, XMarkIcon } from '@heroicons/vue/24/solid'
 import { appMessageState as state, closeAppMessage } from '../../composables/appMessage'
 
 const router = useRouter()
 const { t } = useI18n()
 const titleId = 'app-message-modal-title'
 
-const primaryButtonLabel = computed(() => state.primaryLabel || t('app.close'))
+const isForbidden = computed(() => state.variant === 'error' && state.apiDetails?.status === 403)
+const primaryButtonLabel = computed(() => state.primaryLabel || (isForbidden.value ? t('message_modal.understood') : t('app.close')))
 
 function dismissModal() {
   const to = state.navigateTo

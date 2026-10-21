@@ -161,9 +161,9 @@
     },
     "driver_home": {
         "hello": "Xin chào,",
-        "good_morning": "Buổi sáng tốt lành ☀️",
-        "good_afternoon": "Buổi chiều vui vẻ 🌤",
-        "good_evening": "Buổi tối an lành 🌙",
+        "good_morning": "Buổi sáng tốt lành",
+        "good_afternoon": "Buổi chiều vui vẻ",
+        "good_evening": "Buổi tối an lành",
         "vehicle_active": "Hoạt động",
         "vehicle_idle": "Nghỉ",
         "no_vehicle": "Chưa gán xe",
@@ -5394,6 +5394,8 @@
     "message_modal": {
         "close": "Đóng",
         "tech_details": "Chi tiết kỹ thuật",
+        "support_details": "Thông tin gửi bộ phận hỗ trợ",
+        "understood": "Đã hiểu",
         "http": "HTTP",
         "request": "Yêu cầu",
         "config_missing": "Không đọc được cấu hình request (axios). URL phía trên là mặc định /api — dùng để kiểm tra domain có đúng không.",

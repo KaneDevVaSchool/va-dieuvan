@@ -15,17 +15,17 @@
       <div v-if="loading" class="grid grid-cols-7 gap-1">
         <div v-for="n in 7" :key="n" class="flex flex-col items-center gap-2 py-1">
           <div class="h-3 w-6 animate-pulse rounded bg-[#7fdcc8]/15" />
-          <div class="h-14 w-14 max-w-full animate-pulse rounded-full bg-[#070f0d]/90" />
+          <div class="aspect-square w-full max-w-10 animate-pulse rounded-full bg-[#070f0d]/90 sm:max-w-12" />
           <div class="h-4 w-5 animate-pulse rounded-md bg-[#7fdcc8]/10" />
         </div>
       </div>
 
-      <div v-else class="grid grid-cols-7 gap-0.5">
+      <div v-else class="grid grid-cols-7 gap-1">
         <button
           v-for="day in weekDays"
           :key="day.iso"
           type="button"
-          class="flex min-h-[76px] w-full flex-col items-center gap-1.5 rounded-xl py-2 transition active:scale-[0.95]"
+          class="flex min-h-[76px] min-w-0 w-full flex-col items-center gap-1.5 rounded-xl py-2 transition active:scale-[0.95]"
           :class="selectedIso === day.iso ? 'bg-[#7fdcc8]/10' : 'hover:bg-[#7fdcc8]/5'"
           :aria-pressed="selectedIso === day.iso"
           @click="selectedIso = day.iso"
@@ -46,7 +46,7 @@
 
           <!-- Date circle -->
           <div
-            class="flex h-12 w-12 max-w-full items-center justify-center rounded-full text-lg font-bold tabular-nums leading-none transition-colors"
+            class="flex aspect-square w-full max-w-10 shrink-0 items-center justify-center rounded-full text-lg font-bold tabular-nums leading-none transition-colors sm:max-w-12"
             :class="
               selectedIso === day.iso
                 ? day.isToday

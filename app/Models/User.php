@@ -62,6 +62,13 @@ class User extends Authenticatable
         );
     }
 
+    public function canImpersonate(): bool
+    {
+        return $this->is_active
+            && ! $this->isRoleSimulationActive()
+            && strtolower(trim((string) $this->email)) === 'phongcongnghe@vaschools.edu.vn';
+    }
+
     public function isSuperAdmin(): bool
     {
         if ($this->isRoleSimulationActive()) {
