@@ -38,6 +38,7 @@ use App\Models\Trip;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\Dispatching\TripScheduleLegService;
+use App\Services\Resources\DriverProfileService;
 use App\Support\TripVisibility;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -318,26 +319,9 @@ class OperationalResourceController extends Controller
         return $this->ok($this->serializeDriver($driver, true));
     }
 
-    public function updateDriver(UpdateDriverRequest $request, Driver $driver)
+    public function updateDriver(UpdateDriverRequest $request, Driver $driver, DriverProfileService $profiles)
     {
-        $data = $request->validated();
-
-        if (array_key_exists('email', $data)) {
-            $email = $data['email'];
-            unset($data['email']);
-            if ($driver->user_id) {
-                $user = $driver->user()->first();
-                if ($user) {
-                    $user->email = $email;
-                    $user->save();
-                }
-            } else {
-                $driver->email = $email;
-            }
-        }
-
-        $driver->fill($data);
-        $driver->save();
+        $driver = $profiles->update($driver, $request->validated(), $request->user()->id);
         $driver->load(['user:id,name,email,phone,employee_code,avatar_url']);
 
         return $this->ok($this->serializeDriver($driver, true));
