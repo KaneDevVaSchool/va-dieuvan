@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-full w-full bg-driver-bg pb-[calc(7rem+env(safe-area-inset-bottom))] text-driver-ink">
+  <div class="min-h-full w-full bg-driver-bg pb-4 text-driver-ink">
     <header
       class="sticky top-0 z-40 border-b border-white/[0.06] bg-driver-bg/90 backdrop-blur-md"
       :style="{ paddingTop: 'max(0.5rem, env(safe-area-inset-top))' }"
@@ -64,7 +64,7 @@
           <div class="mt-3 grid gap-2">
             <label class="text-xs text-driver-muted">
               {{ t('checklist.info_route') }}
-              <input v-model="tripInfo.campus_route" :readonly="!editable" type="text" maxlength="255" class="mt-1 w-full rounded-lg border border-white/10 bg-driver-surface px-3 py-2 text-sm text-driver-ink" @input="markHeaderDirty" />
+              <input v-model="tripInfo.campus_route" :readonly="!editable" type="text" maxlength="255" class="mt-1 w-full rounded-lg border border-white/10 bg-driver-surface px-3 py-2 text-sm text-driver-ink" @input="markHeaderDirty" :placeholder="t('driver_form.route')" />
             </label>
             <div class="grid grid-cols-2 gap-2">
               <label class="text-xs text-driver-muted">
@@ -73,7 +73,7 @@
               </label>
               <label class="text-xs text-driver-muted">
                 {{ t('checklist.info_attendant') }}
-                <input v-model="tripInfo.attendant" :readonly="!editable" type="text" maxlength="255" class="mt-1 w-full rounded-lg border border-white/10 bg-driver-surface px-3 py-2 text-sm text-driver-ink" @input="markHeaderDirty" />
+                <input v-model="tripInfo.attendant" :readonly="!editable" type="text" maxlength="255" class="mt-1 w-full rounded-lg border border-white/10 bg-driver-surface px-3 py-2 text-sm text-driver-ink" @input="markHeaderDirty" :placeholder="t('driver_form.attendant')" />
               </label>
             </div>
           </div>
@@ -105,11 +105,11 @@
         <section v-if="editable" class="space-y-3 rounded-[1.25rem] bg-driver-card p-4 ring-1 ring-white/[0.06]">
           <label class="block text-sm font-semibold text-driver-muted">
             {{ t('checklist.general_note') }}
-            <textarea v-model="headerNote" rows="2" maxlength="2000" class="mt-1.5 w-full rounded-xl border border-white/10 bg-driver-surface px-3 py-2 text-sm text-driver-ink" @input="markHeaderDirty" />
+            <textarea v-model="headerNote" rows="2" maxlength="2000" class="mt-1.5 w-full rounded-xl border border-white/10 bg-driver-surface px-3 py-2 text-sm text-driver-ink" @input="markHeaderDirty" :placeholder="t('driver_form.note')" />
           </label>
           <label class="block text-sm font-semibold text-driver-muted">
             {{ t('checklist.inspector') }}
-            <input v-model="inspectorName" type="text" maxlength="255" class="mt-1.5 w-full rounded-xl border border-white/10 bg-driver-surface px-3 py-2 text-sm text-driver-ink" @input="markHeaderDirty" />
+            <input v-model="inspectorName" type="text" maxlength="255" class="mt-1.5 w-full rounded-xl border border-white/10 bg-driver-surface px-3 py-2 text-sm text-driver-ink" @input="markHeaderDirty" :placeholder="t('driver_form.inspector')" />
           </label>
 
           <div v-if="criticalNgCount > 0" class="rounded-xl bg-rose-500/15 px-3 py-2.5 text-sm text-rose-100 ring-1 ring-rose-400/30" role="alert">
@@ -121,9 +121,9 @@
             <span class="text-sm leading-snug">{{ statement }}</span>
           </label>
 
-          <div v-if="submissionIssues.length || !confirmed || uploadingItemId != null" class="rounded-xl bg-amber-500/10 p-3 text-sm text-amber-100 ring-1 ring-amber-400/30" role="status" aria-live="polite" data-testid="checklist-submit-requirements">
-            <p class="font-semibold">{{ t('checklist.submit_requirements_title') }}</p>
-            <ul class="mt-2 max-h-56 space-y-2 overflow-y-auto">
+          <div v-if="submissionIssues.length || !confirmed || uploadingItemId != null" class="overflow-hidden rounded-xl bg-amber-500/10 text-sm text-amber-100 ring-1 ring-amber-400/30" role="status" aria-live="polite" data-testid="checklist-submit-requirements">
+            <p class="px-3 pt-3 font-semibold">{{ t('checklist.submit_requirements_title') }}</p>
+            <ul class="checklist-requirements-scroll mt-2 max-h-56 space-y-2 overflow-y-auto px-3 pb-3">
               <li v-for="issue in submissionIssues" :key="issue.id">
                 <button type="button" class="text-left underline decoration-amber-300/50 underline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-300" @click="goToItem(issue.id)">
                   <strong>{{ issue.title }}:</strong> {{ issue.messages.join(' ') }}
@@ -442,3 +442,23 @@ onBeforeUnmount(() => {
   if (dirtyItems.size || headerDirty) void flushSave().catch(() => {})
 })
 </script>
+
+<style scoped>
+.checklist-requirements-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(252 211 77 / 45%) transparent;
+}
+
+.checklist-requirements-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.checklist-requirements-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgb(252 211 77 / 45%);
+}
+
+.checklist-requirements-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+</style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-full w-full bg-driver-bg pb-[calc(7rem+env(safe-area-inset-bottom))] text-driver-ink">
+  <div class="min-h-full w-full bg-driver-bg pb-4 text-driver-ink">
     <header
       class="sticky top-0 z-40 border-b border-white/[0.06] bg-driver-bg/90 backdrop-blur-md"
       :style="{ paddingTop: 'max(0.5rem, env(safe-area-inset-top))' }"
@@ -41,7 +41,7 @@
       <section class="space-y-2 rounded-[1.25rem] bg-driver-card p-4 ring-1 ring-white/[0.06]">
         <h2 class="text-sm font-bold uppercase tracking-wide text-driver-muted">{{ t('expense.sec_requester') }}</h2>
         <input v-model="form.requester_name" type="text" maxlength="255" :placeholder="t('expense.requester_name')" :aria-label="t('expense.requester_name')" :class="inputCls" />
-        <div class="grid grid-cols-2 gap-2">
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <input v-model="form.requester_phone" type="tel" maxlength="32" :placeholder="t('expense.requester_phone')" :aria-label="t('expense.requester_phone')" :class="inputCls" />
           <input v-model="form.requester_email" type="email" maxlength="255" :placeholder="t('expense.requester_email')" :aria-label="t('expense.requester_email')" :class="inputCls" />
         </div>
@@ -54,33 +54,33 @@
         <label class="block text-xs text-driver-muted">
           {{ t('expense.vehicle_main') }}
           <select v-model="form.vehicle_id" :class="inputCls">
-            <option value="">—</option>
+            <option value="">{{ t('driver_form.select_vehicle') }}</option>
             <option v-for="v in vehicles" :key="v.id" :value="v.id">{{ v.license_plate }}{{ v.mine ? ' ★' : '' }}</option>
           </select>
         </label>
         <label class="block text-xs text-driver-muted">
           {{ docType === 'payment_request' ? t('expense.content') : t('expense.purpose') }}
-          <textarea v-model="form.purpose" rows="2" maxlength="2000" :class="inputCls" />
+          <textarea v-model="form.purpose" rows="2" maxlength="2000" :class="inputCls" :placeholder="t(docType === 'payment_request' ? 'driver_form.content' : 'driver_form.purpose')" />
         </label>
         <label class="block text-xs text-driver-muted">
           {{ t('expense.basis') }}
-          <input v-model="form.basis" type="text" maxlength="2000" :class="inputCls" />
+          <input v-model="form.basis" type="text" maxlength="2000" :class="inputCls" :placeholder="t('driver_form.basis')" />
         </label>
 
         <template v-if="docType === 'proposal'">
-          <div class="grid grid-cols-2 gap-2">
-            <label class="text-xs text-driver-muted">{{ t('expense.proposed_on') }}<input v-model="form.proposed_on" type="date" :class="inputCls" /></label>
-            <label class="text-xs text-driver-muted">{{ t('expense.needed_by') }}<input v-model="form.needed_by" type="date" :class="inputCls" /></label>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label class="text-xs text-driver-muted">{{ t('expense.proposed_on') }}<DriverDateInput v-model="form.proposed_on" :aria-label="t('expense.proposed_on')" :placeholder="t('driver_form.select_date')" /></label>
+            <label class="text-xs text-driver-muted">{{ t('expense.needed_by') }}<DriverDateInput v-model="form.needed_by" :aria-label="t('expense.needed_by')" :placeholder="t('driver_form.select_date')" /></label>
           </div>
           <label class="flex items-center gap-2 text-sm"><input v-model="form.is_urgent" type="checkbox" class="h-5 w-5 accent-[#7fdcc8]" />{{ t('expense.urgent') }}</label>
           <input v-if="form.is_urgent" v-model="form.urgent_reason" type="text" maxlength="255" :placeholder="t('expense.urgent_reason')" :class="inputCls" />
-          <label class="block text-xs text-driver-muted">{{ t('expense.allocation_target') }}<input v-model="form.allocation_target" type="text" maxlength="255" :class="inputCls" /></label>
-          <label class="block text-xs text-driver-muted">{{ t('expense.handover_person') }}<input v-model="form.handover_person" type="text" maxlength="255" :class="inputCls" /></label>
+          <label class="block text-xs text-driver-muted">{{ t('expense.allocation_target') }}<input v-model="form.allocation_target" type="text" maxlength="255" :class="inputCls" :placeholder="t('driver_form.allocation_target')" /></label>
+          <label class="block text-xs text-driver-muted">{{ t('expense.handover_person') }}<input v-model="form.handover_person" type="text" maxlength="255" :class="inputCls" :placeholder="t('driver_form.handover_person')" /></label>
         </template>
 
         <template v-if="docType === 'payment_request'">
-          <div class="grid grid-cols-2 gap-2">
-            <label class="text-xs text-driver-muted">{{ t('expense.proposed_on') }}<input v-model="form.proposed_on" type="date" :class="inputCls" /></label>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label class="text-xs text-driver-muted">{{ t('expense.proposed_on') }}<DriverDateInput v-model="form.proposed_on" :aria-label="t('expense.proposed_on')" :placeholder="t('driver_form.select_date')" /></label>
             <label class="text-xs text-driver-muted">{{ t('expense.payment_due') }}<input v-model="form.payment_due_label" type="text" maxlength="255" :placeholder="t('expense.payment_due_ph')" :class="inputCls" /></label>
           </div>
           <div class="grid grid-cols-2 gap-2" role="radiogroup" :aria-label="t('expense.payment_method')">
@@ -97,7 +97,7 @@
           </div>
           <template v-if="form.payment_method === 'transfer'">
             <input v-model="form.bank_account_no" type="text" inputmode="numeric" maxlength="64" :placeholder="t('expense.bank_account_no')" :class="inputCls" />
-            <div class="grid grid-cols-2 gap-2">
+            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <input v-model="form.bank_name" type="text" maxlength="255" :placeholder="t('expense.bank_name')" :class="inputCls" />
               <input v-model="form.bank_account_holder" type="text" maxlength="255" :placeholder="t('expense.bank_holder')" :class="inputCls" />
             </div>
@@ -105,8 +105,8 @@
         </template>
 
         <template v-if="docType === 'no_invoice_statement'">
-          <label class="block text-xs text-driver-muted">{{ t('expense.purchasing_person') }}<input v-model="form.purchasing_person" type="text" maxlength="255" :class="inputCls" /></label>
-          <label class="block text-xs text-driver-muted">{{ t('expense.proposed_on') }}<input v-model="form.proposed_on" type="date" :class="inputCls" /></label>
+          <label class="block text-xs text-driver-muted">{{ t('expense.purchasing_person') }}<input v-model="form.purchasing_person" type="text" maxlength="255" :class="inputCls" :placeholder="t('driver_form.purchasing_person')" /></label>
+          <label class="block text-xs text-driver-muted">{{ t('expense.proposed_on') }}<DriverDateInput v-model="form.proposed_on" :aria-label="t('expense.proposed_on')" :placeholder="t('driver_form.select_date')" /></label>
         </template>
       </section>
 
@@ -153,7 +153,7 @@
         <h2 class="text-sm font-bold uppercase tracking-wide text-driver-muted">{{ t('expense.sec_signatories') }}</h2>
         <label v-for="(s, i) in form.signatories" :key="i" class="block text-xs text-driver-muted">
           {{ s.role }}
-          <input v-model="s.name" type="text" maxlength="120" :class="inputCls" />
+          <input v-model="s.name" type="text" maxlength="120" :class="inputCls" :placeholder="t('driver_form.signatory')" />
         </label>
       </section>
 
@@ -191,11 +191,12 @@ import { expenseTypeKey, expenseUsesTripCosts } from '../../constants/checklistE
 import { showAppSuccess } from '../../composables/appMessage'
 import { formatVndCurrency, vndAmountInWords } from '../../util/money'
 import { toLocalDateKey } from '../../util/dates'
+import DriverDateInput from '../../components/driver/DriverDateInput.vue'
 import ExpenseLineEditor from '../../components/driver/expenses/ExpenseLineEditor.vue'
 import ExpenseCostPicker from '../../components/driver/expenses/ExpenseCostPicker.vue'
 
 const inputCls =
-  'mt-1 min-h-[48px] w-full rounded-xl border border-white/10 bg-driver-surface px-3 py-2 text-base text-driver-ink placeholder:text-driver-muted/50 focus:outline-none focus:ring-2 focus:ring-driver-accent/45'
+  'mt-1 min-h-[48px] min-w-0 w-full rounded-xl border border-white/10 bg-driver-surface px-3 py-2 text-base text-driver-ink placeholder:text-driver-muted/50 focus:outline-none focus:ring-2 focus:ring-driver-accent/45'
 
 const { t } = useI18n()
 const route = useRoute()

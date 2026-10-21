@@ -1,6 +1,6 @@
 <template>
   <div
-    class="mx-auto min-h-full w-full max-w-[430px] overflow-x-hidden bg-driver-bg pb-2 text-driver-ink sm:max-w-2xl"
+    class="mx-auto min-h-full w-full max-w-[430px] overflow-x-hidden bg-driver-bg pb-4 text-driver-ink sm:max-w-2xl"
     :style="{ '--accent': '#7fdcc8' }"
     @touchstart.passive="onTouchStart"
     @touchmove.passive="onTouchMove"
@@ -62,7 +62,7 @@
       </button>
     </header>
 
-    <div class="space-y-4 px-3 pt-4 pb-8">
+    <div class="space-y-4 px-3 pt-4">
       <!-- Search box -->
       <div v-if="searchOpen" class="rounded-2xl border border-[rgba(255,255,255,0.08)] bg-driver-card px-3 py-2">
         <input

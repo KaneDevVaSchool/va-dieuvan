@@ -12,50 +12,50 @@
 
     <div class="mt-2 grid gap-2">
       <div class="grid grid-cols-2 gap-2">
-        <label class="text-xs text-driver-muted">
+        <label class="flex min-w-0 flex-col justify-between text-xs text-driver-muted">
           {{ t('expense.line_vehicle') }}
-          <select v-model="model.vehicle_id" :disabled="linked" class="mt-1 min-h-[44px] w-full rounded-lg border border-white/10 bg-driver-bg/60 px-2 text-sm text-driver-ink disabled:opacity-60">
-            <option value="">—</option>
+          <select v-model="model.vehicle_id" :disabled="linked" class="mt-1 min-h-[44px] min-w-0 w-full rounded-lg border border-white/10 bg-driver-bg/60 px-2 text-sm text-driver-ink disabled:opacity-60">
+            <option value="">{{ t('driver_form.select_vehicle') }}</option>
             <option v-for="v in vehicles" :key="v.id" :value="v.id">{{ v.license_plate }}</option>
           </select>
         </label>
-        <label v-if="usesTripCosts" class="text-xs text-driver-muted">
+        <label v-if="usesTripCosts" class="flex min-w-0 flex-col justify-between text-xs text-driver-muted">
           {{ t('expense.line_cost_type') }}
-          <select v-model="model.cost_type" :disabled="linked" class="mt-1 min-h-[44px] w-full rounded-lg border border-white/10 bg-driver-bg/60 px-2 text-sm text-driver-ink disabled:opacity-60">
+          <select v-model="model.cost_type" :disabled="linked" class="mt-1 min-h-[44px] min-w-0 w-full rounded-lg border border-white/10 bg-driver-bg/60 px-2 text-sm text-driver-ink disabled:opacity-60">
             <option v-for="ct in EXPENSE_COST_TYPES" :key="ct" :value="ct">{{ t(`expense.cost_type_${ct}`) }}</option>
           </select>
         </label>
-        <label v-else class="text-xs text-driver-muted">
+        <label v-else class="flex min-w-0 flex-col justify-between text-xs text-driver-muted">
           {{ t('expense.line_unit') }}
-          <input v-model="model.unit" type="text" maxlength="32" :placeholder="t('expense.line_unit_ph')" class="mt-1 min-h-[44px] w-full rounded-lg border border-white/10 bg-driver-bg/60 px-2 text-sm text-driver-ink" />
+          <input v-model="model.unit" type="text" maxlength="32" :placeholder="t('expense.line_unit_ph')" class="mt-1 min-h-[44px] min-w-0 w-full rounded-lg border border-white/10 bg-driver-bg/60 px-2 text-sm text-driver-ink" />
         </label>
       </div>
 
-      <label class="text-xs text-driver-muted">
+      <label class="flex min-w-0 flex-col justify-between text-xs text-driver-muted">
         {{ docType === 'no_invoice_statement' ? t('expense.line_item_name') : t('expense.line_category') }}
-        <input v-model="model.category" type="text" maxlength="255" class="mt-1 min-h-[44px] w-full rounded-lg border border-white/10 bg-driver-bg/60 px-3 text-sm text-driver-ink" />
+        <input v-model="model.category" type="text" maxlength="255" class="mt-1 min-h-[44px] min-w-0 w-full rounded-lg border border-white/10 bg-driver-bg/60 px-3 text-sm text-driver-ink" :placeholder="t('driver_form.category')" />
       </label>
-      <label class="text-xs text-driver-muted">
+      <label class="flex min-w-0 flex-col justify-between text-xs text-driver-muted">
         {{ t('expense.line_description') }}
-        <textarea v-model="model.description" rows="2" maxlength="1000" class="mt-1 w-full rounded-lg border border-white/10 bg-driver-bg/60 px-3 py-2 text-sm text-driver-ink" />
+        <textarea v-model="model.description" rows="2" maxlength="1000" class="mt-1 min-w-0 w-full rounded-lg border border-white/10 bg-driver-bg/60 px-3 py-2 text-sm text-driver-ink" :placeholder="t('driver_form.description')" />
       </label>
 
       <div class="grid grid-cols-3 gap-2">
-        <label class="text-xs text-driver-muted">
+        <label class="flex min-w-0 flex-col justify-between text-xs text-driver-muted">
           {{ t('expense.line_qty') }}
-          <input v-model="model.quantity" type="number" min="0.01" step="0.01" inputmode="decimal" :disabled="linked" class="mt-1 min-h-[44px] w-full rounded-lg border border-white/10 bg-driver-bg/60 px-2 text-sm tabular-nums text-driver-ink disabled:opacity-60" />
+          <input v-model="model.quantity" type="number" min="0.01" step="0.01" inputmode="decimal" :disabled="linked" class="mt-1 min-h-[44px] min-w-0 w-full rounded-lg border border-white/10 bg-driver-bg/60 px-2 text-sm tabular-nums text-driver-ink disabled:opacity-60" :placeholder="t('driver_form.quantity')" />
         </label>
         <label class="col-span-2 text-xs text-driver-muted">
           {{ t('expense.line_unit_price') }}
-          <input :value="unitPriceDisplay" type="text" inputmode="numeric" :disabled="linked" class="mt-1 min-h-[44px] w-full rounded-lg border border-white/10 bg-driver-bg/60 px-2 text-sm font-semibold tabular-nums text-driver-ink disabled:opacity-60" @input="onPriceInput" />
+          <input :value="unitPriceDisplay" type="text" inputmode="numeric" :disabled="linked" class="mt-1 min-h-[44px] min-w-0 w-full rounded-lg border border-white/10 bg-driver-bg/60 px-2 text-sm font-semibold tabular-nums text-driver-ink disabled:opacity-60" @input="onPriceInput" :placeholder="t('driver_form.unit_price')" />
         </label>
       </div>
 
       <template v-if="usesTripCosts">
         <div class="grid grid-cols-2 gap-2">
-          <label class="text-xs text-driver-muted">
+          <label class="flex min-w-0 flex-col justify-between text-xs text-driver-muted">
             {{ t('expense.line_date') }}
-            <input v-model="model.purchased_on" type="date" class="mt-1 min-h-[44px] w-full rounded-lg border border-white/10 bg-driver-bg/60 px-2 text-sm text-driver-ink" />
+            <DriverDateInput v-model="model.purchased_on" :aria-label="t('expense.line_date')" :placeholder="t('driver_form.select_date')" />
           </label>
           <label v-if="docType !== 'no_invoice_statement'" class="flex items-end gap-2 pb-2 text-sm">
             <input v-model="model.has_invoice" type="checkbox" class="h-5 w-5 accent-[#7fdcc8]" />
@@ -64,20 +64,20 @@
         </div>
         <div v-if="!model.has_invoice || docType === 'no_invoice_statement'" class="grid gap-2">
           <p class="text-[11px] text-amber-200/90">{{ t('expense.line_no_invoice_hint') }}</p>
-          <label class="text-xs text-driver-muted">
+          <label class="flex min-w-0 flex-col justify-between text-xs text-driver-muted">
             {{ t('expense.line_seller') }}
-            <input v-model="model.seller_name" type="text" maxlength="255" class="mt-1 min-h-[44px] w-full rounded-lg border border-white/10 bg-driver-bg/60 px-3 text-sm text-driver-ink" />
+            <input v-model="model.seller_name" type="text" maxlength="255" class="mt-1 min-h-[44px] min-w-0 w-full rounded-lg border border-white/10 bg-driver-bg/60 px-3 text-sm text-driver-ink" :placeholder="t('driver_form.seller')" />
           </label>
-          <label class="text-xs text-driver-muted">
+          <label class="flex min-w-0 flex-col justify-between text-xs text-driver-muted">
             {{ t('expense.line_seller_address') }}
-            <input v-model="model.seller_address" type="text" maxlength="255" class="mt-1 min-h-[44px] w-full rounded-lg border border-white/10 bg-driver-bg/60 px-3 text-sm text-driver-ink" />
+            <input v-model="model.seller_address" type="text" maxlength="255" class="mt-1 min-h-[44px] min-w-0 w-full rounded-lg border border-white/10 bg-driver-bg/60 px-3 text-sm text-driver-ink" :placeholder="t('driver_form.seller_address')" />
           </label>
         </div>
       </template>
 
-      <label class="text-xs text-driver-muted">
+      <label class="flex min-w-0 flex-col justify-between text-xs text-driver-muted">
         {{ t('expense.line_note') }}
-        <input v-model="model.note" type="text" maxlength="255" class="mt-1 min-h-[44px] w-full rounded-lg border border-white/10 bg-driver-bg/60 px-3 text-sm text-driver-ink" />
+        <input v-model="model.note" type="text" maxlength="255" class="mt-1 min-h-[44px] min-w-0 w-full rounded-lg border border-white/10 bg-driver-bg/60 px-3 text-sm text-driver-ink" :placeholder="t('driver_form.note')" />
       </label>
 
       <p class="text-right text-sm">
@@ -92,6 +92,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { TrashIcon } from '@heroicons/vue/24/outline'
+import DriverDateInput from '../DriverDateInput.vue'
 import { EXPENSE_COST_TYPES } from '../../../constants/checklistExpense'
 import { formatVndCurrency, formatVndWhileTyping, parseMoneyVnd } from '../../../util/money'
 

@@ -55,19 +55,19 @@
 
     <div
       v-else
-      class="-mx-3 snap-x snap-mandatory overflow-x-auto px-3 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      class="-mx-4 snap-x snap-mandatory scroll-px-4 overflow-x-auto px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:-mx-5 sm:scroll-px-5 sm:px-5"
       style="-webkit-overflow-scrolling: touch"
       data-testid="driver-dash-trip-carousel"
     >
       <TransitionGroup
         name="dash-trip-carousel"
         tag="div"
-        class="flex w-max max-w-none snap-x snap-mandatory gap-3 pb-2 pl-0.5 pr-3"
+        class="flex w-max max-w-none gap-3 pb-2"
       >
         <div
           v-for="trip in trips"
           :key="rowKey(trip)"
-          class="dash-carousel-card snap-center first:snap-start last:pr-[max(0.75rem,env(safe-area-inset-right))]"
+          class="dash-carousel-card snap-start last:snap-end"
         >
           <DriverTripCard
             class="w-[min(82vw,20rem)] shrink-0 will-change-transform"
@@ -116,7 +116,6 @@ const isSingleTrip = computed(() => props.trips.length === 1)
 
 <style scoped>
 .dash-carousel-card {
-  scroll-snap-align: center;
   flex-shrink: 0;
 }
 .dash-trip-carousel-enter-active,

@@ -21,7 +21,8 @@
     />
 
     <div
-      class="relative z-10 -mt-3 flex-1 space-y-3 pb-44 pl-[max(theme(spacing.3),env(safe-area-inset-left))] pr-[max(theme(spacing.3),env(safe-area-inset-right))] sm:pb-12 sm:pl-[max(theme(spacing.4),env(safe-area-inset-left))] sm:pr-[max(theme(spacing.4),env(safe-area-inset-right))]"
+      class="relative z-10 -mt-3 flex-1 space-y-3 pl-[max(theme(spacing.3),env(safe-area-inset-left))] pr-[max(theme(spacing.3),env(safe-area-inset-right))] sm:pl-[max(theme(spacing.4),env(safe-area-inset-left))] sm:pr-[max(theme(spacing.4),env(safe-area-inset-right))]"
+      :style="{ paddingBottom: `${actionBarHeight + 16}px` }"
     >
       <p
         v-if="loadError"
@@ -119,6 +120,7 @@
     </div>
 
     <DriverTripBottomBar
+      @height-change="actionBarHeight = $event"
       :trip-status="trip?.status"
       :multi-leg="multiScheduleLegTrip"
       :show-pickup-bar="showPickupBar"
@@ -176,6 +178,7 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ChartBarIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
 import { DRIVER_KM_SECTION_ENABLED, useDriverTripDetailPage } from '../../composables/useDriverTripDetailPage'
@@ -191,6 +194,7 @@ import DriverTripPaxSection from '../../components/driver/trip-detail/DriverTrip
 import DriverTripRouteSection from '../../components/driver/trip-detail/DriverTripRouteSection.vue'
 
 const { t } = useI18n()
+const actionBarHeight = ref(0)
 
 const {
   trip,

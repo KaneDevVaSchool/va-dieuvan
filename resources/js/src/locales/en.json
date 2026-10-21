@@ -2640,6 +2640,27 @@
         "period_line": "#{id} {status} ({start} → {end})",
         "payment_line": "#{id} trip {tripId} · {status}"
     },
+    "driver_form": {
+        "select_date": "Choose a date",
+        "select_vehicle": "Choose a vehicle",
+        "purpose": "e.g. Scheduled vehicle maintenance",
+        "content": "Enter the payment description",
+        "basis": "e.g. Approved quote or plan",
+        "allocation_target": "e.g. HCM campus school bus",
+        "handover_person": "Enter the recipient's name",
+        "purchasing_person": "Enter the purchaser's name",
+        "signatory": "Enter the signer's name",
+        "category": "e.g. Engine oil change",
+        "description": "Enter the details",
+        "quantity": "e.g. 1",
+        "unit_price": "e.g. 250,000",
+        "seller": "Enter the shop or supplier name",
+        "seller_address": "Enter the purchase location address",
+        "note": "Enter a note",
+        "route": "e.g. HCM campus → District 7",
+        "attendant": "Enter the accompanying person's name",
+        "inspector": "Enter the inspector's name"
+    },
     "message_modal": {
         "close": "Close",
         "tech_details": "Technical details",

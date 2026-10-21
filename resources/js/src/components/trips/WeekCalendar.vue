@@ -12,7 +12,7 @@
         v-for="day in weekDays"
         :key="day.iso"
         type="button"
-        class="flex min-h-[5.25rem] min-w-0 w-full flex-col items-center gap-1.5 rounded-lg py-2 transition hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#7fdcc8] active:scale-[0.96]"
+        class="flex min-h-[76px] min-w-0 w-full flex-col items-center gap-1.5 rounded-lg py-2 transition hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#7fdcc8] active:scale-[0.96]"
         :aria-pressed="isSelected(day.iso)"
         :aria-current="day.isToday ? 'date' : undefined"
         @click="selectDay(day)"
@@ -24,17 +24,17 @@
           {{ day.abbr }}
         </span>
         <div
-          class="flex aspect-square w-full max-w-10 shrink-0 items-center justify-center rounded-full text-base font-bold tabular-nums transition-colors sm:max-w-12 sm:text-lg"
+          class="relative flex aspect-square w-full max-w-10 shrink-0 items-center justify-center rounded-full text-base font-bold tabular-nums transition-colors sm:max-w-12 sm:text-lg"
           :class="dayCircleClass(day)"
         >
           {{ day.dayNum }}
+          <span
+            v-if="hasTripDot(day.iso)"
+            class="absolute bottom-1 h-1 w-1 rounded-full sm:bottom-1.5"
+            :class="isSelected(day.iso) ? 'bg-[#09180f]' : 'bg-[#7fdcc8]'"
+            aria-hidden="true"
+          />
         </div>
-        <span
-          v-if="hasTripDot(day.iso)"
-          class="h-1 w-1 rounded-full bg-[#7fdcc8]"
-          aria-hidden="true"
-        />
-        <span v-else class="h-1 w-1 shrink-0" aria-hidden="true" />
       </button>
     </div>
   </div>

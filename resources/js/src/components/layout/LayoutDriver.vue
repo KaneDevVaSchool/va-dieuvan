@@ -1,6 +1,7 @@
 <template>
   <div
-    class="driver-pwa-shell flex h-dvh min-h-0 w-full flex-col overflow-hidden bg-[#020B0B] text-[#eaf8f5] [--driver-bottom-nav-height:3.5rem] supports-[padding:max(0px)]:pb-[env(safe-area-inset-bottom)]"
+    ref="shellRef"
+    class="driver-pwa-shell flex h-dvh min-h-0 w-full flex-col overflow-hidden bg-[#020B0B] text-[#eaf8f5] [--driver-bottom-nav-height:3.5rem]"
   >
     <AppOpenInPwaBanner />
     <ImpersonationBanner class="mx-auto w-full max-w-2xl" />
@@ -19,14 +20,16 @@
       <div
         class="pointer-events-auto bg-[#080f0d] pb-[env(safe-area-inset-bottom)]"
       >
-        <MobileBottomNav class="mx-auto max-w-2xl" />
+        <div ref="navRef">
+          <MobileBottomNav class="mx-auto max-w-2xl" />
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import AppOpenInPwaBanner from '../AppOpenInPwaBanner.vue'
 import ImpersonationBanner from './ImpersonationBanner.vue'
 import MobileBottomNav from '../nav/MobileBottomNav.vue'
@@ -37,14 +40,25 @@ import MobileBottomNav from '../nav/MobileBottomNav.vue'
  * và loại bỏ hiện tượng footer (bottom nav) giật lên lúc mới vào app.
  */
 const SCROLL_LOCK_CLASS = 'driver-scroll-lock'
+const shellRef = ref(null)
+const navRef = ref(null)
+let navObserver
 
 onMounted(() => {
   if (typeof document !== 'undefined') {
     document.documentElement.classList.add(SCROLL_LOCK_CLASS)
   }
+  const measureNav = () => {
+    const height = navRef.value?.getBoundingClientRect().height
+    if (height) shellRef.value?.style.setProperty('--driver-bottom-nav-height', `${height}px`)
+  }
+  measureNav()
+  navObserver = new ResizeObserver(measureNav)
+  if (navRef.value) navObserver.observe(navRef.value)
 })
 
 onBeforeUnmount(() => {
+  navObserver?.disconnect()
   if (typeof document !== 'undefined') {
     document.documentElement.classList.remove(SCROLL_LOCK_CLASS)
   }

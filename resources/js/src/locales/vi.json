@@ -5391,6 +5391,27 @@
         "period_line": "#{id} {status} ({start} → {end})",
         "payment_line": "#{id} chuyến {tripId} · {status}"
     },
+    "driver_form": {
+        "select_date": "Chọn ngày",
+        "select_vehicle": "Chọn xe",
+        "purpose": "Ví dụ: Bảo dưỡng xe định kỳ",
+        "content": "Nhập nội dung cần thanh toán",
+        "basis": "Ví dụ: Báo giá hoặc kế hoạch đã duyệt",
+        "allocation_target": "Ví dụ: Xe đưa đón cơ sở HCM",
+        "handover_person": "Nhập họ tên người nhận bàn giao",
+        "purchasing_person": "Nhập họ tên người mua hàng",
+        "signatory": "Nhập họ tên người ký",
+        "category": "Ví dụ: Thay dầu động cơ",
+        "description": "Nhập nội dung chi tiết",
+        "quantity": "Ví dụ: 1",
+        "unit_price": "Ví dụ: 250.000",
+        "seller": "Nhập tên cửa hàng hoặc đơn vị bán",
+        "seller_address": "Nhập địa chỉ nơi mua hàng",
+        "note": "Nhập ghi chú",
+        "route": "Ví dụ: Cơ sở HCM → Quận 7",
+        "attendant": "Nhập họ tên người đi cùng",
+        "inspector": "Nhập họ tên người kiểm tra"
+    },
     "message_modal": {
         "close": "Đóng",
         "tech_details": "Chi tiết kỹ thuật",

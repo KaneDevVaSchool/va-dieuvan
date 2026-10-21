@@ -21,7 +21,7 @@
       </div>
     </header>
 
-    <div class="mx-auto max-w-lg px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-4 sm:max-w-2xl">
+    <div class="mx-auto max-w-lg px-4 pb-4 pt-4 sm:max-w-2xl">
       <p
         v-if="loadError"
         class="mb-4 rounded-2xl border border-amber-500/35 bg-amber-950/40 px-4 py-3 text-sm text-amber-100 ring-1 ring-amber-500/25"

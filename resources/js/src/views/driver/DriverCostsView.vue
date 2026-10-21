@@ -21,7 +21,7 @@
     />
 
     <div
-      class="driver-stagger mx-auto w-full max-w-lg px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-4 sm:max-w-2xl sm:px-5"
+      class="driver-stagger mx-auto w-full max-w-lg px-4 pb-4 pt-4 sm:max-w-2xl sm:px-5"
     >
       <div class="flex items-center justify-between gap-3">
         <h1 class="min-w-0 text-xl font-bold tracking-tight text-driver-ink sm:text-2xl">
@@ -96,7 +96,7 @@
         <span class="inline-block h-9 w-9 animate-spin rounded-full border-2 border-driver-accent border-t-transparent" />
       </div>
 
-      <p v-if="items.length && noMore" class="pb-8 pt-2 text-center text-sm text-driver-muted/70">
+      <p v-if="items.length && noMore" class="pt-2 text-center text-sm text-driver-muted/70">
         {{ t('driver_costs.end_of_list') }}
       </p>
     </div>

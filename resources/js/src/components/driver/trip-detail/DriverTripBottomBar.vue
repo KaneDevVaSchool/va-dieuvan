@@ -1,5 +1,6 @@
 <template>
   <div
+    ref="barRef"
     class="safe-pb fixed bottom-[calc(var(--driver-bottom-nav-height,3.5rem)+env(safe-area-inset-bottom))] left-0 right-0 z-[35] mx-auto max-w-2xl border-t border-[#7fdcc8]/15 bg-driver-card/95 pt-2 backdrop-blur-md pl-[max(theme(spacing.3),env(safe-area-inset-left))] pr-[max(theme(spacing.3),env(safe-area-inset-right))] sm:static sm:bottom-auto sm:z-auto sm:mt-4 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-0"
   >
     <div
@@ -79,6 +80,7 @@
 </template>
 
 <script setup>
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { FlagIcon, PauseIcon, PlayIcon } from '@heroicons/vue/24/outline'
 import { useHaptics } from '../../../composables/useHaptics'
@@ -98,7 +100,19 @@ defineProps({
   actionBusy: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['toggle-pause', 'start-trip', 'end-trip', 'confirm-trip', 'decline-trip'])
+const emit = defineEmits(['toggle-pause', 'start-trip', 'end-trip', 'confirm-trip', 'decline-trip', 'height-change'])
+const barRef = ref(null)
+let barObserver
+onMounted(() => {
+  const measure = () => {
+    const bar = barRef.value
+    emit('height-change', bar && getComputedStyle(bar).position === 'fixed' ? bar.getBoundingClientRect().height : 0)
+  }
+  measure()
+  barObserver = new ResizeObserver(measure)
+  if (barRef.value) barObserver.observe(barRef.value)
+})
+onBeforeUnmount(() => barObserver?.disconnect())
 
 const { t } = useI18n()
 const haptics = useHaptics()

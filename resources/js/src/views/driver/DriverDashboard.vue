@@ -1,6 +1,6 @@
 <template>
   <div
-    class="min-h-0 w-full bg-[#020B0B] pb-[calc(2rem+env(safe-area-inset-bottom))] text-[#eaf8f5]"
+    class="min-h-0 w-full bg-[#020B0B] pb-4 text-[#eaf8f5]"
   >
     <!-- Pull-to-refresh: overlay cố định, không đẩy header (giữ nguyên xử lý safe-area) -->
     <div

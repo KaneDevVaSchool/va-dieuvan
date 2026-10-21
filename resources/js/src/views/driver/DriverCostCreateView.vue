@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-full w-full bg-driver-bg pb-[calc(6rem+env(safe-area-inset-bottom))] text-driver-ink">
+  <div class="min-h-full w-full bg-driver-bg pb-4 text-driver-ink">
     <header
       class="sticky top-0 z-40 border-b border-white/[0.06] bg-driver-bg/90 backdrop-blur-md"
       :style="{ paddingTop: 'max(0.5rem, env(safe-area-inset-top))' }"
@@ -94,13 +94,12 @@
         <div v-if="linkMode === 'none'">
           <label class="text-sm font-semibold text-driver-muted" for="dcc-report-date">{{ t('driver_costs.report_date_title') }}</label>
           <p class="mt-0.5 text-xs leading-snug text-driver-muted/80">{{ t('driver_costs.report_date_hint') }}</p>
-          <input
+          <DriverDateInput
             id="dcc-report-date"
             v-model="form.reported_on"
-            type="date"
             :max="todayKey"
             data-testid="driver-cost-create-report-date"
-            class="mt-1.5 flex min-h-[48px] w-full appearance-none rounded-xl border border-white/10 bg-driver-surface px-3 py-2.5 text-base font-medium text-driver-ink focus:outline-none focus:ring-2 focus:ring-driver-accent/45"
+            :placeholder="t('driver_form.select_date')"
           />
         </div>
 
@@ -197,6 +196,7 @@ import { submitStandaloneTripCost } from '../../api/costs'
 import { uploadAttachment } from '../../api/attachments'
 import { showAppSuccess, showAppError } from '../../composables/appMessage'
 import DriverCostTripPicker from '../../components/driver/costs/DriverCostTripPicker.vue'
+import DriverDateInput from '../../components/driver/DriverDateInput.vue'
 import DriverCostCreateReceiptPicker from '../../components/driver/costs/DriverCostCreateReceiptPicker.vue'
 import { isTripEligibleForDriverLinkedCost } from '../../constants/tripStatus'
 import { toLocalDateKey } from '../../util/dates'
