@@ -207,7 +207,6 @@ function itemValidationMessages(item) {
   const messages = []
   if (item.result === 'ng') {
     if (!String(item.note || '').trim()) messages.push(t('checklist.ng_note_required'))
-    if (item.requires_photo_on_ng && !item.attachments?.length) messages.push(t('checklist.ng_photo_required'))
   }
   return messages
 }

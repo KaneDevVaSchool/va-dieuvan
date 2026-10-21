@@ -86,20 +86,20 @@
         <button
           v-if="DRIVER_KM_SECTION_ENABLED"
           type="button"
-          class="flex min-h-[52px] w-full items-center justify-between gap-2 rounded-2xl bg-driver-card px-4 py-3.5 text-left ring-1 ring-white/[0.06] active:bg-driver-surface/30"
+          class="flex min-h-[44px] w-full items-center justify-between gap-2 rounded-2xl bg-driver-card px-3.5 py-2.5 text-left ring-1 ring-white/[0.06] active:bg-driver-surface/30"
           @click="openKmModal()"
         >
-          <div class="flex min-w-0 items-center gap-3">
-            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-driver-elevated text-driver-muted">
+          <div class="flex min-w-0 items-center gap-2.5">
+            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-driver-elevated text-driver-muted">
               <ChartBarIcon class="h-4 w-4" aria-hidden="true" />
             </div>
             <div class="min-w-0">
-              <p class="text-base font-semibold text-driver-ink sm:text-lg">{{ t('driver_trip_detail.km_row_title') }}</p>
-              <p v-if="!hasEndOdometer" class="text-sm text-amber-500 sm:text-base">{{ t('driver_trip_detail.km_end_missing') }}</p>
-              <p v-else class="text-sm text-driver-muted sm:text-base">{{ t('driver_trip_detail.km_end_value', { km: formatKm(trip.record.end_odometer_km) }) }}</p>
+              <p class="text-sm font-semibold text-driver-ink sm:text-base">{{ t('driver_trip_detail.km_row_title') }}</p>
+              <p v-if="!hasEndOdometer" class="text-xs text-amber-500 sm:text-sm">{{ t('driver_trip_detail.km_end_missing') }}</p>
+              <p v-else class="text-xs text-driver-muted sm:text-sm">{{ t('driver_trip_detail.km_end_value', { km: formatKm(trip.record.end_odometer_km) }) }}</p>
             </div>
           </div>
-          <ChevronRightIcon class="h-5 w-5 shrink-0 text-driver-muted/60" aria-hidden="true" />
+          <ChevronRightIcon class="h-4 w-4 shrink-0 text-driver-muted/60" aria-hidden="true" />
         </button>
 
         <DriverTripCostsSection

@@ -31,45 +31,45 @@
 
     <!-- Header -->
     <header
-      class="sticky top-0 z-[25] flex items-center justify-between gap-2 border-b border-[rgba(255,255,255,0.06)] bg-driver-bg/90 px-3 py-3 backdrop-blur-md [-webkit-backdrop-filter:blur(12px)]"
-      style="padding-top: max(0.75rem, env(safe-area-inset-top))"
+      class="sticky top-0 z-[25] flex items-center justify-between gap-2 border-b border-[rgba(255,255,255,0.06)] bg-driver-bg/90 px-3.5 py-2.5 backdrop-blur-md [-webkit-backdrop-filter:blur(12px)]"
+      style="padding-top: max(0.5rem, env(safe-area-inset-top))"
     >
-      <div class="flex min-w-0 flex-1 items-center gap-2">
+      <div class="flex min-w-0 flex-1 items-center gap-1.5">
         <RouterLink
           to="/driver"
-          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#7fdcc8] transition hover:bg-white/5 active:scale-95"
+          class="flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-full text-[#7fdcc8] transition hover:bg-white/5 active:scale-95"
           :title="t('trip_history_page.back')"
         >
           <span class="sr-only">{{ t('trip_history_page.back') }}</span>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-4.5 w-4.5" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
           </svg>
         </RouterLink>
-        <h1 class="min-w-0 truncate text-2xl font-bold tracking-tight sm:text-3xl">
+        <h1 class="min-w-0 truncate text-lg font-bold tracking-tight sm:text-xl">
           {{ t('trip_history_page.title') }}
         </h1>
       </div>
       <button
         type="button"
-        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#7fdcc8] ring-1 ring-[rgba(255,255,255,0.08)] transition hover:bg-white/5"
+        class="flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-full text-[#7fdcc8] ring-1 ring-[rgba(255,255,255,0.08)] transition hover:bg-white/5"
         :aria-pressed="searchOpen ? 'true' : 'false'"
         :title="t('trip_history_page.search')"
         @click="searchOpen = !searchOpen"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" class="h-5 w-5">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" class="h-4.5 w-4.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
         </svg>
       </button>
     </header>
 
-    <div class="space-y-4 px-3 pt-4">
+    <div class="space-y-3 px-3 pt-3">
       <!-- Search box -->
-      <div v-if="searchOpen" class="rounded-2xl border border-[rgba(255,255,255,0.08)] bg-driver-card px-3 py-2">
+      <div v-if="searchOpen" class="rounded-xl border border-[rgba(255,255,255,0.08)] bg-driver-card px-3 py-1.5">
         <input
           v-model.trim="searchQ"
           type="search"
           autocomplete="off"
-          class="w-full rounded-lg bg-transparent px-2 py-3 text-base text-driver-ink placeholder:text-driver-muted/60 focus:outline-none focus:ring-1 focus:ring-[#7fdcc8]/50"
+          class="w-full rounded-lg bg-transparent px-2 py-2 text-sm text-driver-ink placeholder:text-driver-muted/60 focus:outline-none focus:ring-1 focus:ring-[#7fdcc8]/50"
           :placeholder="t('trip_history_page.search_placeholder')"
         />
       </div>

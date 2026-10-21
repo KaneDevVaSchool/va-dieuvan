@@ -88,7 +88,7 @@ class ChecklistPresenter
                 'severity' => $i->severity,
                 'ng_action' => $i->ng_action,
                 'allow_na' => (bool) $i->allow_na,
-                'requires_photo_on_ng' => (bool) $i->requires_photo_on_ng,
+                'requires_photo_on_ng' => false,
                 'result' => $i->result,
                 'note' => $i->note,
                 'checked_at' => $this->iso($i->checked_at),

@@ -7,7 +7,7 @@
     >
       <!-- Header chrome -->
       <div class="flex items-center justify-between gap-3 pt-1">
-        <h1 class="text-2xl font-bold tracking-tight text-driver-ink md:text-[1.75rem]">
+        <h1 class="text-lg font-bold tracking-tight text-driver-ink sm:text-xl">
           {{ t('nav.bottom_driver_account') }}
         </h1>
         <NotificationBell />
@@ -15,18 +15,18 @@
 
       <p
         v-if="errorMsg"
-        class="rounded-2xl border border-amber-700/40 bg-amber-950/30 px-4 py-3 text-sm leading-relaxed text-amber-100/90"
+        class="rounded-xl border border-amber-700/40 bg-amber-950/30 px-3 py-2.5 text-xs leading-relaxed text-amber-100/90 sm:text-sm"
       >
         {{ errorMsg }}
       </p>
 
       <!-- S1: Header card -->
       <section
-        class="rounded-[20px] border border-white/[0.06] bg-driver-card px-4 pb-5 pt-6 sm:px-5"
+        class="rounded-2xl border border-white/[0.06] bg-driver-card px-3.5 pb-4 pt-4 sm:px-4"
       >
         <div class="relative mx-auto flex w-fit flex-col items-center">
           <!-- Inner circle uses overflow-hidden; FAB sits outside so it is not clipped -->
-          <div class="relative h-20 w-20 shrink-0">
+          <div class="relative h-16 w-16 shrink-0">
             <div
               class="relative h-full w-full overflow-hidden rounded-full border border-white/[0.08] bg-driver-bg"
             >
@@ -38,7 +38,7 @@
               />
               <div
                 v-else
-                class="flex h-full w-full items-center justify-center text-xl font-bold text-driver-accent"
+                class="flex h-full w-full items-center justify-center text-lg font-bold text-driver-accent"
               >
                 {{ initials }}
               </div>
@@ -49,7 +49,7 @@
               >
                 <span class="sr-only">{{ t('driver_account.avatar_uploading_a11y') }}</span>
                 <svg
-                  class="h-7 w-7 animate-spin text-driver-accent"
+                  class="h-6 w-6 animate-spin text-driver-accent"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -73,36 +73,36 @@
             />
             <button
               type="button"
-              class="absolute -bottom-px -right-px z-10 flex h-[26px] w-[26px] items-center justify-center rounded-full bg-driver-accent text-driver-bg shadow-sm shadow-black/25 ring-2 ring-driver-card transition hover:brightness-105 active:scale-95 disabled:pointer-events-none disabled:opacity-60"
+              class="absolute -bottom-px -right-px z-10 flex h-6 w-6 items-center justify-center rounded-full bg-driver-accent text-driver-bg shadow-sm shadow-black/25 ring-2 ring-driver-card transition hover:brightness-105 active:scale-95 disabled:pointer-events-none disabled:opacity-60"
               :disabled="avatarUploading"
               :aria-label="t('driver_account.update_photo_a11y')"
               @click="openAvatarPicker"
             >
-              <ArrowUpTrayIcon class="h-[14px] w-[14px]" aria-hidden="true" />
+              <ArrowUpTrayIcon class="h-3 w-3" aria-hidden="true" />
             </button>
           </div>
         </div>
 
-        <p class="mt-4 text-center text-[22px] font-bold leading-tight text-driver-ink">
+        <p class="mt-2.5 text-center text-base font-bold leading-tight text-driver-ink sm:text-lg">
           {{ user?.name || '—' }}
         </p>
 
-        <div class="mt-3 flex flex-wrap items-center justify-center gap-2">
+        <div class="mt-2.5 flex flex-wrap items-center justify-center gap-1.5">
           <span
             v-if="employeeCodeDisplay"
-            class="rounded-full border border-driver-accent px-3 py-1 text-sm font-medium leading-none text-driver-accent"
+            class="rounded-full border border-driver-accent px-2.5 py-0.5 text-xs font-medium leading-none text-driver-accent"
           >
             {{ employeeCodeDisplay }}
           </span>
           <span
-            class="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-driver-bg/60 px-3 py-1 text-sm font-medium text-driver-ink"
+            class="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-driver-bg/60 px-2.5 py-0.5 text-xs font-medium text-driver-ink"
           >
             <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" aria-hidden="true" />
             {{ t('driver_account.active_status') }}
           </span>
         </div>
 
-        <div class="my-5 h-px w-full bg-white/[0.06]" aria-hidden="true" />
+        <div class="my-3.5 h-px w-full bg-white/[0.06]" aria-hidden="true" />
 
         <div class="grid grid-cols-3 gap-2 text-center">
           <div v-for="col in headerCols" :key="col.k" class="min-w-0 px-0.5">
@@ -111,7 +111,7 @@
             >
               {{ col.label }}
             </p>
-            <p class="mt-2 text-base font-bold leading-snug text-driver-ink tabular-nums">
+            <p class="mt-1.5 text-sm font-bold leading-snug text-driver-ink tabular-nums">
               {{ col.value }}
             </p>
           </div>
@@ -119,28 +119,28 @@
       </section>
 
       <!-- S2: Stats -->
-      <section class="rounded-[20px] border border-white/[0.06] bg-driver-card px-2 py-4 sm:px-3">
+      <section class="rounded-2xl border border-white/[0.06] bg-driver-card px-2 py-3 sm:px-3">
         <div v-if="loading" class="grid grid-cols-3 gap-0">
-          <div v-for="n in 3" :key="n" class="flex flex-col items-center gap-2 py-2">
-            <div class="h-10 w-10 animate-pulse rounded-full bg-driver-accent/10" />
-            <div class="h-8 w-10 animate-pulse rounded bg-white/5" />
-            <div class="h-3 w-16 animate-pulse rounded bg-white/5" />
+          <div v-for="n in 3" :key="n" class="flex flex-col items-center gap-1.5 py-1">
+            <div class="h-8 w-8 animate-pulse rounded-full bg-driver-accent/10" />
+            <div class="h-6 w-8 animate-pulse rounded bg-white/5" />
+            <div class="h-2.5 w-12 animate-pulse rounded bg-white/5" />
           </div>
         </div>
         <div v-else class="grid grid-cols-3 divide-x divide-white/[0.06]">
           <div
             v-for="cell in statCells"
             :key="cell.key"
-            class="flex min-h-[120px] flex-col items-center justify-start gap-2 px-1 py-2 text-center first:pl-0 last:pr-0"
+            class="flex min-h-[92px] flex-col items-center justify-start gap-1.5 px-1 py-1 text-center first:pl-0 last:pr-0"
           >
             <div
-              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-driver-accent/15 text-driver-accent [&_svg]:h-6 [&_svg]:w-6"
+              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-driver-accent/15 text-driver-accent [&_svg]:h-5 [&_svg]:w-5"
               v-html="cell.iconSvg"
             />
-            <span class="text-[32px] font-bold tabular-nums leading-none text-driver-ink sm:text-4xl">
+            <span class="text-xl font-bold tabular-nums leading-none text-driver-ink sm:text-2xl">
               {{ cell.value }}
             </span>
-            <span class="text-sm leading-snug text-driver-muted">
+            <span class="text-xs leading-snug text-driver-muted">
               {{ cell.label }}
             </span>
           </div>
@@ -148,10 +148,10 @@
       </section>
 
       <!-- S3: Work info -->
-      <section class="rounded-[20px] border border-white/[0.06] bg-driver-card p-4 sm:p-5">
-        <div class="mb-4 flex items-center gap-2">
-          <span class="h-2 w-2 shrink-0 rounded-full bg-driver-accent" />
-          <h2 class="text-base font-semibold text-driver-ink">
+      <section class="rounded-2xl border border-white/[0.06] bg-driver-card p-3.5 sm:p-4">
+        <div class="mb-3 flex items-center gap-2">
+          <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-driver-accent" />
+          <h2 class="text-sm font-semibold text-driver-ink">
             {{ t('driver_account.work_info_title') }}
           </h2>
         </div>
@@ -159,11 +159,11 @@
           <li
             v-for="row in workRows"
             :key="row.k"
-            class="flex items-center gap-3 py-3.5 first:pt-0 last:pb-0"
+            class="flex items-center gap-2.5 py-2.5 first:pt-0 last:pb-0"
           >
-            <component :is="row.icon" class="h-6 w-6 shrink-0 text-driver-accent" aria-hidden="true" />
-            <span class="min-w-0 flex-1 text-[15px] leading-snug text-driver-muted">{{ row.label }}</span>
-            <span class="max-w-[58%] text-right text-[15px] font-bold leading-snug text-driver-ink truncate">{{
+            <component :is="row.icon" class="h-5 w-5 shrink-0 text-driver-accent" aria-hidden="true" />
+            <span class="min-w-0 flex-1 text-xs leading-snug text-driver-muted sm:text-sm">{{ row.label }}</span>
+            <span class="max-w-[58%] text-right text-xs font-bold leading-snug text-driver-ink truncate sm:text-sm">{{
               row.value
             }}</span>
           </li>
@@ -171,13 +171,13 @@
       </section>
 
       <!-- Đăng xuất -->
-      <section class="rounded-[20px] border border-white/[0.06] bg-driver-card p-4 sm:p-5">
+      <section class="rounded-2xl border border-white/[0.06] bg-driver-card p-3.5 sm:p-4">
         <button
           type="button"
-          class="inline-flex min-h-[54px] w-full items-center justify-center gap-2 rounded-2xl bg-driver-accent/12 px-4 text-base font-bold text-driver-accent ring-1 ring-driver-accent/30 transition hover:bg-driver-accent/20 active:scale-[0.98]"
+          class="inline-flex min-h-[42px] w-full items-center justify-center gap-2 rounded-xl bg-driver-accent/12 px-4 text-sm font-bold text-driver-accent ring-1 ring-driver-accent/30 transition hover:bg-driver-accent/20 active:scale-[0.98]"
           @click="openLogoutConfirm"
         >
-          <ArrowRightOnRectangleIcon class="h-6 w-6 shrink-0" aria-hidden="true" />
+          <ArrowRightOnRectangleIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
           {{ t('driver_account.logout') }}
         </button>
       </section>

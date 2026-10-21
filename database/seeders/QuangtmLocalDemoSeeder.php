@@ -149,7 +149,7 @@ class QuangtmLocalDemoSeeder extends Seeder
                             'template_item_id' => $item->id, 'group_name' => $item->group_name,
                             'title' => $item->title, 'requirement' => $item->requirement,
                             'severity' => $item->severity, 'ng_action' => $item->ng_action,
-                            'allow_na' => $item->allow_na, 'requires_photo_on_ng' => $item->requires_photo_on_ng,
+                            'allow_na' => $item->allow_na, 'requires_photo_on_ng' => false,
                             'sort_order' => $item->sort_order, 'prefill_hint' => $hints[$item->id] ?? null,
                             'result' => $checked ? ChecklistSubmissionItem::RESULT_OK : null,
                             'checked_at' => $checked ? $at->copy()->subMinutes(5)->utc() : null,

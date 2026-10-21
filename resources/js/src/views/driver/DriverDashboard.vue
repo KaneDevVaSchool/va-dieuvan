@@ -60,8 +60,8 @@
       </div>
     </div>
 
-    <div class="mx-auto w-full min-h-0 min-w-0 max-w-full px-4 pt-5 sm:px-5">
-      <div class="driver-stagger min-w-0 space-y-4">
+    <div class="mx-auto w-full min-h-0 min-w-0 max-w-full px-3.5 pt-3.5 sm:px-5 sm:pt-4">
+      <div class="driver-stagger min-w-0 space-y-3">
         <DriverPendingConfirmationSection
           v-if="dash.needsConfirmationTrips.length > 0 || dash.loadingInitial"
           :trips="dash.needsConfirmationTrips"
@@ -69,7 +69,7 @@
         />
         <p
           v-if="dash.errorMsg"
-          class="rounded-2xl border border-amber-700/50 bg-amber-950/40 px-4 py-3 text-sm text-amber-100 ring-1 ring-amber-600/30"
+          class="rounded-xl border border-amber-700/50 bg-amber-950/40 px-3.5 py-2.5 text-xs text-amber-100 ring-1 ring-amber-600/30"
         >
           {{ dash.errorMsg }}
         </p>
@@ -107,19 +107,19 @@
       </div>
 
       <div
-        class="pointer-events-none fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-[max(1rem,calc((100vw-42rem)/2+1.25rem),env(safe-area-inset-right))] z-30 flex max-w-[100vw] flex-col items-end gap-3"
+        class="pointer-events-none fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] right-[max(1rem,calc((100vw-42rem)/2+1rem),env(safe-area-inset-right))] z-30 flex max-w-[100vw] flex-col items-end gap-3"
       >
         <a
           v-if="dispatcherPhone"
           :href="`tel:${dispatcherPhone}`"
-          class="pointer-events-auto flex min-h-[48px] min-w-[44px] items-center gap-2 rounded-2xl bg-[#9A0036] px-4 text-white shadow-xl shadow-black/40 ring-1 ring-white/10 transition hover:bg-[#850030] active:scale-[0.96]"
+          class="pointer-events-auto flex min-h-[42px] min-w-[40px] items-center gap-1.5 rounded-xl bg-[#9A0036] px-3.5 py-2 text-white shadow-xl shadow-black/40 ring-1 ring-white/10 transition hover:bg-[#850030] active:scale-[0.96]"
           @click="haptics.impact()"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 20 20"
             fill="currentColor"
-            class="h-5 w-5 shrink-0"
+            class="h-4.5 w-4.5 shrink-0"
             aria-hidden="true"
           >
             <path
@@ -128,7 +128,7 @@
               clip-rule="evenodd"
             />
           </svg>
-          <span class="text-sm font-semibold">{{ t('driver_home.float_call') }}</span>
+          <span class="text-xs font-semibold sm:text-sm">{{ t('driver_home.float_call') }}</span>
         </a>
       </div>
     </div>

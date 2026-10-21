@@ -1,15 +1,15 @@
 <template>
   <button
     type="button"
-    class="w-full rounded-2xl border border-[#243a27] bg-[#1a2e1c] px-4 py-3.5 text-left shadow-md shadow-black/20 transition hover:border-[#2d4a32] active:scale-[0.99]"
+    class="w-full rounded-xl border border-[#243a27] bg-[#1a2e1c] px-3.5 py-2.5 text-left shadow-md shadow-black/20 transition hover:border-[#2d4a32] active:scale-[0.99]"
     @click="goTrip"
   >
-    <div class="flex gap-3">
+    <div class="flex items-center gap-2.5">
       <span
-        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#fbbf24]/15 text-[#fbbf24]"
+        class="flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-lg bg-[#fbbf24]/15 text-[#fbbf24]"
         aria-hidden="true"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5">
           <path
             fill-rule="evenodd"
             d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z"
@@ -18,10 +18,10 @@
         </svg>
       </span>
       <div class="min-w-0 flex-1">
-        <p class="text-base font-bold leading-snug text-[#4ade80]">
+        <p class="text-sm font-bold leading-snug text-[#4ade80]">
           {{ titleLine }}
         </p>
-        <p class="mt-1 text-sm leading-snug text-[#86b894]/90">
+        <p class="mt-0.5 text-xs leading-snug text-[#86b894]/90">
           {{ t('driver_home.upcoming_banner_subtitle') }}
         </p>
       </div>

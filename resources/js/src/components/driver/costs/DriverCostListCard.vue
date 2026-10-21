@@ -1,27 +1,27 @@
 <template>
   <article
-    class="overflow-hidden rounded-[1.35rem] bg-driver-card shadow-[0_12px_40px_-16px_rgba(0,0,0,0.65)] ring-1 ring-white/[0.06] transition-transform duration-200 hover:ring-driver-accent/20"
+    class="overflow-hidden rounded-xl bg-driver-card shadow-[0_8px_30px_-12px_rgba(0,0,0,0.65)] ring-1 ring-white/[0.06] transition-transform duration-200 hover:ring-driver-accent/20"
   >
     <RouterLink
       :to="`/driver/costs/${cost.id}`"
-      class="block px-4 pb-4 pt-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-driver-accent/60 sm:px-5 sm:pt-5"
+      class="block px-3.5 pb-3.5 pt-3.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-driver-accent/60 sm:px-4 sm:pt-4"
     >
       <div class="flex flex-wrap items-start justify-between gap-2">
         <span
-          class="inline-flex items-center rounded-full px-3.5 py-1.5 text-sm font-bold sm:text-base"
+          class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold"
           :class="statusBadgeClass(cost.status)"
         >
           {{ statusLabel(cost.status) }}
         </span>
         <span
           v-if="cost.trip_id"
-          class="font-mono text-sm font-bold tabular-nums text-[#7fdcc8] sm:text-base"
+          class="font-mono text-xs font-bold tabular-nums text-[#7fdcc8]"
         >
           {{ tripCode }}
         </span>
         <span
           v-else
-          class="rounded-full bg-driver-accent/12 px-3 py-1 text-sm font-bold text-driver-accent ring-1 ring-driver-accent/25"
+          class="rounded-full bg-driver-accent/12 px-2.5 py-0.5 text-xs font-bold text-driver-accent ring-1 ring-driver-accent/25"
         >
           {{ standaloneBadge }}
         </span>
@@ -29,35 +29,35 @@
 
       <p
         v-if="flowLine.text"
-        class="mt-3 flex items-start gap-1.5 text-sm font-medium leading-snug sm:text-base"
+        class="mt-2 flex items-start gap-1.5 text-xs font-medium leading-snug"
         :class="flowToneClass"
       >
-        <component :is="flowIcon" class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+        <component :is="flowIcon" class="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         <span class="min-w-0">{{ flowLine.text }}</span>
       </p>
 
-      <div class="mt-4 flex gap-4 sm:gap-5">
+      <div class="mt-3 flex gap-3 sm:gap-4">
         <div
-          class="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-driver-surface ring-1 ring-white/[0.05] sm:h-[4.25rem] sm:w-[4.25rem]"
+          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-driver-surface ring-1 ring-white/[0.05]"
           aria-hidden="true"
         >
-          <component :is="typeIcon" class="h-8 w-8 text-driver-accent sm:h-9 sm:w-9" />
+          <component :is="typeIcon" class="h-6 w-6 text-driver-accent" />
         </div>
         <div class="min-w-0 flex-1">
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-driver-muted/80 sm:text-xs">
+          <p class="text-[10px] font-semibold uppercase tracking-wide text-driver-muted/80 sm:text-[11px]">
             {{ t('driver_costs.card_amount_label') }}
           </p>
-          <p class="mt-0.5 text-2xl font-bold tabular-nums leading-tight text-driver-ink sm:text-[1.75rem]">
+          <p class="mt-0.5 text-lg font-bold tabular-nums leading-tight text-driver-ink sm:text-xl">
             {{ formatVnd(cost.amount) }}
           </p>
-          <p class="mt-2 text-lg font-semibold leading-snug text-driver-ink/95 sm:text-xl">
+          <p class="mt-1 text-sm font-semibold leading-snug text-driver-ink/95">
             {{ typeLabel(cost.type) }}
           </p>
-          <p v-if="cost.description" class="mt-2 line-clamp-2 text-base leading-snug text-driver-muted">
+          <p v-if="cost.description" class="mt-1 line-clamp-2 text-xs leading-snug text-driver-muted">
             {{ cost.description }}
           </p>
         </div>
-        <ChevronRightIcon class="mt-2 h-7 w-7 shrink-0 text-driver-muted/40" aria-hidden="true" />
+        <ChevronRightIcon class="mt-2 h-5 w-5 shrink-0 text-driver-muted/40" aria-hidden="true" />
       </div>
 
       <div

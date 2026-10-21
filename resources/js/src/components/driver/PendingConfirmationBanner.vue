@@ -1,31 +1,31 @@
 <template>
   <div
-    class="overflow-hidden rounded-3xl border-2 border-amber-500/65 bg-[#141008]/95 shadow-xl shadow-black/40 ring-1 ring-amber-400/35"
+    class="overflow-hidden rounded-2xl border-2 border-amber-500/65 bg-[#141008]/95 shadow-xl shadow-black/40 ring-1 ring-amber-400/35"
     role="region"
     :aria-label="t('driver_home.group_pending')"
   >
     <!-- Header -->
-    <div class="px-4 pt-4 pb-3 sm:px-5 sm:pt-5">
+    <div class="px-3.5 pt-3.5 pb-2.5 sm:px-4 sm:pt-4">
       <template v-if="loading">
-        <div class="flex items-center gap-4">
-          <div class="h-12 w-12 shrink-0 animate-pulse rounded-xl bg-amber-500/20" />
-          <div class="min-w-0 flex-1 space-y-2">
-            <div class="h-6 w-52 max-w-full animate-pulse rounded-lg bg-amber-500/15" />
-            <div class="h-5 w-36 animate-pulse rounded bg-amber-500/10" />
+        <div class="flex items-center gap-3">
+          <div class="h-9.5 w-9.5 shrink-0 animate-pulse rounded-xl bg-amber-500/20" />
+          <div class="min-w-0 flex-1 space-y-1.5">
+            <div class="h-5 w-44 max-w-full animate-pulse rounded-lg bg-amber-500/15" />
+            <div class="h-4 w-32 animate-pulse rounded bg-amber-500/10" />
           </div>
         </div>
       </template>
       <template v-else>
-        <div class="flex items-start gap-3 sm:gap-4">
+        <div class="flex items-start gap-2.5 sm:gap-3">
           <div
-            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 ring-1 ring-amber-400/35"
+            class="flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 ring-1 ring-amber-400/35"
             aria-hidden="true"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
               fill="currentColor"
-              class="h-6 w-6 text-amber-200"
+              class="h-5 w-5 text-amber-200"
             >
               <path
                 fill-rule="evenodd"
@@ -35,10 +35,10 @@
             </svg>
           </div>
           <div class="min-w-0 flex-1 pt-0.5">
-            <p class="text-base font-extrabold leading-snug text-amber-50 sm:text-lg">
+            <p class="text-sm font-extrabold leading-snug text-amber-50 sm:text-base">
               {{ bannerTitle }}
             </p>
-            <p v-if="pendingCount > 0" class="mt-1 text-sm font-medium text-amber-200/75 sm:text-base">
+            <p v-if="pendingCount > 0" class="mt-0.5 text-xs font-medium text-amber-200/75 sm:text-sm">
               {{ bannerSubline }}
             </p>
           </div>

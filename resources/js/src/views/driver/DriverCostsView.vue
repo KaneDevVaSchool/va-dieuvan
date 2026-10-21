@@ -21,64 +21,64 @@
     />
 
     <div
-      class="driver-stagger mx-auto w-full max-w-lg px-4 pb-4 pt-4 sm:max-w-2xl sm:px-5"
+      class="driver-stagger mx-auto w-full max-w-lg px-3.5 pb-4 pt-3 sm:max-w-2xl sm:px-5"
     >
       <div class="flex items-center justify-between gap-3">
-        <h1 class="min-w-0 text-xl font-bold tracking-tight text-driver-ink sm:text-2xl">
+        <h1 class="min-w-0 text-lg font-bold tracking-tight text-driver-ink sm:text-xl">
           {{ t('driver_costs.title') }}
         </h1>
         <RouterLink
           :to="{ name: 'driverCostCreate' }"
-          class="inline-flex min-h-[44px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-driver-accent px-3 text-sm font-semibold text-driver-bg transition hover:brightness-110 active:scale-[0.98]"
+          class="inline-flex min-h-[38px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-driver-accent px-3 py-1.5 text-xs font-semibold text-driver-bg transition hover:brightness-110 active:scale-[0.98] sm:text-sm"
         >
-          <PlusIcon class="h-5 w-5 shrink-0" :stroke-width="2.5" aria-hidden="true" />
+          <PlusIcon class="h-4 w-4 shrink-0" :stroke-width="2.5" aria-hidden="true" />
           {{ t('driver_costs.cta_add') }}
         </RouterLink>
       </div>
-      <p class="mt-2 text-sm leading-relaxed text-driver-muted">
+      <p class="mt-1 text-xs leading-relaxed text-driver-muted">
         {{ t('driver_costs.subtitle') }}
       </p>
 
       <RouterLink
         v-if="canExpense"
         :to="{ name: 'driverExpenses' }"
-        class="mt-4 flex min-h-[56px] items-center gap-3 rounded-2xl bg-driver-card px-4 py-3 ring-1 ring-white/[0.08] active:scale-[0.99]"
+        class="mt-3 flex min-h-[48px] items-center gap-2.5 rounded-xl bg-driver-card px-3.5 py-2.5 ring-1 ring-white/[0.08] active:scale-[0.99]"
         data-testid="driver-costs-expense-link"
       >
-        <DocumentDuplicateIcon class="h-6 w-6 shrink-0 text-driver-accent" aria-hidden="true" />
+        <DocumentDuplicateIcon class="h-5 w-5 shrink-0 text-driver-accent" aria-hidden="true" />
         <span class="min-w-0 flex-1">
-          <span class="block text-base font-bold">{{ t('expense.costs_link_title') }}</span>
-          <span class="block text-xs text-driver-muted">{{ t('expense.costs_link_hint') }}</span>
+          <span class="block text-sm font-bold">{{ t('expense.costs_link_title') }}</span>
+          <span class="block text-[11px] text-driver-muted">{{ t('expense.costs_link_hint') }}</span>
         </span>
-        <ChevronRightIcon class="h-5 w-5 shrink-0 text-driver-muted" aria-hidden="true" />
+        <ChevronRightIcon class="h-4.5 w-4.5 shrink-0 text-driver-muted" aria-hidden="true" />
       </RouterLink>
 
       <p
         v-if="errorMsg"
-        class="mt-4 rounded-2xl border border-amber-500/35 bg-amber-950/35 px-4 py-3 text-sm text-amber-100 ring-1 ring-amber-500/20"
+        class="mt-3 rounded-xl border border-amber-500/35 bg-amber-950/35 px-3.5 py-2.5 text-xs text-amber-100 ring-1 ring-amber-500/20"
       >
         {{ t('driver_home.load_error') }}
       </p>
 
       <!-- Skeleton -->
-      <div v-if="loading && !items.length" class="mt-6 space-y-4">
-        <div v-for="s in 4" :key="s" class="animate-pulse overflow-hidden rounded-[1.35rem] bg-driver-card ring-1 ring-white/[0.06]">
-          <div class="h-36 bg-driver-surface/90" />
-          <div class="h-14 border-t border-white/[0.06] bg-driver-surface/60" />
+      <div v-if="loading && !items.length" class="mt-4 space-y-3">
+        <div v-for="s in 4" :key="s" class="animate-pulse overflow-hidden rounded-xl bg-driver-card ring-1 ring-white/[0.06]">
+          <div class="h-28 bg-driver-surface/90" />
+          <div class="h-10 border-t border-white/[0.06] bg-driver-surface/60" />
         </div>
       </div>
 
       <!-- Empty -->
       <div
         v-else-if="!loading && !items.length"
-        class="mt-6 rounded-2xl bg-driver-card px-5 py-8 text-center ring-1 ring-white/[0.06]"
+        class="mt-4 rounded-xl bg-driver-card px-4 py-6 text-center ring-1 ring-white/[0.06]"
       >
-        <ClipboardDocumentListIcon class="mx-auto h-10 w-10 text-driver-muted/45" aria-hidden="true" />
-        <p class="mt-4 text-base font-semibold text-driver-ink">{{ t('driver_costs.empty_title') }}</p>
-        <p class="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-driver-muted">{{ t('driver_costs.empty_hint') }}</p>
+        <ClipboardDocumentListIcon class="mx-auto h-8 w-8 text-driver-muted/45" aria-hidden="true" />
+        <p class="mt-3 text-sm font-semibold text-driver-ink">{{ t('driver_costs.empty_title') }}</p>
+        <p class="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-driver-muted">{{ t('driver_costs.empty_hint') }}</p>
       </div>
 
-      <ul v-else class="mt-6 space-y-5">
+      <ul v-else class="mt-3 space-y-3">
         <li v-for="c in items" :key="c.id">
           <DriverCostListCard
             :cost="c"

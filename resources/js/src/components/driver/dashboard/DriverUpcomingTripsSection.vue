@@ -1,13 +1,13 @@
 <template>
   <section class="space-y-2 pb-2 pt-1">
     <div class="flex items-end justify-between gap-2">
-      <h2 class="text-sm font-bold uppercase tracking-wide text-[#64748b]">
+      <h2 class="text-xs font-bold uppercase tracking-wider text-[#64748b]">
         {{ t(titleKey) }}
       </h2>
       <RouterLink
         v-if="showScheduleLink"
         to="/driver/schedule"
-        class="shrink-0 text-base font-bold text-[#4ade80] transition hover:text-[#7fdcc8]"
+        class="shrink-0 text-xs font-semibold text-[#4ade80] transition hover:text-[#7fdcc8]"
       >
         {{ t('driver_home.view_schedule') }} →
       </RouterLink>
@@ -17,12 +17,12 @@
       <div
         v-for="n in 3"
         :key="n"
-        class="h-[280px] w-[min(88vw,20rem)] shrink-0 animate-pulse rounded-2xl border border-white/5 bg-[#0f1816] p-5"
+        class="h-[240px] w-[min(80vw,18.5rem)] shrink-0 animate-pulse rounded-xl border border-white/5 bg-[#0f1816] p-4"
       >
-        <div class="h-5 w-40 rounded bg-white/10" />
-        <div class="mt-4 h-8 w-24 rounded bg-white/10" />
-        <div class="mt-3 h-4 w-full rounded bg-white/[0.06]" />
-        <div class="mt-2 h-4 w-4/5 rounded bg-white/[0.05]" />
+        <div class="h-4 w-32 rounded bg-white/10" />
+        <div class="mt-3 h-7 w-20 rounded bg-white/10" />
+        <div class="mt-2.5 h-3.5 w-full rounded bg-white/[0.06]" />
+        <div class="mt-2 h-3.5 w-4/5 rounded bg-white/[0.05]" />
       </div>
     </div>
 
@@ -70,7 +70,7 @@
           class="dash-carousel-card snap-start last:snap-end"
         >
           <DriverTripCard
-            class="w-[min(82vw,20rem)] shrink-0 will-change-transform"
+            class="w-[min(80vw,18.5rem)] shrink-0 will-change-transform"
             layout="carousel"
             :trip="trip"
             :busy="startBusyTripId != null && String(startBusyTripId) === rowKey(trip)"

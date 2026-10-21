@@ -15,10 +15,36 @@ export function isNavRouteActive(navTo, currentPath, navPaths = NAV_TO_PATHS) {
     return isDispatchStaffHomePath(currentPath)
   }
 
+  if (navTo === '/driver') {
+    return currentPath === '/driver'
+  }
+
   if (navTo === '/driver/schedule') {
     return (
       currentPath === '/driver/schedule' ||
-      /^\/driver\/trips\/\d+/.test(currentPath)
+      /^\/driver\/trips\/\d+/.test(currentPath) ||
+      currentPath === '/driver/trips'
+    )
+  }
+
+  if (navTo === '/driver/tp-days') {
+    return (
+      currentPath === '/driver/tp-days' ||
+      currentPath.startsWith('/driver/tp-days/')
+    )
+  }
+
+  if (navTo === '/driver/costs') {
+    return (
+      currentPath === '/driver/costs' ||
+      currentPath.startsWith('/driver/costs/')
+    )
+  }
+
+  if (navTo === '/driver/account') {
+    return (
+      currentPath === '/driver/account' ||
+      currentPath.startsWith('/driver/account/')
     )
   }
 

@@ -75,7 +75,7 @@ class ChecklistTemplateSeeder extends Seeder
                     'template_id' => $template->id,
                     'sort_order' => ($i + 1) * 10,
                     'is_active' => true,
-                    'requires_photo_on_ng' => $item['severity'] === self::C,
+                    'requires_photo_on_ng' => false,
                     ...$item,
                 ]);
             }

@@ -61,6 +61,8 @@ class ChecklistTemplateService
             $fields = array_intersect_key($data, array_flip([
                 'group_name', 'title', 'requirement', 'severity', 'ng_action', 'allow_na', 'requires_photo_on_ng', 'auto_source', 'is_active', 'sort_order',
             ]));
+            // Accept legacy payloads, but evidence is optional for every checklist item.
+            $fields['requires_photo_on_ng'] = false;
 
             if ($item === null) {
                 $fields['sort_order'] ??= ((int) $template->items()->max('sort_order')) + 10;
@@ -159,8 +161,8 @@ class ChecklistTemplateService
             'is_active' => $t->is_active,
             'form_meta' => $t->form_meta ?? [],
             'items' => $t->relationLoaded('items') ? $t->items->map(fn (ChecklistTemplateItem $i) => $i->only([
-                'id', 'group_name', 'sort_order', 'title', 'requirement', 'severity', 'ng_action', 'allow_na', 'requires_photo_on_ng', 'auto_source', 'is_active',
-            ]))->values()->all() : [],
+                'id', 'group_name', 'sort_order', 'title', 'requirement', 'severity', 'ng_action', 'allow_na', 'auto_source', 'is_active',
+            ]) + ['requires_photo_on_ng' => false])->values()->all() : [],
             'reminder_slots' => $t->relationLoaded('reminderSlots') ? $t->reminderSlots->map(fn (ChecklistReminderSlot $s) => $s->only([
                 'id', 'template_id', 'remind_at', 'weekdays', 'escalate_after_minutes', 'is_active',
             ]))->values()->all() : [],

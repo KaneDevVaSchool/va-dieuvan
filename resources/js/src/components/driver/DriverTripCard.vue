@@ -1,13 +1,13 @@
 <template>
   <div
-    class="flex w-full min-w-0 flex-col gap-0 rounded-2xl text-left outline-none transition touch-manipulation"
+    class="flex w-full min-w-0 flex-col gap-0 rounded-xl text-left outline-none transition touch-manipulation"
     :class="rootClass"
     data-testid="driver-trip-card"
     @click="onRootClick"
   >
     <!-- Header -->
     <div
-      class="flex gap-2 px-4 pt-4"
+      class="flex gap-2 px-3.5 pt-3.5"
       :class="
         isStackedLayout
           ? 'flex-col items-stretch'
@@ -16,56 +16,56 @@
     >
       <div class="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 sm:gap-2">
         <span
-          class="inline-flex shrink-0 rounded-lg px-2.5 py-1 text-xs font-bold uppercase tracking-wide"
+          class="inline-flex shrink-0 rounded-md px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide"
           :style="typeBadgeStyle"
         >
           {{ typeLabel }}
         </span>
         <span
           v-if="shiftLabel"
-          class="inline-flex shrink-0 rounded-lg px-2.5 py-1 text-xs font-bold ring-1"
+          class="inline-flex shrink-0 rounded-md px-2 py-0.5 text-[11px] font-bold ring-1"
           :class="shiftBadgeClass"
         >
           {{ shiftLabel }}
         </span>
         <span
-          class="min-w-0 max-w-full truncate text-xs font-medium text-[#94a3b8] sm:text-sm"
+          class="min-w-0 max-w-full truncate text-[11px] font-medium text-[#94a3b8] sm:text-xs"
           :title="tripCode"
         >
           {{ tripCode }}
         </span>
       </div>
       <span
-        class="inline-flex w-fit max-w-full items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold leading-tight"
+        class="inline-flex w-fit max-w-full items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold leading-tight"
         :class="[statusPillClass, isStackedLayout ? 'self-start' : 'shrink-0 sm:max-w-[11rem] sm:truncate']"
       >
-        <component :is="statusIcon" v-if="statusIcon" class="h-3.5 w-3.5" />
+        <component :is="statusIcon" v-if="statusIcon" class="h-3 w-3" />
         {{ statusLabelText }}
       </span>
     </div>
 
     <!-- Time -->
-    <div class="mt-3 flex items-baseline gap-2 px-4">
-      <span class="text-[22px] font-bold tabular-nums leading-none" :class="timeClass">
+    <div class="mt-2.5 flex items-baseline gap-2 px-3.5">
+      <span class="text-[19px] font-bold tabular-nums leading-none" :class="timeClass">
         {{ pickupTime }}
       </span>
-      <span class="text-sm font-medium text-[#94a3b8]">
+      <span class="text-xs font-medium text-[#94a3b8]">
         {{ dayContextLabel }}
       </span>
     </div>
 
     <!-- Route -->
-    <div class="mt-3 px-4">
-      <div class="flex min-w-0 items-start gap-2.5">
+    <div class="mt-2.5 px-3.5">
+      <div class="flex min-w-0 items-start gap-2">
         <span aria-hidden="true" class="mt-0.5 shrink-0 text-xs" :class="dotOriginClass">●</span>
-        <p class="min-w-0 truncate text-[13px] font-medium leading-snug" :class="routeTextClass">
+        <p class="min-w-0 truncate text-xs font-medium leading-snug" :class="routeTextClass">
           {{ originLine }}
         </p>
       </div>
-      <div class="ml-[9px] h-4 w-px shrink-0 bg-white/15" />
-      <div class="flex min-w-0 items-start gap-2.5">
+      <div class="ml-[8px] h-3.5 w-px shrink-0 bg-white/15" />
+      <div class="flex min-w-0 items-start gap-2">
         <span aria-hidden="true" class="mt-0.5 shrink-0 text-xs text-rose-400">●</span>
-        <p class="min-w-0 truncate text-[13px] font-medium leading-snug" :class="routeTextClass">
+        <p class="min-w-0 truncate text-xs font-medium leading-snug" :class="routeTextClass">
           {{ destLine }}
         </p>
       </div>
@@ -73,11 +73,11 @@
 
     <!-- Footer -->
     <div
-      class="mt-4 flex gap-2 px-4 pb-4"
+      class="mt-3 flex gap-2 px-3.5 pb-3.5"
       :class="footerLayoutClass"
     >
       <p
-        class="min-w-0 text-sm text-[#94a3b8]"
+        class="min-w-0 text-xs text-[#94a3b8]"
         :class="cardMode === 'pending' && showPendingActions ? 'w-full' : ''"
       >
         <span v-if="passengerCount > 0">👥 {{ passengerMeta }}</span>
@@ -88,7 +88,7 @@
       <template v-if="cardMode === 'in_progress'">
         <button
           type="button"
-          class="inline-flex min-h-12 items-center justify-center gap-1 rounded-xl bg-[#22c55e] px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-black/25 active:scale-[0.98]"
+          class="inline-flex min-h-[40px] items-center justify-center gap-1 rounded-lg bg-[#22c55e] px-3.5 py-2 text-xs font-bold text-white shadow-md shadow-black/25 active:scale-[0.98] sm:text-sm"
           :class="primaryActionClass"
           data-testid="driver-trip-card-open"
           @click.stop="goDetail"
@@ -99,7 +99,7 @@
       <template v-else-if="cardMode === 'confirmed'">
         <button
           type="button"
-          class="inline-flex min-h-12 items-center justify-center rounded-xl bg-[#22c55e] px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-black/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+          class="inline-flex min-h-[40px] items-center justify-center rounded-lg bg-[#22c55e] px-3.5 py-2 text-xs font-bold text-white shadow-md shadow-black/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
           :class="primaryActionClass"
           :disabled="busy || !canStartAction"
           data-testid="driver-trip-card-start"
@@ -110,10 +110,10 @@
       </template>
       <template v-else-if="cardMode === 'pending'">
         <template v-if="showPendingActions">
-          <div class="grid min-h-[48px] w-full shrink-0 grid-cols-2 gap-2">
+          <div class="grid min-h-[40px] w-full shrink-0 grid-cols-2 gap-2">
             <button
               type="button"
-              class="inline-flex items-center justify-center rounded-xl bg-[#22c55e] px-3 py-2.5 text-sm font-bold text-white shadow-md shadow-black/25 disabled:cursor-not-allowed disabled:opacity-50"
+              class="inline-flex items-center justify-center rounded-lg bg-[#22c55e] px-3 py-2 text-xs font-bold text-white shadow-md shadow-black/25 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
               :disabled="busy || !canConfirmAction"
               data-testid="driver-trip-card-confirm"
               @click.stop="onConfirm"
@@ -122,7 +122,7 @@
             </button>
             <button
               type="button"
-              class="inline-flex items-center justify-center rounded-xl border-2 border-rose-500/70 bg-transparent px-3 py-2.5 text-sm font-bold text-rose-400 transition active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
+              class="inline-flex items-center justify-center rounded-lg border-2 border-rose-500/70 bg-transparent px-3 py-2 text-xs font-bold text-rose-400 transition active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
               :disabled="busy"
               @click.stop="onDecline"
             >
@@ -132,7 +132,7 @@
           <button
             v-if="footerDetailMode === 'collapse'"
             type="button"
-            class="min-h-[44px] w-full text-center text-sm font-semibold text-[#fbbf24]/90 underline-offset-2 hover:underline"
+            class="min-h-[38px] w-full text-center text-xs font-semibold text-[#fbbf24]/90 underline-offset-2 hover:underline"
             data-testid="driver-trip-card-collapse"
             @click.stop="emit('collapse-request')"
           >
@@ -142,7 +142,7 @@
         <button
           v-else
           type="button"
-          class="inline-flex shrink-0 items-center justify-center rounded-xl border-2 border-[#fbbf24] bg-transparent px-4 py-2 text-sm font-bold text-[#fbbf24]"
+          class="inline-flex shrink-0 items-center justify-center rounded-lg border-2 border-[#fbbf24] bg-transparent px-3 py-1.5 text-xs font-bold text-[#fbbf24]"
           data-testid="driver-trip-card-detail"
           @click.stop="onFooterDetailClick"
         >
@@ -150,7 +150,7 @@
         </button>
       </template>
       <template v-else-if="cardMode === 'completed'">
-        <span class="shrink-0 text-sm font-semibold text-[#64748b]">
+        <span class="shrink-0 text-xs font-semibold text-[#64748b]">
           {{ t('driver_home.card_done_label') }}
         </span>
       </template>

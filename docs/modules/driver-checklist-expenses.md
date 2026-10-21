@@ -37,7 +37,7 @@ Dữ liệu nguồn: `data/Dữ liệu tham khảo - Phần mềm Điều vận.
 - Tài xế làm **bất kỳ lúc nào, nhiều phiếu/ngày** (mỗi xe / ca / chuyến). Kỳ (`period_key`: `Y-m-d` hoặc `o-\WW`) tính "đã làm" khi có ≥ 1 phiếu đã nộp.
 - Mục được **snapshot** vào `checklist_submission_items` khi tạo phiếu; sửa template tăng `version`, không đổi lịch sử.
 - Mốc thời gian lấy **giờ server**: `started_at`, `checked_at` từng mục, `submitted_at`. `client_submitted_at` chỉ để đối chiếu.
-- Nộp: mọi mục phải có kết quả; NG bắt buộc ghi chú; NG + `requires_photo_on_ng` bắt buộc ảnh (attachment `checklist_evidence` trên item).
+- Nộp: mọi mục phải có kết quả; NG bắt buộc ghi chú. Ảnh luôn tùy chọn, kể cả mục Critical và phiếu nháp cũ; vẫn có thể thêm attachment `checklist_evidence`. Không còn cấu hình bắt buộc ảnh; trường `requires_photo_on_ng` được giữ để tương thích API cũ và không còn dùng để chặn nộp.
 - Kết luận: có ≥ 1 mục Critical NG → `fail`. **Không chặn chuyến** — gửi `ChecklistCriticalFailedNotification` cho điều phối, banner cảnh báo trên app tài xế.
 - Mục giấy tờ có `auto_source` (`driver_doc:license`, `vehicle_doc:inspection_certificate`…) hiển thị gợi ý theo hạn trong kho chứng từ; tài xế vẫn tự bấm.
 - Mẫu in daily: 7 dòng giấy tờ đầu lấy từ phiếu weekly gần nhất (≤ 14 ngày) hoặc kho chứng từ.

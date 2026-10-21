@@ -26,47 +26,47 @@
             @keydown.space.prevent="onToggle(p._origIndex)"
           >
             <div class="relative shrink-0">
-              <div class="flex h-12 w-12 items-center justify-center rounded-full bg-driver-elevated text-base font-bold text-driver-muted">
+              <div class="flex h-10 w-10 items-center justify-center rounded-full bg-driver-elevated text-sm font-bold text-driver-muted">
                 {{ initials(p.name) }}
               </div>
               <div
-                class="absolute -left-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white text-xs font-bold"
+                class="absolute -left-1 -top-1 flex h-4.5 w-4.5 items-center justify-center rounded-full border-2 border-white text-[11px] font-bold"
                 :class="stateClass(rowState(p._origIndex))"
               >
                 {{ p._origIndex + 1 }}
               </div>
               <div
                 v-if="rowState(p._origIndex) === 'picked_up'"
-                class="driver-pop absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white ring-2 ring-white"
+                class="driver-pop absolute -bottom-0.5 -right-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-emerald-500 text-white ring-2 ring-white"
               >
-                <CheckIcon class="h-3.5 w-3.5" aria-hidden="true" />
+                <CheckIcon class="h-3 w-3" aria-hidden="true" />
               </div>
             </div>
 
             <div class="min-w-0 flex-1">
               <div class="flex flex-wrap items-center gap-1.5">
-                <span class="text-base font-semibold leading-snug text-driver-ink sm:text-lg">{{ p.name }}</span>
+                <span class="text-sm font-semibold leading-snug text-driver-ink sm:text-base">{{ p.name }}</span>
                 <span
                   v-if="isNextIndex(p._origIndex) && canMarkPickup"
-                  class="rounded-md bg-amber-100 px-1.5 py-0.5 text-xs font-bold uppercase text-amber-900 sm:text-sm"
+                  class="rounded-md bg-amber-100 px-1.5 py-0.5 text-[11px] font-bold uppercase text-amber-900 sm:text-xs"
                 >
                   {{ t('driver_trip_detail.tag_next') }}
                 </span>
               </div>
-              <p class="mt-0.5 text-sm leading-snug text-driver-muted sm:text-base">{{ p.subtitle }}</p>
-              <p v-if="p.address" class="mt-1 flex items-start gap-1 text-sm leading-snug text-driver-muted/85 sm:text-base">
-                <MapPinIcon class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              <p class="mt-0.5 text-xs leading-snug text-driver-muted sm:text-sm">{{ p.subtitle }}</p>
+              <p v-if="p.address" class="mt-1 flex items-start gap-1 text-xs leading-snug text-driver-muted/85 sm:text-sm">
+                <MapPinIcon class="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                 {{ p.address }}
               </p>
             </div>
 
             <div class="flex shrink-0 flex-col items-end gap-1">
-              <span class="rounded-full px-2 py-0.5 text-xs font-semibold sm:text-sm" :class="pillClass(rowState(p._origIndex))">
+              <span class="rounded-full px-2 py-0.5 text-[11px] font-semibold sm:text-xs" :class="pillClass(rowState(p._origIndex))">
                 {{ pillText(rowState(p._origIndex)) }}
               </span>
-              <span v-if="p.time" class="text-xs font-semibold tabular-nums text-driver-muted sm:text-sm">{{ p.time }}</span>
+              <span v-if="p.time" class="text-xs font-semibold tabular-nums text-driver-muted">{{ p.time }}</span>
               <ChevronDownIcon
-                class="h-5 w-5 text-driver-muted/60 transition-transform sm:h-4 sm:w-4"
+                class="h-4.5 w-4.5 text-driver-muted/60 transition-transform"
                 :class="expandedStudentIdx === p._origIndex ? 'rotate-180' : ''"
                 aria-hidden="true"
               />
@@ -74,31 +74,31 @@
           </div>
 
           <Transition :css="false" @enter="onRowEnter" @leave="onRowLeave">
-            <div v-if="expandedStudentIdx === p._origIndex" class="flex flex-wrap gap-2 border-t border-white/[0.06] bg-driver-surface/50 px-4 py-3">
+            <div v-if="expandedStudentIdx === p._origIndex" class="flex flex-wrap gap-2 border-t border-white/[0.06] bg-driver-surface/50 px-4 py-2.5">
               <a
                 v-if="p.phone"
                 :href="`tel:${p.phone}`"
-                class="flex min-h-[48px] min-w-[44px] flex-1 basis-[calc(50%-0.25rem)] items-center justify-center gap-2 rounded-xl bg-emerald-500 px-3 py-3 text-base font-bold text-white transition active:scale-[0.97] active:opacity-90 sm:flex-none sm:basis-auto"
+                class="flex min-h-[40px] min-w-[40px] flex-1 basis-[calc(50%-0.25rem)] items-center justify-center gap-1.5 rounded-xl bg-emerald-500 px-3 py-2 text-sm font-bold text-white transition active:scale-[0.97] active:opacity-90 sm:flex-none sm:basis-auto"
                 @click="haptics.tap()"
               >
-                <PhoneIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+                <PhoneIcon class="h-4.5 w-4.5 shrink-0" aria-hidden="true" />
                 {{ t('driver_trip_detail.call') }}
               </a>
               <button
                 v-if="canMarkPickup && rowState(p._origIndex) !== 'picked_up'"
                 type="button"
                 :disabled="eventPosting"
-                class="flex min-h-[48px] min-w-[44px] flex-1 basis-[calc(50%-0.25rem)] items-center justify-center gap-2 rounded-xl bg-[#7fdcc8] px-3 py-3 text-base font-bold text-driver-bg transition active:scale-[0.97] disabled:opacity-50 active:opacity-90 sm:flex-none sm:basis-auto"
+                class="flex min-h-[40px] min-w-[40px] flex-1 basis-[calc(50%-0.25rem)] items-center justify-center gap-1.5 rounded-xl bg-[#7fdcc8] px-3 py-2 text-sm font-bold text-driver-bg transition active:scale-[0.97] disabled:opacity-50 active:opacity-90 sm:flex-none sm:basis-auto"
                 @click.stop="onSetState(p._origIndex, 'picked_up')"
               >
-                <CheckIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+                <CheckIcon class="h-4.5 w-4.5 shrink-0" aria-hidden="true" />
                 {{ t('driver_trip_detail.btn_picked') }}
               </button>
               <button
                 v-if="canMarkPickup && rowState(p._origIndex) !== 'absent'"
                 type="button"
                 :disabled="eventPosting"
-                class="flex min-h-[48px] min-w-[44px] flex-1 basis-full items-center justify-center gap-2 rounded-xl bg-driver-surface px-3 py-3 text-base font-semibold text-driver-muted transition active:scale-[0.98] disabled:opacity-50 active:opacity-90 sm:basis-auto"
+                class="flex min-h-[40px] min-w-[40px] flex-1 basis-full items-center justify-center gap-1.5 rounded-xl bg-driver-surface px-3 py-2 text-sm font-semibold text-driver-muted transition active:scale-[0.98] disabled:opacity-50 active:opacity-90 sm:basis-auto"
                 @click.stop="onSetState(p._origIndex, 'absent')"
               >
                 {{ t('driver_trip_detail.btn_absent') }}
@@ -111,15 +111,15 @@
 
     <p
       v-else
-      class="rounded-2xl border border-dashed border-white/10 bg-driver-surface/70 px-4 py-5 text-center text-base text-driver-muted sm:text-lg"
+      class="rounded-2xl border border-dashed border-white/10 bg-driver-surface/70 px-4 py-4 text-center text-sm text-driver-muted sm:text-base"
     >
       {{ t('driver_trip_detail.no_pax') }}
     </p>
   </template>
 
   <div v-else-if="paxList.length" class="overflow-hidden rounded-2xl bg-driver-card ring-1 ring-white/[0.06]">
-    <div class="px-4 pb-2 pt-3.5">
-      <h2 class="text-base font-semibold text-driver-ink sm:text-lg">
+    <div class="px-4 pb-2 pt-3">
+      <h2 class="text-sm font-semibold text-driver-ink sm:text-base">
         {{
           paxKind === 'cargo'
             ? t('driver_trip_detail.cargo_list_title', { n: paxList.length })
@@ -128,16 +128,16 @@
       </h2>
     </div>
     <ul class="divide-y divide-white/10 px-4 pb-3">
-      <li v-for="(p, i) in paxList" :key="i" class="flex items-start gap-3 py-3">
-        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-driver-elevated text-sm font-bold text-driver-muted">
+      <li v-for="(p, i) in paxList" :key="i" class="flex items-start gap-3 py-2.5">
+        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-driver-elevated text-xs font-bold text-driver-muted">
           {{ initials(p.name) }}
         </div>
         <div class="min-w-0 flex-1">
-          <p class="text-base font-semibold leading-snug text-driver-ink sm:text-lg">{{ p.name }}</p>
-          <p class="mt-0.5 text-sm leading-snug text-driver-muted sm:text-base">{{ p.subtitle }}</p>
+          <p class="text-sm font-semibold leading-snug text-driver-ink sm:text-base">{{ p.name }}</p>
+          <p class="mt-0.5 text-xs leading-snug text-driver-muted sm:text-sm">{{ p.subtitle }}</p>
           <p
             v-if="paxKind === 'cargo' && p.deliverySubtitle"
-            class="mt-0.5 text-sm leading-snug text-driver-muted/90 sm:text-base"
+            class="mt-0.5 text-xs leading-snug text-driver-muted/90 sm:text-sm"
           >
             {{ p.deliverySubtitle }}
           </p>

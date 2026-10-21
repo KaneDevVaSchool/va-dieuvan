@@ -1,15 +1,15 @@
 <template>
   <section
     v-if="visible"
-    class="rounded-[1.25rem] bg-driver-card p-4 ring-1 ring-white/[0.06]"
+    class="rounded-xl bg-driver-card p-3.5 ring-1 ring-white/[0.06]"
     data-testid="driver-checklist-today-card"
   >
     <div class="flex items-center justify-between gap-2">
-      <h2 class="flex items-center gap-2 text-base font-bold">
-        <ClipboardDocumentCheckIcon class="h-5 w-5 text-driver-accent" aria-hidden="true" />
+      <h2 class="flex items-center gap-1.5 text-sm font-bold">
+        <ClipboardDocumentCheckIcon class="h-4.5 w-4.5 text-driver-accent" aria-hidden="true" />
         {{ t('checklist.today_title') }}
       </h2>
-      <RouterLink :to="{ name: 'driverChecklists' }" class="text-sm font-semibold text-driver-accent">
+      <RouterLink :to="{ name: 'driverChecklists' }" class="text-xs font-semibold text-driver-accent">
         {{ t('checklist.see_all') }}
       </RouterLink>
     </div>
@@ -17,29 +17,29 @@
     <div
       v-for="f in failedToday"
       :key="f.submission_id"
-      class="mt-3 flex items-start gap-2 rounded-xl bg-rose-500/15 px-3 py-2.5 text-sm text-rose-100 ring-1 ring-rose-400/30"
+      class="mt-2.5 flex items-start gap-2 rounded-lg bg-rose-500/15 px-3 py-2 text-xs text-rose-100 ring-1 ring-rose-400/30"
       role="alert"
     >
-      <ExclamationTriangleIcon class="mt-0.5 h-5 w-5 shrink-0 text-rose-300" aria-hidden="true" />
+      <ExclamationTriangleIcon class="mt-0.5 h-4 w-4 shrink-0 text-rose-300" aria-hidden="true" />
       <span>{{ t('checklist.failed_banner', { plate: f.license_plate || '—', count: f.critical_ng_count }) }}</span>
     </div>
 
-    <p v-if="loading && !periods.length" class="mt-3 text-sm text-driver-muted">{{ t('checklist.loading') }}</p>
+    <p v-if="loading && !periods.length" class="mt-2.5 text-xs text-driver-muted">{{ t('checklist.loading') }}</p>
 
-    <ul class="mt-3 space-y-2">
+    <ul class="mt-2.5 space-y-1.5">
       <li v-for="p in periods" :key="p.template.id">
         <RouterLink
           :to="p.draft_id ? { name: 'driverChecklistForm', params: { id: p.draft_id } } : { name: 'driverChecklists', query: { start: p.template.id } }"
-          class="flex min-h-[56px] items-center gap-3 rounded-xl bg-driver-surface px-3 py-2.5 ring-1 ring-white/[0.06] transition active:scale-[0.99]"
+          class="flex min-h-[48px] items-center gap-2.5 rounded-lg bg-driver-surface px-3 py-2 ring-1 ring-white/[0.06] transition active:scale-[0.99]"
         >
           <span class="min-w-0 flex-1">
-            <span class="block truncate text-sm font-semibold">{{ t(`checklist.freq_${p.template.frequency}`) }}</span>
-            <span class="block truncate text-xs text-driver-muted">{{ p.period_label }}</span>
+            <span class="block truncate text-xs sm:text-sm font-semibold">{{ t(`checklist.freq_${p.template.frequency}`) }}</span>
+            <span class="block truncate text-[11px] text-driver-muted">{{ p.period_label }}</span>
           </span>
-          <span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-bold" :class="statePill(p.state)">
+          <span class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold" :class="statePill(p.state)">
             {{ t(`checklist.state_${p.state}`) }}
           </span>
-          <ChevronRightIcon class="h-5 w-5 shrink-0 text-driver-muted" aria-hidden="true" />
+          <ChevronRightIcon class="h-4 w-4 shrink-0 text-driver-muted" aria-hidden="true" />
         </RouterLink>
       </li>
     </ul>

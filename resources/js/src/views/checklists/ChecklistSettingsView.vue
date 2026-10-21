@@ -93,7 +93,6 @@
               </td>
               <td class="px-2 py-2 align-top text-xs">
                 <label class="flex items-center gap-1"><input v-model="item.allow_na" type="checkbox" :disabled="!canManage" class="accent-teal-600" />{{ t('checklist.opt_allow_na') }}</label>
-                <label class="flex items-center gap-1"><input v-model="item.requires_photo_on_ng" type="checkbox" :disabled="!canManage" class="accent-teal-600" />{{ t('checklist.opt_photo') }}</label>
                 <label class="flex items-center gap-1"><input v-model="item.is_active" type="checkbox" :disabled="!canManage" class="accent-teal-600" />{{ t('checklist.active') }}</label>
                 <span v-if="item.auto_source" class="mt-1 inline-block rounded bg-sky-50 px-1.5 py-0.5 text-[10px] text-sky-700 dark:bg-sky-900/30 dark:text-sky-300">{{ item.auto_source }}</span>
               </td>
@@ -215,7 +214,6 @@ function itemPayload(item) {
     severity: item.severity,
     ng_action: item.ng_action || null,
     allow_na: !!item.allow_na,
-    requires_photo_on_ng: !!item.requires_photo_on_ng,
     is_active: !!item.is_active,
   }
 }
@@ -230,7 +228,7 @@ function saveItem(tpl, item) {
 
 function addItem(tpl) {
   const last = tpl.items[tpl.items.length - 1]
-  tpl.items.push({ id: null, group_name: last?.group_name || '', title: '', requirement: '', severity: 'critical', ng_action: '', allow_na: false, requires_photo_on_ng: true, is_active: true, auto_source: null })
+  tpl.items.push({ id: null, group_name: last?.group_name || '', title: '', requirement: '', severity: 'critical', ng_action: '', allow_na: false, is_active: true, auto_source: null })
 }
 
 async function removeItem(tpl, item) {

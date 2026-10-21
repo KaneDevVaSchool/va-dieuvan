@@ -11,47 +11,47 @@
     <!-- Card top: comfortable = 2 rows (time+status, then badges); compact = wrapped row -->
     <div
       v-if="comfortable"
-      class="flex flex-col gap-2 px-4 pt-4"
+      class="flex flex-col gap-1.5 px-3.5 pt-3.5"
     >
       <div class="flex min-w-0 items-start justify-between gap-3">
         <div class="min-w-0 shrink text-left">
-          <p class="text-2xl font-bold tabular-nums leading-tight text-white sm:text-3xl">
+          <p class="text-lg font-bold tabular-nums leading-tight text-white sm:text-xl">
             {{ displayPickupTime }}
           </p>
           <p
             v-if="arriveTimeLabel"
-            class="mt-0.5 text-sm font-medium tabular-nums text-[#7fdcc8]"
+            class="mt-0.5 text-xs font-medium tabular-nums text-[#7fdcc8]"
           >
             {{ arriveTimeLabel }}
           </p>
-          <p class="mt-0.5 text-sm tabular-nums text-[#64748b]">
+          <p class="mt-0.5 text-xs tabular-nums text-[#64748b]">
             {{ trip.pickup_date || trip.depart_date || '' }}
           </p>
         </div>
         <span
-          class="max-w-[11rem] shrink-0 rounded-full px-2.5 py-1 text-center text-xs font-semibold leading-snug sm:max-w-none sm:text-sm"
+          class="max-w-[11rem] shrink-0 rounded-full px-2 py-0.5 text-center text-[11px] font-semibold leading-snug sm:max-w-none sm:text-xs"
           :style="{ backgroundColor: statusStyle.bg, color: statusStyle.fg }"
         >
           {{ statusLabel }}
         </span>
       </div>
-      <div class="flex min-w-0 flex-col gap-1">
+      <div class="flex min-w-0 flex-col gap-0.5">
         <div class="flex min-w-0 flex-wrap items-center gap-1.5">
           <span
-            class="inline-flex max-w-full shrink-0 rounded-lg px-2 py-0.5 text-xs font-bold uppercase tracking-wide sm:text-sm"
+            class="inline-flex max-w-full shrink-0 rounded-md px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide sm:text-xs"
             :style="typeBadgeStyle"
           >
             {{ typeLabel }}
           </span>
           <span
             v-if="trip.is_urgent"
-            class="inline-flex shrink-0 rounded-lg bg-rose-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-rose-300 sm:text-xs"
+            class="inline-flex shrink-0 rounded-md bg-rose-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-rose-300"
           >
             {{ t('trip_history_page.urgent_badge') }}
           </span>
         </div>
         <p
-          class="min-w-0 break-all text-sm font-semibold text-[#7fdcc8] sm:truncate sm:text-base"
+          class="min-w-0 break-all text-xs font-semibold text-[#7fdcc8] sm:truncate sm:text-sm"
           :title="tripCode"
         >
           {{ tripCode }}
@@ -101,19 +101,19 @@
     <div class="border-t border-white/[0.05]" :class="comfortable ? 'mx-4 mt-3' : 'mx-3 mt-2.5'" />
 
     <!-- Origin / Destination -->
-    <div :class="comfortable ? 'px-4 pt-3' : 'px-3 pt-2.5'">
-      <div class="flex min-w-0 items-start gap-2.5">
+    <div :class="comfortable ? 'px-3.5 pt-2.5' : 'px-3 pt-2'">
+      <div class="flex min-w-0 items-start gap-2">
         <span aria-hidden="true" class="mt-1 shrink-0 text-xs text-emerald-400">●</span>
         <div class="min-w-0 flex-1">
           <p
             v-if="comfortable"
-            class="text-xs font-semibold uppercase tracking-wide text-emerald-400/80"
+            class="text-[11px] font-semibold uppercase tracking-wide text-emerald-400/80"
           >
             {{ t('driver_trip_detail.point_start') }}
           </p>
           <p
             class="min-w-0 font-medium text-white"
-            :class="comfortable ? 'line-clamp-2 text-lg leading-snug' : 'truncate text-[13px]'"
+            :class="comfortable ? 'line-clamp-2 text-xs sm:text-sm leading-snug' : 'truncate text-xs'"
           >
             {{ trip.pickup_location || trip.origin || '—' }}
           </p>
@@ -121,21 +121,21 @@
       </div>
       <!-- Connector line -->
       <div
-        class="ml-[9px] border-l border-dashed border-white/[0.12]"
-        :class="comfortable ? 'h-5' : 'h-3'"
+        class="ml-[8px] border-l border-dashed border-white/[0.12]"
+        :class="comfortable ? 'h-3.5' : 'h-2.5'"
       />
-      <div class="flex min-w-0 items-start gap-2.5">
+      <div class="flex min-w-0 items-start gap-2">
         <span aria-hidden="true" class="mt-1 shrink-0 text-xs text-blue-400">●</span>
         <div class="min-w-0 flex-1">
           <p
             v-if="comfortable"
-            class="text-xs font-semibold uppercase tracking-wide text-blue-400/80"
+            class="text-[11px] font-semibold uppercase tracking-wide text-blue-400/80"
           >
             {{ t('driver_trip_detail.point_end') }}
           </p>
           <p
             class="min-w-0 font-medium text-white"
-            :class="comfortable ? 'line-clamp-2 text-lg leading-snug' : 'truncate text-[13px]'"
+            :class="comfortable ? 'line-clamp-2 text-xs sm:text-sm leading-snug' : 'truncate text-xs'"
           >
             {{ trip.dropoff_location || trip.destination || '—' }}
           </p>
@@ -146,22 +146,22 @@
     <!-- Extra details (comfortable) -->
     <div
       v-if="comfortable && (notesPreview || scheduleLegCount > 1)"
-      class="space-y-1 px-4 pt-2"
+      class="space-y-1 px-3.5 pt-1.5"
     >
-      <p v-if="scheduleLegCount > 1" class="text-sm font-medium text-[#94a3b8]">
+      <p v-if="scheduleLegCount > 1" class="text-xs font-medium text-[#94a3b8]">
         {{ t('trip_history_page.schedule_legs', { n: scheduleLegCount }) }}
       </p>
-      <p v-if="notesPreview" class="line-clamp-2 text-sm italic text-[#64748b]">
+      <p v-if="notesPreview" class="line-clamp-2 text-xs italic text-[#64748b]">
         {{ notesPreview }}
       </p>
     </div>
 
     <!-- Footer: passengers + km + chevron -->
     <div
-      class="flex items-center justify-between pt-2"
-      :class="comfortable ? 'px-4 pb-4 pt-3' : 'px-3 pb-3'"
+      class="flex items-center justify-between pt-1.5"
+      :class="comfortable ? 'px-3.5 pb-3.5 pt-2' : 'px-3 pb-2.5'"
     >
-      <p :class="comfortable ? 'text-base font-semibold text-[#cbd5e1]' : 'text-xs text-[#94a3b8]'">
+      <p :class="comfortable ? 'text-xs sm:text-sm font-semibold text-[#cbd5e1]' : 'text-[11px] text-[#94a3b8]'">
         <template v-if="passengerCount > 0">
           <span>👥 {{ passengerCount }} {{ passengerLabel }}</span>
           <span v-if="kmPart"> · {{ kmPart }}</span>
@@ -174,7 +174,7 @@
       </p>
       <span
         class="font-light leading-none text-[#7fdcc8]"
-        :class="comfortable ? 'text-3xl' : 'text-lg'"
+        :class="comfortable ? 'text-xl' : 'text-base'"
         aria-hidden="true"
       >›</span>
     </div>

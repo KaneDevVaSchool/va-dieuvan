@@ -30,11 +30,13 @@ class ChecklistSettingsTest extends TestCase
             'title' => 'Kính chắn gió',
             'severity' => 'critical',
             'ng_action' => 'Không khởi hành',
-        ])->assertCreated();
+            'requires_photo_on_ng' => true,
+        ])->assertCreated()->assertJsonPath('data.requires_photo_on_ng', false);
         $this->assertSame($version + 1, $template->fresh()->version);
 
-        $this->patchJson("/api/checklist-settings/templates/{$template->id}/items/{$item->json('data.id')}", ['is_active' => false])
+        $this->patchJson("/api/checklist-settings/templates/{$template->id}/items/{$item->json('data.id')}", ['is_active' => false, 'requires_photo_on_ng' => true])
             ->assertOk()
+            ->assertJsonPath('data.requires_photo_on_ng', false)
             ->assertJsonPath('data.is_active', false);
 
         $slot = $this->postJson('/api/checklist-settings/slots', [

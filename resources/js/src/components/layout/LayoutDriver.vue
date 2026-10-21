@@ -1,13 +1,13 @@
 <template>
   <div
     ref="shellRef"
-    class="driver-pwa-shell flex h-dvh min-h-0 w-full flex-col overflow-hidden bg-[#020B0B] text-[#eaf8f5] [--driver-bottom-nav-height:3.5rem]"
+    class="driver-pwa-shell flex h-dvh min-h-0 w-full flex-col overflow-hidden bg-[#020B0B] text-[#eaf8f5] [--driver-bottom-nav-height:3.875rem]"
   >
     <AppOpenInPwaBanner />
     <ImpersonationBanner class="mx-auto w-full max-w-2xl" />
     <main
       id="app-main-scroll"
-      class="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain pb-[calc(var(--driver-bottom-nav-height,3.5rem)+env(safe-area-inset-bottom))] scrollbar-hidden"
+      class="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain pb-[calc(var(--driver-bottom-nav-height,3.875rem)+env(safe-area-inset-bottom))] scrollbar-hidden"
     >
       <div class="mx-auto min-h-full w-full max-w-2xl">
         <slot />

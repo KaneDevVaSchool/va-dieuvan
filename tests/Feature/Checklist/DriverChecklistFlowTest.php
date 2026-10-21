@@ -3,6 +3,7 @@
 namespace Tests\Feature\Checklist;
 
 use App\Models\ChecklistSubmission;
+use App\Models\ChecklistSubmissionItem;
 use App\Models\ChecklistTemplate;
 use App\Models\Driver;
 use App\Models\User;
@@ -95,6 +96,9 @@ class DriverChecklistFlowTest extends TestCase
         $id = $data['id'];
         $items = collect($data['items']);
         $brake = $items->firstWhere('title', 'Phanh');
+        $this->assertFalse($brake['requires_photo_on_ng']);
+        // A draft created before the policy change must also allow submitting without photos.
+        ChecklistSubmissionItem::findOrFail($brake['id'])->update(['requires_photo_on_ng' => true]);
 
         // Nộp khi chưa tick đủ → 422.
         $this->postJson("/api/driver/checklists/{$id}/submit", ['lock_version' => $data['lock_version'], 'confirm' => true])
@@ -109,14 +113,11 @@ class DriverChecklistFlowTest extends TestCase
         // Lock version cũ → 409.
         $this->patchJson("/api/driver/checklists/{$id}", ['lock_version' => $data['lock_version'], 'note' => 'x'])->assertStatus(409);
 
-        // NG critical thiếu ghi chú + ảnh.
+        // NG vẫn bắt buộc ghi chú; ảnh không còn là điều kiện nộp.
         $res = $this->postJson("/api/driver/checklists/{$id}/submit", ['lock_version' => $lock, 'confirm' => true]);
         $res->assertStatus(422);
-        $res->assertJsonValidationErrors(["items.{$brake['id']}.note", "items.{$brake['id']}.photo"]);
-
-        $this->post("/api/driver/checklists/{$id}/items/{$brake['id']}/evidence", [
-            'file' => UploadedFile::fake()->image('phanh.jpg'),
-        ], ['Accept' => 'application/json'])->assertCreated();
+        $res->assertJsonValidationErrors(["items.{$brake['id']}.note"]);
+        $res->assertJsonMissingValidationErrors(["items.{$brake['id']}.photo"]);
 
         $submit = $this->postJson("/api/driver/checklists/{$id}/submit", [
             'lock_version' => $lock,
@@ -127,6 +128,9 @@ class DriverChecklistFlowTest extends TestCase
         $submit->assertJsonPath('data.status', 'submitted');
         $submit->assertJsonPath('data.result', 'fail');
         $submit->assertJsonPath('data.critical_ng_count', 1);
+        $submittedBrake = collect($submit->json('data.items'))->firstWhere('id', $brake['id']);
+        $this->assertSame([], $submittedBrake['attachments']);
+        $this->assertFalse($submittedBrake['requires_photo_on_ng']);
         $this->assertNotNull($submit->json('data.submitted_at'));
 
         Notification::assertSentTo($this->dispatcher, ChecklistCriticalFailedNotification::class);
@@ -141,6 +145,40 @@ class DriverChecklistFlowTest extends TestCase
         $this->assertSame('51B-12345', $overview->json('data.failed_today.0.license_plate'));
 
         $this->get("/api/driver/checklists/{$id}/pdf")->assertOk()->assertHeader('content-type', 'application/pdf');
+    }
+
+    public function test_optional_photo_can_still_be_uploaded_to_a_draft(): void
+    {
+        $data = $this->start();
+        $item = $data['items'][0];
+        $this->post("/api/driver/checklists/{$data['id']}/items/{$item['id']}/evidence", [
+            'file' => UploadedFile::fake()->image('optional.jpg'),
+        ], ['Accept' => 'application/json'])->assertCreated();
+        $detail = $this->getJson("/api/driver/checklists/{$data['id']}")->assertOk();
+        $saved = collect($detail->json('data.items'))->firstWhere('id', $item['id']);
+        $this->assertCount(1, $saved['attachments']);
+        $this->assertFalse($saved['requires_photo_on_ng']);
+    }
+
+    public function test_weekly_legacy_draft_accepts_ng_with_note_without_photo(): void
+    {
+        Notification::fake();
+        $weekly = ChecklistTemplate::where('code', ChecklistTemplate::CODE_WEEKLY)->firstOrFail();
+        $weekly->items()->update(['requires_photo_on_ng' => true]);
+        $data = $this->actingAs($this->driverUser)->postJson('/api/driver/checklists', [
+            'template_id' => $weekly->id, 'vehicle_id' => $this->vehicle->id,
+        ])->assertCreated()->json('data');
+        $critical = collect($data['items'])->firstWhere('severity', 'critical');
+        $this->assertFalse($critical['requires_photo_on_ng']);
+        ChecklistSubmissionItem::where('submission_id', $data['id'])->update(['requires_photo_on_ng' => true]);
+        $items = collect($data['items'])->map(fn ($item) => [
+            'id' => $item['id'],
+            'result' => $item['id'] === $critical['id'] ? 'ng' : 'ok',
+            'note' => $item['id'] === $critical['id'] ? 'Đã báo điều vận kiểm tra lại giấy tờ.' : null,
+        ])->all();
+        $this->postJson("/api/driver/checklists/{$data['id']}/submit", [
+            'lock_version' => 0, 'confirm' => true, 'items' => $items,
+        ])->assertOk()->assertJsonPath('data.status', 'submitted')->assertJsonPath('data.result', 'fail');
     }
 
     public function test_dispatcher_sees_list_compliance_and_can_review(): void

@@ -1,10 +1,10 @@
 <template>
   <div
-    class="rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[#0f2318] p-3"
+    class="rounded-xl border border-[rgba(255,255,255,0.06)] bg-[#0f2318] p-2.5"
     @touchstart.passive="onTouchStart"
     @touchend.passive="onTouchEnd"
   >
-    <p class="mb-3 px-1 text-sm font-bold uppercase tracking-wider text-[#7fdcc8] sm:text-base">
+    <p class="mb-2 px-1 text-xs font-bold uppercase tracking-wider text-[#7fdcc8]">
       {{ t('trip_history_page.week_calendar_title') }}
     </p>
     <div class="grid grid-cols-7 gap-1">
@@ -12,25 +12,25 @@
         v-for="day in weekDays"
         :key="day.iso"
         type="button"
-        class="flex min-h-[76px] min-w-0 w-full flex-col items-center gap-1.5 rounded-lg py-2 transition hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#7fdcc8] active:scale-[0.96]"
+        class="flex min-h-[62px] min-w-0 w-full flex-col items-center gap-1 rounded-lg py-1.5 transition hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#7fdcc8] active:scale-[0.96]"
         :aria-pressed="isSelected(day.iso)"
         :aria-current="day.isToday ? 'date' : undefined"
         @click="selectDay(day)"
       >
         <span
-          class="text-xs font-bold uppercase leading-none tracking-wide sm:text-sm"
+          class="text-[11px] font-bold uppercase leading-none tracking-wide"
           :class="dayAbbrevClass(day)"
         >
           {{ day.abbr }}
         </span>
         <div
-          class="relative flex aspect-square w-full max-w-10 shrink-0 items-center justify-center rounded-full text-base font-bold tabular-nums transition-colors sm:max-w-12 sm:text-lg"
+          class="relative flex aspect-square w-full max-w-8.5 shrink-0 items-center justify-center rounded-full text-sm font-bold tabular-nums transition-colors sm:max-w-9.5 sm:text-base"
           :class="dayCircleClass(day)"
         >
           {{ day.dayNum }}
           <span
             v-if="hasTripDot(day.iso)"
-            class="absolute bottom-1 h-1 w-1 rounded-full sm:bottom-1.5"
+            class="absolute bottom-1 h-1 w-1 rounded-full sm:bottom-1"
             :class="isSelected(day.iso) ? 'bg-[#09180f]' : 'bg-[#7fdcc8]'"
             aria-hidden="true"
           />

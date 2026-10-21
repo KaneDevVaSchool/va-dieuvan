@@ -75,9 +75,6 @@
           {{ uploading ? t('checklist.photo_uploading') : t('checklist.photo_add') }}
           <input type="file" accept="image/*" capture="environment" class="sr-only" :disabled="uploading" @change="onFile" />
         </label>
-        <span v-if="item.requires_photo_on_ng && !item.attachments?.length" class="text-xs text-amber-200">
-          {{ t('checklist.ng_photo_required') }}
-        </span>
       </div>
     </div>
     <p v-else-if="item.note && !editable" class="mt-2 text-xs text-driver-muted">{{ item.note }}</p>

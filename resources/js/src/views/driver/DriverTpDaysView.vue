@@ -2,38 +2,38 @@
   <div class="mx-auto min-h-full w-full max-w-[430px] overflow-x-hidden bg-driver-bg pb-4 text-driver-ink sm:max-w-2xl">
     <!-- Header -->
     <header
-      class="sticky top-0 z-[25] flex items-center gap-3 border-b border-white/5 bg-driver-bg/90 px-4 py-3 backdrop-blur-md [-webkit-backdrop-filter:blur(12px)]"
-      style="padding-top: max(0.75rem, env(safe-area-inset-top))"
+      class="sticky top-0 z-[25] flex items-center gap-2.5 border-b border-white/5 bg-driver-bg/90 px-3.5 py-2.5 backdrop-blur-md [-webkit-backdrop-filter:blur(12px)]"
+      style="padding-top: max(0.5rem, env(safe-area-inset-top))"
     >
-      <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-driver-accent/15">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 text-driver-accent" aria-hidden="true">
+      <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-driver-accent/15">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4.5 w-4.5 text-driver-accent" aria-hidden="true">
           <path fill-rule="evenodd" d="M4 4a2 2 0 0 1 2-2h4.586A2 2 0 0 1 12 2.586L15.414 6A2 2 0 0 1 16 7.414V16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4Zm2 6a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H7a1 1 0 0 1-1-1Zm1 3a1 1 0 1 0 0 2h4a1 1 0 1 0 0-2H7Z" clip-rule="evenodd" />
         </svg>
       </div>
       <div class="min-w-0 flex-1">
-        <h1 class="truncate text-base font-bold leading-tight tracking-tight">{{ t('nav.driver_tp_days') }}</h1>
-        <p class="truncate text-[11px] leading-tight text-driver-muted">{{ t('driver_tp_days.subtitle') }}</p>
+        <h1 class="truncate text-sm font-bold leading-tight tracking-tight">{{ t('nav.driver_tp_days') }}</h1>
+        <p class="truncate text-[10px] leading-tight text-driver-muted">{{ t('driver_tp_days.subtitle') }}</p>
       </div>
       <span
         v-if="!online"
-        class="shrink-0 rounded-full bg-amber-500/20 px-2.5 py-1 text-[11px] font-semibold text-amber-300"
+        class="shrink-0 rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-semibold text-amber-300"
       >
         Ngoại tuyến
       </span>
     </header>
 
-    <div class="px-3 pt-4">
+    <div class="px-3 pt-3">
       <!-- Week calendar -->
       <WeekCalendar v-model="selectedDate" :trip-dates="weekTripDateKeys" />
 
       <!-- Day title bar -->
-      <div class="mt-5 mb-4 flex items-center justify-between gap-3 px-1">
-        <p class="min-w-0 truncate text-base font-bold tracking-tight text-driver-ink">
+      <div class="mt-3.5 mb-2.5 flex items-center justify-between gap-3 px-1">
+        <p class="min-w-0 truncate text-sm font-bold tracking-tight text-driver-ink">
           {{ dayTitle }}
         </p>
         <span
           v-if="visibleDays.length"
-          class="shrink-0 rounded-full bg-driver-elevated px-3 py-1 text-xs font-bold tabular-nums text-driver-accent ring-1 ring-driver-accent/20"
+          class="shrink-0 rounded-full bg-driver-elevated px-2.5 py-0.5 text-[11px] font-bold tabular-nums text-driver-accent ring-1 ring-driver-accent/20"
         >
           {{ visibleDays.length }}
         </span>
@@ -113,12 +113,12 @@
             <div class="h-0.5 w-full" :class="shiftStripClass(d)" />
 
             <!-- Card body -->
-            <div class="px-4 pb-0 pt-3.5">
+            <div class="px-3.5 pb-0 pt-2.5">
               <!-- Row 1: shift badge + status chip -->
-              <div class="mb-2.5 flex items-center justify-between gap-2">
+              <div class="mb-2 flex items-center justify-between gap-2">
                 <!-- Shift badge with icon -->
                 <span
-                  class="flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1 text-[11px] font-bold uppercase tracking-wide"
+                  class="flex shrink-0 items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide"
                   :class="shiftBadgeClass(d)"
                 >
                   <!-- Morning: sun -->
@@ -127,7 +127,7 @@
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
                     fill="currentColor"
-                    class="h-3.5 w-3.5"
+                    class="h-3 w-3"
                     aria-hidden="true"
                   >
                     <path d="M10 2a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 2ZM10 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 15ZM10 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM15.657 5.404a.75.75 0 1 0-1.06-1.06l-1.061 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM6.464 14.596a.75.75 0 1 0-1.06-1.06l-1.06 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM18 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 18 10ZM5 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 5 10ZM14.596 15.657a.75.75 0 0 0 1.06-1.06l-1.06-1.061a.75.75 0 1 0-1.06 1.06l1.06 1.06ZM5.404 6.464a.75.75 0 0 0 1.06-1.06l-1.06-1.06a.75.75 0 1 0-1.06 1.06l1.06 1.06Z" />
@@ -138,7 +138,7 @@
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
                     fill="currentColor"
-                    class="h-3.5 w-3.5"
+                    class="h-3 w-3"
                     aria-hidden="true"
                   >
                     <path fill-rule="evenodd" d="M7.455 2.004a.75.75 0 0 1 .26.77 7 7 0 0 0 9.958 7.967.75.75 0 0 1 1.067.853A8.5 8.5 0 1 1 6.647 1.921a.75.75 0 0 1 .808.083Z" clip-rule="evenodd" />
@@ -148,7 +148,7 @@
 
                 <!-- Status chip -->
                 <span
-                  class="shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-bold"
+                  class="shrink-0 rounded-md px-2 py-0.5 text-[10.5px] font-bold"
                   :class="statusChipClass(d)"
                 >
                   {{ statusLabel(d) }}
@@ -156,21 +156,21 @@
               </div>
 
               <!-- Program name -->
-              <p class="truncate text-base font-bold leading-snug text-white">
+              <p class="truncate text-sm font-bold leading-snug text-white">
                 {{ d.program_name }}
               </p>
 
               <!-- Meta row: arrival time + student count -->
-              <div class="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5">
-                <span v-if="d.arrival_time" class="flex items-center gap-1.5 text-[13px] text-driver-muted">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="h-3.5 w-3.5 shrink-0 text-driver-accent/50" aria-hidden="true">
+              <div class="mt-2 flex flex-wrap items-center gap-x-3.5 gap-y-1">
+                <span v-if="d.arrival_time" class="flex items-center gap-1.5 text-xs text-driver-muted">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="h-3 w-3 shrink-0 text-driver-accent/50" aria-hidden="true">
                     <path fill-rule="evenodd" d="M1 8a7 7 0 1 1 14 0A7 7 0 0 1 1 8Zm7.75-4.25a.75.75 0 0 0-1.5 0V8c0 .414.336.75.75.75h3.25a.75.75 0 0 0 0-1.5h-2.5v-3.5Z" clip-rule="evenodd" />
                   </svg>
                   Đến {{ d.arrival_time }}
                 </span>
 
-                <span class="flex items-center gap-1.5 text-[13px] text-driver-muted">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="h-3.5 w-3.5 shrink-0 text-driver-accent/50" aria-hidden="true">
+                <span class="flex items-center gap-1.5 text-xs text-driver-muted">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="h-3 w-3 shrink-0 text-driver-accent/50" aria-hidden="true">
                     <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM12.735 14c.618 0 1.093-.561.872-1.139a6.002 6.002 0 0 0-11.215 0c-.22.578.254 1.139.872 1.139h9.47Z" />
                   </svg>
                   {{ d.expected_count }} học sinh
@@ -179,9 +179,9 @@
             </div>
 
             <!-- Footer tap indicator -->
-            <div class="mt-3 flex items-center justify-end gap-1.5 border-t border-white/[0.05] px-4 py-2.5">
-              <span class="text-[11px] text-driver-muted/70">Xem điểm danh</span>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="h-3.5 w-3.5 shrink-0 text-driver-accent/35" aria-hidden="true">
+            <div class="mt-2.5 flex items-center justify-end gap-1 border-t border-white/[0.05] px-3.5 py-1.5">
+              <span class="text-[10.5px] text-driver-muted/70">Xem điểm danh</span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="h-3 w-3 shrink-0 text-driver-accent/35" aria-hidden="true">
                 <path fill-rule="evenodd" d="M6.22 4.22a.75.75 0 0 1 1.06 0l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 0 1-1.06-1.06L9.19 8 6.22 5.03a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
               </svg>
             </div>

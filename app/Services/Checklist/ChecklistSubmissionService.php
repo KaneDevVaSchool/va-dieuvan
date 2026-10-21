@@ -92,7 +92,7 @@ class ChecklistSubmissionService
                     'severity' => $item->severity,
                     'ng_action' => $item->ng_action,
                     'allow_na' => $item->allow_na,
-                    'requires_photo_on_ng' => $item->requires_photo_on_ng,
+                    'requires_photo_on_ng' => false,
                     'sort_order' => $item->sort_order,
                     'prefill_hint' => $hints[$item->id] ?? null,
                 ]);
@@ -138,7 +138,7 @@ class ChecklistSubmissionService
     }
 
     /**
-     * Nộp phiếu: kiểm tra đủ mục, NG có ghi chú / ảnh, tính kết luận, chốt giờ nộp server.
+     * Nộp phiếu: kiểm tra đủ mục, NG có ghi chú, tính kết luận, chốt giờ nộp server. Ảnh luôn tùy chọn.
      *
      * @param  array<string, mixed>  $data
      */
@@ -376,9 +376,6 @@ class ChecklistSubmissionService
             }
             if (trim((string) $item->note) === '') {
                 $errors[$key.'.note'] = "Mục \"{$item->title}\" không đạt — vui lòng ghi rõ lý do / phương án.";
-            }
-            if ($item->requires_photo_on_ng && (int) ($item->attachments_count ?? 0) === 0) {
-                $errors[$key.'.photo'] = "Mục \"{$item->title}\" không đạt — cần chụp ảnh minh chứng.";
             }
         }
 

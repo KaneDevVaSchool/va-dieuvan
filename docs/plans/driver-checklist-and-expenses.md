@@ -70,7 +70,7 @@ Tiền tố:
 - `code` (unique: `daily_safety`, `weekly_compliance`), `name`, `frequency` enum(`daily`,`weekly`), `version` (uint), `is_active`, `form_meta` json (kí hiệu, ngày hiệu lực, ngày ban hành, lần ban hành, lời xác nhận), timestamps, softDeletes.
 
 **`checklist_template_items`**
-- `template_id` FK cascade, `group_name`, `sort_order`, `title`, `requirement`, `severity` enum(`critical`,`non_critical`), `ng_action`, `allow_na` bool (các mục "nếu có / nếu áp dụng"), `requires_photo_on_ng` bool (mặc định = critical), `auto_source` nullable (vd `driver_doc:license`, `vehicle_doc:inspection`, `vehicle_doc:insurance_tnds`), `is_active`, timestamps.
+- `template_id` FK cascade, `group_name`, `sort_order`, `title`, `requirement`, `severity` enum(`critical`,`non_critical`), `ng_action`, `allow_na` bool (các mục "nếu có / nếu áp dụng"), `requires_photo_on_ng` bool (giữ tương thích API cũ, luôn false; ảnh tùy chọn), `auto_source` nullable (vd `driver_doc:license`, `vehicle_doc:inspection`, `vehicle_doc:insurance_tnds`), `is_active`, timestamps.
 - Index `(template_id, is_active, sort_order)`.
 
 **`checklist_reminder_slots`**
@@ -109,7 +109,7 @@ Tiền tố:
 | `ChecklistTemplateService` | CRUD template/mục; sửa mục → tăng `version`; audit `checklist_template.*` |
 | `ChecklistReminderSlotService` | CRUD khung giờ; audit |
 | `ChecklistPrefillService` | Điền `trip_info` từ trip/TP day trong ngày của tài xế + xe; gợi ý kết quả cho mục có `auto_source` từ `DriverComplianceDocument`/`VehicleComplianceDocument` (hết hạn → gợi ý NG). Tài xế vẫn phải bấm xác nhận. |
-| `ChecklistSubmissionService` | `start()` (sinh mã, snapshot mục, prefill), `saveItems()` (optimistic lock, ghi `checked_at` server), `submit()` (validate đủ mục, NG phải có ghi chú, NG critical phải có ảnh; tính `result`; set `submitted_at = now()`), `review()`. Tất cả trong `DB::transaction` + `AuditLogger` (`checklist.started`, `checklist.submitted`, `checklist.critical_ng`, `checklist.reviewed`). |
+| `ChecklistSubmissionService` | `start()` (sinh mã, snapshot mục, prefill), `saveItems()` (optimistic lock, ghi `checked_at` server), `submit()` (validate đủ mục, NG phải có ghi chú, ảnh luôn tùy chọn; tính `result`; set `submitted_at = now()`), `review()`. Tất cả trong `DB::transaction` + `AuditLogger` (`checklist.started`, `checklist.submitted`, `checklist.critical_ng`, `checklist.reviewed`). |
 | `ChecklistResultCalculator` | Hàm thuần: có mục critical NG → `fail`; tách riêng để unit test. |
 | `ChecklistComplianceQuery` | Dashboard: tài xế × kỳ (đã làm / chưa / NG), eager load, lọc theo ngày/tuần/xe/tài xế. |
 | `ChecklistDailyPdfPresenter` | Chuẩn dữ liệu cho mẫu in "Phiếu kiểm tra an toàn xe (Daily)" (35 dòng; dòng 1–7 lấy từ weekly gần nhất + hạn giấy tờ). |
@@ -157,7 +157,7 @@ CRUD   /checklist-templates, /checklist-templates/{t}/items, /checklist-reminder
 - `views/driver/DriverChecklistsView.vue`: 2 thẻ Daily / Weekly (trạng thái kỳ), nút "Làm checklist", lịch sử.
 - `views/driver/DriverChecklistFormView.vue`:
   - Header: chọn xe (`/driver/cost-vehicles`), gắn chuyến (tùy chọn), thông tin chuyến đã prefill (sửa được).
-  - Mục gom theo nhóm (accordion), nút lớn **OK / NG / N/A**; NG → hiện "Hành động khi NG", bắt buộc ghi chú; critical → bắt buộc chụp ảnh.
+  - Mục gom theo nhóm (accordion), nút lớn **OK / NG / N/A**; NG → hiện "Hành động khi NG", bắt buộc ghi chú; ảnh luôn tùy chọn cho mọi mức độ và phiếu nháp cũ.
   - Thanh tiến độ cố định, tự lưu nháp (debounce), nộp kèm tick lời xác nhận.
   - Kết quả sau khi nộp: ĐẠT / KHÔNG ĐẠT + danh sách mục NG và hành động.
 - `components/driver/checklist/*`: `ChecklistItemRow`, `ChecklistGroupSection`, `ChecklistProgressBar`, `ChecklistResultCard`, `DriverChecklistTodayCard` (gắn vào `DriverDashboard`).
@@ -299,7 +299,7 @@ GET/PUT /expense-form-settings                              # expense.manage
 - `VietnameseMoneyWordsTest`, `DocumentCodeGeneratorTest`, `ChecklistResultCalculatorTest`.
 
 **PHPUnit — Feature**
-- Checklist: tài xế tạo/nộp; NG thiếu ghi chú/ảnh bị từ chối; critical NG → notification điều phối; nhiều phiếu/ngày; tài xế không xem phiếu người khác; command nhắc chỉ gửi người chưa làm, không gửi trùng, đúng thứ trong tuần; feature toggle tắt → 404/403.
+- Checklist: tài xế tạo/nộp; NG thiếu ghi chú bị từ chối, ảnh tùy chọn; critical NG → notification điều phối; nhiều phiếu/ngày; tài xế không xem phiếu người khác; command nhắc chỉ gửi người chưa làm, không gửi trùng, đúng thứ trong tuần; feature toggle tắt → 404/403.
 - Expense: sinh mã `DX-YYMMDD-n` tăng dần và reset qua ngày; tạo TT từ trip_costs; 1 trip_cost không vào 2 hồ sơ; BK gom đúng dòng không hóa đơn; submitted không sửa được; paid khóa hồ sơ + trip_costs (mở rộng `FinancialLockTest`); PDF/XLSX trả 200 đúng content-type; quyền `expense.manage`.
 
 **Playwright E2E** (`tests/e2e/`)

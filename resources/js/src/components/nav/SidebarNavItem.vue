@@ -101,6 +101,14 @@ const statusPillClass = computed(() => {
 
 const iconClass = computed(() => {
   if (props.variant === 'bottom') {
+    if (props.driverBottomNav) {
+      return [
+        'h-6 w-6 shrink-0 transition-all duration-200 ease-out',
+        isActive.value
+          ? 'scale-110 text-[#7fdcc8] drop-shadow-[0_0_8px_rgba(127,220,200,0.6)]'
+          : 'text-slate-400 opacity-80 group-hover:text-slate-200',
+      ].join(' ')
+    }
     return [
       'h-6 w-6 shrink-0 text-current opacity-90 transition-transform duration-200 ease-out',
       isActive.value ? '-translate-y-0.5 scale-110' : '',
@@ -117,6 +125,12 @@ const iconClass = computed(() => {
 
 const labelClass = computed(() => {
   if (props.variant === 'bottom') {
+    if (props.driverBottomNav) {
+      return [
+        'line-clamp-2 min-w-0 max-w-full text-center text-[10px] leading-tight transition-colors',
+        isActive.value ? 'font-bold text-[#7fdcc8]' : 'font-medium text-slate-400 group-hover:text-slate-200',
+      ].join(' ')
+    }
     return 'line-clamp-2 min-w-0 max-w-full text-center text-[10px] font-medium leading-tight'
   }
   if (props.variant === 'horizontal') {
@@ -171,18 +185,17 @@ const linkClass = computed(() => {
   if (v === 'bottom') {
     if (props.driverBottomNav) {
       const base = [
-        'relative flex min-h-[3.25rem] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 border-t-2 border-transparent px-0.5 py-1 transition-colors',
-        'text-[#7fdcc8]/65',
+        'group relative flex min-h-[3.875rem] min-w-0 flex-1 flex-col items-center justify-center gap-1 px-0.5 pt-2 pb-3 transition-colors',
       ]
       if (isActive.value) {
-        base.push('border-[#7fdcc8] bg-[#7fdcc8]/12 font-semibold text-[#7fdcc8]')
+        base.push('text-[#7fdcc8]')
       } else {
-        base.push('active:bg-white/5')
+        base.push('text-slate-400 active:bg-white/5')
       }
       return base.join(' ')
     }
     const base = [
-      'relative flex min-h-[3.25rem] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 border-t-2 border-transparent px-0.5 py-1 transition-colors',
+      'relative flex min-h-[3.875rem] min-w-0 flex-1 flex-col items-center justify-center gap-1 border-t-2 border-transparent px-0.5 pt-2 pb-3 transition-colors',
       'text-slate-600 dark:text-slate-300',
     ]
     if (isActive.value) {
