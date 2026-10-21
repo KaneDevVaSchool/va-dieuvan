@@ -7,7 +7,7 @@
       aria-modal="true"
       :aria-label="t('tp_attendance_page.notify_title')"
     >
-      <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px]" @click="$emit('close')" />
+      <div class="absolute inset-0 bg-slate-900/40" @click="$emit('close')" />
       <div
         class="relative flex h-full w-full max-w-lg flex-col border-l border-slate-200 bg-white shadow-2xl"
       >

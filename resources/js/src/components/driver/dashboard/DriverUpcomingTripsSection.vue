@@ -1,5 +1,5 @@
 <template>
-  <section class="space-y-2 pb-2 pt-1">
+  <section class="space-y-2">
     <div class="flex items-end justify-between gap-2">
       <h2 class="text-xs font-bold uppercase tracking-wider text-[#64748b]">
         {{ t(titleKey) }}
@@ -39,7 +39,7 @@
       v-else-if="isSingleTrip"
       name="dash-trip-carousel"
       tag="div"
-      class="flex w-full min-w-0 flex-col gap-3 pb-1"
+      class="flex w-full min-w-0 flex-col gap-3"
     >
       <DriverTripCard
         v-for="trip in trips"
@@ -55,14 +55,14 @@
 
     <div
       v-else
-      class="-mx-4 snap-x snap-mandatory scroll-px-4 overflow-x-auto px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:-mx-5 sm:scroll-px-5 sm:px-5"
+      class="-mx-3 snap-x snap-mandatory scroll-px-3 overflow-x-auto px-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:-mx-4 sm:scroll-px-4 sm:px-4"
       style="-webkit-overflow-scrolling: touch"
       data-testid="driver-dash-trip-carousel"
     >
       <TransitionGroup
         name="dash-trip-carousel"
         tag="div"
-        class="flex w-max max-w-none gap-3 pb-2"
+        class="flex w-max max-w-none gap-3"
       >
         <div
           v-for="trip in trips"

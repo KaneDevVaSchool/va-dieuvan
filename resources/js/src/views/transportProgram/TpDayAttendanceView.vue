@@ -1,6 +1,6 @@
 <template>
-  <div class="space-y-5 pb-8">
-    <div class="flex flex-col gap-4 border-b border-slate-200/80 pb-5">
+  <div class="space-y-4 sm:space-y-5">
+    <div class="flex flex-col gap-4 border-b border-slate-200/80 pb-4 sm:pb-5">
       <div class="flex flex-wrap items-start gap-3">
         <button
           type="button"
@@ -129,7 +129,7 @@
         ref="datagridRef"
         class="overflow-visible rounded-xl border border-slate-200/80 bg-white shadow-sm"
       >
-        <div class="border-b border-slate-100 px-4 py-3 sm:px-5">
+        <div class="border-b border-slate-100 px-3 py-2.5 sm:px-5 sm:py-3">
           <div class="mb-2 flex flex-wrap items-center gap-2">
             <h2 class="text-sm font-semibold text-slate-800">
               {{ t('tp_attendance_page.list_section_title') }}

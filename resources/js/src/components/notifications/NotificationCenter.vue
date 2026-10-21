@@ -7,11 +7,11 @@
       :class="panelJustifyClass"
     >
       <div
-        class="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px] transition-opacity active:bg-slate-900/55"
+        class="absolute inset-0 bg-slate-900/50 transition-opacity active:bg-slate-900/55"
         @click="notifStore.closePanel()"
       />
       <div
-        class="relative z-10 flex max-h-[min(82dvh,36rem)] w-full flex-col overflow-hidden rounded-t-2xl border border-slate-200/90 bg-white shadow-lg dark:border-slate-700/90 dark:bg-slate-900 sm:max-h-[min(28rem,80vh)] sm:max-w-sm sm:rounded-xl sm:shadow-xl"
+        class="relative z-10 flex max-h-[min(82dvh,36rem)] w-full flex-col overflow-hidden rounded-none border border-slate-200/90 bg-white shadow-lg dark:border-slate-700/90 dark:bg-slate-900 sm:max-h-[min(28rem,80vh)] sm:max-w-sm sm:shadow-xl"
         :style="{
           paddingTop: 'max(0.5rem, env(safe-area-inset-top))',
           paddingBottom: 'max(0.375rem, env(safe-area-inset-bottom))',
@@ -51,26 +51,28 @@
 
         <div
           v-if="showAudienceTabs"
-          class="flex shrink-0 gap-0.5 overflow-x-auto border-b border-slate-100 px-2 py-1.5 dark:border-slate-800"
+          class="shrink-0 border-b border-slate-100 px-2 py-1.5 dark:border-slate-800"
           role="tablist"
           :aria-label="t('notify.title')"
         >
+          <div class="flex gap-1 overflow-x-auto rounded-lg bg-slate-100 p-0.5 [scrollbar-width:none] dark:bg-slate-800/60 [&::-webkit-scrollbar]:hidden">
           <button
             v-for="tab in audienceTabs"
             :key="tab.key"
             type="button"
             role="tab"
             :aria-selected="notifStore.activeTab === tab.key"
-            class="shrink-0 rounded-md px-2.5 py-1 text-xs font-semibold transition"
+            class="flex-1 shrink-0 whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-semibold transition"
             :class="
               notifStore.activeTab === tab.key
-                ? 'bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-200'
-                : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
+                ? 'bg-va-800 text-white shadow-sm dark:bg-va-700'
+                : 'text-slate-700 hover:bg-white/70 hover:text-va-800 dark:text-slate-300 dark:hover:bg-slate-700/60'
             "
             @click="notifStore.setTab(tab.key)"
           >
             {{ t(tab.labelKey) }}
           </button>
+          </div>
         </div>
 
         <div

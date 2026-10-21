@@ -307,7 +307,7 @@ onActivated(() => load())
 
 
 <template>
-  <div class="space-y-5 pb-8">
+  <div class="space-y-4 sm:space-y-5">
 
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
@@ -333,7 +333,7 @@ onActivated(() => load())
       ref="datagridRef"
       class="overflow-visible rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40"
     >
-      <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+      <div class="border-b border-slate-100 px-3 py-2.5 dark:border-slate-700 sm:px-5 sm:py-3">
         <div class="mb-2">
           <h2 class="text-sm font-semibold text-slate-800 dark:text-slate-100">
             {{ t('system_pages.feature_toggles.list_title') }}

@@ -1,6 +1,6 @@
 <template>
   <div
-    class="min-h-full w-full bg-driver-bg pb-4 text-driver-ink"
+    class="min-h-full w-full bg-driver-bg text-driver-ink"
   >
     <div
       class="driver-stagger mx-auto w-full min-w-0 max-w-full space-y-3 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-4"
@@ -187,7 +187,7 @@
     <Teleport to="body">
       <div
         v-if="logoutConfirmOpen"
-        class="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 p-4 backdrop-blur-[2px] sm:items-center"
+        class="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 p-4 sm:items-center"
         role="presentation"
         @click.self="logoutConfirmOpen = false"
       >

@@ -1,6 +1,6 @@
 <template>
   <div
-    class="dispatch-wizard mx-auto max-w-4xl space-y-6 px-4 py-6 text-slate-900 sm:px-6 lg:py-8"
+    class="dispatch-wizard mx-auto max-w-4xl space-y-4 sm:space-y-6 px-4 py-6 text-slate-900 sm:px-6 lg:py-8"
   >
     <header class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div>

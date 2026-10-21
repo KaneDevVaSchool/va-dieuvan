@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-4">
+  <div class="space-y-3 sm:space-y-4">
     <Card title="Hướng dẫn nhanh">
       <p class="text-sm leading-relaxed text-slate-700">
         Phần mềm hỗ trợ quy trình: <strong>tạo yêu cầu</strong> → <strong>duyệt</strong> → <strong>phân công chuyến</strong> →

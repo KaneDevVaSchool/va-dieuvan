@@ -1,5 +1,5 @@
 <template>
-  <div class="min-w-0 space-y-6 pb-10">
+  <div class="min-w-0 space-y-4 sm:space-y-6">
 
     <div>
       <router-link

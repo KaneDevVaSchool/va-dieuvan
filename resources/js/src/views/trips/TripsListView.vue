@@ -1,6 +1,6 @@
 <template>
-  <div class="space-y-6">
-    <div class="flex flex-col gap-3 border-b border-slate-200/80 pb-6 lg:flex-row lg:items-end lg:justify-between">
+  <div class="space-y-4 sm:space-y-6">
+    <div class="flex flex-col gap-3 border-b border-slate-200/80 pb-4 sm:pb-6 lg:flex-row lg:items-end lg:justify-between">
       <div>
         <h1 class="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">
           {{ pageTitle }}
@@ -21,7 +21,7 @@
       ref="tripsDatagridRef"
       class="overflow-visible rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40"
     >
-      <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+      <div class="border-b border-slate-100 px-3 py-2.5 dark:border-slate-700 sm:px-5 sm:py-3">
         <div class="flex w-full min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
           <div class="min-w-0 w-full basis-full lg:min-w-[10rem] lg:flex-1 lg:basis-auto">
             <DatagridToolbarSearch
@@ -270,27 +270,27 @@
         :key="trip.id"
         class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/50"
       >
-        <div class="border-b border-slate-100 px-3 py-4 sm:px-5 dark:border-slate-800">
-          <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div class="border-b border-slate-100 px-3 py-3 sm:px-5 sm:py-4 dark:border-slate-800">
+          <div class="flex flex-col gap-2.5 sm:gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div class="flex min-w-0 gap-3 sm:gap-4">
               <div
-                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12"
+                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg sm:h-12 sm:w-12 sm:rounded-xl"
                 :class="tripTypeIconWrap(trip.dispatch_request?.trip_type)"
               >
-                <TruckIcon v-if="trip.dispatch_request?.trip_type === 'door_to_door'" class="h-6 w-6 text-sky-600 dark:text-sky-400" />
-                <MapPinIcon v-else-if="trip.dispatch_request?.trip_type === 'point_to_point'" class="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-                <BriefcaseIcon v-else-if="trip.dispatch_request?.trip_type === 'business'" class="h-6 w-6 text-amber-600 dark:text-amber-400" />
-                <QueueListIcon v-else class="h-6 w-6 text-slate-600 dark:text-slate-400" />
+                <TruckIcon v-if="trip.dispatch_request?.trip_type === 'door_to_door'" class="h-5 w-5 text-sky-600 sm:h-6 sm:w-6 dark:text-sky-400" />
+                <MapPinIcon v-else-if="trip.dispatch_request?.trip_type === 'point_to_point'" class="h-5 w-5 text-emerald-600 sm:h-6 sm:w-6 dark:text-emerald-400" />
+                <BriefcaseIcon v-else-if="trip.dispatch_request?.trip_type === 'business'" class="h-5 w-5 text-amber-600 sm:h-6 sm:w-6 dark:text-amber-400" />
+                <QueueListIcon v-else class="h-5 w-5 text-slate-600 sm:h-6 sm:w-6 dark:text-slate-400" />
               </div>
               <div class="min-w-0 flex-1">
                 <div class="flex flex-wrap items-center gap-2">
                   <div class="min-w-0">
-                    <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    <p class="hidden text-[11px] font-semibold uppercase tracking-wide text-slate-500 sm:block dark:text-slate-400">
                       {{ t('trips_page.card_trip_code') }}
                     </p>
                     <RouterLink
                       :to="`${tripDetailPrefix}/${trip.id}`"
-                      class="mt-0.5 inline-block font-mono text-lg font-bold tracking-tight text-slate-900 underline decoration-slate-300 underline-offset-2 hover:text-va-800 hover:decoration-va-400 dark:text-slate-100"
+                      class="inline-block font-mono text-base font-bold sm:mt-0.5 sm:text-lg tracking-tight text-slate-900 underline decoration-slate-300 underline-offset-2 hover:text-va-800 hover:decoration-va-400 dark:text-slate-100"
                       :data-testid="`trips-card-link-${trip.id}`"
                     >
                       {{ tripCode(trip.id) }}
@@ -315,20 +315,21 @@
                     {{ t('trips_page.badge_recurring') }}
                   </span>
                 </div>
-                <dl class="mt-3 grid grid-cols-1 gap-x-4 gap-y-2 text-sm sm:grid-cols-2 xl:grid-cols-3">
-                  <div class="min-w-0">
-                    <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <!-- Mobile: mỗi mục một dòng (nhãn + giá trị); sm+: lưới như cũ. -->
+                <dl class="mt-2 grid grid-cols-1 gap-x-4 gap-y-0.5 text-[13px] sm:mt-3 sm:grid-cols-2 sm:gap-y-2 sm:text-sm xl:grid-cols-3">
+                  <div class="flex min-w-0 items-baseline gap-1.5 sm:block">
+                    <dt class="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       {{ t('trips_page.created_at_label') }}
                     </dt>
-                    <dd class="mt-0.5 font-medium tabular-nums text-slate-800 dark:text-slate-200">
+                    <dd class="truncate font-medium tabular-nums text-slate-800 sm:mt-0.5 dark:text-slate-200">
                       {{ fmtTripDateTime(trip.created_at) }}
                     </dd>
                   </div>
-                  <div class="min-w-0">
-                    <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <div class="flex min-w-0 items-baseline gap-1.5 sm:block">
+                    <dt class="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       {{ t('trips_page.meta_channel') }}
                     </dt>
-                    <dd class="mt-0.5 font-medium text-slate-800 dark:text-slate-200">
+                    <dd class="truncate font-medium text-slate-800 sm:mt-0.5 dark:text-slate-200">
                       {{
                         trip.dispatch_request?.source_channel
                           ? labelSourceChannel(trip.dispatch_request.source_channel)
@@ -336,11 +337,11 @@
                       }}
                     </dd>
                   </div>
-                  <div class="min-w-0">
-                    <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <div class="flex min-w-0 items-baseline gap-1.5 sm:block">
+                    <dt class="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       {{ t('trips_page.meta_paper') }}
                     </dt>
-                    <dd class="mt-0.5 font-medium text-slate-800 dark:text-slate-200">
+                    <dd class="truncate font-medium text-slate-800 sm:mt-0.5 dark:text-slate-200">
                       {{
                         trip.dispatch_request?.paper_status
                           ? labelPaperStatus(trip.dispatch_request.paper_status)
@@ -364,7 +365,7 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 gap-4 px-3 py-4 sm:px-4 md:grid-cols-2 md:gap-5 xl:grid-cols-5">
+        <div class="grid grid-cols-2 gap-3 px-3 py-3 sm:gap-4 sm:px-4 sm:py-4 md:gap-5 xl:grid-cols-5">
           <div class="min-w-0">
             <div class="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
               <MapPinIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -373,7 +374,7 @@
             <p class="mt-1 text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100 sm:text-base">
               {{ displayPlace(trip.dispatch_request?.origin, 'empty_origin') }}
             </p>
-            <div class="mt-2">
+            <div class="mt-1.5 sm:mt-2">
               <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 {{ t('trips_page.depart_at_label') }}
               </p>
@@ -390,7 +391,7 @@
             <p class="mt-1 text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100 sm:text-base">
               {{ displayPlace(trip.dispatch_request?.destination, 'empty_destination') }}
             </p>
-            <div class="mt-2">
+            <div class="mt-1.5 sm:mt-2">
               <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 {{ t('trips_page.arrive_by_label') }}
               </p>
@@ -399,21 +400,21 @@
               </p>
             </div>
           </div>
-          <div class="min-w-0 rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/40">
+          <div class="min-w-0 rounded-xl border border-slate-100 bg-slate-50/80 p-2.5 sm:p-3 dark:border-slate-800 dark:bg-slate-800/40">
             <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               {{ t('trips_page.col_requester') }}
             </p>
-            <div class="mt-2 flex items-start gap-2">
+            <div class="mt-1.5 flex items-start gap-2 sm:mt-2">
               <UserAvatar
                 :name="trip.dispatch_request?.requester?.name || ''"
                 :email="trip.dispatch_request?.requester?.email || ''"
                 :avatar-url="trip.dispatch_request?.requester?.avatar_url"
                 :title="trip.dispatch_request?.requester?.name || ''"
-                size="md"
+                size="sm"
                 data-testid="trips-card-requester-avatar"
               />
               <div class="min-w-0">
-                <p class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                <p class="line-clamp-2 break-words text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100">
                   {{ trip.dispatch_request?.requester?.name || t('trips_page.empty_requester') }}
                 </p>
                 <p
@@ -425,21 +426,21 @@
               </div>
             </div>
           </div>
-          <div class="min-w-0 rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/40">
-            <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          <div class="min-w-0 rounded-xl border border-slate-100 bg-slate-50/80 p-2.5 sm:p-3 dark:border-slate-800 dark:bg-slate-800/40">
+            <p class="truncate text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               {{ t('trips_page.col_driver') }} · {{ t('trips_page.col_vehicle') }}
             </p>
-            <div v-if="trip.driver" class="mt-2 flex items-start gap-2">
+            <div v-if="trip.driver" class="mt-1.5 flex items-start gap-2 sm:mt-2">
               <UserAvatar
                 :name="trip.driver.full_name || ''"
                 :email="trip.driver.email || ''"
                 :avatar-url="trip.driver.user?.avatar_url"
                 :title="trip.driver.full_name || ''"
-                size="md"
+                size="sm"
                 data-testid="trips-card-driver-avatar"
               />
               <div class="min-w-0">
-                <p class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                <p class="line-clamp-2 break-words text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100">
                   {{ trip.driver.full_name }}
                 </p>
                 <p v-if="trip.driver.phone" class="mt-0.5 text-xs tabular-nums text-slate-600 dark:text-slate-400">
@@ -453,8 +454,8 @@
                 </p>
               </div>
             </div>
-            <div v-else class="mt-2 flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-300">
+            <div v-else class="mt-1.5 flex items-center gap-2 text-sm text-slate-500 sm:mt-2 dark:text-slate-400">
+              <div class="flex h-8 w-8 shrink-0 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-300">
                 ?
               </div>
               <span>{{ t('trips_page.unassigned') }}</span>
@@ -464,11 +465,11 @@
               <span class="ml-1 text-slate-800 dark:text-slate-200">{{ trip.transport_provider.name }}</span>
             </div>
           </div>
-          <div class="min-w-0 rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/40">
+          <div class="col-span-2 min-w-0 rounded-xl border border-slate-100 bg-slate-50/80 p-2.5 sm:p-3 xl:col-span-1 dark:border-slate-800 dark:bg-slate-800/40">
             <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               {{ t('trips_page.col_ops_meta') }}
             </p>
-            <ul class="mt-2 space-y-2 text-xs text-slate-700 dark:text-slate-300 sm:text-sm">
+            <ul class="mt-1.5 space-y-1 text-xs text-slate-700 sm:mt-2 sm:space-y-2 sm:text-sm dark:text-slate-300">
               <li>
                 <span class="font-semibold text-slate-600 dark:text-slate-400">{{ t('trips_page.col_dispatcher') }}</span>
                 {{ trip.dispatcher?.name || t('trips_page.empty_dispatcher') }}
@@ -484,7 +485,7 @@
             </ul>
             <p
               v-if="trip.dispatch_request?.notes && String(trip.dispatch_request.notes).trim()"
-              class="mt-3 line-clamp-3 border-t border-slate-200/80 pt-2 text-xs leading-relaxed text-slate-600 dark:border-slate-700 dark:text-slate-400"
+              class="mt-2 line-clamp-2 border-t border-slate-200/80 pt-2 text-xs leading-relaxed text-slate-600 sm:mt-3 sm:line-clamp-3 dark:border-slate-700 dark:text-slate-400"
               :title="String(trip.dispatch_request.notes).trim()"
             >
               <span class="font-semibold text-slate-700 dark:text-slate-300">{{ t('trips_page.notes_label') }}</span>

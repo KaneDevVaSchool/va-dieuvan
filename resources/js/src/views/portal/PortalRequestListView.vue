@@ -1,5 +1,5 @@
 ﻿<template>
-  <div class="w-full min-w-0 space-y-4 px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+  <div class="w-full min-w-0 space-y-3 sm:space-y-4 px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
     <PortalDispatchSummaryBar
       :variant="summaryVariant"
       :loading="summaryLoading"

@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-5 pb-10 print:pb-0">
+  <div class="space-y-4 sm:space-y-5 print:pb-0">
     <div
       v-if="loadError"
       role="alert"
@@ -622,7 +622,7 @@
     <Teleport to="body">
       <div
         v-if="podPreviewOpen"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-sm print:hidden"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 print:hidden"
         role="dialog"
         aria-modal="true"
         data-testid="cargo-pod-preview-modal"
@@ -655,7 +655,7 @@
     <Teleport to="body">
       <div
         v-if="mapExpanded"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm print:hidden"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 print:hidden"
         role="dialog"
         aria-modal="true"
         @click.self="mapExpanded = false"
@@ -699,7 +699,7 @@
     <Teleport to="body">
       <div
         v-if="assignProviderModalOpen"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
         role="dialog"
         aria-modal="true"
         @click.self="assignProviderModalOpen = false"

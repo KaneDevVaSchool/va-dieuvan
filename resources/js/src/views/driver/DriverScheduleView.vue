@@ -1,6 +1,6 @@
 <template>
   <div
-    class="mx-auto min-h-full w-full max-w-[430px] overflow-x-hidden bg-driver-bg pb-4 text-driver-ink sm:max-w-2xl"
+    class="mx-auto min-h-full w-full max-w-[430px] overflow-x-hidden bg-driver-bg text-driver-ink sm:max-w-2xl"
     :style="{ '--accent': '#7fdcc8' }"
     @touchstart.passive="onTouchStart"
     @touchmove.passive="onTouchMove"

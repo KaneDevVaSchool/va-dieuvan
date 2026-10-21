@@ -9,7 +9,7 @@
       </div>
 
       <PortalNotificationsSummaryBar
-        class="mt-6"
+        class="mt-6 mb-3 sm:mb-4"
         :loading="loading"
         :total="summaryTotal"
         :unread="unreadTotal"

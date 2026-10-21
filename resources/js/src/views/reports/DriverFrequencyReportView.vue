@@ -1,7 +1,7 @@
 ﻿<template>
-  <div class="freq-dash space-y-5 pb-14">
+  <div class="freq-dash space-y-4 sm:space-y-5">
 
-    <div class="flex flex-col gap-4 border-b border-slate-200/80 pb-6 dark:border-slate-700/80">
+    <div class="flex flex-col gap-4 border-b border-slate-200/80 pb-4 sm:pb-6 dark:border-slate-700/80">
       <div>
         <h1 class="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
           {{ t('driver_freq.hero_title') }}
@@ -90,7 +90,7 @@
 
       <!-- Ranking table -->
       <div ref="rankingToolbarRef" class="freq-panel lg:col-span-3">
-        <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+        <div class="border-b border-slate-100 px-3 py-2.5 dark:border-slate-700 sm:px-5 sm:py-3">
           <div class="mb-2 flex flex-wrap items-center gap-2">
             <h2 class="text-sm font-semibold text-slate-800 dark:text-slate-100">
               {{ t('driver_freq.section_ranking') }}

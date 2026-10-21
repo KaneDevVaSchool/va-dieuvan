@@ -1,71 +1,49 @@
 <template>
-  <!-- Collapsed trigger: icon button on small screens, pill on md+ -->
-  <button
-    v-if="!open"
-    type="button"
-    class="flex items-center gap-2 rounded-lg border border-slate-200/80 bg-slate-50/90 text-slate-500 transition hover:border-slate-300 hover:bg-white hover:text-slate-700 dark:border-slate-600/80 dark:bg-slate-800/80 dark:text-slate-400 dark:hover:border-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-    :class="[
-      'h-9 px-2 md:px-3',
-    ]"
-    :aria-label="t('app.search_label')"
-    @click="openSearch"
-  >
-    <MagnifyingGlassIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-    <span class="hidden max-w-[8rem] truncate text-sm md:inline">{{ t('app.search_placeholder') }}</span>
+  <!-- Ô tìm kiếm inline: gõ ngay trong header, kết quả sổ xuống bên dưới (không modal). -->
+  <div ref="rootRef" class="relative w-full min-w-0 md:w-60">
+    <MagnifyingGlassIcon
+      class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 md:left-3 dark:text-slate-500"
+      aria-hidden="true"
+    />
+    <input
+      ref="inputRef"
+      v-model="query"
+      type="search"
+      role="combobox"
+      :aria-expanded="open"
+      aria-controls="global-search-results"
+      aria-autocomplete="list"
+      class="h-10 w-full min-w-0 truncate rounded-full border border-slate-200 bg-slate-50 pl-10 pr-3.5 text-base text-slate-900 transition placeholder:text-slate-500 hover:border-slate-300 focus:border-va-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-va-700/15 md:h-9 md:rounded-lg md:pl-9 md:pr-14 md:text-sm dark:border-slate-600/80 dark:bg-slate-800/80 dark:text-slate-100 dark:placeholder:text-slate-400"
+      :placeholder="t('app.search_placeholder')"
+      :aria-label="t('app.search_label')"
+      autocomplete="off"
+      @focus="openSearch"
+      @click="openSearch"
+      @keydown.escape="closeSearch(true)"
+      @keydown.arrow-down.prevent="moveFocus(1)"
+      @keydown.arrow-up.prevent="moveFocus(-1)"
+      @keydown.enter.prevent="selectFocused"
+    />
     <kbd
-      class="hidden items-center gap-0.5 rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-400 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-500 md:flex"
+      v-if="!open"
+      class="pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 items-center gap-0.5 rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-400 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-500 md:flex"
       aria-hidden="true"
     >
       <span>{{ isMac ? '⌘' : 'Ctrl' }}</span><span>K</span>
     </kbd>
-  </button>
+  </div>
 
-  <!-- Full search overlay (Teleport to body) -->
+  <!-- Dropdown kết quả: teleport ra body để không bị header (backdrop-blur) cắt; vị trí bám theo ô nhập. -->
   <Teleport to="body">
     <div
       v-if="open"
-      class="fixed inset-0 z-[250] flex items-start justify-center px-4 pt-[10vh] print:hidden"
+      ref="panelRef"
+      class="fixed z-[250] overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xl ring-1 ring-slate-900/5 print:hidden dark:border-slate-700/90 dark:bg-slate-900"
+      :style="panelStyle"
     >
-      <!-- Backdrop -->
-      <div
-        class="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]"
-        @click="closeSearch"
-      />
-
-      <!-- Search panel -->
-      <div
-        class="relative z-10 w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl dark:border-slate-700/90 dark:bg-slate-900"
-        role="dialog"
-        aria-modal="true"
-        :aria-label="t('app.search_label')"
-      >
-        <!-- Input row -->
-        <div class="flex items-center gap-3 border-b border-slate-100 px-4 py-3 dark:border-slate-800">
-          <MagnifyingGlassIcon class="h-5 w-5 shrink-0 text-slate-400 dark:text-slate-500" aria-hidden="true" />
-          <input
-            ref="inputRef"
-            v-model="query"
-            type="search"
-            class="min-w-0 flex-1 bg-transparent text-base text-slate-900 placeholder-slate-400 focus:outline-none dark:text-slate-100 dark:placeholder-slate-500"
-            :placeholder="t('app.search_placeholder')"
-            :aria-label="t('app.search_label')"
-            autocomplete="off"
-            @keydown.escape="closeSearch"
-            @keydown.arrow-down.prevent="moveFocus(1)"
-            @keydown.arrow-up.prevent="moveFocus(-1)"
-            @keydown.enter.prevent="selectFocused"
-          />
-          <kbd
-            class="flex shrink-0 items-center rounded border border-slate-200 bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-500"
-            aria-hidden="true"
-          >
-            Esc
-          </kbd>
-        </div>
-
-        <!-- Results -->
         <ul
-          class="py-2"
+          id="global-search-results"
+          class="max-h-[min(24rem,60dvh)] overflow-y-auto py-2"
           role="listbox"
           :aria-label="t('app.search_label')"
         >
@@ -100,7 +78,7 @@
                 <DocumentTextIcon class="h-4 w-4" />
               </div>
               <div class="min-w-0 flex-1">
-                <p class="truncate text-sm font-medium">{{ item.label }}</p>
+                <p class="break-words text-sm font-medium leading-snug">{{ item.label }}</p>
                 <p
                   v-if="item.sectionLabel"
                   class="truncate text-[11px] text-slate-400 dark:text-slate-500"
@@ -111,7 +89,6 @@
             </div>
           </li>
         </ul>
-      </div>
     </div>
   </Teleport>
 </template>
@@ -129,8 +106,30 @@ const { sections } = useNavSections()
 
 const open = ref(false)
 const query = ref('')
+const rootRef = ref(null)
 const inputRef = ref(null)
+const panelRef = ref(null)
 const focusedIdx = ref(0)
+const panelStyle = ref({})
+
+/** Mobile: dropdown rộng đúng bằng ô nhập; md+: canh phải theo ô nhập, tối thiểu 352px. */
+function placePanel() {
+  const rect = inputRef.value?.getBoundingClientRect()
+  if (!rect) return
+  const top = `${Math.round(rect.bottom + 8)}px`
+  if (window.innerWidth < 768) {
+    panelStyle.value = { top, left: `${Math.round(rect.left)}px`, width: `${Math.round(rect.width)}px` }
+  } else {
+    const width = Math.max(rect.width, 352)
+    panelStyle.value = { top, left: `${Math.round(Math.max(12, rect.right - width))}px`, width: `${width}px` }
+  }
+}
+
+function onPointerDownOutside(e) {
+  if (!open.value) return
+  if (rootRef.value?.contains(e.target) || panelRef.value?.contains(e.target)) return
+  closeSearch()
+}
 
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
 
@@ -167,16 +166,19 @@ const results = computed(() => {
 })
 
 async function openSearch() {
-  open.value = true
-  query.value = ''
-  focusedIdx.value = 0
+  if (!open.value) {
+    focusedIdx.value = 0
+    open.value = true
+  }
+  placePanel()
   await nextTick()
-  inputRef.value?.focus()
+  if (document.activeElement !== inputRef.value) inputRef.value?.focus()
 }
 
-function closeSearch() {
+function closeSearch(blur = false) {
   open.value = false
   query.value = ''
+  if (blur) inputRef.value?.blur()
 }
 
 function moveFocus(delta) {
@@ -191,7 +193,7 @@ function selectFocused() {
 }
 
 function navigate(item) {
-  closeSearch()
+  closeSearch(true)
   router.push(item.to).catch(() => {})
 }
 
@@ -199,7 +201,7 @@ function onKeyDown(e) {
   if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
     e.preventDefault()
     if (open.value) {
-      closeSearch()
+      closeSearch(true)
     } else {
       openSearch()
     }
@@ -212,9 +214,13 @@ watch(results, () => {
 
 onMounted(() => {
   document.addEventListener('keydown', onKeyDown)
+  document.addEventListener('pointerdown', onPointerDownOutside)
+  window.addEventListener('resize', placePanel)
 })
 
 onUnmounted(() => {
   document.removeEventListener('keydown', onKeyDown)
+  document.removeEventListener('pointerdown', onPointerDownOutside)
+  window.removeEventListener('resize', placePanel)
 })
 </script>

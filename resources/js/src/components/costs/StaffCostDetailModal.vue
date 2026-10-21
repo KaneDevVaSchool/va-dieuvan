@@ -70,7 +70,7 @@
         class="rounded-2xl border border-slate-200/90 bg-white dark:border-slate-700 dark:bg-slate-900/30"
         aria-labelledby="cost-detail-trip-vehicle-heading"
       >
-        <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+        <div class="border-b border-slate-100 px-3 py-2.5 dark:border-slate-700 sm:px-5 sm:py-3">
           <h3 id="cost-detail-trip-vehicle-heading" class="text-sm font-bold text-slate-900 dark:text-slate-100">
             {{ t('costs_page.detail_section_trip_vehicle') }}
           </h3>
@@ -177,7 +177,7 @@
         class="rounded-2xl border border-slate-200/90 bg-white dark:border-slate-700 dark:bg-slate-900/30"
         aria-labelledby="cost-detail-note-heading"
       >
-        <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+        <div class="border-b border-slate-100 px-3 py-2.5 dark:border-slate-700 sm:px-5 sm:py-3">
           <h3 id="cost-detail-note-heading" class="text-sm font-bold text-slate-900 dark:text-slate-100">
             {{ t('costs_page.detail_section_note') }}
           </h3>
@@ -268,7 +268,7 @@
         class="rounded-2xl border border-slate-200/90 bg-white dark:border-slate-700 dark:bg-slate-900/30"
         aria-labelledby="cost-detail-evidence-heading"
       >
-        <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+        <div class="border-b border-slate-100 px-3 py-2.5 dark:border-slate-700 sm:px-5 sm:py-3">
           <h3 id="cost-detail-evidence-heading" class="text-sm font-bold text-slate-900 dark:text-slate-100">
             {{ t('costs_page.detail_evidence_heading') }}
           </h3>

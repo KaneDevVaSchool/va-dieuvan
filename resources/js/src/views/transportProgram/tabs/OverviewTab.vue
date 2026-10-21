@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-5">
+  <div class="space-y-4 sm:space-y-5">
     <div v-if="chartLoading" class="flex items-center justify-center rounded-2xl border border-slate-200 bg-white py-16 text-sm text-slate-500">
       <ArrowPathIcon class="mr-2 h-5 w-5 animate-spin" /> {{ t('tp_program_detail.loading_charts') }}
     </div>

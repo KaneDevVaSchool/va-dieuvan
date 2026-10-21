@@ -1,7 +1,7 @@
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4 sm:space-y-6">
     <!-- Page header -->
-    <div class="flex flex-col gap-3 border-b border-slate-200/80 pb-6 lg:flex-row lg:items-end lg:justify-between">
+    <div class="flex flex-col gap-3 border-b border-slate-200/80 pb-4 sm:pb-6 lg:flex-row lg:items-end lg:justify-between">
       <div>
         <h1 class="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">
           {{ t('cargo_page.hero_title') }}
@@ -41,7 +41,7 @@
       class="overflow-visible rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40"
     >
       <!-- Toolbar row -->
-      <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+      <div class="border-b border-slate-100 px-3 py-2.5 dark:border-slate-700 sm:px-5 sm:py-3">
         <div class="flex w-full min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
           <div class="min-w-0 w-full basis-full lg:min-w-[10rem] lg:flex-1 lg:basis-auto">
             <DatagridToolbarSearch
@@ -349,7 +349,7 @@
     <Teleport to="body">
       <div
         v-if="purgeAllOpen"
-        class="fixed inset-0 z-[191] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-[2px]"
+        class="fixed inset-0 z-[191] flex items-center justify-center bg-slate-900/50 p-4"
         role="dialog"
         aria-modal="true"
         aria-labelledby="cargo-purge-all-title"

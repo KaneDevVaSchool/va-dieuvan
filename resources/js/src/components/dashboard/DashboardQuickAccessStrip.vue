@@ -160,7 +160,7 @@ onUnmounted(() => {
           {{ t('dashboard_analytics.quick_title') }}
         </h2>
       </div>
-      <p class="max-w-md text-right text-[11px] text-slate-500 dark:text-slate-400">
+      <p class="text-[11px] text-slate-500 dark:text-slate-400 sm:max-w-md sm:text-right">
         {{ t('dashboard_analytics.quick_strip_hint') }}
       </p>
     </header>
@@ -168,13 +168,13 @@ onUnmounted(() => {
     <div class="relative flex items-stretch gap-1 sm:gap-2">
       <button
         type="button"
-        class="flex w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200/90 bg-white/90 text-slate-600 shadow-sm transition hover:border-va-200/70 hover:text-va-800 disabled:pointer-events-none disabled:opacity-25 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300 sm:w-9"
+        class="flex w-7 shrink-0 items-center justify-center rounded-lg border border-slate-200/90 bg-white/90 text-slate-600 shadow-sm transition hover:border-va-200/70 hover:text-va-800 disabled:pointer-events-none disabled:opacity-25 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300 sm:w-9"
         :disabled="!quickCanScrollLeft"
         :aria-label="t('dashboard_analytics.quick_scroll_prev')"
         data-testid="dash-quick-scroll-prev"
         @click="scrollQuickLinks(-1)"
       >
-        <ChevronLeftIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+        <ChevronLeftIcon class="h-4 w-4 shrink-0 sm:h-5 sm:w-5" aria-hidden="true" />
       </button>
 
       <div
@@ -189,21 +189,21 @@ onUnmounted(() => {
             :to="item.to"
             :title="item.hint"
             :class="[
-              'kpi-card kpi-card--interactive flex w-[7.25rem] shrink-0 flex-col items-center justify-center gap-2 px-2 py-3 text-center sm:w-32',
+              'kpi-card kpi-card--interactive flex w-28 shrink-0 flex-col items-center justify-center gap-1.5 px-1.5 py-2.5 text-center sm:w-32 sm:gap-2 sm:px-2 sm:py-3',
               toneClass[item.tone] ?? toneClass.brand,
             ]"
             :data-testid="`dash-quick-${item.key}`"
           >
             <span
               :class="[
-                'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ring-1',
+                'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 sm:h-10 sm:w-10',
                 iconToneClass[item.tone] ?? iconToneClass.brand,
               ]"
               aria-hidden="true"
             >
-              <component :is="item.icon" class="h-5 w-5" />
+              <component :is="item.icon" class="h-4 w-4 sm:h-5 sm:w-5" />
             </span>
-            <span class="w-full line-clamp-2 text-[11px] font-semibold uppercase leading-tight tracking-wide text-slate-700 dark:text-slate-200 sm:text-xs">
+            <span class="w-full text-center text-[10px] font-semibold uppercase leading-tight tracking-wide text-slate-700 dark:text-slate-200 break-words sm:text-xs">
               {{ item.title }}
             </span>
           </RouterLink>
@@ -212,13 +212,13 @@ onUnmounted(() => {
 
       <button
         type="button"
-        class="flex w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200/90 bg-white/90 text-slate-600 shadow-sm transition hover:border-va-200/70 hover:text-va-800 disabled:pointer-events-none disabled:opacity-25 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300 sm:w-9"
+        class="flex w-7 shrink-0 items-center justify-center rounded-lg border border-slate-200/90 bg-white/90 text-slate-600 shadow-sm transition hover:border-va-200/70 hover:text-va-800 disabled:pointer-events-none disabled:opacity-25 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300 sm:w-9"
         :disabled="!quickCanScrollRight"
         :aria-label="t('dashboard_analytics.quick_scroll_next')"
         data-testid="dash-quick-scroll-next"
         @click="scrollQuickLinks(1)"
       >
-        <ChevronRightIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+        <ChevronRightIcon class="h-4 w-4 shrink-0 sm:h-5 sm:w-5" aria-hidden="true" />
       </button>
     </div>
   </section>

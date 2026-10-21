@@ -5111,6 +5111,7 @@
         "standalone_intro": "Ghi chú phát sinh không gắn chuyến (tài xế hoặc kế toán ghi nhận).",
         "table_title_standalone": "Ghi chú ngoài luồng",
         "add_standalone_cost": "Thêm ngoài luồng",
+        "add_short": "Thêm",
         "modal_add_standalone_title": "Thêm ghi chú ngoài luồng",
         "modal_add_standalone_hint": "Có thể gắn thêm chuyến nếu phát sinh trong hành trình cụ thể.",
         "modal_trip_optional": "tùy chọn",

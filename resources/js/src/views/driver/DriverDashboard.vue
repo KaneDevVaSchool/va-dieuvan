@@ -1,6 +1,6 @@
 <template>
   <div
-    class="min-h-0 w-full bg-[#020B0B] pb-4 text-[#eaf8f5]"
+    class="min-h-0 w-full bg-[#020B0B] text-[#eaf8f5]"
   >
     <!-- Pull-to-refresh: overlay cố định, không đẩy header (giữ nguyên xử lý safe-area) -->
     <div
@@ -27,13 +27,15 @@
       </div>
     </div>
 
+    <DriverGreetingBar
+      class="sticky top-0 z-40"
+      :avatar-url="avatarUrl"
+      :initials="initials"
+    />
+
     <div
-      class="relative isolate w-full overflow-hidden shadow-[0_10px_40px_-8px_rgba(34,211,238,0.18)] ring-1 ring-[#7fdcc8]/10 -mt-[env(safe-area-inset-top,0px)] pt-[env(safe-area-inset-top,0px)]"
+      class="relative isolate w-full overflow-hidden shadow-[0_10px_40px_-8px_rgba(34,211,238,0.18)] ring-1 ring-[#7fdcc8]/10"
     >
-      <div
-        class="pointer-events-none absolute inset-x-0 top-0 z-0 h-[env(safe-area-inset-top,0px)] bg-[#020B0B]"
-        aria-hidden="true"
-      />
       <div
         class="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#020B0B] to-[#031818]"
         aria-hidden="true"
@@ -56,11 +58,11 @@
       />
 
       <div class="relative z-[1]">
-        <DriverHeader :user="user" :avatarUrl="avatarUrl" :initials="initials" />
+        <DriverHeader :user="user" />
       </div>
     </div>
 
-    <div class="mx-auto w-full min-h-0 min-w-0 max-w-full px-3.5 pt-3.5 sm:px-5 sm:pt-4">
+    <div class="mx-auto w-full min-h-0 min-w-0 max-w-full p-3 pb-1 sm:p-4 sm:pb-2">
       <div class="driver-stagger min-w-0 space-y-3">
         <DriverPendingConfirmationSection
           v-if="dash.needsConfirmationTrips.length > 0 || dash.loadingInitial"
@@ -147,6 +149,7 @@ import { dashPerfMounted } from '../../util/devDriverDashboardPerf'
 import { driverTripListRowKey } from '../../util/driverScheduleLeg'
 import { playNotificationChime } from '../../util/notificationChime'
 import DriverHeader from '../../components/driver/DriverHeader.vue'
+import DriverGreetingBar from '../../components/driver/DriverGreetingBar.vue'
 import UpcomingTripBanner from '../../components/driver/UpcomingTripBanner.vue'
 import DriverPendingConfirmationSection from '../../components/driver/dashboard/DriverPendingConfirmationSection.vue'
 import DriverUpcomingTripsSection from '../../components/driver/dashboard/DriverUpcomingTripsSection.vue'

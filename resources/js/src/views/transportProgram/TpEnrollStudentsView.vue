@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full pb-2">
+  <div class="w-full">
     <!-- Sticky breadcrumb / header -->
     <div class="sticky top-0 z-30 -mx-3 mb-5 border-b border-slate-200 bg-white/90 px-3 py-3 backdrop-blur sm:-mx-4 sm:px-4 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8">
       <div class="flex items-center justify-between gap-3">

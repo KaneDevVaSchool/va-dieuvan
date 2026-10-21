@@ -1,4 +1,6 @@
 <script setup>
+import { MagnifyingGlassIcon } from '@heroicons/vue/20/solid'
+
 defineProps({
   modelValue: { type: String, default: '' },
   inputId: { type: String, default: 'datagrid-search' },
@@ -22,6 +24,10 @@ const emit = defineEmits(['update:modelValue', 'enter'])
       Tìm kiếm
     </label>
     <div class="relative min-w-0" :class="stretch ? 'w-full flex-1' : 'w-full max-w-xl'">
+      <MagnifyingGlassIcon
+        class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+        aria-hidden="true"
+      />
       <input
         :id="inputId"
         type="search"
@@ -29,8 +35,8 @@ const emit = defineEmits(['update:modelValue', 'enter'])
         :placeholder="placeholder"
         :aria-label="ariaLabel || placeholder"
         data-testid="datagrid-toolbar-search"
-        class="w-full rounded-lg border border-slate-200 bg-white text-base text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-va-700 focus:outline-none focus:ring-2 focus:ring-va-700/15 sm:text-sm dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
-        :class="[inputHeight, hideLabel ? 'px-3' : 'px-3']"
+        class="w-full truncate rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-base text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-va-700 focus:outline-none focus:ring-2 focus:ring-va-700/15 sm:text-sm dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
+        :class="inputHeight"
         @input="emit('update:modelValue', $event.target.value)"
         @keydown.enter="emit('enter')"
       />

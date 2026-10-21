@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-6 pb-10">
+  <div class="space-y-4 sm:space-y-6">
     <!-- Loading -->
     <div v-if="!program" class="flex items-center justify-center py-20 text-base text-slate-500">
       <ArrowPathIcon class="mr-2 h-6 w-6 animate-spin" /> {{ t('tp_program_detail.loading_program') }}
@@ -7,7 +7,7 @@
 
     <template v-else>
       <!-- Page header (no card border) -->
-      <div class="flex flex-col gap-4 border-b border-slate-200/80 pb-6 sm:flex-row sm:items-start sm:justify-between">
+      <div class="flex flex-col gap-4 border-b border-slate-200/80 pb-4 sm:pb-6 sm:flex-row sm:items-start sm:justify-between">
         <div class="min-w-0">
           <button
             class="mb-2 inline-flex items-center gap-1 text-sm font-medium text-va-800 transition hover:text-va-900"

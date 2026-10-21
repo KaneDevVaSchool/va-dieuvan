@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-4">
+  <div class="space-y-3 sm:space-y-4">
     <!-- Toolbar -->
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-2">

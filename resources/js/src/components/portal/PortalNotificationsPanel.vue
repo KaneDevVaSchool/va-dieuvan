@@ -1,6 +1,6 @@
 <template>
   <section
-    class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm"
+    class="rounded-xl border border-slate-200/80 bg-white p-3.5 shadow-sm sm:rounded-2xl sm:p-5"
     data-testid="portal-notifications-panel"
   >
     <div class="flex items-start justify-between gap-2">
@@ -49,7 +49,7 @@
               <span v-else class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-transparent" aria-hidden="true" />
               <div class="min-w-0 flex-1">
                 <p class="text-sm font-semibold text-slate-900">{{ n.data?.title ?? n.type }}</p>
-                <p class="mt-0.5 line-clamp-2 text-xs leading-snug text-slate-600">{{ n.data?.body ?? '' }}</p>
+                <p class="mt-0.5 text-xs leading-snug text-slate-600 break-words">{{ n.data?.body ?? '' }}</p>
                 <p class="mt-1 text-xs text-slate-400">{{ fmtTime(n.created_at) }}</p>
               </div>
             </div>

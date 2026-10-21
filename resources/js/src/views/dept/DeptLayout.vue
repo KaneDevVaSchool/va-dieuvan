@@ -6,7 +6,7 @@
     <button
       v-if="mobileOpen"
       type="button"
-      class="fixed inset-0 z-40 bg-black/50 backdrop-blur-[2px] md:hidden"
+      class="fixed inset-0 z-40 bg-black/50 md:hidden"
       :aria-label="t('dept.aria_close_menu')"
       @click="mobileOpen = false"
     />
@@ -306,7 +306,7 @@
           'min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain scrollbar-hidden',
           route.name === 'deptRequestDetail'
             ? 'flex flex-col p-0'
-            : 'px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5 lg:px-8 lg:py-6',
+            : 'px-3 pt-3 pb-6 sm:px-4 sm:pt-4 md:px-6 md:pt-5 md:pb-8 lg:px-8 lg:pt-6',
         ]"
       >
         <ImpersonationBanner />

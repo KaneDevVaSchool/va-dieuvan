@@ -120,7 +120,7 @@ const cards = computed(() => {
 <template>
   <KpiSummaryStrip
     :cards="cards"
-    grid-class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6"
+    grid-class="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-3 lg:grid-cols-6"
     :aria-label="t('dashboard_analytics.kpi_strip_aria')"
     :eyebrow="t('dashboard_analytics.kpi_strip_eyebrow')"
     :title="t('dashboard_analytics.kpi_strip_title')"

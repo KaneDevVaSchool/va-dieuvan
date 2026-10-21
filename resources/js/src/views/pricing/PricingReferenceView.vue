@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-8 pb-10">
+  <div class="space-y-5 sm:space-y-8">
     <Card>
       <div class="mb-6 border-b border-slate-100 pb-5">
         <h1 class="text-lg font-semibold tracking-tight text-slate-900 md:text-xl">Bảng giá tham chiếu</h1>

@@ -127,16 +127,16 @@
         v-for="req in requests"
         :key="req.id"
         :to="portalDetailRouteForRequest(req)"
-        class="group/card block rounded-2xl bg-white p-4 shadow-sm transition active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-va-800"
+        class="group/card block rounded-xl border border-slate-100/80 bg-white p-3.5 shadow-sm transition active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-va-800 sm:rounded-2xl sm:p-4"
         :class="cardHighlightClass(req)"
       >
-        <div class="flex items-start gap-3">
+        <div class="flex items-start gap-2.5">
           <div class="min-w-0 flex-1">
-            <div class="flex flex-wrap items-center gap-2">
-              <span class="inline-flex items-center gap-1.5 font-mono text-base font-semibold text-slate-900">
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="inline-flex items-center gap-1 font-mono text-sm font-semibold text-slate-900">
                 <BoltIcon
                   v-if="req.is_urgent"
-                  class="h-4 w-4 shrink-0 text-amber-500"
+                  class="h-3.5 w-3.5 shrink-0 text-amber-500"
                   aria-hidden="true"
                 />
                 {{ refCode(req) }}
@@ -145,36 +145,36 @@
             </div>
             <p
               v-if="tripTypeLabel(req)"
-              class="mt-2 inline-flex rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700"
+              class="mt-1.5 inline-flex rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700"
             >
               {{ tripTypeLabel(req) }}
             </p>
-            <dl class="mt-3 space-y-2 text-base">
-              <div class="grid grid-cols-[4.5rem_1fr] gap-x-2 gap-y-0.5">
-                <dt class="text-sm font-medium text-slate-500">{{ t('portal.table_origin') }}</dt>
-                <dd class="font-medium" :class="placeCellClass(req.origin)">
+            <dl class="mt-2.5 space-y-1.5 text-xs sm:text-sm">
+              <div class="flex items-start gap-2">
+                <dt class="shrink-0 min-w-[5.25rem] text-xs font-medium text-slate-500">{{ t('portal.table_origin') }}:</dt>
+                <dd class="min-w-0 flex-1 text-xs sm:text-sm font-medium leading-snug break-words" :class="placeCellClass(req.origin)">
                   {{ emptyText.origin(req.origin) }}
                 </dd>
               </div>
-              <div class="grid grid-cols-[4.5rem_1fr] gap-x-2 gap-y-0.5">
-                <dt class="text-sm font-medium text-slate-500">{{ t('portal.table_destination') }}</dt>
-                <dd class="font-medium" :class="placeCellClass(req.destination)">
+              <div class="flex items-start gap-2">
+                <dt class="shrink-0 min-w-[5.25rem] text-xs font-medium text-slate-500">{{ t('portal.table_destination') }}:</dt>
+                <dd class="min-w-0 flex-1 text-xs sm:text-sm font-medium leading-snug break-words" :class="placeCellClass(req.destination)">
                   {{ emptyText.destination(req.destination) }}
                 </dd>
               </div>
-              <div class="grid grid-cols-[4.5rem_1fr] gap-x-2 gap-y-0.5">
-                <dt class="text-sm font-medium text-slate-500">{{ t('portal.table_created') }}</dt>
-                <dd class="text-sm font-medium text-slate-800">
+              <div class="flex items-start gap-2">
+                <dt class="shrink-0 min-w-[5.25rem] text-xs font-medium text-slate-500">{{ t('portal.table_created') }}:</dt>
+                <dd class="min-w-0 flex-1 text-xs font-medium text-slate-800 break-words">
                   <span v-if="req.created_at">{{ createdFmt(req) }}</span>
                   <span v-else class="italic text-slate-400">{{ emptyText.createdAt('') }}</span>
                 </dd>
               </div>
-              <div class="grid grid-cols-[4.5rem_1fr] gap-x-2 gap-y-0.5">
-                <dt class="text-sm font-medium text-slate-500">{{ t('portal.table_time') }}</dt>
-                <dd class="font-medium text-slate-800">
+              <div class="flex items-start gap-2">
+                <dt class="shrink-0 min-w-[5.25rem] text-xs font-medium text-slate-500">{{ t('portal.table_time') }}:</dt>
+                <dd class="min-w-0 flex-1 text-xs sm:text-sm font-medium text-slate-800 break-words">
                   <span v-if="departFmt(req)">{{ departFmt(req) }}</span>
                   <span v-else class="italic text-slate-400">{{ emptyText.departAt('') }}</span>
-                  <span v-if="req.arrive_by" class="mt-0.5 block text-sm font-normal text-slate-500">
+                  <span v-if="req.arrive_by" class="mt-0.5 block text-xs font-normal text-slate-500">
                     {{ arriveFmt(req) }}
                   </span>
                 </dd>
@@ -182,7 +182,7 @@
             </dl>
           </div>
           <ChevronRightIcon
-            class="mt-1 h-6 w-6 shrink-0 text-slate-300 transition group-hover/card:text-va-700"
+            class="mt-0.5 h-5 w-5 shrink-0 text-slate-300 transition group-hover/card:text-va-700"
             aria-hidden="true"
           />
         </div>

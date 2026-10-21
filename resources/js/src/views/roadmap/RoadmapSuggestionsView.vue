@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4 sm:space-y-6">
     <div class="rounded-xl border border-indigo-100 bg-indigo-50/60 p-4 md:p-5">
       <h1 class="text-lg font-semibold text-indigo-950">Đề xuất tính năng &amp; lộ trình UX</h1>
       <p class="mt-1 text-sm text-indigo-900/90">

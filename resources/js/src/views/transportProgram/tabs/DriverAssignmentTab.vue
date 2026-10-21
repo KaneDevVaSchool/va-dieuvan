@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-5">
+  <div class="space-y-4 sm:space-y-5">
     <div
       v-if="programAssignmentLocked"
       class="rounded-2xl border border-rose-200 bg-rose-50/80 px-4 py-3 text-sm text-rose-900"

@@ -1,7 +1,7 @@
 ﻿<template>
-  <div class="tr-rev space-y-6 pb-14 text-slate-800 dark:text-slate-200">
+  <div class="tr-rev space-y-4 sm:space-y-6 text-slate-800 dark:text-slate-200">
 
-    <div class="flex flex-col gap-4 border-b border-slate-200/80 pb-6 dark:border-slate-700/80">
+    <div class="flex flex-col gap-4 border-b border-slate-200/80 pb-4 sm:pb-6 dark:border-slate-700/80">
       <div>
         <h1 class="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
           {{ t('cost_report.hero_title') }}
@@ -94,7 +94,7 @@
         ref="detailTableToolbarRef"
         class="overflow-visible rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40"
       >
-        <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+        <div class="border-b border-slate-100 px-3 py-2.5 dark:border-slate-700 sm:px-5 sm:py-3">
           <div class="mb-2 flex flex-wrap items-center gap-2">
             <h2 id="cr-table-title" class="text-sm font-semibold text-slate-800 dark:text-slate-100">
               {{ t('cost_report.table_title') }}

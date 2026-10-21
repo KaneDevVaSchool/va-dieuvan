@@ -47,7 +47,7 @@
 
     <div class="grid gap-4 lg:grid-cols-2">
       <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
-        <div class="border-b border-slate-100 bg-slate-50 px-4 py-3 sm:px-5">
+        <div class="border-b border-slate-100 bg-slate-50 px-3 py-2.5 sm:px-5 sm:py-3">
           <h2 class="text-sm font-bold text-slate-800">{{ t('portal.info_cards.requester_title') }}</h2>
         </div>
         <table class="portal-info-table w-full text-sm">
@@ -78,7 +78,7 @@
       </div>
 
       <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
-        <div class="border-b border-slate-100 bg-slate-50 px-4 py-3 sm:px-5">
+        <div class="border-b border-slate-100 bg-slate-50 px-3 py-2.5 sm:px-5 sm:py-3">
           <h2 class="text-sm font-bold text-slate-800">{{ t('portal.info_cards.dispatch_title') }}</h2>
         </div>
         <table class="portal-info-table w-full text-sm">
@@ -126,7 +126,7 @@
       v-if="purpose || notes"
       class="overflow-hidden rounded-xl border border-slate-200 bg-white"
     >
-      <div class="border-b border-slate-100 bg-slate-50 px-4 py-3 sm:px-5">
+      <div class="border-b border-slate-100 bg-slate-50 px-3 py-2.5 sm:px-5 sm:py-3">
         <h2 class="text-sm font-bold text-slate-800">{{ t('portal.info_cards.notes_title') }}</h2>
       </div>
       <table class="portal-info-table w-full text-sm">
@@ -144,7 +144,7 @@
     </div>
 
     <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
-      <div class="border-b border-slate-100 bg-slate-50 px-4 py-3 sm:px-5">
+      <div class="border-b border-slate-100 bg-slate-50 px-3 py-2.5 sm:px-5 sm:py-3">
         <h2 class="text-sm font-bold text-slate-800">{{ t('portal.info_cards.history_title') }}</h2>
       </div>
       <ul v-if="historyEntries.length" class="divide-y divide-slate-100">

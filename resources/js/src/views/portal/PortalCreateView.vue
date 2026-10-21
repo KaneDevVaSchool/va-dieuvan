@@ -1,6 +1,6 @@
 <template>
     <div
-        class="dispatch-wizard portal-create w-full min-w-0 space-y-4 px-4 py-4 text-slate-900 supports-[padding:max(0px)]:pl-[max(1rem,env(safe-area-inset-left))] supports-[padding:max(0px)]:pr-[max(1rem,env(safe-area-inset-right))] sm:px-6 sm:py-5 lg:px-8 lg:py-6"
+        class="dispatch-wizard portal-create w-full min-w-0 space-y-3 sm:space-y-4 px-4 py-4 text-slate-900 supports-[padding:max(0px)]:pl-[max(1rem,env(safe-area-inset-left))] supports-[padding:max(0px)]:pr-[max(1rem,env(safe-area-inset-right))] sm:px-6 sm:py-5 lg:px-8 lg:py-6"
         :class="showWizardActionBar ? 'dw-has-action-bar' : 'pb-10'"
         :aria-label="
             form.is_urgent && !loading
@@ -1030,7 +1030,7 @@
         >
             <div
                 v-if="clearDraftModalOpen"
-                class="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-[3px]"
+                class="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/45 p-4"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="clear-draft-modal-title"
@@ -1119,7 +1119,7 @@
         >
             <div
                 v-if="draftsModalOpen"
-                class="fixed inset-0 z-[201] flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-[3px]"
+                class="fixed inset-0 z-[201] flex items-center justify-center bg-slate-900/45 p-4"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="drafts-library-title"
@@ -1273,7 +1273,7 @@
         >
             <div
                 v-if="saveTemplateModalOpen"
-                class="fixed inset-0 z-[202] flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-[3px]"
+                class="fixed inset-0 z-[202] flex items-center justify-center bg-slate-900/45 p-4"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="save-template-modal-title"
@@ -1372,7 +1372,7 @@
         >
             <div
                 v-if="templateModalOpen"
-                class="fixed inset-0 z-[202] flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-[3px]"
+                class="fixed inset-0 z-[202] flex items-center justify-center bg-slate-900/45 p-4"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="template-library-title"
@@ -1608,7 +1608,7 @@
             <div
                 v-if="targetPickerModalOpen"
                 id="dw-target-picker-modal"
-                class="fixed inset-0 z-[201] flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-[3px]"
+                class="fixed inset-0 z-[201] flex items-center justify-center bg-slate-900/45 p-4"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="dw-target-picker-title"

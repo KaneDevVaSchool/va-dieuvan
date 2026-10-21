@@ -10,14 +10,14 @@
     >
       <div
         class="relative flex w-full min-w-0 items-center justify-center"
-        :class="isCollapsed ? 'flex-col gap-1.5' : 'px-9'"
+        :class="isCollapsed ? 'flex-col gap-1.5' : mobileDrawer ? 'px-7' : 'px-9'"
       >
         <AppLogo
           align="center"
           class="w-full min-w-0 [&_img]:mx-auto [&_img]:object-contain"
           :class="isCollapsed ? 'max-w-full px-0.5' : 'max-w-full'"
           :variant="isCollapsed ? 'icon' : 'wordmark'"
-          :size="isCollapsed ? 'sm' : 'lg'"
+          :size="isCollapsed ? 'sm' : mobileDrawer ? 'md' : 'lg'"
         />
         <button
           type="button"
@@ -233,23 +233,23 @@
     <div
       class="flex w-full min-w-0 items-center gap-2 px-3 py-2.5 sm:min-h-14 sm:gap-3 sm:px-4 sm:py-2"
     >
-      <button
-        type="button"
-        class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:text-slate-100 dark:hover:bg-slate-800 md:hidden"
-        :aria-label="t('app.menu')"
-        aria-controls="mobile-sidebar-menu"
-        aria-haspopup="dialog"
-        :aria-expanded="mobileMenuOpen"
-        @click="emit('open-menu')"
-      >
-        <Bars3Icon class="h-6 w-6" aria-hidden="true" />
-      </button>
       <div
-        class="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3 md:max-w-[min(18rem,36vw)] md:flex-none md:shrink-0"
+        class="flex min-w-0 shrink-0 items-center gap-2 sm:gap-3 md:max-w-[min(18rem,36vw)]"
       >
-        <AppLogo class="shrink-0" size="sm" />
+        <button
+          type="button"
+          class="-ml-1.5 inline-flex h-10 w-9 shrink-0 items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:text-slate-100 dark:hover:bg-slate-800 md:hidden"
+          :aria-label="t('app.menu')"
+          aria-controls="mobile-sidebar-menu"
+          aria-haspopup="dialog"
+          :aria-expanded="mobileMenuOpen"
+          @click="emit('open-menu')"
+        >
+          <Bars3Icon class="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
+        </button>
+        <AppLogo class="hidden shrink-0 md:block" size="sm" />
         <span
-          class="min-w-0 max-w-[min(12rem,28vw)] truncate text-xs font-semibold leading-tight tracking-tight text-slate-800 dark:text-slate-100 sm:max-w-[14rem] sm:text-sm"
+          class="hidden min-w-0 truncate text-sm font-bold leading-tight tracking-tight text-slate-900 dark:text-slate-100 sm:block"
           :title="t('app.title')"
         >
           {{ t('app.title_bar') }}
@@ -320,8 +320,11 @@
         </template>
       </nav>
 
-      <div class="flex shrink-0 items-center gap-2">
+      <!-- Mobile: ô tìm kiếm chiếm phần giữa header; md+: pill gọn cạnh chuông. -->
+      <div class="flex min-w-0 flex-1 md:flex-none">
         <GlobalSearch />
+      </div>
+      <div class="flex shrink-0 items-center gap-2">
         <NotificationBell tone="light" />
         <SidebarAccountBlock layout="horizontal" />
       </div>

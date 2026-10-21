@@ -3,7 +3,7 @@
   <Teleport to="body">
     <div
       v-if="open"
-      class="fixed inset-0 overflow-y-auto bg-black/45 backdrop-blur-[1px]"
+      class="fixed inset-0 overflow-y-auto bg-black/45"
       :style="{ zIndex }"
     >
       <div class="flex min-h-full items-center justify-center px-4 py-10 sm:px-6 sm:py-12">

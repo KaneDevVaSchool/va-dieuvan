@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-5">
+  <div class="space-y-4 sm:space-y-5">
     <div
       v-if="loadError"
       class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-100"
@@ -9,17 +9,17 @@
 
     <div class="space-y-4">
       <!-- Tiêu đề trang -->
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div class="flex items-center justify-between gap-3">
         <div>
-          <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl md:text-2xl">
+          <h1 class="text-base font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl md:text-2xl">
             {{ t('dashboard_analytics.title') }}
           </h1>
-          <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400 sm:mt-1 sm:text-sm">
             {{ t('dashboard_analytics.subtitle') }}
           </p>
         </div>
         <RouterLink
-          class="shrink-0 text-sm font-medium text-va-800 hover:text-va-900 dark:text-va-300 dark:hover:text-va-200"
+          class="shrink-0 text-xs font-medium text-va-800 hover:text-va-900 dark:text-va-300 dark:hover:text-va-200 sm:text-sm"
           :to="staffPath('/reports')"
         >
           {{ t('dashboard_analytics.reports_link') }} →
@@ -84,7 +84,7 @@
               :key="tr.id"
               :to="staffPath(`/trips/${tr.id}`)"
               :class="[
-                'group flex gap-3 rounded-xl border p-3 transition',
+                'group flex gap-2.5 rounded-xl border p-2.5 transition sm:gap-3 sm:p-3',
                 'border-slate-100 bg-gradient-to-br from-white to-slate-50/90 shadow-sm ring-1 ring-slate-900/[0.03]',
                 'hover:border-va-200/90 hover:shadow-md hover:ring-va-700/10',
                 'dark:border-slate-700/90 dark:from-slate-900 dark:to-slate-900/80 dark:ring-white/[0.04]',
@@ -92,37 +92,37 @@
                 recentTripsBusy ? 'pointer-events-none opacity-55' : '',
               ]"
             >
-              <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-va-50 text-va-800 shadow-inner dark:bg-va-950/55 dark:text-va-300" aria-hidden="true">
-                <TruckIcon class="h-5 w-5" />
+              <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-va-50 text-va-800 shadow-inner sm:h-11 sm:w-11 dark:bg-va-950/55 dark:text-va-300" aria-hidden="true">
+                <TruckIcon class="h-4.5 w-4.5 sm:h-5 sm:w-5" />
               </div>
               <div class="min-w-0 flex-1">
-                <div class="flex flex-wrap items-start justify-between gap-2">
+                <div class="flex items-start justify-between gap-2">
                   <div class="min-w-0 flex-1">
                     <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                      <span class="font-mono text-[11px] font-semibold tabular-nums text-slate-400 dark:text-slate-500">
+                      <span class="font-mono text-[10px] font-semibold tabular-nums text-slate-400 dark:text-slate-500 sm:text-[11px]">
                         TRP-{{ String(tr.id).padStart(4, '0') }}
                       </span>
-                      <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                        <ArrowsRightLeftIcon class="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
+                      <span class="inline-flex items-center gap-1 text-[10px] font-medium text-slate-500 dark:text-slate-400 sm:text-[11px]">
+                        <ArrowsRightLeftIcon class="h-3 w-3 opacity-70 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
                         {{ t('dashboard_analytics.recent_col_route') }}
                       </span>
                     </div>
-                    <div class="mt-1 space-y-1 leading-snug">
-                      <p class="text-sm">
-                        <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">{{ t('trips_page.col_origin') }}:</span>
+                    <div class="mt-1 space-y-0.5 leading-snug sm:space-y-1">
+                      <p class="text-xs sm:text-sm break-words">
+                        <span class="text-[10px] font-medium text-slate-500 dark:text-slate-400 sm:text-[11px]">{{ t('trips_page.col_origin') }}:</span>
                         <span :class="routeValueClass(tr.dispatch_request?.origin)">{{ displayOrigin(tr.dispatch_request?.origin) }}</span>
                       </p>
-                      <p class="text-sm">
-                        <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">{{ t('trips_page.col_destination') }}:</span>
+                      <p class="text-xs sm:text-sm break-words">
+                        <span class="text-[10px] font-medium text-slate-500 dark:text-slate-400 sm:text-[11px]">{{ t('trips_page.col_destination') }}:</span>
                         <span :class="routeValueClass(tr.dispatch_request?.destination)">{{ displayDestination(tr.dispatch_request?.destination) }}</span>
                       </p>
                     </div>
-                    <p class="mt-1 flex items-center gap-1.5 text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
-                      <ClockIcon class="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden="true" />
+                    <p class="mt-1 flex items-center gap-1.5 text-[10px] tabular-nums text-slate-500 dark:text-slate-400 sm:text-[11px]">
+                      <ClockIcon class="h-3 w-3 shrink-0 opacity-80 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
                       <span>{{ t('dashboard_analytics.recent_col_when') }}: {{ formatDepartShort(tr.depart_at) }}</span>
                     </p>
                   </div>
-                  <span :class="['shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold leading-none', tripStatusPillClass(tr.status)]">
+                  <span :class="['shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold leading-none sm:px-2.5 sm:py-1 sm:text-[11px]', tripStatusPillClass(tr.status)]">
                     {{ labelTripStatus(tr.status) }}
                   </span>
                 </div>
@@ -171,7 +171,7 @@
               :key="rq.id"
               :to="staffPath(`/requests/${rq.id}`)"
               :class="[
-                'group flex gap-3 rounded-xl border p-3 transition',
+                'group flex gap-2.5 rounded-xl border p-2.5 transition sm:gap-3 sm:p-3',
                 'border-slate-100 bg-gradient-to-br from-white to-violet-50/40 shadow-sm ring-1 ring-slate-900/[0.03]',
                 'hover:border-violet-200/90 hover:shadow-md hover:ring-violet-700/10',
                 'dark:border-slate-700/90 dark:from-slate-900 dark:to-violet-950/25 dark:ring-white/[0.04]',
@@ -180,37 +180,37 @@
               ]"
               :data-testid="`dash-recent-request-${rq.id}`"
             >
-              <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-100/95 text-violet-700 shadow-inner dark:bg-violet-950/50 dark:text-violet-300" aria-hidden="true">
-                <ClipboardDocumentListIcon class="h-5 w-5" />
+              <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-100/95 text-violet-700 shadow-inner sm:h-11 sm:w-11 dark:bg-violet-950/50 dark:text-violet-300" aria-hidden="true">
+                <ClipboardDocumentListIcon class="h-4.5 w-4.5 sm:h-5 sm:w-5" />
               </div>
               <div class="min-w-0 flex-1">
-                <div class="flex flex-wrap items-start justify-between gap-2">
+                <div class="flex items-start justify-between gap-2">
                   <div class="min-w-0 flex-1">
                     <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                      <span class="font-mono text-[11px] font-semibold tabular-nums text-slate-600 dark:text-slate-300">
+                      <span class="font-mono text-[10px] font-semibold tabular-nums text-slate-600 dark:text-slate-300 sm:text-[11px]">
                         {{ requestRefCode(rq) }}
                       </span>
-                      <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                        <ArrowsRightLeftIcon class="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
+                      <span class="inline-flex items-center gap-1 text-[10px] font-medium text-slate-500 dark:text-slate-400 sm:text-[11px]">
+                        <ArrowsRightLeftIcon class="h-3 w-3 opacity-70 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
                         {{ t('dashboard_analytics.recent_col_route') }}
                       </span>
                     </div>
-                    <div class="mt-1 space-y-1 leading-snug">
-                      <p class="text-sm">
-                        <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">{{ t('trips_page.col_origin') }}:</span>
+                    <div class="mt-1 space-y-0.5 leading-snug sm:space-y-1">
+                      <p class="text-xs sm:text-sm break-words">
+                        <span class="text-[10px] font-medium text-slate-500 dark:text-slate-400 sm:text-[11px]">{{ t('trips_page.col_origin') }}:</span>
                         <span :class="routeValueClass(rq.origin, true)">{{ displayOrigin(rq.origin) }}</span>
                       </p>
-                      <p class="text-sm">
-                        <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">{{ t('trips_page.col_destination') }}:</span>
+                      <p class="text-xs sm:text-sm break-words">
+                        <span class="text-[10px] font-medium text-slate-500 dark:text-slate-400 sm:text-[11px]">{{ t('trips_page.col_destination') }}:</span>
                         <span :class="routeValueClass(rq.destination, true)">{{ displayDestination(rq.destination) }}</span>
                       </p>
                     </div>
-                    <p class="mt-1 flex items-center gap-1.5 text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
-                      <ClockIcon class="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden="true" />
+                    <p class="mt-1 flex items-center gap-1.5 text-[10px] tabular-nums text-slate-500 dark:text-slate-400 sm:text-[11px]">
+                      <ClockIcon class="h-3 w-3 shrink-0 opacity-80 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
                       <span>{{ t('dashboard_analytics.recent_col_when') }}: {{ formatDepartShort(rq.depart_at) }}</span>
                     </p>
                   </div>
-                  <span :class="['shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold leading-none', requestStatusPillClass(rq.status)]">
+                  <span :class="['shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold leading-none sm:px-2.5 sm:py-1 sm:text-[11px]', requestStatusPillClass(rq.status)]">
                     {{ labelRequestStatus(rq.status) }}
                   </span>
                 </div>

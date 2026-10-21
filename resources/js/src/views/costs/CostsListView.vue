@@ -1,8 +1,8 @@
 <template>
-  <div class="cv-page space-y-6 min-h-0 min-w-0 pb-12 text-slate-900 dark:text-slate-100">
+  <div class="cv-page space-y-4 sm:space-y-6 min-h-0 min-w-0 text-slate-900 dark:text-slate-100">
 
     <!-- Header -->
-    <div class="flex flex-col gap-3 border-b border-slate-200/80 pb-6 lg:flex-row lg:items-end lg:justify-between">
+    <div class="flex flex-col gap-3 border-b border-slate-200/80 pb-4 sm:pb-6 lg:flex-row lg:items-end lg:justify-between">
       <div>
         <h1 class="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">
           {{ t('costs_page.hero_title') }}
@@ -80,9 +80,10 @@
         ref="costsDatagridRef"
         class="overflow-visible rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40"
       >
-        <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+        <div class="border-b border-slate-100 px-3 py-2.5 dark:border-slate-700 sm:px-5 sm:py-3">
           <div class="flex w-full min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
-            <div class="min-w-0 w-full basis-full lg:min-w-[10rem] lg:flex-1 lg:basis-auto">
+            <!-- Mobile: hàng 1 = tìm kiếm + nút thêm, hàng 2 = Lọc/Cột/Dữ liệu; lg: một hàng. -->
+            <div class="order-1 min-w-0 flex-1 lg:min-w-[10rem]">
               <DatagridToolbarSearch
                 v-model="searchQ"
                 input-id="costs-list-search"
@@ -94,7 +95,7 @@
               />
             </div>
 
-            <div class="flex shrink-0 items-center gap-2">
+            <div class="order-3 flex basis-full flex-wrap items-center gap-2 lg:order-2 lg:basis-auto lg:shrink-0 lg:flex-nowrap">
               <FilterVisibilityDropdown
                 :open="showFilterPanelDd"
                 :title="t('costs_page.filter_show_controls_title')"
@@ -248,16 +249,18 @@
               </button>
             </div>
 
-            <div class="ml-auto flex shrink-0 items-center gap-2">
+            <div class="order-2 flex shrink-0 items-center gap-2 lg:order-3 lg:ml-auto">
               <button
                 v-if="showAddCostButton"
                 type="button"
-                class="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg bg-va-800 px-3.5 text-sm font-semibold text-white shadow-sm ring-1 ring-black/5 transition hover:bg-va-900 focus:outline-none focus:ring-2 focus:ring-va-800/35 dark:ring-white/10"
+                class="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg bg-va-800 px-3 text-sm font-semibold text-white shadow-sm ring-1 ring-black/5 transition hover:bg-va-900 focus:outline-none focus:ring-2 focus:ring-va-800/35 sm:px-3.5 dark:ring-white/10"
+                :aria-label="activeTab === 'standalone' ? t('costs_page.add_standalone_cost') : t('costs_page.add_cost')"
                 data-testid="costs-add-btn"
                 @click="openAddCostModal"
               >
                 <PlusCircleIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-                {{ activeTab === 'standalone' ? t('costs_page.add_standalone_cost') : t('costs_page.add_cost') }}
+                <span class="sm:hidden">{{ t('costs_page.add_short') }}</span>
+                <span class="hidden sm:inline">{{ activeTab === 'standalone' ? t('costs_page.add_standalone_cost') : t('costs_page.add_cost') }}</span>
               </button>
             </div>
           </div>
@@ -726,7 +729,7 @@
     <section v-else-if="activeTab === 'business_personnel'" aria-labelledby="costs-section-business-personnel">
 
       <div class="overflow-visible rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
-        <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+        <div class="border-b border-slate-100 px-3 py-2.5 dark:border-slate-700 sm:px-5 sm:py-3">
           <h2
             id="costs-section-business-personnel"
             class="sr-only"
@@ -1074,7 +1077,7 @@
       <div class="overflow-visible rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
 
         <!-- ── Toolbar ─────────────────────────────────────────── -->
-        <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+        <div class="border-b border-slate-100 px-3 py-2.5 dark:border-slate-700 sm:px-5 sm:py-3">
           <div class="flex w-full min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
             <!-- Search -->
             <div class="min-w-0 w-full basis-full lg:min-w-[10rem] lg:flex-1 lg:basis-auto">
@@ -1271,7 +1274,7 @@
         aria-modal="true"
         aria-labelledby="costs-add-title"
       >
-        <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-[1px]" aria-hidden="true" @click="closeAddCostModal" />
+        <div class="absolute inset-0 bg-slate-900/50" aria-hidden="true" @click="closeAddCostModal" />
         <div
           class="relative z-10 flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-slate-900/10 max-sm:rounded-t-2xl max-sm:rounded-b-none"
           @click.stop
@@ -1408,7 +1411,7 @@
         aria-modal="true"
         aria-labelledby="costs-reject-title"
       >
-        <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-[1px]" aria-hidden="true" @click="closeRejectModal" />
+        <div class="absolute inset-0 bg-slate-900/50" aria-hidden="true" @click="closeRejectModal" />
         <div
           class="relative z-10 flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-rose-200/90 bg-white shadow-2xl ring-1 ring-rose-900/10 dark:border-rose-900/50 dark:bg-slate-900 max-sm:rounded-t-2xl max-sm:rounded-b-none"
           @click.stop
@@ -1490,7 +1493,7 @@
         aria-modal="true"
         aria-labelledby="costs-delete-title"
       >
-        <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-[1px]" aria-hidden="true" @click="closeDeleteModal" />
+        <div class="absolute inset-0 bg-slate-900/50" aria-hidden="true" @click="closeDeleteModal" />
         <div
           class="relative z-10 w-full max-w-sm overflow-hidden rounded-2xl border border-rose-200/90 bg-white shadow-2xl ring-1 ring-rose-900/10 dark:border-rose-900/50 dark:bg-slate-900 max-sm:rounded-t-2xl max-sm:rounded-b-none"
           @click.stop
@@ -1558,7 +1561,7 @@
         aria-modal="true"
         aria-labelledby="costs-quick-type-title"
       >
-        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-[1px]" aria-hidden="true" @click="quickAddTypeOpen = false" />
+        <div class="absolute inset-0 bg-slate-900/60" aria-hidden="true" @click="quickAddTypeOpen = false" />
         <div
           class="relative z-10 w-full max-w-sm overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-slate-900/10"
           @click.stop
@@ -3175,20 +3178,25 @@ onUnmounted(() => {
 
 <style scoped>
 /* ── Tab bar ──────────────────────────────────────────────────── */
+/* Mobile: lưới 2×2 để nhãn không bị bẻ từng chữ; từ sm: một hàng pill. */
 .cv-tab-bar {
-  @apply flex gap-1.5 rounded-2xl bg-slate-100/80 p-1.5 dark:bg-slate-800/60;
+  @apply grid grid-cols-2 gap-1 rounded-2xl bg-slate-100 p-1 ring-1 ring-slate-200/80 sm:inline-flex sm:gap-1.5 sm:p-1.5 dark:bg-slate-800/60 dark:ring-slate-700;
 }
 
 .cv-tab {
-  @apply flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-500 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 hover:text-slate-800 sm:flex-none dark:text-slate-400 dark:hover:text-slate-200;
+  @apply flex min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 text-[13px] font-semibold text-slate-700 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-va-700/40 hover:bg-white/70 hover:text-va-800 sm:px-4 sm:py-2.5 sm:text-sm dark:text-slate-200 dark:hover:bg-slate-700/60 dark:hover:text-white;
 }
 
 .cv-tab--active {
-  @apply bg-white text-teal-800 shadow-sm ring-1 ring-slate-200/70 dark:bg-slate-900 dark:text-teal-300 dark:ring-slate-700;
+  @apply bg-va-800 text-white shadow-md shadow-va-900/20 hover:bg-va-800 hover:text-white dark:bg-va-700 dark:hover:bg-va-700;
 }
 
 .cv-tab-badge {
-  @apply rounded-full bg-teal-100 px-1.5 py-0.5 text-xs font-bold text-teal-800 dark:bg-teal-950/60 dark:text-teal-300;
+  @apply rounded-full bg-va-100 px-1.5 py-0.5 text-xs font-bold text-va-800 dark:bg-va-950/60 dark:text-va-200;
+}
+
+.cv-tab--active .cv-tab-badge {
+  @apply bg-white/20 text-white;
 }
 
 /* ── Filter strip (business-personnel tab) ────────────────────── */

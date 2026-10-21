@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full space-y-5">
+  <div class="w-full space-y-4 sm:space-y-5">
     <DeptRejectedSummaryBar
       :stats="kpiStats"
       :loading="kpiLoading"
@@ -11,7 +11,7 @@
       ref="rejectedDatagridRef"
       class="overflow-visible rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40"
     >
-      <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+      <div class="border-b border-slate-100 px-3 py-2.5 dark:border-slate-700 sm:px-5 sm:py-3">
         <div class="flex w-full min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
           <div class="min-w-0 w-full basis-full lg:min-w-[10rem] lg:flex-1 lg:basis-auto">
             <DatagridToolbarSearch

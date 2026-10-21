@@ -199,7 +199,7 @@
   <Teleport to="body">
     <div
       v-if="horizontalConfirmOpen"
-      class="fixed inset-0 z-[100] flex items-end justify-center bg-slate-900/50 p-4 backdrop-blur-[2px] sm:items-center"
+      class="fixed inset-0 z-[100] flex items-end justify-center bg-slate-900/50 p-4 sm:items-center"
       role="presentation"
       @click.self="horizontalConfirmOpen = false"
     >
@@ -242,7 +242,7 @@
   <Teleport to="body">
     <div
       v-if="logoutConfirmOpen"
-      class="fixed inset-0 z-[100] flex items-end justify-center bg-slate-900/50 p-4 backdrop-blur-[2px] sm:items-center"
+      class="fixed inset-0 z-[100] flex items-end justify-center bg-slate-900/50 p-4 sm:items-center"
       role="presentation"
       @click.self="logoutConfirmOpen = false"
     >

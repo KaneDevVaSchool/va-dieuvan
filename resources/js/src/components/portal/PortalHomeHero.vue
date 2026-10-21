@@ -1,6 +1,6 @@
 <template>
   <section
-    class="relative overflow-hidden rounded-2xl border border-va-900/20 bg-gradient-to-br from-va-800 via-va-900 to-slate-900 px-5 py-5 text-white shadow-sm sm:px-6 sm:py-6"
+    class="relative overflow-hidden rounded-2xl border border-va-900/20 bg-gradient-to-br from-va-800 via-va-900 to-slate-900 px-4 py-4 text-white shadow-sm sm:px-6 sm:py-6"
     :aria-label="t('portal.dashboard_heading')"
     data-testid="portal-home-hero"
   >
@@ -13,22 +13,22 @@
       aria-hidden="true"
     />
 
-    <div class="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div class="relative flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div class="min-w-0 flex-1">
-        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-white/70">
+        <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70 sm:text-xs">
           {{ t('portal.dashboard_today', { date: todayLabel }) }}
         </p>
-        <h1 class="mt-1 font-display text-xl font-bold tracking-tight sm:text-2xl">
+        <h1 class="mt-1 font-display text-lg font-bold tracking-tight sm:text-2xl">
           {{ t('portal.dashboard_greeting', { name: displayName }) }}
         </h1>
-        <p class="mt-2 max-w-2xl text-sm leading-relaxed text-white/85 sm:text-base">
+        <p class="mt-1.5 max-w-2xl text-xs leading-relaxed text-white/85 sm:mt-2 sm:text-sm">
           {{ t('portal.dashboard_lead') }}
         </p>
       </div>
 
       <RouterLink
         :to="{ name: 'portalCreate' }"
-        class="inline-flex min-h-[44px] shrink-0 items-center justify-center rounded-xl bg-white px-5 text-sm font-semibold text-va-900 shadow-sm transition hover:bg-va-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        class="inline-flex min-h-[40px] shrink-0 items-center justify-center rounded-xl bg-white px-4 text-xs font-semibold text-va-900 shadow-sm transition hover:bg-va-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:min-h-[44px] sm:px-5 sm:text-sm"
         data-testid="portal-home-hero-create"
       >
         {{ t('portal.cta_primary') }}

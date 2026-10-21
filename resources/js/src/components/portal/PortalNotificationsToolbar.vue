@@ -37,7 +37,7 @@ const tabOptions = computed(() => [
     class="rounded-card border border-slate-200/80 bg-white shadow-sm"
     data-testid="portal-notifications-toolbar"
   >
-    <div class="border-b border-slate-100 px-4 py-3 sm:px-5">
+    <div class="border-b border-slate-100 px-3 py-2.5 sm:px-5 sm:py-3">
       <div class="flex w-full min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
         <div class="min-w-0 w-full basis-full lg:flex-1 lg:basis-auto">
           <DatagridToolbarSearch

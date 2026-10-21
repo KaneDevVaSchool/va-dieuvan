@@ -90,7 +90,7 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="space-y-5 pb-12">
+  <div class="space-y-4 sm:space-y-5">
     <SystemImpersonationModal :user="impersonationUser" :initial-role="role?.name" @close="impersonationUser = null" />
 
     <!-- ── Loading ────────────────────────────────────────────────────────── -->

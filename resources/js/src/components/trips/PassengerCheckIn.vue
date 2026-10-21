@@ -658,7 +658,7 @@
         <!-- DETAIL DRAWER -->
         <Teleport to="body">
             <div v-if="drawerRow" class="fixed inset-0 z-[110]" role="dialog" aria-modal="true">
-                <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px]" @click="closeDrawer" />
+                <div class="absolute inset-0 bg-slate-900/40" @click="closeDrawer" />
                 <aside
                     class="absolute right-0 top-0 flex h-full w-full max-w-full flex-col bg-white shadow-2xl sm:w-[420px] dark:bg-slate-900"
                 >
@@ -783,7 +783,7 @@
         <Teleport to="body">
             <div
                 v-if="addModalOpen"
-                class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-[1px]"
+                class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 p-4"
                 role="dialog"
                 aria-modal="true"
                 @click.self="closeAddModal"

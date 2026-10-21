@@ -1,11 +1,11 @@
 <template>
-  <div class="w-full max-w-none space-y-6 pb-10 text-slate-900 dark:text-slate-100">
+  <div class="w-full max-w-none space-y-4 sm:space-y-6 text-slate-900 dark:text-slate-100">
     <div v-if="loading" class="py-12 text-center text-sm text-slate-500">{{ t('resources.loading') }}</div>
     <div v-else-if="loadError" class="py-12 text-center text-sm text-rose-600">{{ loadError }}</div>
 
     <template v-else>
       <!-- Content header -->
-      <div class="border-b border-slate-200/80 pb-6 dark:border-slate-700/80">
+      <div class="border-b border-slate-200/80 pb-4 sm:pb-6 dark:border-slate-700/80">
         <RouterLink
           to="/resources/list?tab=vehicles"
           class="mb-3 inline-flex items-center gap-1 text-sm font-medium text-teal-700 hover:underline dark:text-teal-400"

@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full min-w-0 space-y-4 md:space-y-5">
+  <div class="w-full min-w-0 space-y-3 sm:space-y-4 md:space-y-5">
 
     <!-- ── Header ─────────────────────────────────────────────────── -->
     <div class="flex flex-wrap items-start justify-between gap-3">

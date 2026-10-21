@@ -1,9 +1,9 @@
 <template>
-  <div class="space-y-4">
+  <div class="space-y-3 sm:space-y-4">
     <Card :title="t('notifications_hub.card_inbox_title')">
       <div
         v-if="showAudienceTabs"
-        class="mb-3 flex flex-wrap gap-1 border-b border-slate-100 pb-3 dark:border-slate-800"
+        class="mb-3 flex gap-0.5 overflow-x-auto rounded-xl bg-slate-100 p-1 ring-1 ring-slate-200/80 [scrollbar-width:none] sm:inline-flex sm:max-w-full dark:bg-slate-800/60 dark:ring-slate-700 [&::-webkit-scrollbar]:hidden"
         role="tablist"
       >
         <button
@@ -12,11 +12,11 @@
           type="button"
           role="tab"
           :aria-selected="notifStore.activeTab === tab.key"
-          class="rounded-lg px-3 py-1.5 text-sm font-semibold transition"
+          class="flex-1 shrink-0 whitespace-nowrap rounded-lg px-1.5 py-1.5 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-va-700/40 sm:flex-none sm:px-3 sm:text-sm"
           :class="
             notifStore.activeTab === tab.key
-              ? 'bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-200'
-              : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
+              ? 'bg-va-800 text-white shadow-sm dark:bg-va-700'
+              : 'text-slate-700 hover:bg-white/70 hover:text-va-800 dark:text-slate-200 dark:hover:bg-slate-700/60'
           "
           :data-testid="`notifications-hub-tab-${tab.key}`"
           @click="setActiveTab(tab.key)"

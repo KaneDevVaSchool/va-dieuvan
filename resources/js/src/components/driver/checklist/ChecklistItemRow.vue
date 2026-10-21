@@ -21,7 +21,7 @@
       <span v-if="checkedTime" class="shrink-0 text-[11px] tabular-nums text-driver-muted/80">{{ checkedTime }}</span>
     </div>
 
-    <div class="mt-2.5 grid gap-2" :class="item.allow_na ? 'grid-cols-3' : 'grid-cols-2'" role="radiogroup" :aria-label="item.title">
+    <div class="mt-2 grid gap-1.5" :class="item.allow_na ? 'grid-cols-3' : 'grid-cols-2'" role="radiogroup" :aria-label="item.title">
       <button
         v-for="opt in choices"
         :key="opt.value"
@@ -29,7 +29,7 @@
         role="radio"
         :aria-checked="item.result === opt.value"
         :disabled="!editable"
-        class="min-h-[48px] rounded-xl text-sm font-bold ring-1 transition active:scale-[0.98] disabled:active:scale-100"
+        class="min-h-10 min-w-0 rounded-lg px-1.5 py-1 text-[13px] font-semibold leading-4 ring-1 transition active:scale-[0.98] disabled:active:scale-100"
         :class="item.result === opt.value ? opt.active : 'bg-driver-bg/60 text-driver-muted ring-white/10'"
         :data-testid="`checklist-item-${item.id}-${opt.value}`"
         @click="$emit('update:result', item.result === opt.value ? null : opt.value)"
@@ -44,6 +44,7 @@
       </p>
       <label :for="`checklist-note-${item.id}`" class="block text-xs font-semibold text-driver-ink">{{ t('checklist.ng_note_label') }}</label>
       <textarea
+        v-autosize-textarea
         :id="`checklist-note-${item.id}`"
         :value="item.note || ''"
         :readonly="!editable"
@@ -68,7 +69,7 @@
         />
         <label
           v-if="editable"
-          class="flex h-12 cursor-pointer items-center gap-1.5 rounded-lg bg-driver-bg/60 px-3 text-xs font-semibold text-driver-accent ring-1 ring-white/10"
+          class="flex h-10 cursor-pointer items-center gap-1.5 rounded-lg bg-driver-bg/60 px-3 text-xs font-semibold text-driver-accent ring-1 ring-white/10"
           :class="uploading ? 'opacity-50' : ''"
         >
           <CameraIcon class="h-5 w-5" aria-hidden="true" />
@@ -88,6 +89,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { CameraIcon, InformationCircleIcon } from '@heroicons/vue/24/outline'
 import AuthAttachmentThumb from '../../shared/AuthAttachmentThumb.vue'
+import vAutosizeTextarea from '../../../directives/autosizeTextarea'
 
 const props = defineProps({
   item: { type: Object, required: true },

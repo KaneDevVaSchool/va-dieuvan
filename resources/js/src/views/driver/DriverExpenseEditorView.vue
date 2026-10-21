@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-full w-full bg-driver-bg pb-4 text-driver-ink">
+  <div class="min-h-full w-full bg-driver-bg text-driver-ink">
     <header
       class="sticky top-0 z-40 border-b border-white/[0.06] bg-driver-bg/90 backdrop-blur-md"
       :style="{ paddingTop: 'max(0.5rem, env(safe-area-inset-top))' }"

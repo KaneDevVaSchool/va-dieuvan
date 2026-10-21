@@ -1,7 +1,7 @@
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4 sm:space-y-6">
     <!-- Header -->
-    <div class="flex flex-col gap-4 border-b border-slate-200/80 pb-6 lg:flex-row lg:items-center lg:justify-between">
+    <div class="flex flex-col gap-4 border-b border-slate-200/80 pb-4 sm:pb-6 lg:flex-row lg:items-center lg:justify-between">
       <div>
         <h1 class="text-xl font-semibold tracking-tight text-slate-900">
           {{ t('requests_page.title') }}
@@ -30,7 +30,7 @@
       ref="requestsDatagridRef"
       class="overflow-visible rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40"
     >
-      <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+      <div class="border-b border-slate-100 px-3 py-2.5 dark:border-slate-700 sm:px-5 sm:py-3">
         <div class="flex w-full min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
           <div class="min-w-0 w-full basis-full lg:min-w-[10rem] lg:flex-1 lg:basis-auto">
             <DatagridToolbarSearch
@@ -513,8 +513,8 @@
             :data-testid="`requests-row-${r.id}`"
           >
             <!-- Header -->
-            <div class="border-b border-slate-100 px-3 py-4 sm:px-5 dark:border-slate-800">
-              <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div class="border-b border-slate-100 px-3 py-3 sm:px-5 sm:py-4 dark:border-slate-800">
+              <div class="flex flex-col gap-2.5 sm:gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div class="flex min-w-0 gap-3 sm:gap-4">
                   <div
                     v-if="canBulkTrash && (isTrashTab || canDeleteRow(r))"
@@ -530,12 +530,12 @@
                     />
                   </div>
                   <div
-                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12"
+                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg sm:h-12 sm:w-12 sm:rounded-xl"
                     :class="requestTypeIconWrap(r.trip_type)"
                   >
                     <component
                       :is="requestTypeIcon(r.trip_type)"
-                      class="h-6 w-6"
+                      class="h-5 w-5 sm:h-6 sm:w-6"
                       :class="requestTypeIconColor(r.trip_type)"
                       aria-hidden="true"
                     />
@@ -543,12 +543,12 @@
                   <div class="min-w-0 flex-1">
                     <div class="flex flex-wrap items-center gap-2">
                       <div class="min-w-0">
-                        <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                        <p class="hidden text-[11px] font-semibold uppercase tracking-wide text-slate-500 sm:block dark:text-slate-400">
                           {{ t('requests_page.col_id') }}
                         </p>
                         <RouterLink
                           :to="{ name: 'requestDetail', params: { id: String(r.id) } }"
-                          class="mt-0.5 inline-flex items-center rounded-lg px-2.5 py-1 font-mono text-base font-bold tracking-tight transition hover:opacity-90 sm:text-lg"
+                          class="inline-flex items-center rounded-lg px-2 py-0.5 font-mono text-sm font-bold tracking-tight transition hover:opacity-90 sm:mt-0.5 sm:px-2.5 sm:py-1 sm:text-lg"
                           :class="requestCodeBadgeClass(r)"
                           :data-testid="`requests-card-link-${r.id}`"
                         >
@@ -583,28 +583,29 @@
                         {{ t('requests_page.badge_needs_cost_update') }}
                       </span>
                     </div>
-                    <dl class="mt-3 grid grid-cols-1 gap-x-4 gap-y-2 text-sm sm:grid-cols-2 xl:grid-cols-3">
-                      <div class="min-w-0">
-                        <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    <!-- Mobile: mỗi mục một dòng (nhãn + giá trị); sm+: lưới như cũ. -->
+                    <dl class="mt-2 grid grid-cols-1 gap-x-4 gap-y-0.5 text-[13px] sm:mt-3 sm:grid-cols-2 sm:gap-y-2 sm:text-sm xl:grid-cols-3">
+                      <div class="flex min-w-0 items-baseline gap-1.5 sm:block">
+                        <dt class="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                           {{ t('requests_page.meta_created') }}
                         </dt>
-                        <dd class="mt-0.5 font-medium tabular-nums text-slate-800 dark:text-slate-200">
+                        <dd class="truncate font-medium tabular-nums text-slate-800 sm:mt-0.5 dark:text-slate-200">
                           {{ formatRequestDateTime(r.created_at) }}
                         </dd>
                       </div>
-                      <div class="min-w-0">
-                        <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      <div class="flex min-w-0 items-baseline gap-1.5 sm:block">
+                        <dt class="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                           {{ t('requests_page.mobile_meta_channel') }}
                         </dt>
-                        <dd class="mt-0.5 font-medium text-slate-800 dark:text-slate-200">
+                        <dd class="truncate font-medium text-slate-800 sm:mt-0.5 dark:text-slate-200">
                           {{ r.source_channel ? labelSourceChannel(r.source_channel) : t('requests_page.empty_channel') }}
                         </dd>
                       </div>
-                      <div class="min-w-0">
-                        <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      <div class="flex min-w-0 items-baseline gap-1.5 sm:block">
+                        <dt class="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                           {{ t('requests_page.col_paper') }}
                         </dt>
-                        <dd class="mt-0.5 font-medium text-slate-800 dark:text-slate-200">
+                        <dd class="truncate font-medium text-slate-800 sm:mt-0.5 dark:text-slate-200">
                           {{ r.paper_status ? labelPaperStatus(r.paper_status) : t('requests_page.empty_paper') }}
                         </dd>
                       </div>
@@ -630,7 +631,7 @@
             </div>
 
             <!-- Body grid: origin · destination · requester · sla -->
-            <div class="grid grid-cols-1 gap-4 px-3 py-4 sm:px-4 md:grid-cols-2 md:gap-5 xl:grid-cols-4">
+            <div class="grid grid-cols-2 gap-3 px-3 py-3 sm:gap-4 sm:px-4 sm:py-4 md:gap-5 xl:grid-cols-4">
               <div class="min-w-0">
                 <div class="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
                   <MapPinIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -639,7 +640,7 @@
                 <p class="mt-1 text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100 sm:text-base">
                   {{ displayPlaceLabel(r.origin, 'empty_origin') }}
                 </p>
-                <div class="mt-2">
+                <div class="mt-1.5 sm:mt-2">
                   <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     {{ t('requests_page.col_depart_at') }}
                   </p>
@@ -656,7 +657,7 @@
                 <p class="mt-1 text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100 sm:text-base">
                   {{ displayPlaceLabel(r.destination, 'empty_destination') }}
                 </p>
-                <div class="mt-2">
+                <div class="mt-1.5 sm:mt-2">
                   <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     {{ t('requests_page.col_arrive_by') }}
                   </p>
@@ -665,21 +666,21 @@
                   </p>
                 </div>
               </div>
-              <div class="min-w-0 rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/40">
+              <div class="min-w-0 rounded-xl border border-slate-100 bg-slate-50/80 p-2.5 sm:p-3 dark:border-slate-800 dark:bg-slate-800/40">
                 <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   {{ t('requests_page.col_requester') }}
                 </p>
-                <div class="mt-2 flex items-start gap-2">
+                <div class="mt-1.5 flex items-center gap-2 sm:mt-2 sm:items-start">
                   <UserAvatar
                     :name="r.requester?.name || ''"
                     :email="r.requester?.email || ''"
                     :avatar-url="r.requester?.avatar_url"
                     :title="r.requester?.name || ''"
-                    size="md"
+                    size="sm"
                     data-testid="requests-card-requester-avatar"
                   />
                   <div class="min-w-0">
-                    <p class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    <p class="line-clamp-2 break-words text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100">
                       {{ r.requester?.name || t('requests_page.empty_requester') }}
                     </p>
                     <p v-if="r.paper_reference" class="mt-1 truncate text-xs text-slate-600 dark:text-slate-400" :title="r.paper_reference">
@@ -688,11 +689,11 @@
                   </div>
                 </div>
               </div>
-              <div class="min-w-0 rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/40">
+              <div class="min-w-0 rounded-xl border border-slate-100 bg-slate-50/80 p-2.5 sm:p-3 dark:border-slate-800 dark:bg-slate-800/40">
                 <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   {{ t('requests_page.col_sla') }}
                 </p>
-                <div class="mt-2 text-sm">
+                <div class="mt-1.5 text-sm sm:mt-2">
                   <span v-if="slaCell(r).kind === 'ok'" class="inline-flex items-center gap-1.5 font-medium text-emerald-700 dark:text-emerald-400">
                     <CheckCircleIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
                     {{ t('requests_page.sla_on_track') }}
@@ -705,7 +706,7 @@
                 </div>
                 <p
                   v-if="requestNotesListCell(r) !== t('requests_page.empty_notes')"
-                  class="mt-3 line-clamp-3 border-t border-slate-200/80 pt-2 text-xs leading-relaxed text-slate-600 dark:border-slate-700 dark:text-slate-400"
+                  class="mt-2 line-clamp-2 border-t border-slate-200/80 pt-2 text-xs leading-relaxed sm:mt-3 sm:line-clamp-3 text-slate-600 dark:border-slate-700 dark:text-slate-400"
                   :title="requestNotesListCell(r)"
                 >
                   <span class="font-semibold text-slate-700 dark:text-slate-300">{{ t('requests_page.col_notes') }}:</span>
@@ -721,7 +722,7 @@
                   <UserPlusIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
                   {{ passengerSummary(r) }}
                 </span>
-                <span class="inline-flex items-center gap-1.5">
+                <span class="hidden items-center gap-1.5 sm:inline-flex">
                   <ArrowsRightLeftIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
                   {{ labelTripType(r.trip_type) || t('requests_page.empty_trip_type') }}
                 </span>
@@ -836,7 +837,7 @@
     <Teleport to="body">
       <div
         v-if="bulkConfirmOpen"
-        class="fixed inset-0 z-[190] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-[2px]"
+        class="fixed inset-0 z-[190] flex items-center justify-center bg-slate-900/50 p-4"
         role="dialog"
         aria-modal="true"
         :aria-labelledby="'bulk-confirm-title'"
@@ -938,7 +939,7 @@
     <Teleport to="body">
       <div
         v-if="purgeAllOpen"
-        class="fixed inset-0 z-[191] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-[2px]"
+        class="fixed inset-0 z-[191] flex items-center justify-center bg-slate-900/50 p-4"
         role="dialog"
         aria-modal="true"
         aria-labelledby="purge-all-title"

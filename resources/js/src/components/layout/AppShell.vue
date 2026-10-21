@@ -2,7 +2,7 @@
   <div
     :class="[
       'h-dvh min-h-0 w-full overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100',
-      'supports-[padding:max(0px)]:pt-[env(safe-area-inset-top)] supports-[padding:max(0px)]:pb-[env(safe-area-inset-bottom)]',
+      'supports-[padding:max(0px)]:pt-[env(safe-area-inset-top)] md:supports-[padding:max(0px)]:pb-[env(safe-area-inset-bottom)]',
       isVertical ? 'flex flex-row' : 'flex flex-col',
     ]"
   >
@@ -12,7 +12,7 @@
         id="mobile-sidebar-menu"
         ref="mobileMenuDialog"
         :aria-label="$t('app.menu')"
-        class="m-0 h-dvh max-h-none w-[min(20rem,calc(100vw-3rem))] max-w-none overflow-hidden border-0 bg-transparent p-0 text-inherit backdrop:bg-slate-950/50"
+        class="m-0 h-dvh max-h-none w-[min(15rem,calc(100vw-3.5rem))] max-w-none overflow-hidden border-0 bg-transparent p-0 text-inherit backdrop:bg-slate-950/50"
         @close="mobileMenuOpen = false"
         @click="onMobileMenuClick"
       >
@@ -25,20 +25,20 @@
         'flex min-h-0 min-w-0 flex-1 flex-col overscroll-y-contain bg-slate-50 scrollbar-hidden dark:bg-slate-950',
         mainFlush
           ? 'overflow-hidden px-0 py-0'
-          : 'overflow-y-auto overflow-x-hidden px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5 lg:px-8 lg:py-6',
-        isHorizontalMobilePad,
+          // Padding đáy chung cho mọi trang staff — các view không tự đặt pb-* ở thẻ gốc.
+          : 'overflow-y-auto overflow-x-hidden p-3 pb-6 sm:p-4 sm:pb-6 md:px-6 md:pt-5 md:pb-8 lg:px-8 lg:pt-6 lg:pb-8',
       ]"
     >
       <ImpersonationBanner />
       <OperationalStatusBanner class="print:hidden" :class="mainFlush ? 'shrink-0 px-3 pt-3 sm:px-4 md:px-6 lg:px-8' : ''" />
-      <div class="flex min-h-0 min-w-0 flex-1 flex-col">
+      <div :class="mainFlush ? 'flex min-h-0 min-w-0 flex-1 flex-col' : 'flex min-w-0 shrink-0 flex-col'">
         <slot />
       </div>
     </main>
     <!-- Menu dưới: chỉ layout ngang + viewport &lt; md -->
     <div
       v-if="isHorizontal"
-      class="pointer-events-none fixed inset-x-0 bottom-0 z-40 print:hidden md:hidden"
+      class="pointer-events-none z-40 shrink-0 print:hidden md:hidden"
     >
       <div class="pointer-events-auto pb-[env(safe-area-inset-bottom)]">
         <MobileBottomNav />
@@ -89,11 +89,6 @@ const { isVertical, isHorizontal } = useSidebarLayout()
 
 useAppViewportLock()
 
-const isHorizontalMobilePad = computed(() =>
-  isHorizontal.value
-    ? 'pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:pb-5'
-    : '',
-)
 const auth = useAuthStore()
 
 onMounted(async () => {

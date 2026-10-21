@@ -17,7 +17,7 @@ const props = defineProps({
   hint: { type: String, default: '' },
   activeCardKey: { type: String, default: '' },
   /** Mặc định cỡ số KPI (card.displayClass ghi đè). */
-  valueDisplayClass: { type: String, default: 'text-2xl' },
+  valueDisplayClass: { type: String, default: 'text-lg sm:text-2xl' },
   /** Thẻ gọn — số nhỏ hơn, icon nhỏ, chiều cao thấp (vd. 6 cột tài chính). */
   compact: { type: Boolean, default: false },
 })
@@ -66,30 +66,30 @@ function valueClass(card) {
 
 <template>
   <section
-    class="kpi-strip relative mb-5 overflow-x-hidden rounded-xl border border-slate-200/80 bg-gradient-to-b from-slate-50/90 to-white px-4 py-4 shadow-sm sm:px-5 sm:py-5"
+    class="kpi-strip relative overflow-x-hidden rounded-xl border border-slate-200/80 bg-gradient-to-b from-slate-50/90 to-white px-3 py-3 shadow-sm sm:px-5 sm:py-5"
     :aria-label="ariaLabel"
   >
     <div class="kpi-strip__bg-outer" aria-hidden="true">
       <div class="kpi-strip__bg-inner" />
     </div>
 
-    <header class="relative mb-3 flex flex-wrap items-end justify-between gap-2">
+    <header class="relative mb-2.5 sm:mb-3 flex flex-wrap items-end justify-between gap-2">
       <div>
-        <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-va-800/80">{{ eyebrow }}</p>
-        <h2 class="text-sm font-semibold tracking-tight text-slate-800">{{ title }}</h2>
+        <p class="text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.14em] text-va-800/80">{{ eyebrow }}</p>
+        <h2 class="text-xs sm:text-sm font-semibold tracking-tight text-slate-800">{{ title }}</h2>
       </div>
-      <p v-if="hint" class="max-w-md text-right text-[11px] text-slate-500">{{ hint }}</p>
+      <p v-if="hint" class="max-w-md text-right text-[10px] sm:text-[11px] text-slate-500">{{ hint }}</p>
     </header>
 
-    <div class="relative pb-1" :class="gridClass">
+    <div class="relative pb-0.5" :class="gridClass">
       <component
         :is="isInteractive(card) ? 'button' : 'div'"
         v-for="card in cards"
         :key="card.key"
         :type="isInteractive(card) ? 'button' : undefined"
-        class="kpi-card group relative w-full"
+        class="kpi-card group relative w-full !p-2.5 sm:!p-3.5"
         :class="[
-          compact ? 'min-h-[5rem]' : 'min-h-[6.75rem]',
+          compact ? 'min-h-[4.5rem] sm:min-h-[5rem]' : 'min-h-[5.25rem] sm:min-h-[6.5rem]',
           toneClass[card.tone] || toneClass.brand,
           isInteractive(card) ? 'kpi-card--interactive' : 'kpi-card--static',
           isActive(card) ? 'kpi-card--active' : '',
@@ -103,30 +103,30 @@ function valueClass(card) {
         <span class="kpi-card__shell-accent" aria-hidden="true" />
         <span class="kpi-card__shine" aria-hidden="true" />
 
-        <div class="relative flex items-start justify-between gap-2">
+        <div class="relative flex items-start justify-between gap-1.5 sm:gap-2">
           <div class="min-w-0 flex-1">
-            <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ card.label }}</p>
+            <p class="text-[10px] font-semibold uppercase leading-snug tracking-wide text-slate-500 break-words sm:text-xs">{{ card.label }}</p>
             <p
-              class="mt-1 tabular-nums font-semibold font-display"
+              class="mt-0.5 sm:mt-1 tabular-nums font-semibold font-display"
               :class="[
                 compact
-                  ? 'truncate text-xs leading-snug sm:text-sm'
+                  ? 'text-xs leading-snug sm:text-sm'
                   : card.displayClass || valueDisplayClass,
                 valueClass(card),
               ]"
             >
               {{ card.display }}
             </p>
-            <p v-if="card.sub" class="mt-0.5 text-[11px] leading-snug text-slate-500">{{ card.sub }}</p>
+            <p v-if="card.sub" class="mt-0.5 text-[10px] leading-tight text-slate-500 break-words sm:text-[11px]">{{ card.sub }}</p>
             <div
               v-if="card.progress != null && card.progressTotal > 0"
-              class="mt-2"
+              class="mt-1.5 sm:mt-2"
             >
-              <div class="mb-0.5 flex justify-between text-[10px] text-slate-500">
+              <div class="mb-0.5 flex justify-between text-[9px] sm:text-[10px] text-slate-500">
                 <span>{{ t('app.kpi_strip_progress_label') }}</span>
                 <span class="tabular-nums">{{ card.progress }}%</span>
               </div>
-              <div class="h-1.5 overflow-hidden rounded-full bg-slate-100">
+              <div class="h-1 sm:h-1.5 overflow-hidden rounded-full bg-slate-100">
                 <div class="kpi-card__bar" :style="{ width: `${card.progress}%` }" />
               </div>
             </div>
@@ -135,11 +135,11 @@ function valueClass(card) {
             v-if="card.icon"
             class="flex shrink-0 items-center justify-center rounded-lg ring-1"
             :class="[
-              compact ? 'h-8 w-8' : 'h-10 w-10',
+              compact ? 'h-7 w-7' : 'h-8 w-8 sm:h-10 sm:w-10',
               iconToneClass[card.tone] || iconToneClass.brand,
             ]"
           >
-            <component :is="card.icon" :class="compact ? 'h-4 w-4' : 'h-5 w-5'" aria-hidden="true" />
+            <component :is="card.icon" :class="compact ? 'h-3.5 w-3.5' : 'h-4 w-4 sm:h-5 sm:w-5'" aria-hidden="true" />
           </div>
         </div>
 

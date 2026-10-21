@@ -4,7 +4,7 @@
     class="scroll-mt-44 rounded-lg border border-slate-200 bg-white"
     :aria-labelledby="headingId"
   >
-    <header class="border-b border-slate-100 px-4 py-3 sm:px-5">
+    <header class="border-b border-slate-100 px-3 py-2.5 sm:px-5 sm:py-3">
       <h2 :id="headingId" class="text-sm font-semibold text-slate-900 sm:text-base">{{ title }}</h2>
       <p v-if="lead" class="mt-1 text-xs text-slate-600 sm:text-sm">{{ lead }}</p>
     </header>

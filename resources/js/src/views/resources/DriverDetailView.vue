@@ -1,6 +1,6 @@
 <template>
   <div
-    class="w-full max-w-none space-y-6 rounded-xl border border-slate-200 bg-white p-4 text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 sm:p-6 lg:px-8"
+    class="w-full max-w-none space-y-4 sm:space-y-6 rounded-xl border border-slate-200 bg-white p-4 text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 sm:p-6 lg:px-8"
   >
     <div class="flex flex-wrap items-center gap-3">
       <RouterLink

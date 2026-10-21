@@ -266,7 +266,7 @@ onMounted(loadAll)
 </script>
 
 <template>
-  <div class="mx-auto max-w-4xl space-y-0 pb-12">
+  <div class="mx-auto max-w-4xl space-y-0">
 
     <!-- ── Header ─────────────────────────────────────────────────────────── -->
     <div class="mb-6 flex items-center gap-3">

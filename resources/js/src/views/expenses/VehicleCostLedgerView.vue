@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-4">
+  <div class="space-y-3 sm:space-y-4">
     <RouterLink :to="{ name: 'expenses' }" class="inline-flex items-center gap-1 text-sm font-medium text-teal-700 hover:underline dark:text-teal-400">
       <ArrowLeftIcon class="h-4 w-4" /> {{ t('expense.back_to_list') }}
     </RouterLink>

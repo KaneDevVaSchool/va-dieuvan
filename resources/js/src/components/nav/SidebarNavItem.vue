@@ -110,8 +110,8 @@ const iconClass = computed(() => {
       ].join(' ')
     }
     return [
-      'h-6 w-6 shrink-0 text-current opacity-90 transition-transform duration-200 ease-out',
-      isActive.value ? '-translate-y-0.5 scale-110' : '',
+      'h-5 w-5 shrink-0 transition-transform duration-200 ease-out',
+      isActive.value ? '-translate-y-0.5 text-va-800 dark:text-va-300' : 'text-slate-500 opacity-80 dark:text-slate-400',
     ].join(' ')
   }
   if (props.variant === 'horizontal') {
@@ -141,14 +141,21 @@ const labelClass = computed(() => {
 
 const badgeClass = computed(() => {
   const base = [
-    'inline-flex min-w-[1.25rem] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-bold leading-none',
+    'inline-flex shrink-0 items-center justify-center rounded-full font-bold leading-none',
+    // Thanh dưới tự đặt kích thước nhỏ riêng; các biến thể khác giữ kích thước gốc.
+    props.variant === 'bottom' ? '' : 'min-w-[1.25rem] px-1 text-[10px]',
   ]
   if (props.variant === 'vertical-compact') {
     base.push('absolute -right-0.5 -top-0.5 h-4 min-w-[1rem] px-0.5')
   } else if (props.variant === 'horizontal') {
     base.push('absolute -right-1 -top-1 h-3.5 min-w-[0.875rem] px-0.5 text-[9px]')
   } else if (props.variant === 'bottom') {
-    base.push('absolute -right-0.5 top-0.5 h-4 min-w-[1rem] px-0.5 text-[9px]')
+    // Neo vào góc trên-phải của icon (icon nằm giữa ô), không phải góc ô.
+    base.push(
+      props.driverBottomNav
+        ? 'absolute left-1/2 top-0.5 ml-2.5 h-4 min-w-4 px-1 text-[9px]'
+        : 'absolute left-1/2 top-0 ml-2 h-4 min-w-4 px-1 text-[9px] tabular-nums',
+    )
   }
   if (props.driverBottomNav && props.variant === 'bottom') {
     if (isActive.value) {
@@ -164,6 +171,14 @@ const badgeClass = computed(() => {
     } else {
       base.push('bg-amber-100 text-amber-900')
     }
+    return base.join(' ')
+  }
+  if (props.variant === 'bottom') {
+    base.push(
+      isActive.value
+        ? 'bg-va-800 text-white ring-[1.5px] ring-white dark:bg-va-500 dark:ring-slate-900'
+        : 'bg-rose-600 text-white ring-[1.5px] ring-white dark:ring-slate-900',
+    )
     return base.join(' ')
   }
   if (isActive.value) {
@@ -195,12 +210,12 @@ const linkClass = computed(() => {
       return base.join(' ')
     }
     const base = [
-      'relative flex min-h-[3.875rem] min-w-0 flex-1 flex-col items-center justify-center gap-1 border-t-2 border-transparent px-0.5 pt-2 pb-3 transition-colors',
-      'text-slate-600 dark:text-slate-300',
+      'relative flex min-h-[3.5rem] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 pt-1.5 pb-2 transition-colors',
+      'text-slate-500 dark:text-slate-400',
     ]
     if (isActive.value) {
       base.push(
-        'border-va-800 bg-va-50/95 font-semibold text-va-900 dark:border-va-500 dark:bg-va-950/50 dark:text-va-100',
+        'font-bold text-va-800 dark:text-va-300',
       )
     } else {
       base.push('active:bg-slate-100 dark:active:bg-slate-800/80')

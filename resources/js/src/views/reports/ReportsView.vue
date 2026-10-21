@@ -1,5 +1,5 @@
 <template>
-  <div class="reports-print space-y-4 md:space-y-5">
+  <div class="reports-print space-y-3 sm:space-y-4 md:space-y-5">
     <div v-if="loadError" class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 print:hidden">
       {{ loadError }}
     </div>

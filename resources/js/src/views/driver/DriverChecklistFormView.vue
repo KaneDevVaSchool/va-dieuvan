@@ -1,23 +1,23 @@
 <template>
-  <div class="min-h-full w-full bg-driver-bg pb-4 text-driver-ink">
+  <div class="min-h-full w-full bg-driver-bg text-driver-ink">
     <header
       class="sticky top-0 z-40 border-b border-white/[0.06] bg-driver-bg/90 backdrop-blur-md"
       :style="{ paddingTop: 'max(0.5rem, env(safe-area-inset-top))' }"
     >
-      <div class="mx-auto flex max-w-lg items-center gap-2 px-3 pt-2 sm:max-w-2xl">
+      <div class="mx-auto flex max-w-lg items-center gap-2 px-3 pb-2 pt-2 sm:max-w-2xl">
         <button
           type="button"
-          class="flex min-h-[48px] min-w-[48px] shrink-0 items-center justify-center rounded-2xl bg-driver-card ring-1 ring-white/[0.08] active:scale-[0.97]"
+          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-driver-card ring-1 ring-white/[0.08] active:scale-[0.97]"
           :aria-label="t('checklist.back')"
           @click="goBack"
         >
-          <ArrowLeftIcon class="h-6 w-6 text-driver-accent" />
+          <ArrowLeftIcon class="h-5 w-5 text-driver-accent" />
         </button>
         <div class="min-w-0 flex-1 text-center">
           <h1 class="truncate text-lg font-bold">{{ sub ? t(`checklist.freq_${sub.period_type}`) : t('checklist.page_title') }}</h1>
           <p v-if="sub" class="truncate text-xs text-driver-muted">{{ sub.code }} · {{ sub.vehicle?.license_plate }}</p>
         </div>
-        <span class="w-[48px] shrink-0 text-right text-[11px] text-driver-muted" aria-live="polite">{{ saveStateLabel }}</span>
+        <span class="w-10 shrink-0 text-right text-[11px] text-driver-muted" aria-live="polite">{{ saveStateLabel }}</span>
       </div>
       <div v-if="sub && editable" class="mx-auto max-w-lg px-4 pb-2 pt-2 sm:max-w-2xl">
         <div class="h-2 overflow-hidden rounded-full bg-white/10" role="progressbar" :aria-valuenow="doneCount" :aria-valuemax="items.length">
@@ -45,7 +45,7 @@
           <p v-if="sub.review_note" class="mt-2 text-sm">{{ t('checklist.review_note') }}: {{ sub.review_note }}</p>
           <button
             type="button"
-            class="mt-3 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-driver-card text-sm font-bold text-driver-accent ring-1 ring-white/10"
+            class="mt-3 flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-driver-card px-3 py-2 text-sm font-semibold text-driver-accent ring-1 ring-white/10"
             :disabled="downloading"
             @click="downloadPdf"
           >
@@ -105,7 +105,7 @@
         <section v-if="editable" class="space-y-3 rounded-[1.25rem] bg-driver-card p-4 ring-1 ring-white/[0.06]">
           <label class="block text-sm font-semibold text-driver-muted">
             {{ t('checklist.general_note') }}
-            <textarea v-model="headerNote" rows="2" maxlength="2000" class="mt-1.5 w-full rounded-xl border border-white/10 bg-driver-surface px-3 py-2 text-sm text-driver-ink" @input="markHeaderDirty" :placeholder="t('driver_form.note')" />
+            <textarea v-model="headerNote" v-autosize-textarea rows="2" maxlength="2000" class="mt-1.5 w-full rounded-xl border border-white/10 bg-driver-surface px-3 py-2 text-sm text-driver-ink" @input="markHeaderDirty" :placeholder="t('driver_form.note')" />
           </label>
           <label class="block text-sm font-semibold text-driver-muted">
             {{ t('checklist.inspector') }}
@@ -137,7 +137,7 @@
 
           <button
             type="button"
-            class="flex min-h-[52px] w-full items-center justify-center rounded-xl bg-driver-accent py-3 text-base font-bold text-driver-bg transition hover:brightness-110 disabled:opacity-45 active:scale-[0.99]"
+            class="flex min-h-11 w-full items-center justify-center rounded-lg bg-driver-accent px-3 py-2 text-sm font-bold text-driver-bg transition hover:brightness-110 disabled:opacity-45 active:scale-[0.99]"
             :disabled="submitting || !confirmed || doneCount < items.length || uploadingItemId != null"
             data-testid="checklist-submit"
             @click="submit"
@@ -170,6 +170,7 @@ import {
 import { confirmAction } from '../../composables/useConfirm'
 import { showAppError, showAppSuccess } from '../../composables/appMessage'
 import ChecklistItemRow from '../../components/driver/checklist/ChecklistItemRow.vue'
+import vAutosizeTextarea from '../../directives/autosizeTextarea'
 
 const AUTOSAVE_MS = 1200
 

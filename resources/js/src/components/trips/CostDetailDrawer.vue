@@ -8,7 +8,7 @@
     >
       <div
         v-if="open"
-        class="fixed inset-0 z-[55] bg-slate-900/40 backdrop-blur-[2px]"
+        class="fixed inset-0 z-[55] bg-slate-900/40"
         @click="emit('close')"
       />
     </Transition>

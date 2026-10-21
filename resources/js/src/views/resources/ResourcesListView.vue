@@ -1,7 +1,7 @@
-﻿<template>
-  <div class="w-full min-w-0 space-y-6" style="zoom: 0.9">
+<template>
+  <div class="w-full min-w-0 space-y-4 sm:space-y-6" style="zoom: 0.9">
     <!-- Page header -->
-    <div class="flex flex-col gap-3 border-b border-slate-200/80 pb-6 lg:flex-row lg:items-end lg:justify-between">
+    <div class="flex flex-col gap-3 border-b border-slate-200/80 pb-4 sm:pb-6 lg:flex-row lg:items-end lg:justify-between">
       <div>
         <div class="flex flex-wrap items-center gap-2">
           <h1 class="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">{{ t('resources.page_title') }}</h1>
@@ -46,7 +46,7 @@
       </div>
 
       <!-- Toolbar row -->
-      <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:px-5">
+      <div class="border-b border-slate-100 px-3 py-2.5 dark:border-slate-700 sm:px-5 sm:py-3">
         <div class="flex w-full min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
           <!-- Search -->
           <div class="min-w-0 w-full basis-full lg:min-w-[10rem] lg:flex-1 lg:basis-auto">
@@ -701,7 +701,7 @@
       >
         <aside
           v-if="activeTab === 'vehicles' && selectedVehicle"
-          class="fixed inset-0 z-50 flex justify-end bg-black/40 p-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-sm sm:p-3 xl:static xl:z-auto xl:inset-auto xl:flex xl:w-[min(100%,440px)] xl:max-w-none xl:shrink-0 xl:self-start xl:bg-transparent xl:p-0 xl:pt-0 xl:pb-0 xl:backdrop-blur-0"
+          class="fixed inset-0 z-50 flex justify-end bg-black/40 p-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] sm:p-3 xl:static xl:z-auto xl:inset-auto xl:flex xl:w-[min(100%,440px)] xl:max-w-none xl:shrink-0 xl:self-start xl:bg-transparent xl:p-0 xl:pt-0 xl:pb-0"
           @click.self="closePanel"
         >
           <div
@@ -1060,7 +1060,7 @@
       >
         <aside
           v-if="activeTab === 'suppliers' && selectedSupplier"
-          class="fixed inset-0 z-50 flex justify-end bg-black/40 p-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-sm sm:p-3 xl:static xl:z-auto xl:inset-auto xl:flex xl:w-[min(100%,440px)] xl:shrink-0 xl:bg-transparent xl:p-0 xl:backdrop-blur-0"
+          class="fixed inset-0 z-50 flex justify-end bg-black/40 p-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] sm:p-3 xl:static xl:z-auto xl:inset-auto xl:flex xl:w-[min(100%,440px)] xl:shrink-0 xl:bg-transparent xl:p-0"
           @click.self="closePanel"
         >
           <div
@@ -2416,7 +2416,7 @@
     <Teleport to="body">
       <div
         v-if="pdfPreviewOpen"
-        class="fixed inset-0 z-[70] flex flex-col bg-black/60 backdrop-blur-sm"
+        class="fixed inset-0 z-[70] flex flex-col bg-black/60"
         role="dialog"
         aria-modal="true"
         :aria-label="t('resources.attachment_preview_pdf')"

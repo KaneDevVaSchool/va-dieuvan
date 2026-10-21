@@ -10,7 +10,7 @@
     >
       <div
         v-if="open"
-        class="fixed inset-0 z-[202] flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-[3px]"
+        class="fixed inset-0 z-[202] flex items-center justify-center bg-slate-900/45 p-4"
         role="dialog"
         aria-modal="true"
         aria-labelledby="submit-result-modal-title"
