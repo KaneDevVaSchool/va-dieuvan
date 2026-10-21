@@ -101,11 +101,42 @@ class ImpersonationTest extends TestCase
         $actor = $this->account(['superadmin']);
         $original = $actor->createToken('test')->plainTextToken;
         $target = $this->account([]);
-        $this->asToken($original)->postJson('/api/impersonate/'.$target->id)->assertUnprocessable();
+        $this->asToken($original)->postJson('/api/impersonate/'.$target->id, ['role' => 'driver'])->assertUnprocessable();
         $target->assignRole(['driver', 'admin']);
         $this->asToken($original)->postJson('/api/impersonate/'.$target->id)->assertUnprocessable();
         $this->asToken($original)->postJson('/api/impersonate/'.$target->id, ['role' => 'dispatcher'])->assertUnprocessable();
         $this->assertTrue($target->fresh()->hasAllRoles(['driver', 'admin']));
+    }
+
+    public function test_user_without_role_is_impersonated_as_portal_requester(): void
+    {
+        $actor = $this->account(['superadmin']);
+        $target = $this->account([]);
+        $token = $this->start($actor, $target);
+
+        $this->asToken($token)->getJson('/api/user')->assertOk()
+            ->assertJsonPath('id', $target->id)
+            ->assertJsonPath('is_superadmin', false)
+            ->assertJsonPath('impersonation.portal', true)
+            ->assertJsonPath('impersonation.role.label', 'Portal người yêu cầu')
+            ->assertJsonCount(0, 'roles');
+        $this->asToken($token)->getJson('/api/portal/dispatch-requests')->assertOk();
+        $this->asToken($token)->getJson('/api/vehicles')->assertForbidden();
+        $this->assertDatabaseHas('audit_logs', ['event' => 'impersonation.started', 'actor_id' => $actor->id, 'auditable_id' => $target->id]);
+    }
+
+    public function test_staff_can_be_impersonated_as_portal_without_staff_access(): void
+    {
+        $actor = $this->account(['superadmin']);
+        $target = $this->account(['dispatcher']);
+        $token = $this->asToken($actor->createToken('test')->plainTextToken)
+            ->postJson('/api/impersonate/'.$target->id, ['portal' => true])->assertOk()->json('data.token');
+
+        $this->asToken($token)->getJson('/api/user')->assertOk()
+            ->assertJsonPath('impersonation.portal', true)->assertJsonCount(0, 'roles');
+        $this->asToken($token)->getJson('/api/portal/dispatch-requests')->assertOk();
+        $this->asToken($token)->getJson('/api/vehicles')->assertForbidden();
+        $this->assertTrue($target->fresh()->hasRole('dispatcher'));
     }
 
     public function test_nested_impersonation_is_forbidden(): void

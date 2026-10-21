@@ -23,6 +23,7 @@
 import { computed, ref, watch } from 'vue'
 import { useAuthStore } from '../../store'
 import { formatApiError } from '../../api/http'
+import { IMPERSONATE_PORTAL } from '../../api/auth'
 
 const props = defineProps({ user: { type: Object, default: null } })
 const emit = defineEmits(['close'])
@@ -30,10 +31,16 @@ const auth = useAuthStore()
 const busy = ref(false)
 const error = ref('')
 const selectedRole = ref('')
-const availableRoles = computed(() => (props.user?.roles ?? []).filter(role => role.name !== 'superadmin'))
+const userRoles = computed(() => (props.user?.roles ?? []).filter(role => role.name !== 'superadmin'))
+const availableRoles = computed(() => [
+  ...userRoles.value,
+  { name: IMPERSONATE_PORTAL, display_name: 'Portal người yêu cầu' },
+])
 watch(() => props.user, () => {
   error.value = ''
-  selectedRole.value = availableRoles.value.length === 1 ? availableRoles.value[0].name : ''
+  // Mặc định: vai trò duy nhất của user; user chưa có vai trò → Portal.
+  if (userRoles.value.length === 1) selectedRole.value = userRoles.value[0].name
+  else selectedRole.value = userRoles.value.length === 0 ? IMPERSONATE_PORTAL : ''
 })
 function close() { if (!busy.value) emit('close') }
 async function start() {

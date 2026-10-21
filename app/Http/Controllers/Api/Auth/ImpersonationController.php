@@ -24,22 +24,32 @@ class ImpersonationController extends Controller
         abort_if($user->isSuperAdmin(), 403, 'Không thể giả lập tài khoản Super Admin.');
         abort_unless($user->is_active, 422, 'Tài khoản này đã bị khóa.');
 
-        $data = $request->validate(['role' => ['nullable', 'string', 'max:64']]);
+        $data = $request->validate([
+            'role' => ['nullable', 'string', 'max:64'],
+            'portal' => ['nullable', 'boolean'],
+        ]);
         $roles = $user->roles;
-        abort_if($roles->isEmpty(), 422, 'Người dùng chưa có vai trò để giả lập.');
-        $roleName = $data['role'] ?? ($roles->count() === 1 ? $roles->first()->name : null);
-        abort_unless($roleName, 422, 'Vui lòng chọn một vai trò để trải nghiệm.');
-        $role = $roles->firstWhere('name', $roleName);
-        abort_unless($role, 422, 'Vai trò không hợp lệ cho tài khoản này.');
+        // User chưa có vai trò chỉ dùng được Portal; user có vai trò có thể chọn Portal để trải nghiệm như người yêu cầu.
+        $portal = (bool) ($data['portal'] ?? false) || ($roles->isEmpty() && empty($data['role']));
+        if ($portal) {
+            $abilities = ['impersonation', 'impersonator:'.$actor->id, ImpersonationToken::PORTAL_ABILITY];
+            $roleSummary = ['name' => null, 'label' => ImpersonationToken::PORTAL_LABEL];
+        } else {
+            $roleName = $data['role'] ?? ($roles->count() === 1 ? $roles->first()->name : null);
+            abort_unless($roleName, 422, 'Vui lòng chọn một vai trò để trải nghiệm.');
+            $role = $roles->firstWhere('name', $roleName);
+            abort_unless($role, 422, 'Vai trò không hợp lệ cho tài khoản này.');
+            $abilities = ['impersonation', 'impersonator:'.$actor->id, 'as_role:'.$roleName];
+            $roleSummary = ['name' => $roleName, 'label' => $role->display_name ?? $roleName];
+        }
 
-        $token = $user->createToken(ImpersonationToken::NAME, [
-            'impersonation', 'impersonator:'.$actor->id, 'as_role:'.$roleName,
-        ], now()->addHours(ImpersonationToken::TTL_HOURS));
+        $token = $user->createToken(ImpersonationToken::NAME, $abilities, now()->addHours(ImpersonationToken::TTL_HOURS));
         $metadata = [
             'active' => true,
             'impersonator' => ImpersonationToken::summary($actor),
             'target' => ImpersonationToken::summary($user),
-            'role' => ['name' => $roleName, 'label' => $role->display_name ?? $roleName],
+            'portal' => $portal,
+            'role' => $roleSummary,
             'expires_at' => $token->accessToken->expires_at->toIso8601String(),
         ];
         app(AuditLogger::class)->log(

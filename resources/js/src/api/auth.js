@@ -21,8 +21,12 @@ export async function patchProfile(payload) {
   return data
 }
 
+/** Giá trị chọn trong modal giả lập = trải nghiệm Portal người yêu cầu (không vai trò). */
+export const IMPERSONATE_PORTAL = '__portal__'
+
 export async function startImpersonation(userId, role) {
-  const { data } = await http.post(`/impersonate/${userId}`, { role })
+  const payload = role === IMPERSONATE_PORTAL ? { portal: true } : { role }
+  const { data } = await http.post(`/impersonate/${userId}`, payload)
   return data.data
 }
 

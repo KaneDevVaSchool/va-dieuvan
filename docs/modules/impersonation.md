@@ -4,7 +4,8 @@ Luồng tham chiếu: tính năng giả lập của SIS trong VA AGN.
 
 Đăng nhập bằng **Super Admin**, mở **Hệ thống → Phân vai trò nhân viên**, chọn **Giả lập** trên thẻ người dùng. Chọn một vai trò người đó đang có rồi xác nhận. Hệ thống chuyển đến phân hệ tương ứng, dùng đúng danh tính và dữ liệu của người được chọn. Banner màu cam cho biết người/vai trò đang trải nghiệm; **Thoát giả lập** khôi phục phiên Super Admin và quay lại trang phân vai trò.
 
-- Chỉ Super Admin được bắt đầu; không giả lập chính mình, Super Admin khác, tài khoản bị khóa hoặc user chưa có role. Không cho phép giả lập lồng nhau.
+- Chỉ Super Admin được bắt đầu; không giả lập chính mình, Super Admin khác hoặc tài khoản bị khóa. Không cho phép giả lập lồng nhau.
+- **Portal người yêu cầu**: luôn có trong danh sách chọn. User chưa có role mặc định chọn Portal; user có role cũng có thể chọn Portal để xem `/portal` như người yêu cầu. Phiên Portal bỏ toàn bộ role (token mang ability `as_portal`), chỉ giữ quyền gán trực tiếp, nên không gọi được API staff/tài xế. API: `POST /api/impersonate/{user}` với `{ "portal": true }`.
 - User nhiều role phải chọn một role. Quyền hiệu lực gồm quyền role đã chọn và quyền gán trực tiếp cho user, giống SIS. Không thay đổi role trong DB.
 - Phiên Sanctum riêng hết hạn sau 2 giờ. Token gốc vẫn được giữ; thoát thu hồi token giả lập. Token hết hạn hoặc quyền giả lập bị thu hồi thì giao diện khôi phục tài khoản gốc. Đăng xuất thu hồi cả hai phiên.
 - `impersonation.started`, `impersonation.ended` và log API ghi nhận người giả lập. Thao tác trong phiên giả lập vẫn ghi dữ liệu thật của user được chọn.

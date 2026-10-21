@@ -33,17 +33,23 @@ try {
   const original = { id: 1, name: 'Test Super Admin', email: 'super@example.test', is_active: true, is_superadmin: true, roles: [roles[0]], permissions: [], impersonation: null }
   const target = { id: 2, name: 'Test Driver', email: 'driver@example.test', is_active: true, is_superadmin: false, roles: [roles[1]], permissions: ['trip.view_own', 'trip.update_status'], impersonation: { active: true, impersonator: { id: 1, name: original.name }, role: { name: 'driver', label: 'Tài xế' } } }
   let expired = false
+  const portalTarget = { id: 3, name: 'No role', email: 'none@example.test', is_active: true, is_superadmin: false, roles: [], permissions: [], impersonation: { active: true, portal: true, impersonator: { id: 1, name: original.name }, role: { name: null, label: 'Portal người yêu cầu' } } }
   let starts = 0
   let leaves = 0
   await context.route('**/api/**', async route => {
     const request = route.request()
     const path = new URL(request.url()).pathname
     const impersonating = request.headers().authorization === 'Bearer impersonated-test-token'
+    const portalImpersonating = request.headers().authorization === 'Bearer impersonated-portal-token'
     let status = 200
     let data = { data: { items: [], meta: { total: 0, last_page: 1 }, unread_count: 0 } }
     if (path === '/api/user') {
       if (impersonating && expired) { status = 401; data = { message: 'Expired' } }
-      else data = impersonating ? target : original
+      else data = impersonating ? target : portalImpersonating ? portalTarget : original
+    }
+    if (path === '/api/impersonate/3') {
+      assert.deepEqual(request.postDataJSON(), { portal: true })
+      data = { data: { token: 'impersonated-portal-token', impersonation: portalTarget.impersonation } }
     }
     if (path === '/api/admin/roles') data = { data: roles }
     if (path === '/api/admin/users') data = { data: { items: [original, { ...target, impersonation: null }, { id: 3, name: 'No role', email: 'none@example.test', roles: [] }], meta: { total: 3, current_page: 1, last_page: 1, per_page: 25, per_page_mode: 'paged' } } }
@@ -64,7 +70,24 @@ try {
   await page.goto(`${origin}/mng/system/user-roles`)
   await expect(page.getByTestId('user-role-card-2').getByTestId('user-role-impersonate')).toBeVisible()
   await expect(page.getByTestId('user-role-card-1').getByTestId('user-role-impersonate')).toHaveCount(0)
-  await expect(page.getByTestId('user-role-card-3').getByTestId('user-role-impersonate')).toHaveCount(0)
+  await expect(page.getByTestId('user-role-card-3').getByTestId('user-role-impersonate')).toBeVisible()
+
+  // User chưa có vai trò → giả lập Portal người yêu cầu.
+  await page.getByTestId('user-role-card-3').getByTestId('user-role-impersonate').click()
+  await expect(page.getByRole('dialog').getByRole('combobox')).toHaveValue('__portal__')
+  await page.getByRole('dialog').getByRole('button', { name: 'Giả lập', exact: true }).click()
+  await expect(page).toHaveURL(/\/portal$/)
+  await expect(page.getByTestId('impersonation-banner')).toContainText('No role')
+  await expect(page.getByTestId('impersonation-banner')).toContainText('Portal người yêu cầu')
+  await expect(page.locator('.splash-screen')).toHaveCount(0)
+  await expect(page.getByTestId('impersonation-banner')).toBeInViewport()
+  await page.locator('.portal-app-main').evaluate(el => el.scrollTo(0, 400))
+  await page.screenshot({ path: 'storage/app/impersonation-portal-preview.png' })
+  await page.getByTestId('impersonation-banner').getByRole('button', { name: 'Thoát giả lập' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Thoát giả lập' }).click()
+  await expect(page).toHaveURL(/\/mng\/system\/user-roles$/)
+  assert.equal(leaves, 1)
+  leaves = 0
 
   async function startDriver() {
     await page.getByTestId('user-role-card-2').getByTestId('user-role-impersonate').click()
@@ -96,7 +119,7 @@ try {
   assert.equal(starts, 2)
   assert.equal(await page.evaluate(() => localStorage.getItem('sanctum_token')), 'original-test-token')
   assert.deepEqual(errors, [])
-  console.log('PASS: SIS user/role selection, driver identity, reload, confirmed exit, expired-session restoration, and no browser exceptions.')
+  console.log('PASS: SIS user/role selection, portal requester, driver identity, reload, confirmed exit, expired-session restoration, and no browser exceptions.')
 } finally {
   if (browser) await browser.close()
   server.close()

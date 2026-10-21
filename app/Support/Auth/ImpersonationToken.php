@@ -12,6 +12,16 @@ final class ImpersonationToken
 
     public const TTL_HOURS = 2;
 
+    /** Giả lập không vai trò: trải nghiệm Portal người yêu cầu (`/portal`). */
+    public const PORTAL_ABILITY = 'as_portal';
+
+    public const PORTAL_LABEL = 'Portal người yêu cầu';
+
+    public static function isPortal(PersonalAccessToken $token): bool
+    {
+        return in_array(self::PORTAL_ABILITY, $token->abilities ?? [], true);
+    }
+
     public static function current(Request $request): ?PersonalAccessToken
     {
         $token = $request->user()?->currentAccessToken();

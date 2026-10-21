@@ -30,7 +30,7 @@ const impersonationUser = ref(null)
 function canImpersonate(user) {
   return !!auth.user?.is_superadmin && !auth.user?.impersonation?.active && user.id !== auth.user.id
     && user.is_active !== false && user.is_active !== 0 && !user.is_superadmin
-    && (user.roles?.length ?? 0) > 0 && !user.roles.some(role => role.name === 'superadmin')
+    && !(user.roles ?? []).some(role => role.name === 'superadmin')
 }
 
 const COLUMN_DEFS = [

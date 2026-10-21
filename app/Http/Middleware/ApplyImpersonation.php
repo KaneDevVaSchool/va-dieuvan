@@ -21,12 +21,16 @@ class ApplyImpersonation
 
         $target = $request->user();
         $actor = User::find(ImpersonationToken::actorId($token));
-        $roleName = ImpersonationToken::roleName($token);
-        $role = Role::where('name', $roleName)->where('guard_name', 'web')->first();
+        $portal = ImpersonationToken::isPortal($token);
+        $roleName = $portal ? null : ImpersonationToken::roleName($token);
+        $role = $roleName ? Role::where('name', $roleName)->where('guard_name', 'web')->first() : null;
         $request->attributes->set('impersonation', [
             'active' => true,
             'impersonator' => $actor ? ImpersonationToken::summary($actor) : null,
-            'role' => ['name' => $roleName, 'label' => $role?->display_name ?? $roleName],
+            'portal' => $portal,
+            'role' => $portal
+                ? ['name' => null, 'label' => ImpersonationToken::PORTAL_LABEL]
+                : ['name' => $roleName, 'label' => $role?->display_name ?? $roleName],
             'expires_at' => $token->expires_at?->toIso8601String(),
         ]);
 
@@ -36,10 +40,12 @@ class ApplyImpersonation
         }
 
         abort_unless($actor && $actor->is_active && $actor->isSuperAdmin(), 401, 'Phiên giả lập không còn hợp lệ.');
-        abort_unless($target->is_active && ! $target->isSuperAdmin() && $role && $target->hasRole($roleName), 401, 'Vai trò giả lập đã thay đổi.');
+        abort_unless($target->is_active && ! $target->isSuperAdmin(), 401, 'Phiên giả lập không còn hợp lệ.');
+        abort_unless($portal || ($role && $target->hasRole($roleName)), 401, 'Vai trò giả lập đã thay đổi.');
 
         $effectiveUser = clone $target;
-        $effectiveUser->simulateRole($role);
+        // Portal: không vai trò nào, chỉ còn quyền gán trực tiếp — giống người yêu cầu chưa được phân vai trò.
+        $effectiveUser->simulateRole($portal ? null : $role);
         $resolver = $request->getUserResolver();
         $guard = Auth::guard();
         $guard->setUser($effectiveUser);
