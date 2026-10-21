@@ -6,7 +6,19 @@
       isVertical ? 'flex flex-row' : 'flex flex-col',
     ]"
   >
-    <AppSidebar />
+    <AppSidebar :mobile-menu-open="mobileMenuOpen" @open-menu="openMobileMenu" />
+    <Teleport to="body">
+      <dialog
+        id="mobile-sidebar-menu"
+        ref="mobileMenuDialog"
+        :aria-label="$t('app.menu')"
+        class="m-0 h-dvh max-h-none w-[min(20rem,calc(100vw-3rem))] max-w-none overflow-hidden border-0 bg-transparent p-0 text-inherit backdrop:bg-slate-950/50"
+        @close="mobileMenuOpen = false"
+        @click="onMobileMenuClick"
+      >
+        <AppSidebar v-if="mobileMenuOpen" mobile-drawer @close-menu="closeMobileMenu" />
+      </dialog>
+    </Teleport>
     <main
       id="app-main-scroll"
       :class="[
@@ -36,7 +48,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, nextTick, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAppViewportLock } from '../../composables/useAppViewportLock'
 import AppSidebar from './AppSidebar.vue'
@@ -45,8 +57,32 @@ import ImpersonationBanner from './ImpersonationBanner.vue'
 import MobileBottomNav from '../nav/MobileBottomNav.vue'
 import { useSidebarLayout } from '../../composables/useSidebarLayout'
 import { useAuthStore } from '../../store'
+import { useUiStore } from '../../store/ui'
 
 const route = useRoute()
+const ui = useUiStore()
+const mobileMenuDialog = ref(null)
+const mobileMenuOpen = ref(false)
+
+async function openMobileMenu() {
+  mobileMenuOpen.value = true
+  await nextTick()
+  mobileMenuDialog.value?.showModal()
+}
+
+function closeMobileMenu() {
+  mobileMenuDialog.value?.close()
+  mobileMenuOpen.value = false
+}
+
+function onMobileMenuClick(event) {
+  // Backdrop clicks target the dialog; links also close when already on that page.
+  if (event.target === mobileMenuDialog.value || event.target.closest('a[href]')) closeMobileMenu()
+}
+
+watch(() => route.fullPath, closeMobileMenu)
+watch(() => ui.viewportWidth, width => { if (width >= 768) closeMobileMenu() })
+onBeforeUnmount(closeMobileMenu)
 const mainFlush = computed(() => route.matched.some((record) => record.meta.mainFlush === true))
 
 const { isVertical, isHorizontal } = useSidebarLayout()

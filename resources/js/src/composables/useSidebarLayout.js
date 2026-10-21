@@ -7,9 +7,10 @@ import { useUiStore } from '../store/ui'
 export function useSidebarLayout() {
   const ui = useUiStore()
 
-  const axis = computed(() => ui.sidebarEffectiveAxis)
-  const isVertical = computed(() => ui.sidebarEffectiveAxis === 'vertical')
-  const isHorizontal = computed(() => ui.sidebarEffectiveAxis === 'horizontal')
+  // Phones use a header and drawer, preserving the desktop layout preference.
+  const axis = computed(() => ui.viewportWidth < 768 ? 'horizontal' : ui.sidebarEffectiveAxis)
+  const isVertical = computed(() => axis.value === 'vertical')
+  const isHorizontal = computed(() => axis.value === 'horizontal')
   const preferenceLabelKey = computed(() => ui.sidebarAxisPreferenceLabelKey)
 
   return {

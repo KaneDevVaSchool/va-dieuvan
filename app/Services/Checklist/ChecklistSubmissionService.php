@@ -424,12 +424,22 @@ class ChecklistSubmissionService
             ->values()
             ->all();
 
-        Notification::send($recipients, new ChecklistCriticalFailedNotification(
+        $notification = new ChecklistCriticalFailedNotification(
             (int) $submission->id,
             (string) $submission->code,
             (string) ($submission->driver?->full_name ?? ''),
             (string) ($submission->vehicle?->license_plate ?? ''),
             $ngTitles,
-        ));
+        );
+
+        // The submission is already committed. A broken mail transport must not
+        // turn a successful submit into a 500 or skip the remaining dispatchers.
+        foreach ($recipients as $recipient) {
+            try {
+                Notification::send($recipient, clone $notification);
+            } catch (\Throwable $exception) {
+                report($exception);
+            }
+        }
     }
 }

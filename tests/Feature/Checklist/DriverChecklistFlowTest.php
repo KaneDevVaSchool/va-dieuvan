@@ -12,6 +12,7 @@ use App\Notifications\ChecklistCriticalFailedNotification;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Notifications\Channels\MailChannel;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
@@ -145,6 +146,48 @@ class DriverChecklistFlowTest extends TestCase
         $this->assertSame('51B-12345', $overview->json('data.failed_today.0.license_plate'));
 
         $this->get("/api/driver/checklists/{$id}/pdf")->assertOk()->assertHeader('content-type', 'application/pdf');
+    }
+
+    public function test_critical_ng_submit_succeeds_and_alerts_all_dispatchers_when_mail_fails(): void
+    {
+        config(['queue.default' => 'sync']);
+        $secondDispatcher = User::factory()->create(['is_active' => true]);
+        $secondDispatcher->assignRole('dispatcher');
+
+        // Exercise real notification delivery and database persistence, without SMTP.
+        $this->mock(MailChannel::class, function ($mock) {
+            $mock->shouldReceive('send')->twice()
+                ->andThrow(new \RuntimeException('SMTP authentication failed'));
+        });
+
+        $data = $this->start();
+        $critical = collect($data['items'])->firstWhere('severity', 'critical');
+        $items = collect($data['items'])->map(fn ($item) => [
+            'id' => $item['id'],
+            'result' => $item['id'] === $critical['id'] ? 'ng' : 'ok',
+            'note' => $item['id'] === $critical['id'] ? 'Đã báo điều phối đổi xe.' : null,
+        ])->all();
+
+        $this->postJson("/api/driver/checklists/{$data['id']}/submit", [
+            'lock_version' => $data['lock_version'], 'confirm' => true, 'items' => $items,
+        ])->assertOk()
+            ->assertJsonPath('data.status', 'submitted')
+            ->assertJsonPath('data.result', 'fail')
+            ->assertJsonPath('data.critical_ng_count', 1);
+
+        $this->assertDatabaseHas('checklist_submission_items', [
+            'id' => $critical['id'], 'result' => 'ng', 'note' => 'Đã báo điều phối đổi xe.',
+        ]);
+        $this->assertSame(1, ChecklistSubmission::whereKey($data['id'])->count());
+        foreach ([$this->dispatcher, $secondDispatcher] as $recipient) {
+            $alerts = $recipient->notifications()->where('type', ChecklistCriticalFailedNotification::class)->get();
+            $this->assertCount(1, $alerts);
+            $this->assertSame($data['id'], $alerts->first()->data['submission_id']);
+        }
+
+        $this->getJson("/api/driver/checklists/{$data['id']}")->assertOk()
+            ->assertJsonPath('data.status', 'submitted')
+            ->assertJsonPath('data.result', 'fail');
     }
 
     public function test_optional_photo_can_still_be_uploaded_to_a_draft(): void

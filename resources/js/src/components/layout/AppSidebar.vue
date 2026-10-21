@@ -6,34 +6,35 @@
   >
     <div
       class="shrink-0 border-b border-white/15 bg-[color:var(--va-brand)]/95 backdrop-blur-sm"
-      :class="ui.sidebarCollapsed ? 'px-1 py-2 md:px-1.5 md:py-2.5' : 'px-2 py-3 md:px-3 md:py-3.5'"
+      :class="isCollapsed ? 'px-1 py-2 md:px-1.5 md:py-2.5' : 'px-2 py-3 md:px-3 md:py-3.5'"
     >
       <div
         class="relative flex w-full min-w-0 items-center justify-center"
-        :class="ui.sidebarCollapsed ? 'flex-col gap-1.5' : 'px-9'"
+        :class="isCollapsed ? 'flex-col gap-1.5' : 'px-9'"
       >
         <AppLogo
           align="center"
           class="w-full min-w-0 [&_img]:mx-auto [&_img]:object-contain"
-          :class="ui.sidebarCollapsed ? 'max-w-full px-0.5' : 'max-w-full'"
-          :variant="ui.sidebarCollapsed ? 'icon' : 'wordmark'"
-          :size="ui.sidebarCollapsed ? 'sm' : 'lg'"
+          :class="isCollapsed ? 'max-w-full px-0.5' : 'max-w-full'"
+          :variant="isCollapsed ? 'icon' : 'wordmark'"
+          :size="isCollapsed ? 'sm' : 'lg'"
         />
         <button
           type="button"
           class="inline-flex shrink-0 items-center justify-center rounded-md text-white/85 transition hover:bg-white/10"
           :class="
-            ui.sidebarCollapsed
+            isCollapsed
               ? 'h-7 w-7'
               : 'absolute right-0 top-1/2 h-7 w-7 -translate-y-1/2 sm:h-8 sm:w-8'
           "
-          :title="ui.sidebarCollapsed ? t('app.sidebar_expand') : t('app.sidebar_collapse')"
-          @click="ui.toggleSidebarCollapsed()"
+          :title="mobileDrawer ? t('common.close') : isCollapsed ? t('app.sidebar_expand') : t('app.sidebar_collapse')"
+          @click="mobileDrawer ? emit('close-menu') : ui.toggleSidebarCollapsed()"
         >
-          <ChevronLeftIcon v-if="!ui.sidebarCollapsed" class="h-4 w-4 sm:h-[1.125rem] sm:w-[1.125rem]" aria-hidden="true" />
+          <XMarkIcon v-if="mobileDrawer" class="h-5 w-5" aria-hidden="true" />
+          <ChevronLeftIcon v-else-if="!isCollapsed" class="h-4 w-4 sm:h-[1.125rem] sm:w-[1.125rem]" aria-hidden="true" />
           <ChevronRightIcon v-else class="h-4 w-4" aria-hidden="true" />
           <span class="sr-only">
-            {{ ui.sidebarCollapsed ? t('app.sidebar_expand') : t('app.sidebar_collapse') }}
+            {{ mobileDrawer ? t('common.close') : isCollapsed ? t('app.sidebar_expand') : t('app.sidebar_collapse') }}
           </span>
         </button>
       </div>
@@ -49,7 +50,7 @@
             <template v-for="(item, ii) in section.items" :key="'v' + (item.to || item.labelKey)">
               <template v-if="item.children?.length">
                 <SidebarCollapsedNavGroup
-                  v-if="ui.sidebarCollapsed"
+                  v-if="isCollapsed"
                   :class="ii > 0 || si > 0 ? 'mt-3' : 'mt-0.5'"
                   :label="t(item.labelKey)"
                   :icon="item.icon"
@@ -111,7 +112,7 @@
 
           <!-- Section có tiêu đề: collapse cả khối -->
           <div v-else :class="si >= 1 ? 'mt-3 border-t border-white/15 pt-2' : 'mt-2'">
-            <div v-if="!ui.sidebarCollapsed" class="mb-1 px-1">
+            <div v-if="!isCollapsed" class="mb-1 px-1">
               <button
                 type="button"
                 class="flex w-full items-center justify-between gap-1 rounded-md px-2 py-1.5 text-left text-xs font-medium text-white/80 transition hover:bg-white/10"
@@ -126,11 +127,11 @@
                 />
               </button>
             </div>
-            <div v-show="ui.sidebarCollapsed || isGroupOpen(sectionGroupKey(si))" class="space-y-0.5">
+            <div v-show="isCollapsed || isGroupOpen(sectionGroupKey(si))" class="space-y-0.5">
               <template v-for="(item, ii) in section.items" :key="'v' + (item.to || item.labelKey)">
                 <template v-if="item.children?.length">
                   <SidebarCollapsedNavGroup
-                    v-if="ui.sidebarCollapsed"
+                    v-if="isCollapsed"
                     class="mt-2"
                     :label="t(item.labelKey)"
                     :icon="item.icon"
@@ -212,13 +213,14 @@
 
     <!-- Chuông thông báo: dọc theo sidebar, trên block tài khoản -->
     <div
+      v-if="!mobileDrawer"
       class="shrink-0 border-t border-white/15 py-1.5 md:py-2"
-      :class="ui.sidebarCollapsed ? 'flex justify-center px-1 md:px-1.5' : 'flex w-full items-center px-2 md:px-3'"
+      :class="isCollapsed ? 'flex justify-center px-1 md:px-1.5' : 'flex w-full items-center px-2 md:px-3'"
     >
-      <NotificationBell tone="brand" :show-label="!ui.sidebarCollapsed" />
+      <NotificationBell tone="brand" :show-label="!isCollapsed" />
     </div>
 
-    <SidebarAccountBlock layout="vertical" brand :compact="ui.sidebarCollapsed" />
+    <SidebarAccountBlock v-if="!mobileDrawer" layout="vertical" brand :compact="isCollapsed" />
 
     <p class="sr-only" aria-live="polite">{{ t(preferenceLabelKey) }}</p>
   </aside>
@@ -231,6 +233,17 @@
     <div
       class="flex w-full min-w-0 items-center gap-2 px-3 py-2.5 sm:min-h-14 sm:gap-3 sm:px-4 sm:py-2"
     >
+      <button
+        type="button"
+        class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:text-slate-100 dark:hover:bg-slate-800 md:hidden"
+        :aria-label="t('app.menu')"
+        aria-controls="mobile-sidebar-menu"
+        aria-haspopup="dialog"
+        :aria-expanded="mobileMenuOpen"
+        @click="emit('open-menu')"
+      >
+        <Bars3Icon class="h-6 w-6" aria-hidden="true" />
+      </button>
       <div
         class="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3 md:max-w-[min(18rem,36vw)] md:flex-none md:shrink-0"
       >
@@ -319,7 +332,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
+import { Bars3Icon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
 import AppLogo from '../branding/AppLogo.vue'
 import HorizontalNavGroup from '../nav/HorizontalNavGroup.vue'
 import SidebarCollapsedNavGroup from '../nav/SidebarCollapsedNavGroup.vue'
@@ -343,11 +356,15 @@ function navStatusPill(navItem) {
 }
 const navBarLabel = useNavBarLabel()
 const { sections, badgeCount } = useNavSections()
-const { axis, preferenceLabelKey } = useSidebarLayout()
+const { axis: layoutAxis, preferenceLabelKey } = useSidebarLayout()
 const ui = useUiStore()
+const props = defineProps({ mobileDrawer: Boolean, mobileMenuOpen: Boolean })
+const emit = defineEmits(['open-menu', 'close-menu'])
+const axis = computed(() => props.mobileDrawer ? 'vertical' : layoutAxis.value)
+const isCollapsed = computed(() => !props.mobileDrawer && ui.sidebarCollapsed)
 
 const navVariant = computed(() =>
-  ui.sidebarCollapsed ? 'vertical-compact' : 'vertical-full',
+  isCollapsed.value ? 'vertical-compact' : 'vertical-full',
 )
 
 /** Mở/đóng nhóm menu — mặc định mở hết để dễ cuộn xem nhiều mục */
@@ -391,7 +408,7 @@ function expandAllNavGroups() {
 watch(sections, expandAllNavGroups, { immediate: true })
 
 watch(
-  () => ui.sidebarCollapsed,
+  isCollapsed,
   (collapsed) => {
     if (!collapsed) flyoutOpenKey.value = null
   },
@@ -409,7 +426,9 @@ const verticalAsideClass = computed(() => {
   const base = [
     'print:hidden flex flex-col border-r border-white/10 bg-[color:var(--va-brand)] text-white shadow-[inset_-1px_0_0_0_rgba(0,0,0,0.08)]',
   ]
-  if (ui.sidebarCollapsed) {
+  if (props.mobileDrawer) {
+    base.push('h-full w-full pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)]')
+  } else if (isCollapsed.value) {
     /** Rail cố định ~4.25rem — tránh sm:w-14 quá hẹp làm vỡ logo + nút */
     base.push('w-[4.25rem] min-w-[4.25rem] max-w-[4.25rem]')
   } else {
