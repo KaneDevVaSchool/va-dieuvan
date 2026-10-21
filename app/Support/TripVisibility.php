@@ -82,9 +82,12 @@ class TripVisibility
     {
         $q->whereNotNull('schedule_assignments');
         if (DB::getDriverName() === 'mysql') {
+            // driver_id lưu dạng số ("driver_id":52) — JSON_SEARCH chỉ khớp chuỗi nên cần JSON_CONTAINS;
+            // giữ JSON_SEARCH cho dữ liệu cũ/import lưu dạng chuỗi ("driver_id":"52").
             $q->whereRaw(
-                'JSON_SEARCH(schedule_assignments, \'one\', ?, NULL, \'$[*].driver_id\') IS NOT NULL',
-                [(string) $driverId]
+                '(JSON_CONTAINS(schedule_assignments, JSON_OBJECT(\'driver_id\', ?))'
+                .' OR JSON_SEARCH(schedule_assignments, \'one\', ?, NULL, \'$[*].driver_id\') IS NOT NULL)',
+                [$driverId, (string) $driverId]
             );
 
             return;
