@@ -150,7 +150,8 @@ class PortalDispatchRequestController extends Controller
             ->visibleOnPortalRequestIndex()
             ->with([
                 'dispatchRequestTemplate.dispatchPackage',
-                'trip:id,dispatch_request_id,status,completed_at',
+                // dispatcher_id bắt buộc để eager load trip.dispatcher (cột "Điều phối").
+                'trip:id,dispatch_request_id,dispatcher_id,status,completed_at',
                 'trip.dispatcher:id,name',
             ]);
 

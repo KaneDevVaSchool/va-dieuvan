@@ -86,6 +86,10 @@ class TripAssignmentVisibilityTest extends TestCase
             ->assertJsonPath('data.trip.status', 'assigned')
             ->assertJsonPath('data.trip.driver.full_name', 'Tai Xe A')
             ->assertJsonPath('data.trip.vehicle.license_plate', '51A-001');
+        $this->actingAs($this->requester, 'sanctum')
+            ->getJson('/api/portal/dispatch-requests')->assertOk()
+            ->assertJsonPath('data.items.0.trip.status', 'assigned')
+            ->assertJsonPath('data.items.0.trip.dispatcher.name', $this->dispatcher->name);
     }
 
     public function test_driver_assigned_only_on_second_leg_sees_trip(): void
