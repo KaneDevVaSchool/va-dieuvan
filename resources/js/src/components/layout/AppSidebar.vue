@@ -81,7 +81,7 @@
                   </div>
                   <div
                     v-show="isGroupOpen(subGroupKey(si, ii))"
-                    class="ml-2 space-y-0.5 border-l border-white/15 pl-2"
+                    class="space-y-0.5"
                   >
                     <SidebarNavItem
                       v-for="c in item.children"

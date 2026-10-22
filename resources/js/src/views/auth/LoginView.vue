@@ -2,52 +2,48 @@
   <!-- Overlay che form khi đang xử lý OAuth token (tránh flash nếu fetchMe chậm > 800ms) -->
   <div v-if="bootstrapping" class="fixed inset-0 z-[9998] bg-[#9a0036]" aria-hidden="true" />
   <div class="login-page">
-    <div class="login-container">
-      <div class="logo-container">
+    <main class="login-page__wrapper" role="main">
+      <div class="login-page__logo">
         <img
-          :src="LOGO_PWA_URL"
-          alt="VA Dispatch"
-          width="512"
-          height="512"
-          class="h-auto w-full max-w-[min(100%,14rem)] aspect-square object-contain"
+          :src="LOGO_URL"
+          alt="Vietnam America Schools"
+          width="400"
+          height="168"
           decoding="async"
         />
+        <h2 class="login-page__system-name">Hệ thống Điều vận</h2>
       </div>
 
-      <div class="login-box">
+      <div class="login-box" role="region" aria-label="Đăng nhập">
         <h1 class="login-title">Đăng nhập</h1>
         <p class="login-subtitle">
           Đăng nhập thông qua tài khoản mail do nhà trường cung cấp
         </p>
 
-        <div v-if="error" class="login-error">{{ error }}</div>
+        <div v-if="error" class="login-alert" role="alert">
+          <span>{{ error }}</span>
+          <button type="button" class="login-alert__dismiss" aria-label="Đóng" @click="error = ''">&times;</button>
+        </div>
 
-        <a
-          class="google-login-btn"
-          :class="{ 'is-busy': bootstrapping }"
-          :href="googleAuthHref"
-          aria-label="Đăng nhập bằng Google"
-          :aria-busy="bootstrapping ? 'true' : undefined"
-          @click="onGoogleClick"
-        >
-          <img
-            :src="GOOGLE_LOGO_URL"
-            alt=""
-            width="48"
-            height="48"
-            class="google-login-img"
-            decoding="async"
-          />
-        </a>
+        <div class="social-login">
+          <a
+            class="btn-google-icon"
+            :class="{ loading: googleLoading || bootstrapping }"
+            :href="googleAuthHref"
+            aria-label="Đăng nhập bằng Google"
+            :aria-busy="googleLoading || bootstrapping ? 'true' : undefined"
+            @click="onGoogleClick"
+          >
+            <img :src="GOOGLE_LOGO_URL" alt="" aria-hidden="true" width="40" height="40" decoding="async" />
+          </a>
+        </div>
       </div>
-    </div>
-
-    <div class="wave-footer" aria-hidden="true" />
+    </main>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore, readCachedDefaultHome } from '../../store'
@@ -63,7 +59,7 @@ import {
 } from '../../util/loginRedirect'
 
 /** `public/images/logo/...` */
-const LOGO_PWA_URL = '/images/logo/logo-2.png'
+const LOGO_URL = '/images/logo/logo-2.png'
 const GOOGLE_LOGO_URL = '/images/logo/google.png'
 
 const { t } = useI18n()
@@ -73,6 +69,7 @@ const route = useRoute()
 
 const error = ref('')
 const bootstrapping = ref(false)
+const googleLoading = ref(false)
 
 const googleAuthHref = computed(() => {
   const r = sanitizeLoginRedirect(route.query.redirect ?? '/')
@@ -81,9 +78,18 @@ const googleAuthHref = computed(() => {
 
 function onGoogleClick() {
   error.value = ''
+  googleLoading.value = true
 }
 
+/** Quay lại từ Google bằng nút Back (bfcache) → bỏ spinner. */
+function onPageShow(e) {
+  if (e.persisted) googleLoading.value = false
+}
+
+onBeforeUnmount(() => window.removeEventListener('pageshow', onPageShow))
+
 onMounted(async () => {
+  window.addEventListener('pageshow', onPageShow)
   if (loginRouteNeedsSanitizeReplace(route.query)) {
     await router.replace({
       path: '/login',
@@ -188,205 +194,254 @@ onMounted(async () => {
 })
 </script>
 
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap');
+</style>
+
 <style scoped>
+/* Giao diện đồng bộ với trang đăng nhập SIS */
 .login-page {
-  margin: 0;
-  min-height: 100dvh;
-  min-height: 100svh;
-  width: 100%;
+  font-family: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   background-color: #9a0036;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  justify-content: safe center;
   position: relative;
   overflow-x: hidden;
   isolation: isolate;
-  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
-    max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
   box-sizing: border-box;
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    'Helvetica Neue',
-    Arial,
-    sans-serif;
+  padding-top: max(clamp(1.5rem, 5vw, 3.5rem), env(safe-area-inset-top, 0px));
+  padding-bottom: max(clamp(1rem, 4vw, 2.5rem), env(safe-area-inset-bottom, 0px));
+  padding-left: clamp(0.75rem, 4vw, 1.5rem);
+  padding-right: clamp(0.75rem, 4vw, 1.5rem);
 }
 
-/* Hình nền rồng: phủ trọn viewport, tăng độ sáng/tương phản để nổi trên nền đỏ */
 .login-page::before {
   content: '';
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 0;
-  background-color: transparent;
-  background-image: url('/images/background/background-logo.png');
+  background-image: url('/images/background/background_login_1.png');
+  background-size: 195% 203%;
+  background-position: 50% 39%;
   background-repeat: no-repeat;
-  background-position: center center;
-  background-size: cover;
-  /* Nâng silhouette tối (xám/đen) để thấy rõ trên nền brand */
-  filter: brightness(1.45) contrast(1.15) saturate(1.05);
-  opacity: 0.92;
+  opacity: 0.05;
   pointer-events: none;
+  z-index: 0;
 }
 
-.login-container {
+.login-page__wrapper {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  flex: 1;
   width: 100%;
-  max-width: min(440px, 100%);
-  position: relative;
-  z-index: 2;
-  padding: 0;
+  max-width: 720px;
+  gap: clamp(1.25rem, 3.5vw, 2.2rem);
+  margin-block: auto;
 }
 
-.logo-container {
-  margin-bottom: clamp(20px, 4vw, 40px);
+.login-page__logo {
   text-align: center;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: clamp(0.85rem, 2.2vw, 1.4rem);
 }
 
-.logo-container img {
+.login-page__logo img {
+  width: clamp(220px, 56vw, 345px);
   height: auto;
-  max-width: min(400px, 100%);
-  width: 65%;
-  display: block;
-  margin-inline: auto;
+  max-height: min(148px, 24vh);
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+.login-page__system-name {
+  font-family: 'Playfair Display', 'Merriweather', 'Noto Serif', 'Times New Roman', serif;
+  font-size: clamp(0.92rem, 2.6vw, 1.5rem);
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: clamp(0.025em, 0.22vw, 0.055em);
+  line-height: 1.35;
+  margin: 0;
+  text-align: center;
+  white-space: nowrap;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  user-select: none;
 }
 
 .login-box {
   background: #fff;
-  border-radius: clamp(12px, 2vw, 15px);
-  padding: clamp(24px, 5vw, 40px) clamp(20px, 4vw, 30px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 400px;
-  text-align: center;
-  position: relative;
+  border-radius: clamp(12px, 3vw, 20px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.1);
+  margin-top: 10px;
+  padding: clamp(1.4rem, 5vw, 2.4rem) clamp(1.2rem, 6vw, 2.6rem);
+  width: min(450px, 100%);
+  max-width: 100%;
   box-sizing: border-box;
+  text-align: center;
 }
 
 .login-title {
-  font-size: clamp(1.375rem, 4.2vw + 0.6rem, 1.75rem);
-  color: #333;
-  margin: 0 0 8px;
+  font-size: clamp(1.6rem, 4.5vw, 2.1rem);
   font-weight: 700;
-  line-height: 1.2;
+  color: #111827;
+  margin: 0 0 clamp(0.3rem, 1.2vw, 0.5rem);
 }
 
 .login-subtitle {
+  font-size: clamp(0.85rem, 2.8vw, 1rem);
   color: #666;
-  font-size: clamp(0.8125rem, 1.5vw + 0.35rem, 0.875rem);
-  margin: 0 0 clamp(20px, 4vw, 30px);
+  line-height: 1.4;
+  margin: 0 0 clamp(1rem, 3.5vw, 1.5rem);
+}
+
+.login-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  border-radius: 9px;
+  padding: 0.75rem 0.95rem;
+  margin-bottom: 1rem;
+  font-size: clamp(0.76rem, 2.1vw, 0.85rem);
+  text-align: left;
   line-height: 1.5;
-  max-width: 32em;
-  margin-inline: auto;
-}
-
-.login-error {
-  margin-bottom: 16px;
-  padding: 10px 12px;
-  border-radius: 8px;
   background: #fef2f2;
-  color: #b91c1c;
-  font-size: 14px;
-  text-align: center;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
 }
 
-.google-login-btn {
+.login-alert__dismiss {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  opacity: 0.45;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.social-login {
+  display: flex;
+  justify-content: center;
+}
+
+.btn-google-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 48px;
-  min-height: 48px;
-  padding: 10px;
-  border-radius: 12px;
+  width: clamp(50px, 13vw, 62px);
+  height: clamp(50px, 13vw, 62px);
+  border-radius: 50%;
+  border: 1.5px solid #e5e7eb;
   background: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.09);
   cursor: pointer;
-  transition:
-    border-color 0.3s ease,
-    box-shadow 0.3s ease;
   text-decoration: none;
-  box-sizing: border-box;
-  vertical-align: middle;
+  transition: box-shadow 0.2s, transform 0.2s;
+  position: relative;
 }
 
-.google-login-img {
-  display: block;
-  width: clamp(40px, 12vw, 52px);
-  height: auto;
-  aspect-ratio: 1;
-  object-fit: contain;
+.btn-google-icon img {
+  width: clamp(26px, 7vw, 36px);
+  height: clamp(26px, 7vw, 36px);
+}
+
+.btn-google-icon:hover:not(.loading) {
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
+  transform: translateY(-3px);
+}
+
+.btn-google-icon.loading {
+  pointer-events: none;
+}
+
+.btn-google-icon.loading img {
+  opacity: 0;
+}
+
+.btn-google-icon.loading::before {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid #f3f4f6;
+  border-top-color: #8b1a3a;
+  border-radius: 50%;
+  animation: login-spin 0.65s linear infinite;
+}
+
+@keyframes login-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .google-login-btn {
+  .btn-google-icon {
     transition: none;
   }
 }
 
-.google-login-btn.is-busy {
-  pointer-events: none;
-  opacity: 0.65;
-}
-
-.wave-footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-repeat: no-repeat;
-  background-position: center bottom;
-  background-size: contain;
-  z-index: 1;
-  pointer-events: none;
-}
-
-/* Màn hình thấp / ngang (điện thoại xoay, laptop nhỏ): tránh cắt nội dung */
-@media (max-height: 520px) {
+@media (max-width: 480px) {
   .login-page {
-    justify-content: flex-start;
-    padding-top: max(12px, env(safe-area-inset-top));
-  }
-
-  .login-container {
-    justify-content: flex-start;
-    padding-block: 8px 16px;
-  }
-
-  .logo-container {
-    margin-bottom: 12px;
-  }
-
-  .logo-container img {
-    max-width: min(240px, 55vw);
+    padding: max(clamp(1rem, 5vw, 1.5rem), env(safe-area-inset-top, 0px)) 1rem
+      max(clamp(1rem, 5vw, 1.5rem), env(safe-area-inset-bottom, 0px));
   }
 
   .login-box {
-    padding: 16px 18px;
+    padding: 1.5rem 1.2rem;
+    border-radius: 14px;
   }
 
-  .login-subtitle {
-    margin-bottom: 14px;
+  .btn-google-icon {
+    width: 58px;
+    height: 58px;
+  }
+
+  .login-page__wrapper {
+    max-width: 100%;
+    padding: 0 1rem;
   }
 }
 
-/* Màn hình rộng: căn hình nền hơi lên trên để bố cục cân */
-@media (min-width: 1600px) {
-  .login-page::before {
-    background-position: center 38%;
+@media (min-width: 481px) and (max-width: 1024px) {
+  .login-page__wrapper {
+    max-width: 680px;
+  }
+
+  .login-box {
+    padding: 2rem 2.2rem;
   }
 }
 
-@media (max-width: 380px) {
-  .login-page {
-    padding-inline: max(12px, env(safe-area-inset-left));
+@media (min-width: 1025px) {
+  .login-page__wrapper {
+    max-width: 750px;
+  }
+
+  .login-box {
+    padding: 2.6rem 3rem;
+  }
+
+  .btn-google-icon {
+    width: 68px;
+    height: 68px;
+  }
+
+  .btn-google-icon img {
+    width: 40px;
+    height: 40px;
   }
 }
 </style>

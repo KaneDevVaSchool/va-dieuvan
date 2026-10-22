@@ -321,7 +321,7 @@
                   <p v-if="timelineSubtitle(ev)" class="mt-0.5 text-xs text-slate-600 dark:text-slate-400">{{ timelineSubtitle(ev) }}</p>
                 </li>
               </ul>
-              <p v-else class="text-sm text-slate-500 dark:text-slate-400">{{ t('cargo_page.timeline_empty') }}</p>
+              <p v-else class="text-sm text-slate-500 dark:text-slate-400 w-full text-center py-4">{{ t('cargo_page.timeline_empty') }}</p>
             </div>
           </div>
         </div>
@@ -528,7 +528,7 @@
                   </div>
                 </div>
               </template>
-              <p v-else class="text-sm text-slate-500 dark:text-slate-400">{{ t('cargo_detail.costs_empty') }}</p>
+              <p v-else class="text-sm text-slate-500 dark:text-slate-400 w-full text-center py-4">{{ t('cargo_detail.costs_empty') }}</p>
             </div>
           </div>
 
@@ -631,14 +631,7 @@
         <div class="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-slate-900">
           <div class="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 dark:border-slate-700">
             <span class="min-w-0 truncate text-sm font-semibold text-slate-900 dark:text-slate-100">{{ podPreviewName }}</span>
-            <button
-              type="button"
-              class="shrink-0 rounded-lg px-2 py-1 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-              data-testid="cargo-pod-preview-close"
-              @click="closePodPreview"
-            >
-              {{ t('cargo_detail.map_modal_close') }}
-            </button>
+            <ModalCloseButton data-testid="cargo-pod-preview-close" @click="closePodPreview" />
           </div>
           <div class="flex min-h-0 flex-1 items-center justify-center bg-slate-100 p-4 dark:bg-slate-950">
             <img
@@ -663,13 +656,7 @@
         <div class="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-slate-900">
           <div class="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-700">
             <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('cargo_detail.map_modal_title') }}</span>
-            <button
-              type="button"
-              class="rounded-lg px-2 py-1 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-              @click="mapExpanded = false"
-            >
-              {{ t('cargo_detail.map_modal_close') }}
-            </button>
+            <ModalCloseButton @click="mapExpanded = false" />
           </div>
           <div class="relative min-h-[60vh] flex-1 bg-slate-100 dark:bg-slate-800">
             <iframe
@@ -705,9 +692,12 @@
         @click.self="assignProviderModalOpen = false"
       >
         <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl dark:border-slate-600 dark:bg-slate-900">
-          <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('trip_detail.coordination.provider_modal_title') }}</h3>
+          <div class="flex items-start justify-between gap-3">
+            <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('trip_detail.coordination.provider_modal_title') }}</h3>
+            <ModalCloseButton @click="assignProviderModalOpen = false" />
+          </div>
           <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ t('trip_detail.coordination.provider_modal_hint') }}</p>
-          <div class="mt-4 space-y-3">
+          <div class="mt-3 space-y-3">
             <Input v-model="newAssignProviderName" :label="t('trip_detail.coordination.provider_modal_name')" :placeholder="t('trip_detail.coordination.provider_modal_name_ph')" />
             <Select v-model="newAssignProviderType" :label="t('trip_detail.coordination.provider_modal_type')">
               <option value="taxi">{{ t('resources.provider_form_type_taxi') }}</option>
@@ -716,8 +706,8 @@
             <p v-if="assignProviderModalError" class="text-xs text-rose-600">{{ assignProviderModalError }}</p>
           </div>
           <div class="mt-5 flex justify-end gap-2">
-            <Button type="button" variant="secondary" @click="assignProviderModalOpen = false">{{ t('trip_detail.coordination.provider_modal_cancel') }}</Button>
-            <Button type="button" :loading="assignProviderCreating" @click="submitQuickAssignProvider">{{ t('trip_detail.coordination.provider_modal_save') }}</Button>
+            <Button class="px-4" type="button" variant="secondary" @click="assignProviderModalOpen = false">{{ t('trip_detail.coordination.provider_modal_cancel') }}</Button>
+            <Button class="px-4" type="button" :loading="assignProviderCreating" @click="submitQuickAssignProvider">{{ t('trip_detail.coordination.provider_modal_save') }}</Button>
           </div>
         </div>
       </div>
@@ -726,6 +716,7 @@
 </template>
 
 <script setup>
+import ModalCloseButton from '../../components/ui/ModalCloseButton.vue'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -764,7 +755,7 @@ import {
 import { labelCargoStatus } from '../../util/labels'
 import { useAuthStore } from '../../store'
 import { useNotificationStore } from '../../store/notificationCenter'
-import { i18n } from '../../i18n'
+import { buildDocumentTitle } from '../../util/routeDocumentTitle'
 import {
   collectBusyDriverIds,
   collectBusyVehicleIds,
@@ -1455,9 +1446,8 @@ function timelineSubtitle(ev) {
 function setDocumentTitle() {
   if (typeof document === 'undefined') return
   const code = displayCode.value
-  const appTitle = i18n.global.t('app.title')
   if (code) {
-    document.title = `${t('cargo_detail.document_title', { code })} · ${appTitle}`
+    document.title = buildDocumentTitle(t('cargo_detail.document_title', { code }))
   }
 }
 

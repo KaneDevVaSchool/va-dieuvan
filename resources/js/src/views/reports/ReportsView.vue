@@ -183,7 +183,7 @@
       <p class="mb-3 text-xs text-slate-500 dark:text-slate-400">
         {{ t('reports_page.providers_hint') }}
       </p>
-      <div v-if="!providerRows.length" class="text-sm text-slate-500">
+      <div v-if="!providerRows.length" class="text-sm text-slate-500 w-full text-center py-4">
         {{ t('reports_page.no_data') }}
       </div>
       <ul v-else class="space-y-2">

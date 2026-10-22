@@ -13,13 +13,13 @@
 
     <div v-else-if="loadError" class="rounded-xl border border-rose-100 bg-rose-50 px-4 py-6 text-center text-sm text-rose-800">
       {{ t('tp_attendance_page.student_detail_load_error') }}
-      <div class="mt-4">
+      <div class="mt-3">
         <Button variant="secondary" @click="$emit('close')">{{ t('tp_attendance_page.student_detail_close') }}</Button>
       </div>
     </div>
 
-    <div v-else-if="student" class="space-y-6">
-      <div class="flex flex-col gap-4 rounded-2xl border border-slate-100 bg-gradient-to-br from-slate-50 to-white p-4 sm:flex-row sm:items-center">
+    <div v-else-if="student" class="space-y-4">
+      <div class="flex flex-col gap-3 rounded-2xl border border-slate-100 bg-gradient-to-br from-slate-50 to-white p-4 sm:flex-row sm:items-center">
         <div
           class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white shadow-sm"
           :style="{ backgroundColor: avatarColor(student.full_name) }"

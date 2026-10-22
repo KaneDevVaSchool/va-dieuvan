@@ -1,4 +1,8 @@
 {
+    "page_load_error": {
+        "title": "Không thể mở trang",
+        "body": "Chưa tải được giao diện sau khi thử cập nhật. Vui lòng kiểm tra kết nối và thử mở lại trang sau ít phút. Bạn vẫn có thể chuyển sang trang khác."
+    },
     "notify": {
         "title": "Thông báo",
         "empty": "Chưa có thông báo",

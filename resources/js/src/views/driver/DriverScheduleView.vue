@@ -1,6 +1,6 @@
 <template>
   <div
-    class="mx-auto min-h-full w-full max-w-[430px] overflow-x-hidden bg-driver-bg text-driver-ink sm:max-w-2xl"
+    class="mx-auto min-h-full w-full max-w-[430px] overflow-x-clip bg-driver-bg text-driver-ink sm:max-w-2xl"
     :style="{ '--accent': '#7fdcc8' }"
     @touchstart.passive="onTouchStart"
     @touchmove.passive="onTouchMove"
@@ -30,37 +30,21 @@
     </Transition>
 
     <!-- Header -->
-    <header
-      class="sticky top-0 z-[25] flex items-center justify-between gap-2 border-b border-[rgba(255,255,255,0.06)] bg-driver-bg/90 px-3.5 py-2.5 backdrop-blur-md [-webkit-backdrop-filter:blur(12px)]"
-      style="padding-top: max(0.5rem, env(safe-area-inset-top))"
-    >
-      <div class="flex min-w-0 flex-1 items-center gap-1.5">
-        <RouterLink
-          to="/driver"
-          class="flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-full text-[#7fdcc8] transition hover:bg-white/5 active:scale-95"
-          :title="t('trip_history_page.back')"
+    <DriverPageHeader :title="t('trip_history_page.title')">
+      <template #actions>
+        <button
+          type="button"
+          class="flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-full text-driver-accent ring-1 ring-white/[0.08] transition hover:bg-white/5"
+          :aria-pressed="searchOpen ? 'true' : 'false'"
+          :title="t('trip_history_page.search')"
+          @click="searchOpen = !searchOpen"
         >
-          <span class="sr-only">{{ t('trip_history_page.back') }}</span>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-4.5 w-4.5" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" class="h-4.5 w-4.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
           </svg>
-        </RouterLink>
-        <h1 class="min-w-0 truncate text-lg font-bold tracking-tight sm:text-xl">
-          {{ t('trip_history_page.title') }}
-        </h1>
-      </div>
-      <button
-        type="button"
-        class="flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-full text-[#7fdcc8] ring-1 ring-[rgba(255,255,255,0.08)] transition hover:bg-white/5"
-        :aria-pressed="searchOpen ? 'true' : 'false'"
-        :title="t('trip_history_page.search')"
-        @click="searchOpen = !searchOpen"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" class="h-4.5 w-4.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-        </svg>
-      </button>
-    </header>
+        </button>
+      </template>
+    </DriverPageHeader>
 
     <div class="space-y-3 px-3 pt-3">
       <!-- Search box -->
@@ -136,7 +120,7 @@
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { RouterLink } from 'vue-router'
+import DriverPageHeader from '../../components/driver/DriverPageHeader.vue'
 import { useI18n } from 'vue-i18n'
 import { useTripHistory } from '../../composables/useTripHistory'
 import { useDriverWebPushBoot } from '../../composables/useDriverWebPushBoot'

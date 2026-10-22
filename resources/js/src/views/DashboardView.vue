@@ -132,7 +132,7 @@
           <p v-else-if="recentTrips.length" class="text-sm text-slate-500 dark:text-slate-400">
             {{ t('dashboard_analytics.recent_filtered_empty') }}
           </p>
-          <p v-else class="text-sm text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.recent_empty') }}</p>
+          <p v-else class="text-sm text-slate-500 dark:text-slate-400 w-full text-center py-4">{{ t('dashboard_analytics.recent_empty') }}</p>
         </div>
 
         <!-- Yêu cầu gần đây -->
@@ -220,7 +220,7 @@
           <p v-else-if="recentRequests.length" class="text-sm text-slate-500 dark:text-slate-400">
             {{ t('dashboard_analytics.recent_filtered_empty') }}
           </p>
-          <p v-else class="text-sm text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.recent_empty') }}</p>
+          <p v-else class="text-sm text-slate-500 dark:text-slate-400 w-full text-center py-4">{{ t('dashboard_analytics.recent_empty') }}</p>
         </div>
       </div>
     </section>

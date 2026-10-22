@@ -74,7 +74,7 @@
           </div>
 
           <!-- Meta grid -->
-          <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-3">
+          <dl class="mt-3 grid grid-cols-2 gap-x-4 gap-y-3">
             <div>
               <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
                 {{ t('cost_center.col_creator') }}
@@ -152,7 +152,7 @@
               {{ t('cost_center.drawer_receipts') }}
             </h3>
             <div v-if="detailLoading" class="mt-3 text-xs text-slate-400">{{ t('cost_center.loading') }}</div>
-            <div v-else-if="!receipts.length" class="mt-3 text-sm italic text-slate-400">
+            <div v-else-if="!receipts.length" class="mt-3 text-sm italic text-slate-400 w-full text-center py-4">
               {{ t('cost_center.receipts_empty') }}
             </div>
             <div v-else class="mt-3 grid grid-cols-3 gap-2">

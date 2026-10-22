@@ -118,7 +118,9 @@
 
           <div class="ml-auto flex shrink-0 flex-wrap items-center gap-2">
             <div v-if="canManageStudentData" class="relative" data-tp-student-data-panel>
-              <DatagridToolbarActionButton
+              <ToolbarPopover :open="showDataMenu" :title="t('tp_student_page.toolbar_data')" panel-marker="data-tp-student-data-panel" @close="showDataMenu = false">
+                <template #trigger>
+                  <DatagridToolbarActionButton
                 icon="data"
                 :active="showDataMenu"
                 test-id="tp-student-toolbar-data"
@@ -126,11 +128,8 @@
               >
                 {{ t('tp_student_page.toolbar_data') }}
               </DatagridToolbarActionButton>
-              <div
-                v-if="showDataMenu"
-                class="absolute right-0 top-[calc(100%+6px)] z-[110] min-w-[280px] rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-600 dark:bg-slate-900"
-                @click.stop
-              >
+                </template>
+
                 <button
                   type="button"
                   class="flex w-full flex-col px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
@@ -193,7 +192,8 @@
                     {{ t('tp_student_page.purge_all_permanent_hint', { n: meta.total ?? 0 }) }}
                   </span>
                 </button>
-              </div>
+
+              </ToolbarPopover>
             </div>
 
             <div v-else ref="exportMenuRef" class="relative">
@@ -453,9 +453,12 @@
     >
       <div class="absolute inset-0 bg-slate-900/50" aria-hidden="true" />
       <div class="relative w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl dark:border-slate-700 dark:bg-slate-900">
-        <h2 id="tp-student-purge-all-title" class="text-base font-semibold text-slate-900 dark:text-white">
-          {{ t('tp_student_page.purge_all_modal_title') }}
-        </h2>
+        <div class="flex items-start justify-between gap-3">
+          <h2 id="tp-student-purge-all-title" class="text-base font-semibold text-slate-900 dark:text-white">
+            {{ t('tp_student_page.purge_all_modal_title') }}
+          </h2>
+          <ModalCloseButton @click="closePurgeAll" />
+        </div>
         <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">{{ t('tp_student_page.purge_all_modal_lead') }}</p>
         <p class="mt-2 text-sm font-medium text-slate-800 dark:text-slate-200">
           {{
@@ -464,7 +467,7 @@
               : t('tp_student_page.purge_all_mode_soft')
           }}
         </p>
-        <label for="tp-student-purge-confirm" class="mt-4 block text-xs font-medium text-slate-700 dark:text-slate-300">
+        <label for="tp-student-purge-confirm" class="mt-3 block text-xs font-medium text-slate-700 dark:text-slate-300">
           {{ t('tp_student_page.purge_all_confirm_label') }}
         </label>
         <p class="mt-1 text-[11px] text-slate-500">{{ t('tp_student_page.purge_all_confirm_hint', { phrase: purgeRequiredPhrase }) }}</p>
@@ -484,10 +487,10 @@
           data-testid="tp-student-purge-confirm-input"
         />
         <div class="mt-5 flex justify-end gap-2">
-          <Button variant="secondary" data-testid="tp-student-purge-cancel" @click="closePurgeAll">
+          <Button class="px-4" variant="secondary" data-testid="tp-student-purge-cancel" @click="closePurgeAll">
             {{ t('common.cancel') }}
           </Button>
-          <Button
+          <Button class="px-4"
             variant="danger"
             :disabled="
               bulkSubmitting ||
@@ -510,6 +513,8 @@
 </template>
 
 <script setup>
+import ToolbarPopover from '../../components/shared/ui/ToolbarPopover.vue'
+import ModalCloseButton from '../../components/ui/ModalCloseButton.vue'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'

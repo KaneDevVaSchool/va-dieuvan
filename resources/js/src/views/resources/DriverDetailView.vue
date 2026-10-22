@@ -174,7 +174,8 @@
               <option value="offline">{{ t('driver_detail.avail_offline') }}</option>
             </select>
           </label>
-          <div class="sm:col-span-2 flex flex-wrap gap-2 pt-2">
+          <div class="sm:col-span-2 flex flex-wrap items-center justify-end gap-2 pt-2">
+            <p v-if="profileError" class="text-xs text-rose-600">{{ profileError }}</p>
             <button
               type="submit"
               class="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
@@ -182,7 +183,6 @@
             >
               {{ savingProfile ? t('resources.loading') : t('driver_detail.save_profile') }}
             </button>
-            <p v-if="profileError" class="text-xs text-rose-600">{{ profileError }}</p>
           </div>
         </form>
       </section>
@@ -278,7 +278,7 @@
             </tbody>
           </table>
         </div>
-        <p v-if="!documents.length" class="mt-3 text-sm text-slate-500">{{ t('resources.empty') }}</p>
+        <p v-if="!documents.length" class="mt-3 text-sm text-slate-500 w-full text-center py-4">{{ t('resources.empty') }}</p>
       </section>
 
       <!-- Audit -->
@@ -296,7 +296,7 @@
             </div>
           </li>
         </ul>
-        <p v-if="!auditLogs.length" class="mt-2 text-sm text-slate-500">{{ t('resources.empty') }}</p>
+        <p v-if="!auditLogs.length" class="mt-2 text-sm text-slate-500 w-full text-center py-4">{{ t('resources.empty') }}</p>
       </section>
     </template>
 
@@ -313,16 +313,19 @@
           class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-600 dark:bg-slate-900"
           @click.stop
         >
-          <div class="shrink-0 border-b border-slate-200 px-4 py-3 dark:border-slate-700">
-            <h2 class="text-base font-semibold text-slate-900 dark:text-white">
-              {{
-                !canManage
-                  ? t('driver_detail.doc_modal_view')
-                  : editingDocId
-                    ? t('driver_detail.doc_modal_edit')
-                    : t('driver_detail.doc_modal_add')
-              }}
-            </h2>
+          <div class="shrink-0 border-b border-slate-200 px-4 py-3 dark:border-slate-700 relative !pr-16">
+            <div class="flex items-start justify-between gap-3">
+              <h2 class="text-base font-semibold text-slate-900 dark:text-white">
+                {{
+                  !canManage
+                    ? t('driver_detail.doc_modal_view')
+                    : editingDocId
+                      ? t('driver_detail.doc_modal_edit')
+                      : t('driver_detail.doc_modal_add')
+                }}
+              </h2>
+              <ModalCloseButton class="absolute right-3 top-3" @click="docModalOpen = false" />
+            </div>
           </div>
           <form class="flex min-h-0 flex-1 flex-col" @submit.prevent="submitDocForm">
             <div class="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-y-contain p-4">
@@ -364,7 +367,8 @@
               {{ t('driver_detail.notes') }}
               <textarea
                 v-model="docForm.notes"
-                rows="3"
+                v-autosize-textarea
+                rows="4"
                 :readonly="!canManage"
                 class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                 :class="!canManage ? 'bg-slate-50 dark:bg-slate-800/80' : ''"
@@ -403,10 +407,10 @@
             </label>
             <p v-if="docFormError" class="text-xs text-rose-600">{{ docFormError }}</p>
             </div>
-            <div class="flex shrink-0 gap-2 border-t border-slate-200 p-4 dark:border-slate-700">
+            <div class="flex shrink-0 justify-end gap-2 border-t border-slate-200 px-4 py-3 dark:border-slate-700">
               <button
                 type="button"
-                class="flex-1 rounded-lg border border-slate-200 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                class="rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
                 @click="docModalOpen = false"
               >
                 {{ canManage ? t('app.cancel') : t('resources.close_panel') }}
@@ -414,7 +418,7 @@
               <button
                 v-if="canManage"
                 type="submit"
-                class="flex-1 rounded-lg bg-teal-600 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+                class="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
                 :disabled="docSaving"
               >
                 {{ docSaving ? t('resources.loading') : t('driver_detail.save_doc') }}
@@ -437,6 +441,8 @@
 </template>
 
 <script setup>
+import vAutosizeTextarea from '../../directives/autosizeTextarea'
+import ModalCloseButton from '../../components/ui/ModalCloseButton.vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'

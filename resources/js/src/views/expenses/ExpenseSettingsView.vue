@@ -45,9 +45,11 @@
         </div>
       </div>
 
-      <button type="button" class="rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-50" :disabled="saving" @click="save">
-        {{ saving ? t('expense.saving') : t('checklist.save') }}
-      </button>
+      <div class="flex justify-end">
+        <button type="button" class="rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-50" :disabled="saving" @click="save">
+          {{ saving ? t('expense.saving') : t('checklist.save') }}
+        </button>
+      </div>
     </section>
   </div>
 </template>

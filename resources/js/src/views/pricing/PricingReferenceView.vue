@@ -403,8 +403,8 @@
       description="Các trường có dấu * là bắt buộc. Giá để trống nghĩa là không áp dụng (hiển thị — trên bảng)."
       @close="passengerEditOpen = false"
     >
-      <form class="space-y-5" @submit.prevent="savePassengerEdit">
-        <div class="grid gap-4 sm:grid-cols-2">
+      <form class="space-y-4" @submit.prevent="savePassengerEdit">
+        <div class="grid gap-3 sm:grid-cols-2">
           <label :class="labelClass">
             <span>Gói / tuyến <span class="text-rose-600" aria-hidden="true">*</span></span>
             <input
@@ -473,8 +473,8 @@
       description="Các trường có dấu * là bắt buộc. Khoảng cách có thể để trống nếu lộ trình không gắn số km cố định."
       @close="cargoEditOpen = false"
     >
-      <form class="space-y-5" @submit.prevent="saveCargoEdit">
-        <div class="grid gap-4 sm:grid-cols-2">
+      <form class="space-y-4" @submit.prevent="saveCargoEdit">
+        <div class="grid gap-3 sm:grid-cols-2">
           <label class="sm:col-span-2" :class="labelClass">
             <span>Lộ trình <span class="text-rose-600" aria-hidden="true">*</span></span>
             <input
@@ -549,7 +549,7 @@
       description="Nội dung có dấu * là bắt buộc. Tiêu đề có thể để trống."
       @close="noteEditOpen = false"
     >
-      <form class="space-y-4" @submit.prevent="saveNoteEdit">
+      <form class="space-y-3" @submit.prevent="saveNoteEdit">
         <label :class="labelClass">
           <span>Tiêu đề</span>
           <input

@@ -7,10 +7,10 @@
           <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">{{ t('expense.staff_subtitle') }}</p>
         </div>
         <div class="flex flex-wrap gap-2">
-          <RouterLink :to="{ name: 'vehicleCostLedger' }" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800">
+          <RouterLink :to="{ name: 'vehicleCostLedger' }" class="inline-flex items-center gap-1.5 rounded-lg border border-teal-200 bg-teal-50 px-3 py-1.5 text-sm font-medium text-teal-800 hover:bg-teal-100 dark:border-teal-800 dark:bg-teal-950/40 dark:text-teal-200 dark:hover:bg-teal-900/50">
             <TruckIcon class="h-4 w-4" /> {{ t('expense.ledger_title') }}
           </RouterLink>
-          <RouterLink v-if="auth.hasPermission('expense.manage')" :to="{ name: 'expenseSettings' }" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800">
+          <RouterLink v-if="auth.hasPermission('expense.manage')" :to="{ name: 'expenseSettings' }" class="inline-flex items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-sm font-medium text-violet-800 hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-200 dark:hover:bg-violet-900/50">
             <Cog6ToothIcon class="h-4 w-4" /> {{ t('expense.settings_title') }}
           </RouterLink>
         </div>
@@ -68,7 +68,7 @@
           </tbody>
         </table>
         <p v-if="loading" class="mt-3 text-sm text-slate-500">{{ t('expense.loading') }}</p>
-        <p v-else-if="!items.length" class="mt-3 text-sm text-slate-500">{{ t('expense.empty') }}</p>
+        <p v-else-if="!items.length" class="mt-3 text-sm text-slate-500 w-full text-center py-4">{{ t('expense.empty') }}</p>
       </div>
       <div v-if="meta.last_page > 1" class="mt-4 flex items-center justify-between gap-2 text-xs text-slate-600 dark:text-slate-400">
         <span>{{ t('expense.page_info', { page: meta.current_page, last: meta.last_page, total: meta.total }) }}</span>

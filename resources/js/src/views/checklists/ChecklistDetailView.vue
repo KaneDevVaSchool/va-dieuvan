@@ -95,9 +95,11 @@
           {{ t('checklist.reviewed_by', { name: sub.reviewer?.name || '—', time: dateTime(sub.reviewed_at) }) }}
         </p>
         <textarea v-model="reviewNote" rows="2" maxlength="2000" :placeholder="t('checklist.review_note_ph')" class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
-        <button type="button" class="mt-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-50" :disabled="busy" @click="review">
-          {{ sub.status === 'reviewed' ? t('checklist.review_update') : t('checklist.review_mark') }}
-        </button>
+        <div class="mt-2 flex justify-end">
+          <button type="button" class="rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-50" :disabled="busy" @click="review">
+            {{ sub.status === 'reviewed' ? t('checklist.review_update') : t('checklist.review_mark') }}
+          </button>
+        </div>
       </section>
     </template>
   </div>

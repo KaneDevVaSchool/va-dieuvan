@@ -4,6 +4,9 @@
     class="relative transition active:scale-95"
     :class="buttonClass"
     :aria-label="showLabel ? undefined : t('notify.bell_open')"
+    :aria-expanded="notifStore.panelOpen"
+    aria-haspopup="dialog"
+    aria-controls="notification-center-panel"
     data-testid="notification-bell"
     @click="onBellClick"
   >
@@ -92,11 +95,11 @@ const labeledBadgeClass = computed(() => {
   return `${base} bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-100`
 })
 
-function onBellClick() {
+function onBellClick(event) {
   if (notifStore.panelOpen) {
     notifStore.closePanel()
   } else {
-    notifStore.openPanel()
+    notifStore.openPanel(event.currentTarget)
   }
   void notifStore.refreshBadges()
 }

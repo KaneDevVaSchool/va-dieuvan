@@ -1,26 +1,12 @@
 <template>
-  <div class="mx-auto min-h-full w-full max-w-[430px] overflow-x-hidden bg-driver-bg text-driver-ink sm:max-w-2xl">
-    <!-- Header -->
-    <header
-      class="sticky top-0 z-[25] flex items-center gap-2.5 border-b border-white/5 bg-driver-bg/90 px-3.5 py-2.5 backdrop-blur-md [-webkit-backdrop-filter:blur(12px)]"
-      style="padding-top: max(0.5rem, env(safe-area-inset-top))"
-    >
-      <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-driver-accent/15">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4.5 w-4.5 text-driver-accent" aria-hidden="true">
-          <path fill-rule="evenodd" d="M4 4a2 2 0 0 1 2-2h4.586A2 2 0 0 1 12 2.586L15.414 6A2 2 0 0 1 16 7.414V16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4Zm2 6a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H7a1 1 0 0 1-1-1Zm1 3a1 1 0 1 0 0 2h4a1 1 0 1 0 0-2H7Z" clip-rule="evenodd" />
-        </svg>
-      </div>
-      <div class="min-w-0 flex-1">
-        <h1 class="truncate text-sm font-bold leading-tight tracking-tight">{{ t('nav.driver_tp_days') }}</h1>
-        <p class="truncate text-[10px] leading-tight text-driver-muted">{{ t('driver_tp_days.subtitle') }}</p>
-      </div>
-      <span
-        v-if="!online"
-        class="shrink-0 rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-semibold text-amber-300"
-      >
-        Ngoại tuyến
-      </span>
-    </header>
+  <div class="mx-auto min-h-full w-full max-w-[430px] overflow-x-clip bg-driver-bg text-driver-ink sm:max-w-2xl">
+    <DriverPageHeader :title="t('nav.driver_tp_days')">
+      <template v-if="!online" #actions>
+        <span class="shrink-0 rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
+          Ngoại tuyến
+        </span>
+      </template>
+    </DriverPageHeader>
 
     <div class="px-3 pt-3">
       <!-- Week calendar -->
@@ -196,6 +182,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
+import DriverPageHeader from '../../components/driver/DriverPageHeader.vue'
 import { driverListDays } from '../../api/transportProgram'
 import { showAppErrorFromApi } from '../../composables/appMessage'
 import WeekCalendar from '../../components/trips/WeekCalendar.vue'

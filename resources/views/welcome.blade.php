@@ -22,7 +22,7 @@
         $pwaManifest = '/manifest.webmanifest';
     @endphp
     <link rel="manifest" href="{{ $pwaManifest }}" />
-    <title>VA Dispatch — Điều vận</title>
+    <title>Điều Vận</title>
     {{-- Phục hồi khi shell HTML cũ trỏ tới chunk Vite đã xóa (trước khi app.js chạy). --}}
     <script>
       (function () {

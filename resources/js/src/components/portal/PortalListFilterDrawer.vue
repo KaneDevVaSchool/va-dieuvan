@@ -91,7 +91,7 @@ onBeforeUnmount(() => {
           </button>
         </header>
 
-        <div class="flex-1 space-y-4 overflow-y-auto px-4 py-4">
+        <div class="flex-1 space-y-3 overflow-y-auto px-4 py-4">
           <label class="block">
             <span class="mb-1 block text-xs font-medium text-slate-600">{{ t('portal.filter_label_status') }}</span>
             <select

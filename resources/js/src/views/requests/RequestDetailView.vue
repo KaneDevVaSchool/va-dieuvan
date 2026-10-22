@@ -206,11 +206,11 @@
                           type="datetime-local"
                         />
                       </div>
-                      <div class="flex flex-wrap items-center gap-2 sm:col-span-2">
+                      <div class="flex flex-wrap items-center justify-end gap-2 sm:col-span-2">
+                        <span v-if="paperMsg" class="text-xs text-slate-600 dark:text-slate-400">{{ paperMsg }}</span>
                         <Button :loading="paperActing" type="submit" class="!bg-teal-600 hover:!bg-teal-700">
                           {{ t('request_detail.paper_mark_received_btn') }}
                         </Button>
-                        <span v-if="paperMsg" class="text-xs text-slate-600 dark:text-slate-400">{{ paperMsg }}</span>
                       </div>
                     </form>
                   </div>
@@ -236,10 +236,8 @@
                           type="datetime-local"
                         />
                       </div>
-                      <div class="flex flex-wrap items-center gap-2 sm:col-span-2">
-                        <Button :loading="paperActing" type="submit" class="!bg-teal-600 hover:!bg-teal-700">
-                          {{ t('request_detail.paper_save_changes_btn') }}
-                        </Button>
+                      <div class="flex flex-wrap items-center justify-end gap-2 sm:col-span-2">
+                        <span v-if="paperMsg" class="text-xs text-slate-600 dark:text-slate-400">{{ paperMsg }}</span>
                         <Button
                           variant="secondary"
                           type="button"
@@ -249,7 +247,9 @@
                         >
                           {{ t('request_detail.paper_revert_btn') }}
                         </Button>
-                        <span v-if="paperMsg" class="text-xs text-slate-600 dark:text-slate-400">{{ paperMsg }}</span>
+                        <Button :loading="paperActing" type="submit" class="!bg-teal-600 hover:!bg-teal-700">
+                          {{ t('request_detail.paper_save_changes_btn') }}
+                        </Button>
                       </div>
                     </form>
                   </div>

@@ -17,16 +17,10 @@
               <div class="text-base font-semibold tracking-tight text-slate-900">{{ title }}</div>
               <p v-if="description" class="mt-1 text-xs leading-relaxed text-slate-500">{{ description }}</p>
             </div>
-            <button
-              type="button"
-              class="shrink-0 rounded-lg px-2 py-1 text-sm text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
-              @click="$emit('close')"
-            >
-              Đóng
-            </button>
+            <ModalCloseButton @click="$emit('close')" />
           </div>
         </div>
-        <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4 md:px-5 md:py-5">
+        <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-3">
           <slot />
         </div>
         </div>
@@ -36,6 +30,7 @@
 </template>
 
 <script setup>
+import ModalCloseButton from './ModalCloseButton.vue'
 import { computed } from 'vue'
 
 const props = defineProps({

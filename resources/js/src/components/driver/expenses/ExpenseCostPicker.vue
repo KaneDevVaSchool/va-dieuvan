@@ -14,7 +14,7 @@
       </div>
       <div class="min-h-0 flex-1 overflow-y-auto px-4 py-3">
         <p v-if="loading" class="text-sm text-driver-muted">{{ t('expense.loading') }}</p>
-        <p v-else-if="!candidates.length" class="text-sm text-driver-muted">{{ t('expense.picker_empty') }}</p>
+        <p v-else-if="!candidates.length" class="text-sm text-driver-muted w-full text-center py-4">{{ t('expense.picker_empty') }}</p>
         <ul class="space-y-2">
           <li v-for="c in candidates" :key="c.id">
             <label class="flex min-h-[56px] items-center gap-3 rounded-xl bg-driver-surface px-3 py-2 ring-1 ring-white/[0.06]">

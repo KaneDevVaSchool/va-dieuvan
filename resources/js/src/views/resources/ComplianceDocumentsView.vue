@@ -134,7 +134,7 @@
       </div>
 
       <p v-if="loading" class="mt-3 text-sm text-slate-500">{{ t('resources.loading') }}</p>
-      <p v-else-if="!items.length" class="mt-3 text-sm text-slate-500">{{ t('compliance.empty') }}</p>
+      <p v-else-if="!items.length" class="mt-3 text-sm text-slate-500 w-full text-center py-4">{{ t('compliance.empty') }}</p>
 
       <div v-if="meta.last_page > 1" class="mt-4 flex items-center justify-between gap-2 text-xs text-slate-600 dark:text-slate-400">
         <span>{{ t('compliance.page_info', { page: meta.current_page, last: meta.last_page, total: meta.total }) }}</span>

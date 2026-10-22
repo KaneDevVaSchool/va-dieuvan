@@ -16,13 +16,7 @@
           <p class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-900">
             {{ attachment.original_name || t('request_detail.file_fallback_name', { id: attachment.id }) }}
           </p>
-          <button
-            type="button"
-            class="rounded-lg px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100"
-            @click="$emit('close')"
-          >
-            {{ t('request_detail.preview_modal_close') }}
-          </button>
+          <ModalCloseButton @click="$emit('close')" />
         </header>
         <div class="relative min-h-[200px] flex-1 bg-slate-100 p-2">
           <div
@@ -58,6 +52,7 @@
 </template>
 
 <script setup>
+import ModalCloseButton from '../ui/ModalCloseButton.vue'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { http } from '../../api/http'

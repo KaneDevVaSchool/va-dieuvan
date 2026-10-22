@@ -78,7 +78,7 @@
           class="sheet-inner w-full max-w-lg rounded-t-3xl bg-driver-card px-5 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-5 ring-1 ring-white/10"
         >
           <!-- Handle -->
-          <div class="mb-4 flex items-center justify-between">
+          <div class="mb-3 flex items-center justify-between">
             <h3 class="text-base font-bold text-white">{{ t('trip_history_page.adv_filter_title') }}</h3>
             <button
               type="button"

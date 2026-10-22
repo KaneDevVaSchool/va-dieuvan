@@ -1041,9 +1041,9 @@
                     @click.stop
                 >
                     <div
-                        class="border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-amber-50/30 px-5 pb-4 pt-5"
+                        class="border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-amber-50/30 px-5 pb-4 pt-5 relative !pr-16"
                     >
-                        <div class="flex gap-4">
+                        <div class="flex gap-3">
                             <div
                                 class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-100 to-amber-50 text-amber-700 shadow-inner shadow-amber-900/5"
                             >
@@ -1053,16 +1053,19 @@
                                 />
                             </div>
                             <div class="min-w-0 pt-0.5">
-                                <h3
-                                    id="clear-draft-modal-title"
-                                    class="text-base font-semibold leading-snug text-slate-900"
-                                >
-                                    {{
-                                        t(
-                                            "dispatch_wizard.create.clear_modal_title",
-                                        )
-                                    }}
-                                </h3>
+                                <div class="flex items-start justify-between gap-3">
+                                  <h3
+                                      id="clear-draft-modal-title"
+                                      class="text-base font-semibold leading-snug text-slate-900"
+                                  >
+                                      {{
+                                          t(
+                                              "dispatch_wizard.create.clear_modal_title",
+                                          )
+                                      }}
+                                  </h3>
+                                  <ModalCloseButton class="absolute right-3 top-3" @click="closeClearDraftModal" />
+                                </div>
                                 <p
                                     class="mt-2 text-sm leading-relaxed text-slate-600"
                                 >
@@ -1130,22 +1133,25 @@
                     @click.stop
                 >
                     <div
-                        class="shrink-0 border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-sky-50/30 px-5 pb-4 pt-5"
+                        class="shrink-0 border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-sky-50/30 px-5 pb-4 pt-5 relative !pr-16"
                     >
                         <div
                             class="flex flex-wrap items-start justify-between gap-3"
                         >
                             <div class="min-w-0">
-                                <h3
-                                    id="drafts-library-title"
-                                    class="text-base font-semibold leading-snug text-slate-900"
-                                >
-                                    {{
-                                        t(
-                                            "dispatch_wizard.create.library_title",
-                                        )
-                                    }}
-                                </h3>
+                                <div class="flex items-start justify-between gap-3">
+                                  <h3
+                                      id="drafts-library-title"
+                                      class="text-base font-semibold leading-snug text-slate-900"
+                                  >
+                                      {{
+                                          t(
+                                              "dispatch_wizard.create.library_title",
+                                          )
+                                      }}
+                                  </h3>
+                                  <ModalCloseButton class="absolute right-3 top-3" @click="closeDraftsModal" />
+                                </div>
                                 <p
                                     class="mt-1 text-xs leading-relaxed text-slate-600"
                                 >
@@ -1284,7 +1290,7 @@
                     @click.stop
                 >
                     <div
-                        class="border-b border-slate-100 bg-gradient-to-br from-va-50 via-white to-slate-50/30 px-5 pb-4 pt-5"
+                        class="border-b border-slate-100 bg-gradient-to-br from-va-50 via-white to-slate-50/30 px-5 pb-4 pt-5 relative !pr-16"
                     >
                         <div class="flex items-center gap-3">
                             <span
@@ -1296,12 +1302,15 @@
                                 />
                             </span>
                             <div class="min-w-0">
-                                <h3
-                                    id="save-template-modal-title"
-                                    class="text-base font-semibold leading-snug text-slate-900"
-                                >
-                                    {{ t("portal.template_save_title") }}
-                                </h3>
+                                <div class="flex items-start justify-between gap-3">
+                                  <h3
+                                      id="save-template-modal-title"
+                                      class="text-base font-semibold leading-snug text-slate-900"
+                                  >
+                                      {{ t("portal.template_save_title") }}
+                                  </h3>
+                                  <ModalCloseButton class="absolute right-3 top-3" @click="saveTemplateModalOpen = false" />
+                                </div>
                                 <p class="mt-0.5 text-xs text-slate-500">
                                     {{ t("portal.template_save_hint") }}
                                 </p>
@@ -1338,14 +1347,14 @@
                     >
                         <button
                             type="button"
-                            class="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 sm:w-auto"
+                            class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 sm:w-auto"
                             @click="saveTemplateModalOpen = false"
                         >
                             {{ t("dispatch_wizard.create.cancel") }}
                         </button>
                         <button
                             type="button"
-                            class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-va-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-va-800 disabled:opacity-50 sm:w-auto"
+                            class="inline-flex items-center justify-center gap-2 rounded-xl bg-va-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-va-800 disabled:opacity-50 sm:w-auto"
                             :disabled="
                                 !saveTemplateName.trim() || templateSaveLoading
                             "
@@ -1384,7 +1393,7 @@
                 >
                     <!-- Header -->
                     <div
-                        class="shrink-0 border-b border-slate-100 bg-gradient-to-br from-va-50 via-white to-slate-50/30 px-5 pb-4 pt-5"
+                        class="shrink-0 border-b border-slate-100 bg-gradient-to-br from-va-50 via-white to-slate-50/30 px-5 pb-4 pt-5 relative !pr-16"
                     >
                         <div
                             class="flex flex-wrap items-start justify-between gap-3"
@@ -1399,12 +1408,15 @@
                                     />
                                 </span>
                                 <div class="min-w-0">
-                                    <h3
-                                        id="template-library-title"
-                                        class="text-base font-semibold leading-snug text-slate-900"
-                                    >
-                                        {{ t("portal.template_library_title") }}
-                                    </h3>
+                                    <div class="flex items-start justify-between gap-3">
+                                      <h3
+                                          id="template-library-title"
+                                          class="text-base font-semibold leading-snug text-slate-900"
+                                      >
+                                          {{ t("portal.template_library_title") }}
+                                      </h3>
+                                      <ModalCloseButton class="absolute right-3 top-3" @click="templateModalOpen = false" />
+                                    </div>
                                     <p class="mt-0.5 text-xs text-slate-500">
                                         {{ t("portal.template_library_hint") }}
                                     </p>
@@ -1445,7 +1457,7 @@
                             >
                                 <!-- Rename mode -->
                                 <template v-if="templateRenameId === tmpl.id">
-                                    <div class="flex items-center gap-2">
+                                    <div class="flex items-center gap-2 justify-end">
                                         <input
                                             v-model="templateRenameValue"
                                             type="text"
@@ -1620,14 +1632,17 @@
                     @click.stop
                 >
                     <div
-                        class="shrink-0 border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-sky-50/30 px-5 pb-4 pt-5"
+                        class="shrink-0 border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-sky-50/30 px-5 pb-4 pt-5 relative !pr-16"
                     >
-                        <h3
-                            id="dw-target-picker-title"
-                            class="text-base font-semibold leading-snug text-slate-900"
-                        >
-                            {{ t("dispatch_wizard.create.sec_targets") }}
-                        </h3>
+                        <div class="flex items-start justify-between gap-3">
+                          <h3
+                              id="dw-target-picker-title"
+                              class="text-base font-semibold leading-snug text-slate-900"
+                          >
+                              {{ t("dispatch_wizard.create.sec_targets") }}
+                          </h3>
+                          <ModalCloseButton class="absolute right-3 top-3" @click="closeTargetPickerModal" />
+                        </div>
                         <p class="mt-1 text-xs leading-relaxed text-slate-600">
                             {{ t("dispatch_wizard.create.targets_hint") }}
                         </p>
@@ -1644,7 +1659,7 @@
                             v-model="targetModalFilterQ"
                             type="search"
                             autocomplete="off"
-                            class="dw-input mb-4 w-full"
+                            class="dw-input mb-3 w-full"
                             :placeholder="
                                 t('dispatch_wizard.create.targets_search_ph')
                             "
@@ -1710,6 +1725,7 @@
 </template>
 
 <script setup>
+import ModalCloseButton from '../../components/ui/ModalCloseButton.vue'
 import {
     computed,
     defineAsyncComponent,

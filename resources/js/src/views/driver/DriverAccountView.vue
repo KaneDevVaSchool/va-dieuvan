@@ -2,16 +2,15 @@
   <div
     class="min-h-full w-full bg-driver-bg text-driver-ink"
   >
+    <DriverPageHeader :title="t('nav.bottom_driver_account')">
+      <template #actions>
+        <NotificationBell compact />
+      </template>
+    </DriverPageHeader>
+
     <div
-      class="driver-stagger mx-auto w-full min-w-0 max-w-full space-y-3 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-4"
+      class="driver-stagger mx-auto w-full min-w-0 max-w-full space-y-3 px-3 pt-3 sm:px-4"
     >
-      <!-- Header chrome -->
-      <div class="flex items-center justify-between gap-3 pt-1">
-        <h1 class="text-lg font-bold tracking-tight text-driver-ink sm:text-xl">
-          {{ t('nav.bottom_driver_account') }}
-        </h1>
-        <NotificationBell />
-      </div>
 
       <p
         v-if="errorMsg"
@@ -197,9 +196,12 @@
           aria-labelledby="driver-logout-title"
           class="w-full max-w-md rounded-[20px] border border-white/[0.06] bg-driver-card p-5 text-driver-ink"
         >
-          <h2 id="driver-logout-title" class="text-lg font-bold sm:text-xl">
-            {{ t('app.logout_confirm_title') }}
-          </h2>
+          <div class="flex items-start justify-between gap-3">
+            <h2 id="driver-logout-title" class="text-lg font-bold sm:text-xl">
+              {{ t('app.logout_confirm_title') }}
+            </h2>
+            <ModalCloseButton @click="logoutConfirmOpen = false" />
+          </div>
           <p class="mt-3 text-base leading-relaxed text-driver-muted">
             {{ t('app.logout_confirm_body') }}
           </p>
@@ -226,6 +228,7 @@
 </template>
 
 <script setup>
+import ModalCloseButton from '../../components/ui/ModalCloseButton.vue'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -240,6 +243,7 @@ import {
 import { getDriverSummary } from '../../api/driver'
 import { listTripsAll } from '../../api/trips'
 import NotificationBell from '../../components/notifications/NotificationBell.vue'
+import DriverPageHeader from '../../components/driver/DriverPageHeader.vue'
 import { useAuthStore } from '../../store'
 import { useAuthLogout } from '../../composables/useAuthLogout'
 import { useHaptics } from '../../composables/useHaptics'

@@ -103,7 +103,9 @@
             </button>
 
             <div v-if="showCargoDataMenu" class="relative" data-cargo-data-panel>
-              <DatagridToolbarActionButton
+              <ToolbarPopover :open="showDataMenu" :title="t('cargo_page.toolbar_data')" panel-marker="data-cargo-data-panel" @close="showDataMenu = false">
+                <template #trigger>
+                  <DatagridToolbarActionButton
                 icon="data"
                 :active="showDataMenu"
                 test-id="cargo-toolbar-data"
@@ -111,10 +113,8 @@
               >
                 {{ t('cargo_page.toolbar_data') }}
               </DatagridToolbarActionButton>
-              <div
-                v-if="showDataMenu"
-                class="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[280px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
-              >
+                </template>
+
                 <template v-if="canManageCargoImportData">
                 <button
                   type="button"
@@ -188,7 +188,8 @@
                   </span>
                 </button>
                 </template>
-              </div>
+
+              </ToolbarPopover>
             </div>
           </div>
 
@@ -357,13 +358,16 @@
         @click.self="closePurgeAll"
       >
         <div class="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900">
-          <div class="border-b border-slate-100 bg-red-50/90 px-5 py-4 dark:border-slate-700 dark:bg-red-950/40">
-            <h2 id="cargo-purge-all-title" class="text-base font-semibold text-slate-900 dark:text-white">
-              {{ t('cargo_page.purge_all_modal_title') }}
-            </h2>
+          <div class="border-b border-slate-100 bg-red-50/90 px-5 py-4 dark:border-slate-700 dark:bg-red-950/40 relative !pr-16">
+            <div class="flex items-start justify-between gap-3">
+              <h2 id="cargo-purge-all-title" class="text-base font-semibold text-slate-900 dark:text-white">
+                {{ t('cargo_page.purge_all_modal_title') }}
+              </h2>
+              <ModalCloseButton class="absolute right-3 top-3" @click="closePurgeAll" />
+            </div>
             <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ t('cargo_page.purge_all_modal_lead') }}</p>
           </div>
-          <div class="space-y-4 px-5 py-4">
+          <div class="space-y-3 px-5 py-4">
             <p class="text-sm font-medium text-slate-800 dark:text-slate-100">
               {{ purgePermanent ? t('cargo_page.purge_all_mode_permanent') : t('cargo_page.purge_all_mode_soft') }}
               · {{ meta.total ?? 0 }}
@@ -427,6 +431,8 @@
 </template>
 
 <script setup>
+import ToolbarPopover from '../../components/shared/ui/ToolbarPopover.vue'
+import ModalCloseButton from '../../components/ui/ModalCloseButton.vue'
 import { computed, onActivated, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'

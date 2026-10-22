@@ -482,7 +482,7 @@
 
     <div
       v-else
-      class="sticky bottom-0 flex flex-wrap gap-3 border-t-2 border-slate-200 bg-white/95 px-4 py-4 backdrop-blur sm:px-6"
+      class="sticky bottom-0 flex flex-wrap justify-end gap-3 border-t-2 border-slate-200 bg-white/95 px-4 py-4 backdrop-blur sm:px-6"
     >
       <button
         type="button"

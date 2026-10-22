@@ -31,7 +31,7 @@
         <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-3 sm:px-5">
           <div
             v-if="state.variant === 'success'"
-            class="flex gap-4 rounded-xl border border-emerald-100/90 bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/40 p-4 dark:border-emerald-900/40 dark:from-emerald-950/40 dark:via-slate-900 dark:to-teal-950/30"
+            class="flex gap-3 rounded-xl border border-emerald-100/90 bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/40 p-4 dark:border-emerald-900/40 dark:from-emerald-950/40 dark:via-slate-900 dark:to-teal-950/30"
           >
             <div
               class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-md shadow-emerald-900/20"
@@ -52,7 +52,7 @@
           </p>
           <details
             v-if="state.variant === 'error' && state.apiDetails"
-            class="mt-4 rounded-lg border border-slate-200/90 bg-slate-50 p-3 text-left dark:border-slate-600 dark:bg-slate-800/80"
+            class="mt-3 rounded-lg border border-slate-200/90 bg-slate-50 p-3 text-left dark:border-slate-600 dark:bg-slate-800/80"
           >
             <summary class="cursor-pointer text-xs font-medium text-slate-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 dark:text-slate-300">{{ t('message_modal.support_details') }}</summary>
             <dl class="mt-2 space-y-1.5 font-mono text-[11px] text-slate-700 dark:text-slate-300">

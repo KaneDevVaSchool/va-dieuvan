@@ -95,7 +95,7 @@
     >
       <p
         v-if="!passengerRows.length"
-        class="text-sm"
+        class="text-sm w-full text-center py-4"
         :class="RD_EMPTY"
         data-testid="staff-request-trip-tab-passengers-empty"
       >

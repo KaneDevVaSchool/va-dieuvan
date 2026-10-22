@@ -45,7 +45,7 @@
         }}</Button>
       </div>
       <p v-if="error" class="text-sm text-rose-600">{{ error }}</p>
-      <div v-if="!loading && !items.length" class="text-sm text-slate-500">{{ t('notifications_hub.empty') }}</div>
+      <div v-if="!loading && !items.length" class="text-sm text-slate-500 w-full text-center py-4">{{ t('notifications_hub.empty') }}</div>
       <ul class="divide-y divide-slate-100 dark:divide-slate-800" data-testid="notifications-hub-list">
         <li v-for="n in items" :key="n.id" class="py-3">
           <div class="flex flex-wrap items-start justify-between gap-2">

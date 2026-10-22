@@ -103,16 +103,9 @@
           class="flex max-h-[min(92dvh,640px)] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl sm:rounded-2xl dark:bg-slate-900"
           @click.stop
         >
-          <div class="flex shrink-0 items-center justify-between gap-2 border-b border-slate-200/80 px-4 py-3 dark:border-slate-700">
+          <div class="flex shrink-0 items-center justify-between gap-2 border-b border-slate-200/80 px-4 py-3 dark:border-slate-700 relative !pr-16">
             <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ title }}</h2>
-            <button
-              type="button"
-              class="rounded-lg bg-slate-100 px-3 py-1.5 text-[12px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200"
-              data-testid="internal-multi-pick-done"
-              @click="closeModal"
-            >
-              {{ t('trip_detail.coordination.multi_pick_done') }}
-            </button>
+            <ModalCloseButton class="absolute right-3 top-3" @click="closeModal" data-testid="internal-multi-pick-done" />
           </div>
           <div class="shrink-0 px-4 pt-3">
             <input
@@ -180,6 +173,7 @@
 </template>
 
 <script setup>
+import ModalCloseButton from '../ui/ModalCloseButton.vue'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 

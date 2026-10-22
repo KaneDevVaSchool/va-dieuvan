@@ -31,11 +31,11 @@
             :placeholder="t('request_detail.service_price_placeholder')"
             @update:model-value="$emit('update:servicePrice', $event)"
           />
-          <div class="flex flex-wrap items-center gap-2">
+          <div class="flex flex-wrap items-center justify-end gap-2">
+            <span v-if="message" class="text-xs text-slate-600">{{ message }}</span>
             <Button type="submit" class="!bg-sky-600 hover:!bg-sky-700" :loading="submitting">
               {{ t('request_detail.fill_price_submit') }}
             </Button>
-            <span v-if="message" class="text-xs text-slate-600">{{ message }}</span>
           </div>
         </form>
       </div>

@@ -11,6 +11,12 @@ export default {
       screens: {
         xs: '380px',
       },
+      spacing: {
+        4.5: '1.125rem',
+        7.5: '1.875rem',
+        8.5: '2.125rem',
+        9.5: '2.375rem',
+      },
       colors: {
         va: {
           DEFAULT: '#9a0036',

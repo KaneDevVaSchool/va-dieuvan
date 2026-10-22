@@ -30,7 +30,7 @@
 
     <p
       v-else-if="trips.length === 0 && compactEmpty"
-      class="rounded-xl border border-white/5 bg-[#0a1512]/60 px-4 py-3 text-sm text-[#64748b]"
+      class="rounded-xl border border-white/5 bg-[#0a1512]/60 px-4 py-3 text-sm text-[#64748b] w-full text-center"
     >
       {{ t('driver_home.empty_today_short') }}
     </p>

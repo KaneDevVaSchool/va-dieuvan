@@ -159,7 +159,7 @@
           :has-issues="confirmSectionHasIssues('schedule')"
           :issue-hint="t('dispatch_wizard.confirm.section_issue_hint')"
         >
-          <div v-if="!scheduleCards.length" class="text-slate-500">{{ t('dispatch_wizard.confirm.schedule_empty') }}</div>
+          <div v-if="!scheduleCards.length" class="text-slate-500 w-full text-center py-4">{{ t('dispatch_wizard.confirm.schedule_empty') }}</div>
           <div v-else class="grid gap-3">
             <TripItemCard v-for="card in scheduleCards" :key="card.key" :heading="card.heading" :lines="card.lines" />
           </div>

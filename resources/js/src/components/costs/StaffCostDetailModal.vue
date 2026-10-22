@@ -18,13 +18,13 @@
       {{ loadError }}
     </p>
 
-    <div v-else-if="cost" class="space-y-5">
+    <div v-else-if="cost" class="space-y-4">
       <!-- Hero: mã + số tiền -->
       <div
         class="overflow-hidden rounded-2xl border border-slate-200/90 bg-gradient-to-br from-slate-50 via-white to-teal-50/40 dark:border-slate-700 dark:from-slate-900/80 dark:via-slate-900/60 dark:to-teal-950/20"
         data-testid="cost-detail-hero"
       >
-        <div class="flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
+        <div class="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
           <div class="min-w-0 space-y-2">
             <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               {{ t('costs_page.detail_cost_code') }}
@@ -83,7 +83,7 @@
             {{ t('costs_page.detail_standalone_vehicle_hint') }}
           </p>
           <template v-else>
-            <dl class="grid gap-4 sm:grid-cols-2">
+            <dl class="grid gap-3 sm:grid-cols-2">
               <div class="sm:col-span-2">
                 <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   {{ t('costs_page.col_trip') }}
@@ -182,7 +182,7 @@
             {{ t('costs_page.detail_section_note') }}
           </h3>
         </div>
-        <dl class="grid gap-4 px-4 py-4 sm:grid-cols-2 sm:px-5">
+        <dl class="grid gap-3 px-4 py-4 sm:grid-cols-2 sm:px-5">
           <div>
             <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               {{ t('costs_page.detail_type') }}
@@ -328,6 +328,7 @@
         :aria-label="t('costs_page.detail_preview_aria')"
         @click="previewUrl = null"
       >
+        <ModalCloseButton class="absolute right-4 top-4 !text-white hover:!bg-white/10" @click.stop="previewUrl = null" />
         <img
           :src="previewUrl"
           class="max-h-[min(90dvh,900px)] max-w-full rounded-lg object-contain shadow-2xl"
@@ -340,6 +341,7 @@
 </template>
 
 <script setup>
+import ModalCloseButton from '../ui/ModalCloseButton.vue'
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'

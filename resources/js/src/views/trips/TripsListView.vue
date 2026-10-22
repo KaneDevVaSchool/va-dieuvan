@@ -75,7 +75,9 @@
               class="relative"
               data-trips-data-panel
             >
-              <DatagridToolbarActionButton
+              <ToolbarPopover :open="showTripsDataMenu" :title="t('trips_page.toolbar_data')" panel-marker="data-trips-data-panel" @close="showTripsDataMenu = false">
+                <template #trigger>
+                  <DatagridToolbarActionButton
                 icon="data"
                 :active="showTripsDataMenu"
                 test-id="trips-toolbar-data"
@@ -83,10 +85,8 @@
               >
                 {{ t('trips_page.toolbar_data') }}
               </DatagridToolbarActionButton>
-              <div
-                v-if="showTripsDataMenu"
-                class="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[280px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
-              >
+                </template>
+
                 <button
                   type="button"
                   class="flex w-full flex-col px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
@@ -123,7 +123,8 @@
                 >
                   {{ t('trips_page.data_menu_export') }}
                 </button>
-              </div>
+
+              </ToolbarPopover>
             </div>
           </div>
 
@@ -598,6 +599,7 @@
 </template>
 
 <script setup>
+import ToolbarPopover from '../../components/shared/ui/ToolbarPopover.vue'
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'

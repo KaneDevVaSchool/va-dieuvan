@@ -500,20 +500,20 @@ onActivated(() => load())
       @click.self="createOpen = false"
     >
       <Card class="max-h-[90vh] w-full max-w-lg overflow-y-auto shadow-xl">
-        <div class="mb-4 flex items-center justify-between">
+        <div class="mb-3 flex items-center justify-between">
           <h2 id="perm-create-title" class="text-sm font-semibold text-slate-900 dark:text-slate-100">Thêm quyền mới</h2>
           <button type="button" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800" @click="createOpen = false">
             <XMarkIcon class="h-5 w-5" />
           </button>
         </div>
 
-        <form class="space-y-4" @submit.prevent="submitCreate">
+        <form class="space-y-3" @submit.prevent="submitCreate">
           <Select v-model="presetVal" label="Chọn từ mẫu có sẵn">
             <option value="">— Không dùng mẫu —</option>
             <option v-for="p in SEED_PERMISSION_PRESETS" :key="p.name" :value="p.name">{{ p.name }}</option>
           </Select>
 
-          <div class="grid gap-4 sm:grid-cols-2">
+          <div class="grid gap-3 sm:grid-cols-2">
             <Input v-model="createForm.name" label="Mã quyền *" placeholder="vd. request.create" required class="sm:col-span-1" />
             <Input v-model="createForm.display_name" label="Tên hiển thị" placeholder="vd. Tạo yêu cầu điều xe" class="sm:col-span-1" />
           </div>
@@ -565,7 +565,7 @@ onActivated(() => load())
           </div>
 
           <!-- Panel body -->
-          <div class="flex-1 space-y-4 overflow-y-auto p-5">
+          <div class="flex-1 space-y-3 overflow-y-auto p-5">
             <!-- System warning -->
             <div
               v-if="isSystemPerm(editingPerm.name)"
@@ -604,8 +604,8 @@ onActivated(() => load())
 
           <!-- Panel footer -->
           <div class="flex items-center justify-end gap-2 border-t border-slate-200 px-5 py-4 dark:border-slate-700">
-            <Button variant="secondary" :disabled="saving" @click="closeEdit">Huỷ</Button>
-            <Button :loading="saving" :disabled="saving" @click="submitEdit">Lưu thay đổi</Button>
+            <Button class="px-4" variant="secondary" :disabled="saving" @click="closeEdit">Huỷ</Button>
+            <Button class="px-4" :loading="saving" :disabled="saving" @click="submitEdit">Lưu thay đổi</Button>
           </div>
         </div>
       </div>

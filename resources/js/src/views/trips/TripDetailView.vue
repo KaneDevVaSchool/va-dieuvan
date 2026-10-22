@@ -354,7 +354,7 @@
                                 v-if="
                                     !noteEvents.length && !tripRequestNotesFromUser
                                 "
-                                class="text-xs text-slate-500 dark:text-slate-400"
+                                class="text-xs text-slate-500 dark:text-slate-400 w-full text-center py-4"
                             >
                                 {{ t("trip_detail.notes.empty") }}
                             </div>
@@ -484,7 +484,7 @@
                         </ul>
                         <p
                             v-if="!attachmentsList.length"
-                            class="mt-3 text-sm text-slate-500 dark:text-slate-400"
+                            class="mt-3 text-sm text-slate-500 dark:text-slate-400 w-full text-center py-4"
                         >
                             {{ t("trip_detail.attachments.empty") }}
                         </p>
@@ -587,8 +587,8 @@
                         >
                             {{ noteMsg }}
                         </p>
-                        <div class="mt-4 flex justify-end gap-2">
-                            <Button
+                        <div class="mt-3 flex justify-end gap-2">
+                            <Button class="px-4"
                                 type="button"
                                 variant="secondary"
                                 data-testid="trip-detail-note-modal-cancel"
@@ -596,7 +596,7 @@
                             >
                                 {{ t("trip_detail.coordination.provider_modal_cancel") }}
                             </Button>
-                            <Button
+                            <Button class="px-4"
                                 :loading="noting"
                                 :disabled="!newNote.trim()"
                                 data-testid="trip-detail-note-modal-submit"
@@ -617,14 +617,17 @@
                     <div
                         class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl"
                     >
-                        <h3 class="text-sm font-semibold text-slate-900">
-                            {{
-                                t(
-                                    "trip_detail.coordination.provider_modal_title",
-                                )
-                            }}
-                        </h3>
-                        <div class="mt-4 space-y-3">
+                        <div class="flex items-start justify-between gap-3">
+                          <h3 class="text-sm font-semibold text-slate-900">
+                              {{
+                                  t(
+                                      "trip_detail.coordination.provider_modal_title",
+                                  )
+                              }}
+                          </h3>
+                          <ModalCloseButton @click="providerModalOpen = false" />
+                        </div>
+                        <div class="mt-3 space-y-3">
                             <Input
                                 v-model="newProviderName"
                                 :label="
@@ -663,7 +666,7 @@
                             </p>
                         </div>
                         <div class="mt-5 flex justify-end gap-2">
-                            <Button
+                            <Button class="px-4"
                                 type="button"
                                 variant="secondary"
                                 @click="providerModalOpen = false"
@@ -673,7 +676,7 @@
                                     )
                                 }}</Button
                             >
-                            <Button
+                            <Button class="px-4"
                                 type="button"
                                 :loading="providerCreating"
                                 @click="submitQuickProvider"
@@ -693,6 +696,7 @@
 </template>
 
 <script setup>
+import ModalCloseButton from '../../components/ui/ModalCloseButton.vue'
 import { computed, onMounted, ref, watch } from "vue";
 import { useVisiblePoll } from "../../composables/useDriverVisiblePoll";
 import { RouterLink, useRoute, useRouter } from "vue-router";

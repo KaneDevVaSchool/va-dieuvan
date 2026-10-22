@@ -22,7 +22,7 @@
           @click.stop
         >
           <div
-            class="relative border-b border-slate-100 px-5 pb-5 pt-5"
+            class="relative border-b border-slate-100 px-5 pb-5 pt-5 relative !pr-16"
             :class="
               ok
                 ? 'bg-gradient-to-br from-emerald-50/90 via-white to-slate-50/80'
@@ -34,7 +34,7 @@
               :class="ok ? 'bg-emerald-200/60' : 'bg-rose-200/60'"
               aria-hidden="true"
             />
-            <div class="relative flex gap-4">
+            <div class="relative flex gap-3">
               <div
                 class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl shadow-inner ring-1 ring-white/80"
                 :class="
@@ -47,13 +47,16 @@
                 <XCircleIcon v-else class="h-6 w-6" aria-hidden="true" />
               </div>
               <div class="min-w-0 flex-1 pt-0.5">
-                <h3 id="submit-result-modal-title" class="text-base font-semibold leading-snug text-slate-900">
-                  {{
-                    ok
-                      ? t('dispatch_wizard.confirm.submit_modal_success_title')
-                      : t('dispatch_wizard.confirm.submit_modal_fail_title')
-                  }}
-                </h3>
+                <div class="flex items-start justify-between gap-3">
+                  <h3 id="submit-result-modal-title" class="text-base font-semibold leading-snug text-slate-900">
+                    {{
+                      ok
+                        ? t('dispatch_wizard.confirm.submit_modal_success_title')
+                        : t('dispatch_wizard.confirm.submit_modal_fail_title')
+                    }}
+                  </h3>
+                  <ModalCloseButton class="absolute right-3 top-3" @click="emit('close')" />
+                </div>
                 <p class="mt-1.5 text-sm leading-relaxed text-slate-600">
                   {{
                     ok
@@ -66,7 +69,7 @@
 
             <div
               v-if="ok && created?.id"
-              class="relative mt-4 overflow-hidden rounded-xl border border-slate-200/80 bg-white/90 shadow-sm shadow-slate-900/[0.04] ring-1 ring-slate-100"
+              class="relative mt-3 overflow-hidden rounded-xl border border-slate-200/80 bg-white/90 shadow-sm shadow-slate-900/[0.04] ring-1 ring-slate-100"
             >
               <div class="border-b border-slate-100 bg-slate-50/80 px-4 py-3">
                 <p class="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
@@ -158,6 +161,7 @@
 </template>
 
 <script setup>
+import ModalCloseButton from '../../../components/ui/ModalCloseButton.vue'
 import { computed, inject } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/vue/24/outline'

@@ -18,7 +18,7 @@
           </button>
         </header>
 
-        <div class="flex-1 space-y-4 overflow-y-auto p-4">
+        <div class="flex-1 space-y-3 overflow-y-auto p-4">
           <div>
             <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
               {{ t('tp_attendance_page.notify_scope') }}
@@ -107,7 +107,7 @@
                 </button>
               </li>
             </ul>
-            <p v-else class="mt-2 text-xs text-slate-400">{{ t('tp_attendance_page.notify_log_empty') }}</p>
+            <p v-else class="mt-2 text-xs text-slate-400 w-full text-center py-4">{{ t('tp_attendance_page.notify_log_empty') }}</p>
           </div>
         </div>
 

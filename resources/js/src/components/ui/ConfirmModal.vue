@@ -12,10 +12,13 @@
       <div
         class="flex w-full max-w-md max-h-[min(90dvh,calc(100dvh-2rem))] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900"
       >
-        <div class="shrink-0 border-b border-slate-200 px-4 py-3 dark:border-slate-700 sm:px-5">
-          <h2 :id="titleId" class="text-sm font-semibold text-slate-900 dark:text-slate-100">
-            {{ state.title }}
-          </h2>
+        <div class="shrink-0 border-b border-slate-200 px-4 py-3 dark:border-slate-700 sm:px-5 relative !pr-16">
+          <div class="flex items-start justify-between gap-3">
+            <h2 :id="titleId" class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              {{ state.title }}
+            </h2>
+            <ModalCloseButton class="absolute right-3 top-3" @click="onCancel" />
+          </div>
         </div>
         <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-3 sm:px-5">
           <p class="whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-700 dark:text-slate-300">
@@ -50,6 +53,7 @@
 </template>
 
 <script setup>
+import ModalCloseButton from './ModalCloseButton.vue'
 import { onUnmounted, watch, watchEffect } from 'vue'
 import { confirmDialogState as state, resolveConfirm } from '../../composables/useConfirm'
 

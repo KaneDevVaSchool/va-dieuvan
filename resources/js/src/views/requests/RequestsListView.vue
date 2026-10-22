@@ -80,7 +80,9 @@
             </FilterVisibilityDropdown>
 
             <div v-if="canManageBulkData" class="relative" data-requests-data-panel>
-              <DatagridToolbarActionButton
+              <ToolbarPopover :open="showDataMenu" :title="t('requests_page.toolbar_data')" panel-marker="data-requests-data-panel" @close="showDataMenu = false">
+                <template #trigger>
+                  <DatagridToolbarActionButton
                 icon="data"
                 :active="showDataMenu"
                 test-id="requests-toolbar-data"
@@ -88,10 +90,8 @@
               >
                 {{ t('requests_page.toolbar_data') }}
               </DatagridToolbarActionButton>
-              <div
-                v-if="showDataMenu"
-                class="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[280px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
-              >
+                </template>
+
                 <button
                   type="button"
                   class="flex w-full flex-col px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
@@ -168,7 +168,8 @@
                     {{ t('requests_page.purge_all_permanent_hint', { n: meta.total ?? 0 }) }}
                   </span>
                 </button>
-              </div>
+
+              </ToolbarPopover>
             </div>
 
             <div v-else class="relative" data-requests-export-panel>
@@ -847,7 +848,7 @@
           class="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5"
         >
           <div
-            class="flex items-start gap-3 border-b border-slate-100 px-5 py-4"
+            class="flex items-start gap-3 border-b border-slate-100 px-5 py-4 relative !pr-16"
             :class="
               bulkConfirmKind === 'force_delete'
                 ? 'bg-red-50/90'
@@ -875,15 +876,18 @@
               <ArrowPathIcon v-else class="h-5 w-5" aria-hidden="true" />
             </div>
             <div class="min-w-0 flex-1">
-              <h2 id="bulk-confirm-title" class="text-base font-semibold text-slate-900">
-                {{
-                  bulkConfirmKind === 'force_delete'
-                    ? t('requests_page.bulk_force_delete_modal_title')
-                    : bulkConfirmKind === 'delete'
-                      ? t('requests_page.bulk_delete_modal_title')
-                      : t('requests_page.bulk_restore_modal_title')
-                }}
-              </h2>
+              <div class="flex items-start justify-between gap-3">
+                <h2 id="bulk-confirm-title" class="text-base font-semibold text-slate-900">
+                  {{
+                    bulkConfirmKind === 'force_delete'
+                      ? t('requests_page.bulk_force_delete_modal_title')
+                      : bulkConfirmKind === 'delete'
+                        ? t('requests_page.bulk_delete_modal_title')
+                        : t('requests_page.bulk_restore_modal_title')
+                  }}
+                </h2>
+                <ModalCloseButton class="absolute right-3 top-3" @click="closeBulkConfirm" />
+              </div>
               <p class="mt-1 text-sm leading-relaxed text-slate-600">
                 {{
                   bulkConfirmKind === 'force_delete'
@@ -947,13 +951,16 @@
         @click.self="closePurgeAll"
       >
         <div class="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5">
-          <div class="border-b border-slate-100 bg-red-50/90 px-5 py-4">
-            <h2 id="purge-all-title" class="text-base font-semibold text-slate-900">
-              {{ t('requests_page.purge_all_modal_title') }}
-            </h2>
+          <div class="border-b border-slate-100 bg-red-50/90 px-5 py-4 relative !pr-16">
+            <div class="flex items-start justify-between gap-3">
+              <h2 id="purge-all-title" class="text-base font-semibold text-slate-900">
+                {{ t('requests_page.purge_all_modal_title') }}
+              </h2>
+              <ModalCloseButton class="absolute right-3 top-3" @click="closePurgeAll" />
+            </div>
             <p class="mt-1 text-sm text-slate-600">{{ t('requests_page.purge_all_modal_lead') }}</p>
           </div>
-          <div class="space-y-4 px-5 py-4">
+          <div class="space-y-3 px-5 py-4">
             <p class="text-sm font-medium text-slate-800">
               {{ purgePermanent ? t('requests_page.purge_all_mode_permanent') : t('requests_page.purge_all_mode_soft') }}
               · {{ meta.total ?? 0 }}
@@ -1017,6 +1024,8 @@
 </template>
 
 <script setup>
+import ToolbarPopover from '../../components/shared/ui/ToolbarPopover.vue'
+import ModalCloseButton from '../../components/ui/ModalCloseButton.vue'
 import { computed, onActivated, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'

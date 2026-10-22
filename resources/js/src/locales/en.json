@@ -1,4 +1,8 @@
 {
+    "page_load_error": {
+        "title": "Could not open this page",
+        "body": "The page could not load after an update attempt. Check your connection and try opening it again in a few minutes. You can still navigate to other pages."
+    },
     "notify": {
         "title": "Notifications",
         "empty": "No notifications yet",

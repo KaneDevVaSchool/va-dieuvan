@@ -460,14 +460,14 @@ onActivated(() => load())
       @click.self="addModalOpen = false"
     >
       <Card class="max-h-[90vh] w-full max-w-lg overflow-y-auto shadow-xl">
-        <div class="mb-4 flex items-center justify-between">
+        <div class="mb-3 flex items-center justify-between">
           <h2 id="feature-add-title" class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('system_pages.feature_toggles.add_modal_title') }}</h2>
           <button type="button" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800" @click="addModalOpen = false">
             <XMarkIcon class="h-5 w-5" />
           </button>
         </div>
 
-        <form class="space-y-4" @submit.prevent="submitAdd">
+        <form class="space-y-3" @submit.prevent="submitAdd">
           <Select v-model="presetIdx" :label="t('system_pages.feature_toggles.add_preset_label')">
             <option value="">{{ t('system_pages.feature_toggles.add_preset_none') }}</option>
             <option v-for="(row, i) in SEED_FEATURE_TOGGLE_PRESETS" :key="row.key" :value="String(i)">
@@ -475,7 +475,7 @@ onActivated(() => load())
             </option>
           </Select>
 
-          <div class="grid gap-4 sm:grid-cols-2">
+          <div class="grid gap-3 sm:grid-cols-2">
             <Input v-model="form.key" :label="t('system_pages.feature_toggles.add_key_label')" :placeholder="t('system_pages.feature_toggles.add_key_ph')" required />
             <Input v-model="form.name" :label="t('system_pages.feature_toggles.add_name_label')" :placeholder="t('system_pages.feature_toggles.add_name_ph')" required />
           </div>
@@ -505,8 +505,8 @@ onActivated(() => load())
           </div>
 
           <div class="flex flex-col-reverse gap-2 border-t border-slate-100 pt-4 dark:border-slate-800 sm:flex-row sm:justify-end">
-            <Button variant="secondary" type="button" :disabled="saving" @click="addModalOpen = false">{{ t('feature_toggles.cancel') }}</Button>
-            <Button type="submit" :loading="saving" :disabled="saving || !form.key.trim() || !form.name.trim()">{{ t('system_pages.feature_toggles.btn_add') }}</Button>
+            <Button class="px-4" variant="secondary" type="button" :disabled="saving" @click="addModalOpen = false">{{ t('feature_toggles.cancel') }}</Button>
+            <Button class="px-4" type="submit" :loading="saving" :disabled="saving || !form.key.trim() || !form.name.trim()">{{ t('system_pages.feature_toggles.btn_add') }}</Button>
           </div>
         </form>
       </Card>

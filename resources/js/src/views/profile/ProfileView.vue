@@ -1,7 +1,7 @@
 <template>
-  <div class="mx-auto max-w-[1100px] px-4 py-6 sm:px-5">
-    <header class="mb-6">
-      <h1 class="text-xl font-medium tracking-tight text-slate-900 dark:text-slate-100">
+  <div class="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-y-contain p-3 pb-6 sm:p-4 md:px-6 md:pt-5 lg:overflow-hidden lg:px-8 lg:pb-6 lg:pt-6">
+    <header class="shrink-0 border-b border-slate-200/80 pb-4 dark:border-slate-700/60">
+      <h1 class="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">
         Hồ sơ tài khoản
       </h1>
       <p class="mt-1 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
@@ -13,9 +13,9 @@
       Chưa có dữ liệu người dùng.
     </div>
 
-    <div v-else class="grid gap-6 lg:grid-cols-[260px_1fr] lg:items-start">
+    <div v-else class="grid gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-[280px_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)]">
       <!-- Sidebar -->
-      <aside class="flex flex-col gap-5">
+      <aside class="flex flex-col gap-5 lg:min-h-0 lg:overflow-y-auto lg:overscroll-y-contain scrollbar-thin">
         <div
           class="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm shadow-slate-900/5 dark:border-slate-700/80 dark:bg-slate-900/70 dark:shadow-none"
         >
@@ -84,9 +84,9 @@
       </aside>
 
       <!-- Main -->
-      <div class="flex min-w-0 flex-col gap-5">
+      <div class="flex min-w-0 flex-col gap-5 lg:min-h-0">
         <div
-          class="flex flex-wrap gap-1 rounded-xl bg-slate-100/90 p-1 dark:bg-slate-800/60"
+          class="grid shrink-0 grid-cols-2 gap-1 rounded-xl sm:grid-cols-4 bg-slate-100/90 p-1 dark:bg-slate-800/60"
           role="tablist"
           aria-label="Nhóm thông tin hồ sơ"
         >
@@ -96,7 +96,7 @@
             type="button"
             role="tab"
             :aria-selected="activeTab === tab.id"
-            class="min-w-0 flex-1 rounded-lg px-3 py-2 text-center text-[13px] transition-colors duration-150 sm:flex-none sm:px-4"
+            class="min-w-0 truncate rounded-lg px-3 py-2 text-center text-[13px] transition-colors duration-150 sm:px-4"
             :class="
               activeTab === tab.id
                 ? 'border border-slate-200/60 bg-white font-medium text-slate-900 shadow-sm dark:border-slate-600/80 dark:bg-slate-900 dark:text-slate-100'
@@ -109,9 +109,9 @@
         </div>
 
         <section
-          class="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm shadow-slate-900/5 dark:border-slate-700/80 dark:bg-slate-900/70 dark:shadow-none"
+          class="flex flex-col overflow-hidden rounded-2xl lg:min-h-0 border border-slate-200/70 bg-white shadow-sm shadow-slate-900/5 dark:border-slate-700/80 dark:bg-slate-900/70 dark:shadow-none"
         >
-          <div class="border-b border-slate-100/90 px-5 py-4 dark:border-slate-700/60">
+          <div class="shrink-0 border-b border-slate-100/90 px-5 py-4 sm:px-6 dark:border-slate-700/60">
             <h2 class="text-[15px] font-medium text-slate-900 dark:text-slate-100">
               Chỉnh sửa hồ sơ
             </h2>
@@ -124,15 +124,15 @@
             </p>
           </div>
 
-          <div class="px-5 py-5">
+          <div class="px-5 py-5 sm:px-6 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:overscroll-y-contain scrollbar-thin">
             <template v-for="(block, bi) in activeTabSections" :key="block.section">
-              <hr v-if="bi > 0" class="my-6 border-0 border-t border-slate-100 dark:border-slate-700/60" />
+              <hr v-if="bi > 0" class="my-5 border-0 border-t border-slate-100 dark:border-slate-700/60" />
               <h3 class="mb-4 text-[13px] font-medium text-slate-600 dark:text-slate-300">
                 {{ block.section }}
               </h3>
-              <div class="grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2">
+              <div class="grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2 xl:grid-cols-3">
                 <template v-for="field in block.fields" :key="field.key">
-                  <div v-if="field.type === 'textarea'" class="md:col-span-2">
+                  <div v-if="field.type === 'textarea'" class="md:col-span-full">
                     <ProfileFieldLabel :label="field.label" :important="field.important" />
                     <textarea
                       v-model="form[field.key]"
@@ -172,7 +172,7 @@
                       {{ field.placeholder }}
                     </p>
                   </div>
-                  <div v-else :class="field.fullWidth ? 'md:col-span-2' : ''">
+                  <div v-else :class="field.fullWidth ? 'md:col-span-full xl:col-span-1' : ''">
                     <ProfileFieldLabel :label="field.label" :important="field.important" />
                     <input
                       v-model="form[field.key]"
@@ -186,18 +186,18 @@
             </template>
           </div>
 
-          <div class="flex flex-wrap items-center gap-3 border-t border-slate-100/90 px-5 py-4 dark:border-slate-700/60">
-            <Button :loading="saving" type="button" @click="save">
-              Lưu thay đổi
-            </Button>
+          <div class="flex shrink-0 flex-wrap items-center justify-end gap-3 border-t border-slate-100/90 px-5 py-4 sm:px-6 dark:border-slate-700/60">
             <p v-if="msg" class="text-sm text-emerald-700 dark:text-emerald-400">
               {{ msg }}
             </p>
             <p v-if="err" class="text-sm text-rose-600 dark:text-rose-400">
               {{ err }}
             </p>
+            <Button :loading="saving" type="button" @click="save">
+              Lưu thay đổi
+            </Button>
           </div>
-          <p v-if="auth.user.cms_sync_warning" class="border-t border-amber-100 bg-amber-50/80 px-4 py-2 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200">
+          <p v-if="auth.user.cms_sync_warning" class="shrink-0 border-t border-amber-100 bg-amber-50/80 px-4 py-2 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200">
             {{ auth.user.cms_sync_warning }}
           </p>
         </section>

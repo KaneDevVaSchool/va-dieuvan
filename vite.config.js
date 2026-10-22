@@ -4,6 +4,18 @@ import vue from '@vitejs/plugin-vue';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+    // Keep the running app's optimizer separate from temporary preview servers.
+    cacheDir: 'node_modules/.vite/app',
+    optimizeDeps: {
+        // Pre-bundle every chart entry before lazy report pages are opened.
+        include: [
+            'echarts/core',
+            'echarts/charts',
+            'echarts/components',
+            'echarts/features',
+            'echarts/renderers',
+        ],
+    },
     plugins: [
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.js'],

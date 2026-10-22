@@ -11,8 +11,11 @@
         class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-600 dark:bg-slate-900"
         @click.stop
       >
-        <div class="shrink-0 border-b border-slate-200 px-4 py-3 dark:border-slate-700">
-          <h2 class="text-base font-semibold text-slate-900 dark:text-white">{{ t('compliance.renew_title') }}</h2>
+        <div class="shrink-0 border-b border-slate-200 px-4 py-3 dark:border-slate-700 relative !pr-16">
+          <div class="flex items-start justify-between gap-3">
+            <h2 class="text-base font-semibold text-slate-900 dark:text-white">{{ t('compliance.renew_title') }}</h2>
+            <ModalCloseButton class="absolute right-3 top-3" @click="$emit('close')" />
+          </div>
           <p class="mt-0.5 text-sm text-slate-700 dark:text-slate-300">
             {{ docTypeLabel }}<span v-if="doc.title"> · {{ doc.title }}</span>
           </p>
@@ -23,7 +26,7 @@
         </div>
 
         <form class="flex min-h-0 flex-1 flex-col" @submit.prevent="submit">
-          <div class="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-y-contain p-4">
+          <div class="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-y-contain p-3">
             <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
               {{ t('compliance.file_required') }} *
               <input
@@ -79,24 +82,25 @@
               {{ t('driver_detail.notes') }}
               <textarea
                 v-model="form.notes"
-                rows="2"
+                v-autosize-textarea
+                rows="4"
                 maxlength="2000"
                 class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
             <p v-if="error" class="text-xs text-rose-600" role="alert">{{ error }}</p>
           </div>
-          <div class="flex shrink-0 gap-2 border-t border-slate-200 p-4 dark:border-slate-700">
+          <div class="flex shrink-0 gap-2 border-t border-slate-200 p-3 dark:border-slate-700 justify-end">
             <button
               type="button"
-              class="flex-1 rounded-lg border border-slate-200 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+              class="rounded-lg border border-slate-200 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 px-4"
               @click="$emit('close')"
             >
               {{ t('app.cancel') }}
             </button>
             <button
               type="submit"
-              class="flex-1 rounded-lg bg-teal-600 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+              class="rounded-lg bg-teal-600 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50 px-4"
               :disabled="saving"
               data-testid="compliance-renew-submit"
             >
@@ -110,6 +114,8 @@
 </template>
 
 <script setup>
+import vAutosizeTextarea from '../../directives/autosizeTextarea'
+import ModalCloseButton from '../ui/ModalCloseButton.vue'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { formatIsoDate } from '../../util/datetime'

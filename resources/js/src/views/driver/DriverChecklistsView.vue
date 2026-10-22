@@ -110,7 +110,7 @@
       <section class="rounded-[1.25rem] bg-driver-card p-4 ring-1 ring-white/[0.06]">
         <h2 class="text-base font-bold">{{ t('checklist.history_title') }}</h2>
         <p v-if="historyLoading && !history.length" class="mt-3 text-sm text-driver-muted">{{ t('checklist.loading') }}</p>
-        <p v-else-if="!history.length" class="mt-3 text-sm text-driver-muted">{{ t('checklist.history_empty') }}</p>
+        <p v-else-if="!history.length" class="mt-3 text-sm text-driver-muted w-full text-center py-4">{{ t('checklist.history_empty') }}</p>
         <ul class="mt-3 space-y-2">
           <li v-for="s in history" :key="s.id">
             <RouterLink

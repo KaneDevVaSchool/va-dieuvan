@@ -93,7 +93,7 @@
       </template>
     </div>
 
-    <p v-if="!loading && !trips.length" class="text-xs text-driver-muted">
+    <p v-if="!loading && !trips.length" class="text-xs text-driver-muted w-full text-center py-4">
       {{ t('driver_costs.trips_empty') }}
     </p>
   </div>

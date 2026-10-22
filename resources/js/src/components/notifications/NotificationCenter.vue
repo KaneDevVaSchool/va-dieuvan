@@ -1,31 +1,33 @@
 <template>
   <Teleport to="body">
-    <!-- Panel: bottom-sheet mobile · floating card sm+; justify theo trục sidebar -->
+    <!-- Anchor the inbox to the bell that opened it. -->
     <div
       v-if="notifStore.panelOpen"
-      class="fixed inset-0 z-[200] flex flex-col justify-end sm:flex-row sm:items-start sm:p-3 md:p-4 print:hidden"
-      :class="panelJustifyClass"
+      class="pointer-events-none fixed inset-0 z-[200] print:hidden"
     >
       <div
-        class="absolute inset-0 bg-slate-900/50 transition-opacity active:bg-slate-900/55"
-        @click="notifStore.closePanel()"
+        class="pointer-events-auto absolute inset-0"
+        @click="closeNotificationPanel"
+      />
+      <span
+        v-if="pointerStyle"
+        class="pointer-events-none fixed z-20 h-3.5 w-3.5 rotate-45 border-b border-l border-slate-200/90 bg-white dark:border-slate-700/90 dark:bg-slate-900"
+        :style="pointerStyle"
+        data-testid="notification-panel-pointer"
+        aria-hidden="true"
       />
       <div
-        class="relative z-10 flex max-h-[min(82dvh,36rem)] w-full flex-col overflow-hidden rounded-none border border-slate-200/90 bg-white shadow-lg dark:border-slate-700/90 dark:bg-slate-900 sm:max-h-[min(28rem,80vh)] sm:max-w-sm sm:shadow-xl"
-        :style="{
-          paddingTop: 'max(0.5rem, env(safe-area-inset-top))',
-          paddingBottom: 'max(0.375rem, env(safe-area-inset-bottom))',
-        }"
+        id="notification-center-panel"
+        ref="panelRef"
+        class="pointer-events-auto fixed z-10 flex w-full flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_16px_48px_-12px_rgba(15,23,42,0.28),0_4px_12px_rgba(15,23,42,0.06)] dark:border-slate-700/90 dark:bg-slate-900 dark:shadow-black/40"
+        :style="panelStyle"
         role="dialog"
-        aria-modal="true"
         :aria-label="t('notify.title')"
       >
-        <div
-          class="mx-auto mb-0.5 mt-1 h-1 w-9 shrink-0 rounded-full bg-slate-300/70 dark:bg-slate-600 sm:hidden"
-          aria-hidden="true"
-        />
-
-        <div class="flex items-center gap-2 border-b border-slate-100 px-3 py-2 dark:border-slate-800">
+        <div class="flex shrink-0 items-center gap-2.5 border-b border-slate-100 px-3.5 py-3 dark:border-slate-800">
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-va-50 text-va-800 ring-1 ring-inset ring-va-100 dark:bg-va-950/50 dark:text-va-300 dark:ring-va-900/50" aria-hidden="true">
+            <BellIcon class="h-[18px] w-[18px]" />
+          </span>
           <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
               <h2 class="text-base font-semibold text-slate-900 dark:text-white">
@@ -33,7 +35,7 @@
               </h2>
               <span
                 v-if="notifStore.lastUnread > 0"
-                class="text-xs font-medium text-sky-600 dark:text-sky-400"
+                class="rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-700 dark:bg-sky-950/50 dark:text-sky-300"
               >
                 {{ t('notify.unread_line', { n: notifStore.lastUnread > 99 ? '99+' : notifStore.lastUnread }) }}
               </span>
@@ -43,7 +45,7 @@
             type="button"
             class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 active:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-800"
             :aria-label="t('notify.close')"
-            @click="notifStore.closePanel()"
+            @click="closeNotificationPanel"
           >
             <XMarkIcon class="h-5 w-5" />
           </button>
@@ -51,18 +53,18 @@
 
         <div
           v-if="showAudienceTabs"
-          class="shrink-0 border-b border-slate-100 px-2 py-1.5 dark:border-slate-800"
+          class="shrink-0 border-b border-slate-100 px-2.5 py-2 dark:border-slate-800"
           role="tablist"
           :aria-label="t('notify.title')"
         >
-          <div class="flex gap-1 overflow-x-auto rounded-lg bg-slate-100 p-0.5 [scrollbar-width:none] dark:bg-slate-800/60 [&::-webkit-scrollbar]:hidden">
+          <div class="flex gap-0.5 overflow-x-auto rounded-xl bg-slate-100/80 p-1 [scrollbar-width:none] dark:bg-slate-800/60 [&::-webkit-scrollbar]:hidden">
           <button
             v-for="tab in audienceTabs"
             :key="tab.key"
             type="button"
             role="tab"
             :aria-selected="notifStore.activeTab === tab.key"
-            class="flex-1 shrink-0 whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-semibold transition"
+            class="flex-1 shrink-0 whitespace-nowrap rounded-lg px-2 py-1.5 text-[11px] font-semibold transition"
             :class="
               notifStore.activeTab === tab.key
                 ? 'bg-va-800 text-white shadow-sm dark:bg-va-700'
@@ -134,7 +136,7 @@
             </template>
           </ul>
         </template>
-        <div class="shrink-0 border-t border-slate-100 px-3 py-2 dark:border-slate-800">
+        <div class="shrink-0 border-t border-slate-100 bg-slate-50/70 px-3.5 py-3 dark:border-slate-800 dark:bg-slate-950/30">
           <div class="flex items-center justify-between gap-2 text-xs">
             <RouterLink
               :to="hubPath"
@@ -159,7 +161,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { BellIcon, XMarkIcon } from '@heroicons/vue/24/outline'
@@ -167,7 +169,6 @@ import NotificationItem from './NotificationItem.vue'
 import { buildStaffPrefixedPath } from '../../config/dispatchWebBase'
 import { useNotificationStore } from '../../store/notificationCenter'
 import { useAuthStore } from '../../store'
-import { useSidebarLayout } from '../../composables/useSidebarLayout'
 
 const { t, locale } = useI18n()
 const auth = useAuthStore()
@@ -178,10 +179,79 @@ const isDriverApp = computed(() => !!route.meta?.driverApp)
 const hubPath = computed(() =>
   isDriverApp.value ? '/driver' : buildStaffPrefixedPath('/notifications'),
 )
-const { isVertical } = useSidebarLayout()
-const panelJustifyClass = computed(() =>
-  isVertical.value ? 'md:justify-start' : 'sm:justify-end',
-)
+const panelRef = ref(null)
+const panelStyle = ref({})
+const pointerStyle = ref(null)
+let panelObserver = null
+
+function positionPanel() {
+  if (!notifStore.panelOpen || !panelRef.value) return
+  const anchor = notifStore.panelAnchor?.isConnected
+    ? notifStore.panelAnchor
+    : document.querySelector('[data-testid="notification-bell"]')
+  const rect = anchor?.getBoundingClientRect()
+  const sidebarRect = anchor?.closest('aside')?.getBoundingClientRect()
+  const margin = 8
+  const gap = 8
+  const rightSpace = sidebarRect ? window.innerWidth - sidebarRect.right - gap - margin : 0
+  const besideSidebar = sidebarRect && rightSpace >= 220
+  const width = Math.min(384, besideSidebar ? rightSpace : window.innerWidth - margin * 2)
+  const below = Math.max(0, window.innerHeight - (rect?.bottom ?? 0) - gap - margin)
+  const above = Math.max(0, (rect?.top ?? 0) - gap - margin)
+  const openBelow = below >= 280 || below >= above
+  const maxHeight = Math.min(448, besideSidebar ? window.innerHeight - margin * 2 : openBelow ? below : above)
+  const height = Math.min(panelRef.value.scrollHeight, maxHeight)
+  const left = besideSidebar
+    ? sidebarRect.right + gap
+    : Math.max(margin, Math.min(rect?.left ?? margin, window.innerWidth - width - margin))
+  const top = besideSidebar
+    ? Math.min(rect.top, window.innerHeight - height - margin) - 24
+    : openBelow ? (rect?.bottom ?? 0) + gap : (rect?.top ?? 0) - gap - height
+  const panelTop = Math.max(margin, top)
+  // Keep the pointer aimed at the bell while avoiding the rounded corners.
+  const pointerY = rect ? Math.max(panelTop + 24, Math.min(rect.top + rect.height / 2, panelTop + height - 24)) : 0
+  pointerStyle.value = besideSidebar ? { left: `${left - 7}px`, top: `${pointerY - 7}px` } : null
+  panelStyle.value = {
+    width: `${width}px`,
+    maxHeight: `${maxHeight}px`,
+    left: `${left}px`,
+    top: `${panelTop}px`,
+  }
+}
+
+function closeNotificationPanel() {
+  notifStore.closePanel()
+  notifStore.panelAnchor?.focus({ preventScroll: true })
+}
+
+function onPanelKeydown(event) {
+  if (event.key === 'Escape') {
+    event.preventDefault()
+    closeNotificationPanel()
+  }
+}
+
+function stopPanelListeners() {
+  panelObserver?.disconnect()
+  panelObserver = null
+  window.removeEventListener('resize', positionPanel)
+  window.removeEventListener('scroll', positionPanel, true)
+  document.removeEventListener('keydown', onPanelKeydown)
+}
+
+watch(() => notifStore.panelOpen, async (open) => {
+  stopPanelListeners()
+  if (!open) return
+  await nextTick()
+  if (!notifStore.panelOpen || !panelRef.value) return
+  positionPanel()
+  panelObserver = new ResizeObserver(positionPanel)
+  panelObserver.observe(panelRef.value)
+  window.addEventListener('resize', positionPanel)
+  window.addEventListener('scroll', positionPanel, true)
+  document.addEventListener('keydown', onPanelKeydown)
+  panelRef.value.querySelector('button')?.focus({ preventScroll: true })
+})
 
 const audienceTabs = [
   { key: 'all', labelKey: 'notify.tab_all' },
@@ -480,6 +550,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  stopPanelListeners()
   notifStore.stopPolling()
 })
 

@@ -166,7 +166,9 @@
                 class="relative"
                 data-costs-data-panel
               >
-                <DatagridToolbarActionButton
+                <ToolbarPopover :open="showCostsDataMenu" :title="t('costs_page.toolbar_data')" panel-marker="data-costs-data-panel" @close="showCostsDataMenu = false">
+                  <template #trigger>
+                    <DatagridToolbarActionButton
                   icon="data"
                   :active="showCostsDataMenu"
                   test-id="costs-toolbar-data"
@@ -174,11 +176,8 @@
                 >
                   {{ t('costs_page.toolbar_data') }}
                 </DatagridToolbarActionButton>
-                <div
-                  v-if="showCostsDataMenu"
-                  class="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[280px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
-                  role="menu"
-                >
+                  </template>
+
                   <button
                     type="button"
                     class="flex w-full flex-col px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
@@ -234,7 +233,8 @@
                       {{ t('costs_page.purge_all_hint', { n: meta.total ?? 0 }) }}
                     </span>
                   </button>
-                </div>
+
+                </ToolbarPopover>
               </div>
 
               <button
@@ -1297,8 +1297,8 @@
           </div>
 
           <form class="flex min-h-0 flex-1 flex-col" @submit.prevent="submitCost">
-            <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 py-4">
-            <div class="grid gap-4">
+            <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-3">
+            <div class="grid gap-3">
               <div>
                 <label class="mb-1 block text-xs font-medium text-slate-700">
                   {{ t('costs_page.modal_trip_label') }}
@@ -1385,11 +1385,11 @@
               {{ costMsg }}
             </p>
             </div>
-            <div class="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-slate-100 px-5 py-4">
-              <button type="button" class="costs-btn-ghost" :disabled="submitting" @click="closeAddCostModal">{{
+            <div class="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-slate-100 px-4 py-3">
+              <button type="button" class="costs-btn-ghost px-4" :disabled="submitting" @click="closeAddCostModal">{{
                 t('app.cancel')
               }}</button>
-              <button type="submit" class="costs-btn-primary" :disabled="submitting || tripsForModalLoading">
+              <button type="submit" class="costs-btn-primary px-4" :disabled="submitting || tripsForModalLoading">
                 <span
                   v-if="submitting"
                   class="inline-block size-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
@@ -1463,7 +1463,7 @@
             />
             </div>
             <div class="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-slate-100 px-5 py-4 dark:border-slate-700">
-              <button type="button" class="costs-btn-ghost" :disabled="decidingId != null" @click="closeRejectModal">
+              <button type="button" class="costs-btn-ghost px-4" :disabled="decidingId != null" @click="closeRejectModal">
                 {{ t('costs_page.reject_modal_cancel') }}
               </button>
               <button
@@ -1532,7 +1532,7 @@
             </button>
           </div>
           <div class="flex items-center justify-end gap-2 px-5 py-4">
-            <button type="button" class="costs-btn-ghost" :disabled="deletingCostId != null" @click="closeDeleteModal">
+            <button type="button" class="costs-btn-ghost px-4" :disabled="deletingCostId != null" @click="closeDeleteModal">
               {{ t('costs_page.delete_modal_cancel') }}
             </button>
             <button
@@ -1566,8 +1566,11 @@
           class="relative z-10 w-full max-w-sm overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-slate-900/10"
           @click.stop
         >
-          <div class="border-b border-slate-100 px-4 py-3">
-            <h2 id="costs-quick-type-title" class="text-sm font-semibold text-slate-900">{{ t('costs_page.quick_type_title') }}</h2>
+          <div class="border-b border-slate-100 px-4 py-3 relative !pr-16">
+            <div class="flex items-start justify-between gap-3">
+              <h2 id="costs-quick-type-title" class="text-sm font-semibold text-slate-900">{{ t('costs_page.quick_type_title') }}</h2>
+              <ModalCloseButton class="absolute right-3 top-3" @click="quickAddTypeOpen = false" />
+            </div>
           </div>
           <div class="space-y-3 p-4">
             <label class="block text-xs font-medium text-slate-700">{{ t('costs_page.quick_type_name') }}</label>
@@ -1581,8 +1584,8 @@
             />
             <p v-if="quickAddTypeError" class="text-xs text-rose-600">{{ quickAddTypeError }}</p>
             <div class="flex justify-end gap-2 pt-1">
-              <button type="button" class="costs-btn-ghost text-sm" @click="quickAddTypeOpen = false">{{ t('app.cancel') }}</button>
-              <button type="button" class="costs-btn-primary text-sm" @click="submitQuickAddType">{{
+              <button type="button" class="costs-btn-ghost text-sm px-4" @click="quickAddTypeOpen = false">{{ t('app.cancel') }}</button>
+              <button type="button" class="costs-btn-primary text-sm px-4" @click="submitQuickAddType">{{
                 t('costs_page.quick_type_save')
               }}</button>
             </div>
@@ -1613,11 +1616,14 @@
         <div class="absolute inset-0 bg-slate-900/50" aria-hidden="true" @click="closePurgeAllCosts" />
         <div class="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl dark:border-slate-700 dark:bg-slate-900">
           <div>
-            <h2 id="costs-purge-all-title" class="text-base font-semibold text-slate-900 dark:text-slate-100">
-              {{ t('costs_page.purge_all_modal_title') }}
-            </h2>
+            <div class="flex items-start justify-between gap-3">
+              <h2 id="costs-purge-all-title" class="text-base font-semibold text-slate-900 dark:text-slate-100">
+                {{ t('costs_page.purge_all_modal_title') }}
+              </h2>
+              <ModalCloseButton @click="closePurgeAllCosts" />
+            </div>
             <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">{{ t('costs_page.purge_all_modal_lead') }}</p>
-            <div class="mt-4">
+            <div class="mt-3">
               <label for="costs-purge-confirm" class="text-xs font-medium text-slate-700 dark:text-slate-300">
                 {{ t('costs_page.purge_all_confirm_label') }}
               </label>
@@ -1684,6 +1690,8 @@
 </template>
 
 <script setup>
+import ToolbarPopover from '../../components/shared/ui/ToolbarPopover.vue'
+import ModalCloseButton from '../../components/ui/ModalCloseButton.vue'
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'

@@ -132,7 +132,7 @@
               </button>
             </header>
 
-            <div class="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+            <div class="flex-1 space-y-3 overflow-y-auto px-5 py-4">
               <div class="grid grid-cols-2 gap-3">
                 <div class="rounded-xl border border-slate-200 bg-slate-50/60 p-3">
                   <div class="text-xs text-slate-400">Sĩ số dự kiến</div>

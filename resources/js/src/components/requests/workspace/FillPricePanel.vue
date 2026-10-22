@@ -302,7 +302,7 @@
         </div>
         </div>
 
-        <div class="mt-4 flex shrink-0 flex-wrap items-center gap-3 lg:mt-0">
+        <div class="mt-4 flex shrink-0 flex-wrap items-center justify-end gap-3 lg:mt-0">
           <Button
             class="!bg-sky-600 hover:!bg-sky-700"
             :loading="acting"

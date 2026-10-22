@@ -160,7 +160,7 @@
           <time class="shrink-0 text-xs tabular-nums font-medium text-slate-500">{{ entry.at }}</time>
         </li>
       </ul>
-      <p v-else class="px-4 py-4 text-sm italic text-slate-400 sm:px-5">{{ t('portal.info_cards.history_empty') }}</p>
+      <p v-else class="px-4 py-4 text-sm italic text-slate-400 sm:px-5 w-full text-center">{{ t('portal.info_cards.history_empty') }}</p>
     </div>
   </div>
 </template>

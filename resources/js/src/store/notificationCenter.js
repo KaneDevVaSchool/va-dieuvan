@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, watch } from 'vue'
+import { ref, shallowRef, watch } from 'vue'
 import { playNotificationChime } from '../util/notificationChime'
 import { fetchNavBadges } from '../api/navBadges'
 import {
@@ -129,6 +129,7 @@ function mapPushRegisterError(e) {
 
 export const useNotificationStore = defineStore('notificationCenter', () => {
   const panelOpen = ref(false)
+  const panelAnchor = shallowRef(null)
   const items = ref([])
   const loading = ref(false)
   const activeTab = ref('all')
@@ -170,7 +171,8 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
     panelOpen.value = open
   }
 
-  function openPanel() {
+  function openPanel(anchor = null) {
+    panelAnchor.value = anchor
     panelOpen.value = true
     loadInbox()
   }
@@ -439,6 +441,7 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
 
   return {
     panelOpen,
+    panelAnchor,
     items,
     loading,
     activeTab,

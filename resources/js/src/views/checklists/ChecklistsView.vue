@@ -33,15 +33,12 @@
 
       <!-- Ma trận tuân thủ -->
       <template v-if="activeTab === 'compliance'">
-        <div class="mt-4 grid gap-3 sm:grid-cols-4">
+        <div class="mt-4 grid gap-3 sm:grid-cols-3">
           <select v-model="matrixFilters.template_id" :aria-label="t('checklist.filter_template')" class="rounded-lg border border-slate-200 py-2 pl-3 pr-8 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @change="onTemplateChange">
             <option v-for="tpl in templates" :key="tpl.id" :value="tpl.id">{{ tpl.name }}</option>
           </select>
           <input v-model="matrixFilters.date_from" type="date" :aria-label="t('checklist.filter_from')" class="rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
           <input v-model="matrixFilters.date_to" type="date" :aria-label="t('checklist.filter_to')" class="rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
-          <button type="button" class="rounded-lg bg-teal-600 px-3 py-2 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-50" :disabled="matrixLoading" @click="loadMatrix">
-            {{ t('checklist.apply') }}
-          </button>
         </div>
 
         <div v-if="matrix" class="mt-4 flex flex-wrap gap-2">
@@ -80,7 +77,7 @@
             </tbody>
           </table>
           <p v-if="matrixLoading" class="mt-3 text-sm text-slate-500">{{ t('checklist.loading') }}</p>
-          <p v-else-if="matrix && !matrix.rows.length" class="mt-3 text-sm text-slate-500">{{ t('checklist.no_drivers') }}</p>
+          <p v-else-if="matrix && !matrix.rows.length" class="mt-3 text-sm text-slate-500 w-full text-center py-4">{{ t('checklist.no_drivers') }}</p>
         </div>
       </template>
 
@@ -101,7 +98,6 @@
           <input v-model="listFilters.date_to" type="date" :aria-label="t('checklist.filter_to')" class="rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
         </div>
         <div class="mt-3 flex flex-wrap justify-end gap-2">
-          <button type="button" class="rounded-lg bg-teal-600 px-3 py-2 text-sm font-semibold text-white hover:bg-teal-700" @click="loadList(1)">{{ t('checklist.apply') }}</button>
           <button type="button" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium dark:border-slate-600 dark:text-slate-200" :disabled="exporting" @click="exportList">
             <ArrowDownTrayIcon class="h-4 w-4" /> {{ t('checklist.export_excel') }}
           </button>
@@ -135,7 +131,7 @@
             </tbody>
           </table>
           <p v-if="listLoading" class="mt-3 text-sm text-slate-500">{{ t('checklist.loading') }}</p>
-          <p v-else-if="!list.length" class="mt-3 text-sm text-slate-500">{{ t('checklist.history_empty') }}</p>
+          <p v-else-if="!list.length" class="mt-3 text-sm text-slate-500 w-full text-center py-4">{{ t('checklist.history_empty') }}</p>
         </div>
         <div v-if="listMeta.last_page > 1" class="mt-4 flex items-center justify-between gap-2 text-xs text-slate-600 dark:text-slate-400">
           <span>{{ t('checklist.page_info', { page: listMeta.current_page, last: listMeta.last_page, total: listMeta.total }) }}</span>
@@ -159,6 +155,7 @@ import { CHECKLIST_STATE_PILL } from '../../constants/checklistExpense'
 import { showAppErrorFromApi } from '../../composables/appMessage'
 import { useAuthStore } from '../../store'
 import { toLocalDateKey } from '../../util/dates'
+import { debounceTrailing } from '../../composables/useDebounce'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -187,7 +184,6 @@ function onTemplateChange() {
   const tpl = templates.value.find((x) => String(x.id) === String(matrixFilters.template_id))
   matrixFilters.date_from = daysAgo(tpl?.frequency === 'weekly' ? 55 : 6)
   matrixFilters.date_to = daysAgo(0)
-  void loadMatrix()
 }
 
 function shortPeriod(p) {
@@ -215,11 +211,14 @@ function clean(obj) {
   return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== '' && v != null))
 }
 
+let matrixSeq = 0
 async function loadMatrix() {
   if (!matrixFilters.template_id) return
+  const seq = ++matrixSeq
   matrixLoading.value = true
   try {
-    matrix.value = await getChecklistCompliance(clean({ ...matrixFilters }))
+    const res = await getChecklistCompliance(clean({ ...matrixFilters }))
+    if (seq === matrixSeq) matrix.value = res
   } catch (err) {
     showAppErrorFromApi(err, t('checklist.load_error'))
   } finally {
@@ -227,10 +226,13 @@ async function loadMatrix() {
   }
 }
 
+let listSeq = 0
 async function loadList(page = 1) {
+  const seq = ++listSeq
   listLoading.value = true
   try {
     const res = await listChecklists(clean({ ...listFilters, page, per_page: 30 }))
+    if (seq !== listSeq) return
     list.value = res.items
     listMeta.value = res.meta
   } catch (err) {
@@ -250,6 +252,23 @@ async function exportList() {
     exporting.value = false
   }
 }
+
+/** Bộ lọc tự áp dụng khi đổi (không cần nút "Xem"); bỏ qua lúc ô ngày đang nhập dở. */
+const isDateOk = (v) => v === '' || /^\d{4}-\d{2}-\d{2}$/.test(v)
+const reloadMatrix = debounceTrailing(() => void loadMatrix(), 250)
+watch(
+  () => [matrixFilters.template_id, matrixFilters.date_from, matrixFilters.date_to],
+  () => {
+    if (matrixFilters.date_from && matrixFilters.date_to) reloadMatrix()
+  },
+)
+const reloadList = debounceTrailing(() => void loadList(1), 350)
+watch(
+  () => [listFilters.q, listFilters.template_id, listFilters.result, listFilters.date_from, listFilters.date_to],
+  () => {
+    if (isDateOk(listFilters.date_from) && isDateOk(listFilters.date_to)) reloadList()
+  },
+)
 
 watch(activeTab, (tab) => {
   if (tab === 'list' && !list.value.length) void loadList(1)

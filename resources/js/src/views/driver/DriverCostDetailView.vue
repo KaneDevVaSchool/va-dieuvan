@@ -237,7 +237,10 @@
             @click.stop
           >
             <div class="mx-auto mb-4 h-1.5 w-12 shrink-0 rounded-full bg-white/15 sm:hidden" aria-hidden="true" />
-            <h3 class="text-xl font-bold text-driver-ink">{{ t('driver_cost_req.edit_title') }}</h3>
+            <div class="flex items-start justify-between gap-3">
+              <h3 class="text-xl font-bold text-driver-ink">{{ t('driver_cost_req.edit_title') }}</h3>
+              <ModalCloseButton @click="closeEditSheet" />
+            </div>
             <p v-if="draftSavedHint" class="mt-2 text-sm text-driver-accent">{{ draftSavedHint }}</p>
 
             <p class="mt-5 text-sm font-semibold text-driver-muted">{{ t('driver_trip_detail.cost_type') }}</p>
@@ -309,6 +312,7 @@
 </template>
 
 <script setup>
+import ModalCloseButton from '../../components/ui/ModalCloseButton.vue'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'

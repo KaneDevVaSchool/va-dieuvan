@@ -30,7 +30,7 @@
       </div>
     </div>
 
-    <p v-else-if="!items.length" class="mt-4 text-sm text-slate-500">{{ t('portal.notifications_empty') }}</p>
+    <p v-else-if="!items.length" class="mt-4 text-sm text-slate-500 w-full text-center py-4">{{ t('portal.notifications_empty') }}</p>
 
     <ul v-else class="mt-4 divide-y divide-slate-100">
       <li v-for="n in items" :key="n.id" class="group/item py-3 first:pt-0">

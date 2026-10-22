@@ -103,6 +103,7 @@ const cards = computed(() => {
       tone: 'violet',
       icon: BuildingStorefrontIcon,
       display: m.topProviderAmount ? formatMoneyCompact(m.topProviderAmount) : t('dashboard_analytics.kpi_empty_provider'),
+      displayClass: m.topProviderAmount ? '' : 'text-xs font-medium leading-snug',
       sub: providerName || t('dashboard_analytics.kpi_providers_sub'),
     },
     {

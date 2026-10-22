@@ -209,12 +209,15 @@
         aria-labelledby="sidebar-horizontal-confirm-title"
         class="w-full max-w-md rounded-2xl border border-slate-200/90 bg-white p-5 shadow-2xl dark:border-slate-600 dark:bg-slate-900"
       >
-        <h2
-          id="sidebar-horizontal-confirm-title"
-          class="text-base font-semibold text-slate-900 dark:text-slate-50"
-        >
-          {{ t('app.sidebar_confirm_horizontal_title') }}
-        </h2>
+        <div class="flex items-start justify-between gap-3">
+          <h2
+            id="sidebar-horizontal-confirm-title"
+            class="text-base font-semibold text-slate-900 dark:text-slate-50"
+          >
+            {{ t('app.sidebar_confirm_horizontal_title') }}
+          </h2>
+          <ModalCloseButton @click="horizontalConfirmOpen = false" />
+        </div>
         <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
           {{ t('app.sidebar_confirm_horizontal_body') }}
         </p>
@@ -252,9 +255,12 @@
         aria-labelledby="logout-confirm-title"
         class="w-full max-w-md rounded-2xl border border-slate-200/90 bg-white p-5 shadow-2xl dark:border-slate-600 dark:bg-slate-900"
       >
-        <h2 id="logout-confirm-title" class="text-base font-semibold text-slate-900 dark:text-slate-50">
-          {{ t('app.logout_confirm_title') }}
-        </h2>
+        <div class="flex items-start justify-between gap-3">
+          <h2 id="logout-confirm-title" class="text-base font-semibold text-slate-900 dark:text-slate-50">
+            {{ t('app.logout_confirm_title') }}
+          </h2>
+          <ModalCloseButton @click="logoutConfirmOpen = false" />
+        </div>
         <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
           {{ t('app.logout_confirm_body') }}
         </p>
@@ -280,6 +286,7 @@
 </template>
 
 <script setup>
+import ModalCloseButton from '../ui/ModalCloseButton.vue'
 import { computed, nextTick, onUnmounted, ref, useId, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'

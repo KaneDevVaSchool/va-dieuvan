@@ -12,11 +12,14 @@
         class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-violet-200 bg-white shadow-2xl"
         @click.stop
       >
-        <div class="shrink-0 border-b border-violet-100 bg-violet-50/80 px-4 py-3">
-          <h3 class="text-base font-semibold text-violet-950">{{ modalTitle || t('request_detail.dept_reject_modal_title') }}</h3>
+        <div class="shrink-0 border-b border-violet-100 bg-violet-50/80 px-4 py-3 relative !pr-16">
+          <div class="flex items-start justify-between gap-3">
+            <h3 class="text-base font-semibold text-violet-950">{{ modalTitle || t('request_detail.dept_reject_modal_title') }}</h3>
+            <ModalCloseButton class="absolute right-3 top-3" @click="$emit('close')" :disabled="acting" />
+          </div>
           <p class="mt-0.5 text-xs text-violet-900/80">{{ modalLead || t('request_detail.dept_reject_modal_lead') }}</p>
         </div>
-        <div class="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-y-contain p-4">
+        <div class="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-y-contain p-4">
           <label class="block">
             <span class="mb-1 block text-xs font-medium text-slate-600">{{ t('request_detail.dept_reject_reason_label') }}</span>
             <textarea
@@ -28,12 +31,12 @@
             />
           </label>
           <p v-if="errorMessage" class="text-sm text-rose-700">{{ errorMessage }}</p>
-          <div class="flex flex-wrap gap-2">
-            <Button variant="danger" class="min-h-[2.75rem]" :loading="acting" @click="$emit('confirm')">
-              {{ t('request_detail.dept_confirm_reject') }}
-            </Button>
+          <div class="flex flex-wrap justify-end gap-2">
             <Button variant="secondary" type="button" class="min-h-[2.75rem]" :disabled="acting" @click="$emit('close')">
               {{ t('request_detail.dept_cancel_reject') }}
+            </Button>
+            <Button variant="danger" class="min-h-[2.75rem]" :loading="acting" @click="$emit('confirm')">
+              {{ t('request_detail.dept_confirm_reject') }}
             </Button>
           </div>
         </div>
@@ -44,6 +47,7 @@
 </template>
 
 <script setup>
+import ModalCloseButton from '../ui/ModalCloseButton.vue'
 import { useI18n } from 'vue-i18n'
 import Button from '../ui/Button.vue'
 

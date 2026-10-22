@@ -684,7 +684,7 @@
                         </button>
                     </header>
 
-                    <div class="flex-1 space-y-5 overflow-y-auto p-4">
+                    <div class="flex-1 space-y-4 overflow-y-auto p-4">
                         <!-- Quick status actions -->
                         <div v-if="opsMode" class="flex flex-wrap gap-1.5">
                             <button
@@ -789,14 +789,17 @@
                 @click.self="closeAddModal"
             >
                 <div class="w-full max-w-lg rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xl dark:border-slate-700 dark:bg-slate-900">
-                    <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                        {{ t("trip_detail.passengers.add_modal_title") }}
-                    </h3>
+                    <div class="flex items-start justify-between gap-3">
+                      <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                          {{ t("trip_detail.passengers.add_modal_title") }}
+                      </h3>
+                      <ModalCloseButton @click="closeAddModal" :disabled="listBusy" />
+                    </div>
                     <p v-if="listKind === 'passenger'" class="mt-1 text-xs text-slate-500 dark:text-slate-400">
                         {{ t("trip_detail.passengers.one_row_one_passenger_hint") }}
                     </p>
 
-                    <div v-if="listKind === 'passenger'" class="mt-4 grid gap-3 sm:grid-cols-2">
+                    <div v-if="listKind === 'passenger'" class="mt-3 grid gap-3 sm:grid-cols-2">
                         <label class="block sm:col-span-2">
                             <span class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">{{ t("trip_detail.passengers.col_name") }}</span>
                             <input v-model="addForm.person_in_charge" type="text" class="inp" :placeholder="t('trip_detail.passengers.ph_name')" />
@@ -833,7 +836,7 @@
                         </label>
                     </div>
 
-                    <div v-else-if="listKind === 'business'" class="mt-4 grid gap-3 sm:grid-cols-2">
+                    <div v-else-if="listKind === 'business'" class="mt-3 grid gap-3 sm:grid-cols-2">
                         <div class="grid grid-cols-1 gap-3 sm:col-span-2 sm:grid-cols-2">
                             <label class="block min-w-0">
                                 <span class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">{{ t("trip_detail.passengers.m_depart_at") }}</span>
@@ -870,7 +873,7 @@
                         </label>
                     </div>
 
-                    <div v-else class="mt-4 grid gap-3 sm:grid-cols-2">
+                    <div v-else class="mt-3 grid gap-3 sm:grid-cols-2">
                         <label class="block sm:col-span-2">
                             <span class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">{{ t("trip_detail.passengers.col_name") }}</span>
                             <input v-model="addForm.name" type="text" class="inp" :placeholder="t('trip_detail.passengers.ph_cargo_name')" />
@@ -950,6 +953,7 @@
 </template>
 
 <script setup lang="ts">
+import ModalCloseButton from '../ui/ModalCloseButton.vue'
 import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import {

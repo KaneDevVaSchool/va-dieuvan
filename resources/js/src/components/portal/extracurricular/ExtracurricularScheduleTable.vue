@@ -50,7 +50,7 @@
                     @keydown.enter.prevent="savePlanLabel(group)"
                     @keydown.escape.prevent="cancelPlanLabelEdit"
                   />
-                  <div class="flex flex-wrap items-center gap-2">
+                  <div class="flex flex-wrap items-center justify-end gap-2">
                     <button
                       type="button"
                       class="inline-flex h-9 shrink-0 items-center rounded-lg bg-va-800 px-3 text-xs font-semibold text-white hover:bg-va-900 disabled:opacity-60"

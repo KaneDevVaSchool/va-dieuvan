@@ -339,9 +339,11 @@
               </span>
             </label>
           </div>
-          <Button class="mt-3" variant="secondary" :loading="busy" @click="doFixes">
-            <WrenchScrewdriverIcon class="h-4 w-4" /> Áp dụng &amp; kiểm tra lại
-          </Button>
+          <div class="mt-3 flex justify-end">
+            <Button variant="secondary" :loading="busy" @click="doFixes">
+              <WrenchScrewdriverIcon class="h-4 w-4" /> Áp dụng &amp; kiểm tra lại
+            </Button>
+          </div>
         </div>
       </details>
 

@@ -12,6 +12,7 @@
         "test:driver-checklist-autosave": "node scripts/test-driver-checklist-autosave.mjs",
         "test:impersonation": "node scripts/test-impersonation.mjs",
         "test:portal-dispatch-info": "node scripts/test-portal-dispatch-info.mjs",
+        "test:driver-frequency-report": "node scripts/test-driver-frequency-report.mjs",
         "test:pre-deploy-driver-status": "node scripts/test-driver-schedule-leg.mjs && php vendor/bin/phpunit tests/Feature/TripStatusTransitionValidatorTest.php tests/Feature/TripDriverLegStatusUpdateTest.php",
         "test:e2e:report": "playwright show-report tests/screenshots/report",
         "lint": "eslint resources/js --ext .vue,.js,.ts",

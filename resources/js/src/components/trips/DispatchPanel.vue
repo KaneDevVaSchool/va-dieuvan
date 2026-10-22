@@ -358,15 +358,18 @@
                     <div class="flex items-start gap-2.5 px-4 pt-4">
                         <ExclamationTriangleIcon class="mt-0.5 size-5 shrink-0 text-[#EF9F27]" aria-hidden="true" />
                         <div>
-                            <h2 class="text-[14px] font-semibold text-slate-900 dark:text-slate-100">
-                                {{ t('trip_detail.coordination.confirm_short_title') }}
-                            </h2>
+                            <div class="flex items-start justify-between gap-3">
+                              <h2 class="text-[14px] font-semibold text-slate-900 dark:text-slate-100">
+                                  {{ t('trip_detail.coordination.confirm_short_title') }}
+                              </h2>
+                              <ModalCloseButton @click="showShortConfirm = false" />
+                            </div>
                             <p class="mt-1 text-[13px] leading-relaxed text-slate-600 dark:text-slate-300">
                                 {{ t('trip_detail.coordination.confirm_short_body', { n: shortfallSeats }) }}
                             </p>
                         </div>
                     </div>
-                    <div class="mt-4 flex gap-2 px-4 pb-4">
+                    <div class="mt-3 flex gap-2 px-4 pb-4">
                         <button
                             type="button"
                             class="flex-1 rounded-xl bg-slate-100 px-3 py-2.5 text-[12px] font-semibold text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
@@ -391,6 +394,7 @@
 </template>
 
 <script setup lang="ts">
+import ModalCloseButton from '../ui/ModalCloseButton.vue'
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import {

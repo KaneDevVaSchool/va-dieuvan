@@ -6,7 +6,7 @@
     :description="student ? 'Cập nhật hồ sơ học sinh trong hệ thống đưa đón.' : 'Điền hồ sơ học sinh. Các trường có dấu * là bắt buộc.'"
     @close="$emit('close')"
   >
-    <form class="space-y-6" @submit.prevent="submit">
+    <form class="space-y-4" @submit.prevent="submit">
       <!-- ── Thông tin học sinh ─────────────────────────────── -->
       <section class="space-y-3">
         <div class="flex items-center gap-2">
@@ -171,8 +171,8 @@
 
       <!-- ── Actions ────────────────────────────────────────── -->
       <div class="flex justify-end gap-2 border-t border-slate-100 pt-4">
-        <Button type="button" variant="secondary" @click="$emit('close')">Hủy</Button>
-        <Button type="submit" :loading="saving">{{ student ? 'Lưu thay đổi' : 'Thêm học sinh' }}</Button>
+        <Button class="px-4" type="button" variant="secondary" @click="$emit('close')">Hủy</Button>
+        <Button class="px-4" type="submit" :loading="saving">{{ student ? 'Lưu thay đổi' : 'Thêm học sinh' }}</Button>
       </div>
     </form>
   </Modal>

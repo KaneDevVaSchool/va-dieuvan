@@ -54,7 +54,7 @@
       </div>
 
       <p v-if="loading && !items.length" class="text-sm text-driver-muted">{{ t('expense.loading') }}</p>
-      <p v-else-if="!items.length" class="rounded-xl bg-driver-card p-4 text-sm text-driver-muted ring-1 ring-white/[0.06]">{{ t('expense.empty') }}</p>
+      <p v-else-if="!items.length" class="rounded-xl bg-driver-card p-4 text-sm text-driver-muted ring-1 ring-white/[0.06] w-full text-center">{{ t('expense.empty') }}</p>
 
       <ul class="space-y-2">
         <li v-for="doc in items" :key="doc.id">

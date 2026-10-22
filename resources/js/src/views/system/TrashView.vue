@@ -323,7 +323,10 @@
         @click.self="confirmRestore = null"
       >
         <div class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-900">
-          <h2 class="text-base font-semibold text-slate-800 dark:text-slate-100">{{ t('trash_page.confirm_restore_title') }}</h2>
+          <div class="flex items-start justify-between gap-3">
+            <h2 class="text-base font-semibold text-slate-800 dark:text-slate-100">{{ t('trash_page.confirm_restore_title') }}</h2>
+            <ModalCloseButton @click="confirmRestore = null" />
+          </div>
           <p class="mt-1.5 text-sm text-slate-500 dark:text-slate-400">{{ t('trash_page.confirm_restore_body', { count: confirmRestore.ids.length }) }}</p>
           <div class="mt-5 flex justify-end gap-2">
             <button
@@ -353,7 +356,10 @@
         <div class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-900">
           <div class="mb-3 flex items-center gap-2">
             <ExclamationTriangleIcon class="h-6 w-6 shrink-0 text-rose-500" aria-hidden="true" />
-            <h2 class="text-base font-semibold text-slate-800 dark:text-slate-100">{{ t('trash_page.confirm_delete_title') }}</h2>
+            <div class="flex items-start justify-between gap-3">
+              <h2 class="text-base font-semibold text-slate-800 dark:text-slate-100">{{ t('trash_page.confirm_delete_title') }}</h2>
+              <ModalCloseButton @click="confirmDelete = null" />
+            </div>
           </div>
           <p class="text-sm text-slate-500 dark:text-slate-400">{{ t('trash_page.confirm_delete_body', { count: confirmDelete.ids.length }) }}</p>
           <div class="mt-5 flex justify-end gap-2">
@@ -378,6 +384,7 @@
 </template>
 
 <script setup>
+import ModalCloseButton from '../../components/ui/ModalCloseButton.vue'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {

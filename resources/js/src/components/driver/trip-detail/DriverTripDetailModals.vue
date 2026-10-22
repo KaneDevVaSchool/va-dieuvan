@@ -229,9 +229,12 @@
         class="w-full max-w-md rounded-3xl bg-driver-card p-5 shadow-2xl ring-1 ring-white/10"
         @click.stop
       >
-        <h2 id="driver-trip-decline-modal-title" class="text-lg font-bold text-driver-ink sm:text-xl">
-          {{ declineModalTitle }}
-        </h2>
+        <div class="flex items-start justify-between gap-3">
+          <h2 id="driver-trip-decline-modal-title" class="text-lg font-bold text-driver-ink sm:text-xl">
+            {{ declineModalTitle }}
+          </h2>
+          <ModalCloseButton @click="$emit('close-decline')" :disabled="declineBusy" />
+        </div>
         <p v-if="declineTripSummary" class="mt-2 text-sm text-driver-muted sm:text-base">
           {{ declineTripSummary }}
         </p>
@@ -317,6 +320,7 @@
 </template>
 
 <script setup>
+import ModalCloseButton from '../../ui/ModalCloseButton.vue'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {

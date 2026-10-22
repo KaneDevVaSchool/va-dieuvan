@@ -13,7 +13,6 @@
         <div class="flex flex-wrap items-center gap-2">
           <input v-model="range.date_from" type="date" :aria-label="t('expense.filter_from')" class="rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
           <input v-model="range.date_to" type="date" :aria-label="t('expense.filter_to')" class="rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
-          <button type="button" class="rounded-lg bg-teal-600 px-3 py-2 text-sm font-semibold text-white hover:bg-teal-700" @click="loadSummary">{{ t('checklist.apply') }}</button>
         </div>
       </div>
 
@@ -48,7 +47,7 @@
             </tfoot>
           </table>
           <p v-if="loading" class="mt-3 text-sm text-slate-500">{{ t('expense.loading') }}</p>
-          <p v-else-if="!summary.items.length" class="mt-3 text-sm text-slate-500">{{ t('expense.ledger_empty') }}</p>
+          <p v-else-if="!summary.items.length" class="mt-3 text-sm text-slate-500 w-full text-center py-4">{{ t('expense.ledger_empty') }}</p>
         </div>
 
         <div class="lg:col-span-3">
@@ -106,7 +105,7 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowDownTrayIcon, ArrowLeftIcon } from '@heroicons/vue/24/outline'
@@ -114,6 +113,7 @@ import { downloadVehicleCostLedger, getVehicleCostLedger, getVehicleCostLedgerSu
 import { showAppErrorFromApi } from '../../composables/appMessage'
 import { formatVndCurrency } from '../../util/money'
 import { toLocalDateKey } from '../../util/dates'
+import { debounceTrailing } from '../../composables/useDebounce'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -162,6 +162,15 @@ async function exportDetail() {
     showAppErrorFromApi(err, t('expense.download_error'))
   }
 }
+
+/** Đổi khoảng ngày → tự tải lại (không cần nút "Xem"); chỉ khi cả 2 ngày hợp lệ. */
+const reloadSummary = debounceTrailing(() => void loadSummary(), 250)
+watch(
+  () => [range.date_from, range.date_to],
+  ([from, to]) => {
+    if (from && to) reloadSummary()
+  },
+)
 
 onMounted(loadSummary)
 </script>

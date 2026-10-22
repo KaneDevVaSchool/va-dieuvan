@@ -207,7 +207,9 @@
               class="relative"
               data-resources-vehicles-data-panel
             >
-              <DatagridToolbarActionButton
+              <ToolbarPopover :open="showVehiclesDataMenu" :title="t('resources.toolbar_data')" panel-marker="data-resources-vehicles-data-panel" @close="showVehiclesDataMenu = false">
+                <template #trigger>
+                  <DatagridToolbarActionButton
                 icon="data"
                 :active="showVehiclesDataMenu"
                 test-id="resources-vehicles-toolbar-data"
@@ -215,10 +217,8 @@
               >
                 {{ t('resources.toolbar_data') }}
               </DatagridToolbarActionButton>
-              <div
-                v-if="showVehiclesDataMenu"
-                class="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[280px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
-              >
+                </template>
+
                 <button
                   type="button"
                   class="flex w-full flex-col px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
@@ -255,7 +255,8 @@
                 >
                   {{ t('resources.data_menu_export') }}
                 </button>
-              </div>
+
+              </ToolbarPopover>
             </div>
 
             <!-- Data menu (drivers tab) -->
@@ -264,7 +265,9 @@
               class="relative"
               data-resources-drivers-data-panel
             >
-              <DatagridToolbarActionButton
+              <ToolbarPopover :open="showDriversDataMenu" :title="t('resources.toolbar_data')" panel-marker="data-resources-drivers-data-panel" @close="showDriversDataMenu = false">
+                <template #trigger>
+                  <DatagridToolbarActionButton
                 icon="data"
                 :active="showDriversDataMenu"
                 test-id="resources-drivers-toolbar-data"
@@ -272,10 +275,8 @@
               >
                 {{ t('resources.toolbar_data') }}
               </DatagridToolbarActionButton>
-              <div
-                v-if="showDriversDataMenu"
-                class="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[280px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
-              >
+                </template>
+
                 <button
                   type="button"
                   class="flex w-full flex-col px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
@@ -312,7 +313,8 @@
                 >
                   {{ t('resources.data_menu_export') }}
                 </button>
-              </div>
+
+              </ToolbarPopover>
             </div>
 
             <!-- Add button -->
@@ -813,7 +815,7 @@
                 </button>
               </div>
 
-              <div v-if="vehicleSheetDetailVisible(selectedVehicle)" class="mt-4">
+              <div v-if="vehicleSheetDetailVisible(selectedVehicle)" class="mt-3">
                 <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   {{ t('resources.section_vehicle_sheet') }}
                 </div>
@@ -890,7 +892,7 @@
                 </dl>
               </div>
 
-              <div class="mt-4 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{{ t('resources.section_compliance') }}</div>
+              <div class="mt-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{{ t('resources.section_compliance') }}</div>
               <div class="mt-1.5 grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <div
                   class="rounded-lg border p-2.5 sm:p-3"
@@ -921,7 +923,7 @@
                 </div>
               </div>
 
-              <div v-if="canViewVehicleComplianceDocs && vehiclesViewMode === 'active'" class="mt-4 border-t border-slate-200 pt-3 dark:border-slate-700">
+              <div v-if="canViewVehicleComplianceDocs && vehiclesViewMode === 'active'" class="mt-3 border-t border-slate-200 pt-3 dark:border-slate-700">
                 <div class="flex flex-wrap items-start justify-between gap-2">
                   <div class="min-w-0 flex-1">
                     <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -1032,7 +1034,7 @@
                     <ComplianceHistoryList v-if="vehicleDocHistoryOpen[doc.id] && doc.history?.length" class="mt-2" :history="doc.history" />
                   </li>
                 </ul>
-                <p v-if="!vehicleComplianceDocs.length" class="mt-1.5 text-[11px] text-slate-500 sm:text-xs">{{ t('resources.empty') }}</p>
+                <p v-if="!vehicleComplianceDocs.length" class="mt-1.5 text-[11px] text-slate-500 sm:text-xs w-full text-center py-4">{{ t('resources.empty') }}</p>
               </div>
 
             </div>
@@ -1099,7 +1101,7 @@
                 </span>
                 <span :class="compliancePillClass(selectedSupplier.contract)">{{ t('resources.tag_contract') }} {{ insuranceHint(selectedSupplier.contract) }}</span>
               </div>
-              <div class="mt-4">
+              <div class="mt-3">
                 <div v-if="canManageProviders && suppliersViewMode === 'trash'" class="flex flex-col gap-2 sm:flex-row">
                   <button
                     type="button"
@@ -1183,7 +1185,7 @@
               </div>
 
               <div class="mt-6 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('resources.section_supplier_services') }}</div>
-              <p v-if="!selectedSupplier.servicesList?.length" class="mt-2 text-xs text-slate-500">{{ t('resources.empty') }}</p>
+              <p v-if="!selectedSupplier.servicesList?.length" class="mt-2 text-xs text-slate-500 w-full text-center py-4">{{ t('resources.empty') }}</p>
               <ul v-else class="mt-2 space-y-2">
                 <li
                   v-for="(svc, i) in selectedSupplier.servicesList"
@@ -1244,7 +1246,7 @@
           @click.stop
         >
           <div
-            class="flex shrink-0 items-start justify-between gap-4 border-b border-slate-200/90 bg-gradient-to-r from-slate-50 via-white to-teal-50/40 px-5 py-4 dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-teal-950/20"
+            class="flex shrink-0 items-start justify-between gap-3 border-b border-slate-200/90 bg-gradient-to-r from-slate-50 via-white to-teal-50/40 px-5 py-4 dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-teal-950/20"
           >
             <div class="min-w-0">
               <h2 id="vehicle-modal-title" class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
@@ -1261,20 +1263,20 @@
             </button>
           </div>
           <form class="flex min-h-0 flex-1 flex-col" @submit.prevent="submitVehicleForm">
-            <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 py-5 sm:px-6 sm:py-6">
-              <div class="grid gap-6 lg:grid-cols-2">
-                <section class="rounded-xl border border-slate-200/80 bg-slate-50/60 p-4 dark:border-slate-700 dark:bg-slate-800/40">
+            <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-3 sm:px-4 sm:py-3">
+              <div class="grid gap-4 lg:grid-cols-2">
+                <section class="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 dark:border-slate-700 dark:bg-slate-800/40">
                   <h3 class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     {{ t('resources.vehicle_modal_section_identity') }}
                   </h3>
-                  <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                  <div class="mt-3 grid gap-3 sm:grid-cols-2">
                     <label class="block sm:col-span-2">
                       <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_form_plate') }}</span>
                       <input
                         v-model="vehicleForm.license_plate"
                         type="text"
                         required
-                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                         :placeholder="t('resources.vehicle_ph_plate')"
                       />
                     </label>
@@ -1283,7 +1285,7 @@
                       <input
                         v-model="vehicleForm.type"
                         type="text"
-                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                         :placeholder="t('resources.vehicle_ph_type')"
                       />
                     </label>
@@ -1293,7 +1295,7 @@
                         v-model="vehicleForm.seat_count"
                         type="number"
                         min="0"
-                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                         :placeholder="t('resources.vehicle_ph_seats')"
                       />
                     </label>
@@ -1303,7 +1305,7 @@
                         v-model="vehicleForm.payload_kg"
                         type="number"
                         min="0"
-                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                         :placeholder="t('resources.vehicle_ph_payload')"
                       />
                     </label>
@@ -1311,7 +1313,7 @@
                       <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.filter_status') }} (API)</span>
                       <select
                         v-model="vehicleForm.status"
-                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-3 pr-8 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        class="mt-1 w-full rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                       >
                         <option value="ready">{{ t('resources.vehicle_status_ready') }}</option>
                         <option value="in_use">{{ t('resources.vehicle_status_in_use') }}</option>
@@ -1325,23 +1327,23 @@
                         v-model="vehicleForm.odometer_km"
                         type="number"
                         min="0"
-                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                         :placeholder="t('resources.vehicle_ph_odometer')"
                       />
                     </label>
                   </div>
                 </section>
-                <section class="rounded-xl border border-slate-200/80 bg-slate-50/60 p-4 dark:border-slate-700 dark:bg-slate-800/40">
+                <section class="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 dark:border-slate-700 dark:bg-slate-800/40">
                   <h3 class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     {{ t('resources.vehicle_modal_section_dates') }}
                   </h3>
-                  <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                  <div class="mt-3 grid gap-3 sm:grid-cols-2">
                     <label class="block">
                       <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_form_inspection') }}</span>
                       <input
                         v-model="vehicleForm.inspection_expires_at"
                         type="date"
-                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                       />
                     </label>
                     <label class="block">
@@ -1349,7 +1351,7 @@
                       <input
                         v-model="vehicleForm.insurance_expires_at"
                         type="date"
-                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                       />
                     </label>
                     <label class="block sm:col-span-2">
@@ -1357,26 +1359,26 @@
                       <input
                         v-model="vehicleForm.road_fee_expires_at"
                         type="date"
-                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                       />
                     </label>
                   </div>
                 </section>
-                <section class="rounded-xl border border-slate-200/80 bg-white p-4 dark:border-slate-700 dark:bg-slate-900/60 lg:col-span-2">
+                <section class="rounded-xl border border-slate-200/80 bg-white p-3 dark:border-slate-700 dark:bg-slate-900/60 lg:col-span-2">
                   <h3 class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     {{ t('resources.vehicle_modal_section_registry') }}
                   </h3>
-                  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+                  <div class="mt-3 grid gap-3 lg:grid-cols-2">
                     <label class="block">
                       <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_form_owner') }}</span>
                       <input
                         v-model="vehicleForm.owner_name"
                         type="text"
-                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                         :placeholder="t('resources.vehicle_ph_owner')"
                       />
                     </label>
-                    <div class="grid gap-4 sm:grid-cols-3 lg:col-span-2">
+                    <div class="grid gap-3 sm:grid-cols-3 lg:col-span-2">
                       <label class="block">
                         <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_form_year_mfg') }}</span>
                         <input
@@ -1384,7 +1386,7 @@
                           type="number"
                           min="1900"
                           max="2100"
-                          class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                          class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                           :placeholder="t('resources.vehicle_ph_year')"
                         />
                       </label>
@@ -1393,7 +1395,7 @@
                         <input
                           v-model="vehicleForm.purchased_at"
                           type="date"
-                          class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                          class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                         />
                       </label>
                       <label class="block">
@@ -1403,7 +1405,7 @@
                           type="number"
                           min="1900"
                           max="2100"
-                          class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                          class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                           :placeholder="t('resources.vehicle_ph_usage_year')"
                         />
                       </label>
@@ -1413,7 +1415,7 @@
                       <textarea
                         v-model="vehicleForm.frame_engine_number"
                         rows="3"
-                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                         :placeholder="t('resources.vehicle_ph_frame')"
                       />
                     </label>
@@ -1422,7 +1424,7 @@
                       <input
                         v-model="vehicleForm.insurance_provider"
                         type="text"
-                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                         :placeholder="t('resources.vehicle_ph_insurer')"
                       />
                     </label>
@@ -1431,7 +1433,7 @@
                       <input
                         v-model="vehicleForm.registration_cycle_note"
                         type="text"
-                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                         :placeholder="t('resources.vehicle_ph_reg_cycle')"
                       />
                     </label>
@@ -1440,32 +1442,32 @@
                       <textarea
                         v-model="vehicleForm.insurance_policy_note"
                         rows="2"
-                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                         :placeholder="t('resources.vehicle_ph_insurance_policy')"
                       />
                     </label>
                   </div>
                 </section>
-                <section class="rounded-xl border border-slate-200/80 bg-white p-4 dark:border-slate-700 dark:bg-slate-900/60 lg:col-span-2">
+                <section class="rounded-xl border border-slate-200/80 bg-white p-3 dark:border-slate-700 dark:bg-slate-900/60 lg:col-span-2">
                   <h3 class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     {{ t('resources.vehicle_modal_section_ops') }}
                   </h3>
-                  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+                  <div class="mt-3 grid gap-3 lg:grid-cols-2">
                     <label class="block">
                       <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_form_last_maint') }}</span>
                       <input
                         v-model="vehicleForm.last_maintenance_at"
                         type="date"
-                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                       />
                     </label>
-                    <div class="grid gap-4 sm:grid-cols-2 lg:col-span-2">
+                    <div class="grid gap-3 sm:grid-cols-2 lg:col-span-2">
                       <label class="block">
                         <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_form_caretaker') }}</span>
                         <input
                           v-model="vehicleForm.caretaker_name"
                           type="text"
-                          class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                          class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                           :placeholder="t('resources.vehicle_ph_caretaker')"
                         />
                       </label>
@@ -1474,7 +1476,7 @@
                         <input
                           v-model="vehicleForm.caretaker_phone"
                           type="text"
-                          class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                          class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                           :placeholder="t('resources.vehicle_ph_caretaker_phone')"
                         />
                       </label>
@@ -1484,7 +1486,7 @@
                       <textarea
                         v-model="vehicleForm.maintenance_schedule_note"
                         rows="2"
-                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                         :placeholder="t('resources.vehicle_ph_maint_schedule')"
                       />
                     </label>
@@ -1493,7 +1495,7 @@
                       <textarea
                         v-model="vehicleForm.notes"
                         rows="3"
-                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                         :placeholder="t('resources.vehicle_ph_notes')"
                       />
                     </label>
@@ -1515,21 +1517,21 @@
                   </div>
                 </section>
               </div>
-              <p v-if="vehicleFormError" class="mt-4 text-xs text-rose-600">{{ vehicleFormError }}</p>
+              <p v-if="vehicleFormError" class="mt-3 text-xs text-rose-600">{{ vehicleFormError }}</p>
             </div>
             <div
-              class="flex shrink-0 flex-wrap gap-2 border-t border-slate-200/90 bg-slate-50/90 px-5 py-4 dark:border-slate-700 dark:bg-slate-900/90 sm:px-6"
+              class="flex shrink-0 flex-wrap gap-2 border-t border-slate-200/90 bg-slate-50/90 px-4 py-3 dark:border-slate-700 dark:bg-slate-900/90 sm:px-4 justify-end"
             >
               <button
                 type="button"
-                class="min-h-[44px] flex-1 rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-white dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 sm:min-h-0 sm:flex-initial sm:px-6"
+                class="min-h-[44px] rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-white dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 sm:min-h-0 sm:px-4 px-4"
                 @click="vehicleModalOpen = false"
               >
                 {{ t('app.cancel') }}
               </button>
               <button
                 type="submit"
-                class="min-h-[44px] flex-[2] rounded-xl bg-teal-600 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-500 disabled:opacity-50 sm:min-h-0 sm:flex-initial sm:px-10"
+                class="min-h-[44px] rounded-xl bg-teal-600 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-500 disabled:opacity-50 sm:min-h-0 px-4"
                 :disabled="vehicleSaving"
               >
                 {{ vehicleSaving ? t('resources.loading') : t('resources.vehicle_form_save') }}
@@ -1553,12 +1555,15 @@
           class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
           @click.stop
         >
-          <div class="shrink-0 border-b border-slate-200 px-5 py-4 dark:border-slate-700">
-            <h2 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
-              <template v-if="assignVehicleId != null">{{ t('resources.assign_driver_modal_title') }}</template>
-              <template v-else-if="addDriverMode === 'external'">{{ t('resources.add_driver_modal_title_external') }}</template>
-              <template v-else>{{ t('resources.assign_driver_modal_title_add') }}</template>
-            </h2>
+          <div class="shrink-0 border-b border-slate-200 px-5 py-4 dark:border-slate-700 relative !pr-16">
+            <div class="flex items-start justify-between gap-3">
+              <h2 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
+                <template v-if="assignVehicleId != null">{{ t('resources.assign_driver_modal_title') }}</template>
+                <template v-else-if="addDriverMode === 'external'">{{ t('resources.add_driver_modal_title_external') }}</template>
+                <template v-else>{{ t('resources.assign_driver_modal_title_add') }}</template>
+              </h2>
+              <ModalCloseButton class="absolute right-3 top-3" @click="closeAssignModal" />
+            </div>
             <p class="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
               <template v-if="assignVehicleId != null">{{ t('resources.assign_driver_modal_hint_vehicle') }}</template>
               <template v-else-if="addDriverMode === 'external'">{{ t('resources.add_driver_hint_external') }}</template>
@@ -1569,7 +1574,7 @@
           <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
           <!-- Thêm tài xế: từ user HOẶC ngoài hệ thống (tab Tài xế) -->
           <div v-if="assignVehicleId == null" class="px-5 py-4 sm:px-6">
-            <div class="mb-4 flex flex-wrap gap-2 rounded-xl border border-slate-200 bg-slate-50/80 p-1 dark:border-slate-700 dark:bg-slate-800/50">
+            <div class="mb-3 flex flex-wrap gap-2 rounded-xl border border-slate-200 bg-slate-50/80 p-1 dark:border-slate-700 dark:bg-slate-800/50">
               <button
                 type="button"
                 class="min-h-[40px] flex-1 rounded-lg px-3 py-2 text-xs font-medium transition sm:text-sm"
@@ -1724,7 +1729,7 @@
           </div>
 
           <!-- Gán tài xế mặc định cho xe (chi tiết xe) -->
-          <div v-else class="space-y-4 px-5 py-4 sm:px-6">
+          <div v-else class="space-y-3 px-5 py-4 sm:px-6">
             <div class="rounded-lg border border-slate-200 bg-slate-50/90 px-3 py-2.5 text-sm dark:border-slate-700 dark:bg-slate-800/60">
               <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('resources.col_vehicle') }}</div>
               <div v-if="assignVehicleDisplay" class="mt-0.5 font-semibold text-slate-900 dark:text-white">
@@ -1752,17 +1757,17 @@
           </div>
           </div>
 
-          <div class="flex shrink-0 flex-wrap gap-2 border-t border-slate-200/90 bg-slate-50/90 px-5 py-4 dark:border-slate-700 dark:bg-slate-900/90 sm:px-6">
+          <div class="flex shrink-0 flex-wrap gap-2 border-t border-slate-200/90 bg-slate-50/90 px-5 py-4 dark:border-slate-700 dark:bg-slate-900/90 sm:px-6 justify-end">
             <button
               type="button"
-              class="min-h-[44px] flex-1 rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-white dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 sm:min-h-0 sm:flex-initial sm:px-6"
+              class="min-h-[44px] rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-white dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 sm:min-h-0 px-4"
               @click="closeAssignModal"
             >
               {{ t('app.cancel') }}
             </button>
             <button
               type="button"
-              class="min-h-[44px] flex-[2] rounded-xl bg-teal-600 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-500 disabled:opacity-50 sm:min-h-0 sm:flex-initial sm:px-10"
+              class="min-h-[44px] rounded-xl bg-teal-600 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-500 disabled:opacity-50 sm:min-h-0 px-4"
               :disabled="assignSubmitDisabled"
               @click="submitAssignDriver"
             >
@@ -1794,7 +1799,7 @@
           @click.stop
         >
           <div
-            class="flex shrink-0 items-start justify-between gap-4 border-b border-slate-200/90 bg-gradient-to-r from-slate-50 via-white to-indigo-50/30 px-5 py-4 dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/20"
+            class="flex shrink-0 items-start justify-between gap-3 border-b border-slate-200/90 bg-gradient-to-r from-slate-50 via-white to-indigo-50/30 px-5 py-4 dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/20"
           >
             <div class="min-w-0">
               <h2 id="provider-modal-title" class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
@@ -1814,7 +1819,7 @@
             </button>
           </div>
           <form class="flex min-h-0 flex-1 flex-col" @submit.prevent="submitProviderForm">
-            <div class="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-y-contain px-5 py-4 sm:px-6">
+            <div class="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-y-contain px-4 py-3 sm:px-4">
             <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
               <span>{{ t('resources.provider_form_name') }} <span class="text-rose-600" aria-hidden="true">*</span></span>
               <input
@@ -1936,22 +1941,22 @@
             </div>
             </div>
 
-            <p v-if="providerFormError" class="shrink-0 border-t border-slate-200/90 bg-white px-5 pb-2 pt-3 text-xs text-rose-600 dark:border-slate-700 dark:bg-slate-900 sm:px-6">
+            <p v-if="providerFormError" class="shrink-0 border-t border-slate-200/90 bg-white px-4 pb-2 pt-3 text-xs text-rose-600 dark:border-slate-700 dark:bg-slate-900 sm:px-4">
               {{ providerFormError }}
             </p>
             <div
-              class="flex shrink-0 flex-wrap gap-2 border-t border-slate-200/90 bg-slate-50/90 px-5 py-4 dark:border-slate-700 dark:bg-slate-900/90 sm:px-6"
+              class="flex shrink-0 flex-wrap gap-2 border-t border-slate-200/90 bg-slate-50/90 px-4 py-3 dark:border-slate-700 dark:bg-slate-900/90 sm:px-4 justify-end"
             >
               <button
                 type="button"
-                class="min-h-[44px] flex-1 rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-white dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 sm:min-h-0 sm:flex-initial sm:px-6"
+                class="min-h-[44px] rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-white dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 sm:min-h-0 sm:px-4 px-4"
                 @click="providerModalOpen = false"
               >
                 {{ t('app.cancel') }}
               </button>
               <button
                 type="submit"
-                class="min-h-[44px] flex-[2] rounded-xl bg-teal-600 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-500 disabled:opacity-50 sm:min-h-0 sm:flex-initial sm:px-10"
+                class="min-h-[44px] rounded-xl bg-teal-600 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-500 disabled:opacity-50 sm:min-h-0 px-4"
                 :disabled="providerSaving"
                 data-testid="provider-form-submit"
               >
@@ -1976,14 +1981,17 @@
           class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
           @click.stop
         >
-          <div class="shrink-0 border-b border-slate-200 px-5 py-4 dark:border-slate-700">
-            <h2 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
-              {{ editingVehicleDocId ? t('resources.vehicle_doc_modal_edit') : t('resources.vehicle_doc_modal_add') }}
-            </h2>
+          <div class="shrink-0 border-b border-slate-200 px-5 py-4 dark:border-slate-700 relative !pr-16">
+            <div class="flex items-start justify-between gap-3">
+              <h2 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
+                {{ editingVehicleDocId ? t('resources.vehicle_doc_modal_edit') : t('resources.vehicle_doc_modal_add') }}
+              </h2>
+              <ModalCloseButton class="absolute right-3 top-3" @click="vehicleDocModalOpen = false" />
+            </div>
             <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ t('resources.vehicle_doc_modal_hint') }}</p>
           </div>
           <form class="flex min-h-0 flex-1 flex-col" @submit.prevent="submitVehicleDocForm">
-            <div class="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-y-contain px-5 py-4 sm:px-6">
+            <div class="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-y-contain px-4 py-3 sm:px-4">
             <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
               <span>{{ t('driver_detail.col_doc_type') }} <span class="text-rose-600" aria-hidden="true">*</span></span>
               <select
@@ -2007,7 +2015,8 @@
               {{ t('driver_detail.notes') }}
               <textarea
                 v-model="vehicleDocForm.notes"
-                rows="2"
+                v-autosize-textarea
+                rows="4"
                 class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                 :placeholder="t('resources.vehicle_doc_ph_notes')"
               />
@@ -2031,20 +2040,20 @@
               {{ t('driver_detail.replace_file') }}
             </label>
             </div>
-            <p v-if="vehicleDocFormError" class="shrink-0 border-t border-slate-200/90 bg-white px-5 pb-2 pt-3 text-xs text-rose-600 dark:border-slate-700 dark:bg-slate-900 sm:px-6">
+            <p v-if="vehicleDocFormError" class="shrink-0 border-t border-slate-200/90 bg-white px-4 pb-2 pt-3 text-xs text-rose-600 dark:border-slate-700 dark:bg-slate-900 sm:px-4">
               {{ vehicleDocFormError }}
             </p>
-            <div class="flex shrink-0 flex-wrap gap-2 border-t border-slate-200/90 bg-slate-50/90 px-5 py-4 dark:border-slate-700 dark:bg-slate-900/90 sm:px-6">
+            <div class="flex shrink-0 flex-wrap gap-2 border-t border-slate-200/90 bg-slate-50/90 px-4 py-3 dark:border-slate-700 dark:bg-slate-900/90 sm:px-4 justify-end">
               <button
                 type="button"
-                class="min-h-[44px] flex-1 rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-white dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 sm:min-h-0 sm:flex-initial sm:px-6"
+                class="min-h-[44px] rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-white dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 sm:min-h-0 sm:px-4 px-4"
                 @click="vehicleDocModalOpen = false"
               >
                 {{ t('app.cancel') }}
               </button>
               <button
                 type="submit"
-                class="min-h-[44px] flex-[2] rounded-xl bg-teal-600 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-500 disabled:opacity-50 sm:min-h-0 sm:flex-initial sm:px-10"
+                class="min-h-[44px] rounded-xl bg-teal-600 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-500 disabled:opacity-50 sm:min-h-0 px-4"
                 :disabled="vehicleDocSaving"
               >
                 {{ vehicleDocSaving ? t('resources.loading') : t('resources.vehicle_doc_save') }}
@@ -2069,15 +2078,18 @@
           class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
           @click.stop
         >
-          <div class="border-b border-slate-200 px-4 py-4 dark:border-slate-700">
+          <div class="border-b border-slate-200 px-4 py-4 dark:border-slate-700 relative !pr-16">
             <div class="flex items-start gap-3">
               <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400">
                 <TrashIcon class="h-5 w-5" aria-hidden="true" />
               </div>
               <div class="min-w-0 flex-1">
-                <h2 id="vehicle-doc-delete-title" class="text-base font-semibold text-slate-900 dark:text-white">
-                  {{ t('resources.vehicle_doc_delete_modal_title') }}
-                </h2>
+                <div class="flex items-start justify-between gap-3">
+                  <h2 id="vehicle-doc-delete-title" class="text-base font-semibold text-slate-900 dark:text-white">
+                    {{ t('resources.vehicle_doc_delete_modal_title') }}
+                  </h2>
+                  <ModalCloseButton class="absolute right-3 top-3" @click="closeVehicleDocDeleteModal" :disabled="vehicleDocDeleting" />
+                </div>
                 <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
                   {{ t('resources.vehicle_doc_delete_modal_body') }}
                 </p>
@@ -2091,10 +2103,10 @@
               </div>
             </div>
           </div>
-          <div class="flex gap-2 px-4 pb-4 pt-2">
+          <div class="flex gap-2 px-4 pb-4 pt-2 justify-end">
             <button
               type="button"
-              class="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+              class="rounded-lg border border-slate-200 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 px-4"
               :disabled="vehicleDocDeleting"
               @click="closeVehicleDocDeleteModal"
             >
@@ -2102,7 +2114,7 @@
             </button>
             <button
               type="button"
-              class="flex-1 rounded-lg bg-rose-600 py-2.5 text-sm font-medium text-white hover:bg-rose-500 disabled:opacity-50"
+              class="rounded-lg bg-rose-600 py-2.5 text-sm font-medium text-white hover:bg-rose-500 disabled:opacity-50 px-4"
               :disabled="vehicleDocDeleting"
               @click="submitDeleteVehicleDoc"
             >
@@ -2127,15 +2139,18 @@
           class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
           @click.stop
         >
-          <div class="border-b border-slate-200 px-4 py-4 dark:border-slate-700">
+          <div class="border-b border-slate-200 px-4 py-4 dark:border-slate-700 relative !pr-16">
             <div class="flex items-start gap-3">
               <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400">
                 <TrashIcon class="h-5 w-5" aria-hidden="true" />
               </div>
               <div class="min-w-0 flex-1">
-                <h2 id="vehicle-delete-title" class="text-base font-semibold text-slate-900 dark:text-white">
-                  {{ t('resources.vehicle_delete_modal_title') }}
-                </h2>
+                <div class="flex items-start justify-between gap-3">
+                  <h2 id="vehicle-delete-title" class="text-base font-semibold text-slate-900 dark:text-white">
+                    {{ t('resources.vehicle_delete_modal_title') }}
+                  </h2>
+                  <ModalCloseButton class="absolute right-3 top-3" @click="vehicleDeleteModalOpen = false" />
+                </div>
                 <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
                   {{ t('resources.vehicle_delete_modal_body', { plate: vehicleDeleteTarget?.code ?? '' }) }}
                 </p>
@@ -2172,14 +2187,17 @@
         @click.self="driverDeleteModalOpen = false"
       >
         <div class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40">
-          <div class="flex gap-3 border-b border-slate-100 px-4 py-4 dark:border-slate-700">
+          <div class="flex gap-3 border-b border-slate-100 px-4 py-4 dark:border-slate-700 relative !pr-16">
             <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300">
               <TrashIcon class="h-5 w-5" aria-hidden="true" />
             </div>
             <div class="min-w-0 flex-1">
-              <h2 id="driver-delete-title" class="text-base font-semibold text-slate-900 dark:text-white">
-                {{ t('resources.driver_delete_modal_title') }}
-              </h2>
+              <div class="flex items-start justify-between gap-3">
+                <h2 id="driver-delete-title" class="text-base font-semibold text-slate-900 dark:text-white">
+                  {{ t('resources.driver_delete_modal_title') }}
+                </h2>
+                <ModalCloseButton class="absolute right-3 top-3" @click="driverDeleteModalOpen = false" />
+              </div>
               <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
                 {{ t('resources.driver_delete_modal_body', { name: driverDeleteTarget?.name ?? '' }) }}
               </p>
@@ -2219,15 +2237,18 @@
           class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
           @click.stop
         >
-          <div class="border-b border-slate-200 px-4 py-4 dark:border-slate-700">
+          <div class="border-b border-slate-200 px-4 py-4 dark:border-slate-700 relative !pr-16">
             <div class="flex items-start gap-3">
               <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400">
                 <TrashIcon class="h-5 w-5" aria-hidden="true" />
               </div>
               <div class="min-w-0 flex-1">
-                <h2 id="provider-delete-title" class="text-base font-semibold text-slate-900 dark:text-white">
-                  {{ t('resources.provider_delete_modal_title') }}
-                </h2>
+                <div class="flex items-start justify-between gap-3">
+                  <h2 id="provider-delete-title" class="text-base font-semibold text-slate-900 dark:text-white">
+                    {{ t('resources.provider_delete_modal_title') }}
+                  </h2>
+                  <ModalCloseButton class="absolute right-3 top-3" @click="providerDeleteModalOpen = false" />
+                </div>
                 <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
                   {{ t('resources.provider_delete_modal_body', { name: providerDeleteTarget?.name ?? '' }) }}
                 </p>
@@ -2268,15 +2289,18 @@
           class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
           @click.stop
         >
-          <div class="border-b border-slate-200 px-4 py-4 dark:border-slate-700">
+          <div class="border-b border-slate-200 px-4 py-4 dark:border-slate-700 relative !pr-16">
             <div class="flex items-start gap-3">
               <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400">
                 <TrashIcon class="h-5 w-5" aria-hidden="true" />
               </div>
               <div class="min-w-0 flex-1">
-                <h2 id="bulk-trash-title" class="text-base font-semibold text-slate-900 dark:text-white">
-                  {{ t('resources.bulk_move_to_trash_title') }}
-                </h2>
+                <div class="flex items-start justify-between gap-3">
+                  <h2 id="bulk-trash-title" class="text-base font-semibold text-slate-900 dark:text-white">
+                    {{ t('resources.bulk_move_to_trash_title') }}
+                  </h2>
+                  <ModalCloseButton class="absolute right-3 top-3" @click="bulkTrashModalOpen = false" :disabled="bulkTrashSubmitting" />
+                </div>
                 <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
                   {{
                     t('resources.bulk_move_to_trash_confirm', {
@@ -2322,15 +2346,18 @@
           class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-rose-200/80 bg-white shadow-2xl ring-1 ring-rose-900/10 dark:border-rose-900/50 dark:bg-slate-900 dark:ring-slate-900/40"
           @click.stop
         >
-          <div class="border-b border-rose-100 bg-rose-50/80 px-4 py-4 dark:border-rose-900/40 dark:bg-rose-950/40">
+          <div class="border-b border-rose-100 bg-rose-50/80 px-4 py-4 dark:border-rose-900/40 dark:bg-rose-950/40 relative !pr-16">
             <div class="flex items-start gap-3">
               <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300">
                 <TrashIcon class="h-5 w-5" aria-hidden="true" />
               </div>
               <div class="min-w-0 flex-1">
-                <h2 id="bulk-force-title" class="text-base font-semibold text-slate-900 dark:text-white">
-                  {{ t('resources.bulk_force_resources_title') }}
-                </h2>
+                <div class="flex items-start justify-between gap-3">
+                  <h2 id="bulk-force-title" class="text-base font-semibold text-slate-900 dark:text-white">
+                    {{ t('resources.bulk_force_resources_title') }}
+                  </h2>
+                  <ModalCloseButton class="absolute right-3 top-3" @click="bulkForceModalOpen = false" :disabled="bulkForceSubmitting" />
+                </div>
                 <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
                   {{ t('resources.bulk_force_resources_confirm', { n: bulkForcePendingIds.length }) }}
                 </p>
@@ -2373,15 +2400,18 @@
           class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
           @click.stop
         >
-          <div class="border-b border-rose-200/60 bg-rose-50/50 px-4 py-4 dark:border-rose-900/40 dark:bg-rose-950/30">
+          <div class="border-b border-rose-200/60 bg-rose-50/50 px-4 py-4 dark:border-rose-900/40 dark:bg-rose-950/30 relative !pr-16">
             <div class="flex items-start gap-3">
               <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300">
                 <TrashIcon class="h-5 w-5" aria-hidden="true" />
               </div>
               <div class="min-w-0 flex-1">
-                <h2 id="force-delete-title" class="text-base font-semibold text-slate-900 dark:text-white">
-                  {{ t('resources.force_delete_modal_title') }}
-                </h2>
+                <div class="flex items-start justify-between gap-3">
+                  <h2 id="force-delete-title" class="text-base font-semibold text-slate-900 dark:text-white">
+                    {{ t('resources.force_delete_modal_title') }}
+                  </h2>
+                  <ModalCloseButton class="absolute right-3 top-3" @click="forceDeleteModalOpen = false" :disabled="forcePermDeleting" />
+                </div>
                 <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
                   {{ t('resources.force_delete_modal_body', { name: forceDeleteContext.name }) }}
                 </p>
@@ -2437,13 +2467,7 @@
               </div>
             </div>
             <div class="flex shrink-0 items-center gap-2">
-              <button
-                type="button"
-                class="rounded-lg border border-slate-600 px-3 py-1.5 text-xs font-medium text-slate-100 hover:bg-slate-800"
-                @click="closePdfPreview"
-              >
-                {{ t('app.close') }}
-              </button>
+              <ModalCloseButton @click="closePdfPreview" />
             </div>
           </div>
           <div class="relative min-h-0 flex-1 bg-slate-950">
@@ -2477,6 +2501,9 @@
 </template>
 
 <script setup>
+import ToolbarPopover from '../../components/shared/ui/ToolbarPopover.vue'
+import vAutosizeTextarea from '../../directives/autosizeTextarea'
+import ModalCloseButton from '../../components/ui/ModalCloseButton.vue'
 import { computed, onActivated, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'

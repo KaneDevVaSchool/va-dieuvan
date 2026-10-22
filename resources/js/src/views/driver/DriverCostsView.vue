@@ -1,5 +1,5 @@
 <template>
-  <div class="relative min-h-full w-full overflow-x-hidden bg-driver-bg text-driver-ink">
+  <div class="relative min-h-full w-full overflow-x-clip bg-driver-bg text-driver-ink">
     <!-- Pull distance indicator -->
     <div
       class="pointer-events-none fixed left-1/2 top-[calc(env(safe-area-inset-top)+4px)] z-40 -translate-x-1/2 transition-opacity duration-150"
@@ -14,35 +14,30 @@
       </div>
     </div>
 
-    <DriverCostStatusTabs
-      v-model="statusTab"
-      :tabs="tabItems"
-      :aria-label="t('driver_costs.filter_aria')"
-    />
-
-    <div
-      class="driver-stagger mx-auto w-full max-w-lg px-3.5 pb-4 pt-3 sm:max-w-2xl sm:px-5"
-    >
-      <div class="flex items-center justify-between gap-3">
-        <h1 class="min-w-0 text-lg font-bold tracking-tight text-driver-ink sm:text-xl">
-          {{ t('driver_costs.title') }}
-        </h1>
+    <DriverPageHeader :title="t('driver_costs.title')">
+      <template #actions>
         <RouterLink
           :to="{ name: 'driverCostCreate' }"
-          class="inline-flex min-h-[38px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-driver-accent px-3 py-1.5 text-xs font-semibold text-driver-bg transition hover:brightness-110 active:scale-[0.98] sm:text-sm"
+          class="inline-flex min-h-[36px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-driver-accent px-3 py-1.5 text-xs font-semibold text-driver-bg transition hover:brightness-110 active:scale-[0.98] sm:text-sm"
         >
           <PlusIcon class="h-4 w-4 shrink-0" :stroke-width="2.5" aria-hidden="true" />
           {{ t('driver_costs.cta_add') }}
         </RouterLink>
-      </div>
-      <p class="mt-1 text-xs leading-relaxed text-driver-muted">
-        {{ t('driver_costs.subtitle') }}
-      </p>
+      </template>
+      <DriverCostStatusTabs
+        v-model="statusTab"
+        :tabs="tabItems"
+        :aria-label="t('driver_costs.filter_aria')"
+      />
+    </DriverPageHeader>
 
+    <div
+      class="driver-stagger mx-auto w-full max-w-lg px-3.5 pb-4 pt-3 sm:max-w-2xl sm:px-5"
+    >
       <RouterLink
         v-if="canExpense"
         :to="{ name: 'driverExpenses' }"
-        class="mt-3 flex min-h-[48px] items-center gap-2.5 rounded-xl bg-driver-card px-3.5 py-2.5 ring-1 ring-white/[0.08] active:scale-[0.99]"
+        class="flex min-h-[48px] items-center gap-2.5 rounded-xl bg-driver-card px-3.5 py-2.5 ring-1 ring-white/[0.08] active:scale-[0.99]"
         data-testid="driver-costs-expense-link"
       >
         <DocumentDuplicateIcon class="h-5 w-5 shrink-0 text-driver-accent" aria-hidden="true" />
@@ -109,6 +104,7 @@ import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { ChevronRightIcon, ClipboardDocumentListIcon, DocumentDuplicateIcon, PlusIcon } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '../../store'
+import DriverPageHeader from '../../components/driver/DriverPageHeader.vue'
 import DriverCostStatusTabs from '../../components/driver/costs/DriverCostStatusTabs.vue'
 import DriverCostListCard from '../../components/driver/costs/DriverCostListCard.vue'
 import { useDriverCostsList } from '../../composables/useDriverCostsList'

@@ -201,19 +201,20 @@
                 :error="passengerPatchErr"
                 @save="savePassengerDraft"
               />
-              <button
-                v-if="canSubmitPassengerCount"
-                type="button"
-                class="mt-3 inline-flex min-h-[40px] items-center rounded-xl bg-va-800 px-4 text-sm font-semibold text-white shadow-sm hover:bg-va-900 disabled:opacity-50"
-                :disabled="passengerSubmitting || passengerSaving"
-                @click="submitPassengerCount"
-              >
-                {{
-                  passengerSubmitting
-                    ? t('portal.extracurricular_table.submit_dispatch_busy')
-                    : t('portal.extracurricular_table.submit_dispatch')
-                }}
-              </button>
+              <div v-if="canSubmitPassengerCount" class="mt-3 flex justify-end">
+                <button
+                  type="button"
+                  class="inline-flex min-h-[40px] items-center rounded-xl bg-va-800 px-4 text-sm font-semibold text-white shadow-sm hover:bg-va-900 disabled:opacity-50"
+                  :disabled="passengerSubmitting || passengerSaving"
+                  @click="submitPassengerCount"
+                >
+                  {{
+                    passengerSubmitting
+                      ? t('portal.extracurricular_table.submit_dispatch_busy')
+                      : t('portal.extracurricular_table.submit_dispatch')
+                  }}
+                </button>
+              </div>
             </div>
           </div>
 

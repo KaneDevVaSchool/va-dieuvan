@@ -630,17 +630,20 @@
           class="w-full max-w-[420px] overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl shadow-slate-900/20 ring-1 ring-black/5"
           @click.stop
         >
-          <div class="border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-amber-50/30 px-5 pb-4 pt-5">
-            <div class="flex gap-4">
+          <div class="border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-amber-50/30 px-5 pb-4 pt-5 relative !pr-16">
+            <div class="flex gap-3">
               <div
                 class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-100 to-amber-50 text-amber-700 shadow-inner shadow-amber-900/5"
               >
                 <ExclamationTriangleIcon class="h-6 w-6" aria-hidden="true" />
               </div>
               <div class="min-w-0 pt-0.5">
-                <h3 id="clear-draft-modal-title" class="text-base font-semibold leading-snug text-slate-900">
-                  {{ t('dispatch_wizard.create.clear_modal_title') }}
-                </h3>
+                <div class="flex items-start justify-between gap-3">
+                  <h3 id="clear-draft-modal-title" class="text-base font-semibold leading-snug text-slate-900">
+                    {{ t('dispatch_wizard.create.clear_modal_title') }}
+                  </h3>
+                  <ModalCloseButton class="absolute right-3 top-3" @click="closeClearDraftModal" />
+                </div>
                 <p class="mt-2 text-sm leading-relaxed text-slate-600">
                   {{ t('dispatch_wizard.create.clear_modal_body') }}
                 </p>
@@ -700,12 +703,15 @@
           class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl shadow-slate-900/20 ring-1 ring-black/5"
           @click.stop
         >
-          <div class="shrink-0 border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-sky-50/30 px-5 pb-4 pt-5">
+          <div class="shrink-0 border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-sky-50/30 px-5 pb-4 pt-5 relative !pr-16">
             <div class="flex flex-wrap items-start justify-between gap-3">
               <div class="min-w-0">
-                <h3 id="drafts-library-title" class="text-base font-semibold leading-snug text-slate-900">
-                  {{ t('dispatch_wizard.create.library_title') }}
-                </h3>
+                <div class="flex items-start justify-between gap-3">
+                  <h3 id="drafts-library-title" class="text-base font-semibold leading-snug text-slate-900">
+                    {{ t('dispatch_wizard.create.library_title') }}
+                  </h3>
+                  <ModalCloseButton class="absolute right-3 top-3" @click="closeDraftsModal" />
+                </div>
                 <p class="mt-1 text-xs leading-relaxed text-slate-600">
                   {{ t('dispatch_wizard.create.library_hint') }}
                 </p>
@@ -801,10 +807,13 @@
           class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl shadow-slate-900/20 ring-1 ring-black/5"
           @click.stop
         >
-          <div class="shrink-0 border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-sky-50/30 px-5 pb-4 pt-5">
-            <h3 id="dw-staff-target-picker-title" class="text-base font-semibold leading-snug text-slate-900">
-              {{ t('dispatch_wizard.create.sec_targets') }}
-            </h3>
+          <div class="shrink-0 border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-sky-50/30 px-5 pb-4 pt-5 relative !pr-16">
+            <div class="flex items-start justify-between gap-3">
+              <h3 id="dw-staff-target-picker-title" class="text-base font-semibold leading-snug text-slate-900">
+                {{ t('dispatch_wizard.create.sec_targets') }}
+              </h3>
+              <ModalCloseButton class="absolute right-3 top-3" @click="closeTargetPickerModal" />
+            </div>
             <p class="mt-1 text-xs leading-relaxed text-slate-600">
               {{ t('dispatch_wizard.create.targets_hint') }}
             </p>
@@ -819,7 +828,7 @@
               v-model="targetModalFilterQ"
               type="search"
               autocomplete="off"
-              class="dw-input mb-4 w-full"
+              class="dw-input mb-3 w-full"
               :placeholder="t('dispatch_wizard.create.targets_search_ph')"
               data-testid="staff-targets-modal-filter"
             />
@@ -872,6 +881,7 @@
 </template>
 
 <script setup>
+import ModalCloseButton from '../../components/ui/ModalCloseButton.vue'
 import { computed, defineAsyncComponent, onMounted, onUnmounted, provide, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {

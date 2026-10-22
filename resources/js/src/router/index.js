@@ -8,7 +8,8 @@ import {
 import { useAuthStore, readCachedDefaultHome } from "../store";
 import { isUnauthorizedApiError, isTransientSessionError } from "../util/apiError";
 import { applyRouteDocumentTitle } from "../util/routeDocumentTitle";
-import { setLocale } from "../i18n";
+import { i18n, setLocale } from "../i18n";
+import { showAppError } from "../composables/appMessage";
 import { resolvePostLoginTarget } from "../util/loginRedirect";
 import {
     CHUNK_RELOAD_SESSION_KEY,
@@ -61,7 +62,7 @@ const staffChildRoutes = [
         path: "profile",
         name: "profile",
         component: () => import("../views/profile/ProfileView.vue"),
-        meta: { title: "Hồ sơ", subtitle: "Tài khoản" },
+        meta: { title: "Hồ sơ", subtitle: "Tài khoản", mainFlush: true },
     },
     {
         path: "requests",
@@ -676,7 +677,7 @@ const router = createRouter({
         {
             path: "/profile",
             component: () => import("../views/profile/ProfileView.vue"),
-            meta: { title: "Hồ sơ", subtitle: "Tài khoản" },
+            meta: { title: "Hồ sơ", subtitle: "Tài khoản", mainFlush: true },
         },
         {
             path: "/driver",
@@ -1024,19 +1025,28 @@ router.beforeEach(async (to) => {
     return true;
 });
 
-router.afterEach((to) => {
+router.afterEach((to, _from, failure) => {
+    // A mounted app can still have a failed lazy route. Reset recovery only
+    // after navigation succeeds, so a missing page chunk cannot reload forever.
+    if (!failure) sessionStorage.removeItem(CHUNK_RELOAD_SESSION_KEY);
     updateDocumentTitle(to);
     scrollAppMainToTop();
 });
 
-router.onError((error, to) => {
+router.onError(async (error, to) => {
     const message = error?.message ?? String(error ?? "");
     if (!isStaleChunkMessage(message, error)) return;
-    void reloadOnceForStaleAssets(
+    const reloading = await reloadOnceForStaleAssets(
         to?.fullPath
             ? `${window.location.origin}${to.fullPath}`
             : window.location.href,
     );
+    if (!reloading) {
+        showAppError(
+            i18n.global.t("page_load_error.body"),
+            i18n.global.t("page_load_error.title"),
+        );
+    }
 });
 
 export default router;

@@ -142,7 +142,7 @@
           {{ error }}
         </div>
         <template v-else>
-          <p v-if="!loading && !items.length" class="text-sm text-slate-500">{{ t('dept.empty_all') }}</p>
+          <p v-if="!loading && !items.length" class="text-sm text-slate-500 w-full text-center py-4">{{ t('dept.empty_all') }}</p>
           <div class="space-y-4">
             <DeptRequestCard
               v-for="r in items"

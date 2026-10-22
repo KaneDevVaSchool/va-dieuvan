@@ -112,9 +112,12 @@
           class="w-full max-w-md rounded-3xl bg-[#0f1816] p-5 shadow-2xl shadow-black/60"
           @click.stop
         >
-          <h2 id="decline-modal-title" class="text-lg font-bold text-white">
-            {{ modalTitle }}
-          </h2>
+          <div class="flex items-start justify-between gap-3">
+            <h2 id="decline-modal-title" class="text-lg font-bold text-white">
+              {{ modalTitle }}
+            </h2>
+            <ModalCloseButton @click="closeDeclineModal" :disabled="busyId != null" />
+          </div>
           <p v-if="declineTrip" class="mt-2 text-sm text-[#7fdcc8]/80">
             {{ declineTripSummary }}
           </p>
@@ -192,6 +195,7 @@
 </template>
 
 <script setup>
+import ModalCloseButton from '../ui/ModalCloseButton.vue'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { formatApiError } from '../../api/http'
