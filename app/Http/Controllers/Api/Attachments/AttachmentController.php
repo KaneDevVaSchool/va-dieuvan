@@ -471,6 +471,11 @@ class AttachmentController extends Controller
             if ($user->can('cargo.manage') || $user->can('trip.view_all')) {
                 return;
             }
+            // Tài xế xem lại ảnh minh chứng (POD) của vận đơn thuộc chuyến mình được phân.
+            $trip = $parent->trip;
+            if ($trip !== null && TripVisibility::userCanViewTrip($user, $trip)) {
+                return;
+            }
             abort(403);
         }
 

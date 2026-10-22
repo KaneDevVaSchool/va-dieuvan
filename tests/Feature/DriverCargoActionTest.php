@@ -19,7 +19,7 @@ class DriverCargoActionTest extends TestCase
 
     public function test_driver_marks_pickup_then_delivered_and_uploads_pod(): void
     {
-        Storage::fake('public');
+        Storage::fake('local');
         $this->seed(RbacSeeder::class);
 
         [$driver, , $shipment] = $this->makeCargoTrip();
@@ -41,11 +41,18 @@ class DriverCargoActionTest extends TestCase
         $this->assertNotNull($shipment->delivered_at);
 
         // Ảnh minh chứng
-        $this->postJson("/api/driver/cargo-shipments/{$shipment->id}/pod", [
+        $attachmentId = $this->postJson("/api/driver/cargo-shipments/{$shipment->id}/pod", [
             'file' => UploadedFile::fake()->image('pod.jpg'),
-        ])->assertCreated();
+        ])->assertCreated()->json('data.id');
 
         $this->assertSame(1, $shipment->attachments()->where('kind', 'pod')->count());
+
+        $attachment = $shipment->attachments()->findOrFail($attachmentId);
+        $this->assertSame('local', $attachment->disk);
+        Storage::disk('local')->assertExists($attachment->path);
+
+        // Tài xế xem lại ảnh vừa tải qua endpoint đã xác thực
+        $this->get("/api/attachments/{$attachmentId}/download")->assertOk();
     }
 
     public function test_trip_show_serializes_cargo_shipment_for_driver(): void

@@ -198,12 +198,12 @@ class CargoController extends Controller
         /** @var UploadedFile $file */
         $file = $data['file'];
 
-        $disk = 'public';
-        $path = Storage::putFileAs(
+        // Lưu kho private; FE đọc qua GET /attachments/{id}/download (đã xác thực).
+        $disk = 'local';
+        $path = Storage::disk($disk)->putFileAs(
             "attachments/cargo/{$cargoShipment->id}/pod",
             $file,
             $file->hashName(),
-            ['disk' => $disk],
         );
 
         $attachment = Attachment::create([
@@ -227,10 +227,7 @@ class CargoController extends Controller
             after: ['attachment_id' => $attachment->id],
         );
 
-        return $this->created([
-            ...$attachment->toArray(),
-            'url' => Storage::url($path),
-        ]);
+        return $this->created($attachment->toArray());
     }
 
     public function destroy(DestroyCargoShipmentRequest $request, CargoShipment $cargoShipment)

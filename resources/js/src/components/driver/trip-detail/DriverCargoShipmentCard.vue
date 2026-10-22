@@ -105,17 +105,8 @@
           </label>
         </div>
 
-        <div v-if="proofImages.length" class="mt-3 grid grid-cols-3 gap-2">
-          <a
-            v-for="img in proofImages"
-            :key="img.id"
-            :href="img.url"
-            target="_blank"
-            rel="noopener"
-            class="block aspect-square overflow-hidden rounded-lg ring-1 ring-white/10"
-          >
-            <img :src="img.url" alt="" class="h-full w-full object-cover" loading="lazy" />
-          </a>
+        <div v-if="proofImages.length" class="mt-3 flex flex-wrap gap-2">
+          <AuthAttachmentThumb v-for="img in proofImages" :key="img.id" :attachment="img" size="lg" dark />
         </div>
         <p v-else class="mt-2 text-xs text-driver-muted/80 sm:text-sm">
           {{ t('driver_trip_detail.cargo_proof_empty') }}
@@ -140,6 +131,7 @@ import {
   PlusIcon,
   TruckIcon,
 } from '@heroicons/vue/24/outline'
+import AuthAttachmentThumb from '../../shared/AuthAttachmentThumb.vue'
 
 const props = defineProps({
   shipment: { type: Object, required: true },
@@ -185,7 +177,7 @@ const showDeliver = computed(() => ['pending', 'picked_up', 'in_transit'].includ
 
 const proofImages = computed(() => {
   const list = Array.isArray(props.shipment?.attachments) ? props.shipment.attachments : []
-  return list.filter((a) => a && a.url)
+  return list.filter((a) => a && a.id)
 })
 
 function fmt(iso) {
