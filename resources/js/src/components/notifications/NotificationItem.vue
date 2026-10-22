@@ -1,27 +1,27 @@
 <template>
   <li
-    class="mb-2 list-none rounded-2xl border px-3.5 py-3 text-sm shadow-sm transition active:scale-[0.99]"
-    :class="notification.read
+    class="mb-2 list-none border text-sm shadow-sm transition active:scale-[0.99]"
+    :class="[compact ? 'rounded-xl px-2.5 py-2.5' : 'rounded-2xl px-3.5 py-3', notification.read
       ? 'cursor-pointer border-slate-100 bg-slate-50/90 dark:border-slate-800 dark:bg-slate-800/40'
-      : 'cursor-pointer border-sky-200/90 bg-gradient-to-br from-sky-50 to-white dark:border-sky-900/60 dark:from-sky-950/30 dark:to-slate-900/80'"
+      : 'cursor-pointer border-sky-200/90 bg-gradient-to-br from-sky-50 to-white dark:border-sky-900/60 dark:from-sky-950/30 dark:to-slate-900/80']"
     role="button"
     tabindex="0"
     @click="emit('open', notification)"
     @keydown.enter.prevent="emit('open', notification)"
     @keydown.space.prevent="emit('open', notification)"
   >
-    <div class="flex items-start gap-3">
+    <div class="flex items-start" :class="compact ? 'gap-2' : 'gap-3'">
       <!-- Typed icon -->
       <div
-        class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-        :class="iconConfig.bg"
+        class="mt-0.5 flex shrink-0 items-center justify-center rounded-full"
+        :class="[iconConfig.bg, compact ? 'h-7 w-7' : 'h-8 w-8']"
         aria-hidden="true"
       >
         <component :is="iconConfig.icon" class="h-4 w-4" :class="iconConfig.color" />
       </div>
 
       <div class="min-w-0 flex-1">
-        <p class="text-[11px] font-medium tracking-wide text-slate-500 dark:text-slate-400">
+        <p class="font-medium tracking-wide text-slate-500 dark:text-slate-400" :class="compact ? 'text-[10px]' : 'text-[11px]'">
           {{ relativeTime }}
         </p>
         <span
@@ -31,16 +31,17 @@
         >
           {{ typeLabel }}
         </span>
-        <p class="mt-1.5 text-[15px] font-semibold leading-snug text-slate-800 dark:text-slate-100">
+        <p class="font-semibold leading-snug text-slate-800 dark:text-slate-100" :class="compact ? 'mt-1 text-[13px]' : 'mt-1.5 text-[15px]'">
           {{ lines.primary }}
         </p>
         <p
           v-if="lines.sub"
-          class="mt-1 text-[13px] leading-snug text-slate-600 dark:text-slate-300"
+          class="mt-1 leading-snug text-slate-600 dark:text-slate-300"
+          :class="compact ? 'text-xs' : 'text-[13px]'"
         >
           {{ lines.sub }}
         </p>
-        <div class="mt-2.5 flex flex-wrap items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2" :class="compact ? 'mt-2' : 'mt-2.5'">
           <button
             v-if="hasNavLink"
             type="button"
@@ -80,6 +81,7 @@ import {
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
+  compact: { type: Boolean, default: false },
   notification: { type: Object, required: true },
   kind: { type: String, default: 'generic' },
   lines: { type: Object, required: true },

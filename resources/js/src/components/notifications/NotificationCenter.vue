@@ -1,5 +1,6 @@
 <template>
   <Teleport to="body">
+    <Transition name="notification-popover">
     <!-- Anchor the inbox to the bell that opened it. -->
     <div
       v-if="notifStore.panelOpen"
@@ -11,7 +12,8 @@
       />
       <span
         v-if="pointerStyle"
-        class="pointer-events-none fixed z-20 h-3.5 w-3.5 rotate-45 border-b border-l border-slate-200/90 bg-white dark:border-slate-700/90 dark:bg-slate-900"
+        class="pointer-events-none fixed z-20 h-3.5 w-3.5 rotate-45 border-slate-200/90 bg-white dark:border-slate-700/90 dark:bg-slate-900"
+        :class="pointerSide === 'left' ? 'border-b border-l' : pointerSide === 'top' ? 'border-l border-t' : 'border-b border-r'"
         :style="pointerStyle"
         data-testid="notification-panel-pointer"
         aria-hidden="true"
@@ -24,13 +26,13 @@
         role="dialog"
         :aria-label="t('notify.title')"
       >
-        <div class="flex shrink-0 items-center gap-2.5 border-b border-slate-100 px-3.5 py-3 dark:border-slate-800">
-          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-va-50 text-va-800 ring-1 ring-inset ring-va-100 dark:bg-va-950/50 dark:text-va-300 dark:ring-va-900/50" aria-hidden="true">
-            <BellIcon class="h-[18px] w-[18px]" />
+        <div class="flex shrink-0 items-center gap-2.5 border-b border-slate-100 dark:border-slate-800" :class="isDriverApp ? 'px-3 py-2' : 'px-3.5 py-3'">
+          <span class="flex shrink-0 items-center justify-center rounded-xl bg-va-50 text-va-800 ring-1 ring-inset ring-va-100 dark:bg-va-950/50 dark:text-va-300 dark:ring-va-900/50" :class="isDriverApp ? 'h-7 w-7' : 'h-8 w-8'" aria-hidden="true">
+            <BellIcon :class="isDriverApp ? 'h-4 w-4' : 'h-[18px] w-[18px]'" />
           </span>
           <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-              <h2 class="text-base font-semibold text-slate-900 dark:text-white">
+              <h2 class="font-semibold text-slate-900 dark:text-white" :class="isDriverApp ? 'text-sm' : 'text-base'">
                 {{ t('notify.title') }}
               </h2>
               <span
@@ -101,7 +103,8 @@
         <template v-else>
           <div
             v-if="!notifStore.items.length"
-            class="flex flex-1 flex-col items-center justify-center gap-1.5 px-4 py-10 text-center"
+            class="flex flex-1 flex-col items-center justify-center gap-1.5 px-4 text-center"
+            :class="isDriverApp ? 'py-6' : 'py-10'"
           >
             <BellIcon class="h-7 w-7 text-slate-300 dark:text-slate-600" aria-hidden="true" />
             <p class="text-sm font-medium text-slate-600 dark:text-slate-300">
@@ -126,6 +129,7 @@
                 v-for="n in section.items"
                 :key="n.id"
                 :notification="n"
+                :compact="isDriverApp"
                 :kind="classifyKind(n)"
                 :lines="linesFor(n)"
                 :type-label="tripTypeLabelFor(n)"
@@ -136,7 +140,7 @@
             </template>
           </ul>
         </template>
-        <div class="shrink-0 border-t border-slate-100 bg-slate-50/70 px-3.5 py-3 dark:border-slate-800 dark:bg-slate-950/30">
+        <div class="shrink-0 border-t border-slate-100 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-950/30" :class="isDriverApp ? 'px-3 py-2' : 'px-3.5 py-3'">
           <div class="flex items-center justify-between gap-2 text-xs">
             <RouterLink
               :to="hubPath"
@@ -157,6 +161,7 @@
         </div>
       </div>
     </div>
+    </Transition>
   </Teleport>
 </template>
 
@@ -182,6 +187,7 @@ const hubPath = computed(() =>
 const panelRef = ref(null)
 const panelStyle = ref({})
 const pointerStyle = ref(null)
+const pointerSide = ref('left')
 let panelObserver = null
 
 function positionPanel() {
@@ -195,11 +201,11 @@ function positionPanel() {
   const gap = 8
   const rightSpace = sidebarRect ? window.innerWidth - sidebarRect.right - gap - margin : 0
   const besideSidebar = sidebarRect && rightSpace >= 220
-  const width = Math.min(384, besideSidebar ? rightSpace : window.innerWidth - margin * 2)
+  const width = Math.min(isDriverApp.value ? 320 : 384, besideSidebar ? rightSpace : window.innerWidth - margin * 2)
   const below = Math.max(0, window.innerHeight - (rect?.bottom ?? 0) - gap - margin)
   const above = Math.max(0, (rect?.top ?? 0) - gap - margin)
   const openBelow = below >= 280 || below >= above
-  const maxHeight = Math.min(448, besideSidebar ? window.innerHeight - margin * 2 : openBelow ? below : above)
+  const maxHeight = Math.min(isDriverApp.value ? 360 : 448, besideSidebar ? window.innerHeight - margin * 2 : openBelow ? below : above)
   const height = Math.min(panelRef.value.scrollHeight, maxHeight)
   const left = besideSidebar
     ? sidebarRect.right + gap
@@ -210,12 +216,18 @@ function positionPanel() {
   const panelTop = Math.max(margin, top)
   // Keep the pointer aimed at the bell while avoiding the rounded corners.
   const pointerY = rect ? Math.max(panelTop + 24, Math.min(rect.top + rect.height / 2, panelTop + height - 24)) : 0
-  pointerStyle.value = besideSidebar ? { left: `${left - 7}px`, top: `${pointerY - 7}px` } : null
+  const pointerX = rect ? Math.max(left + 20, Math.min(rect.left + rect.width / 2, left + width - 20)) : 0
+  pointerSide.value = besideSidebar ? 'left' : openBelow ? 'top' : 'bottom'
+  pointerStyle.value = rect ? {
+    left: `${besideSidebar ? left - 7 : pointerX - 7}px`,
+    top: `${besideSidebar ? pointerY - 7 : openBelow ? panelTop - 7 : panelTop + height - 7}px`,
+  } : null
   panelStyle.value = {
     width: `${width}px`,
     maxHeight: `${maxHeight}px`,
     left: `${left}px`,
     top: `${panelTop}px`,
+    transformOrigin: besideSidebar ? `left ${pointerY - panelTop}px` : `${pointerX - left}px ${openBelow ? 'top' : 'bottom'}`,
   }
 }
 
@@ -566,3 +578,30 @@ watch(
 )
 
 </script>
+
+<style scoped>
+.notification-popover-enter-active,
+.notification-popover-enter-active #notification-center-panel {
+  transition: opacity 160ms ease, transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.notification-popover-leave-active,
+.notification-popover-leave-active #notification-center-panel {
+  transition: opacity 100ms ease, transform 100ms ease;
+}
+.notification-popover-enter-from,
+.notification-popover-leave-to {
+  opacity: 0;
+}
+.notification-popover-enter-from #notification-center-panel,
+.notification-popover-leave-to #notification-center-panel {
+  transform: scale(0.97);
+}
+@media (prefers-reduced-motion: reduce) {
+  .notification-popover-enter-active,
+  .notification-popover-leave-active,
+  .notification-popover-enter-active #notification-center-panel,
+  .notification-popover-leave-active #notification-center-panel {
+    transition: none;
+  }
+}
+</style>
