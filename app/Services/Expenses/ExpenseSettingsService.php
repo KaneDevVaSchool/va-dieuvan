@@ -98,7 +98,7 @@ class ExpenseSettingsService
         foreach ($ledger['rows'] as $row) {
             $sheet->fromArray([
                 $row['date'], $row['type'], $row['description'], $row['amount'],
-                $row['has_invoice'] ? 'Có' : 'Không', $row['seller_name'], $row['status'],
+                $row['has_invoice'] ? 'Có' : 'Không', $row['seller_name'], $row['status'] === 'confirmed' ? 'Đã duyệt' : 'Chờ duyệt',
                 $row['expense_document'] ? $row['expense_document']['code'].' ('.$row['expense_document']['status'].')' : '',
                 $row['trip_id'] ? '#'.$row['trip_id'] : '', $row['created_by'],
             ], null, "A{$r}");
@@ -107,6 +107,11 @@ class ExpenseSettingsService
         $sheet->setCellValue("C{$r}", 'Tổng cộng');
         $sheet->setCellValue("D{$r}", $ledger['total']);
         $sheet->getStyle("C{$r}:D{$r}")->getFont()->setBold(true);
+        $sheet->setCellValue('C'.($r + 1), 'Đã duyệt');
+        $sheet->setCellValue('D'.($r + 1), $ledger['confirmed_total'] ?? 0);
+        $sheet->setCellValue('C'.($r + 2), 'Chờ duyệt');
+        $sheet->setCellValue('D'.($r + 2), $ledger['pending_total'] ?? 0);
+        $r += 2;
         $sheet->getStyle("D5:D{$r}")->getNumberFormat()->setFormatCode('#,##0');
         foreach (range('A', 'J') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);

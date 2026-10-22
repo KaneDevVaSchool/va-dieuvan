@@ -1,7 +1,7 @@
 <template>
   <section class="space-y-3" :aria-label="title">
     <div>
-      <p class="text-sm font-semibold text-driver-muted">{{ title }}</p>
+      <p class="text-xs font-semibold text-driver-muted">{{ title }}</p>
       <p v-if="hint" class="mt-0.5 text-xs leading-snug text-driver-muted/80">{{ hint }}</p>
     </div>
 
@@ -18,7 +18,7 @@
     <div class="grid gap-3 sm:grid-cols-2">
       <button
         type="button"
-        class="flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-driver-surface px-3 text-sm font-semibold text-driver-accent ring-1 ring-driver-accent/30 transition hover:bg-driver-elevated active:scale-[0.99]"
+        class="flex min-h-[40px] items-center justify-center gap-2 rounded-xl bg-driver-surface px-3 text-xs font-semibold text-driver-accent ring-1 ring-driver-accent/30 transition hover:bg-driver-elevated active:scale-[0.99]"
         data-testid="driver-cost-create-receipt-gallery"
         @click="openPicker(false)"
       >
@@ -27,7 +27,7 @@
       </button>
       <button
         type="button"
-        class="flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-driver-accent/15 px-3 text-sm font-semibold text-driver-ink ring-1 ring-driver-accent/35 transition hover:bg-driver-accent/25 active:scale-[0.99]"
+        class="flex min-h-[40px] items-center justify-center gap-2 rounded-xl bg-driver-accent/15 px-3 text-xs font-semibold text-driver-ink ring-1 ring-driver-accent/35 transition hover:bg-driver-accent/25 active:scale-[0.99]"
         data-testid="driver-cost-create-receipt-camera"
         @click="openPicker(true)"
       >
@@ -36,14 +36,14 @@
       </button>
     </div>
 
-    <p v-if="busyCount" class="text-sm text-amber-200/90">{{ preparingLabel }} ({{ busyCount }})</p>
+    <p v-if="busyCount" class="text-xs text-amber-200/90">{{ preparingLabel }} ({{ busyCount }})</p>
 
     <div
       v-if="!staged.length"
-      class="rounded-2xl bg-driver-surface/80 px-4 py-8 text-center ring-1 ring-white/[0.05]"
+      class="rounded-lg bg-driver-surface/80 px-3 py-4 text-center ring-1 ring-white/[0.05]"
     >
-      <PhotoIcon class="mx-auto h-10 w-10 text-driver-muted/50" aria-hidden="true" />
-      <p class="mt-3 text-sm text-driver-muted">{{ emptyText }}</p>
+      <PhotoIcon class="mx-auto h-7 w-7 text-driver-muted/50" aria-hidden="true" />
+      <p class="mt-3 text-xs text-driver-muted">{{ emptyText }}</p>
     </div>
 
     <div v-else class="grid grid-cols-3 gap-2 sm:grid-cols-4">

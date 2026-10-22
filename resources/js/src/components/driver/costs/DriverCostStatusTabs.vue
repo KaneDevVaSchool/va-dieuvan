@@ -9,7 +9,7 @@
       :key="tab.value || 'all'"
       type="button"
       role="tab"
-      class="min-h-[34px] min-w-0 whitespace-nowrap rounded-lg px-1 text-xs font-semibold transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-driver-accent/70 active:scale-[0.98] min-[375px]:text-[13px] sm:text-sm"
+      class="min-h-[32px] min-w-0 whitespace-nowrap rounded-lg px-1 text-[11px] font-semibold transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-driver-accent/70 active:scale-[0.98] min-[375px]:text-xs"
       :class="
         modelValue === tab.value
           ? 'bg-driver-accent/15 text-driver-accent'

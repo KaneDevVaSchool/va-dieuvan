@@ -32,17 +32,17 @@
     </DriverPageHeader>
 
     <div
-      class="driver-stagger mx-auto w-full max-w-lg px-3.5 pb-4 pt-3 sm:max-w-2xl sm:px-5"
+      class="driver-stagger mx-auto w-full max-w-lg px-3.5 pb-4 pt-2.5 sm:max-w-2xl sm:px-5"
     >
       <RouterLink
         v-if="canExpense"
         :to="{ name: 'driverExpenses' }"
-        class="flex min-h-[48px] items-center gap-2.5 rounded-xl bg-driver-card px-3.5 py-2.5 ring-1 ring-white/[0.08] active:scale-[0.99]"
+        class="flex min-h-[44px] items-center gap-2 rounded-lg bg-driver-card px-3 py-2 ring-1 ring-white/[0.08] active:scale-[0.99]"
         data-testid="driver-costs-expense-link"
       >
-        <DocumentDuplicateIcon class="h-5 w-5 shrink-0 text-driver-accent" aria-hidden="true" />
+        <DocumentDuplicateIcon class="h-4 w-4 shrink-0 text-driver-accent" aria-hidden="true" />
         <span class="min-w-0 flex-1">
-          <span class="block text-sm font-bold">{{ t('expense.costs_link_title') }}</span>
+          <span class="block text-xs font-bold">{{ t('expense.costs_link_title') }}</span>
           <span class="block text-[11px] text-driver-muted">{{ t('expense.costs_link_hint') }}</span>
         </span>
         <ChevronRightIcon class="h-4.5 w-4.5 shrink-0 text-driver-muted" aria-hidden="true" />
@@ -56,10 +56,10 @@
       </p>
 
       <!-- Skeleton -->
-      <div v-if="loading && !items.length" class="mt-4 space-y-3">
+      <div v-if="loading && !items.length" class="mt-2.5 space-y-2">
         <div v-for="s in 4" :key="s" class="animate-pulse overflow-hidden rounded-xl bg-driver-card ring-1 ring-white/[0.06]">
-          <div class="h-28 bg-driver-surface/90" />
-          <div class="h-10 border-t border-white/[0.06] bg-driver-surface/60" />
+          <div class="h-24 bg-driver-surface/90" />
+          <div class="h-9 border-t border-white/[0.06] bg-driver-surface/60" />
         </div>
       </div>
 
@@ -73,7 +73,7 @@
         <p class="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-driver-muted">{{ t('driver_costs.empty_hint') }}</p>
       </div>
 
-      <ul v-else class="mt-3 space-y-3">
+      <ul v-else class="mt-2.5 space-y-2">
         <li v-for="c in items" :key="c.id">
           <DriverCostListCard
             :cost="c"
@@ -87,11 +87,11 @@
 
       <div ref="sentinelRef" class="h-4 w-full shrink-0 scroll-mt-4" aria-hidden="true" />
 
-      <div v-if="loadingMore" class="flex justify-center py-8">
-        <span class="inline-block h-9 w-9 animate-spin rounded-full border-2 border-driver-accent border-t-transparent" />
+      <div v-if="loadingMore" class="flex justify-center py-4">
+        <span class="inline-block h-6 w-6 animate-spin rounded-full border-2 border-driver-accent border-t-transparent" />
       </div>
 
-      <p v-if="items.length && noMore" class="pt-2 text-center text-sm text-driver-muted/70">
+      <p v-if="items.length && noMore" class="pt-2 text-center text-xs text-driver-muted/70">
         {{ t('driver_costs.end_of_list') }}
       </p>
     </div>

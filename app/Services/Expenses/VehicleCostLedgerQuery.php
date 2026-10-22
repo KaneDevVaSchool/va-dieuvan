@@ -93,6 +93,8 @@ class VehicleCostLedgerQuery
             'by_type' => $this->groupTotals($rows, 'type'),
             'by_month' => $this->groupTotals($rows->map(fn ($r) => [...$r, 'month' => substr($r['date'], 0, 7)]), 'month'),
             'total' => (float) $rows->sum('amount'),
+            'confirmed_total' => (float) $rows->where('status', 'confirmed')->sum('amount'),
+            'pending_total' => (float) $rows->where('status', '!=', 'confirmed')->sum('amount'),
         ];
     }
 

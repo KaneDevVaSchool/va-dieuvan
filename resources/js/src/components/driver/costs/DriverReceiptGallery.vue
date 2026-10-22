@@ -1,9 +1,9 @@
 <template>
-  <section class="space-y-4" :aria-label="title">
+  <section :class="compactSection ? 'space-y-2.5' : 'space-y-4'" :aria-label="title">
     <div class="flex items-center justify-between gap-3">
       <h2
         class="text-driver-ink"
-        :class="compactSection ? 'text-base font-semibold' : 'text-lg font-bold sm:text-xl'"
+        :class="compactSection ? 'text-sm font-semibold' : 'text-lg font-bold sm:text-xl'"
       >
         {{ title }}
       </h2>
@@ -31,18 +31,20 @@
     >
       <button
         type="button"
-        class="flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-driver-surface px-4 text-base font-semibold text-driver-accent ring-1 ring-driver-accent/30 transition hover:bg-driver-elevated active:scale-[0.99]"
+        class="flex items-center justify-center gap-2 bg-driver-surface font-semibold text-driver-accent ring-1 ring-driver-accent/30 transition hover:bg-driver-elevated active:scale-[0.99]"
+        :class="compactSection ? 'min-h-[40px] rounded-lg px-3 text-xs' : 'min-h-[52px] rounded-2xl px-4 text-base'"
         @click="openPicker(false)"
       >
-        <PhotoIcon class="h-6 w-6 shrink-0" aria-hidden="true" />
+        <PhotoIcon class="shrink-0" :class="compactSection ? 'h-4 w-4' : 'h-6 w-6'" aria-hidden="true" />
         {{ addPhotos }}
       </button>
       <button
         type="button"
-        class="flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-driver-accent/15 px-4 text-base font-semibold text-driver-ink ring-1 ring-driver-accent/35 transition hover:bg-driver-accent/25 active:scale-[0.99]"
+        class="flex items-center justify-center gap-2 bg-driver-accent/15 font-semibold text-driver-ink ring-1 ring-driver-accent/35 transition hover:bg-driver-accent/25 active:scale-[0.99]"
+        :class="compactSection ? 'min-h-[40px] rounded-lg px-3 text-xs' : 'min-h-[52px] rounded-2xl px-4 text-base'"
         @click="openPicker(true)"
       >
-        <CameraIcon class="h-6 w-6 shrink-0" aria-hidden="true" />
+        <CameraIcon class="shrink-0" :class="compactSection ? 'h-4 w-4' : 'h-6 w-6'" aria-hidden="true" />
         {{ cameraCapture }}
       </button>
     </div>
@@ -51,9 +53,9 @@
       {{ uploadingLabel }} ({{ queueLen }})
     </p>
 
-    <div v-if="!displayRows.length" class="rounded-3xl bg-driver-surface/80 px-6 py-12 text-center ring-1 ring-white/[0.05]">
-      <PhotoIcon class="mx-auto h-12 w-12 text-driver-muted/50" aria-hidden="true" />
-      <p class="mt-4 text-base text-driver-muted">{{ emptyText }}</p>
+    <div v-if="!displayRows.length" class="bg-driver-surface/80 text-center ring-1 ring-white/[0.05]" :class="compactSection ? 'rounded-lg px-3 py-4' : 'rounded-3xl px-6 py-12'">
+      <PhotoIcon class="mx-auto text-driver-muted/50" :class="compactSection ? 'h-7 w-7' : 'h-12 w-12'" aria-hidden="true" />
+      <p class="text-driver-muted" :class="compactSection ? 'mt-2 text-xs' : 'mt-4 text-base'">{{ emptyText }}</p>
     </div>
 
     <div v-else class="grid grid-cols-2 gap-3 sm:grid-cols-3">

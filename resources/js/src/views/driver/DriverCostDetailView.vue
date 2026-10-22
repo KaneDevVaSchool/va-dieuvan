@@ -8,49 +8,49 @@
       <div class="mx-auto flex max-w-lg items-center gap-2 px-3 pb-3 pt-2 sm:max-w-2xl">
         <button
           type="button"
-          class="flex min-h-[48px] min-w-[48px] shrink-0 items-center justify-center rounded-2xl bg-driver-card ring-1 ring-white/[0.08] transition active:scale-[0.97]"
+          class="flex min-h-[40px] min-w-[40px] shrink-0 items-center justify-center rounded-lg bg-driver-card ring-1 ring-white/[0.08] transition active:scale-[0.97]"
           :aria-label="t('driver_cost_req.back')"
           @click="goBack"
         >
-          <ArrowLeftIcon class="h-6 w-6 text-driver-accent" />
+          <ArrowLeftIcon class="h-5 w-5 text-driver-accent" />
         </button>
-        <h1 class="min-w-0 flex-1 truncate text-center text-lg font-bold">
+        <h1 class="min-w-0 flex-1 truncate text-center text-base font-bold">
           {{ t('driver_cost_req.title') }}
         </h1>
-        <span class="w-[48px] shrink-0" aria-hidden="true" />
+        <span class="w-[40px] shrink-0" aria-hidden="true" />
       </div>
     </header>
 
-    <div class="mx-auto max-w-lg px-4 pb-4 pt-4 sm:max-w-2xl">
+    <div class="mx-auto max-w-lg px-3 pb-4 pt-3 sm:max-w-2xl">
       <p
         v-if="loadError"
-        class="mb-4 rounded-2xl border border-amber-500/35 bg-amber-950/40 px-4 py-3 text-sm text-amber-100 ring-1 ring-amber-500/25"
+        class="mb-3 rounded-lg border border-amber-500/35 bg-amber-950/40 px-3 py-2 text-xs text-amber-100 ring-1 ring-amber-500/25"
       >
         {{ loadError }}
       </p>
 
       <p
         v-if="showTripLockedBanner"
-        class="mb-4 rounded-2xl border border-slate-500/30 bg-slate-900/50 px-4 py-3 text-sm leading-snug text-slate-200 ring-1 ring-white/[0.06]"
+        class="mb-3 rounded-lg border border-slate-500/30 bg-slate-900/50 px-3 py-2 text-xs leading-snug text-slate-200 ring-1 ring-white/[0.06]"
       >
         {{ t('driver_cost_req.trip_finished_readonly') }}
       </p>
 
-      <div v-if="loading" class="space-y-4">
-        <div class="h-44 animate-pulse rounded-[1.35rem] bg-driver-card ring-1 ring-white/[0.06]" />
-        <div class="h-36 animate-pulse rounded-[1.35rem] bg-driver-card ring-1 ring-white/[0.06]" />
-        <div class="h-48 animate-pulse rounded-[1.35rem] bg-driver-card ring-1 ring-white/[0.06]" />
+      <div v-if="loading" class="space-y-3">
+        <div class="h-44 animate-pulse rounded-xl bg-driver-card ring-1 ring-white/[0.06]" />
+        <div class="h-36 animate-pulse rounded-xl bg-driver-card ring-1 ring-white/[0.06]" />
+        <div class="h-48 animate-pulse rounded-xl bg-driver-card ring-1 ring-white/[0.06]" />
       </div>
 
       <template v-else-if="cost">
         <!-- Hero -->
-        <div class="relative isolate mb-5 overflow-hidden rounded-[1.25rem] bg-driver-card px-4 pb-5 pt-5 ring-1 ring-white/[0.06] sm:px-5 sm:pb-6 sm:pt-6">
+        <div class="relative isolate mb-3 overflow-hidden rounded-xl bg-driver-card px-3 pb-3 pt-3 ring-1 ring-white/[0.06] sm:px-3 sm:pb-3 sm:pt-3">
           <div class="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full bg-driver-accent/[0.08] blur-3xl" aria-hidden="true" />
           <div class="relative flex flex-wrap items-start justify-between gap-3">
-            <span class="rounded-full px-3.5 py-1.5 text-xs font-semibold sm:text-[13px]" :class="badgeCls(cost.status)">
+            <span class="rounded-full px-3.5 py-1.5 text-xs font-semibold sm:text-xs" :class="badgeCls(cost.status)">
               {{ badgeTitle(cost.status) }}
             </span>
-            <span v-if="cost.trip_id" class="text-sm font-semibold tabular-nums text-driver-muted">{{ tripCodeLabel }}</span>
+            <span v-if="cost.trip_id" class="text-xs font-semibold tabular-nums text-driver-muted">{{ tripCodeLabel }}</span>
             <span
               v-else
               class="rounded-full bg-driver-accent/12 px-2.5 py-0.5 text-xs font-semibold text-driver-accent ring-1 ring-driver-accent/25"
@@ -58,19 +58,19 @@
               {{ t('driver_costs.badge_standalone') }}
             </span>
           </div>
-          <div class="relative mt-5 flex items-start gap-4">
-            <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-[1.1rem] bg-driver-surface ring-1 ring-white/[0.06]" aria-hidden="true">
-              <FuelIcon v-if="normType(cost.type) === 'fuel'" class="h-9 w-9 text-driver-accent" />
-              <TollIcon v-else-if="normType(cost.type) === 'toll'" class="h-9 w-9 text-driver-accent" />
-              <ParkingIcon v-else-if="normType(cost.type) === 'parking'" class="h-9 w-9 text-driver-accent" />
-              <MoneyIcon v-else class="h-9 w-9 text-driver-accent" />
+          <div class="relative mt-3 flex items-start gap-3">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-driver-surface ring-1 ring-white/[0.06]" aria-hidden="true">
+              <FuelIcon v-if="normType(cost.type) === 'fuel'" class="h-6 w-6 text-driver-accent" />
+              <TollIcon v-else-if="normType(cost.type) === 'toll'" class="h-6 w-6 text-driver-accent" />
+              <ParkingIcon v-else-if="normType(cost.type) === 'parking'" class="h-6 w-6 text-driver-accent" />
+              <MoneyIcon v-else class="h-6 w-6 text-driver-accent" />
             </div>
             <div class="min-w-0 flex-1">
-              <p class="text-sm font-semibold text-driver-muted">{{ typeLabelUi(cost.type) }}</p>
-              <p class="mt-2 text-2xl font-bold tabular-nums leading-tight text-driver-ink sm:text-3xl">
+              <p class="text-xs font-semibold text-driver-muted">{{ typeLabelUi(cost.type) }}</p>
+              <p class="mt-2 text-xl font-bold tabular-nums leading-tight text-driver-ink sm:text-xl">
                 {{ formatVnd(cost.amount) }}
               </p>
-              <p class="mt-2 text-sm tabular-nums text-driver-muted">
+              <p class="mt-2 text-xs tabular-nums text-driver-muted">
                 {{ datetimeLabel }}
               </p>
             </div>
@@ -78,62 +78,62 @@
         </div>
 
         <!-- Quick trip -->
-        <details v-if="cost.trip_id" open class="mb-4 overflow-hidden rounded-[1.25rem] bg-driver-card ring-1 ring-white/[0.06]">
+        <details v-if="cost.trip_id" open class="mb-3 overflow-hidden rounded-xl bg-driver-card ring-1 ring-white/[0.06]">
           <summary
-            class="flex cursor-pointer list-none items-center gap-3 px-4 py-3.5 text-base font-semibold text-driver-ink outline-none transition hover:bg-white/[0.03] [&::-webkit-details-marker]:hidden"
+            class="flex cursor-pointer list-none items-center gap-3 px-3 py-2.5 text-sm font-semibold text-driver-ink outline-none transition hover:bg-white/[0.03] [&::-webkit-details-marker]:hidden"
           >
             <MapIcon class="h-5 w-5 shrink-0 text-driver-accent" aria-hidden="true" />
             <span class="min-w-0 flex-1">{{ t('driver_cost_req.sec_trip') }}</span>
             <ChevronDownIcon class="details-chevron h-5 w-5 shrink-0 text-driver-muted transition-transform duration-200" />
           </summary>
-          <div class="border-t border-white/[0.06] px-4 pb-5 pt-4">
+          <div class="border-t border-white/[0.06] px-3 pb-3 pt-3">
             <RouterLink
               :to="`/driver/trips/${cost.trip_id}`"
-              class="flex min-h-[52px] items-center gap-4 rounded-2xl bg-driver-surface px-4 py-3 ring-1 ring-white/[0.06] transition hover:bg-driver-elevated"
+              class="flex min-h-[40px] items-center gap-3 rounded-lg bg-driver-surface px-3 py-2 ring-1 ring-white/[0.06] transition hover:bg-driver-elevated"
             >
               <div class="min-w-0 flex-1">
-                <p class="text-sm font-semibold text-driver-muted">{{ t('driver_cost_req.trip_label') }}</p>
-                <p class="mt-1 text-base font-semibold tabular-nums text-driver-ink">{{ tripCodeLabel }}</p>
-                <p class="mt-1 line-clamp-2 text-sm leading-snug text-driver-muted">{{ tripRouteLine }}</p>
+                <p class="text-xs font-semibold text-driver-muted">{{ t('driver_cost_req.trip_label') }}</p>
+                <p class="mt-1 text-sm font-semibold tabular-nums text-driver-ink">{{ tripCodeLabel }}</p>
+                <p class="mt-1 line-clamp-2 text-xs leading-snug text-driver-muted">{{ tripRouteLine }}</p>
               </div>
-              <ChevronRightIcon class="h-6 w-6 shrink-0 text-driver-muted/45" />
+              <ChevronRightIcon class="h-5 w-5 shrink-0 text-driver-muted/45" />
             </RouterLink>
           </div>
         </details>
 
         <!-- Cost breakdown -->
-        <details open class="mb-4 overflow-hidden rounded-[1.25rem] bg-driver-card ring-1 ring-white/[0.06]">
+        <details open class="mb-3 overflow-hidden rounded-xl bg-driver-card ring-1 ring-white/[0.06]">
           <summary
-            class="flex cursor-pointer list-none items-center gap-3 px-4 py-3.5 text-base font-semibold text-driver-ink outline-none transition hover:bg-white/[0.03] sm:px-5 [&::-webkit-details-marker]:hidden"
+            class="flex cursor-pointer list-none items-center gap-3 px-3 py-2.5 text-sm font-semibold text-driver-ink outline-none transition hover:bg-white/[0.03] sm:px-3 [&::-webkit-details-marker]:hidden"
           >
             <MoneyIcon class="h-5 w-5 shrink-0 text-driver-accent" aria-hidden="true" />
             <span class="flex-1">{{ t('driver_cost_req.sec_cost') }}</span>
             <ChevronDownIcon class="details-chevron h-5 w-5 shrink-0 text-driver-muted transition-transform duration-200" />
           </summary>
-          <div class="border-t border-white/[0.06] px-4 pb-5 pt-4 sm:px-5">
-            <dl class="grid gap-4 sm:grid-cols-2">
+          <div class="border-t border-white/[0.06] px-3 pb-3 pt-3 sm:px-3">
+            <dl class="grid gap-3 sm:grid-cols-2">
               <div>
-                <dt class="text-sm font-semibold text-driver-muted">{{ t('driver_cost_req.cost_type_label') }}</dt>
-                <dd class="mt-1 text-base text-driver-ink">{{ typeLabelUi(cost.type) }}</dd>
+                <dt class="text-xs font-semibold text-driver-muted">{{ t('driver_cost_req.cost_type_label') }}</dt>
+                <dd class="mt-1 text-sm text-driver-ink">{{ typeLabelUi(cost.type) }}</dd>
               </div>
               <div>
-                <dt class="text-sm font-semibold text-driver-muted">{{ t('driver_cost_req.amount_label') }}</dt>
-                <dd class="mt-1 text-base font-semibold tabular-nums text-driver-ink">{{ formatVnd(cost.amount) }}</dd>
+                <dt class="text-xs font-semibold text-driver-muted">{{ t('driver_cost_req.amount_label') }}</dt>
+                <dd class="mt-1 text-sm font-semibold tabular-nums text-driver-ink">{{ formatVnd(cost.amount) }}</dd>
               </div>
               <div class="sm:col-span-2">
-                <dt class="text-sm font-semibold text-driver-muted">{{ t('driver_cost_req.date_label') }}</dt>
-                <dd class="mt-1 text-base tabular-nums text-driver-ink">{{ datetimeLabel }}</dd>
+                <dt class="text-xs font-semibold text-driver-muted">{{ t('driver_cost_req.date_label') }}</dt>
+                <dd class="mt-1 text-sm tabular-nums text-driver-ink">{{ datetimeLabel }}</dd>
               </div>
               <div v-if="reportDateLabel">
-                <dt class="text-sm font-semibold text-driver-muted">{{ t('driver_costs.report_date_title') }}</dt>
-                <dd class="mt-1 text-base tabular-nums text-driver-ink">{{ reportDateLabel }}</dd>
+                <dt class="text-xs font-semibold text-driver-muted">{{ t('driver_costs.report_date_title') }}</dt>
+                <dd class="mt-1 text-sm tabular-nums text-driver-ink">{{ reportDateLabel }}</dd>
               </div>
             </dl>
           </div>
         </details>
 
         <!-- Receipts -->
-        <div class="mb-4 overflow-hidden rounded-[1.25rem] bg-driver-card p-4 ring-1 ring-white/[0.06]">
+        <div class="mb-3 overflow-hidden rounded-xl bg-driver-card p-3 ring-1 ring-white/[0.06]">
           <DriverReceiptGallery
             compact-section
             :trip-id="cost.trip_id ? Number(cost.trip_id) : null"
@@ -165,37 +165,37 @@
         </div>
 
         <!-- Notes -->
-        <details v-if="cost.description" class="mb-4 overflow-hidden rounded-[1.25rem] bg-driver-card ring-1 ring-white/[0.06]">
+        <details v-if="cost.description" class="mb-3 overflow-hidden rounded-xl bg-driver-card ring-1 ring-white/[0.06]">
           <summary
-            class="flex cursor-pointer list-none items-center gap-3 px-4 py-3.5 text-base font-semibold text-driver-ink outline-none transition hover:bg-white/[0.03] sm:px-5 [&::-webkit-details-marker]:hidden"
+            class="flex cursor-pointer list-none items-center gap-3 px-3 py-2.5 text-sm font-semibold text-driver-ink outline-none transition hover:bg-white/[0.03] sm:px-3 [&::-webkit-details-marker]:hidden"
           >
             <DocumentTextIcon class="h-5 w-5 shrink-0 text-driver-accent" aria-hidden="true" />
             <span class="flex-1">{{ t('driver_cost_req.notes_title') }}</span>
             <ChevronDownIcon class="details-chevron h-5 w-5 shrink-0 text-driver-muted transition-transform duration-200" />
           </summary>
-          <div class="border-t border-white/[0.06] px-4 pb-5 pt-4 sm:px-5">
-            <p class="rounded-xl bg-driver-surface/90 px-4 py-3 text-sm leading-relaxed text-driver-ink ring-1 ring-white/[0.05]">
+          <div class="border-t border-white/[0.06] px-3 pb-3 pt-3 sm:px-3">
+            <p class="rounded-xl bg-driver-surface/90 px-3 py-2 text-xs leading-relaxed text-driver-ink ring-1 ring-white/[0.05]">
               {{ cost.description }}
             </p>
           </div>
         </details>
 
         <!-- Timeline -->
-        <details open class="mb-4 overflow-hidden rounded-[1.25rem] bg-driver-card ring-1 ring-white/[0.06]">
+        <details open class="mb-3 overflow-hidden rounded-xl bg-driver-card ring-1 ring-white/[0.06]">
           <summary
-            class="flex cursor-pointer list-none items-center gap-3 px-4 py-3.5 text-base font-semibold text-driver-ink outline-none transition hover:bg-white/[0.03] sm:px-5 [&::-webkit-details-marker]:hidden"
+            class="flex cursor-pointer list-none items-center gap-3 px-3 py-2.5 text-sm font-semibold text-driver-ink outline-none transition hover:bg-white/[0.03] sm:px-3 [&::-webkit-details-marker]:hidden"
           >
             <ClockIcon class="h-5 w-5 shrink-0 text-driver-accent" aria-hidden="true" />
             <span class="flex-1">{{ t('driver_cost_req.sec_timeline') }}</span>
             <ChevronDownIcon class="details-chevron h-5 w-5 shrink-0 text-driver-muted transition-transform duration-200" />
           </summary>
-          <div class="border-t border-white/[0.06] px-4 pb-5 pt-4 sm:px-5">
-            <ol class="relative space-y-5 border-l-2 border-driver-accent/25 pl-6">
+          <div class="border-t border-white/[0.06] px-3 pb-3 pt-3 sm:px-3">
+            <ol class="relative space-y-3 border-l-2 border-driver-accent/25 pl-6">
               <li v-for="row in timelineRows" :key="row.key" class="relative">
                 <span class="absolute -left-[1.4rem] top-1 flex h-4 w-4 items-center justify-center rounded-full bg-driver-accent shadow-[0_0_0_4px_#020B0B]" aria-hidden="true" />
-                <p class="text-sm font-semibold text-driver-ink">{{ row.title }}</p>
-                <p class="mt-1 text-sm tabular-nums text-driver-muted">{{ row.when }}</p>
-                <p v-if="row.detail" class="mt-1.5 text-sm leading-snug text-driver-muted">{{ row.detail }}</p>
+                <p class="text-xs font-semibold text-driver-ink">{{ row.title }}</p>
+                <p class="mt-1 text-xs tabular-nums text-driver-muted">{{ row.when }}</p>
+                <p v-if="row.detail" class="mt-1.5 text-xs leading-snug text-driver-muted">{{ row.detail }}</p>
               </li>
             </ol>
           </div>
@@ -204,7 +204,7 @@
         <div v-if="canAct" class="mt-2 flex gap-3">
           <button
             type="button"
-            class="flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-xl bg-rose-500/15 py-3 text-sm font-bold text-rose-200 ring-1 ring-rose-400/35 transition hover:bg-rose-500/25 disabled:opacity-45"
+            class="flex min-h-[40px] flex-1 items-center justify-center gap-2 rounded-xl bg-rose-500/15 py-2 text-xs font-bold text-rose-200 ring-1 ring-rose-400/35 transition hover:bg-rose-500/25 disabled:opacity-45"
             :disabled="actionBusy"
             @click="onCancel"
           >
@@ -213,7 +213,7 @@
           </button>
           <button
             type="button"
-            class="flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-xl bg-driver-accent py-3 text-sm font-bold text-driver-bg transition hover:brightness-110 disabled:opacity-45 active:scale-[0.99]"
+            class="flex min-h-[40px] flex-1 items-center justify-center gap-2 rounded-xl bg-driver-accent py-2 text-xs font-bold text-driver-bg transition hover:brightness-110 disabled:opacity-45 active:scale-[0.99]"
             :disabled="actionBusy"
             @click="openEdit"
           >
@@ -233,23 +233,23 @@
           @click.self="closeEditSheet"
         >
           <div
-            class="w-full max-w-lg rounded-t-[1.75rem] bg-driver-card px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5 shadow-2xl ring-1 ring-white/[0.08] sm:rounded-[1.75rem]"
+            class="w-full max-w-lg rounded-t-xl bg-driver-card px-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 shadow-2xl ring-1 ring-white/[0.08] sm:rounded-xl"
             @click.stop
           >
-            <div class="mx-auto mb-4 h-1.5 w-12 shrink-0 rounded-full bg-white/15 sm:hidden" aria-hidden="true" />
+            <div class="mx-auto mb-3 h-1.5 w-12 shrink-0 rounded-full bg-white/15 sm:hidden" aria-hidden="true" />
             <div class="flex items-start justify-between gap-3">
-              <h3 class="text-xl font-bold text-driver-ink">{{ t('driver_cost_req.edit_title') }}</h3>
+              <h3 class="text-base font-bold text-driver-ink">{{ t('driver_cost_req.edit_title') }}</h3>
               <ModalCloseButton @click="closeEditSheet" />
             </div>
-            <p v-if="draftSavedHint" class="mt-2 text-sm text-driver-accent">{{ draftSavedHint }}</p>
+            <p v-if="draftSavedHint" class="mt-2 text-xs text-driver-accent">{{ draftSavedHint }}</p>
 
-            <p class="mt-5 text-sm font-semibold text-driver-muted">{{ t('driver_trip_detail.cost_type') }}</p>
+            <p class="mt-3 text-xs font-semibold text-driver-muted">{{ t('driver_trip_detail.cost_type') }}</p>
             <div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
               <button
                 v-for="opt in editTypes"
                 :key="opt.value"
                 type="button"
-                class="min-h-[48px] rounded-2xl px-2 text-sm font-bold transition ring-1 sm:text-base"
+                class="min-h-[40px] rounded-lg px-2 text-xs font-bold transition ring-1 sm:text-sm"
                 :class="
                   editForm.type === opt.value
                     ? 'bg-driver-accent text-driver-bg ring-driver-accent'
@@ -261,43 +261,43 @@
               </button>
             </div>
 
-            <label class="mt-6 block text-sm font-semibold text-driver-muted" for="dcf-amt">{{ t('driver_trip_detail.cost_amount') }}</label>
+            <label class="mt-3 block text-xs font-semibold text-driver-muted" for="dcf-amt">{{ t('driver_trip_detail.cost_amount') }}</label>
             <input
               id="dcf-amt"
               v-model="editForm.amount"
               type="text"
               inputmode="numeric"
               autocomplete="transaction-amount"
-              class="mt-2 min-h-[52px] w-full rounded-2xl border-0 bg-driver-surface px-4 text-lg font-semibold text-driver-ink ring-1 ring-white/[0.08] placeholder:text-driver-muted/50 focus:outline-none focus:ring-2 focus:ring-driver-accent/80"
+              class="mt-2 min-h-[40px] w-full rounded-lg border-0 bg-driver-surface px-3 text-base font-semibold text-driver-ink ring-1 ring-white/[0.08] placeholder:text-driver-muted/50 focus:outline-none focus:ring-2 focus:ring-driver-accent/80"
               :placeholder="t('driver_cost_req.ph_amount')"
               @blur="touch.amount = true"
             />
-            <p v-if="amountErr && touch.amount" class="mt-2 text-sm font-medium text-rose-300">{{ amountErr }}</p>
+            <p v-if="amountErr && touch.amount" class="mt-2 text-xs font-medium text-rose-300">{{ amountErr }}</p>
 
-            <label class="mt-5 block text-sm font-semibold text-driver-muted" for="dcf-desc">{{ t('driver_trip_detail.cost_desc') }}</label>
+            <label class="mt-3 block text-xs font-semibold text-driver-muted" for="dcf-desc">{{ t('driver_trip_detail.cost_desc') }}</label>
             <input
               id="dcf-desc"
               v-model="editForm.description"
               type="text"
-              class="mt-2 min-h-[52px] w-full rounded-2xl border-0 bg-driver-surface px-4 text-base text-driver-ink ring-1 ring-white/[0.08] placeholder:text-driver-muted/50 focus:outline-none focus:ring-2 focus:ring-driver-accent/80"
+              class="mt-2 min-h-[40px] w-full rounded-lg border-0 bg-driver-surface px-3 text-sm text-driver-ink ring-1 ring-white/[0.08] placeholder:text-driver-muted/50 focus:outline-none focus:ring-2 focus:ring-driver-accent/80"
               :placeholder="t('driver_cost_req.ph_desc')"
             />
 
-            <p v-if="editError" class="mt-4 rounded-xl bg-rose-500/15 px-4 py-3 text-sm font-medium text-rose-200 ring-1 ring-rose-400/25">
+            <p v-if="editError" class="mt-3 rounded-xl bg-rose-500/15 px-3 py-2 text-xs font-medium text-rose-200 ring-1 ring-rose-400/25">
               {{ editError }}
             </p>
 
-            <div class="mt-8 flex gap-3 pb-2">
+            <div class="mt-4 flex gap-3 pb-2">
               <button
                 type="button"
-                class="flex min-h-[52px] flex-1 items-center justify-center rounded-2xl bg-driver-surface py-3 text-base font-bold text-driver-ink ring-1 ring-white/10 transition hover:bg-driver-elevated"
+                class="flex min-h-[40px] flex-1 items-center justify-center rounded-lg bg-driver-surface py-2 text-sm font-bold text-driver-ink ring-1 ring-white/10 transition hover:bg-driver-elevated"
                 @click="closeEditSheet"
               >
                 {{ t('driver_trip_detail.cancel') }}
               </button>
               <button
                 type="button"
-                class="flex min-h-[52px] flex-1 items-center justify-center rounded-2xl bg-driver-accent py-3 text-base font-bold text-driver-bg transition hover:brightness-110 disabled:opacity-45"
+                class="flex min-h-[40px] flex-1 items-center justify-center rounded-lg bg-driver-accent py-2 text-sm font-bold text-driver-bg transition hover:brightness-110 disabled:opacity-45"
                 :disabled="editBusy || !!amountErr"
                 @click="confirmSaveEdit"
               >

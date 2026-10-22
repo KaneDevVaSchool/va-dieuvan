@@ -4,24 +4,24 @@
   >
     <RouterLink
       :to="`/driver/costs/${cost.id}`"
-      class="block px-3.5 pb-3.5 pt-3.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-driver-accent/60 sm:px-4 sm:pt-4"
+      class="block p-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-driver-accent/60"
     >
       <div class="flex flex-wrap items-start justify-between gap-2">
         <span
-          class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold"
+          class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold"
           :class="statusBadgeClass(cost.status)"
         >
           {{ statusLabel(cost.status) }}
         </span>
         <span
           v-if="cost.trip_id"
-          class="font-mono text-xs font-bold tabular-nums text-[#7fdcc8]"
+          class="font-mono text-[11px] font-bold tabular-nums text-[#7fdcc8]"
         >
           {{ tripCode }}
         </span>
         <span
           v-else
-          class="rounded-full bg-driver-accent/12 px-2.5 py-0.5 text-xs font-bold text-driver-accent ring-1 ring-driver-accent/25"
+          class="rounded-full bg-driver-accent/12 px-2 py-0.5 text-[11px] font-bold text-driver-accent ring-1 ring-driver-accent/25"
         >
           {{ standaloneBadge }}
         </span>
@@ -29,48 +29,48 @@
 
       <p
         v-if="flowLine.text"
-        class="mt-2 flex items-start gap-1.5 text-xs font-medium leading-snug"
+        class="mt-1.5 flex items-start gap-1.5 text-[11px] font-medium leading-snug"
         :class="flowToneClass"
       >
         <component :is="flowIcon" class="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         <span class="min-w-0">{{ flowLine.text }}</span>
       </p>
 
-      <div class="mt-3 flex gap-3 sm:gap-4">
+      <div class="mt-2 flex gap-2.5">
         <div
-          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-driver-surface ring-1 ring-white/[0.05]"
+          class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-driver-surface ring-1 ring-white/[0.05]"
           aria-hidden="true"
         >
-          <component :is="typeIcon" class="h-6 w-6 text-driver-accent" />
+          <component :is="typeIcon" class="h-4.5 w-4.5 text-driver-accent" />
         </div>
         <div class="min-w-0 flex-1">
-          <p class="text-[10px] font-semibold uppercase tracking-wide text-driver-muted/80 sm:text-[11px]">
+          <p class="text-[10px] font-semibold uppercase tracking-wide text-driver-muted/80">
             {{ t('driver_costs.card_amount_label') }}
           </p>
-          <p class="mt-0.5 text-lg font-bold tabular-nums leading-tight text-driver-ink sm:text-xl">
+          <p class="mt-0.5 text-sm font-bold tabular-nums leading-tight text-driver-ink">
             {{ formatVnd(cost.amount) }}
           </p>
-          <p class="mt-1 text-sm font-semibold leading-snug text-driver-ink/95">
+          <p class="mt-0.5 text-xs font-semibold leading-snug text-driver-ink/95">
             {{ typeLabel(cost.type) }}
           </p>
           <p v-if="cost.description" class="mt-1 line-clamp-2 text-xs leading-snug text-driver-muted">
             {{ cost.description }}
           </p>
         </div>
-        <ChevronRightIcon class="mt-2 h-5 w-5 shrink-0 text-driver-muted/40" aria-hidden="true" />
+        <ChevronRightIcon class="mt-2 h-4 w-4 shrink-0 text-driver-muted/40" aria-hidden="true" />
       </div>
 
       <div
         v-if="hasTripInfo"
-        class="mt-4 space-y-2 rounded-xl border border-white/[0.06] bg-driver-surface/60 p-3.5 sm:p-4"
+        class="mt-2 space-y-1 rounded-lg border border-white/[0.06] bg-driver-surface/60 p-2"
       >
         <div class="flex flex-wrap items-center gap-2">
-          <span class="text-sm font-semibold text-driver-muted sm:text-base">
+          <span class="text-xs font-semibold text-driver-muted">
             {{ t('driver_costs.card_trip_label', { code: tripCode }) }}
           </span>
           <span
             v-if="tripTypeLabel"
-            class="rounded-md px-2.5 py-0.5 text-xs font-semibold ring-1 sm:text-sm"
+            class="rounded-md px-1.5 py-0.5 text-[10px] font-semibold ring-1"
             :class="tripTypeChipClass"
           >
             {{ tripTypeLabel }}
@@ -78,41 +78,41 @@
         </div>
         <p
           v-if="timeRange"
-          class="flex items-center gap-2 text-base font-semibold tabular-nums text-[#7fdcc8] sm:text-lg"
+          class="flex items-center gap-1.5 text-xs font-semibold tabular-nums text-[#7fdcc8]"
         >
-          <ClockIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+          <ClockIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           {{ t('driver_costs.card_time', { range: timeRange }) }}
         </p>
-        <div v-if="originLine" class="flex items-start gap-2 text-base leading-snug sm:text-lg">
-          <span class="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-400" aria-hidden="true" />
-          <div class="min-w-0">
-            <p class="text-xs font-semibold uppercase tracking-wide text-driver-muted/80">
+        <div v-if="originLine" class="flex items-start gap-1.5 text-xs leading-snug">
+          <span class="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" aria-hidden="true" />
+          <div class="min-w-0 flex-1">
+            <span class="mr-1 text-[10px] font-semibold uppercase tracking-wide text-driver-muted/80">
               {{ t('driver_costs.card_pickup') }}
-            </p>
-            <p class="font-medium text-driver-ink">{{ originLine }}</p>
+            </span>
+            <span class="font-medium text-driver-ink">{{ originLine }}</span>
           </div>
         </div>
-        <div v-if="destinationLine" class="flex items-start gap-2 text-base leading-snug sm:text-lg">
-          <span class="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-rose-400" aria-hidden="true" />
-          <div class="min-w-0">
-            <p class="text-xs font-semibold uppercase tracking-wide text-driver-muted/80">
+        <div v-if="destinationLine" class="flex items-start gap-1.5 text-xs leading-snug">
+          <span class="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-rose-400" aria-hidden="true" />
+          <div class="min-w-0 flex-1">
+            <span class="mr-1 text-[10px] font-semibold uppercase tracking-wide text-driver-muted/80">
               {{ t('driver_costs.card_dropoff') }}
-            </p>
-            <p class="font-medium text-driver-ink">{{ destinationLine }}</p>
+            </span>
+            <span class="font-medium text-driver-ink">{{ destinationLine }}</span>
           </div>
         </div>
       </div>
 
-      <p class="mt-4 flex items-center gap-2 text-base text-driver-muted sm:text-lg">
-        <CalendarIcon class="h-5 w-5 shrink-0 opacity-80" aria-hidden="true" />
+      <p class="mt-2 flex items-center gap-1.5 text-[11px] leading-snug text-driver-muted">
+        <CalendarIcon class="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden="true" />
         {{ submittedLabel }}
       </p>
     </RouterLink>
 
-    <div v-if="cost.trip_id" class="border-t border-white/[0.06] px-4 pb-4 pt-3 sm:px-5">
+    <div v-if="cost.trip_id" class="border-t border-white/[0.06] px-2.5 py-1.5">
       <RouterLink
         :to="`/driver/trips/${cost.trip_id}`"
-        class="flex min-h-[52px] w-full items-center justify-center rounded-2xl bg-driver-surface text-base font-bold text-driver-accent ring-1 ring-driver-accent/25 transition hover:bg-driver-elevated active:scale-[0.99] sm:text-lg"
+        class="flex min-h-[36px] w-full items-center justify-center rounded-lg bg-driver-surface px-2 py-1.5 text-xs font-semibold text-driver-accent ring-1 ring-driver-accent/25 transition hover:bg-driver-elevated active:scale-[0.99]"
       >
         {{ tripCta }}
       </RouterLink>
