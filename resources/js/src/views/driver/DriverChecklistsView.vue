@@ -40,7 +40,7 @@
               :data-testid="`checklist-template-${tpl.code}`"
               @click="form.template_id = tpl.id"
             >
-              {{ t(`checklist.freq_${tpl.frequency}`) }}
+              {{ te(`checklist.template_${tpl.code}`) ? t(`checklist.template_${tpl.code}`) : tpl.name }}
             </button>
           </div>
         </div>
@@ -148,7 +148,7 @@ import { ArrowLeftIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
 import { getChecklistOptions, listMyChecklists, startChecklist } from '../../api/checklists'
 import DriverChecklistTodayCard from '../../components/driver/checklist/DriverChecklistTodayCard.vue'
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 const route = useRoute()
 const router = useRouter()
 

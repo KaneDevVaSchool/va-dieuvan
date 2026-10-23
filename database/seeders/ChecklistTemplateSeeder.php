@@ -27,17 +27,18 @@ class ChecklistTemplateSeeder extends Seeder
         DB::transaction(function () {
             $this->seedTemplate(
                 code: ChecklistTemplate::CODE_DAILY,
-                name: 'Checklist an toàn xe hằng ngày (pre-trip)',
-                frequency: ChecklistTemplate::FREQUENCY_DAILY,
+                name: 'Checklist an toàn xe hằng tuần',
+                frequency: ChecklistTemplate::FREQUENCY_WEEKLY,
                 formMeta: [
                     'org_line_1' => 'HỆ THỐNG TRƯỜNG VIỆT MỸ',
                     'org_line_2' => 'PHÒNG MUA HÀNG',
-                    'title' => 'PHIẾU KIỂM TRA AN TOÀN XE (DAILY)',
+                    'title' => 'PHIẾU KIỂM TRA AN TOÀN XE',
                     'purpose' => 'Đảm bảo an toàn và tuân thủ quy định Bộ GTVT.',
                     'confirm_statement' => 'Sau khi kiểm tra, tôi xác nhận xe :plate đủ điều kiện lưu thông trên đường.',
                 ],
                 items: $this->dailyItems(),
-                slots: [['remind_at' => '05:30', 'weekdays' => [1, 2, 3, 4, 5, 6], 'escalate_after_minutes' => 60]],
+                // Làm ngày nào trong tuần cũng được: nhắc mỗi sáng cho người chưa nộp, không báo quá hạn theo ngày.
+                slots: [['remind_at' => '05:30', 'weekdays' => [1, 2, 3, 4, 5, 6], 'escalate_after_minutes' => null]],
             );
 
             $this->seedTemplate(

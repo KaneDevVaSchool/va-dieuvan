@@ -16,8 +16,8 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 /**
- * File in phiếu checklist theo mẫu "PHIẾU KIỂM TRA AN TOÀN XE (DAILY)".
- * Với phiếu daily, 7 mục giấy tờ đầu mẫu lấy từ phiếu weekly gần nhất (≤ 14 ngày) hoặc gợi ý từ kho chứng từ.
+ * File in phiếu checklist theo mẫu "PHIẾU KIỂM TRA AN TOÀN XE".
+ * Với phiếu an toàn xe, 7 mục giấy tờ đầu mẫu lấy từ phiếu giấy tờ & tuân thủ gần nhất (≤ 14 ngày) hoặc gợi ý từ kho chứng từ.
  */
 class ChecklistPrintService
 {
@@ -45,7 +45,7 @@ class ChecklistPrintService
         $info = $s->trip_info ?? [];
 
         $rows = [];
-        if ($s->period_type === ChecklistTemplate::FREQUENCY_DAILY) {
+        if ($s->template?->code === ChecklistTemplate::CODE_DAILY) {
             $rows = $this->paperworkRows($s);
         }
         foreach ($s->items as $item) {
@@ -237,7 +237,7 @@ class ChecklistPrintService
         $weekly = ChecklistSubmission::query()
             ->where('driver_id', $s->driver_id)
             ->where('vehicle_id', $s->vehicle_id)
-            ->where('period_type', ChecklistTemplate::FREQUENCY_WEEKLY)
+            ->whereHas('template', fn ($q) => $q->where('code', ChecklistTemplate::CODE_WEEKLY))
             ->where('status', '!=', ChecklistSubmission::STATUS_DRAFT)
             ->where('submitted_at', '>=', ($s->started_at ?? Carbon::now())->copy()->subDays(14))
             ->where('submitted_at', '<=', $s->submitted_at ?? $s->started_at ?? Carbon::now())

@@ -90,7 +90,8 @@ class DriverChecklistFlowTest extends TestCase
 
         $data = $this->start();
         $this->assertSame('CL-261005-1', $data['code']);
-        $this->assertSame('2026-10-05', $data['period_key']);
+        $this->assertSame('2026-W41', $data['period_key']);
+        $this->assertSame('weekly', $data['period_type']);
         $this->assertSame('51B-12345', $data['trip_info']['license_plate']);
         $this->assertCount(30, $data['items']);
 
@@ -244,8 +245,9 @@ class DriverChecklistFlowTest extends TestCase
             'date_to' => '2026-10-05',
         ]))->assertOk();
         $row = collect($matrix->json('data.rows'))->firstWhere('driver.id', $this->driver->id);
-        $this->assertSame('todo', $row['cells']['2026-10-04']['state']);
-        $this->assertSame('pass', $row['cells']['2026-10-05']['state']);
+        // 04/10 là Chủ nhật tuần 40; 05/10 là thứ Hai tuần 41.
+        $this->assertSame('todo', $row['cells']['2026-W40']['state']);
+        $this->assertSame('pass', $row['cells']['2026-W41']['state']);
 
         $this->postJson("/api/checklists/{$id}/review", ['review_note' => 'OK'])
             ->assertOk()
@@ -296,7 +298,7 @@ class DriverChecklistFlowTest extends TestCase
         Notification::assertSentToTimes($this->driverUser, \App\Notifications\DriverChecklistReminderNotification::class, 2);
     }
 
-    public function test_reminder_skips_driver_who_already_submitted(): void
+    public function test_reminder_skips_driver_who_already_submitted_this_week(): void
     {
         Notification::fake();
         $submission = ChecklistSubmission::query()->create([
@@ -305,15 +307,64 @@ class DriverChecklistFlowTest extends TestCase
             'driver_id' => $this->driver->id,
             'user_id' => $this->driverUser->id,
             'vehicle_id' => $this->vehicle->id,
-            'period_type' => 'daily',
-            'period_key' => '2026-10-06',
+            'period_type' => 'weekly',
+            'period_key' => '2026-W41',
             'status' => 'submitted',
             'result' => 'pass',
             'submitted_at' => now(),
         ]);
         $this->assertNotNull($submission->id);
 
-        $this->artisan('checklist:remind-drivers', ['--at' => '2026-10-06 05:31'])->assertSuccessful();
+        // Nộp thứ Hai → thứ Năm cùng tuần không nhắc nữa.
+        $this->artisan('checklist:remind-drivers', ['--at' => '2026-10-08 05:31'])->assertSuccessful();
         Notification::assertNotSentTo($this->driverUser, \App\Notifications\DriverChecklistReminderNotification::class);
+    }
+
+    public function test_safety_checklist_submitted_any_day_covers_the_whole_week(): void
+    {
+        $this->assertSame('weekly', $this->dailyTemplate()->frequency);
+        $this->assertNull($this->dailyTemplate()->reminderSlots()->value('escalate_after_minutes'));
+
+        // Nộp thứ Tư 07/10.
+        Carbon::setTestNow(Carbon::parse('2026-10-07 02:00:00', 'UTC'));
+        $data = $this->start();
+        $payload = collect($data['items'])->map(fn ($i) => ['id' => $i['id'], 'result' => $i['allow_na'] ? 'na' : 'ok'])->all();
+        $this->postJson("/api/driver/checklists/{$data['id']}/submit", ['lock_version' => $data['lock_version'], 'confirm' => true, 'items' => $payload])
+            ->assertOk()->assertJsonPath('data.period_key', '2026-W41');
+
+        $state = fn () => collect($this->getJson('/api/driver/checklists/overview')->assertOk()->json('data.periods'))
+            ->firstWhere('template.code', ChecklistTemplate::CODE_DAILY)['state'];
+
+        // Thứ Hai và Chủ nhật cùng tuần đều tính là đã làm.
+        Carbon::setTestNow(Carbon::parse('2026-10-05 00:10:00', 'UTC'));
+        $this->assertSame('pass', $state());
+        Carbon::setTestNow(Carbon::parse('2026-10-11 10:00:00', 'UTC'));
+        $this->assertSame('pass', $state());
+
+        // Sang tuần mới phải làm lại.
+        Carbon::setTestNow(Carbon::parse('2026-10-12 00:10:00', 'UTC'));
+        $this->assertSame('todo', $state());
+    }
+
+    public function test_failed_banner_clears_after_a_passing_resubmission_in_the_same_week(): void
+    {
+        Notification::fake();
+        $submit = function (bool $fail): void {
+            $data = $this->start();
+            $critical = collect($data['items'])->firstWhere('severity', 'critical');
+            $items = collect($data['items'])->map(fn ($i) => [
+                'id' => $i['id'],
+                'result' => $fail && $i['id'] === $critical['id'] ? 'ng' : ($i['allow_na'] ? 'na' : 'ok'),
+                'note' => $fail && $i['id'] === $critical['id'] ? 'Hỏng' : null,
+            ])->all();
+            $this->postJson("/api/driver/checklists/{$data['id']}/submit", ['lock_version' => $data['lock_version'], 'confirm' => true, 'items' => $items])->assertOk();
+        };
+
+        $submit(true);
+        $this->assertCount(1, $this->getJson('/api/driver/checklists/overview')->json('data.failed_today'));
+
+        Carbon::setTestNow(Carbon::parse('2026-10-07 02:00:00', 'UTC'));
+        $submit(false);
+        $this->assertSame([], $this->getJson('/api/driver/checklists/overview')->json('data.failed_today'));
     }
 }

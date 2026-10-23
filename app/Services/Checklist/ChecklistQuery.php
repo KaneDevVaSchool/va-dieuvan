@@ -106,14 +106,20 @@ class ChecklistQuery
             ];
         }
 
-        $todayKey = ChecklistPeriod::key(ChecklistTemplate::FREQUENCY_DAILY, $now);
-        $failedVehicles = ChecklistSubmission::query()
+        // Xe có phiếu an toàn mới nhất trong kỳ hiện tại (tuần này) là không đạt — banner cảnh báo không khởi hành.
+        // Nộp lại phiếu đạt cho cùng xe sẽ gỡ cảnh báo.
+        $safety = $templates->firstWhere('code', ChecklistTemplate::CODE_DAILY);
+        $failedVehicles = $safety === null ? [] : ChecklistSubmission::query()
             ->where('driver_id', $driver->id)
-            ->where('period_key', $todayKey)
-            ->where('result', ChecklistSubmission::RESULT_FAIL)
+            ->where('template_id', $safety->id)
+            ->where('period_key', ChecklistPeriod::key($safety->frequency, $now))
             ->where('status', '!=', ChecklistSubmission::STATUS_DRAFT)
             ->with('vehicle:id,license_plate')
-            ->get(['id', 'vehicle_id', 'code', 'critical_ng_count'])
+            ->orderByDesc('submitted_at')
+            ->orderByDesc('id')
+            ->get(['id', 'vehicle_id', 'code', 'result', 'critical_ng_count'])
+            ->unique('vehicle_id')
+            ->where('result', ChecklistSubmission::RESULT_FAIL)
             ->map(fn (ChecklistSubmission $s) => [
                 'submission_id' => $s->id,
                 'code' => $s->code,

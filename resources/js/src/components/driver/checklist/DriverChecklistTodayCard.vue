@@ -33,7 +33,7 @@
           class="flex min-h-[48px] items-center gap-2.5 rounded-lg bg-driver-surface px-3 py-2 ring-1 ring-white/[0.06] transition active:scale-[0.99]"
         >
           <span class="min-w-0 flex-1">
-            <span class="block truncate text-xs sm:text-sm font-semibold">{{ t(`checklist.freq_${p.template.frequency}`) }}</span>
+            <span class="block truncate text-xs sm:text-sm font-semibold">{{ te(`checklist.template_${p.template.code}`) ? t(`checklist.template_${p.template.code}`) : p.template.name }}</span>
             <span class="block truncate text-[11px] text-driver-muted">{{ p.period_label }}</span>
           </span>
           <span class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold" :class="statePill(p.state)">
@@ -53,7 +53,7 @@ import { ChevronRightIcon, ClipboardDocumentCheckIcon, ExclamationTriangleIcon }
 import { getChecklistOverview } from '../../../api/checklists'
 import { useAuthStore } from '../../../store'
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 const auth = useAuthStore()
 
 const loading = ref(false)
