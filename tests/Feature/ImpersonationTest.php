@@ -101,6 +101,23 @@ class ImpersonationTest extends TestCase
             ->postJson('/api/impersonate/'.$this->account(['driver'])->id)->assertForbidden();
     }
 
+    public function test_support_mailbox_is_superadmin_and_can_impersonate(): void
+    {
+        $support = User::factory()->create(['email' => 'hotro.pcn@vaschools.edu.vn', 'is_active' => true]);
+        $this->assertTrue($support->isSuperAdmin());
+
+        $token = $this->start($support, $this->account(['driver']), 'driver');
+        $this->asToken($token)->getJson('/api/user')->assertOk()
+            ->assertJsonPath('impersonation.impersonator.id', $support->id);
+    }
+
+    public function test_impersonator_list_comes_from_config(): void
+    {
+        config(['permission.impersonator_emails' => ['hotro.pcn@vaschools.edu.vn']]);
+        $this->asToken($this->impersonator()->createToken('test')->plainTextToken)
+            ->postJson('/api/impersonate/'.$this->account(['driver'])->id)->assertForbidden();
+    }
+
     public function test_inactive_allowed_account_cannot_start(): void
     {
         $actor = $this->impersonator();

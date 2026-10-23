@@ -64,7 +64,7 @@ class User extends Authenticatable
     {
         return $this->is_active
             && ! $this->isRoleSimulationActive()
-            && strtolower(trim((string) $this->email)) === 'phongcongnghe@vaschools.edu.vn';
+            && in_array(strtolower(trim((string) $this->email)), config('permission.impersonator_emails', []), true);
     }
 
     public function isSuperAdmin(): bool

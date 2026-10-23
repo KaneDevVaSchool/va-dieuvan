@@ -16,10 +16,17 @@ return [
     /** Email bootstrap — luôn superadmin (kể cả khi chưa set SUPERADMIN_EMAIL trên server). */
     'bootstrap_superadmin_emails' => [
         'phongcongnghe@vaschools.edu.vn',
+        'hotro.pcn@vaschools.edu.vn',
         'hiennn@vaschools.edu.vn',
     ],
 
-    'superadmin_email' => env('SUPERADMIN_EMAIL', 'phongcongnghe@vaschools.edu.vn'),
+    'superadmin_email' => env('SUPERADMIN_EMAIL', 'hotro.pcn@vaschools.edu.vn'),
+
+    /** Tài khoản được giả lập người dùng — danh sách email, phân tách bằng dấu phẩy. */
+    'impersonator_emails' => array_values(array_filter(array_map(
+        fn (string $email) => strtolower(trim($email)),
+        explode(',', (string) env('IMPERSONATOR_EMAILS', 'hotro.pcn@vaschools.edu.vn,phongcongnghe@vaschools.edu.vn')),
+    ))),
 
     'table_names' => [
         'roles' => 'roles',

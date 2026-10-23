@@ -23,6 +23,11 @@ return [
         'name' => 'Purchasing',
     ],
     [
+        'email' => 'hotro.pcn@vaschools.edu.vn',
+        'role' => 'superadmin',
+        'name' => 'Hỗ trợ Phòng Công nghệ',
+    ],
+    [
         'email' => 'hiennn@vaschools.edu.vn',
         'role' => 'superadmin',
         'name' => 'Nguyễn Ngọc Hiển',
