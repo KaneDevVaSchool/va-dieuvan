@@ -421,13 +421,12 @@ function isNonEmpty(val) {
 }
 
 const employeeCodeDisplay = computed(() => {
-  const ci = user.value?.cms_user_info
-  const code = ci?.code != null ? String(ci.code) : user.value?.employee_code
+  const code = user.value?.work_info?.code
   return code && String(code).trim() !== '' ? String(code).trim() : ''
 })
 
 const headerCols = computed(() => {
-  const ci = user.value?.cms_user_info || {}
+  const ci = user.value?.work_info ?? {}
   const dash = '—'
   return [
     {
@@ -494,13 +493,11 @@ function positionDisplay(ci) {
 
 const workRows = computed(() => {
   const u = user.value
-  const ci = u?.cms_user_info || {}
+  const ci = u?.work_info ?? {}
   const code =
     ci?.code != null && String(ci.code).trim() !== ''
       ? String(ci.code).trim()
-      : u?.employee_code && String(u.employee_code).trim() !== ''
-        ? String(u.employee_code).trim()
-        : '—'
+      : '—'
 
   const hq = isNonEmpty(ci.headquarter_name) ? String(ci.headquarter_name) : '—'
   const wp = isNonEmpty(ci.working_place) ? String(ci.working_place) : '—'

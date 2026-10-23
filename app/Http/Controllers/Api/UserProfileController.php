@@ -4,16 +4,16 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\UpdateUserProfileRequest;
-use App\Services\CmsUserInfoService;
 use App\Services\FeatureToggleService;
+use App\Services\Hr\UserWorkInfoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Throwable;
 
 class UserProfileController extends Controller
 {
-    public function show(Request $request, CmsUserInfoService $cms, FeatureToggleService $featureToggles): JsonResponse
+    public function show(Request $request, FeatureToggleService $featureToggles): JsonResponse
     {
         $user = $request->user()->load(['roles:id,name,display_name,guard_name', 'department:id,name,code']);
         $permissions = $user->getAllPermissions()->pluck('name')->unique()->values()->all();
@@ -26,15 +26,12 @@ class UserProfileController extends Controller
             'impersonation' => $request->attributes->get('impersonation'),
         ]);
 
-        $cmsUserId = $cms->findCmsUserIdByEmail($user->email);
-        $payload['cms_user_info'] = $cmsUserId !== null
-            ? $cms->getLatestUserInfoRow($cmsUserId)
-            : null;
+        $payload['work_info'] = app(UserWorkInfoService::class)->forUser($user);
 
         return response()->json($payload);
     }
 
-    public function update(UpdateUserProfileRequest $request, CmsUserInfoService $cms, FeatureToggleService $featureToggles): JsonResponse
+    public function update(UpdateUserProfileRequest $request, FeatureToggleService $featureToggles): JsonResponse
     {
         $user = $request->user();
         $validated = $request->validated();
@@ -44,11 +41,6 @@ class UserProfileController extends Controller
             $localUpdates['phone'] = ($validated['phone'] === '' || $validated['phone'] === null)
                 ? null
                 : $validated['phone'];
-        }
-        if (array_key_exists('employee_code', $validated)) {
-            $localUpdates['employee_code'] = ($validated['employee_code'] === '' || $validated['employee_code'] === null)
-                ? null
-                : $validated['employee_code'];
         }
 
         if ($request->hasFile('avatar')) {
@@ -63,23 +55,13 @@ class UserProfileController extends Controller
             $localUpdates['avatar_url'] = $disk->url($storedPath);
         }
 
-        $cmsUserId = $cms->findCmsUserIdByEmail($user->email);
-
-        $cmsSyncWarning = null;
-        try {
-            if ($cmsUserId !== null && $cms->isAvailable()) {
-                $cmsPayload = $validated;
-                unset($cmsPayload['avatar']);
-                $cms->updateUserInfo($cmsUserId, $cmsPayload);
-            }
-        } catch (Throwable $e) {
-            report($e);
-            $cmsSyncWarning = 'Không ghi được bảng user_info trên CMS; đã cập nhật bản cục bộ.';
-        }
-
         if ($localUpdates !== []) {
-            $user->fill($localUpdates);
-            $user->save();
+            DB::transaction(function () use ($user, $localUpdates) {
+                $user->fill($localUpdates)->save();
+                if (array_key_exists('phone', $localUpdates)) {
+                    $user->hrEmployee()->update(['phone' => $localUpdates['phone'], 'updated_at' => now()]);
+                }
+            });
         }
 
         $user->refresh()->load(['roles:id,name,display_name,guard_name', 'department:id,name,code']);
@@ -92,12 +74,7 @@ class UserProfileController extends Controller
             'feature_toggle_states' => $featureToggles->mapStatesForRuntime(),
             'impersonation' => $request->attributes->get('impersonation'),
         ]);
-        $payload['cms_user_info'] = $cmsUserId !== null
-            ? $cms->getLatestUserInfoRow($cmsUserId)
-            : null;
-        if ($cmsSyncWarning !== null) {
-            $payload['cms_sync_warning'] = $cmsSyncWarning;
-        }
+        $payload['work_info'] = app(UserWorkInfoService::class)->forUser($user);
 
         return response()->json($payload);
     }

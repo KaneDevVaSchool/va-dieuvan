@@ -6,7 +6,7 @@ use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Admin\ListUsersForRolesRequest;
 use App\Models\User;
-use App\Services\CmsUserInfoService;
+use App\Services\Hr\UserWorkInfoService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 
@@ -21,7 +21,7 @@ class UserListController extends Controller
         $this->middleware('permission:any,system.user_roles.manage');
     }
 
-    public function index(ListUsersForRolesRequest $request, CmsUserInfoService $cms): JsonResponse
+    public function index(ListUsersForRolesRequest $request, UserWorkInfoService $workInfo): JsonResponse
     {
         $data = $request->validated();
         $q = isset($data['q']) ? trim((string) $data['q']) : '';
@@ -37,6 +37,8 @@ class UserListController extends Controller
             ->select(['id', 'name', 'email', 'employee_code', 'avatar_url', 'department_id', 'source', 'is_active'])
             ->with([
                 'department:id,name,code',
+                'hrEmployee.department',
+                'hrEmployee.division',
                 'roles' => static function ($r) {
                     $r->select('roles.id', 'roles.name', 'roles.display_name', 'roles.guard_name')
                         ->orderBy('roles.name');
@@ -63,7 +65,7 @@ class UserListController extends Controller
             $items = (clone $base)->limit(self::MAX_ALL)->get();
 
             return $this->ok([
-                'items' => $this->formatUserRows($items, $cms),
+                'items' => $this->formatUserRows($items, $workInfo),
                 'meta' => [
                     'current_page' => 1,
                     'per_page' => $items->count(),
@@ -80,7 +82,7 @@ class UserListController extends Controller
         $paginator = $base->paginate($pp, ['*'], 'page', $page);
 
         return $this->ok([
-            'items' => $this->formatUserRows(collect($paginator->items()), $cms),
+            'items' => $this->formatUserRows(collect($paginator->items()), $workInfo),
             'meta' => [
                 'current_page' => $paginator->currentPage(),
                 'per_page' => $paginator->perPage(),
@@ -97,11 +99,11 @@ class UserListController extends Controller
      * @param  \Illuminate\Support\Collection<int, User>|iterable<int, User>  $users
      * @return list<array<string, mixed>>
      */
-    private function formatUserRows(iterable $users, CmsUserInfoService $cms): array
+    private function formatUserRows(iterable $users, UserWorkInfoService $workInfo): array
     {
         $out = [];
         foreach ($users as $user) {
-            $out[] = $this->formatUserRow($user, $cms);
+            $out[] = $this->formatUserRow($user, $workInfo);
         }
 
         return $out;
@@ -110,30 +112,9 @@ class UserListController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function formatUserRow(User $user, CmsUserInfoService $cms): array
+    private function formatUserRow(User $user, UserWorkInfoService $workInfo): array
     {
-        $departmentName = $user->department?->name;
-        $positionName = null;
-        $cmsDepartmentName = null;
-
-        $cmsUserId = $cms->findCmsUserIdByEmail((string) $user->email);
-        if ($cmsUserId !== null) {
-            $info = $cms->getLatestUserInfoRow($cmsUserId);
-            if (is_array($info)) {
-                $positionName = isset($info['position_name']) ? trim((string) $info['position_name']) : null;
-                if ($positionName === '') {
-                    $positionName = null;
-                }
-                $cmsDepartmentName = isset($info['department_name']) ? trim((string) $info['department_name']) : null;
-                if ($cmsDepartmentName === '') {
-                    $cmsDepartmentName = null;
-                }
-            }
-        }
-
-        if ($departmentName === null || $departmentName === '') {
-            $departmentName = $cmsDepartmentName;
-        }
+        $info = $workInfo->forUser($user);
 
         return [
             'id' => $user->id,
@@ -141,11 +122,11 @@ class UserListController extends Controller
             'email' => $user->email,
             'is_active' => (bool) $user->is_active,
             'is_superadmin' => $user->isSuperAdmin(),
-            'employee_code' => $user->employee_code,
+            'employee_code' => $info['code'],
             'source' => $user->source,
             'avatar_url' => $user->avatar_url,
-            'department_name' => $departmentName,
-            'position_name' => $positionName,
+            'department_name' => $info['department_name'],
+            'position_name' => $info['position_name'],
             'roles' => $user->roles,
             'roles_count' => $user->roles_count ?? $user->roles?->count() ?? 0,
         ];

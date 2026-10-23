@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
- * Thêm tay người dùng không có trong CMS.
+ * Thêm tay tài khoản để phân quyền truy cập.
  *
  * Người dùng đăng nhập bằng Google với đúng email đã khai: GoogleAuthController tìm user theo email
  * trước khi kiểm tra domain, nên email ngoài domain trường (vd. gmail) cũng vào được sau khi được thêm ở đây.

@@ -6,7 +6,7 @@ Tài liệu chỉ hướng dẫn những tính năng mới được bổ sung t�
 
 | Trạng thái mã nguồn | Tính năng |
 |---|---|
-| Đã commit | Gia hạn giấy tờ xe/tài xế; kho chứng từ tập trung; thêm người dùng thủ công; cải thiện đồng bộ người dùng CMS; import xe/tài xế từ Excel bàn giao; dọn dữ liệu test. |
+| Đã commit | Gia hạn giấy tờ xe/tài xế; kho chứng từ tập trung; thêm người dùng thủ công; import nhân sự HCNS; import xe/tài xế từ Excel bàn giao; dọn dữ liệu test. |
 | Đang chưa commit | Checklist tài xế; giám sát và nhắc checklist; hồ sơ đề xuất/thanh toán/tạm ứng/hoàn ứng; bảng kê không hóa đơn; sổ chi phí theo xe; cấu hình và xuất biểu mẫu. |
 
 > Hướng dẫn được đối chiếu với mã nguồn hiện tại. Trạng thái “đã commit” không đồng nghĩa đã triển khai lên hệ thống đang sử dụng. Các phần chưa commit chỉ xuất hiện khi phiên bản tương ứng đã được triển khai, khởi tạo dữ liệu và bật tính năng.
@@ -15,7 +15,7 @@ Tài liệu chỉ hướng dẫn những tính năng mới được bổ sung t�
 
 1. [Điều kiện sử dụng và quyền truy cập](#1-điều-kiện-sử-dụng-và-quyền-truy-cập)
 2. [Kho chứng từ và gia hạn giấy tờ](#2-kho-chứng-từ-và-gia-hạn-giấy-tờ)
-3. [Thêm người dùng thủ công và đồng bộ CMS](#3-thêm-người-dùng-thủ-công-và-đồng-bộ-cms)
+3. [Thêm người dùng thủ công và nhập HCNS](#3-thêm-người-dùng-thủ-công-và-nhập-hcns)
 4. [Checklist dành cho tài xế](#4-checklist-dành-cho-tài-xế)
 5. [Theo dõi và cấu hình checklist](#5-theo-dõi-và-cấu-hình-checklist)
 6. [Lập và theo dõi hồ sơ chi phí](#6-lập-và-theo-dõi-hồ-sơ-chi-phí)
@@ -34,7 +34,7 @@ Tài liệu chỉ hướng dẫn những tính năng mới được bổ sung t�
 | Điều phối | Theo dõi checklist; ghi nhận xử lý; cấu hình checklist và lịch nhắc; xem hồ sơ chi phí. |
 | Kế toán | Kiểm tra hồ sơ chi phí; trả lại hồ sơ; tải bản scan; xác nhận thanh toán; xem sổ chi phí; cấu hình mẫu in. |
 | Quản trị | Quản lý giấy tờ và người dùng theo quyền được cấp; bật tính năng, cấp quyền; sử dụng các phần quản trị được phân công. |
-| Người vận hành hệ thống | Chạy lệnh import, đồng bộ CMS và dọn dữ liệu trên máy chủ. |
+| Người vận hành hệ thống | Chạy lệnh nhập HCNS và dọn dữ liệu trên máy chủ. |
 
 Các nút thao tác xuất hiện theo quyền và trạng thái dữ liệu. Có quyền xem không đồng nghĩa có quyền sửa hoặc xử lý.
 
@@ -132,11 +132,11 @@ Khi sửa loại giấy tờ, hệ thống tính lại hạn trên hồ sơ cho 
 
 Hướng dẫn kỹ thuật về nơi lưu, sao lưu, chuyển thư mục và kiểm thử: [Lưu trữ và kiểm thử chứng từ](COMPLIANCE_STORAGE_AND_TESTING.md).
 
-## 3. Thêm người dùng thủ công và đồng bộ CMS
+## 3. Thêm người dùng thủ công và nhập HCNS
 
-### 3.1. Thêm tài khoản chưa có trong CMS
+### 3.1. Thêm tài khoản thủ công
 
-**Mục đích:** tạo người dùng để cấp quyền cho nhân sự chưa được đồng bộ từ CMS.
+**Mục đích:** tạo tài khoản để cấp quyền truy cập.
 
 1. Vào **Gán vai trò tài khoản**.
 2. Chọn nút thêm người dùng.
@@ -152,15 +152,9 @@ Người dùng đăng nhập bằng **Google với đúng email đã khai báo**
 
 Nếu báo email đã tồn tại, tìm tài khoản hiện có để gán vai trò. Không tạo thêm bản ghi bằng email khác chỉ để bỏ qua thông báo này.
 
-### 3.2. Điều gì xảy ra khi đồng bộ CMS sau đó?
+### 3.2. Liên kết hồ sơ HCNS
 
-| Tình huống | Cách hệ thống xử lý |
-|---|---|
-| CMS có cùng email với tài khoản tạo thủ công | Liên kết tài khoản hiện có sang nguồn `cms`, giữ ID và vai trò; ghi nhận lịch sử liên kết. |
-| CMS để trống một trường thông tin | Giữ giá trị hiện có bên điều vận cho trường đó. |
-| CMS có cùng mã nhân viên nhưng khác email với tài khoản thủ công | Cảnh báo khả năng trùng; không tự gộp tài khoản. |
-
-Quản trị cần kiểm tra cảnh báo trùng mã nhân viên trước khi phân quyền tiếp. Cách chạy lệnh đồng bộ được trình bày ở [phần 9.3](#93-đồng-bộ-người-dùng-từ-cms).
+Lệnh nhập HCNS đối chiếu mã nhân viên và email với tài khoản hiện có, giữ nguyên ID và vai trò. Xung đột được báo cáo; không tự gộp tài khoản. Thông tin công việc trên giao diện lấy từ hồ sơ HCNS đã liên kết. Xem [phần 9.3](#93-nhập-nhân-sự-hcns).
 
 ## 4. Checklist dành cho tài xế
 
@@ -583,23 +577,11 @@ php artisan data:purge-test --force --keep-files
 
 `--keep-files` chỉ giữ file vật lý; không giữ các bản ghi dữ liệu bị lệnh xóa. Các bảng chưa phân loại được báo riêng và không bị xóa. Sau khi dọn, cần nhập lại dữ liệu xe/tài xế thực tế và kiểm tra vai trò trước khi sử dụng.
 
-### 9.3. Đồng bộ người dùng từ CMS
+### 9.3. Nhập nhân sự HCNS
 
-1. Đảm bảo kết nối CMS đã được cấu hình trên máy chủ.
-2. Chạy xem trước:
+Nhân sự và cơ cấu tổ chức được quản lý bằng master data HCNS. Xem [hướng dẫn nhập HCNS](hr-master-data-import.md) để chạy migration, kiểm tra file bằng `hr:import-master-data --dry-run`, nhập dữ liệu và nối 7 tài xế chính.
 
-```bash
-php artisan cms:sync-users --dry-run
-```
-
-3. Kiểm tra các tài khoản dự kiến đồng bộ, liên kết tài khoản thủ công và cảnh báo trùng mã nhân viên.
-4. Khi dữ liệu phù hợp, chạy:
-
-```bash
-php artisan cms:sync-users
-```
-
-5. Kiểm tra báo cáo cuối lệnh và danh sách tài khoản trên ứng dụng. Với tài khoản thủ công được nối theo email, kiểm tra nguồn đã thành `cms` và vai trò vẫn còn.
+Trang tài khoản chỉ cho cập nhật điện thoại liên hệ và ảnh đại diện. Mã nhân viên, phòng ban, bộ phận, cơ sở và chức danh lấy từ HCNS; không sửa trực tiếp tại trang tài khoản.
 
 ## 10. Các tình huống thường gặp
 

@@ -7,7 +7,6 @@ use App\Models\DispatchRequest;
 use App\Models\Driver;
 use App\Models\Trip;
 use App\Models\User;
-use App\Services\CmsUserInfoService;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
@@ -22,9 +21,6 @@ class ImpersonationTest extends TestCase
     {
         parent::setUp();
         $this->seed(RbacSeeder::class);
-        $this->mock(CmsUserInfoService::class, function ($mock) {
-            $mock->shouldReceive('findCmsUserIdByEmail')->andReturn(null);
-        });
     }
 
     private function account(array $roles): User

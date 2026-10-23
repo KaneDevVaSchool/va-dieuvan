@@ -1,6 +1,6 @@
 # Nhập master data nhân sự HCNS
 
-Lệnh nhập hồ sơ nhân sự và cơ cấu tổ chức vào database điều vận. Không ghi sang CMS, không xóa tài khoản, không thay mật khẩu, không cập nhật người duyệt của phiếu đã tạo. Không sao chép CCCD, ngân hàng, địa chỉ hoặc email cá nhân từ Excel.
+Lệnh nhập hồ sơ nhân sự và cơ cấu tổ chức vào database điều vận. HCNS là nguồn nhân sự duy nhất; tích hợp nhân sự CMS và lệnh đồng bộ cũ đã được gỡ. Không xóa tài khoản, không thay mật khẩu, không cập nhật người duyệt của phiếu đã tạo. Không sao chép CCCD, ngân hàng, địa chỉ hoặc email cá nhân từ Excel.
 
 ## Cách chạy
 
@@ -68,9 +68,15 @@ Không tự tách cơ sở ghép thành một cơ sở đơn lẻ. Khi tên cơ 
 
 Các bảng mới: `hr_companies`, `hr_branches`, `hr_levels`, `hr_job_titles`, `hr_divisions`, `hr_employees`. Bảng `departments` hiện có được bổ sung pháp nhân, email quản lý và user quản lý. Hồ sơ nhân sự có foreign key tới các danh mục; các tham chiếu chưa khớp được giữ trong `organization_labels`.
 
+Trang tài khoản tài xế và phần tóm tắt hồ sơ dùng `work_info` từ API `/api/user`, chỉ đọc hồ sơ HCNS đã nhập, không fallback sang CMS hay phòng ban/mã nhân viên cũ trên tài khoản. Trụ sở lấy từ cơ sở trong Excel. Excel không có cột nơi làm việc riêng, nên hiển thị tên cơ sở HCNS cho mục này. Tham chiếu danh mục chưa khớp vẫn có thể hiển thị nhãn gốc HCNS trong `organization_labels`. Không có hồ sơ HCNS hoặc HCNS để trống thì để trống; không dùng dữ liệu cũ để lấp vào.
+
+API không còn trả `cms_user_info`. Trang hồ sơ bỏ các form giấy tờ/ngân hàng/nhân sự cũ; thông tin công việc chỉ đọc từ HCNS. PATCH `/api/user` chỉ nhận điện thoại và ảnh đại diện; trường nhân sự khác bị từ chối bằng 422. Điện thoại cập nhật đồng thời trên tài khoản và hồ sơ HCNS nếu đã liên kết. Tìm người đề xuất và danh sách phân quyền cũng dùng HCNS.
+
+Sau khi deploy thay đổi gỡ CMS, chạy `php artisan optimize:clear` và build frontend để bỏ cấu hình/UI cũ. Có thể gỡ các biến `CMS_DB_*` và `CMS_DATABASE_URL` khỏi cấu hình môi trường; ứng dụng không sử dụng chúng nữa. Giá trị `users.source` lịch sử được giữ nguyên để không thay đổi danh tính tài khoản. Không xóa database CMS bên ngoài hoặc các bảng nghiệp vụ.
+
 ## Gán trưởng đơn vị
 
-`EmployeeManagerResolver` là điểm dùng chung: lấy quản lý bộ phận trước, sau đó quản lý phòng ban. Chỉ trả về user đang hoạt động, có role `department_head`, khác người đề xuất. Nếu quản lý bộ phận không đủ điều kiện thì thử quản lý phòng ban. User chưa có hồ sơ HCNS có thể dùng quản lý phòng ban đang gắn trên user.
+`EmployeeManagerResolver` là điểm dùng chung: lấy quản lý bộ phận trước, sau đó quản lý phòng ban từ hồ sơ HCNS. Chỉ trả về user đang hoạt động, có role `department_head`, khác người đề xuất. Nếu quản lý bộ phận không đủ điều kiện thì thử quản lý phòng ban HCNS. User chưa có hồ sơ HCNS không được tự gán quản lý theo phòng ban cũ trên tài khoản.
 
 Portal tạo phiếu mới gợi ý sẵn người duyệt; người dùng vẫn có thể chọn người khác trong danh sách có quyền. API tạo phiếu portal/điều vận tự lấy quản lý khi không truyền `dept_head_user_id`, ngoại trừ đưa đón. Khi điều vận tạo thay người khác, resolver dùng người đề xuất thực tế. API portal vẫn yêu cầu chọn thủ công nếu không tìm được người đủ điều kiện.
 

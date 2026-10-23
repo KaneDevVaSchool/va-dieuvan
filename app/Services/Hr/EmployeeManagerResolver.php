@@ -10,7 +10,7 @@ class EmployeeManagerResolver
     public function resolve(User $requester): ?User
     {
         $employee = $requester->hrEmployee()->with(['division.manager', 'department.manager'])->first();
-        $department = $employee ? $employee->department : $requester->department;
+        $department = $employee?->department;
         $candidates = [$employee?->division?->manager, $department?->manager];
         foreach ($candidates as $candidate) {
             if ($candidate && $candidate->id !== $requester->id && $candidate->is_active && $candidate->hasRole('department_head')) {

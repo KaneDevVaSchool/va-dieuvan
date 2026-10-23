@@ -6,7 +6,7 @@ use App\Http\Requests\Api\ApiFormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Thêm tay người dùng không có trong CMS (để phân quyền). Đăng nhập bằng Google với đúng email này.
+ * Thêm tay tài khoản để phân quyền. Đăng nhập bằng Google với đúng email này.
  */
 class StoreUserRequest extends ApiFormRequest
 {

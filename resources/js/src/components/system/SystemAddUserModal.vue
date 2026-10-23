@@ -18,7 +18,7 @@
             <ModalCloseButton class="absolute right-3 top-3" @click="$emit('close')" />
           </div>
           <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            Dành cho người không có trong CMS. Người dùng đăng nhập bằng
+            Thêm tài khoản để phân quyền. Người dùng đăng nhập bằng
             <strong class="font-semibold text-slate-700 dark:text-slate-300">tài khoản Google</strong> với đúng email bên dưới.
           </p>
         </div>

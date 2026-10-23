@@ -100,7 +100,7 @@ export async function bulkUpdateUserRoles(payload) {
 }
 
 /**
- * Thêm tay người dùng không có trong CMS (trang Phân vai trò).
+ * Thêm tay tài khoản trên trang Phân vai trò.
  * @param {{ name: string, email: string, employee_code?: string, phone?: string, role_id?: number|null }} payload
  */
 export async function createUser(payload) {

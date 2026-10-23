@@ -9,7 +9,7 @@ use App\Services\Admin\UserProvisionService;
 use Illuminate\Http\JsonResponse;
 
 /**
- * Trang Phân vai trò: thêm người dùng không có trong CMS.
+ * Trang Phân vai trò: thêm tài khoản thủ công.
  */
 class UserStoreController extends Controller
 {

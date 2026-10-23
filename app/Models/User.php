@@ -24,9 +24,6 @@ class User extends Authenticatable
     use HasRoles;
     use Notifiable;
 
-    /** Nguồn tạo user (cột users.source). */
-    public const SOURCE_CMS = 'cms';
-
     public const SOURCE_MANUAL = 'manual';
 
     public const SOURCE_GOOGLE = 'google';

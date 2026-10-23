@@ -321,10 +321,8 @@ const rejectTargetId = ref(null)
 const rejectSubmitting = ref(false)
 
 const deptName = computed(() => {
-  const d = auth.user?.department?.name
+  const d = auth.user?.work_info?.department_name
   if (d) return d
-  const cms = auth.user?.cms_user_info
-  if (cms && typeof cms.department_name === 'string' && cms.department_name) return cms.department_name
   return t('dept.dept_fallback')
 })
 

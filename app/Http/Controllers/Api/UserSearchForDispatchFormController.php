@@ -6,7 +6,7 @@ use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Operational\SearchUsersForDispatchFormRequest;
 use App\Models\User;
-use App\Services\CmsUserInfoService;
+use App\Services\Hr\UserWorkInfoService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 
@@ -14,12 +14,13 @@ class UserSearchForDispatchFormController extends Controller
 {
     use ApiResponses;
 
-    public function __invoke(SearchUsersForDispatchFormRequest $request, CmsUserInfoService $cms): JsonResponse
+    public function __invoke(SearchUsersForDispatchFormRequest $request, UserWorkInfoService $workInfo): JsonResponse
     {
         $q = $request->validated('q');
         $like = '%'.addcslashes($q, '%_\\').'%';
 
         $users = User::query()
+            ->with(['hrEmployee.department', 'hrEmployee.division'])
             ->where('is_active', true)
             ->where(function (Builder $w) use ($like) {
                 $w->where('email', 'like', $like)
@@ -31,25 +32,18 @@ class UserSearchForDispatchFormController extends Controller
             ->limit(25)
             ->get(['id', 'name', 'email', 'employee_code', 'phone', 'avatar_url']);
 
-        $payload = $users->map(function (User $u) use ($cms) {
+        $payload = $users->map(function (User $u) use ($workInfo) {
+            $info = $workInfo->forUser($u);
             $row = [
                 'id' => $u->id,
                 'name' => $u->name,
                 'email' => $u->email,
-                'employee_code' => $u->employee_code,
-                'phone' => $u->phone,
+                'employee_code' => $info['code'],
+                'phone' => $info['phone'],
                 'avatar_url' => $u->avatar_url,
-                'department_name' => null,
-                'unit_name' => null,
+                'department_name' => $info['department_name'],
+                'unit_name' => $info['unit_name'],
             ];
-            $cmsUserId = $cms->findCmsUserIdByEmail((string) $u->email);
-            if ($cmsUserId !== null) {
-                $info = $cms->getLatestUserInfoRow($cmsUserId);
-                if (is_array($info)) {
-                    $row['department_name'] = $info['department_name'] ?? null;
-                    $row['unit_name'] = $info['unit_name'] ?? null;
-                }
-            }
 
             return $row;
         });

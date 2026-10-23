@@ -1832,13 +1832,13 @@ export function useDispatchRequestWizard(options = {}) {
       if (!form.value.requester_name?.trim() && auth.user.name) form.value.requester_name = auth.user.name
       if (!form.value.requester_email?.trim() && auth.user.email) form.value.requester_email = auth.user.email
       if (!form.value.requester_phone?.trim()) {
-        const phone = auth.user.cms_user_info?.phone || auth.user.phone || ''
+        const phone = auth.user.work_info?.phone || ''
         if (phone) form.value.requester_phone = phone
       }
       if (!form.value.requester_unit?.trim()) {
-        const cms = auth.user.cms_user_info
-        if (cms) {
-          const parts = [cms.unit_name, cms.department_name].filter(Boolean)
+        const workInfo = auth.user.work_info
+        if (workInfo) {
+          const parts = [workInfo.unit_name, workInfo.department_name].filter(Boolean)
           if (parts.length) form.value.requester_unit = parts.join(' — ')
         }
       }

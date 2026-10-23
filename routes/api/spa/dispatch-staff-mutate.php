@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('v1/users/roles/bulk-update', BulkUserRolesUpdateController::class)
     ->middleware(['permission:any,system.user_roles.manage', 'throttle:60,1']);
-// Thêm tay người dùng không có trong CMS (trang Phân vai trò).
+// Thêm tay tài khoản trên trang Phân vai trò.
 Route::post('admin/users', UserStoreController::class)
     ->middleware(['permission:any,system.user_roles.manage', 'throttle:30,1']);
 
