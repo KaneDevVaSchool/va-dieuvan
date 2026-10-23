@@ -35,13 +35,12 @@
               v-for="tpl in options.templates"
               :key="tpl.id"
               type="button"
-              class="min-h-[52px] rounded-xl px-3 py-2 text-left text-sm font-bold ring-1 transition"
+              class="min-h-[44px] truncate whitespace-nowrap rounded-xl px-2 py-2 text-center text-[13px] font-bold ring-1 transition"
               :class="String(form.template_id) === String(tpl.id) ? 'bg-driver-accent text-driver-bg ring-driver-accent' : 'bg-driver-surface text-driver-ink ring-white/10'"
               :data-testid="`checklist-template-${tpl.code}`"
               @click="form.template_id = tpl.id"
             >
               {{ t(`checklist.freq_${tpl.frequency}`) }}
-              <span class="block truncate text-xs font-medium opacity-80">{{ tpl.name }}</span>
             </button>
           </div>
         </div>

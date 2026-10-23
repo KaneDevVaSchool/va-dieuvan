@@ -14,11 +14,12 @@
             <span class="inline-flex rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-300">
               {{ t('compliance.superseded') }}
             </span>
-            <span class="truncate text-slate-700 dark:text-slate-300">{{ h.title || '—' }}</span>
+            <span class="min-w-0 break-words text-slate-700 dark:text-slate-300">{{ h.title || '—' }}</span>
           </div>
           <div class="mt-1 text-slate-500 dark:text-slate-400">
-            <span v-if="h.document_no">{{ h.document_no }} · </span>
-            {{ formatIsoDate(h.issued_at, locale) }} → {{ formatIsoDate(h.expires_at, locale) }}
+            <div v-if="h.document_no" class="break-words">{{ h.document_no }}</div>
+            <div>{{ t('compliance.col_issued') }}: {{ formatIsoDate(h.issued_at, locale) }}</div>
+            <div>{{ t('compliance.col_expires') }}: {{ formatIsoDate(h.expires_at, locale) }}</div>
           </div>
         </div>
         <ComplianceFileActions :attachments="h.attachments" />

@@ -34,7 +34,7 @@ class ChecklistTemplateSeeder extends Seeder
                     'org_line_2' => 'PHÒNG MUA HÀNG',
                     'title' => 'PHIẾU KIỂM TRA AN TOÀN XE (DAILY)',
                     'purpose' => 'Đảm bảo an toàn và tuân thủ quy định Bộ GTVT.',
-                    'confirm_statement' => 'Sau khi kiểm tra, tôi xác nhận xe :plate đủ điều kiện lưu thông trên đường và đảm bảo an toàn khi vận chuyển học sinh.',
+                    'confirm_statement' => 'Sau khi kiểm tra, tôi xác nhận xe :plate đủ điều kiện lưu thông trên đường.',
                 ],
                 items: $this->dailyItems(),
                 slots: [['remind_at' => '05:30', 'weekdays' => [1, 2, 3, 4, 5, 6], 'escalate_after_minutes' => 60]],
@@ -104,7 +104,7 @@ class ChecklistTemplateSeeder extends Seeder
 
         return [
             $this->item($g1, 'Phanh', 'Thử phanh chân/phanh tay, không trượt, không bất thường', self::C, 'Dừng xe/đổi xe; gọi kỹ thuật/cứu hộ'),
-            $this->item($g1, 'Lốp', 'Áp suất phù hợp, độ mòn an toàn, không nứt/rách/phồng', self::C, 'Thay lốp/sửa; không khởi hành nếu không khắc phục'),
+            $this->item($g1, 'Lốp', 'Còn hạn sử dụng; áp suất phù hợp, độ mòn an toàn, không nứt/rách/phồng', self::C, 'Thay lốp/sửa; không khởi hành nếu không khắc phục'),
             $this->item($g1, 'Bánh dự phòng & dụng cụ', 'Nếu xe có trang bị: còn đủ bánh + kích + dụng cụ', self::N, 'Bổ sung/khắc phục trước ca tiếp theo; báo điều hành', allowNa: true),
             $this->item($g1, 'Đèn pha/cốt', 'Bật thử, sáng đều, không chập chờn', self::C, 'Sửa ngay/đổi xe nếu không khắc phục kịp'),
             $this->item($g1, 'Đèn xi nhan/đèn phanh', 'Bật thử, hoạt động đủ 2 bên', self::C, 'Sửa ngay/đổi xe; không khởi hành nếu không đạt'),
@@ -116,7 +116,7 @@ class ChecklistTemplateSeeder extends Seeder
             $this->item($g1, 'Cửa lên/xuống', 'Đóng mở trơn tru, chốt an toàn hoạt động', self::C, 'Dừng xe/đổi xe; sửa ngay'),
             $this->item($g1, 'Dây an toàn', 'Kiểm tra ngẫu nhiên 3–5 vị trí: khóa cài chắc, dây kéo/nhả OK', self::C, 'Không nhận HS ở vị trí dây lỗi; ưu tiên đổi xe/khắc phục trước chuyến'),
             $this->item($g1, 'Bình chữa cháy', 'Còn hạn, niêm phong OK, đặt đúng vị trí, dễ lấy', self::C, 'Bổ sung/đổi bình trước khởi hành; không khởi hành nếu thiếu/ hết hạn'),
-            $this->item($g1, 'Búa thoát hiểm/thiết bị thoát hiểm', 'Đủ số lượng, đúng vị trí, không hư hỏng', self::C, 'Bổ sung/khắc phục trước khởi hành; không khởi hành nếu thiếu'),
+            $this->item($g1, 'Búa thoát hiểm', 'Có trang bị Búa thoát hiểm', self::C, 'Bổ sung/khắc phục trước khởi hành; không khởi hành nếu thiếu'),
             $this->item($g1, 'Hộp sơ cứu (nếu áp dụng)', 'Đủ vật tư cơ bản, còn hạn, dễ truy cập', self::N, 'Bổ sung trong ngày; báo điều hành', allowNa: true),
             $this->item($g1, 'Tam giác phản quang/đèn cảnh báo dừng xe', 'Đầy đủ, sẵn sàng sử dụng', self::C, 'Bổ sung trước khởi hành; không khởi hành nếu thiếu'),
             $this->item($g1, 'Camera/thiết bị giám sát (nếu có)', 'Bật nguồn, ghi hình OK (kiểm tra trạng thái)', self::C, 'Báo điều hành; xử lý thiết bị/đổi xe theo quy định tuyến', allowNa: true),

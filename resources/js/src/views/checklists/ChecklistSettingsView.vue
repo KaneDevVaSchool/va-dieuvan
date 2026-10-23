@@ -85,22 +85,22 @@
                 <textarea v-model="item.requirement" :disabled="!canManage" rows="1" :placeholder="t('checklist.requirement')" class="mt-1 w-full rounded border border-slate-200 px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-800" />
                 <textarea v-model="item.ng_action" :disabled="!canManage" rows="1" :placeholder="t('checklist.ng_action')" class="mt-1 w-full rounded border border-slate-200 px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-800" />
               </td>
-              <td class="px-2 py-2 align-top">
-                <select v-model="item.severity" :disabled="!canManage" class="rounded border border-slate-200 py-1 pl-2 pr-7 text-xs dark:border-slate-600 dark:bg-slate-800">
+              <td class="whitespace-nowrap px-2 py-2 align-top">
+                <select v-model="item.severity" :disabled="!canManage" class="min-w-[8.5rem] whitespace-nowrap rounded border border-slate-200 py-1 pl-2 pr-7 text-xs dark:border-slate-600 dark:bg-slate-800">
                   <option value="critical">Critical</option>
                   <option value="non_critical">Non-critical</option>
                 </select>
               </td>
-              <td class="px-2 py-2 align-top text-xs">
-                <label class="flex items-center gap-1"><input v-model="item.allow_na" type="checkbox" :disabled="!canManage" class="accent-teal-600" />{{ t('checklist.opt_allow_na') }}</label>
+              <td class="whitespace-nowrap px-2 py-2 align-top text-xs">
+                <label class="flex items-center gap-1" :title="t('checklist.opt_allow_na_hint')"><input v-model="item.allow_na" type="checkbox" :disabled="!canManage" class="accent-teal-600" />{{ t('checklist.opt_allow_na') }}</label>
                 <label class="flex items-center gap-1"><input v-model="item.is_active" type="checkbox" :disabled="!canManage" class="accent-teal-600" />{{ t('checklist.active') }}</label>
                 <span v-if="item.auto_source" class="mt-1 inline-block rounded bg-sky-50 px-1.5 py-0.5 text-[10px] text-sky-700 dark:bg-sky-900/30 dark:text-sky-300">{{ item.auto_source }}</span>
               </td>
               <td class="px-2 py-2 align-top">
-                <template v-if="canManage">
+                <div v-if="canManage" class="flex items-center gap-3">
                   <button type="button" class="rounded-md bg-teal-600 px-2.5 py-1 text-xs font-semibold text-white" @click="saveItem(tpl, item)">{{ t('checklist.save') }}</button>
-                  <button type="button" class="ml-1 rounded-md px-2 py-1 text-xs text-rose-600" @click="removeItem(tpl, item)">{{ t('checklist.delete') }}</button>
-                </template>
+                  <button type="button" class="rounded-md px-2 py-1 text-xs text-rose-600" @click="removeItem(tpl, item)">{{ t('checklist.delete') }}</button>
+                </div>
               </td>
             </tr>
           </tbody>
