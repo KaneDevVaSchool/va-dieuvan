@@ -34,7 +34,7 @@ class ImpersonationTest extends TestCase
     private function impersonator(): User
     {
         return User::factory()->create([
-            'email' => 'phongcongnghe@vaschools.edu.vn',
+            'email' => 'hotro.pcn@vaschools.edu.vn',
             'is_active' => true,
         ]);
     }
@@ -101,21 +101,29 @@ class ImpersonationTest extends TestCase
             ->postJson('/api/impersonate/'.$this->account(['driver'])->id)->assertForbidden();
     }
 
-    public function test_support_mailbox_is_superadmin_and_can_impersonate(): void
+    public function test_support_mailbox_is_bootstrap_superadmin(): void
     {
-        $support = User::factory()->create(['email' => 'hotro.pcn@vaschools.edu.vn', 'is_active' => true]);
-        $this->assertTrue($support->isSuperAdmin());
-
-        $token = $this->start($support, $this->account(['driver']), 'driver');
-        $this->asToken($token)->getJson('/api/user')->assertOk()
-            ->assertJsonPath('impersonation.impersonator.id', $support->id);
+        $this->assertTrue($this->impersonator()->isSuperAdmin());
     }
 
     public function test_impersonator_list_comes_from_config(): void
     {
-        config(['permission.impersonator_emails' => ['hotro.pcn@vaschools.edu.vn']]);
+        config(['permission.impersonator_emails' => ['someone-else@vaschools.edu.vn']]);
         $this->asToken($this->impersonator()->createToken('test')->plainTextToken)
             ->postJson('/api/impersonate/'.$this->account(['driver'])->id)->assertForbidden();
+    }
+
+    public function test_former_tech_mailbox_is_no_longer_locked_superadmin(): void
+    {
+        $former = User::factory()->create(['email' => 'phongcongnghe@vaschools.edu.vn', 'is_active' => true]);
+        $former->assignRole('superadmin');
+        $this->assertTrue($former->isSuperAdmin());
+        $this->assertFalse($former->canImpersonate());
+
+        $this->asToken($this->impersonator()->createToken('test')->plainTextToken)
+            ->putJson('/api/admin/users/'.$former->id.'/roles', ['role_ids' => [\App\Models\Role::where('name', 'admin')->value('id')]])
+            ->assertSuccessful();
+        $this->assertFalse($former->fresh()->isSuperAdmin());
     }
 
     public function test_inactive_allowed_account_cannot_start(): void
