@@ -214,6 +214,7 @@ export async function searchUsersForPortalForm(q) {
 /** Trưởng đơn vị (portal tạo phiếu). @param {{ q?: string, pick?: number|string }} opts */
 export async function searchPortalDeptHeads(opts = {}) {
   const params = {}
+  if (opts.suggested) params.suggested = 1
   if (opts.q != null && String(opts.q).trim() !== '') params.q = String(opts.q).trim()
   if (opts.pick != null && opts.pick !== '') params.pick = opts.pick
   const { data } = await http.get('/portal/users/dept-heads', { params })

@@ -377,6 +377,7 @@ export function useDispatchRequestWizard(options = {}) {
   const portalNeedsDeptHead = computed(() => isPortal && deptHeadEnabled.value)
   const portalDeptHeadSearch = usePortalDeptHeadSearch(form, portalNeedsDeptHead, {
     searchDeptHeads: isPortal ? searchPortalDeptHeads : searchDeptHeadsForDispatchForm,
+    suggestDefault: isPortal,
   })
 
   /** Bước 3: form thẻ — không cho Next khi có lỗi inline hoặc danh sách rỗng (đồng bộ từ DispatchWizardStep3). */

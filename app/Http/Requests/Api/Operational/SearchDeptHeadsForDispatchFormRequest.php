@@ -19,6 +19,8 @@ class SearchDeptHeadsForDispatchFormRequest extends ApiFormRequest
         return [
             'q' => ['nullable', 'string', 'max:255'],
             'pick' => ['nullable', 'integer', 'min:1'],
+            'suggested' => ['nullable', 'boolean'],
+            'requester_id' => ['nullable', 'integer', 'min:1'],
         ];
     }
 }

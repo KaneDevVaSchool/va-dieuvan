@@ -107,6 +107,23 @@ export function usePortalDeptHeadSearch(form, needsDeptHead, options = {}) {
     deptHeadDropdownOpen.value = false
   }
 
+  // Only new-request forms opt in. Never replace a saved or manually chosen approver.
+  if (options.suggestDefault) {
+    watch(() => unref(needsDeptHead), async (needed, _previous, onCleanup) => {
+      let cancelled = false
+      onCleanup(() => { cancelled = true })
+      if (!needed || form.value.dept_head_user_id || deptHeadQ.value.trim()) return
+      try {
+        const rows = await searchDeptHeads({ suggested: true })
+        if (!cancelled && !form.value.dept_head_user_id && !deptHeadQ.value.trim() && rows?.[0]) {
+          pickDeptHead(rows[0])
+        }
+      } catch {
+        // Manual search remains available if no suggestion can be loaded.
+      }
+    }, { immediate: true })
+  }
+
   function clearDeptHeadSearch() {
     deptHeadQ.value = ''
     lockedLabel.value = ''

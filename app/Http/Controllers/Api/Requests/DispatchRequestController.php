@@ -114,7 +114,7 @@ class DispatchRequestController extends Controller
 
         $urgentReasonTrim = isset($data['urgent_reason']) ? trim((string) $data['urgent_reason']) : '';
 
-        $deptHeadId = DispatchRequestDeptHeadAssignment::resolveValidatedId($data['dept_head_user_id'] ?? null);
+        $deptHeadId = DispatchRequestDeptHeadAssignment::resolveForRequester($data['dept_head_user_id'] ?? null, $requesterId, $data['trip_type']);
         unset($data['dept_head_user_id']);
 
         $dispatchRequest = DispatchRequest::create([

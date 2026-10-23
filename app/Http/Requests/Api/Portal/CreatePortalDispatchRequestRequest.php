@@ -4,6 +4,7 @@ namespace App\Http\Requests\Api\Portal;
 
 use App\Http\Requests\Api\ApiFormRequest;
 use App\Models\DispatchRequest;
+use App\Services\Hr\EmployeeManagerResolver;
 use App\Support\DispatchRequestDeptHeadAssignment;
 use App\Support\Messages;
 use Illuminate\Support\Carbon;
@@ -37,7 +38,8 @@ class CreatePortalDispatchRequestRequest extends ApiFormRequest
             'urgent_reason' => ['nullable', 'string', 'max:500'],
             'wizard_snapshot' => ['nullable', 'array'],
             'dept_head_user_id' => [
-                Rule::requiredIf(fn () => DispatchRequestDeptHeadAssignment::requiresChoice((string) $this->input('trip_type', ''))),
+                Rule::requiredIf(fn () => DispatchRequestDeptHeadAssignment::requiresChoice((string) $this->input('trip_type', ''))
+                    && (! $this->user() || ! app(EmployeeManagerResolver::class)->resolve($this->user()))),
                 'nullable',
                 'integer',
                 'exists:users,id',

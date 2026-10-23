@@ -3,9 +3,23 @@
 namespace App\Support;
 
 use App\Models\User;
+use App\Services\Hr\EmployeeManagerResolver;
 
 final class DispatchRequestDeptHeadAssignment
 {
+    public static function resolveForRequester(mixed $raw, int $requesterId, string $tripType): ?int
+    {
+        if ($raw !== null && $raw !== '') {
+            return self::resolveValidatedId($raw);
+        }
+        if (! self::requiresChoice($tripType)) {
+            return null;
+        }
+        $requester = User::find($requesterId);
+
+        return $requester ? app(EmployeeManagerResolver::class)->resolve($requester)?->id : null;
+    }
+
     public static function requiresChoice(string $tripType): bool
     {
         if ($tripType === '' || $tripType === 'door_to_door') {
