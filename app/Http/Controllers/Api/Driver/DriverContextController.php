@@ -8,6 +8,7 @@ use App\Http\Requests\Api\Driver\DriverContextSummaryRequest;
 use App\Models\Driver;
 use App\Models\TripCost;
 use App\Models\Vehicle;
+use App\Services\Resources\DriverDocumentStatusService;
 use App\Support\TripVisibility;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -82,6 +83,12 @@ class DriverContextController extends Controller
             ],
             'maintenance' => $maintenance,
         ]);
+    }
+
+    /** Giấy tờ xe đang phụ trách + GPLX, kèm cảnh báo sắp/đã hết hạn (chỉ đọc). */
+    public function documents(DriverContextSummaryRequest $request, DriverDocumentStatusService $service): JsonResponse
+    {
+        return $this->ok($service->forUser($request->user()));
     }
 
     protected function newTripListBuilder($user): Builder

@@ -169,6 +169,65 @@
         </ul>
       </section>
 
+      <!-- S4: Xe & giấy tờ -->
+      <section class="rounded-2xl border border-white/[0.06] bg-driver-card p-3.5 sm:p-4" data-testid="driver-documents">
+        <div class="mb-3 flex items-center gap-2">
+          <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-driver-accent" />
+          <h2 class="text-sm font-semibold text-driver-ink">{{ t('driver_account.docs_title') }}</h2>
+        </div>
+
+        <div v-if="docsLoading" class="space-y-2">
+          <div v-for="n in 3" :key="n" class="h-9 animate-pulse rounded-lg bg-white/5" />
+        </div>
+        <p v-else-if="docsError" class="text-xs text-amber-100/90">{{ docsError }}</p>
+        <template v-else-if="docs">
+          <div
+            v-if="docs.alerts?.length"
+            class="mb-3 rounded-xl bg-rose-500/12 px-3 py-2.5 ring-1 ring-rose-400/30"
+            role="alert"
+          >
+            <p class="flex items-center gap-1.5 text-xs font-bold text-rose-100 sm:text-sm">
+              <ExclamationTriangleIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+              {{ t('driver_account.docs_alert_title', { n: docs.alerts.length }) }}
+            </p>
+            <ul class="mt-1.5 space-y-1 text-xs leading-snug text-rose-50/90">
+              <li v-for="(a, i) in docs.alerts" :key="i">• {{ alertLine(a) }}</li>
+            </ul>
+          </div>
+          <p v-else class="mb-3 rounded-xl bg-emerald-500/10 px-3 py-2 text-xs text-emerald-100 ring-1 ring-emerald-400/25">
+            {{ t('driver_account.docs_all_ok') }}
+          </p>
+
+          <ul class="divide-y divide-white/[0.06]">
+            <li v-if="docs.license" class="flex items-center gap-2.5 py-2.5 first:pt-0">
+              <IdentificationIcon class="h-5 w-5 shrink-0 text-driver-accent" aria-hidden="true" />
+              <span class="min-w-0 flex-1 text-xs text-driver-muted sm:text-sm">{{ t('driver_account.doc_license') }}</span>
+              <span :class="docPillClass(docs.license.state)">{{ expiryText(docs.license) }}</span>
+            </li>
+          </ul>
+
+          <p v-if="!docs.vehicles?.length" class="mt-2 text-xs text-driver-muted">{{ t('driver_account.docs_no_vehicle') }}</p>
+          <div v-for="v in docs.vehicles" :key="v.id" class="mt-3 rounded-xl bg-driver-bg/50 p-3 ring-1 ring-white/[0.06]">
+            <p class="flex items-center gap-2 text-sm font-bold text-driver-ink">
+              <TruckIcon class="h-5 w-5 shrink-0 text-driver-accent" aria-hidden="true" />
+              {{ v.license_plate }}
+              <span v-if="v.type" class="truncate text-xs font-medium text-driver-muted">· {{ v.type }}</span>
+            </p>
+            <ul class="mt-2 divide-y divide-white/[0.06]">
+              <li v-for="d in v.documents" :key="d.key" class="flex items-center gap-2 py-2">
+                <span class="min-w-0 flex-1 text-xs text-driver-muted sm:text-sm">{{ t(`driver_account.doc_${d.key}`) }}</span>
+                <span :class="docPillClass(d.state)">{{ expiryText(d) }}</span>
+              </li>
+              <li class="flex items-center gap-2 py-2">
+                <span class="min-w-0 flex-1 text-xs text-driver-muted sm:text-sm">{{ t('driver_account.doc_maintenance') }}</span>
+                <span :class="docPillClass(v.maintenance.state)">{{ maintenanceText(v.maintenance) }}</span>
+              </li>
+            </ul>
+          </div>
+          <p class="mt-3 text-[11px] leading-snug text-driver-muted">{{ t('driver_account.docs_footer', { n: docs.soon_days, m: docs.maintenance_stale_days }) }}</p>
+        </template>
+      </section>
+
       <!-- Đăng xuất -->
       <section class="rounded-2xl border border-white/[0.06] bg-driver-card p-3.5 sm:p-4">
         <button
@@ -237,10 +296,12 @@ import {
   ArrowUpTrayIcon,
   BriefcaseIcon,
   BuildingOffice2Icon,
+  ExclamationTriangleIcon,
   IdentificationIcon,
   MapPinIcon,
+  TruckIcon,
 } from '@heroicons/vue/24/outline'
-import { getDriverSummary } from '../../api/driver'
+import { getDriverDocuments, getDriverSummary } from '../../api/driver'
 import { listTripsAll } from '../../api/trips'
 import NotificationBell from '../../components/notifications/NotificationBell.vue'
 import DriverPageHeader from '../../components/driver/DriverPageHeader.vue'
@@ -481,6 +542,57 @@ async function fetchData() {
   }
 }
 
+const docs = ref(null)
+const docsLoading = ref(true)
+const docsError = ref('')
+
+async function fetchDocuments() {
+  docsLoading.value = true
+  docsError.value = ''
+  try {
+    docs.value = await getDriverDocuments()
+  } catch {
+    docsError.value = t('driver_account.docs_load_error')
+  } finally {
+    docsLoading.value = false
+  }
+}
+
+function dmy(iso) {
+  if (!iso) return ''
+  const [y, m, d] = String(iso).slice(0, 10).split('-')
+  return `${d}/${m}/${y}`
+}
+
+function docPillClass(state) {
+  const base = 'shrink-0 rounded-md px-2 py-0.5 text-[11px] font-semibold tabular-nums sm:text-xs'
+  if (state === 'exp' || state === 'stale') return `${base} bg-rose-500/20 text-rose-100`
+  if (state === 'soon') return `${base} bg-amber-500/20 text-amber-100`
+  if (state === 'ok') return `${base} bg-emerald-500/15 text-emerald-100`
+  return `${base} bg-white/[0.06] text-driver-muted`
+}
+
+function expiryText(doc) {
+  if (doc.state === 'none') return t('driver_account.doc_unset')
+  if (doc.state === 'exp') return t('driver_account.doc_expired', { date: dmy(doc.expires_at) })
+  if (doc.state === 'soon') return t('driver_account.doc_soon', { n: doc.days, date: dmy(doc.expires_at) })
+  return t('driver_account.doc_valid', { date: dmy(doc.expires_at) })
+}
+
+function maintenanceText(m) {
+  if (m.state === 'none') return t('driver_account.doc_unset')
+  if (m.state === 'stale') return t('driver_account.maint_stale', { date: dmy(m.last_at), n: m.days_since })
+  return t('driver_account.maint_ok', { date: dmy(m.last_at) })
+}
+
+function alertLine(a) {
+  const name = t(`driver_account.doc_${a.key}`)
+  const who = a.license_plate ? `${name} (${a.license_plate})` : name
+  if (a.state === 'stale') return t('driver_account.alert_maint', { doc: who, n: a.days })
+  if (a.state === 'exp') return t('driver_account.alert_expired', { doc: who, date: dmy(a.expires_at) })
+  return t('driver_account.alert_soon', { doc: who, n: a.days, date: dmy(a.expires_at) })
+}
+
 async function confirmLogout() {
   haptics.impact()
   logoutConfirmOpen.value = false
@@ -495,6 +607,6 @@ onMounted(async () => {
       /* handled by guard */
     }
   }
-  await fetchData()
+  await Promise.all([fetchData(), fetchDocuments()])
 })
 </script>

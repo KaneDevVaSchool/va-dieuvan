@@ -15,6 +15,12 @@ export async function getDriverSummary() {
   return data.data
 }
 
+/** Giấy tờ xe đang phụ trách + GPLX, kèm cảnh báo hết hạn (GET /api/driver/documents). */
+export async function getDriverDocuments() {
+  const { data } = await http.get('/driver/documents')
+  return data.data
+}
+
 /** Danh sách xe tài xế được gán khi ghi chi phí (GET /api/driver/cost-vehicles). */
 export async function listDriverCostVehicles() {
   const { data } = await http.get('/driver/cost-vehicles')
