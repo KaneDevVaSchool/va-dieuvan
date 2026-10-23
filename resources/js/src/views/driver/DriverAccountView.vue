@@ -550,7 +550,9 @@ async function fetchDocuments() {
   docsLoading.value = true
   docsError.value = ''
   try {
-    docs.value = await getDriverDocuments()
+    const data = await getDriverDocuments()
+    if (!Array.isArray(data?.vehicles)) throw new Error('Unexpected /driver/documents response')
+    docs.value = data
   } catch {
     docsError.value = t('driver_account.docs_load_error')
   } finally {

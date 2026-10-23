@@ -53,5 +53,5 @@ Route::get('/.well-known/web-app-origin-association', function () {
     ]);
 });
 
-/** Do not match `/build/` or `/storage/` so missing static files 404 instead of returning HTML SPA (avoids MIME type errors on *.js modules). */
-Route::view('/{any?}', 'welcome')->where('any', '^(?!build/|storage/).*');
+/** Do not match `/build/`, `/storage/` or `/api/` so missing static files / API routes 404 instead of returning HTML SPA with 200. */
+Route::view('/{any?}', 'welcome')->where('any', '^(?!build/|storage/|api/).*');
